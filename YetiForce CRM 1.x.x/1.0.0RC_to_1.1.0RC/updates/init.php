@@ -81,17 +81,11 @@ class YetiForceUpdate{
 	function updateFiles() {
 		$config = '
 
-// Maximum number of displayed search results
-$max_number_search_result = 100;
-
-// List of products in the inventory module popup limited to products / services selected in Potentials
-$inventory_popup_limited_from_potentials = true;
-
 //Should menu breadcrumbs be visible? true = show, false = hide
 $breadcrumbs = true;
 
-//Separator for menu breadcrumbs default value = '>'
-$breadcrumbs_separator = '>';';
+//Separator for menu breadcrumbs default value = \'>\'
+$breadcrumbs_separator = \'>\';';
 		file_put_contents( 'config/config.inc.php', $config, FILE_APPEND );
 		$file = file('modules/OSSMail/roundcube/config/config.inc.php'); 
 		$newFile = '';
