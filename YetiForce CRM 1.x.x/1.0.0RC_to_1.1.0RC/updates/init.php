@@ -91,7 +91,7 @@ $inventory_popup_limited_from_potentials = true;
 $breadcrumbs = true;
 
 //Separator for menu breadcrumbs default value = '>'
-$breadcrumbs_separator = '>';';
+$breadcrumbs_separator = \'>\';';
 		file_put_contents( 'config/config.inc.php', $config, FILE_APPEND );
 		$file = file('modules/OSSMail/roundcube/config/config.inc.php'); 
 		$newFile = '';
