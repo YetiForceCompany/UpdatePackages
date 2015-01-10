@@ -5,7 +5,7 @@
     <label>Update package</label>
 	<parent></parent>
 	<type>update</type>
-    <version>1.00</version>
+    <version>1.02</version>
 	<from_version>1.0.1 RC</from_version>
 	<to_version>1.1.0 RC</to_version>
     <dependencies>
