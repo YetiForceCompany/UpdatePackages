@@ -13,20 +13,22 @@ class YetiForceUpdate{
 	var $return = true;
 	
 	var $filesToDelete = array(
-		'layouts\vlayout\modules\Settings\MenuEditor\Index.tpl',
-		'modules\Settings\MenuEditor\actions\Save.php',
-		'modules\Settings\MenuEditor\views\Index.php',
-		'languages\de_de\Proposal.php',
-		'languages\en_us\Proposal.php',
-		'languages\pl_pl\Proposal.php',
-		'languages\pt_br\Proposal.php',
-		'languages\ru_ru\Proposal.php',
-		'modules\Settings\ModuleManager\models\Extension.php',
+		'layouts/vlayout/modules/Settings/MenuEditor/Index.tpl',
+		'modules/Settings/MenuEditor/actions/Save.php',
+		'modules/Settings/MenuEditor/views/Index.php',
+		'languages/de_de/Proposal.php',
+		'languages/en_us/Proposal.php',
+		'languages/pl_pl/Proposal.php',
+		'languages/pt_br/Proposal.php',
+		'languages/ru_ru/Proposal.php',
+		'modules/Settings/ModuleManager/models/Extension.php',
+		'api/mobile_services/callhistory.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
 	}
 	function preupdate() {
+		$this->recurseCopy('cache/updates/files','');
 	}
 	
 	function update() {
@@ -74,7 +76,7 @@ class YetiForceUpdate{
 		$adb->query("UPDATE vtiger_field SET `displaytype` = '4' WHERE `columnname` = 'user_name' AND `tablename` = 'vtiger_users';");
 		$adb->query("UPDATE vtiger_field SET `fieldlabel` = 'LBL_ORDER_TIME' WHERE `fieldlabel` = 'Czas realizacji';");
 		$adb->query("UPDATE vtiger_field SET `uitype` = '301' WHERE `columnname` = 'oss_module_list' AND `tablename` = 'vtiger_ossmailtemplates';");
-		$result = $adb->query("SELECT * FROM `vtiger_language` WHERE prefix = 'pt_br'");
+		$result = $adb->query("SELECT * FROM `vtiger_language` WHERE prefix = 'ru_ru'");
 		if($adb->num_rows($result) == 0){
 			$adb->query("insert  into `vtiger_language`(`name`,`prefix`,`label`,`lastupdated`,`sequence`,`isdefault`,`active`) values ('Russian','ru_ru','Russian','2015-01-13 15:12:39',NULL,0,1);");
 			$adb->query("UPDATE vtiger_language_seq SET `id` = (SELECT count(*) FROM `vtiger_language`);");
@@ -88,7 +90,7 @@ class YetiForceUpdate{
 			$tabid = $adb->query_result_raw($result, 0, 'tabid');
 			$result = $adb->query("SELECT id FROM `vtiger_ossmenumanager` WHERE parent_id = '0' ORDER BY id DESC;");
 			$parent_id = $adb->query_result_raw($result, 0, 'id');
-			$adb->uery("insert  into `vtiger_ossmenumanager`(`parent_id`,`tabid`,`label`,`sequence`,`visible`,`type`,`url`,`new_window`,`permission`,`locationicon`,`sizeicon`,`langfield`,`paintedicon`,`color`) values ($parent_id,$tabid,'CallHistory',1011,1,0,'index.php?module=CallHistory&view=List',0,'  ','','16x16','',0,NULL);");
+			$adb->query("insert  into `vtiger_ossmenumanager`(`parent_id`,`tabid`,`label`,`sequence`,`visible`,`type`,`url`,`new_window`,`permission`,`locationicon`,`sizeicon`,`langfield`,`paintedicon`,`color`) values ($parent_id,$tabid,'CallHistory',1011,1,0,'index.php?module=CallHistory&view=List',0,'  ','','16x16','',0,NULL);");
 		}
 		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_MDULES_COLOR_EDITOR'");
 		if($adb->num_rows($result) == 0){
@@ -100,6 +102,7 @@ class YetiForceUpdate{
 			$lastId = $adb->getUniqueID("vtiger_settings_field");
 			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,5,'LBL_MOBILE_KEYS',NULL,'LBL_MOBILE_KEYS_DESCRIPTION','index.php?parent=Settings&module=MobileApps&view=MobileKeys',5,0,0);");
 		}
+		$adb->query("UPDATE vtiger_entityname SET `searchcolumn` = 'to_number' WHERE `modulename` = 'CallHistory';");
 	}
 	
 	public function addModules(){
@@ -112,5 +115,23 @@ class YetiForceUpdate{
 		} catch (Exception $e) {
 			echo $e->getMessage();
 		}
+	}
+	
+	function recurseCopy($src,$dst) {
+		global $root_directory;
+		$dir = opendir($src); 
+		@mkdir($root_directory.$dst); 
+		while(false !== ( $file = readdir($dir)) ) { 
+			if (( $file != '.' ) && ( $file != '..' )) { 
+				if ( is_dir($src . '/' . $file) ) { 
+					$this->recurseCopy($src . '/' . $file,$dst . '/' . $file); 
+				} else {
+					copy($root_directory.$src . '/' . $file,$root_directory.$dst . '/' . $file);
+					unlink($root_directory.$src . '/' . $file);
+				}
+			} 
+		} 
+		closedir($dir); 
+		rmdir($src);
 	}
 }
