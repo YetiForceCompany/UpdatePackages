@@ -37,16 +37,15 @@ class HistoryCall{
 		}
 		if($this->debug){
 			$file = 'api/mobile_services_HistoryCall_logs.txt';
-			$dane = print_r( array( $data, $resultData ) ,true);
+			$dane = print_r( array( $type,$authorization, $data, $resultData ) ,true);
 			file_put_contents($file,'-----> '.date("Y-m-d H:i:s").' <-----'.PHP_EOL.$dane.PHP_EOL,FILE_APPEND | LOCK_EX);
 		}
-        return $test;
+        return $resultData;
     }
 	
 	function addCallLogs($data){
-		global $log,$adb;
-		include_once 'modules/Users/Users.php';
-		include_once 'modules/CallHistory/CallHistory.php';
+		global $log,$adb,$current_user;
+		include_once 'includes/main/WebUI.php';
 		$log->info("Start HistoryCall::addCallLogs | user id: ".$this->userID);
 		$resultData = array('status' => 2);
 		$user = new Users();
@@ -67,8 +66,8 @@ class HistoryCall{
 			$CallHistory->column_fields['from_number'] = $from_number;
 			$CallHistory->column_fields['location'] = $call->location;
 			$CallHistory->column_fields['phonecallid'] = $call->callid;
-			$CallHistory->column_fields['start_time'] = date("Y-m-d H:i:s", $call->start_time);
-			$CallHistory->column_fields['end_time'] = date("Y-m-d H:i:s", $call->end_time);
+			$CallHistory->column_fields['start_time'] = $this->getDate($call->start_time);
+			$CallHistory->column_fields['end_time'] = $this->getDate($call->end_time);
 			$CallHistory->column_fields['duration'] = $call->duration;
 			$CallHistory->column_fields['imei'] = $data->imei;
 			$CallHistory->column_fields['ipAddress'] = $data->ipAddress;
@@ -79,7 +78,7 @@ class HistoryCall{
 			$CallHistory->save('CallHistory');
 			$count++;
 		}
-		$resultData = array('status' => 1, 'restStatus' => 'true', 'count' => $count);
+		$resultData = array('status' => 1, 'count' => $count);
 		$log->info("End HistoryCall::addCallLogs | return: ".print_r( $resultData,true));
 		return $resultData;
 	}
@@ -88,7 +87,7 @@ class HistoryCall{
 		global $log,$adb;
 		$log->info("Start HistoryCall::checkPermissions | ".print_r( $authorization,true));
 		$return = false;	
-		$result = $adb->pquery("SELECT yetiforce_mobile_keys.user FROM yetiforce_mobile_keys INNER JOIN vtiger_users ON vtiger_users.id = yetiforce_mobile_keys.user WHERE service = ? AND `key` = ? AND vtiger_users.user_name = ?",array('callhistory', $authorization->phoneKey, $authorization->userName),true);
+		$result = $adb->pquery("SELECT yetiforce_mobile_keys.user FROM yetiforce_mobile_keys INNER JOIN vtiger_users ON vtiger_users.id = yetiforce_mobile_keys.user WHERE service = ? AND `key` = ? AND vtiger_users.user_name = ?",array('historycall', $authorization->phoneKey, $authorization->userName),true);
 		if($adb->num_rows($result) > 0 ){
 			$this->userID = $adb->query_result_raw($result, 0, 'user');
 			$return = true;	
@@ -135,5 +134,10 @@ class HistoryCall{
 		}else{
 			return !$this->types[$type]? $type : $this->types[$type];
 		}
+	}
+	
+	function getDate($timestamp){
+		$timestamp = substr($timestamp, 0, 10);
+		return date("Y-m-d H:i:s", $timestamp);
 	}
 }

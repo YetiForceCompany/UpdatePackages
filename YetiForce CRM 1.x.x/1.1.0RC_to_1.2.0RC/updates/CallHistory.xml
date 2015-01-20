@@ -9,7 +9,7 @@
 <tables>
 <table>
 <name>vtiger_callhistory</name>
-<sql><![CDATA[CREATE TABLE `vtiger_callhistory` (
+<sql><![CDATA[CREATE TABLE IF NOT EXISTS `vtiger_callhistory` (
   `callhistoryid` int(19) NOT NULL,
   `callhistorytype` varchar(255) DEFAULT NULL,
   `from_number` varchar(30) DEFAULT NULL,
@@ -34,7 +34,7 @@
 </table>
 <table>
 <name>vtiger_callhistorycf</name>
-<sql><![CDATA[CREATE TABLE `vtiger_callhistorycf` (
+<sql><![CDATA[CREATE TABLE IF NOT EXISTS `vtiger_callhistorycf` (
   `callhistoryid` int(19) NOT NULL,
   PRIMARY KEY (`callhistoryid`),
   CONSTRAINT `vtiger_callhistorycf_ibfk_1` FOREIGN KEY (`callhistoryid`) REFERENCES `vtiger_callhistory` (`callhistoryid`) ON DELETE CASCADE

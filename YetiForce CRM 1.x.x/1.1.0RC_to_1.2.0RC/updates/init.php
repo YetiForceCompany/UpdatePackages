@@ -23,6 +23,7 @@ class YetiForceUpdate{
 		'languages/ru_ru/Proposal.php',
 		'modules/Settings/ModuleManager/models/Extension.php',
 		'api/mobile_services/callhistory.php',
+		'modules/Settings/WidgetsManagement/actions/SaveWidgets.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -49,26 +50,42 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_calendar_default_activitytypes` ADD COLUMN `active` tinyint(1)   NULL DEFAULT 0 after `defaultcolor` ;");
 		}
-		$result = $adb->query("SHOW TABLES LIKE 'yetiforce_mobile_keys';");
-		if($adb->num_rows($result) == 0){
-			$adb->query("CREATE TABLE `yetiforce_mobile_keys`(
-	`id` int(19) NOT NULL  auto_increment , 
-	`user` int(19) NOT NULL  , 
-	`service` varchar(50) COLLATE utf8_general_ci NOT NULL  , 
-	`key` varchar(30) COLLATE utf8_general_ci NOT NULL  , 
-	`privileges_users` text COLLATE utf8_general_ci NULL  , 
-	PRIMARY KEY (`id`) , 
-	KEY `user`(`user`,`service`) 
-) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
-		}
-		$result = $adb->query("SHOW TABLES LIKE 'yetiforce_mobile_pushcall';");
-		if($adb->num_rows($result) == 0){
-			$adb->query("CREATE TABLE `yetiforce_mobile_pushcall`(
-	`user` int(19) NOT NULL  , 
-	`number` varchar(20) COLLATE utf8_general_ci NULL  , 
-	PRIMARY KEY (`user`) 
-) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
-		}
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_mobile_keys`(
+					`id` int(19) NOT NULL  auto_increment , 
+					`user` int(19) NOT NULL  , 
+					`service` varchar(50) COLLATE utf8_general_ci NOT NULL  , 
+					`key` varchar(30) COLLATE utf8_general_ci NOT NULL  , 
+					`privileges_users` text COLLATE utf8_general_ci NULL  , 
+					PRIMARY KEY (`id`) , 
+					KEY `user`(`user`,`service`) 
+				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_mobile_pushcall`(
+					`user` int(19) NOT NULL  , 
+					`number` varchar(20) COLLATE utf8_general_ci NULL  , 
+					PRIMARY KEY (`user`) 
+				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_module_dashboard_blocks` (
+					  `id` int(100) NOT NULL AUTO_INCREMENT,
+					  `authorized` varchar(10) NOT NULL,
+					  `tabid` int(19) NOT NULL,
+					  PRIMARY KEY (`id`)
+					) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;");
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_module_dashboard` (
+					  `id` int(100) NOT NULL AUTO_INCREMENT,
+					  `blockid` int(100) NOT NULL,
+					  `linkid` int(19) DEFAULT NULL,
+					  `filterid` int(19) DEFAULT NULL,
+					  `title` varchar(100) DEFAULT NULL,
+					  `data` text,
+					  `isdefault` int(1) NOT NULL DEFAULT '0',
+					  PRIMARY KEY (`id`),
+					  KEY `vtiger_module_dashboard_ibfk_1` (`blockid`),
+					  CONSTRAINT `vtiger_module_dashboard_ibfk_1` FOREIGN KEY (`blockid`) REFERENCES `vtiger_module_dashboard_blocks` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;");
 	}
 	
 	public function databaseData(){
@@ -103,6 +120,9 @@ class YetiForceUpdate{
 			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,5,'LBL_MOBILE_KEYS',NULL,'LBL_MOBILE_KEYS_DESCRIPTION','index.php?parent=Settings&module=MobileApps&view=MobileKeys',5,0,0);");
 		}
 		$adb->query("UPDATE vtiger_entityname SET `searchcolumn` = 'to_number' WHERE `modulename` = 'CallHistory';");
+		$adb->query("ALTER TABLE `vtiger_links` DROP COLUMN `linkdata`;");
+		$adb->query("DELETE FROM `vtiger_module_dashboard_widgets`;");
+		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` CHANGE `linkid` `linkid` INT(19) NOT NULL, ADD COLUMN `templateid` INT(19) NOT NULL AFTER `userid`, ADD COLUMN `active` INT(1) DEFAULT 0 NULL AFTER `isdefault`, ADD INDEX (`templateid`), ADD FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard_widgets`(`id`) ON DELETE CASCADE;");
 	}
 	
 	public function addModules(){
