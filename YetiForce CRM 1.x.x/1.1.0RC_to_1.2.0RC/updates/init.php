@@ -27,6 +27,7 @@ class YetiForceUpdate{
 		'languages/pl_pl/Settings/Mobile.php',
 		'layouts/vlayout/modules/Settings/Mobile/MobileKeys.tpl',
 		'layouts/vlayout/modules/Settings/Mobile/resources/Mobile.js',
+		'layouts/vlayout/modules/Settings/Mobile/resources',
 		'layouts/vlayout/modules/Settings/Mobile',
 	);
 	function YetiForceUpdate($modulenode) {
@@ -133,11 +134,18 @@ class YetiForceUpdate{
 		}
 		$adb->query("DELETE FROM `vtiger_module_dashboard_widgets`;");
 		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` CHANGE `linkid` `linkid` INT(19) NOT NULL, ADD COLUMN `templateid` INT(19) NOT NULL AFTER `userid`, ADD COLUMN `active` INT(1) DEFAULT 0 NULL AFTER `isdefault`, ADD INDEX (`templateid`), ADD FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard_widgets`(`id`) ON DELETE CASCADE;");
+		
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossmenumanager` LIKE 'color';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("ALTER TABLE `vtiger_ossmenumanager` DROP COLUMN `color`; ");
+		}
+		$adb->query("ALTER TABLE `vtiger_tab` ADD COLUMN `color` VARCHAR(30) NULL AFTER `trial`, ADD COLUMN `coloractive` TINYINT(1) DEFAULT 0 NULL AFTER `color`;");
+		$adb->query("UPDATE `vtiger_settings_field` SET `blockid` = '2' WHERE `name` = 'LBL_ACTIVITY_TYPES';");
 	}
 	
 	public function addModules(){
 		try {
-			if(file_exists('cache/updates/CallHistory.xml' && !Vtiger_Module::getInstance('CallHistory'))){
+			if(file_exists('cache/updates/CallHistory.xml') && !Vtiger_Module::getInstance('CallHistory')){
 				$importInstance = new Vtiger_PackageImport();
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/CallHistory.xml');
 				$importInstance->import_Module();
