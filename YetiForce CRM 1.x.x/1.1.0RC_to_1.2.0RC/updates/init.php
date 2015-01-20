@@ -24,6 +24,10 @@ class YetiForceUpdate{
 		'modules/Settings/ModuleManager/models/Extension.php',
 		'api/mobile_services/callhistory.php',
 		'modules/Settings/WidgetsManagement/actions/SaveWidgets.php',
+		'languages/pl_pl/Settings/Mobile.php',
+		'layouts/vlayout/modules/Settings/Mobile/MobileKeys.tpl',
+		'layouts/vlayout/modules/Settings/Mobile/resources/Mobile.js',
+		'layouts/vlayout/modules/Settings/Mobile',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -98,7 +102,10 @@ class YetiForceUpdate{
 			$adb->query("insert  into `vtiger_language`(`name`,`prefix`,`label`,`lastupdated`,`sequence`,`isdefault`,`active`) values ('Russian','ru_ru','Russian','2015-01-13 15:12:39',NULL,0,1);");
 			$adb->query("UPDATE vtiger_language_seq SET `id` = (SELECT count(*) FROM `vtiger_language`);");
 		}
-		$adb->query("DELETE FROM vtiger_oss_module_list;");
+		$result = $adb->query("SHOW TABLES LIKE 'vtiger_oss_module_list';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("DELETE FROM vtiger_oss_module_list;");
+		}
 		$adb->query("DROP TABLE IF EXISTS vtiger_oss_module_list;");
 		$adb->query("DROP TABLE IF EXISTS vtiger_oss_module_list_seq;");
 		
@@ -120,14 +127,17 @@ class YetiForceUpdate{
 			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,5,'LBL_MOBILE_KEYS',NULL,'LBL_MOBILE_KEYS_DESCRIPTION','index.php?parent=Settings&module=MobileApps&view=MobileKeys',5,0,0);");
 		}
 		$adb->query("UPDATE vtiger_entityname SET `searchcolumn` = 'to_number' WHERE `modulename` = 'CallHistory';");
-		$adb->query("ALTER TABLE `vtiger_links` DROP COLUMN `linkdata`;");
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_links` LIKE 'linkdata';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("ALTER TABLE `vtiger_links` DROP COLUMN `linkdata`;");
+		}
 		$adb->query("DELETE FROM `vtiger_module_dashboard_widgets`;");
 		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` CHANGE `linkid` `linkid` INT(19) NOT NULL, ADD COLUMN `templateid` INT(19) NOT NULL AFTER `userid`, ADD COLUMN `active` INT(1) DEFAULT 0 NULL AFTER `isdefault`, ADD INDEX (`templateid`), ADD FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard_widgets`(`id`) ON DELETE CASCADE;");
 	}
 	
 	public function addModules(){
 		try {
-			if(file_exists('cache/updates/CallHistory.xml')){
+			if(file_exists('cache/updates/CallHistory.xml' && !Vtiger_Module::getInstance('CallHistory'))){
 				$importInstance = new Vtiger_PackageImport();
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/CallHistory.xml');
 				$importInstance->import_Module();
@@ -139,6 +149,8 @@ class YetiForceUpdate{
 	
 	function recurseCopy($src,$dst) {
 		global $root_directory;
+		if(!file_exists( $src ) )
+			return;
 		$dir = opendir($src); 
 		@mkdir($root_directory.$dst); 
 		while(false !== ( $file = readdir($dir)) ) { 
