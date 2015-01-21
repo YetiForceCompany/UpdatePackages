@@ -335,11 +335,13 @@ $breadcrumbs_separator = \'>\';';
 			$lastId = $adb->getUniqueID("vtiger_links");
 			$adb->query("insert  into `vtiger_links`(`linkid`,`tabid`,`linktype`,`linklabel`,`linkurl`,`linkicon`,`sequence`,`handler_path`,`handler_class`,`handler`) values ($lastId,".getTabid('Potentials').",'DASHBOARDWIDGET','KPI','index.php?module=Potentials&view=ShowWidget&name=Kpi',NULL,11,NULL,NULL,NULL);");
 		}
-		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_UPDATES_HISTORY'");
+		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_UPDATES_HISTORY' OR name = 'LBL_UPDATES'");
 		if($adb->num_rows($result) == 0){
 			$lastId = $adb->getUniqueID("vtiger_settings_field");
 			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,9,'LBL_UPDATES_HISTORY',NULL,'LBL_UPDATES_HISTORY_DESCRIPTION','index.php?parent=Settings&module=Updates&view=Index',3,0,0);");
 		}
+		$adb->query("UPDATE vtiger_settings_field SET name = 'LBL_UPDATES_HISTORY' WHERE name = 'LBL_UPDATES';");
+		
 		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'Backup'");
 		if($adb->num_rows($result) == 0){
 			$lastId = $adb->getUniqueID("vtiger_settings_field");
@@ -463,6 +465,10 @@ PRIMARY KEY (`backupid`)
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'isdefault';");
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD COLUMN `isdefault` INT(1) DEFAULT 0 NULL;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_osssoldservices` LIKE 'contact';");
+		if( $adb->query_result_raw($result, 0, 'Key') != ''){
+			$adb->query("ALTER TABLE vtiger_osssoldservices CHANGE `contact` `contact` INT(19) NULL, DROP PRIMARY KEY, ADD PRIMARY KEY (`osssoldservicesid`);");
 		}
 	}
 }
