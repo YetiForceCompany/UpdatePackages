@@ -417,10 +417,12 @@ PRIMARY KEY (`backupid`)
 		$adb->query("UPDATE `com_vtiger_workflowtasks` SET `summary` = 'Update Inventory Products' WHERE `task_id` = '1'; ");
 		$result1 = $adb->query("SELECT workflow_id FROM `com_vtiger_workflows` WHERE summary = 'Workflow for Events when Send Notification is True'");
 		$result2 = $adb->query("SELECT ossmailtemplatesid FROM `vtiger_ossmailtemplates` WHERE name = 'Send invitations'");
-		if($adb->num_rows($result) == 1){
+		if($adb->num_rows($result1) == 1){
 			$workflow_id = $adb->query_result_raw($result1, 0, 'workflow_id');
-			$ossmailtemplatesid = $adb->query_result_raw($result1, 0, 'ossmailtemplatesid');
-			$adb->query("UPDATE `com_vtiger_workflowtasks` SET `summary` = 'Send invitations',`task` = 'O:22:\"VTSendNotificationTask\":7:{s:18:\"executeImmediately\";b:1;s:10:\"workflowId\";s:2:\"$workflow_id\";s:7:\"summary\";s:16:\"Send invitations\";s:6:\"active\";b:0;s:7:\"trigger\";N;s:8:\"template\";s:2:\"$ossmailtemplatesid\";s:2:\"id\";i:122;}' WHERE `summary` = 'Send Notification is True'; ");
+			if($adb->num_rows($result2) == 1){
+				$ossmailtemplatesid = $adb->query_result_raw($result2, 0, 'ossmailtemplatesid');
+				$adb->query("UPDATE `com_vtiger_workflowtasks` SET `summary` = 'Send invitations',`task` = 'O:22:\"VTSendNotificationTask\":7:{s:18:\"executeImmediately\";b:1;s:10:\"workflowId\";s:2:\"$workflow_id\";s:7:\"summary\";s:16:\"Send invitations\";s:6:\"active\";b:0;s:7:\"trigger\";N;s:8:\"template\";s:2:\"$ossmailtemplatesid\";s:2:\"id\";i:122;}' WHERE `summary` = 'Send Notification is True'; ");
+			}
 		}
 		$adb->query("UPDATE vtiger_calendar_default_activitytypes SET fieldname = 'End of support for contact' WHERE `module` = 'Contacts' AND fieldname = 'support_end_date' ;");
 		$adb->query("UPDATE vtiger_calendar_default_activitytypes SET fieldname = 'Birthdays of contacts' WHERE `module` = 'Contacts' AND fieldname = 'birthday';");
