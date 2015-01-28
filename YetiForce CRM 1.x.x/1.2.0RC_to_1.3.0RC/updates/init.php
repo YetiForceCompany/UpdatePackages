@@ -76,7 +76,7 @@ class YetiForceUpdate{
 					KEY `id` (`templateid`),
 					KEY `parenttrre` (`parenttrre`,`templateid`)
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		$adb->query("CREATE TABLE `vtiger_relatedlists_fields` (
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_relatedlists_fields` (
 					`relation_id` int(19) DEFAULT NULL,
 					`fieldid` int(19) DEFAULT NULL,
 					`fieldname` varchar(30) DEFAULT NULL,
@@ -155,6 +155,18 @@ class YetiForceUpdate{
 				$adb->query("UPDATE vtiger_cvcolumnlist SET `columnname` = 'vtiger_notes:folderid:folderid:Documents_Folder_Name:V' WHERE `cvid` = '$cvId' AND `columnname` = 'vtiger_crmentity:modifiedtime:modifiedtime:Notes_Modified_Time:DT';");
 			}
 		}
+		
+		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_TREES_MANAGER'");
+		if($adb->num_rows($result) == 0){
+			$lastId = $adb->getUniqueID("vtiger_settings_field");
+			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,2,'LBL_MOBILE_KEYS',NULL,'LBL_TREES_MANAGER_DESCRIPTION','index.php?module=TreesManager&parent=Settings&view=List',15,0,0);");
+		}
+		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_ACTIVITY_TYPES'");
+		if($adb->num_rows($result) == 1){
+			$id = $adb->query_result_raw($result, 0, 'fieldid');
+			$adb->query("UPDATE vtiger_settings_field SET `sequence` = '14' WHERE `fieldid` = $id;");
+		}
+		
 		$result = $adb->query("SELECT * FROM `vtiger_trees_templates`;");
 		if($adb->num_rows($result) == 0){
 			self::foldersToTree();
