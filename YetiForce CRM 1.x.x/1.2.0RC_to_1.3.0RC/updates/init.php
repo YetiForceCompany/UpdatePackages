@@ -63,6 +63,7 @@ class YetiForceUpdate{
 					`templateid` int(19) NOT NULL AUTO_INCREMENT,
 					`name` varchar(255) DEFAULT NULL,
 					`module` int(19) DEFAULT NULL,
+					`access` int(1) DEFAULT '1',
 					PRIMARY KEY (`templateid`),
 					KEY `module` (`module`)
 					) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;");
@@ -159,7 +160,7 @@ class YetiForceUpdate{
 		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_TREES_MANAGER'");
 		if($adb->num_rows($result) == 0){
 			$lastId = $adb->getUniqueID("vtiger_settings_field");
-			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,2,'LBL_MOBILE_KEYS',NULL,'LBL_TREES_MANAGER_DESCRIPTION','index.php?module=TreesManager&parent=Settings&view=List',15,0,0);");
+			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,2,'LBL_TREES_MANAGER',NULL,'LBL_TREES_MANAGER_DESCRIPTION','index.php?module=TreesManager&parent=Settings&view=List',15,0,0);");
 		}
 		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_ACTIVITY_TYPES'");
 		if($adb->num_rows($result) == 1){
@@ -186,8 +187,43 @@ class YetiForceUpdate{
 				$taskRecordModel->save();
 			}
 		}
-		
-		
+		$moduleInstance = Vtiger_Module::getInstance('CallHistory');
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Contacts')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Contacts');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Accounts')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Accounts');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Leads')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Leads');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Vendors')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Vendors');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('OSSEmployees')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('OSSEmployees');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Potentials')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Potentials');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('HelpDesk')));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('HelpDesk');
+			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
+		}
+
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	
@@ -195,8 +231,8 @@ class YetiForceUpdate{
 		global $log,$adb;
 		$log->debug("Entering YetiForceUpdate::foldersToTree() method ...");
 		
-		$sql = 'INSERT INTO vtiger_trees_templates(name, module) VALUES (?,?)';
-		$params = array('System', getTabid('Documents'));
+		$sql = 'INSERT INTO vtiger_trees_templates(`name`, `module`, `access`) VALUES (?,?,?)';
+		$params = array('System', getTabid('Documents'), 0);
 		$adb->pquery($sql, $params);
 		$templateId = $adb->getLastInsertID();
 		
