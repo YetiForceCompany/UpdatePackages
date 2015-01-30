@@ -228,7 +228,13 @@ class YetiForceUpdate{
 			$targetModule = Vtiger_Module::getInstance('HelpDesk');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linklabel = ?;", array('Employees Time Control'));
+		if($adb->num_rows($result) == 0){
+			$lastId = $adb->getUniqueID("vtiger_links");
+			$adb->query("insert  into `vtiger_links`(`linkid`,`tabid`,`linktype`,`linklabel`,`linkurl`,`linkicon`,`sequence`,`handler_path`,`handler_class`,`handler`) values (".$lastId.",".getTabid('Home').",'DASHBOARDWIDGET','Employees Time Control','index.php?module=OSSEmployees&view=ShowWidget&name=TimeControl','',12,NULL,NULL,NULL);");
+			$lastId = $adb->getUniqueID("vtiger_links");
+			$adb->query("insert  into `vtiger_links`(`linkid`,`tabid`,`linktype`,`linklabel`,`linkurl`,`linkicon`,`sequence`,`handler_path`,`handler_class`,`handler`) values (".$lastId.",".getTabid('OSSEmployees').",'DASHBOARDWIDGET','Employees Time Control','index.php?module=OSSEmployees&view=ShowWidget&name=TimeControl','',1,NULL,NULL,NULL);");			
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	
@@ -240,6 +246,8 @@ class YetiForceUpdate{
 		$params = array('System', getTabid('Documents'), 0);
 		$adb->pquery($sql, $params);
 		$templateId = $adb->getLastInsertID();
+		$query = "UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `columnname` = ? AND `tablename` = ?;";
+		$adb->pquery($query, array($templateId, 'folderid', 'vtiger_notes'));
 		
 		$sql = 'INSERT INTO vtiger_trees_templates_data(`templateid`, `name`, `tree`, `parenttrre`, `depth`, `label`) VALUES (?,?,?,?,?,?)';
 		$params = array($templateId, 'Default', 'T1', 'T1', 0, 'Default');
