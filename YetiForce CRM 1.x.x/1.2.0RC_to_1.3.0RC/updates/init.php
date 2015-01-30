@@ -162,6 +162,11 @@ class YetiForceUpdate{
 			$lastId = $adb->getUniqueID("vtiger_settings_field");
 			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,2,'LBL_TREES_MANAGER',NULL,'LBL_TREES_MANAGER_DESCRIPTION','index.php?module=TreesManager&parent=Settings&view=List',15,0,0);");
 		}
+		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_MODTRACKER_SETTINGS'");
+		if($adb->num_rows($result) == 0){
+			$lastId = $adb->getUniqueID("vtiger_settings_field");
+			$adb->query("insert  into `vtiger_settings_field`(`fieldid`,`blockid`,`name`,`iconpath`,`description`,`linkto`,`sequence`,`active`,`pinned`) values ($lastId,2,'LBL_MODTRACKER_SETTINGS',NULL,'LBL_MODTRACKER_SETTINGS_DESCRIPTION','index.php?module=ModTracker&parent=Settings&view=List','16','0','0');");
+		}
 		$result = $adb->query("SELECT * FROM `vtiger_settings_field` WHERE name = 'LBL_ACTIVITY_TYPES'");
 		if($adb->num_rows($result) == 1){
 			$id = $adb->query_result_raw($result, 0, 'fieldid');
