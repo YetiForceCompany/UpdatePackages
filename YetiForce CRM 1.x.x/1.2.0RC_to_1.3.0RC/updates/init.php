@@ -13,7 +13,27 @@ class YetiForceUpdate{
 	var $return = true;
 	
 	var $filesToDelete = array(
-
+		'forgotPassword.php',
+		'layouts/vlayout/modules/Documents/AddFolder.tpl',
+		'modules/Documents/actions/Folder.php',
+		'modules/Documents/models/Folder.php',
+		'modules/Documents/views/AddFolder.php',
+		'modules/Documents/views/List.php',
+		'modules/Documents/views/ListAjax.php',
+		'licenses/License_linux.txt',
+		'licenses/License_windows.txt',
+		'test/migration/bootstrap/css/bootstrap.min.css',
+		'test/migration/bootstrap/js/bootstrap.min.js',
+		'test/migration/css/check_radio_sprite.png',
+		'test/migration/css/mkCheckbox.css',
+		'test/migration/css/style.css',
+		'test/migration/images/help40.png',
+		'test/migration/images/migration_screen.png',
+		'test/migration/images/no.png',
+		'test/migration/images/vt1.png',
+		'test/migration/images/wizard_screen.png',
+		'test/migration/images/yes.png',
+		'test/migration/js/jquery-min.js',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -27,6 +47,7 @@ class YetiForceUpdate{
 		$this->databaseData();
 		$this->addRecords();
 		$this->dropTable();
+		$this->updateFiles();
 	}
 	function postupdate() {
 		global $adb;
@@ -39,7 +60,7 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_field` LIKE 'fieldparams';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) COLLATE utf8_general_ci NULL after `summaryfield` ;");
+			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) NULL after `summaryfield` ;");
 			$adb->query("UPDATE vtiger_field SET `fieldparams` = '1', `uitype` = '302', `defaultvalue` = 'T1' WHERE `columnname` = 'folderid' AND `tablename` = 'vtiger_notes';");
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'size';");
@@ -246,9 +267,7 @@ class YetiForceUpdate{
 		$params = array('System', getTabid('Documents'), 0);
 		$adb->pquery($sql, $params);
 		$templateId = $adb->getLastInsertID();
-		$query = "UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `columnname` = ? AND `tablename` = ?;";
-		$adb->pquery($query, array($templateId, 'folderid', 'vtiger_notes'));
-		
+
 		$sql = 'INSERT INTO vtiger_trees_templates_data(`templateid`, `name`, `tree`, `parenttrre`, `depth`, `label`) VALUES (?,?,?,?,?,?)';
 		$params = array($templateId, 'Default', 'T1', 'T1', 0, 'Default');
 		$adb->pquery($sql, $params);
@@ -268,5 +287,15 @@ class YetiForceUpdate{
 			$adb->pquery($query, array('T'.$folderid, $folderid));
 		}
 		$log->debug("Exiting YetiForceUpdate::foldersToTree() method ...");
+	}
+	function updateFiles() {
+		$config = '
+	
+//Pop-up window type with record list  1 - Normal , 2 - Expanded search
+$popupType = 1;
+
+//Minimum cron frequency [min]
+$MINIMUM_CRON_FREQUENCY = 1;';
+		file_put_contents( 'config/config.inc.php', $config, FILE_APPEND );
 	}
 }
