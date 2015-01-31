@@ -133,7 +133,7 @@ class YetiForceUpdate{
 			$adb->query("ALTER TABLE `vtiger_links` DROP COLUMN `linkdata`;");
 		}
 		$adb->query("DELETE FROM `vtiger_module_dashboard_widgets`;");
-		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` CHANGE `linkid` `linkid` INT(19) NOT NULL, ADD COLUMN `templateid` INT(19) NOT NULL AFTER `userid`, ADD COLUMN `active` INT(1) DEFAULT 0 NULL AFTER `isdefault`, ADD INDEX (`templateid`), ADD FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard_widgets`(`id`) ON DELETE CASCADE;");
+		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` CHANGE `linkid` `linkid` INT(19) NOT NULL, ADD COLUMN `templateid` INT(19) NOT NULL AFTER `userid`, ADD COLUMN `active` INT(1) DEFAULT 0 NULL AFTER `isdefault`, ADD INDEX (`templateid`), ADD FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard`(`id`) ON DELETE CASCADE;");
 		
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossmenumanager` LIKE 'color';");
 		if($adb->num_rows($result) == 1){
