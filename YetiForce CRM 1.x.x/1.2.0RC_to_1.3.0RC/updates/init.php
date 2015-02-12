@@ -55,6 +55,7 @@ class YetiForceUpdate{
 	}
 	
 	function update() {
+		$this->addFields();
 		$this->addModules();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
@@ -73,7 +74,7 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_field` LIKE 'fieldparams';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) '' after `summaryfield` ;");
+			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) DEFAULT '' after `summaryfield` ;");
 			$adb->query("UPDATE vtiger_field SET `fieldparams` = '1', `uitype` = '302', `defaultvalue` = 'T1' WHERE `columnname` = 'folderid' AND `tablename` = 'vtiger_notes';");
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'size';");
@@ -245,17 +246,20 @@ class YetiForceUpdate{
 		$records[] = array('ForgotPassword','Users','Request: ForgotPassword','Dear user,<br /><br />\r\nYou recently requested a password reset for your YetiForce CRM.<br />\r\nTo create a new password, click on the link #s#LinkToForgotPassword#sEnd#.<br /><br />\r\nThis request was made on #s#CurrentDateTime#sEnd# and will expire in next 24 hours.<br /><br />\r\nRegards,<br />\r\nYetiForce CRM Support Team.');
 		$records[] = array('Customer Portal - ForgotPassword','Contacts','Request: ForgotPassword','Dear #a#67#aEnd# #a#67#aEnd#,<br /><br />You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />You can login by entering the following data:<br /><br />Your username: #a#80#aEnd#<br />Your password: #s#ContactsPortalPass#sEnd#<br /><br /><br />Regards,<br />YetiForce CRM Support Team.');
 		foreach($records as $record){
-			$instance = new $moduleName();
-			$instance->column_fields['assigned_user_id'] = $assigned_user_id;
-			$instance->column_fields['name'] = $record[0];
-			$instance->column_fields['oss_module_list'] = $record[1];
-			$instance->column_fields['subject'] = $record[2];
-			$instance->column_fields['content'] = $record[3];
-			$save = $instance->save($moduleName);
-			if($record[0] == 'ForgotPassword')
-				self::updateForgotPassword($instance->id);
-			if($record[0] == 'Customer Portal - ForgotPassword')
-				self::updateCPForgotPassword($instance->id);
+			$result = $adb->query("SELECT * FROM `vtiger_ossmailtemplates` WHERE `name` = '".$record[0]."'");
+			if($adb->num_rows($result) == 0){
+				$instance = new $moduleName();
+				$instance->column_fields['assigned_user_id'] = $assigned_user_id;
+				$instance->column_fields['name'] = $record[0];
+				$instance->column_fields['oss_module_list'] = $record[1];
+				$instance->column_fields['subject'] = $record[2];
+				$instance->column_fields['content'] = $record[3];
+				$save = $instance->save($moduleName);
+				if($record[0] == 'ForgotPassword')
+					self::updateForgotPassword($instance->id);
+				if($record[0] == 'Customer Portal - ForgotPassword')
+					self::updateCPForgotPassword($instance->id);
+			}
 		}
 		$log->debug("Exiting YetiForceUpdate::addRecords() method ...");
 	}
@@ -368,37 +372,37 @@ class YetiForceUpdate{
 			}
 		}
 		$moduleInstance = Vtiger_Module::getInstance('CallHistory');
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Contacts')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('Contacts'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Contacts');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Accounts')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('Accounts'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Accounts');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Leads')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('Leads'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Leads');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Vendors')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('Vendors'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Vendors');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('OSSEmployees')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('OSSEmployees'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('OSSEmployees');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('Potentials')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('Potentials'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Potentials');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('CallHistory'), getTabid('HelpDesk')));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ?;", array(getTabid('HelpDesk'), getTabid('CallHistory')));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('HelpDesk');
 			$targetModule->setRelatedList($moduleInstance, 'CallHistory', array(),'get_dependents_list');
@@ -410,15 +414,19 @@ class YetiForceUpdate{
 			$lastId = $adb->getUniqueID("vtiger_links");
 			$adb->query("insert  into `vtiger_links`(`linkid`,`tabid`,`linktype`,`linklabel`,`linkurl`,`linkicon`,`sequence`,`handler_path`,`handler_class`,`handler`) values (".$lastId.",".getTabid('OSSEmployees').",'DASHBOARDWIDGET','Employees Time Control','index.php?module=OSSEmployees&view=ShowWidget&name=TimeControl','',1,NULL,NULL,NULL);");			
 		}
+		/*
 		$dbconfig = vglobal('dbconfig');
 		$result = $adb->pquery("SELECT CONSTRAINT_NAME AS keyname FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'vtiger_module_dashboard_widgets' AND constraint_type = 'FOREIGN KEY' AND TABLE_SCHEMA = ?;",array($dbconfig['db_name']));
 		if($adb->num_rows($result) > 0){
 			$adb->pquery("ALTER TABLE `vtiger_module_dashboard_widgets` DROP FOREIGN KEY ?;",array($adb->query_result_raw($result, 0, 'keyname')));
 		}
 		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD CONSTRAINT `vtiger_module_dashboard_widgets_ibfk_1` FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard`(`id`) ON DELETE CASCADE;");
+		*/
 		$adb->query("ALTER TABLE `vtiger_crmentity` CHANGE `was_read` `was_read` tinyint(1)   NULL DEFAULT 0 after `inheritsharing` ;");
 		
-		
+		$adb->query("UPDATE vtiger_projecttype SET `projecttype` = 'PLL_INTERNAL' WHERE `projecttype` = 'administrative';");
+		$adb->query("UPDATE vtiger_projecttype SET `projecttype` = 'PLL_EXTERNAL' WHERE `projecttype` = 'operative';");
+		$adb->query("UPDATE vtiger_projecttype SET `projecttype` = 'PLL_COMMON' WHERE `projecttype` = 'other';");
 		self::changeFieldOnTree();
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -666,6 +674,7 @@ $MINIMUM_CRON_FREQUENCY = 1;';
 		$log->debug("Exiting YetiForceUpdate::deleteFields() method ...");
 	}
 	public function addFields(){
+		$adb = PearDatabase::getInstance();
 		include_once('vtlib/Vtiger/Module.php'); 
 		$sql = "SELECT tabid,name FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
 		$result = $adb->query($sql,true);
