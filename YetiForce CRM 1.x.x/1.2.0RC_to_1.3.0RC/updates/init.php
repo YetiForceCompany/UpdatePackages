@@ -39,7 +39,13 @@ class YetiForceUpdate{
 		//'modules/OSSCosts/copy',
 		'data/CRMEntity.php',
 		'data/Tracker.php',
-		'data/CRMEntity.php',
+		'data/VTEntityDelta.php',
+		'data/Ideas.xml',
+		'data/init.php',
+		'layouts/vlayout/modules/Vtiger/Popup2.tpl',
+		'layouts/vlayout/modules/Vtiger/Popup2Contents.tpl',
+		'layouts/vlayout/modules/Vtiger/Popup2Search.tpl',
+		'modules/Ideas/schema.xml',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -67,7 +73,7 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_field` LIKE 'fieldparams';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) NULL after `summaryfield` ;");
+			$adb->query("ALTER TABLE `vtiger_field` ADD COLUMN `fieldparams` varchar(255) '' after `summaryfield` ;");
 			$adb->query("UPDATE vtiger_field SET `fieldparams` = '1', `uitype` = '302', `defaultvalue` = 'T1' WHERE `columnname` = 'folderid' AND `tablename` = 'vtiger_notes';");
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'size';");
@@ -182,15 +188,16 @@ class YetiForceUpdate{
         
         $profilePermissions = implode( ' |##| ', $profiles );
 		$profilePermissions = ' ' . $profilePermissions . ' ';
+		$tabID = getTabid($moduleName);
 		
 		//$blocksModule = array('My Home Page','Companies','Human resources','Sales','Projects','Support','Databases');
 		$sql = "SELECT `id` FROM `vtiger_ossmenumanager` WHERE label = ? AND tabid = ? AND parent_id = ?;";
-		$result = $adb->pquery( $sql, array($parent, 0, 0), true );
+		$result = $adb->pquery( $sql, array($parent, $tabID, 0) );
 		$num = $adb->num_rows( $result );
 		if($num == 0){
 			$subParams = array(
 				'parent_id'     => 0,
-				'tabid'         => getTabid($moduleName),
+				'tabid'         => $tabID,
 				'label'         => 'Group Card',
 				'sequence'      => -1,
 				'visible'       => '1',
@@ -206,12 +213,12 @@ class YetiForceUpdate{
 			$id = OSSMenuManager_Record_Model::addMenu( $subParams ); 
 		}
 		$sql = "SELECT `id` FROM `vtiger_ossmenumanager` WHERE label = ? AND tabid = ? AND parent_id = ?;";
-		$result = $adb->pquery( $sql, array($parent, 0, 0), true );
+		$result = $adb->pquery( $sql, array($parent, $tabID, 0) );
 		$num = $adb->num_rows( $result );
 		if($num == 1){
 			$subParams = array(
 				'parent_id'     => $adb->query_result( $result, 0, 'id' ),
-				'tabid'         => getTabid($moduleName),
+				'tabid'         => $tabID,
 				'label'         => $moduleName,
 				'sequence'      => -1,
 				'visible'       => '1',
@@ -236,16 +243,19 @@ class YetiForceUpdate{
 		vimport('~~modules/' . $moduleName . '/' . $moduleName . '.php');
 		$records = array();
 		$records[] = array('ForgotPassword','Users','Request: ForgotPassword','Dear user,<br /><br />\r\nYou recently requested a password reset for your YetiForce CRM.<br />\r\nTo create a new password, click on the link #s#LinkToForgotPassword#sEnd#.<br /><br />\r\nThis request was made on #s#CurrentDateTime#sEnd# and will expire in next 24 hours.<br /><br />\r\nRegards,<br />\r\nYetiForce CRM Support Team.');
+		$records[] = array('Customer Portal - ForgotPassword','Contacts','Request: ForgotPassword','Dear #a#67#aEnd# #a#67#aEnd#,<br /><br />You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />You can login by entering the following data:<br /><br />Your username: #a#80#aEnd#<br />Your password: #s#ContactsPortalPass#sEnd#<br /><br /><br />Regards,<br />YetiForce CRM Support Team.');
 		foreach($records as $record){
-				$instance = new $moduleName();
-				$instance->column_fields['assigned_user_id'] = $assigned_user_id;
-				$instance->column_fields['name'] = $record[0];
-				$instance->column_fields['oss_module_list'] = $record[1];
-				$instance->column_fields['subject'] = $record[2];
-				$instance->column_fields['content'] = $record[3];
-				$save = $instance->save($moduleName);
-				if($record[0] == 'ForgotPassword')
-					self::updateForgotPassword($instance->id);
+			$instance = new $moduleName();
+			$instance->column_fields['assigned_user_id'] = $assigned_user_id;
+			$instance->column_fields['name'] = $record[0];
+			$instance->column_fields['oss_module_list'] = $record[1];
+			$instance->column_fields['subject'] = $record[2];
+			$instance->column_fields['content'] = $record[3];
+			$save = $instance->save($moduleName);
+			if($record[0] == 'ForgotPassword')
+				self::updateForgotPassword($instance->id);
+			if($record[0] == 'Customer Portal - ForgotPassword')
+				self::updateCPForgotPassword($instance->id);
 		}
 		$log->debug("Exiting YetiForceUpdate::addRecords() method ...");
 	}
@@ -255,6 +265,24 @@ class YetiForceUpdate{
 		if(!$root_directory)
 			$root_directory = getcwd();
 		$fileName = $root_directory.'/modules/Users/actions/ForgotPassword.php';
+		$completeData = file_get_contents($fileName);
+		$updatedFields = "'id'";
+		$patternString = "%s => %s,";
+		$pattern = '/' . $updatedFields . '[\s]+=([^,]+),/';
+		$replacement = sprintf($patternString, $updatedFields, ltrim($id, '0'));
+		$fileContent = preg_replace($pattern, $replacement, $completeData);
+		$filePointer = fopen($fileName, 'w');
+		fwrite($filePointer, $fileContent);
+		fclose($filePointer);
+		
+		$log->debug("Exiting YetiForceUpdate::updateForgotPassword() method ...");
+	}
+	public function updateCPForgotPassword($id){
+		global $log,$adb,$root_directory;
+		$log->debug("Entering YetiForceUpdate::updateForgotPassword(".$id.") method ...");
+		if(!$root_directory)
+			$root_directory = getcwd();
+		$fileName = $root_directory.'/api/yetiportal.php';
 		$completeData = file_get_contents($fileName);
 		$updatedFields = "'id'";
 		$patternString = "%s => %s,";
@@ -388,6 +416,9 @@ class YetiForceUpdate{
 			$adb->pquery("ALTER TABLE `vtiger_module_dashboard_widgets` DROP FOREIGN KEY ?;",array($adb->query_result_raw($result, 0, 'keyname')));
 		}
 		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD CONSTRAINT `vtiger_module_dashboard_widgets_ibfk_1` FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard`(`id`) ON DELETE CASCADE;");
+		$adb->query("ALTER TABLE `vtiger_crmentity` CHANGE `was_read` `was_read` tinyint(1)   NULL DEFAULT 0 after `inheritsharing` ;");
+		
+		
 		self::changeFieldOnTree();
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -633,6 +664,31 @@ $MINIMUM_CRON_FREQUENCY = 1;';
 			
 		}
 		$log->debug("Exiting YetiForceUpdate::deleteFields() method ...");
+	}
+	public function addFields(){
+		include_once('vtlib/Vtiger/Module.php'); 
+		$sql = "SELECT tabid,name FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
+		$result = $adb->query($sql,true);
+		$Num = $adb->num_rows($result);
+		for($i = 0; $i < $Num; $i++){
+			$name = $adb->query_result($result, $i, 'name');
+			$tabid = $adb->query_result($result, $i, 'tabid');
+			$row = $adb->query_result_rowdata($result, $i); 
+			$result2 = $adb->pquery('SELECT * FROM vtiger_field WHERE tabid = ? AND block <> ? ORDER BY block, sequence ASC',array($tabid,0));
+			$block = $adb->query_result_raw($result2, 0, 'block');
+
+			$moduleInstance = Vtiger_Module::getInstance($name);
+			$blockInstance = Vtiger_Block::getInstance($block,$moduleInstance);
+			$fieldInstance = new Vtiger_Field(); 
+			$fieldInstance->name = 'was_read'; 
+			$fieldInstance->table = 'vtiger_crmentity'; 
+			$fieldInstance->label = 'Was read'; 
+			$fieldInstance->column = 'was_read'; 
+			$fieldInstance->columntype = 'tinyint(1)'; 
+			$fieldInstance->uitype = 56;
+			$fieldInstance->typeofdata = 'C~O'; 
+			$blockInstance->addField($fieldInstance); 
+		}
 	}
 	function recurseCopy($src,$dst) {
 		global $root_directory;
