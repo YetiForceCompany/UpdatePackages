@@ -22,11 +22,14 @@ $languageStrings = array(
 	'LBL_INVALID_DATA' => 'Błędne dane',
 
 	'WidgetsManagement' => 'Zarządzanie widgetami',
-	'LBL_WIDGETS_MANAGEMENT' => 'Zarządzanie widgetami',
+	'LBL_WIDGETS_MANAGEMENT' => 'Widgety modułu',
 	'LBL_WIDGETS_MANAGEMENT_DESCRIPTION' => ' ',
 	'LBL_MANDATORY_WIDGET' => 'Widget obowiązkowy',
 	'LBL_WIDGET' => 'Widgety',
 	'LBL_NUMBER_OF_RECORDS_DISPLAYED' => 'Liczba wyświetlanych rekordów',
+	'LBL_DEFAULT_FILTER' => 'Filtr domyślny',
+	'LBL_FILTERS_AVAILABLE' => 'Filtry dostępne',
+	'LBL_PLEASE_SELECT_ATLEAST_ONE_OPTION' => 'Wybierz co najmniej jedną opcję',
 );
 $jsLanguageStrings = array(
 	'JS_BLOCK_ADDED' => 'Pomyślnie dodano blok',
@@ -34,4 +37,5 @@ $jsLanguageStrings = array(
 	'JS_CUSTOM_FIELD_DELETED' => 'Pomyślnie usunięto widget',
 	'JS_CUSTOM_BLOCK_DELETED' => 'Pomyślnie usunięto blok',
 	'JS_FIELD_EMPTY' => 'Pole nie może być puste',
+	'JS_FILTERS_AVAILABLE' => 'Filtry dostępne',
 );

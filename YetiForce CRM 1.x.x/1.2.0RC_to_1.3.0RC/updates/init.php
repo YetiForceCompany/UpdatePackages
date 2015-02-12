@@ -36,15 +36,20 @@ class YetiForceUpdate{
 		'test/migration/images/wizard_screen.png',
 		'test/migration/images/yes.png',
 		'test/migration/js/jquery-min.js',
+		//'modules/OSSCosts/copy',
+		'data/CRMEntity.php',
+		'data/Tracker.php',
+		'data/CRMEntity.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
 	}
 	function preupdate() {
-
+		$this->recurseCopy('cache/updates/files','');
 	}
 	
 	function update() {
+		$this->addModules();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
 		$this->addRecords();
@@ -81,6 +86,14 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_module_dashboard` ADD COLUMN `limit` int(10) NULL after `size`;");
 		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'owners';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD COLUMN `owners` varchar(100) NULL after `active`;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard` LIKE 'owners';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_module_dashboard` ADD COLUMN `owners` varchar(100)  COLLATE utf8_general_ci NULL after `isdefault`");
+		}
 		$adb->query("ALTER TABLE `vtiger_notes` CHANGE `folderid` `folderid` varchar(255)  COLLATE utf8_general_ci NOT NULL after `notecontent`;");
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_trees_templates` (
 					`templateid` int(19) NOT NULL AUTO_INCREMENT,
@@ -107,7 +120,113 @@ class YetiForceUpdate{
 					`sequence` int(10) DEFAULT NULL,
 					KEY `relation_id` (`relation_id`)
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		// apiAddress			
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_apiaddress` LIKE 'id';");
+		if($adb->num_rows($result) == 0){
+			$result = $adb->query("SELECT * FROM `vtiger_apiaddress`;");
+			if($adb->num_rows($result) != 0){
+				$apiAddress = $adb->query_result_rowdata($result, 0);
+				$adb->query("ALTER TABLE `vtiger_apiaddress` 
+						ADD COLUMN `id` int(19)   NOT NULL first , 
+						ADD COLUMN `name` varchar(255) NOT NULL after `id` , 
+						ADD COLUMN `val` varchar(255) NOT NULL after `name` , 
+						ADD COLUMN `type` varchar(255) NOT NULL after `val` , 
+						DROP COLUMN `nominatim` , 
+						DROP COLUMN `key` , 
+						DROP COLUMN `min_lenght` , 
+						DROP COLUMN `source` , 
+						ADD PRIMARY KEY(`id`) ;");
+	
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(1,'min_lenght',$apiAddress["min_lenght"],'global'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(2,'key','','google_map_api'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(3,'nominatim','0','google_map_api'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(4,'source','https://maps.googleapis.com/maps/api/geocode/json','google_map_api'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(5,'key',$apiAddress["key"],'opencage_data'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(6,'source','https://api.opencagedata.com/geocode/v1/','opencage_data'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(7,'nominatim',$apiAddress["nominatim"],'opencage_data'));
+				$adb->pquery("insert  into `vtiger_apiaddress`(`id`,`name`,`val`,`type`) values (?,?,?,?);", array(8,'result_num','10','global'));
+				$result = $adb->query("SELECT * FROM `vtiger_apiaddress` WHERE `id` = 0;");
+				if($adb->num_rows($result) == 1){
+					$adb->query("delete from vtiger_apiaddress where `id` = 0");
+				}
+			}
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
+	}
+	public function addModules(){
+		try {
+			if(file_exists('cache/updates/Ideas.xml') && !Vtiger_Module::getInstance('Ideas')){
+				$importInstance = new Vtiger_PackageImport();
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/Ideas.xml');
+				$importInstance->import_Module();
+				self::addModuleToMenu('Ideas', (string)$importInstance->_modulexml->parent);
+			}
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+	public function addModuleToMenu($moduleName, $parent){
+		global $log;
+		$log->debug("Entering YetiForceUpdate::addModuleToMenu($moduleName, $parent) method ...");
+		$adb = PearDatabase::getInstance();
+		if(!$parent)
+			return false;
+		$sql = "SELECT `profileid` FROM `vtiger_profile` WHERE 1;";
+        $result = $adb->query( $sql, true );
+        $num = $adb->num_rows( $result );
+        
+        $profiles = array();
+        for ( $i=0; $i<$num; $i++ ) {
+            $profiles[] = $adb->query_result( $result, $i, 'profileid' );
+        }
+        
+        $profilePermissions = implode( ' |##| ', $profiles );
+		$profilePermissions = ' ' . $profilePermissions . ' ';
+		
+		//$blocksModule = array('My Home Page','Companies','Human resources','Sales','Projects','Support','Databases');
+		$sql = "SELECT `id` FROM `vtiger_ossmenumanager` WHERE label = ? AND tabid = ? AND parent_id = ?;";
+		$result = $adb->pquery( $sql, array($parent, 0, 0), true );
+		$num = $adb->num_rows( $result );
+		if($num == 0){
+			$subParams = array(
+				'parent_id'     => 0,
+				'tabid'         => getTabid($moduleName),
+				'label'         => 'Group Card',
+				'sequence'      => -1,
+				'visible'       => '1',
+				'type'          => 0,
+				'url'           => '',
+				'new_window'    => 0,
+				'permission'    => $profilePermissions,
+				'locationicon'  => '',
+				'sizeicon'      => '',
+				'langfield'     => 'en_us*Group Card#pl_pl*Karta grupowa'
+				
+			);
+			$id = OSSMenuManager_Record_Model::addMenu( $subParams ); 
+		}
+		$sql = "SELECT `id` FROM `vtiger_ossmenumanager` WHERE label = ? AND tabid = ? AND parent_id = ?;";
+		$result = $adb->pquery( $sql, array($parent, 0, 0), true );
+		$num = $adb->num_rows( $result );
+		if($num == 1){
+			$subParams = array(
+				'parent_id'     => $adb->query_result( $result, 0, 'id' ),
+				'tabid'         => getTabid($moduleName),
+				'label'         => $moduleName,
+				'sequence'      => -1,
+				'visible'       => '1',
+				'type'          => 0,
+				'url'           => '',
+				'new_window'    => 0,
+				'permission'    => $profilePermissions,
+				'locationicon'  => '',
+				'sizeicon'      => '',
+				'langfield'     => ''
+				
+			);
+			$id = OSSMenuManager_Record_Model::addMenu( $subParams ); 
+		}
+		$log->debug("Exiting YetiForceUpdate::addModuleToMenu() method ...");
 	}
 	public function addRecords(){
 		global $log,$adb,$current_user;
@@ -163,6 +282,7 @@ class YetiForceUpdate{
 	public function databaseData(){
 		global $log,$adb;
 		$log->debug("Entering YetiForceUpdate::databaseData() method ...");
+		$adb->query('UPDATE vtiger_eventhandlers SET handler_path = "include/events/VTEntityDelta.php" WHERE handler_path = "data/VTEntityDelta.php";');
 		$result = $adb->query("SELECT * FROM `vtiger_ws_fieldtype` WHERE `uitype` = '120'");
 		if($adb->num_rows($result) == 0){
 			$adb->query("insert  into `vtiger_ws_fieldtype`(`uitype`,`fieldtype`) values ('120','sharedOwner');");
@@ -262,6 +382,12 @@ class YetiForceUpdate{
 			$lastId = $adb->getUniqueID("vtiger_links");
 			$adb->query("insert  into `vtiger_links`(`linkid`,`tabid`,`linktype`,`linklabel`,`linkurl`,`linkicon`,`sequence`,`handler_path`,`handler_class`,`handler`) values (".$lastId.",".getTabid('OSSEmployees').",'DASHBOARDWIDGET','Employees Time Control','index.php?module=OSSEmployees&view=ShowWidget&name=TimeControl','',1,NULL,NULL,NULL);");			
 		}
+		$dbconfig = vglobal('dbconfig');
+		$result = $adb->pquery("SELECT CONSTRAINT_NAME AS keyname FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'vtiger_module_dashboard_widgets' AND constraint_type = 'FOREIGN KEY' AND TABLE_SCHEMA = ?;",array($dbconfig['db_name']));
+		if($adb->num_rows($result) > 0){
+			$adb->pquery("ALTER TABLE `vtiger_module_dashboard_widgets` DROP FOREIGN KEY ?;",array($adb->query_result_raw($result, 0, 'keyname')));
+		}
+		$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD CONSTRAINT `vtiger_module_dashboard_widgets_ibfk_1` FOREIGN KEY (`templateid`) REFERENCES `vtiger_module_dashboard`(`id`) ON DELETE CASCADE;");
 		self::changeFieldOnTree();
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -507,5 +633,24 @@ $MINIMUM_CRON_FREQUENCY = 1;';
 			
 		}
 		$log->debug("Exiting YetiForceUpdate::deleteFields() method ...");
+	}
+	function recurseCopy($src,$dst) {
+		global $root_directory;
+		if(!file_exists( $src ) )
+			return;
+		$dir = opendir($src); 
+		@mkdir($root_directory.$dst); 
+		while(false !== ( $file = readdir($dir)) ) { 
+			if (( $file != '.' ) && ( $file != '..' )) { 
+				if ( is_dir($src . '/' . $file) ) { 
+					$this->recurseCopy($src . '/' . $file,$dst . '/' . $file); 
+				} else {
+					copy($root_directory.$src . '/' . $file,$root_directory.$dst . '/' . $file);
+					unlink($root_directory.$src . '/' . $file);
+				}
+			} 
+		} 
+		closedir($dir); 
+		rmdir($src);
 	}
 }

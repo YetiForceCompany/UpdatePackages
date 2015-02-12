@@ -6,10 +6,10 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
-*
+ * Contributor(s): YetiForce.com.
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-require_once('data/CRMEntity.php');
+require_once('include/CRMEntity.php');
 require_once('include/utils/UserInfoUtil.php');
 require_once 'modules/Reports/ReportUtils.php';
 global $calpath;
@@ -181,10 +181,7 @@ class Reports extends CRMEntity{
 				else
 					$this->is_editable = 'false';
 			} else {
-				if($_REQUEST['mode'] != 'ajax')
-				{
-					include('modules/Vtiger/header.php');
-				}
+
 				echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
 				echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 80%; position: relative; z-index: 10000000;'>
 

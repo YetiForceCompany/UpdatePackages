@@ -56,7 +56,7 @@ $languageStrings = array(
 	'MultiSelectCombo'=>'Pole słownikowe (wielokrotnego wyboru)',
 	'Percent'=>'Pole procentowe',
 	'Phone'=>'Pole telefonu',
-	'PickList'=>'Pole słownikowe',
+	'Picklist'=>'Pole słownikowe',
 	'Skype'=>'Pole Skype',
 	'TextArea' => 'Obszar tekstowy',
 	'Text'=>'Pole tekstowe',
@@ -74,11 +74,17 @@ $languageStrings = array(
 	'LBL_FIELD_TYPE1' => 'Dodatkowa (np. vtiger_accountcf)',
     'Editor' => 'Edytor WYSIWYG',
 	'Related1M' => 'Pole powiązane 1:M',
-	'LBL_DISPLAY_TYPE' => 'DisplayType',
+	'LBL_DISPLAY_TYPE' => 'Widoczność',
+	'LBL_DISPLAY_TYPE_1' => 'Pole widoczne wszędzie',
+	'LBL_DISPLAY_TYPE_2' => 'Pole widoczne w poglądzie, nie edytowalne',
+	'LBL_DISPLAY_TYPE_3' => 'Pole widoczne wyłącznie w widoku listy',
+	'LBL_DISPLAY_TYPE_4' => 'Pole widoczne wyłącznie podczas tworzenia i poglądzie, nie można dokonywać na nim zmian',
+	'LBL_DISPLAY_TYPE_10' => 'Pole widoczne wszędzie, nie edytowalne',
 	'LBL_HELP_INFO' => 'Ikona pomocy',
 	'LBL_GENERATED_TYPE' => 'Systemowe',
 	'LBL_TREE_TEMPLATE' => 'Drzewo',
 	'Tree' => 'Pole drzewa',
+	'LBL_FIELD_MASK' => 'Maska',
 );
 
 $jsLanguageStrings = array(

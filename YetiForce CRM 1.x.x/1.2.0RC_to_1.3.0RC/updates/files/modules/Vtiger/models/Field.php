@@ -286,8 +286,15 @@ class Vtiger_Field_Model extends Vtiger_Field {
     }
 
 	public function showDisplayTypeList() {
-		$DisplayType = array(0,1,2,3,4,5,10);
-		return $DisplayType;
+		$displayType = array(
+			1 => 'LBL_DISPLAY_TYPE_1',
+			2 => 'LBL_DISPLAY_TYPE_2',
+			3 => 'LBL_DISPLAY_TYPE_3',
+			4 => 'LBL_DISPLAY_TYPE_4',
+			//5 => 'LBL_DISPLAY_TYPE_5',
+			10 => 'LBL_DISPLAY_TYPE_10'
+		);
+		return $displayType;
     }
 	
 	/**
@@ -1134,7 +1141,7 @@ class Vtiger_Field_Model extends Vtiger_Field {
     public function __update() {
         $db = PearDatabase::getInstance();
 		$this->get('generatedtype') == 1 ? $generatedtype = 1 : $generatedtype = 2;
-        $query = 'UPDATE vtiger_field SET typeofdata=?, presence=?, quickcreate=?, masseditable=?, defaultvalue=?, summaryfield=?, displaytype=?, helpinfo=?, generatedtype=? WHERE fieldid=?';
+        $query = 'UPDATE vtiger_field SET typeofdata=?, presence=?, quickcreate=?, masseditable=?, defaultvalue=?, summaryfield=?, displaytype=?, helpinfo=?, generatedtype=?, fieldparams=? WHERE fieldid=?';
         $params = array(
 			$this->get('typeofdata'), 
 			$this->get('presence'), 
@@ -1145,6 +1152,7 @@ class Vtiger_Field_Model extends Vtiger_Field {
 			$this->get('displaytype'), 
 			$this->get('helpinfo'), 
 			$generatedtype,
+        	$this->get('fieldparams'),
 			$this->get('id')
 		);
 		$db->pquery($query,$params);

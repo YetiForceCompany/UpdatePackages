@@ -32,13 +32,22 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 			},false,true);
 			$('input.addNewElement').val('');
 		});
-		editContainer.submit(function( event ) {
-			var data = [];
+		$('.saveTree').click(function(e) {
+			jstreeInstance.jstree('deselect_all',true)
 			var json = jstreeInstance.jstree("get_json");
-			$('#treeValues').val( JSON.stringify(json) ) 
+			$('#treeValues').val( JSON.stringify(json) );
+			editContainer.submit();
+		});
+		$('.addNewElement').keydown(function(event){
+			if(event.keyCode == 13) {
+				$('.addNewElementBtn').trigger( "click" );
+				event.preventDefault();
+				return false;
+			}
 		});
 	},
 	createTree : function() {
+		var thisInstance = this;
 		if(this.jstreeInstance == false) {
 			this.jstreeLastID = parseInt($('#treeLastID').val());
 			var treeValues = $('#treeValues').val();
@@ -57,7 +66,14 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 					"items" :{
 						"create" : {"label"	: app.vtranslate('JS_JSTREE_CREATE')},
 						"rename" : {"label"	: app.vtranslate('JS_JSTREE_RENAME')},
-						"remove" : {"label"	: app.vtranslate('JS_JSTREE_REMOVE')},
+						"remove" : {"label"	: app.vtranslate('JS_JSTREE_REMOVE'),
+									"action" : function (node) {
+									thisInstance.deleteItemEvent(node).then(
+										function(e){
+											if(e)
+												node.remove();
+										}
+									)}},
 						"ccp" : {
 							"label"	: app.vtranslate('JS_JSTREE_CCP'),
 							"submenu" : { 
@@ -74,5 +90,70 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 			});
 		}
 		return this.jstreeInstance;
-	}
+	},
+	deleteItemEvent : function(node) {
+		var thisInstance = this;
+		var aDeferred = jQuery.Deferred();
+		jstreeInstanceClone = jQuery('#treeContents ul:first').clone(true, true);
+
+		//check last element
+		if(jstreeInstanceClone.find('li').length == 1){
+			Settings_Vtiger_Index_Js.showMessage({text:app.vtranslate('JS_YOU_CANNOT_DELETE_ALL_THE_ITEMS'),type : 'error'})
+			aDeferred.resolve();
+			return aDeferred.promise();
+		}
+		//check childNodes exists
+		var childNodes = thisInstance.jstreeInstance.jstree('get_json', node);
+		if(typeof childNodes['0']['children'] != 'undefined'){
+			Settings_Vtiger_Index_Js.showMessage({text:app.vtranslate('JS_YOU_CANNOT_DELETE_PERENT_ITEM'),type : 'error'})
+			aDeferred.resolve();
+			return aDeferred.promise();
+		}
+		
+		
+		app.showModalWindow(null, "index.php?module=TreesManager&parent=Settings&view=ReplaceTreeItem", function(wizardContainer){
+			var form = jQuery('form', wizardContainer);
+			nodeId = jQuery(node).attr('id');
+			var jsonReplaceIds = jQuery(node).data('replaceid');
+			if(typeof jsonReplaceIds != 'undefined'){
+				jsonReplaceIds.push(parseInt(nodeId));
+			}else{
+				jsonReplaceIds = [parseInt(nodeId)];
+			}
+			jstreeInstanceClone.find('li[id="'+nodeId+'"]').remove();
+			
+			jstreeInstanceReplace = wizardContainer.find('#treePopupContents');
+			jstreeInstanceReplace.jstree({
+				"html_data" : {
+					"data" : jstreeInstanceClone
+				},
+				"themes" : {
+					"theme" : "default",
+					"dots" : true,
+					"icons" : true
+				},
+				"plugins" : [ "themes", "html_data", "ui","hotkeys" ]
+			}).bind("loaded.jstree", function (event, data) {
+				$(this).jstree("open_all");	
+			});
+			form.submit(function(e){
+				e.preventDefault();
+				var data = jstreeInstanceReplace.jstree('get_selected');
+				if(typeof data.attr('id') == 'undefined'){
+					var params = {};
+						params['type'] = 'error';
+						params['text'] = app.vtranslate('JS_NO_ITEM_SELECTED');
+						Settings_Vtiger_Index_Js.showMessage(params);
+					return false;
+				}
+				if(typeof data.data('replaceid') != 'undefined'){
+					jsonReplaceIds = jsonReplaceIds.concat(data.data('replaceid'));
+				}
+				jQuery('#treeContents ul:first li[id="'+data.attr('id')+'"]').attr('data-replaceId', JSON.stringify(jsonReplaceIds));
+				app.hideModalWindow();
+				aDeferred.resolve(data.attr('id'));
+			});
+		});
+		return aDeferred.promise();
+	},
 });

@@ -10,31 +10,28 @@
  * The Initial Developer of the Original Code is SugarCRM, Inc.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.;
  * All Rights Reserved.
- * Contributor(s): ______________________________________.
+ * Contributor(s): YetiForce.com.
  ********************************************************************************/
-
 /*********************************************
  * With modifications by
  * Daniel Jabbour
  * iWebPress Incorporated, www.iwebpress.com
  * djabbour - a t - iwebpress - d o t - com
  ********************************************/
-
 /*********************************************************************************
  * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/modules/Users/Users.php,v 1.10 2005/04/19 14:40:48 ray Exp $
  * Description: TODO:  To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
- * Contributor(s): ______________________________________..
+ * Contributor(s): YetiForce.com.
  ********************************************************************************/
-
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/UserInfoUtil.php');
-require_once 'data/CRMEntity.php';
+require_once 'include/CRMEntity.php';
 require_once('modules/Calendar/Activity.php');
 require_once('modules/Contacts/Contacts.php');
-require_once('data/Tracker.php');
+require_once('include/Tracker.php');
 require_once 'include/utils/CommonUtils.php';
 require_once 'include/Webservices/Utils.php';
 require_once('modules/Users/UserTimeZonesArray.php');
@@ -762,6 +759,18 @@ class Users extends CRMEntity {
                 $this->insertIntoEntityTable($table_name, $module);
             }
         }
+        ;
+       
+        if(Settings_Roles_Record_Model::getInstanceById($this->column_fields['roleid']) == null ) {
+        	$roleid = Settings_Roles_Record_Model::getInstanceByName($this->column_fields['roleid']);
+        	if($roleid){
+        		$this->column_fields['roleid'] = $roleid->getId();
+        	}else{
+	        	$roles = Settings_Roles_Record_Model::getAll();
+	        	$this->column_fields['roleid'] = key($roles);
+        	}
+        }
+       
         require_once('modules/Users/CreateUserPrivilegeFile.php');
         createUserPrivilegesfile($this->id);
         unset($_SESSION['next_reminder_interval']);
@@ -1140,6 +1149,17 @@ class Users extends CRMEntity {
      */
     function save($module_name) {
         global $log, $adb;
+        if($this->mode != 'edit') {
+        	$sql = 'SELECT id FROM vtiger_users WHERE user_name = ? OR email1 = ?';
+        	$result = $adb->pquery($sql, array($this->column_fields['user_name'] , $this->column_fields['email1']));
+        	if($adb->num_rows($result) > 0){
+        		Vtiger_Functions::throwNewException('LBL_USER_EXISTS');
+        		throw new WebServiceException(WebServiceErrorCode::$DATABASEQUERYERROR,
+        				vtws_getWebserviceTranslatedString('LBL_USER_EXISTS'));
+        		return false;
+        	}
+        	
+        }
         //Save entity being called with the modulename as parameter
         $this->saveentity($module_name);
 
@@ -1158,7 +1178,6 @@ class Users extends CRMEntity {
         if(isset($this->column_fields['roleid'])) {
             updateUser2RoleMapping($this->column_fields['roleid'],$this->id);
         }
-
 		//After adding new user, set the default activity types for new user
 		Vtiger_Util_Helper::setCalendarDefaultActivityTypesForUser($this->id);
 

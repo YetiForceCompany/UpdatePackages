@@ -1,12 +1,13 @@
 <?php
-/*+***********************************************************************************
- * The contents of this file are subject to the vtiger CRM Public License Version 1.0
+/*+**********************************************************************************
+ * The contents of this file are subject to the vtiger CRM Public License Version 1.1
  * ("License"); You may not use this file except in compliance with the License
  * The Original Code is:  vtiger CRM Open Source
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- *************************************************************************************/
+ * Contributor(s): YetiForce.com
+ ************************************************************************************/
 
 class Vtiger_CalendarActivities_Dashboard extends Vtiger_IndexAjax_View {
 
@@ -19,14 +20,17 @@ class Vtiger_CalendarActivities_Dashboard extends Vtiger_IndexAjax_View {
 		$linkId = $request->get('linkid');
 		
 		$widget = Vtiger_Widget_Model::getInstance($linkId, $currentUser->getId());
-		
+		if (!$request->has('owner')) 
+			$owner = Settings_WidgetsManagement_Module_Model::getDefaultUserId($widget);
+		else
+			$owner = $request->get('owner');
+
 		$pagingModel = new Vtiger_Paging_Model();
 		$pagingModel->set('page', $page);
 		$pagingModel->set('limit', (int)$widget->get('limit'));
-
-		$user = $request->get('owner');
+		
 		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
-		$calendarActivities = $moduleModel->getCalendarActivities('upcoming', $pagingModel, $user);			
+		$calendarActivities = ($owner === false)?array():$moduleModel->getCalendarActivities('upcoming', $pagingModel, $owner);			
 
 		$viewer->assign('WIDGET', $widget);
 		$viewer->assign('MODULE_NAME', $moduleName);

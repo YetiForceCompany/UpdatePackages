@@ -49,7 +49,8 @@ $languageStrings = array(
    'MakeOutgoingCalls' => 'Abgehende Anrufe',
    'Print' => 'Drucken',
 	'DuplicateRecord'  => 'Dupliziere',
-	'EditableComments'  => 'Edit comments',
+	'EditableComments' => 'Kommentar bearbeiten',
+	'TagCloud' => 'Tags cloud',
 );
 
 $jsLanguageStrings = array(

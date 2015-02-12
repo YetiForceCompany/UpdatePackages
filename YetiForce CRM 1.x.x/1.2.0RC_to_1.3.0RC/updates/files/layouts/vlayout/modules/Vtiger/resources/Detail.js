@@ -226,6 +226,14 @@ jQuery.Class("Vtiger_Detail_Js",{
 		'Contacts' : 'contact_id',
 		'Leads' : 'parent_id',
 		'Potentials' : 'potential',
+		'HelpDesk' : 'parent_id',
+		'Campaigns' : 'parent_id',
+		'Projects' : 'parent_id',
+		'ServiceContracts' : 'parent_id',
+		'Invoice' : 'parent_id',
+		'PurchaseOrder' : 'parent_id',
+		'SalesOrder' : 'parent_id',
+		'Quotes' : 'parent_id',
 	},
 
 	//constructor
@@ -913,8 +921,10 @@ jQuery.Class("Vtiger_Detail_Js",{
 			var detailViewValue = jQuery('.value',currentTdElement);
 			var editElement = jQuery('.edit',currentTdElement);
 			var actionElement = jQuery('.summaryViewEdit', currentTdElement);
-			var fieldnameElement = jQuery('.fieldname', editElement);
-			var fieldName = fieldnameElement.val();
+			var fieldElement = jQuery('.fieldname', editElement);
+                        
+       jQuery(fieldElement).each(function(index, element){
+            var fieldName = jQuery(element).val();
 			var fieldElement = jQuery('[name="'+ fieldName +'"]', editElement);
 
 			if(fieldElement.attr('disabled') == 'disabled'){
@@ -943,7 +953,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 
 				currentTdElement.removeAttr('tabindex');
 
-				var previousValue = fieldnameElement.data('prevValue');
+                var previousValue = element.data('prevValue');
 				var formElement = thisInstance.getForm();
 				var formData = formElement.serializeFormData();
 				var ajaxEditNewValue = formData[fieldName];
@@ -1022,7 +1032,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 						actionElement.show();
                         detailViewValue.html(postSaveRecordDetails[fieldName].display_value);
 						fieldElement.trigger(thisInstance.fieldUpdatedEvent,{'old':previousValue,'new':fieldValue});
-                        fieldnameElement.data('prevValue', ajaxEditNewValue);
+                        element.data('prevValue', ajaxEditNewValue);
                         fieldElement.data('selectedValue', ajaxEditNewValue); 
                         //After saving source field value, If Target field value need to change by user, show the edit view of target field. 
                         if(thisInstance.targetPicklistChange) { 
@@ -1053,6 +1063,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 			}
 
 			jQuery(document).on('click','*', saveHandler);
+        })
 	},
 
 
@@ -1095,12 +1106,10 @@ jQuery.Class("Vtiger_Detail_Js",{
 			}
 
 			var customParams = {};
-			if(module == ''){
-				var relField = 'contact_id';
-			}else{
-				var relField = 'parent_id';
+			if(module != '' && typeof thisInstance.referenceFieldNames[module] != 'undefined'){
+				var relField = thisInstance.referenceFieldNames[module];
+				customParams[relField] = recordId;
 			}
-			customParams[relField] = recordId;
 
 			var fullFormUrl = element.data('url');
 			var preQuickCreateSave = function(data){
@@ -2051,7 +2060,32 @@ jQuery.Class("Vtiger_Detail_Js",{
 	getCustomFieldNameValueMap : function(fieldNameValueMap){
 		return fieldNameValueMap;
 	},
-	
+        
+	registerSetReadRecord : function(detailContentsHolder){
+            var thisInstance = this;
+            detailContentsHolder.on('click', '.setReadRecord', function(e){
+                var currentElement = jQuery(e.currentTarget);
+                currentElement.hide();
+                jQuery('#Accounts_detailView_fieldValue_was_read').find('.value').text(app.vtranslate('LBL_YES'));
+		var params = {
+                    'module': app.getModuleName(),
+                    'action' : 'SaveAjax',
+                    'record': thisInstance.getRecordId(),
+                    'field' : 'was_read',
+                    'value' : 'on',
+		}
+                AppConnector.request(params).then(function (data) {	
+                    var params = {
+                        text: app.vtranslate('JS_SET_READ_RECORD'),
+                        title : app.vtranslate('System'),
+                        type: 'info',
+                        animation: 'show'
+                    };
+                    Vtiger_Helper_Js.showPnotify(params);
+                });
+            });
+	},
+        
 	registerFastEditingFiels : function(){
 		var thisInstance = this;
 		var fastEditingFiels = jQuery('.summaryWidgetFastEditing select');
@@ -2139,7 +2173,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 		app.registerEventForDatePickerFields(detailContentsHolder);
 		//Attach time picker event to time fields
 		app.registerEventForTimeFields(detailContentsHolder);
-		
+		this.registerSetReadRecord(detailViewContainer);
 		//register all the events for summary view container
 		this.registerSummaryViewContainerEvents(detailContentsHolder);
 		thisInstance.registerEventForPicklistDependencySetup(thisInstance.getForm());
