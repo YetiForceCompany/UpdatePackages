@@ -109,6 +109,8 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model {
 		if(!empty($tree['children'])){
 			foreach ($tree['children'] as $tree) {
 				$this->insertData( $tree , $depth+1,$parenttrre);
+				if($tree['metadata']['replaceid'])
+					$this->replaceValue($tree, $this->get('module'), $this->getId());
 			}
 		}
 	}
@@ -128,7 +130,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model {
 		$params = array($templateId);
 		$result = $adb->pquery($sql, $params);
 		for($i = 0; $i < $adb->num_rows($result); $i++){
-			$row = $adb->query_result_rowdata($result, $i);
+			$row = $adb->raw_query_result_rowdata($result, $i);
 			$treeID = (int)str_replace('T', '', $row['tree']);
 			$depth = (int)$row['depth']; 
 			$data[$row['tree']] = array( 'data' => $row['name'], 'attr' =>  array('id' => $treeID ) );
@@ -178,10 +180,36 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model {
 			$adb->pquery('DELETE FROM vtiger_trees_templates_data WHERE `templateid` = ?', array($templateId));
 			foreach ($this->get('tree') as $tree) {
 				$this->insertData( $tree , 0, '');
+				if($tree['metadata']['replaceid'])
+					$this->replaceValue($tree, $this->get('module'), $templateId);
 			}
 		}
 	}
 
+	/**
+	 * Function to replaces value in module records
+	 * @param <Array> $tree
+	 * @param <String> $moduleId
+	 * @param <String> $templateId
+	 */
+	public function replaceValue($tree, $moduleId, $templateId) {
+		$adb = PearDatabase::getInstance();
+		$query='SELECT `tablename`,`columnname` FROM `vtiger_field` WHERE `tabid` = ? AND `fieldparams` = ? AND presence in (0,2)';
+		$result = $adb->pquery($query, array($moduleId, $templateId));
+		$num_row = $adb->num_rows($result);
+
+		for($i=0; $i<$num_row; $i++) {
+			$row = $adb->query_result_rowdata($result, $i);
+			$tableName = $row['tablename'];
+			$columnName = $row['columnname'];
+			foreach($tree['metadata']['replaceid'] as $id){
+				$query = 'UPDATE '.$tableName.' SET '.$columnName.' = ? WHERE '.$columnName.' = ?';
+				$params = array('T'.$tree['attr']['id'], 'T'.$id);
+				$adb->pquery($query, $params);
+			}
+		}
+	}
+	
 	/**
 	 * Function to delete the role
 	 * @param <Settings_Roles_Record_Model> $transferToRole
