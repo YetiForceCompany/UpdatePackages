@@ -1,0 +1,14 @@
+<IfModule mod_autoindex.c>
+	Options -Indexes
+</ifModule>
+########################
+<IfModule mod_rewrite.c>
+	#RewriteEngine On
+	#RewriteCond %{HTTPS} off
+	#RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+	#RewriteEngine on 
+	#RewriteCond %{HTTP:Authorization} ^(.*)
+	#RewriteCond %{HTTP:Authorization} !^$
+	#RewriteRule (.*) test.php [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
+</ifModule>
+########################
