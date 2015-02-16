@@ -9,7 +9,7 @@
  * Contributor(s): YetiForce.com.
  ************************************************************************************/
 require_once 'include/events/VTEntityData.inc';
-
+if(!class_exists('VTEntityDelta')){
 class VTEntityDelta extends VTEventHandler {
 	private static $oldEntity;
 	private static $newEntity;
@@ -118,5 +118,6 @@ class VTEntityDelta extends VTEventHandler {
 		return $result;
 	}
 
+}
 }
 ?>
