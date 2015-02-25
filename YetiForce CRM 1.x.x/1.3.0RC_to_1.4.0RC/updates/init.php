@@ -12,26 +12,23 @@ class YetiForceUpdate{
 	var $modulenode;
 	var $return = true;
 	var $dropTablePicklist = array();
-	
-	
 	var $filesToDelete = array(
-		//'modules/OSSCosts/copy',
-		//'data',
-		'test/',
+		'modules/OSSCosts/copy',
+		'data',
+		'test/contact/',
+		'test/logo/',
+		'test/product/',
+		'test/templates_c/',
+		'test/user/',
+		'test/vtlib/',
+		'test/wordtemplatedownload/',
 		'includes/',
 		'modules/Settings/vtigerCRM.CAB',
 		'modules/Utilities/Merge.php',
 		'modules/Utilities/UtilitiesAjax.php',
-		'test/contact/a.txt',
-		'test/logo/logo.txt',
-		'test/logo/pointer.png',
-		'test/logo/sale.jpeg',
-		'test/product/vtigercrm.txt',
-		'test/upload/vtigercrm.txt',
-		'test/user/a.txt',
-		'test/vtlib/HTML/3.3.0,aacfe2e21b552364077576cd0a636b92,1.ser',
-		'test/vtlib/README.txt',
-		'test/wordtemplatedownload/todel.txt'
+		'layouts/vlayout/modules/Calendar/SideBarWidgets.tpl',
+		'libraries/fullcalendar/fullcalendar-bootstrap.css',
+		'libraries/fullcalendar/fullcalendar-bootstrap.less',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -55,12 +52,12 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_portalinfo` LIKE 'crypt_type';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_portalinfo` CHANGE `user_password` `user_password` varchar(200)  COLLATE utf8_general_ci NULL after `user_name` , 
-							ADD COLUMN `crypt_type` varchar(20)  COLLATE utf8_general_ci NULL after `isactive` ;");
+			$adb->query("ALTER TABLE `vtiger_portalinfo` CHANGE `user_password` `user_password` varchar(200) NULL after `user_name` , 
+							ADD COLUMN `crypt_type` varchar(20) NULL after `isactive` ;");
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_portalinfo` LIKE 'password_sent';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_portalinfo` ADD COLUMN `password_sent` varchar(255)  COLLATE utf8_general_ci NOT NULL after `crypt_type` ;");
+			$adb->query("ALTER TABLE `vtiger_portalinfo` ADD COLUMN `password_sent` varchar(255) NOT NULL after `crypt_type` ;");
 		}
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_blocks_hide` (
 					  `id` int(19) NOT NULL AUTO_INCREMENT,
@@ -78,16 +75,28 @@ class YetiForceUpdate{
 					  PRIMARY KEY (`publicholidayid`)
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_calendar_config`(
-					`type` varchar(10) COLLATE utf8_general_ci NULL  , 
-					`name` varchar(20) COLLATE utf8_general_ci NULL  , 
-					`label` varchar(20) COLLATE utf8_general_ci NULL  , 
-					`value` varchar(100) COLLATE utf8_general_ci NULL  
-				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
+					`type` varchar(10) NULL  , 
+					`name` varchar(20) NULL  , 
+					`label` varchar(20) NULL  , 
+					`value` varchar(100) NULL  
+				) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
 		
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_trees_templates_data` LIKE 'state';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_trees_templates_data` ADD COLUMN `state` varchar(10)  COLLATE utf8_general_ci NULL after `label` ; ");
+			$adb->query("ALTER TABLE `vtiger_trees_templates_data` ADD COLUMN `state` varchar(10) NULL after `label` ; ");
 		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_calculations` LIKE 'currency_id';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_calculations` ADD COLUMN `currency_id` INT(19) UNSIGNED NOT NULL AFTER `date`; ");
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_converttoaccount_settings` (
+  `state` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_salesprocesses_settings` (
+  `id` int(11) NOT NULL,
+  `products_rel_potentials` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 		
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
@@ -103,6 +112,8 @@ class YetiForceUpdate{
 		$settings_field[] = array('LBL_STUDIO','LBL_HIDEBLOCKS',NULL,'LBL_HIDEBLOCKS_DESCRIPTION','index.php?module=HideBlocks&parent=Settings&view=List',17,0,0);
 		$settings_field[] = array('LBL_OTHER_SETTINGS','LBL_PUBLIC_HOLIDAY',NULL,'LBL_PUBLIC_HOLIDAY_DESCRIPTION','index.php?module=PublicHoliday&view=Configuration&parent=Settings',25,0,0);
 		$settings_field[] = array('LBL_STUDIO','LBL_CALENDAR_CONFIG',NULL,'LBL_CALENDAR_CONFIG_DESCRIPTION','index.php?parent=Settings&module=Calendar&view=UserColors',18,0,0);
+		$settings_field[] = array('LBL_PROCESSES','LBL_CONVERSION_TO_ACCOUNT',NULL,'LBL_CONVERSION_TO_ACCOUNT_DESCRIPTION','index.php?module=Leads&parent=Settings&view=ConvertToAccount',2,0,0);
+		$settings_field[] = array('LBL_PROCESSES','LBL_SALES_PROCESSES',NULL,'LBL_SALES_PROCESSES_DESCRIPTION','index.php?module=SalesProcesses&view=Configuration&parent=Settings',1,0,0);
 		foreach ($settings_field AS $field){
 			if(!self::checkFieldExists( $field, 'Settings' )){
 				$field[0] = self::getBlockId($field[0]);
@@ -144,10 +155,16 @@ class YetiForceUpdate{
 			$instanceModule = Vtiger_Module::getInstance('Home');
 			$instanceModule->addLink('DASHBOARDWIDGET', 'LIST_OF_LAST_UPDATED_RECORD', 'index.php?module=Home&view=ShowWidget&name=ListUpdatedRecord');
 		}
+		$blockid = $adb->getUniqueId("vtiger_settings_blocks");
+		$adb->pquery("insert  into `vtiger_settings_blocks`(`blockid`,`label`,`sequence`) values (?,?,?);",array($blockid,'LBL_PROCESSES',9));
 		$adb->pquery("UPDATE `vtiger_modentity_num` SET `cur_id` = ? WHERE `semodule` = ? ;", array(2, 'Products'));
 		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal Login Details', 'Contacts'));
 		if($adb->num_rows($result) == 1){
 			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('<p>#s#LogoImage#sEnd# </p><p>Dear #a#67#aEnd#  #a#70#aEnd#</p><p>Created for your account in the customer portal, below sending data access.</p><p>Login: #a#80#aEnd#<br />Password: #s#ContactsPortalPass#sEnd#</p><p>Regards</p>', 'Customer Portal Login Details', 'Contacts'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal - ForgotPassword', 'Contacts'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('Dear #a#67#aEnd#Â #a#67#aEnd#,<br /><br />\r\nYou recently requested a reminder of your access data for the YetiForce Portal.<br /><br />\r\nYou can login by entering the following data:<br /><br />\r\nYour username:Â #a#80#aEnd#<br />\r\nYour password:Â #s#ContactsPortalPass#sEnd#<br /><br /><br />\r\nRegards,<br />\r\nYetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		}
 		$adb->pquery("UPDATE `vtiger_ossmenumanager` SET `label` = ?, `langfield` = ? WHERE `label` = ? ;", array('Teamwork', 'en_us*Teamwork#pl_pl*Praca grupowa', 'Group Card'));
 		$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = ? WHERE `title` = ? AND `moduleid` = ?;", array('<title></title>
@@ -334,6 +351,8 @@ class YetiForceUpdate{
 		
 		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(14,'time_start', 'vtiger_osstimecontrol'));
 		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(14,'time_end', 'vtiger_osstimecontrol'));
+		$adb->pquery('insert  into `vtiger_salesprocesses_settings`(`id`,`products_rel_potentials`) values (1,1);');
+
 		
 		$fieldsToDelete = array(
 		'OSSTimeControl'=>array('payment')
@@ -350,6 +369,17 @@ class YetiForceUpdate{
 			}
 		}
 		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('subject','RequirementCards', 'QuotesEnquires'));
+		
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('parentid','vtiger_contactdetails'));
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", array($adb->query_result($result1, 0, 'fieldid'),'Vendors'));
+		if($adb->num_rows($result2) == 0){
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (".$adb->query_result($result1, 0, 'fieldid').",'Contacts','Vendors');");
+		}
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('potentialid','vtiger_quotesenquires'));
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", array($adb->query_result($result1, 0, 'fieldid'),'Potentials'));
+		if($adb->num_rows($result2) == 0){
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (".$adb->query_result($result1, 0, 'fieldid').",'QuotesEnquires','Potentials');");
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function picklists(){
@@ -509,8 +539,18 @@ class YetiForceUpdate{
 		$Quotes = array(
 		array('20','1585','requirementcards_id','vtiger_quotes','1','10','requirementcards_id','RequirementCards','1','2','','100','28','49','1','V~O','1','','BAS','1','0','0','',"int(19)","LBL_QUOTE_INFORMATION",array(),array('RequirementCards'))
 		);
-
-		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Quotes'=>$Quotes);
+		$Calculations = array(
+		array(70,1601,'currency_id','vtiger_calculations',1,'117','currency_id','Currency',1,2,'1',100,11,182,3,'I~O',3,NULL,'BAS',1,0,0,'',"int(19)","LBL_INFORMATION",array(),array()),
+		array(70,1602,'conversion_rate','vtiger_calculations',1,'1','conversion_rate','Conversion Rate',1,2,'1',100,12,182,3,'N~O',3,NULL,'BAS',1,0,0,'',"decimal(10,3)","LBL_INFORMATION",array(),array())
+		);
+		
+		$Calendar = array(
+		array(9,1603,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,26,19,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_TASK_INFORMATION",array(),array())
+		);
+		$Events = array(
+		array(16,1604,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,24,39,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_EVENT_INFORMATION",array(),array())
+		);
+		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Calculations'=>$Calculations,'Quotes'=>$Quotes,'Calendar'=>$Calendar,'Events'=>$Events);
 
 		$setToCRMAfter = array();
 		foreach($setToCRM as $nameModule=>$module){
