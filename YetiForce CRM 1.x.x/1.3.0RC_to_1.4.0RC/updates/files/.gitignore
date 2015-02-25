@@ -1,0 +1,6 @@
+/.settings
+/.project
+/.buildpath
+/cache/templates_c
+/config.csrf-secret.php
+/config/config_override.php
