@@ -10,7 +10,7 @@
  *************************************************************************************/
 
 include_once dirname(__FILE__) . '/cache/Connector.php';
-if(!class_exists('Vtiger_Cache_Connector')){
+if(!class_exists('Vtiger_Cache')){
 class Vtiger_Cache  {
     private static  $selfInstance = false;
     public static $cacheEnable = true;
