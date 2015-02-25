@@ -15,20 +15,32 @@ class YetiForceUpdate{
 	var $filesToDelete = array(
 		'modules/OSSCosts/copy',
 		'data',
+		'README.md',
+		'logs/',
+		'includes/',
 		'test/contact/',
 		'test/logo/',
 		'test/product/',
 		'test/templates_c/',
 		'test/user/',
-		'test/vtlib/',
+		'test/upload/',
+		//'test/vtlib/',
 		'test/wordtemplatedownload/',
-		'includes/',
 		'modules/Settings/vtigerCRM.CAB',
 		'modules/Utilities/Merge.php',
 		'modules/Utilities/UtilitiesAjax.php',
+		'modules/Utilities/Currencies.php',
 		'layouts/vlayout/modules/Calendar/SideBarWidgets.tpl',
 		'libraries/fullcalendar/fullcalendar-bootstrap.css',
 		'libraries/fullcalendar/fullcalendar-bootstrap.less',
+		'modules/Settings/Vtiger/actions/SaveCompanyField.php',
+		'modules/Calculations/EditView.tpl',
+		'modules/Calculations/Hierarchy.tpl',
+		'modules/Calculations/LineItemsContent.tpl',
+		'modules/Calculations/LineItemsDetail.tpl',
+		'modules/Calculations/LineItemsEdit.tpl',
+		'modules/Calculations/resources/Detail.js',
+		'modules/Calculations/resources/Edit.js',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -39,6 +51,7 @@ class YetiForceUpdate{
 	
 	function update() {
 		$this->addModules();
+		$this->updateFiles();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
 	}
@@ -155,6 +168,9 @@ class YetiForceUpdate{
 			$instanceModule = Vtiger_Module::getInstance('Home');
 			$instanceModule->addLink('DASHBOARDWIDGET', 'LIST_OF_LAST_UPDATED_RECORD', 'index.php?module=Home&view=ShowWidget&name=ListUpdatedRecord');
 		}
+		
+		$result = $adb->query("SELECT MAX(blockid) AS id FROM vtiger_settings_blocks");
+		$result = $adb->pquery("UPDATE vtiger_settings_blocks_seq SET `id` = ?",array($adb->query_result($result, 0, 'id')));
 		$blockid = $adb->getUniqueId("vtiger_settings_blocks");
 		$adb->pquery("insert  into `vtiger_settings_blocks`(`blockid`,`label`,`sequence`) values (?,?,?);",array($blockid,'LBL_PROCESSES',9));
 		$adb->pquery("UPDATE `vtiger_modentity_num` SET `cur_id` = ? WHERE `semodule` = ? ;", array(2, 'Products'));
@@ -164,7 +180,7 @@ class YetiForceUpdate{
 		}
 		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal - ForgotPassword', 'Contacts'));
 		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('Dear #a#67#aEnd#Â #a#67#aEnd#,<br /><br />\r\nYou recently requested a reminder of your access data for the YetiForce Portal.<br /><br />\r\nYou can login by entering the following data:<br /><br />\r\nYour username:Â #a#80#aEnd#<br />\r\nYour password:Â #s#ContactsPortalPass#sEnd#<br /><br /><br />\r\nRegards,<br />\r\nYetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
+			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('Dear #a#67#aEnd#Â #a#67#aEnd#,<br /><br />You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />You can login by entering the following data:<br /><br />Your username:Â #a#80#aEnd#<br />Your password:Â #s#ContactsPortalPass#sEnd#<br /><br /><br />Regards,<br />YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		}
 		$adb->pquery("UPDATE `vtiger_ossmenumanager` SET `label` = ?, `langfield` = ? WHERE `label` = ? ;", array('Teamwork', 'en_us*Teamwork#pl_pl*Praca grupowa', 'Group Card'));
 		$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = ? WHERE `title` = ? AND `moduleid` = ?;", array('<title></title>
@@ -352,7 +368,7 @@ class YetiForceUpdate{
 		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(14,'time_start', 'vtiger_osstimecontrol'));
 		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(14,'time_end', 'vtiger_osstimecontrol'));
 		$adb->pquery('insert  into `vtiger_salesprocesses_settings`(`id`,`products_rel_potentials`) values (1,1);');
-
+		$adb->pquery("UPDATE `vtiger_field` SET `displaytype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(1,'product_id', 'vtiger_troubletickets'));
 		
 		$fieldsToDelete = array(
 		'OSSTimeControl'=>array('payment')
@@ -802,6 +818,14 @@ A new comment has been added to the ticket.<br />
 		}
 		$log->debug("Exiting YetiForceUpdate::addModuleToMenu() method ...");
 	}
+	function updateFiles() {
+		$config = '
+	
+//Update the current session id with a newly generated one after login
+$session_regenerate_id = false;';
+		file_put_contents( 'config/config.inc.php', $config, FILE_APPEND );
+	}
+	
 	function recurseCopy($src,$dst) {
 		global $root_directory;
 		if(!file_exists( $src ) )
