@@ -54,6 +54,13 @@ class YetiForceUpdate{
 		$this->updateFiles();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
+		@chmod($root_directory.'/logs/installation.log', 0777);
+		@chmod($root_directory.'/logs/migration.log', 0777);
+		@chmod($root_directory.'/logs/platform.log', 0777);
+		@chmod($root_directory.'/logs/security.log', 0777);
+		@chmod($root_directory.'/logs/soap.log', 0777);
+		@chmod($root_directory.'/logs/sqltime.log', 0777);
+		@chmod($root_directory.'/logs/vtigercrm.log', 0777);
 	}
 	function postupdate() {
 		Vtiger_Deprecated::createModuleMetaFile();
