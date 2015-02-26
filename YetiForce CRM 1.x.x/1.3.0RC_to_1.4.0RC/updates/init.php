@@ -54,6 +54,7 @@ class YetiForceUpdate{
 		$this->updateFiles();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
+		$this->transferLogo();
 		@chmod($root_directory.'/logs/installation.log', 0777);
 		@chmod($root_directory.'/logs/migration.log', 0777);
 		@chmod($root_directory.'/logs/platform.log', 0777);
@@ -66,6 +67,17 @@ class YetiForceUpdate{
 		Vtiger_Deprecated::createModuleMetaFile();
 		Vtiger_Access::syncSharingAccess();
 		return true;
+	}
+	public function transferLogo(){
+		global $log,$adb,$root_directory;
+		$log->debug("Entering YetiForceUpdate::transferLogo() method ...");
+		$result = $adb->query( "SELECT `logoname` FROM `vtiger_organizationdetails` ;");
+		$num = $adb->num_rows( $result );
+		if($num == 1){
+			$logoName = $adb->query_result( $result, 0, 'logoname' );
+			copy($root_directory.'test/logo/'.$logoName, $root_directory.'/storage/Logo/'.$logoName);
+		}
+		$log->debug("Exiting YetiForceUpdate::transferLogo() method ...");
 	}
 	public function databaseStructureExceptDeletedTables(){
 		global $log,$adb;
