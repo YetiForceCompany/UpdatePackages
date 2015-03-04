@@ -145,10 +145,18 @@ class YetiForceUpdate{
 					FOREIGN KEY (`id`) REFERENCES `vtiger_users` (`id`) ON DELETE CASCADE 
 				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
 		
-		/*$result = $adb->query("SHOW COLUMNS FROM `vtiger_account` LIKE 'payment_balance';");
+		$result = $adb->query("SHOW KEYS FROM `vtiger_module_dashboard_widgets` WHERE Key_name='templateid';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` DROP KEY `templateid`;");
+		}
+		$result = $adb->query("SHOW KEYS FROM `vtiger_module_dashboard_widgets` WHERE Key_name='templateid';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` DROP KEY `templateid`;");
+		}
+		$result = $adb->query("SHOW KEYS FROM  `vtiger_module_dashboard_widgets` WHERE Key_name='vtiger_module_dashboard_widgets_ibfk_1';");
 		if($adb->num_rows($result) == 0){
-			$adb->query("ALTER TABLE `vtiger_account` ADD COLUMN `payment_balance` decimal(25,8) NULL after `average_profit_so` ;");
-		}*/
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD KEY `vtiger_module_dashboard_widgets_ibfk_1`(`templateid`) ;");
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	
@@ -211,14 +219,20 @@ class YetiForceUpdate{
 		$result = $adb->pquery("UPDATE vtiger_settings_blocks_seq SET `id` = ?",array($adb->query_result($result, 0, 'id')));
 		$blockid = $adb->getUniqueId("vtiger_settings_blocks");
 		$adb->pquery("insert  into `vtiger_settings_blocks`(`blockid`,`label`,`sequence`) values (?,?,?);",array($blockid,'LBL_PROCESSES',9));
-		$adb->pquery("UPDATE `vtiger_modentity_num` SET `cur_id` = ? WHERE `semodule` = ? ;", array(2, 'Products'));
+		$adb->pquery("UPDATE `vtiger_modentity_num` SET `cur_id` = ? WHERE `semodule` = ? ;", array(1, 'Products'));
 		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal Login Details', 'Contacts'));
 		if($adb->num_rows($result) == 1){
 			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('<p>#s#LogoImage#sEnd# </p><p>Dear #a#67#aEnd#  #a#70#aEnd#</p><p>Created for your account in the customer portal, below sending data access.</p><p>Login: #a#80#aEnd#<br />Password: #s#ContactsPortalPass#sEnd#</p><p>Regards</p>', 'Customer Portal Login Details', 'Contacts'));
 		}
 		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal - ForgotPassword', 'Contacts'));
 		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('Dear #a#67#aEnd#Â #a#67#aEnd#,<br /><br />You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />You can login by entering the following data:<br /><br />Your username:Â #a#80#aEnd#<br />Your password:Â #s#ContactsPortalPass#sEnd#<br /><br /><br />Regards,<br />YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
+			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE name = ? AND oss_module_list = ?  ;", array('Dear #a#67#aEnd# #a#70#aEnd#,<br /><br />
+You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />
+You can login by entering the following data:<br /><br />
+Your username: #a#80#aEnd#<br />
+Your password: #s#ContactsPortalPass#sEnd#<br /><br /><br />
+Regards,<br />
+YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		}
 		$adb->pquery("UPDATE `vtiger_ossmenumanager` SET `label` = ?, `langfield` = ? WHERE `label` = ? ;", array('Teamwork', 'en_us*Teamwork#pl_pl*Praca grupowa', 'Group Card'));
 		$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = ? WHERE `title` = ? AND `moduleid` = ?;", array('<title></title>
@@ -399,7 +413,7 @@ class YetiForceUpdate{
 			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ?, `actions` = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(7,'',getTabid('Accounts'),getTabid('Calendar'),'get_history','Activity History'));
 		}
 		//
-		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = ? WHERE related_tabid = ? AND name = ? AND label = ?;", array('',getTabid('Calendar'),'Upcoming Activities','get_history','Activity History'));
+		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = ? WHERE related_tabid = ? AND name = ? AND label = ?;", array('',getTabid('Calendar'),'get_history','Activity History'));
 		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Contacts'),getTabid('OSSMailView'),'get_related_list','OSSMailView', 3));
 		if($adb->num_rows($result) == 1){
 			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(9, getTabid('Contacts'),getTabid('OSSMailView'),'get_related_list','OSSMailView'));
