@@ -121,6 +121,10 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_calculations` ADD COLUMN `currency_id` INT(19) UNSIGNED NOT NULL AFTER `date`; ");
 		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_calculations` LIKE 'conversion_rate';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_calculations` ADD COLUMN `conversion_rate` decimal(10,3) unsigned NOT NULL AFTER `currency_id`; ");
+		}
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_converttoaccount_settings` (
   `state` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
@@ -130,6 +134,21 @@ class YetiForceUpdate{
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 		
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_bruteforce` LIKE 'active';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_bruteforce` ADD COLUMN `active` tinyint(1) NULL DEFAULT 1 after `timelock` ;");
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_bruteforce_users`(
+					`id` int(19) NOT NULL  , 
+					KEY `fk_1_vtiger_bruteforce_users`(`id`) , 
+					CONSTRAINT `fk_1_vtiger_bruteforce_users` 
+					FOREIGN KEY (`id`) REFERENCES `vtiger_users` (`id`) ON DELETE CASCADE 
+				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
+		
+		/*$result = $adb->query("SHOW COLUMNS FROM `vtiger_account` LIKE 'payment_balance';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_account` ADD COLUMN `payment_balance` decimal(25,8) NULL after `average_profit_so` ;");
+		}*/
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	
@@ -326,61 +345,6 @@ class YetiForceUpdate{
 			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `payment_duration` = ? WHERE `payment_duration` = ? ;", array('payment:+0 day', 'payment:+0 days'));
 		}
 		$this->picklists();
-		/*
-		$result = $adb->pquery("SELECT * FROM `vtiger_payment_duration` WHERE payment_duration = ?", array('payment:+0 days'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_payment_duration` SET `payment_duration` = ? WHERE `payment_duration` = ? ;", array('payment:+0 day', 'payment:+0 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `payment_duration` = ? WHERE `payment_duration` = ? ;", array('payment:+0 day', 'payment:+0 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_payment_duration` WHERE payment_duration = ?", array('payment:+1 days'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_payment_duration` SET `payment_duration` = ? WHERE `payment_duration` = ? ;", array('payment:+1 day', 'payment:+1 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `payment_duration` = ? WHERE `payment_duration` = ? ;", array('payment:+1 day', 'payment:+1 days'));
-		}
-		*/
-		/*
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+7 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+7 day', '+7 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+7 day', '+7 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+14 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+14 day', '+14 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+14 day', '+14 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+21 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+21 day', '+21 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+21 day', '+21 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+30 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+30 day', '+30 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+30 day', '+30 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+60 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+60 day', '+60 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+60 day', '+60 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+90 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+90 day', '+90 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+90 day', '+90 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+180 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+180 day', '+180 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+180 day', '+180 days'));
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_recurring_frequency` WHERE recurring_frequency = ?", array('+360 day'));
-		if($adb->num_rows($result) == 1){
-			$adb->pquery("UPDATE `vtiger_recurring_frequency` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+360 day', '+360 days'));
-			$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array('+360 day', '+360 days'));
-		}
-		*/
-		
 		$adb->pquery("UPDATE `vtiger_blocks` SET `display_status` = ? WHERE `tabid` = ? AND `blocklabel` = ? ;", array(0,getTabid('OSSTimeControl'), 'LBL_BLOCK'));
 		$adb->query("ALTER TABLE `vtiger_notes` CHANGE `title` `title` varchar(200) NOT NULL after `note_no` ;");
 		
@@ -404,6 +368,9 @@ class YetiForceUpdate{
 			}
 		}
 		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('subject','RequirementCards', 'QuotesEnquires'));
+		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ?, fieldname = ?  WHERE `modulename` = ?;", array('holidaysentitlement_year,ossemployeesid','holidaysentitlement_year', 'HolidaysEntitlement'));
+		// To Do CRM
+		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('paymentsname','PaymentsIn', 'PaymentsOut'));
 		
 		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('parentid','vtiger_contactdetails'));
 		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", array($adb->query_result($result1, 0, 'fieldid'),'Vendors'));
@@ -414,6 +381,122 @@ class YetiForceUpdate{
 		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", array($adb->query_result($result1, 0, 'fieldid'),'Potentials'));
 		if($adb->num_rows($result2) == 0){
 			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (".$adb->query_result($result1, 0, 'fieldid').",'QuotesEnquires','Potentials');");
+		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE type = ? ;", array('reminder'));
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values (?,?,?,?);", array('reminder','update_event','LBL_UPDATE_EVENT','0'));
+		}
+		// related list
+		$adb->pquery("UPDATE `vtiger_relatedlists` SET label = ? WHERE related_tabid = ? AND name = ? AND label = ?;", array('Upcoming Activities',getTabid('Calendar'),'get_activities','Activities'));
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Accounts'),getTabid('OSSMailView'),'get_related_list','OSSMailView', 7));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(8, getTabid('Accounts'),getTabid('OSSMailView'),'get_related_list','OSSMailView'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `actions` = ?;", array(getTabid('Accounts'),getTabid('Calendar'),'get_history','Activity History', 'add'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ?, `actions` = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(7,'',getTabid('Accounts'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		//
+		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = ? WHERE related_tabid = ? AND name = ? AND label = ?;", array('',getTabid('Calendar'),'Upcoming Activities','get_history','Activity History'));
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Contacts'),getTabid('OSSMailView'),'get_related_list','OSSMailView', 3));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(9, getTabid('Contacts'),getTabid('OSSMailView'),'get_related_list','OSSMailView'));
+		}
+		//
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Contacts'),getTabid('Calendar'),'get_history','Activity History', 9));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(3, getTabid('Contacts'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Potentials'),getTabid('Contacts'),'get_contacts','Contacts', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(8, getTabid('Potentials'),getTabid('Contacts'),'get_contacts','Contacts'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Potentials'),getTabid('Calendar'),'get_history','Activity History', 8));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('Potentials'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('HelpDesk'),getTabid('Documents'),'get_attachments','Documents', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(4, getTabid('HelpDesk'),getTabid('Documents'),'get_attachments','Documents'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('HelpDesk'),getTabid('Calendar'),'get_history','Activity History', 4));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('HelpDesk'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Quotes'),getTabid('Documents'),'get_attachments','Documents', 3));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(4, getTabid('Quotes'),getTabid('Documents'),'get_attachments','Documents'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Quotes'),getTabid('Calendar'),'get_history','Activity History', 4));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(3, getTabid('Quotes'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('PurchaseOrder'),getTabid('Documents'),'get_attachments','Documents', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(3, getTabid('PurchaseOrder'),getTabid('Documents'),'get_attachments','Documents'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('PurchaseOrder'),getTabid('Calendar'),'get_history','Activity History', 3));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('PurchaseOrder'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('SalesOrder'),getTabid('Documents'),'get_attachments','Documents', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(4, getTabid('SalesOrder'),getTabid('Documents'),'get_attachments','Documents'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('SalesOrder'),getTabid('Calendar'),'get_history','Activity History', 4));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('SalesOrder'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Invoice'),getTabid('Documents'),'get_attachments','Documents', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(3, getTabid('Invoice'),getTabid('Documents'),'get_attachments','Documents'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Invoice'),getTabid('Calendar'),'get_history','Activity History', 3));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('Invoice'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Campaigns'),getTabid('Accounts'),'get_accounts','Accounts', 5));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(6, getTabid('Campaigns'),getTabid('Accounts'),'get_accounts','Accounts'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('ServiceContracts'),getTabid('HelpDesk'),'get_dependents_list','HelpDesk', 2));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(4, getTabid('ServiceContracts'),getTabid('HelpDesk'),'get_dependents_list','HelpDesk'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Project'),getTabid('HelpDesk'),'get_dependents_list','HelpDesk', 6));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(5, getTabid('Project'),getTabid('HelpDesk'),'get_dependents_list','HelpDesk'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Project'),0,'get_gantt_chart','Charts', 5));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(1, getTabid('Project'),0,'get_gantt_chart','Charts'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ? AND `sequence` = ?;", array(getTabid('Project'),getTabid('Calendar'),'get_activities','Upcoming Activities', 1));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(6, getTabid('Project'),getTabid('Calendar'),'get_activities','Upcoming Activities'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Campaigns'),getTabid('Calendar'),'get_history','Activity History'));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Campaigns');
+			$moduleInstance = Vtiger_Module::getInstance('Calendar');
+			$targetModule->setRelatedList($moduleInstance, 'Activity History', array(),'get_history');
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(5, getTabid('Campaigns'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Project'),getTabid('Calendar'),'get_history','Activity History'));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Project');
+			$moduleInstance = Vtiger_Module::getInstance('Calendar');
+			$targetModule->setRelatedList($moduleInstance, 'Activity History', array(),'get_history');
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(7, getTabid('Project'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('ServiceContracts'),getTabid('Calendar'),'get_history','Activity History'));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('ServiceContracts');
+			$moduleInstance = Vtiger_Module::getInstance('Calendar');
+			$targetModule->setRelatedList($moduleInstance, 'Activity History', array(),'get_history');
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('ServiceContracts'),getTabid('Calendar'),'get_history','Activity History'));
 		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -585,7 +668,18 @@ class YetiForceUpdate{
 		$Events = array(
 		array(16,1604,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,24,39,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_EVENT_INFORMATION",array(),array())
 		);
-		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Calculations'=>$Calculations,'Quotes'=>$Quotes,'Calendar'=>$Calendar,'Events'=>$Events);
+		$Invoice = array(
+		array(23,1629,'payment_balance','vtiger_invoice',1,'7','payment_balance','Payment balance',1,2,'',100,31,67,2,'NN~O',1,NULL,'BAS',1,0,0,'',"decimal(25,8)","LBL_INVOICE_INFORMATION",array(),array())
+		);
+		$Accounts = array(
+		array(6,1630,'payment_balance','vtiger_account',1,'7','payment_balance','Payment balance',1,2,'',100,25,9,2,'NN~O',1,NULL,'BAS',1,0,0,'',"decimal(25,8)","LBL_ACCOUNT_INFORMATION",array(),array())
+		);
+		$Potentials = array(
+		array(2,1631,'payment_balance','vtiger_potential',1,'7','payment_balance','Payment balance',1,2,'',100,19,1,2,'NN~O',1,NULL,'BAS',1,0,0,'',"decimal(25,8)","LBL_OPPORTUNITY_INFORMATION",array(),array())
+		);
+		
+		
+		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Calculations'=>$Calculations,'Quotes'=>$Quotes,'Calendar'=>$Calendar,'Events'=>$Events,'Invoice'=>$Invoice,'Accounts'=>$Accounts,'Potentials'=>$Potentials);
 
 		$setToCRMAfter = array();
 		foreach($setToCRM as $nameModule=>$module){
@@ -765,6 +859,9 @@ A new comment has been added to the ticket.<br />
 		$records[] = array('New comment added to ticket','ModComments','New comment added to ticket','<span class="value">Dear User,<br />
 A new comment has been added to the ticket.<br />
 #b#597#bEnd# #a#597#aEnd#</span>');
+		$records[] = array('Security risk has been detected - Brute Force','Contacts','Security risk has been detected','<span class="value">Dear user,<br />
+Failed login attempts have been detected. </span>');
+
 		foreach($records as $record){
 			$result = $adb->query("SELECT * FROM `vtiger_ossmailtemplates` WHERE `name` = '".$record[0]."'");
 			if($adb->num_rows($result) == 0){
@@ -780,7 +877,7 @@ A new comment has been added to the ticket.<br />
 		$log->debug("Exiting YetiForceUpdate::addRecords() method ...");
 	}
 	public function addModules(){
-		$modules = array('QuotesEnquires','RequirementCards');
+		$modules = array('QuotesEnquires','RequirementCards','HolidaysEntitlement','PaymentsIn','PaymentsOut');
 		foreach($modules as $module){
 			try {
 				if(file_exists('cache/updates/'.$module.'.xml') && !Vtiger_Module::getInstance($module)){
@@ -817,7 +914,37 @@ A new comment has been added to the ticket.<br />
 		$sql = "SELECT `id` FROM `vtiger_ossmenumanager` WHERE label = ? AND tabid = ? AND parent_id = ?;";
 		$result = $adb->pquery( $sql, array($parent, 0, 0), true );
 		$num = $adb->num_rows( $result );
-		if($num == 1){
+		if($num == 0){
+			$subParams = array(
+				'name'         => $parent,
+				'visible'       => '1',
+				'permission'    => $profilePermissions,
+				'locationicon'  => '',
+				'sizeicon'      => '',
+				'langfield'     => ''
+				
+			);
+			$id = OSSMenuManager_Record_Model::addBlock( $subParams ); 
+			if($id){
+				$subParams = array(
+				'parent_id'     => $id,
+				'tabid'         => getTabid($moduleName),
+				'label'         => $moduleName,
+				'sequence'      => -1,
+				'visible'       => '1',
+				'type'          => 0,
+				'url'           => '',
+				'new_window'    => 0,
+				'permission'    => $profilePermissions,
+				'locationicon'  => '',
+				'sizeicon'      => '',
+				'langfield'     => ''
+				
+				);
+				$id = OSSMenuManager_Record_Model::addMenu( $subParams ); 
+			}
+		}
+		elseif($num == 1){
 			$subParams = array(
 				'parent_id'     => $adb->query_result( $result, 0, 'id' ),
 				'tabid'         => getTabid($moduleName),
