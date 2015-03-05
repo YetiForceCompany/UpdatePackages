@@ -145,18 +145,18 @@ class YetiForceUpdate{
 					FOREIGN KEY (`id`) REFERENCES `vtiger_users` (`id`) ON DELETE CASCADE 
 				) ENGINE=InnoDB DEFAULT CHARSET='utf8' COLLATE='utf8_general_ci';");
 		
-		$result = $adb->query("SHOW KEYS FROM `vtiger_module_dashboard_widgets` WHERE Key_name='templateid';");
-		if($adb->num_rows($result) == 1){
-			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` DROP KEY `templateid`;");
-		}
-		$result = $adb->query("SHOW KEYS FROM `vtiger_module_dashboard_widgets` WHERE Key_name='templateid';");
-		if($adb->num_rows($result) == 1){
-			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` DROP KEY `templateid`;");
-		}
 		$result = $adb->query("SHOW KEYS FROM  `vtiger_module_dashboard_widgets` WHERE Key_name='vtiger_module_dashboard_widgets_ibfk_1';");
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD KEY `vtiger_module_dashboard_widgets_ibfk_1`(`templateid`) ;");
 		}
+		$result = $adb->query("SHOW KEYS FROM `vtiger_module_dashboard_widgets` WHERE Key_name='templateid';");
+		if($adb->num_rows($result) == 1){
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` DROP KEY templateid;");
+		}
+		$adb->query("DROP TABLE IF EXISTS `vtiger_max_search_result`;");
+		$adb->query("DROP TABLE IF EXISTS `vtiger_pscategory`;");
+		$adb->query("DROP TABLE IF EXISTS `vtiger_pscategory_seq`;");
+		$adb->query("ALTER TABLE `vtiger_field` CHANGE `helpinfo` `helpinfo` varchar(30) NULL DEFAULT '' after `masseditable` ;");
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	
@@ -377,8 +377,8 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		if($adb->num_rows($result) == 1){
 			$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` ;");
 			if($adb->num_rows($result) == 0){
-				$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','break_time','LBL_BREAK_TIME','#ffd000');");
-				$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','holiday','LBL_HOLIDAY','#00d4f5');");
+				$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','break','PLL_BREAK_TIME','#ffd000');");
+				$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','holiday','PLL_HOLIDAY_TIME','#00d4f5');");
 			}
 		}
 		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('subject','RequirementCards', 'QuotesEnquires'));
@@ -400,6 +400,18 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE type = ? ;", array('reminder'));
 		if($adb->num_rows($result) == 0){
 			$adb->pquery("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values (?,?,?,?);", array('reminder','update_event','LBL_UPDATE_EVENT','0'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE type = ? AND `name` = ?;", array('colors', 'work'));
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values (?,?,?,?);", array('colors','work','PLL_WORKING_TIME','#FFD500'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE type = ? AND `name` = ?;", array('colors', 'Task'));
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values (?,?,?,?);", array('colors','Task','Task','#00d4f5'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE type = ? AND `name` = ?;", array('colors', 'Meeting'));
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values (?,?,?,?);", array('colors','Meeting','Meeting','#FFD500'));
 		}
 		// related list
 		$adb->pquery("UPDATE `vtiger_relatedlists` SET label = ? WHERE related_tabid = ? AND name = ? AND label = ?;", array('Upcoming Activities',getTabid('Calendar'),'get_activities','Activities'));
@@ -891,7 +903,7 @@ Failed login attempts have been detected. </span>');
 		$log->debug("Exiting YetiForceUpdate::addRecords() method ...");
 	}
 	public function addModules(){
-		$modules = array('QuotesEnquires','RequirementCards','HolidaysEntitlement','PaymentsIn','PaymentsOut');
+		$modules = array('QuotesEnquires','RequirementCards','HolidaysEntitlement','PaymentsIn','PaymentsOut','LettersIn','LettersOut');
 		foreach($modules as $module){
 			try {
 				if(file_exists('cache/updates/'.$module.'.xml') && !Vtiger_Module::getInstance($module)){
