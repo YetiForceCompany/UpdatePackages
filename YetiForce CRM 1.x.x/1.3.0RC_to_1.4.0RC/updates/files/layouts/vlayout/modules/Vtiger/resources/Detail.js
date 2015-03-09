@@ -236,19 +236,26 @@ jQuery.Class("Vtiger_Detail_Js",{
 			'SalesOrder': 'parent_id'
 		},
 		'OutsourcedProducts': {
-			'Potentials': 'potential'
+			'Potentials': 'potential',
+                        'Leads': 'parent_id',
+                        'Accounts': 'parent_id',
+                        'Contacts': 'parent_id'
 		},
 		'Assets': {
-			'Potentials': 'potential'
-		},
-		'OutsourcedProducts' : {
-			'Potentials': 'potential'
+			'Potentials': 'potential',
+                        'Accounts': 'parent_id',
+                        'Contacts': 'parent_id'
 		},
 		'OSSOutsourcedServices': {
-			'Potentials': 'potential'
+			'Potentials': 'potential',
+                        'Leads': 'parent_id',
+                        'Accounts': 'parent_id',
+                        'Contacts': 'parent_id'
 		},
 		'OSSSoldServices': {
-			'Potentials': 'potential'
+			'Potentials': 'potential',
+                        'Accounts': 'parent_id',
+                        'Contacts': 'parent_id'
 		},
 	},
 
@@ -1907,6 +1914,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 					app.registerEventForTimeFields(detailContentsHolder);
 					Vtiger_Helper_Js.showHorizontalTopScrollBar();
 					element.progressIndicator({'mode': 'hide'});
+					thisInstance.registerHelpInfo();
 					if(typeof callBack == 'function'){
 						callBack(data);
 					}

@@ -75,7 +75,9 @@ class YetiForceUpdate{
 		$num = $adb->num_rows( $result );
 		if($num == 1){
 			$logoName = $adb->query_result( $result, 0, 'logoname' );
-			copy($root_directory.'test/logo/'.$logoName, $root_directory.'/storage/Logo/'.$logoName);
+			if(file_exists( $root_directory.'test/logo/'.$logoName )){
+				copy($root_directory.'test/logo/'.$logoName, $root_directory.'/storage/Logo/'.$logoName);
+			}
 		}
 		$log->debug("Exiting YetiForceUpdate::transferLogo() method ...");
 	}
@@ -214,11 +216,13 @@ class YetiForceUpdate{
 			$instanceModule = Vtiger_Module::getInstance('Home');
 			$instanceModule->addLink('DASHBOARDWIDGET', 'LIST_OF_LAST_UPDATED_RECORD', 'index.php?module=Home&view=ShowWidget&name=ListUpdatedRecord');
 		}
-		
-		$result = $adb->query("SELECT MAX(blockid) AS id FROM vtiger_settings_blocks");
-		$result = $adb->pquery("UPDATE vtiger_settings_blocks_seq SET `id` = ?",array($adb->query_result($result, 0, 'id')));
-		$blockid = $adb->getUniqueId("vtiger_settings_blocks");
-		$adb->pquery("insert  into `vtiger_settings_blocks`(`blockid`,`label`,`sequence`) values (?,?,?);",array($blockid,'LBL_PROCESSES',9));
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_blocks` WHERE `label` = ? ", array('LBL_PROCESSES'));
+		if($adb->num_rows($result) == 0){
+			$blockid = $adb->getUniqueId("vtiger_settings_blocks");
+			$adb->pquery("insert  into `vtiger_settings_blocks`(`blockid`,`label`,`sequence`) values (?,?,?);",array($blockid,'LBL_PROCESSES',9));
+			$result = $adb->query("SELECT MAX(blockid) AS id FROM vtiger_settings_blocks");
+			$result = $adb->pquery("UPDATE vtiger_settings_blocks_seq SET `id` = ?",array($adb->query_result($result, 0, 'id')));
+		}
 		$adb->pquery("UPDATE `vtiger_modentity_num` SET `cur_id` = ? WHERE `semodule` = ? ;", array(1, 'Products'));
 		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates` WHERE name = ? AND oss_module_list = ? ", array('Customer Portal Login Details', 'Contacts'));
 		if($adb->num_rows($result) == 1){
@@ -522,7 +526,19 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 			$targetModule = Vtiger_Module::getInstance('ServiceContracts');
 			$moduleInstance = Vtiger_Module::getInstance('Calendar');
 			$targetModule->setRelatedList($moduleInstance, 'Activity History', array(),'get_history');
-			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(2, getTabid('ServiceContracts'),getTabid('Calendar'),'get_history','Activity History'));
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET sequence = ? WHERE tabid = ? AND related_tabid = ? AND `name` = ? AND label = ?;", array(2, getTabid('ServiceContracts'),getTabid('Calendar'),'get_history','Activity History'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('RequirementCards','Quotes'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("DELETE FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('RequirementCards','Quotes'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('Calculations','Quotes'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("DELETE FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('Calculations','Quotes'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND `name` = ?", array(getTabid('Quotes'),getTabid('Calculations'),'get_dependents_list'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_relatedlists` SET `name` = ? WHERE `tabid` = ? AND `related_tabid` = ? AND `name` = ?;", array('get_related_list',getTabid('Quotes'),getTabid('Calculations'),'get_dependents_list'));
 		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -587,7 +603,11 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 	public function deleteFields($fieldsToDelete){
 		global $log;
 		$log->debug("Entering YetiForceUpdate::deleteFields() method ...");
-		require_once('includes/main/WebUI.php');
+		if( file_exists( 'includes/main/WebUI.php' ) ){
+			require_once('includes/main/WebUI.php');
+		}elseif( file_exists( 'include/main/WebUI.php' )){
+			require_once('include/main/WebUI.php');
+		}
 		$adb = PearDatabase::getInstance();
 		foreach($fieldsToDelete AS $fld_module=>$columnnames){
 			$moduleId = getTabid($fld_module);
@@ -703,9 +723,17 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		$Potentials = array(
 		array(2,1631,'payment_balance','vtiger_potential',1,'7','payment_balance','Payment balance',1,2,'',100,19,1,2,'NN~O',1,NULL,'BAS',1,0,0,'',"decimal(25,8)","LBL_OPPORTUNITY_INFORMATION",array(),array())
 		);
+		$Vendors = array(
+		array(18,1689,'buildingnumbera','vtiger_vendoraddress',1,'1','buildingnumbera','LBL_BUILDING_NUMBER',1,2,'',100,10,44,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_INFORMATION",array(),array()),
+		array(18,1690,'buildingnumberb','vtiger_vendoraddress',1,'1','buildingnumberb','LBL_BUILDING_NUMBER',1,2,'',100,10,43,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_MAILING_INFORMATION",array(),array()),
+		array(18,1691,'buildingnumberc','vtiger_vendoraddress',1,'1','buildingnumberc','LBL_BUILDING_NUMBER',1,2,'',100,10,179,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_DELIVERY_INFORMATION",array(),array()),
+		array(18,1692,'localnumbera','vtiger_vendoraddress',1,'1','localnumbera','LBL_LOCAL_NUMBER',1,2,'',100,11,44,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_INFORMATION",array(),array()),
+		array(18,1693,'localnumberb','vtiger_vendoraddress',1,'1','localnumberb','LBL_LOCAL_NUMBER',1,2,'',100,11,43,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_MAILING_INFORMATION",array(),array()),
+		array(18,1694,'localnumberc','vtiger_vendoraddress',1,'1','localnumberc','LBL_LOCAL_NUMBER',1,2,'',100,11,179,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(100)","LBL_ADDRESS_DELIVERY_INFORMATION",array(),array()),
+		);
 		
 		
-		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Calculations'=>$Calculations,'Quotes'=>$Quotes,'Calendar'=>$Calendar,'Events'=>$Events,'Invoice'=>$Invoice,'Accounts'=>$Accounts,'Potentials'=>$Potentials);
+		$setToCRM = array('OSSTimeControl'=>$OSSTimeControl,'Calculations'=>$Calculations,'Quotes'=>$Quotes,'Calendar'=>$Calendar,'Events'=>$Events,'Invoice'=>$Invoice,'Accounts'=>$Accounts,'Potentials'=>$Potentials,'Vendors'=>$Vendors);
 
 		$setToCRMAfter = array();
 		foreach($setToCRM as $nameModule=>$module){
@@ -809,16 +837,18 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 			}
 		}
 		//add new entity method
-		$result = $adb->pquery("SELECT * FROM `com_vtiger_workflowtasks_entitymethod` WHERE module_name = ? AND method_name =? ", array('Contacts','MarkPasswordSent'));
-		if($adb->num_rows($result) == 0){
 			$task_entity_method = array();
 			$task_entity_method[] = array('Contacts','MarkPasswordSent','modules/Contacts/handlers/ContactsHandler.php','Contacts_markPasswordSent');
+			$task_entity_method[] = array('PaymentsIn','UpdateBalance','modules/PaymentsIn/workflow/UpdateBalance.php','UpdateBalance');
+			$task_entity_method[] = array('Invoice','UpdateBalance','modules/PaymentsIn/workflow/UpdateBalance.php','UpdateBalance');
+			$task_entity_method[] = array('PaymentsOut','UpdateBalance','modules/PaymentsIn/workflow/UpdateBalance.php','UpdateBalance');
 			$emm = new VTEntityMethodManager($adb);
 			foreach($task_entity_method as $method){
-				$emm->addEntityMethod($method[0], $method[1], $method[2], $method[3]);
+				$result = $adb->pquery("SELECT * FROM `com_vtiger_workflowtasks_entitymethod` WHERE module_name = ? AND method_name =? ", array($method[0],$method[1]));
+				if($adb->num_rows($result) == 0){
+					$emm->addEntityMethod($method[0], $method[1], $method[2], $method[3]);
+				}
 			}
-		}
-		
 		$workflow = array();
 		
 		$workflow[] = array(56,'ModComments','New comment added to ticket from portal','[{"fieldname":"(related_to : (HelpDesk) ticket_title)","operation":"is not empty","value":null,"valuetype":"rawtext","joincondition":"and","groupjoin":"and","groupid":"0"},{"fieldname":"customer","operation":"is not empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]',1,NULL,'basic',6,NULL,NULL,NULL,NULL,NULL,NULL);

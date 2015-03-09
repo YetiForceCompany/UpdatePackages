@@ -25,4 +25,6 @@ $languageStrings = array(
 );
 
 $jsLanguageStrings = array(
+	'LBL_DATE_SHOULD_BE_GREATER_THAN'	=>	'Дата окончания не может быть меньше или равна Дате начала',
+	'LBL_HOURS_SHOULD_BE_SMALLER_THAN' => 'Время работы не может превышать 24 часа',
 );

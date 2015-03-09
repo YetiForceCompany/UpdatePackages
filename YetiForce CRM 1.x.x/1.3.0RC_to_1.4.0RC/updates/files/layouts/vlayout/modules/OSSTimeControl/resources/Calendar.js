@@ -32,7 +32,6 @@ jQuery.Class("OSSTimeControl_Calendar_Js",{
 			var selectedOptionTag = field.find('option[value="'+selectedId+'"]');
 			container.addClass(fieldClass+'_'+selectedId);
 			var element = '<div>'+selectedOptionTag.text()+'</div>';
-			console.log(selectedId);
 			return element;
 		}
 		app.changeSelectElementView(field, 'select2',params);
@@ -87,11 +86,9 @@ jQuery.Class("OSSTimeControl_Calendar_Js",{
 			defaultEventMinutes: 0,
 			defaultTimedEventDuration: '01:00:00',
 			eventLimit: true,
-			selectable: true,
-			selectHelper: true,
 			allDaySlot: false,
-			select: function(start, end) {
-				thisInstance.selectDays(start.format(),end.format());
+			dayClick: function(date, jsEvent, view) {
+				thisInstance.selectDay(date.format());
 				thisInstance.getCalendarView().fullCalendar('unselect');
 			},
 			eventDrop: function ( event, delta, revertFunc) {
@@ -183,7 +180,7 @@ jQuery.Class("OSSTimeControl_Calendar_Js",{
 			revertFunc();
 		});
 	},
-	selectDays: function (start, end) {
+	selectDay: function (date) {
 		var thisInstance = this;
 		thisInstance.getCalendarCreateView().then(function (data) {
 			if (data.length <= 0) {
@@ -196,12 +193,12 @@ jQuery.Class("OSSTimeControl_Calendar_Js",{
 			} else {
 				defaultTimeFormat = 'hh:mm tt';
 			}
-			var startDateInstance = Date.parse(start);
+			var startDateInstance = Date.parse(date);
 			var startDateString = app.getDateInVtigerFormat(dateFormat, startDateInstance);
 			var startTimeString = startDateInstance.toString(defaultTimeFormat);
-			var endDateInstance = Date.parse(end);
+			var endDateInstance = Date.parse(date);
 			var endDateString = app.getDateInVtigerFormat(dateFormat, endDateInstance);
-			var endTimeString = endDateInstance.toString(defaultTimeFormat);
+
 					
 			var view = thisInstance.getCalendarView().fullCalendar('getView');
 			if('month' == view.name){	
@@ -220,6 +217,9 @@ jQuery.Class("OSSTimeControl_Calendar_Js",{
 					now.setMinutes(now.getMinutes() + 15);
 					var endTimeString = now.toString(defaultTimeFormat);
 				}
+			}else{
+				endDateInstance.setMinutes(endDateInstance.getMinutes() + 30);
+				var endTimeString = endDateInstance.toString(defaultTimeFormat);
 			}
 
 			data.find('[name="date_start"]').val(startDateString);
