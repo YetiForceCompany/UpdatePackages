@@ -41,6 +41,7 @@ class YetiForceUpdate{
 		'modules/Calculations/LineItemsEdit.tpl',
 		'modules/Calculations/resources/Detail.js',
 		'modules/Calculations/resources/Edit.js',
+		'modules/Vtiger/widgets/Dropbox.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -159,6 +160,77 @@ class YetiForceUpdate{
 		$adb->query("DROP TABLE IF EXISTS `vtiger_pscategory`;");
 		$adb->query("DROP TABLE IF EXISTS `vtiger_pscategory_seq`;");
 		$adb->query("ALTER TABLE `vtiger_field` CHANGE `helpinfo` `helpinfo` varchar(30) NULL DEFAULT '' after `masseditable` ;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_addressbookchanges` (
+					  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					  `uri` varchar(200) NOT NULL,
+					  `synctoken` int(11) unsigned NOT NULL,
+					  `addressbookid` int(11) unsigned NOT NULL,
+					  `operation` tinyint(1) NOT NULL,
+					  PRIMARY KEY (`id`),
+					  KEY `addressbookid_synctoken` (`addressbookid`,`synctoken`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_groupmembers` (
+				  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				  `principal_id` int(10) unsigned NOT NULL,
+				  `member_id` int(10) unsigned NOT NULL,
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `principal_id` (`principal_id`,`member_id`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_principals` (
+				  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				  `uri` varchar(200) NOT NULL,
+				  `email` varchar(80) DEFAULT NULL,
+				  `displayname` varchar(80) DEFAULT NULL,
+				  `vcardurl` varchar(255) DEFAULT NULL,
+				  `userid` int(19) DEFAULT NULL,
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `uri` (`uri`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_addressbooks` (
+				  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				  `principaluri` varchar(255) DEFAULT NULL,
+				  `displayname` varchar(255) DEFAULT NULL,
+				  `uri` varchar(200) DEFAULT NULL,
+				  `description` text,
+				  `synctoken` int(11) unsigned NOT NULL DEFAULT '1',
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `principaluri` (`principaluri`(100),`uri`(100)),
+				  KEY `principaluri_2` (`principaluri`),
+				  CONSTRAINT `dav_addressbooks_ibfk_1` FOREIGN KEY (`principaluri`) REFERENCES `dav_principals` (`uri`) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_cards` (
+				  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				  `addressbookid` int(11) unsigned NOT NULL,
+				  `carddata` mediumblob,
+				  `uri` varchar(200) DEFAULT NULL,
+				  `lastmodified` int(11) unsigned DEFAULT NULL,
+				  `etag` varbinary(32) DEFAULT NULL,
+				  `size` int(11) unsigned NOT NULL,
+				  `status` tinyint(1) DEFAULT '0',
+				  `crmid` int(19) DEFAULT '0',
+				  PRIMARY KEY (`id`),
+				  KEY `addressbookid` (`addressbookid`,`crmid`),
+				  CONSTRAINT `dav_cards_ibfk_1` FOREIGN KEY (`addressbookid`) REFERENCES `dav_addressbooks` (`id`) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_users` (
+				  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				  `username` varchar(50) DEFAULT NULL,
+				  `digesta1` varchar(32) DEFAULT NULL,
+				  `userid` int(19) unsigned DEFAULT NULL,
+				  `key` varchar(50) DEFAULT NULL,
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `username` (`username`),
+				  UNIQUE KEY `userid` (`userid`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_contactdetails` LIKE 'dav_status';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_contactdetails` ADD COLUMN `dav_status` tinyint(1) NULL DEFAULT 1 after `contactstatus` ;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossemployees` LIKE 'dav_status';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_ossemployees` ADD COLUMN `dav_status` tinyint(1) NULL DEFAULT 1 after `ship_country`;");
+		}
+		
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	
@@ -175,6 +247,7 @@ class YetiForceUpdate{
 		$settings_field[] = array('LBL_STUDIO','LBL_CALENDAR_CONFIG',NULL,'LBL_CALENDAR_CONFIG_DESCRIPTION','index.php?parent=Settings&module=Calendar&view=UserColors',18,0,0);
 		$settings_field[] = array('LBL_PROCESSES','LBL_CONVERSION_TO_ACCOUNT',NULL,'LBL_CONVERSION_TO_ACCOUNT_DESCRIPTION','index.php?module=Leads&parent=Settings&view=ConvertToAccount',2,0,0);
 		$settings_field[] = array('LBL_PROCESSES','LBL_SALES_PROCESSES',NULL,'LBL_SALES_PROCESSES_DESCRIPTION','index.php?module=SalesProcesses&view=Configuration&parent=Settings',1,0,0);
+		$settings_field[] = array('LBL_INTEGRATION','LBL_DAV_KEYS',NULL,'LBL_DAV_KEYS_DESCRIPTION','index.php?parent=Settings&module=Dav&view=Keys',6,0,0);
 		foreach ($settings_field AS $field){
 			if(!self::checkFieldExists( $field, 'Settings' )){
 				$field[0] = self::getBlockId($field[0]);
@@ -372,7 +445,8 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		$adb->pquery("UPDATE `vtiger_field` SET `displaytype` = ? WHERE `columnname` = ? AND `tablename` = ? ;", array(1,'product_id', 'vtiger_troubletickets'));
 		
 		$fieldsToDelete = array(
-		'OSSTimeControl'=>array('payment')
+		'OSSTimeControl'=>array('payment'),
+		'Calculations'=>array('parentid')
 		);
 		self::deleteFields($fieldsToDelete);
 		self::addFields();
@@ -540,6 +614,100 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		if($adb->num_rows($result) == 1){
 			$adb->pquery("UPDATE `vtiger_relatedlists` SET `name` = ? WHERE `tabid` = ? AND `related_tabid` = ? AND `name` = ?;", array('get_related_list',getTabid('Quotes'),getTabid('Calculations'),'get_dependents_list'));
 		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('OSSEmployees'),getTabid('HolidaysEntitlement'),'get_dependents_list','HolidaysEntitlement'));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('OSSEmployees');
+			$moduleInstance = Vtiger_Module::getInstance('HolidaysEntitlement');
+			$targetModule->setRelatedList($moduleInstance, 'HolidaysEntitlement', array('ADD'),'get_dependents_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Accounts'),getTabid('RequirementCards'),'get_dependents_list','RequirementCards'));
+		if($adb->num_rows($result) == 0){
+			$targetModule = Vtiger_Module::getInstance('Accounts');
+			$moduleInstance = Vtiger_Module::getInstance('RequirementCards');
+			$targetModule->setRelatedList($moduleInstance, 'RequirementCards', array('ADD'),'get_dependents_list');
+		}
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE tabid = ? AND linktype = ? AND linklabel = ?;", array(getTabid('Calculations'),'DETAILVIEWWIDGET','DetailViewBlockCommentWidget'));
+		if($adb->num_rows($result) == 0){
+			$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
+			if($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
+				include_once 'modules/ModComments/ModComments.php';
+				if(class_exists('ModComments')) ModComments::addWidgetTo(array('Calculations'));
+			}
+		}
+		$modulename = 'Calculations';
+		$modcommentsModuleInstance = Vtiger_Module::getInstance('ModTracker');
+		if($modcommentsModuleInstance && file_exists('modules/ModTracker/ModTracker.php')) {
+			include_once('vtlib/Vtiger/Module.php');
+			include_once 'modules/ModTracker/ModTracker.php';
+			$tabid = Vtiger_Functions::getModuleId($modulename);
+			$moduleModTrackerInstance = new ModTracker();
+			if(!$moduleModTrackerInstance->isModulePresent($tabid)){
+				$res=$adb->pquery("INSERT INTO vtiger_modtracker_tabs VALUES(?,?)",array($tabid,1));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			} else{
+				$updatevisibility = $adb->pquery("UPDATE vtiger_modtracker_tabs SET visible = 1 WHERE tabid = ?", array($tabid));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			}
+			if(!$moduleModTrackerInstance->isModTrackerLinkPresent($tabid)){
+				$moduleInstance=Vtiger_Module::getInstance($tabid);
+				$moduleInstance->addLink('DETAILVIEWBASIC', 'View History', "javascript:ModTrackerCommon.showhistory('\$RECORD\$')",'','',
+				array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
+			}
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE tabid = ? AND linktype = ? AND linklabel = ?;", array(getTabid('Quotes'),'DETAILVIEWWIDGET','DetailViewBlockCommentWidget'));
+		if($adb->num_rows($result) == 0){
+			$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
+			if($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
+				include_once 'modules/ModComments/ModComments.php';
+				if(class_exists('ModComments')) ModComments::addWidgetTo(array('Quotes'));
+			}
+		}
+		$modulename = 'Quotes';
+		$modcommentsModuleInstance = Vtiger_Module::getInstance('ModTracker');
+		if($modcommentsModuleInstance && file_exists('modules/ModTracker/ModTracker.php')) {
+			include_once('vtlib/Vtiger/Module.php');
+			include_once 'modules/ModTracker/ModTracker.php';
+			$tabid = Vtiger_Functions::getModuleId($modulename);
+			$moduleModTrackerInstance = new ModTracker();
+			if(!$moduleModTrackerInstance->isModulePresent($tabid)){
+				$res=$adb->pquery("INSERT INTO vtiger_modtracker_tabs VALUES(?,?)",array($tabid,1));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			} else{
+				$updatevisibility = $adb->pquery("UPDATE vtiger_modtracker_tabs SET visible = 1 WHERE tabid = ?", array($tabid));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			}
+			if(!$moduleModTrackerInstance->isModTrackerLinkPresent($tabid)){
+				$moduleInstance=Vtiger_Module::getInstance($tabid);
+				$moduleInstance->addLink('DETAILVIEWBASIC', 'View History', "javascript:ModTrackerCommon.showhistory('\$RECORD\$')",'','',
+				array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
+			}
+		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_cron_task` WHERE name = ? ;", array('CardDav'));
+		if($adb->num_rows($result) == 0){
+			$addCrons = array();
+			$addCrons[] = array('CardDav','modules/API/cron/CardDav.php',300,NULL,NULL,1,'Contacts',12,NULL);
+			foreach($addCrons as $cron){
+				Vtiger_Cron::register($cron[0],$cron[1],$cron[2],$cron[6],$cron[5],0,$cron[8]);
+			}
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", array('vtiger.entity.aftersave.final', 'API_CardDAV_Handler'));
+		if($adb->num_rows($result) == 0){
+			$addHandler[] = array('vtiger.entity.aftersave.final','modules/API/handlers/CardDAV.php','API_CardDAV_Handler','',1,'[]');
+			$em = new VTEventsManager($adb);
+			foreach($addHandler as $handler){
+				$em->registerHandler($handler[0], $handler[1], $handler[2], $handler[3], $handler[5]);
+			}
+		}
+		$modules = array('RequirementCards','QuotesEnquires');
+		foreach($modules as $module){
+			$moduleInstance = Vtiger_Module::getInstance($module);
+			$refInstance = Vtiger_Module::getInstance('OSSMailView');
+			if($moduleInstance && $refInstance){
+				$moduleInstance->unsetRelatedList($refInstance,"OSSMailView",'get_related_list');
+			}
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function picklists(){
@@ -549,6 +717,8 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		$addPicklists = array();
 		$addPicklists['SalesOrder'][] = array('name'=>'payment_duration','uitype'=>'16','add_values'=>array('payment:+0 day','payment:+1 day','payment:+7 days','payment:+14 days','payment:+21 days','payment:+30 days','payment:+60 days','payment:+90 days','payment:+180 days','payment:+360 days','payment:+1 month','payment:+3 months','payment:+6 months','payment:+1 year','payment:monday next week','payment:friday next week','payment:first day of next month','payment:last day of next month','payment:first day of +3 months','payment:last day of +3 months'),'remove_values'=>array('Net 30 days','Net 45 days','Net 60 days'));
 		$addPicklists['SalesOrder'][] = array('name'=>'recurring_frequency','uitype'=>'16','add_values'=>array('+1 day','+7 days','+14 days','+21 days','+30 days','+60 days','+90 days','+180 days','+360 days','+1 month','+3 months','+6 months','+1 year','monday next week','friday next week','first day of next month','last day of next month','first day of +3 months','last day of +3 months'),'remove_values'=>array('Daily','Weekly','Monthly','Quarterly','Yearly'));
+		$addPicklists['Calculations'][] = array('name'=>'calculationsstatus','uitype'=>'15','add_values'=>array('PLL_WAITING_FOR_VERIFICATION','PLL_VERIFICATION_PROCESS','PLL_INTERNAL_CONSULTATION_REQUIRED','PLL_EXTERNAL_CONSULTATION_REQUIRED','PLL_WAITING_FOR_VENDORS_QUOTE','PLL_WAITING_FOR_CUSTOMERS_REPLY','PLL_IN_PREPARATION','LBL_DECLINED','LBL_ACCEPTED'),'remove_values'=>array('LBL_IN_PREPARATION','Waiting for valuation','Waiting for acceptance','Accepted','Rejected','LBL_OBJECTIONS_ARE_RAISED'));
+		$addPicklists['Quotes'][] = array('name'=>'quotestage','uitype'=>'15','add_values'=>array('PLL_WAITING_FOR_PREPARATION','PLL_INTERNAL_CONSULTATION_REQUIRED','PLL_EXTERNAL_CONSULTATION_REQUIRED','PLL_WAITING_FOR_CUSTOMERS_REPLY','PLL_IN_PREPARATION','PLL_DECLINED','PLL_ACCEPTED'),'remove_values'=>array('Created','Delivered','Reviewed','Accepted','Rejected'));
 		
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array();
@@ -593,12 +763,36 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 						$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array($piscklist['name'], '+3 months'));
 					}if($piscklist['name'] == 'Yearly'){
 						$adb->pquery("UPDATE `vtiger_invoice_recurring_info` SET `recurring_frequency` = ? WHERE `recurring_frequency` = ? ;", array($piscklist['name'], '+1 year'));
+					}if($piscklist['name'] == 'Accepted' && $moduleName == 'Calculations'){
+						$adb->pquery("UPDATE `vtiger_calculations` SET `calculationsstatus` = ? WHERE `calculationsstatus` = ? ;", array($piscklist['name'], 'LBL_ACCEPTED'));
+					}if($piscklist['name'] == 'Rejected' && $moduleName == 'Calculations'){
+						$adb->pquery("UPDATE `vtiger_calculations` SET `calculationsstatus` = ? WHERE `calculationsstatus` = ? ;", array($piscklist['name'], 'LBL_DECLINED'));
+					}
+					if($piscklist['name'] == 'Accepted' && $moduleName == 'Quotes'){
+						$adb->pquery("UPDATE `vtiger_calculations` SET `calculationsstatus` = ? WHERE `calculationsstatus` = ? ;", array($piscklist['name'], 'PLL_ACCEPTED'));
+					}if($piscklist['name'] == 'Rejected' && $moduleName == 'Quotes'){
+						$adb->pquery("UPDATE `vtiger_quotes` SET `quotestage` = ? WHERE `quotestage` = ? ;", array($piscklist['name'], 'PLL_DECLINED'));
 					}
 					//$moduleModel->remove($piscklist['name'], $deletePicklistId, '', $moduleName); // remove and replace in records
 				}
 			}
 		}
 		$log->debug("Exiting YetiForceUpdate::picklists() method ...");
+	}
+	public function getPicklistId($fieldName, $value){
+		global $log,$adb;
+		$log->debug("Entering YetiForceUpdate::getPicklistId(".$fieldName.','.$value.") method ...");
+		if(Vtiger_Utils::CheckTable('vtiger_' .$fieldName)) {
+			$sql = 'SELECT * FROM vtiger_' .$fieldName. ' WHERE ' .$fieldName. ' = ? ;';
+			$result = $adb->pquery($sql, array($value));
+			if($adb->num_rows($result) > 0){
+				$log->debug("Exiting YetiForceUpdate::getPicklistId() method ...");
+				return $adb->query_result($result, 0, 'picklist_valueid');
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::getPicklistId() method ...");
+		return false;
+		
 	}
 	public function deleteFields($fieldsToDelete){
 		global $log;
@@ -698,14 +892,20 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		$columnName = array("tabid","id","column","table","generatedtype","uitype","name","label","readonly","presence","defaultvalue","maximumlength","sequence","block","displaytype","typeofdata","quickcreate","quicksequence","info_type","masseditable","helpinfo","summaryfield","fieldparams","columntype","blocklabel","setpicklistvalues","setrelatedmodules");
 
 		$OSSTimeControl = array(
-		array('51','1600','timecontrol_type','vtiger_osstimecontrol','1','16','timecontrol_type','Type','1','2','PLL_WORKING_TIME','100','17','128','1','V~M','2','','BAS','1','0','0','',"varchar(255)","LBL_MAIN_INFORMATION",array('PLL_WORKING_TIME','PLL_BREAK_TIME','PLL_HOLIDAY'))
+		array('51','1600','timecontrol_type','vtiger_osstimecontrol','1','16','timecontrol_type','Type','1','2','PLL_WORKING_TIME','100','17','128','1','V~M','2','','BAS','1','','0','',"varchar(255)","LBL_MAIN_INFORMATION",array('PLL_WORKING_TIME','PLL_BREAK_TIME','PLL_HOLIDAY')),
+		array(51,1706,'requirementcardsid','vtiger_osstimecontrol',1,'10','requirementcardsid','RequirementCards',1,2,'',100,13,129,1,'V~O',1,NULL,'BAS',1,'',0,'',"int(19)","LBL_BLOCK",array(),array('RequirementCards')),
+		array(51,1707,'quotesenquiresid','vtiger_osstimecontrol',1,'10','quotesenquiresid','QuotesEnquires',1,2,'',100,14,129,1,'V~O',1,NULL,'BAS',1,'',0,'',"int(19)","LBL_BLOCK",array(),array('QuotesEnquires'))
 		);
 		$Quotes = array(
-		array('20','1585','requirementcards_id','vtiger_quotes','1','10','requirementcards_id','RequirementCards','1','2','','100','28','49','1','V~O','1','','BAS','1','0','0','',"int(19)","LBL_QUOTE_INFORMATION",array(),array('RequirementCards'))
+		array('20','1585','requirementcards_id','vtiger_quotes','1','10','requirementcards_id','RequirementCards','1','2','','100','28','49','1','V~O','1','','BAS','1','0','','',"int(19)","LBL_QUOTE_INFORMATION",array(),array('RequirementCards'))
 		);
 		$Calculations = array(
 		array(70,1601,'currency_id','vtiger_calculations',1,'117','currency_id','Currency',1,2,'1',100,11,182,3,'I~O',3,NULL,'BAS',1,0,0,'',"int(19)","LBL_INFORMATION",array(),array()),
-		array(70,1602,'conversion_rate','vtiger_calculations',1,'1','conversion_rate','Conversion Rate',1,2,'1',100,12,182,3,'N~O',3,NULL,'BAS',1,0,0,'',"decimal(10,3)","LBL_INFORMATION",array(),array())
+		array(70,1602,'conversion_rate','vtiger_calculations',1,'1','conversion_rate','Conversion Rate',1,2,'1',100,12,182,3,'N~O',3,NULL,'BAS',1,0,0,'',"decimal(10,3)","LBL_INFORMATION",array(),array()),
+		array(70,1702,'requirementcardsid','vtiger_calculations',1,'10','requirementcardsid','RequirementCards',1,2,'',100,3,182,1,'M~M',1,NULL,'BAS',1,'',0,'',"int(19)","LBL_INFORMATION",array(),array('RequirementCards')),
+		array(70,1703,'quotesenquiresid','vtiger_calculations',1,'10','quotesenquiresid','QuotesEnquires',1,2,'',100,5,182,10,'M~M',1,NULL,'BAS',1,'',0,'',"int(19)","LBL_INFORMATION",array(),array('QuotesEnquires')),
+		array(70,1704,'calculations_cons','vtiger_calculations',1,'33','calculations_cons','LBL_CONS',1,2,'',100,9,182,1,'V~O',1,NULL,'BAS',1,'',0,'',"text","LBL_INFORMATION",array('PLL_DIFFICULT_REALIZATION','PLL_DIFFICULT_ORDER','PLL_DIFFICULT_SHIPMENT','PLL_OUTSOURCED_PARTNER'),array()),
+		array(70,1705,'calculations_pros','vtiger_calculations',1,'33','calculations_pros','LBL_PROS',1,2,'',100,10,182,1,'V~O',1,NULL,'BAS',1,'',0,'',"text","LBL_INFORMATION",array('PLL_HIGH_MARGIN','PLL_EASY_REALIZATION','PLL_LONGTERM_REALIZATION'),array())
 		);
 		
 		$Calendar = array(
@@ -776,6 +976,14 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 						$fieldInstance->setPicklistValues($field['setpicklistvalues']);
 					if($field['setrelatedmodules'] && $field['uitype'] == 10){
 						$fieldInstance->setRelatedModules($field['setrelatedmodules']);
+					}
+					if('OSSTimeControl' == $moduleName && 'requirementcardsid' == $field['column']){
+						$target_Module = Vtiger_Module::getInstance('RequirementCards');
+						$target_Module->setRelatedList($moduleInstance, $moduleName, array('Add'),'get_dependents_list');
+					}
+					if('OSSTimeControl' == $moduleName && 'quotesenquiresid' == $field['column']){
+						$target_Module = Vtiger_Module::getInstance('QuotesEnquires');
+						$target_Module->setRelatedList($moduleInstance, $moduleName, array('Add'),'get_dependents_list');
 					}
 			}
 		}
