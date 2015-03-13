@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <module>
-<exporttime>2015-03-11 10:37:58</exporttime>
+<exporttime>2015-03-13 05:26:03</exporttime>
 <name>QuotesEnquires</name>
 <label>QuotesEnquires</label>
 <parent>Sales</parent>
@@ -123,10 +123,10 @@
 <masseditable>1</masseditable>
 <summaryfield>1</summaryfield>
 <picklistvalues>
-<picklistvalue>LBL_NOT_STARTED</picklistvalue>
-<picklistvalue>LBL_VERIFICATION</picklistvalue>
-<picklistvalue>LBL_DECLINED</picklistvalue>
-<picklistvalue>LBL_ACCEPTED</picklistvalue>
+<picklistvalue>PLL_NOT_STARTED</picklistvalue>
+<picklistvalue>PLL_VERIFICATION</picklistvalue>
+<picklistvalue>PLL_DECLINED</picklistvalue>
+<picklistvalue>PLL_ACCEPTED</picklistvalue>
 </picklistvalues>
 </field>
 <field>
@@ -152,12 +152,12 @@
 <masseditable>1</masseditable>
 <summaryfield>0</summaryfield>
 <picklistvalues>
-<picklistvalue>LBL_LOW_MARGIN</picklistvalue>
-<picklistvalue>LBL_UNRELIABLE_CONTRACTOR</picklistvalue>
-<picklistvalue>LBL_UNRELIABLE_PAYMENT</picklistvalue>
-<picklistvalue>LBL_NO_DETAILS</picklistvalue>
-<picklistvalue>LBL_LACK_OF_COMPETENCE</picklistvalue>
-<picklistvalue>LBL_LACK_OF_TIME</picklistvalue>
+<picklistvalue>PLL_LOW_MARGIN</picklistvalue>
+<picklistvalue>PLL_UNRELIABLE_CONTRACTOR</picklistvalue>
+<picklistvalue>PLL_UNRELIABLE_PAYMENT</picklistvalue>
+<picklistvalue>PLL_NO_DETAILS</picklistvalue>
+<picklistvalue>PLL_LACK_OF_COMPETENCE</picklistvalue>
+<picklistvalue>PLL_LACK_OF_TIME</picklistvalue>
 </picklistvalues>
 </field>
 <field>
@@ -183,13 +183,13 @@
 <masseditable>1</masseditable>
 <summaryfield>0</summaryfield>
 <picklistvalues>
-<picklistvalue>LBL_HIGH_MARGIN</picklistvalue>
-<picklistvalue>LBL_RELIABLE_CONTRACTOR</picklistvalue>
-<picklistvalue>LBL_SOLID_PAYMENT</picklistvalue>
-<picklistvalue>LBL_DETAILED_DESCRIPTION</picklistvalue>
-<picklistvalue>LBL_COMPETENT_TEAM</picklistvalue>
-<picklistvalue>LBL_EASE_OF_COMMUNICATION</picklistvalue>
-<picklistvalue>LBL_RECOMMENDABLE</picklistvalue>
+<picklistvalue>PLL_HIGH_MARGIN</picklistvalue>
+<picklistvalue>PLL_RELIABLE_CONTRACTOR</picklistvalue>
+<picklistvalue>PLL_SOLID_PAYMENT</picklistvalue>
+<picklistvalue>PLL_DETAILED_DESCRIPTION</picklistvalue>
+<picklistvalue>PLL_COMPETENT_TEAM</picklistvalue>
+<picklistvalue>PLL_EASE_OF_COMMUNICATION</picklistvalue>
+<picklistvalue>PLL_RECOMMENDABLE</picklistvalue>
 </picklistvalues>
 </field>
 <field>

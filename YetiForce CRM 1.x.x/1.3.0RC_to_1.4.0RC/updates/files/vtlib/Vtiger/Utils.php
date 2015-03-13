@@ -15,7 +15,7 @@ include_once('include/utils/utils.php');
  * @package vtlib
  */
 class Vtiger_Utils {
-    protected static $logFileName = 'vtigermodule.log';
+    protected static $logFileName = 'module.log';
     
 	/**
 	 * Check if given value is a number or not

@@ -42,6 +42,10 @@ class YetiForceUpdate{
 		'modules/Calculations/resources/Detail.js',
 		'modules/Calculations/resources/Edit.js',
 		'modules/Vtiger/widgets/Dropbox.php',
+		'languages/de_de/BackUp.php',
+		'languages/en_us/BackUp.php',
+		'languages/pl_pl/BackUp.php',
+		'languages/pt_br/BackUp.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -206,7 +210,6 @@ class YetiForceUpdate{
 				  `lastmodified` int(11) unsigned DEFAULT NULL,
 				  `etag` varbinary(32) DEFAULT NULL,
 				  `size` int(11) unsigned NOT NULL,
-				  `status` tinyint(1) DEFAULT '0',
 				  `crmid` int(19) DEFAULT '0',
 				  PRIMARY KEY (`id`),
 				  KEY `addressbookid` (`addressbookid`,`crmid`),
@@ -229,6 +232,93 @@ class YetiForceUpdate{
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossemployees` LIKE 'dav_status';");
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_ossemployees` ADD COLUMN `dav_status` tinyint(1) NULL DEFAULT 1 after `ship_country`;");
+		}
+		
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_backup_ftp` LIKE 'port';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_backup_ftp` ADD COLUMN `port` int(11) NULL after `status`;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_backup_ftp` LIKE 'active';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_backup_ftp` ADD COLUMN `active` tinyint(1) NOT NULL after `port`;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_backup_ftp` LIKE 'path';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_backup_ftp` ADD COLUMN `path` varchar(255) NOT NULL after `active`;");
+		}
+		
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_calendarchanges` (
+					  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					  `uri` varchar(200) NOT NULL,
+					  `synctoken` int(11) unsigned NOT NULL,
+					  `calendarid` int(11) unsigned NOT NULL,
+					  `operation` tinyint(1) NOT NULL,
+					  PRIMARY KEY (`id`),
+					  KEY `calendarid_synctoken` (`calendarid`,`synctoken`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_calendars` (
+					  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+					  `principaluri` varbinary(100) DEFAULT NULL,
+					  `displayname` varchar(100) DEFAULT NULL,
+					  `uri` varbinary(200) DEFAULT NULL,
+					  `synctoken` int(10) unsigned NOT NULL DEFAULT '1',
+					  `description` text,
+					  `calendarorder` int(11) unsigned NOT NULL DEFAULT '0',
+					  `calendarcolor` varbinary(10) DEFAULT NULL,
+					  `timezone` text,
+					  `components` varbinary(20) DEFAULT NULL,
+					  `transparent` tinyint(1) NOT NULL DEFAULT '0',
+					  PRIMARY KEY (`id`),
+					  UNIQUE KEY `principaluri` (`principaluri`,`uri`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_calendarobjects` (
+					  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					  `calendardata` mediumblob,
+					  `uri` varbinary(200) DEFAULT NULL,
+					  `calendarid` int(10) unsigned NOT NULL,
+					  `lastmodified` int(11) unsigned DEFAULT NULL,
+					  `etag` varbinary(32) DEFAULT NULL,
+					  `size` int(11) unsigned NOT NULL,
+					  `componenttype` varbinary(8) DEFAULT NULL,
+					  `firstoccurence` int(11) unsigned DEFAULT NULL,
+					  `lastoccurence` int(11) unsigned DEFAULT NULL,
+					  `uid` varchar(200) DEFAULT NULL,
+					  `crmid` int(19) DEFAULT NULL,
+					  PRIMARY KEY (`id`),
+					  UNIQUE KEY `calendarid` (`calendarid`,`uri`),
+					  CONSTRAINT `dav_calendarobjects_ibfk_1` FOREIGN KEY (`calendarid`) REFERENCES `dav_calendars` (`id`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_schedulingobjects` (
+					  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					  `principaluri` varchar(255) DEFAULT NULL,
+					  `calendardata` mediumblob,
+					  `uri` varchar(200) DEFAULT NULL,
+					  `lastmodified` int(11) unsigned DEFAULT NULL,
+					  `etag` varchar(32) DEFAULT NULL,
+					  `size` int(11) unsigned NOT NULL,
+					  PRIMARY KEY (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `dav_calendarsubscriptions` (
+					  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					  `uri` varchar(200) NOT NULL,
+					  `principaluri` varchar(100) NOT NULL,
+					  `source` text,
+					  `displayname` varchar(100) DEFAULT NULL,
+					  `refreshrate` varchar(10) DEFAULT NULL,
+					  `calendarorder` int(11) unsigned NOT NULL DEFAULT '0',
+					  `calendarcolor` varchar(10) DEFAULT NULL,
+					  `striptodos` tinyint(1) DEFAULT NULL,
+					  `stripalarms` tinyint(1) DEFAULT NULL,
+					  `stripattachments` tinyint(1) DEFAULT NULL,
+					  `lastmodified` int(11) unsigned DEFAULT NULL,
+					  PRIMARY KEY (`id`),
+					  UNIQUE KEY `principaluri` (`principaluri`,`uri`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+					
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_activity` LIKE 'dav_status';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_activity` ADD COLUMN `dav_status` tinyint(1) NULL DEFAULT 1;");
 		}
 		
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
@@ -708,6 +798,32 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 				$moduleInstance->unsetRelatedList($refInstance,"OSSMailView",'get_related_list');
 			}
 		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_dataaccess` WHERE summary = ?;", array('Date vatidation'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_dataaccess` SET `summary` = ? WHERE `summary` = ? ;", array('Date validation','Date vatidation'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_dataaccess` WHERE summary = ?;", array('Checking whether all mandatory fields in quick edit are filled in'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery("UPDATE `vtiger_dataaccess` SET `summary` = ? WHERE `summary` = ? ;", array('Check whether all mandatory fields in quick edit are filled in','Checking whether all mandatory fields in quick edit are filled in'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_cron_task` WHERE name = ? ;", array('CalDav'));
+		if($adb->num_rows($result) == 0){
+			$addCrons = array();
+			$addCrons[] = array('CalDav','modules/API/cron/CalDav.php',300,NULL,NULL,1,'Calendar',13,NULL);
+			foreach($addCrons as $cron){
+				Vtiger_Cron::register($cron[0],$cron[1],$cron[2],$cron[6],$cron[5],0,$cron[8]);
+			}
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", array('vtiger.entity.aftersave.final', 'API_CalDAV_Handler'));
+		if($adb->num_rows($result) == 0){
+			$addHandler[] = array('vtiger.entity.aftersave.final','modules/API/handlers/CalDAV.php','API_CalDAV_Handler',NULL,1,'[]');
+			$em = new VTEventsManager($adb);
+			foreach($addHandler as $handler){
+				$em->registerHandler($handler[0], $handler[1], $handler[2], $handler[3], $handler[5]);
+			}
+		}
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function picklists(){
@@ -909,10 +1025,12 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		);
 		
 		$Calendar = array(
-		array(9,1603,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,26,19,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_TASK_INFORMATION",array(),array())
+		array(9,1603,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,26,19,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_TASK_INFORMATION",array(),array()),
+		array(9,1715,'state','vtiger_activity',1,'16','state','LBL_STATE',1,2,'PLL_OPAQUE',100,27,19,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(255)","LBL_TASK_INFORMATION",array('PLL_OPAQUE','PLL_TRANSPARENT'),array())
 		);
 		$Events = array(
-		array(16,1604,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,24,39,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_EVENT_INFORMATION",array(),array())
+		array(16,1604,'allday','vtiger_activity',1,'56','allday','All day',1,2,'',100,24,39,1,'C~O',1,NULL,'BAS',1,0,0,'',"tinyint(1)","LBL_EVENT_INFORMATION",array(),array()),
+		array(16,1714,'state','vtiger_activity',1,'16','state','LBL_STATE',1,2,'PLL_OPAQUE',100,25,39,1,'V~O',1,NULL,'BAS',1,'',0,'',"varchar(255)","LBL_EVENT_INFORMATION",array(),array())
 		);
 		$Invoice = array(
 		array(23,1629,'payment_balance','vtiger_invoice',1,'7','payment_balance','Payment balance',1,2,'',100,31,67,2,'NN~O',1,NULL,'BAS',1,0,0,'',"decimal(25,8)","LBL_INVOICE_INFORMATION",array(),array())
@@ -1125,6 +1243,8 @@ A new comment has been added to the ticket.<br />
 #b#597#bEnd# #a#597#aEnd#</span>');
 		$records[] = array('Security risk has been detected - Brute Force','Contacts','Security risk has been detected','<span class="value">Dear user,<br />
 Failed login attempts have been detected. </span>');
+		$records[] = array('Backup has been made','Contacts','Backup has been made notification','Dear User,<br />
+Backup has been made.');
 
 		foreach($records as $record){
 			$result = $adb->query("SELECT * FROM `vtiger_ossmailtemplates` WHERE `name` = '".$record[0]."'");
@@ -1141,7 +1261,7 @@ Failed login attempts have been detected. </span>');
 		$log->debug("Exiting YetiForceUpdate::addRecords() method ...");
 	}
 	public function addModules(){
-		$modules = array('QuotesEnquires','RequirementCards','HolidaysEntitlement','PaymentsIn','PaymentsOut','LettersIn','LettersOut');
+		$modules = array('QuotesEnquires','RequirementCards','HolidaysEntitlement','PaymentsIn','PaymentsOut','LettersIn','LettersOut','NewOrders');
 		foreach($modules as $module){
 			try {
 				if(file_exists('cache/updates/'.$module.'.xml') && !Vtiger_Module::getInstance($module)){
