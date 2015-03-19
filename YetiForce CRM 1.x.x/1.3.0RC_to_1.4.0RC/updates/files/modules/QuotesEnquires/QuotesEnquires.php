@@ -100,7 +100,7 @@ class QuotesEnquires extends Vtiger_CRMEntity {
  			$ModuleInstance = CRMEntity::getInstance('QuotesEnquires');
 			$ModuleInstance->setModuleSeqNumber("configure",'QuotesEnquires','ID','1'); // co w miejsce id
  			$adb->pquery('UPDATE vtiger_tab SET customized=0 WHERE name=?', array('QuotesEnquires'));
-			
+			include_once('vtlib/Vtiger/Module.php'); 
 			$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
 			if($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
 				include_once 'modules/ModComments/ModComments.php';

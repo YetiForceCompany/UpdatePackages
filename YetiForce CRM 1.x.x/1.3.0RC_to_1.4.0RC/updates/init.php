@@ -664,10 +664,8 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 				$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','holiday','PLL_HOLIDAY_TIME','#00d4f5');");
 			}
 		}
-		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('subject','RequirementCards', 'QuotesEnquires'));
+		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?,?);", array('subject','RequirementCards', 'QuotesEnquires','Ideas'));
 		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ?, fieldname = ?  WHERE `modulename` = ?;", array('holidaysentitlement_year,ossemployeesid','holidaysentitlement_year', 'HolidaysEntitlement'));
-		// To Do CRM
-		$adb->pquery("UPDATE `vtiger_entityname` SET `searchcolumn` = ? WHERE `modulename` IN (?,?);", array('paymentsname','PaymentsIn', 'PaymentsOut'));
 		
 		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('parentid','vtiger_contactdetails'));
 		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", array($adb->query_result($result1, 0, 'fieldid'),'Vendors'));
@@ -819,18 +817,18 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 		if($adb->num_rows($result) == 1){
 			$adb->pquery("UPDATE `vtiger_relatedlists` SET `name` = ? WHERE `tabid` = ? AND `related_tabid` = ? AND `name` = ?;", array('get_related_list',getTabid('Quotes'),getTabid('Calculations'),'get_dependents_list'));
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('OSSEmployees'),getTabid('HolidaysEntitlement'),'get_dependents_list','HolidaysEntitlement'));
+		/*$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('OSSEmployees'),getTabid('HolidaysEntitlement'),'get_dependents_list','HolidaysEntitlement'));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('OSSEmployees');
 			$moduleInstance = Vtiger_Module::getInstance('HolidaysEntitlement');
 			$targetModule->setRelatedList($moduleInstance, 'HolidaysEntitlement', array('ADD'),'get_dependents_list');
-		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Accounts'),getTabid('RequirementCards'),'get_dependents_list','RequirementCards'));
+		}*/
+		/*$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Accounts'),getTabid('RequirementCards'),'get_dependents_list','RequirementCards'));
 		if($adb->num_rows($result) == 0){
 			$targetModule = Vtiger_Module::getInstance('Accounts');
 			$moduleInstance = Vtiger_Module::getInstance('RequirementCards');
 			$targetModule->setRelatedList($moduleInstance, 'RequirementCards', array('ADD'),'get_dependents_list');
-		}
+		}*/
 
 		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE tabid = ? AND linktype = ? AND linklabel = ?;", array(getTabid('Calculations'),'DETAILVIEWWIDGET','DetailViewBlockCommentWidget'));
 		if($adb->num_rows($result) == 0){
@@ -888,6 +886,34 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 				array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
 			}
 		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE tabid = ? AND linktype = ? AND linklabel = ?;", array(getTabid('SalesOrder'),'DETAILVIEWWIDGET','DetailViewBlockCommentWidget'));
+		if($adb->num_rows($result) == 0){
+			$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
+			if($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
+				include_once 'modules/ModComments/ModComments.php';
+				if(class_exists('ModComments')) ModComments::addWidgetTo(array('SalesOrder'));
+			}
+		}
+		$modulename = 'SalesOrder';
+		$modcommentsModuleInstance = Vtiger_Module::getInstance('ModTracker');
+		if($modcommentsModuleInstance && file_exists('modules/ModTracker/ModTracker.php')) {
+			include_once('vtlib/Vtiger/Module.php');
+			include_once 'modules/ModTracker/ModTracker.php';
+			$tabid = Vtiger_Functions::getModuleId($modulename);
+			$moduleModTrackerInstance = new ModTracker();
+			if(!$moduleModTrackerInstance->isModulePresent($tabid)){
+				$res=$adb->pquery("INSERT INTO vtiger_modtracker_tabs VALUES(?,?)",array($tabid,1));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			} else{
+				$updatevisibility = $adb->pquery("UPDATE vtiger_modtracker_tabs SET visible = 1 WHERE tabid = ?", array($tabid));
+				$moduleModTrackerInstance->updateCache($tabid,1);
+			}
+			if(!$moduleModTrackerInstance->isModTrackerLinkPresent($tabid)){
+				$moduleInstance=Vtiger_Module::getInstance($tabid);
+				$moduleInstance->addLink('DETAILVIEWBASIC', 'View History', "javascript:ModTrackerCommon.showhistory('\$RECORD\$')",'','',
+				array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
+			}
+		}
 		
 		$result = $adb->pquery("SELECT * FROM `vtiger_cron_task` WHERE name = ? ;", array('CardDav'));
 		if($adb->num_rows($result) == 0){
@@ -905,14 +931,14 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 				$em->registerHandler($handler[0], $handler[1], $handler[2], $handler[3], $handler[5]);
 			}
 		}
-		$modules = array('RequirementCards','QuotesEnquires');
+		/*$modules = array('RequirementCards','QuotesEnquires');
 		foreach($modules as $module){
 			$moduleInstance = Vtiger_Module::getInstance($module);
 			$refInstance = Vtiger_Module::getInstance('OSSMailView');
 			if($moduleInstance && $refInstance){
 				$moduleInstance->unsetRelatedList($refInstance,"OSSMailView",'get_related_list');
 			}
-		}
+		}*/
 		
 		$result = $adb->pquery("SELECT * FROM `vtiger_dataaccess` WHERE summary = ?;", array('Date vatidation'));
 		if($adb->num_rows($result) == 1){
@@ -1089,19 +1115,52 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 
 		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `uitype` = ? AND columnname = ? AND tablename = ?;", array(1,'16','name', 'vtiger_ossemployees'));
 
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('ModComments','Reservations'));
+		if($adb->num_rows($result) == 0){
+			$result = $adb->pquery("SELECT * FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('related_to','vtiger_modcomments'));
+			$fieldId = $adb->query_result( $result, 0, 'fieldid' );
+			$adb->pquery("INSERT INTO vtiger_fieldmodulerel(fieldid, module, relmodule) VALUES(?,?,?)", array($fieldId, 'ModComments', 'Reservations'));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('ModComments','SalesOrder'));
+		if($adb->num_rows($result) == 0){
+			$result = $adb->pquery("SELECT * FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", array('related_to','vtiger_modcomments'));
+			$fieldId = $adb->query_result( $result, 0, 'fieldid' );
+			$adb->pquery("INSERT INTO vtiger_fieldmodulerel(fieldid, module, relmodule) VALUES(?,?,?)", array($fieldId, 'ModComments', 'SalesOrder'));
+		}
+		
 		$result = $adb->pquery("SELECT * FROM `vtiger_trees_templates` WHERE name = ?;", array('Reservations'));
 		if($adb->num_rows($result) == 0){
+			$sql = 'INSERT INTO vtiger_trees_templates(`name`, `module`, `access`) VALUES (?,?,?)';
+			$params = array('Reservations', getTabid('Reservations'), 0);
+			$adb->pquery($sql, $params);
+			$templateId = $adb->getLastInsertID();
+		
 			$recordModel = new Settings_TreesManager_Record_Model();
 			$recordModel->set('name', 'Reservations');
 			$recordModel->set('module', getTabid('Reservations'));
+			$recordModel->set('templateid', $templateId);
 			$recordModel->set('tree', array(
 			array( 'data' => 'LBL_MEETING_ROOMS' , 'attr' =>  array('id' => 3 ), 'state' => NULL ),
 			array( 'data' => 'LBL_EQUIPMENT' , 'attr' =>  array('id' => 2 ), 'state' => NULL ),
 			array( 'data' => 'LBL_CARS' , 'attr' =>  array('id' => 1 ), 'state' => NULL )
 			));
 			$recordModel->save();
+			$adb->pquery("UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `columnname` = ? AND `tablename` = ?;", array($templateId, 'type', 'vtiger_reservations'));
 		}
 		
+		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid('Reservations'), 'Summary');
+		if($adb->num_rows($result) == 0){
+			$widget = array('Reservations','Summary',NULL,'1','0',NULL,'[]');
+			$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
+			$adb->pquery($sql, array( getTabid($widget[0]), $widget[1], $widget[2], $widget[3], $widget[4], $widget[5], $widget[6]));
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid'Reservations'), 'Comments');
+		if($adb->num_rows($result) == 0){
+			$widget = array('Reservations','Comments','','2','1',NULL,'{"relatedmodule":"ModComments","limit":"10"}');
+			$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
+			$adb->pquery($sql, array( getTabid($widget[0]), $widget[1], $widget[2], $widget[3], $widget[4], $widget[5], $widget[6]));
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function roundcubeConfig(){
