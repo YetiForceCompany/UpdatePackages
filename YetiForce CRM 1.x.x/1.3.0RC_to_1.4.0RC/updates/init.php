@@ -142,7 +142,8 @@ class YetiForceUpdate{
  'modules/OSSMail/roundcube/bin/transifexpull.sh ',
  'modules/OSSMail/roundcube/plugins/attachment_reminder/localization/tzm.inc ',
  'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-hard_55_b0ccd7_1x100.png', 'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-hard_65_ffffff_1x100.png', 'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-hard_75_eaeaea_1x100.png', 'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-hard_75_f8f8f8_1x100.png', 'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-soft_75_fafafa_1x100.png', 'modules/OSSMail/roundcube/plugins/jqueryui/themes/larry/images/ui-bg_highlight-soft_90_e4e4e4_1x100.png', 
- 'modules/OSSMail/roundcube/plugins/attachment_reminder/localization/ur_PK.inc ',
+ 'modules/OSSMail/roundcube/plugins/attachment_reminder/localization/ur_PK.inc',
+ 'api/config.php',
 	);
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
@@ -908,11 +909,11 @@ YetiForce CRM Support Team.', 'Customer Portal - ForgotPassword', 'Contacts'));
 				$updatevisibility = $adb->pquery("UPDATE vtiger_modtracker_tabs SET visible = 1 WHERE tabid = ?", array($tabid));
 				$moduleModTrackerInstance->updateCache($tabid,1);
 			}
-			if(!$moduleModTrackerInstance->isModTrackerLinkPresent($tabid)){
+			/*if(!$moduleModTrackerInstance->isModTrackerLinkPresent($tabid)){
 				$moduleInstance=Vtiger_Module::getInstance($tabid);
 				$moduleInstance->addLink('DETAILVIEWBASIC', 'View History', "javascript:ModTrackerCommon.showhistory('\$RECORD\$')",'','',
 				array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
-			}
+			}*/
 		}
 		
 		$result = $adb->pquery("SELECT * FROM `vtiger_cron_task` WHERE name = ? ;", array('CardDav'));
@@ -1149,18 +1150,48 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 			$adb->pquery("UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `columnname` = ? AND `tablename` = ?;", array($templateId, 'type', 'vtiger_reservations'));
 		}
 		
-		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid('Reservations'), 'Summary');
+		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid('Reservations'), 'Summary'));
 		if($adb->num_rows($result) == 0){
 			$widget = array('Reservations','Summary',NULL,'1','0',NULL,'[]');
 			$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
 			$adb->pquery($sql, array( getTabid($widget[0]), $widget[1], $widget[2], $widget[3], $widget[4], $widget[5], $widget[6]));
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid'Reservations'), 'Comments');
+		$result = $adb->pquery("SELECT * FROM `vtiger_widgets` WHERE tabid = ? AND `type` = ? ;", array(getTabid('Reservations'), 'Comments'));
 		if($adb->num_rows($result) == 0){
 			$widget = array('Reservations','Comments','','2','1',NULL,'{"relatedmodule":"ModComments","limit":"10"}');
 			$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
 			$adb->pquery($sql, array( getTabid($widget[0]), $widget[1], $widget[2], $widget[3], $widget[4], $widget[5], $widget[6]));
 		}
+		
+		$picklist_names = array('servicecategory','pscategory');
+		foreach($picklist_names as $picklist_name){
+			$select = $adb->query( "select picklistid from vtiger_picklist where name = '$picklist_name'");
+			if($adb->num_rows($select) == 1){
+				$picklistid = $adb->query_result( $select,0,"picklistid" );
+				$delete_from = $adb->query( "delete from vtiger_role2picklist where picklistid = '$picklistid'");
+				$delete_from = $adb->query( "delete from vtiger_picklist where name = '$picklist_name'");
+			}
+		}
+		
+		$result = $adb->query( "SELECT vtiger_def_org_field.tabid,vtiger_def_org_field.fieldid FROM `vtiger_def_org_field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$num = $adb->num_rows($result);
+		$deleteField = array();
+		for($i=0;$i<$num;$i++){
+			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		}
+		$adb->pquery( "delete from vtiger_def_org_field where fieldid in (".generateQuestionMarks($deleteField).")", array($deleteField));
+		
+		$result = $adb->query( "SELECT vtiger_profile2field.tabid,vtiger_profile2field.fieldid FROM `vtiger_profile2field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$num = $adb->num_rows($result);
+		$deleteField = array();
+		for($i=0;$i<$num;$i++){
+			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		}
+		$adb->pquery( "delete from vtiger_profile2field where fieldid in (".generateQuestionMarks($deleteField).")", array($deleteField));
+		$adb->pquery( "UPDATE from vtiger_field set helpinfo = '' ");
+		
+
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function roundcubeConfig(){
