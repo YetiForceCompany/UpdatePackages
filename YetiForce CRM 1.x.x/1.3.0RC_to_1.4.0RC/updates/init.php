@@ -16,10 +16,16 @@ class YetiForceUpdate{
 		'modules/OSSCosts/copy',
 		'data',
 		'README.md',
-		'logs',
+		//'logs', //add in version 1.4.0 is 1.5.0
 		'includes',
-		'session',
-		'test',
+		//'session', //add in version 1.4.0 is 1.5.0
+		//'test',  //add in version 1.4.0 is 1.5.0
+		'test/contact/',
+		'test/logo/',
+		'test/product/',
+		'test/templates_c/',
+		'test/user/',
+		'test/upload/',
 		'modules/Settings/vtigerCRM.CAB',
 		'modules/Utilities',
 		'layouts/vlayout/modules/Calendar/SideBarWidgets.tpl',
