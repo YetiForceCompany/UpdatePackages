@@ -1186,7 +1186,7 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 		}
 		$adb->pquery( "delete from vtiger_fieldmodulerel where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
 		
-		$adb->pquery( "UPDATE from vtiger_field set helpinfo = '' ");
+		$adb->query( "UPDATE vtiger_field set helpinfo = '' ");
 		
 		$result = $adb->pquery( "SELECT vtiger_field.fieldid FROM `vtiger_field` WHERE tabid = ? AND columnname = ? ", array(getTabid('OSSMailTemplates'),'oss_module_list'));
 		$num = $adb->num_rows($result);
@@ -1214,7 +1214,9 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 			}
 		}
 		
-		$delete_from = $adb->query( "delete from vtiger_role2picklist where roleid = 'H1'");
+		$adb->query( "delete from vtiger_role2picklist where roleid = 'H1'");
+		
+		$adb->pquery( "UPDATE vtiger_profile2utility set permission = ? WHERE tabid = ? ", array(getTabid('PaymentsOut')));
 		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
