@@ -1228,14 +1228,38 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 		$log->debug("Exiting YetiForceUpdate::roundcubeConfig() method ...");
 	}
 	function updateFiles() {
-		$config = "
-\$davStorageDir = 'storage/WebDAV/';
+		$config = 'config/config.inc.php';
+		$configContent = file($config);
+		foreach($configContent as $key => $line){
+			if(	strpos($line, 'Adjust error_reporting') !== FALSE ||
+				strpos($line, "ini_set('display_errors") !== FALSE ||
+				strpos($line, 'List of products in the inventory') !== FALSE ||
+				strpos($line, 'inventory_popup_limited_from_potentials') !== FALSE
+			){
+				unset($configContent[$key]);
+			}
+			if(strpos($line, '$upload_dir = ') !== FALSE){
+				$configContent[$key] = '$upload_dir = \'cache/upload/\';';
+			}
+			if(strpos($line, "ini_set('error_log'") !== FALSE){
+				$configContent[$key] = 'ini_set(\'error_log\',$root_directory.\'cache/logs/php_error_log.log\');';
+			}
+			if(strpos($line, "davStorageDir") !== FALSE){
+				$configContent[$key] = '
+//Update the current session id with a newly generated one after login
+$session_regenerate_id = false;
 
-// prod and demo
-\$systemMode = 'prod';";
-		if(strpos(file_get_contents( 'config/config.inc.php' ),'davStorageDir') === FALSE){
-			file_put_contents( 'config/config.inc.php', $config, FILE_APPEND );
+//Would you like to encode passwords for Customer Portal
+$encode_customer_portal_passwords = true;
+
+$davStorageDir = \'storage/Files\';
+$davHistoryDir = \'storage/FilesHistory\';';
+			}
 		}
+		$content = implode("", $configContent);
+		$file = fopen($config,"w+");
+		fwrite($file,$content);
+		fclose($file);
 	}
 	public function rebootSeq(){
 		global $log,$adb;
