@@ -7,12 +7,16 @@
  * The Original Code is YetiForce.
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
+ * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************************************************************/
 $languageStrings = array(
-    'OSSProjectTemplates' => 'Шаблоны Проектов',
-    
+	'Users'	=>	'Пользователи',
+	'USER_MAIL_EXIST'	=>	'Пользователь с такой электронной почтой уже существует',
 );
 
 $jsLanguageStrings = array(
-	'JS_FILL_REQUIRED_FIELDS' => 'Заполните обязательные поля',
+	'JS_USER_MAIL_EXIST'	=>	'Пользователь с такой электронной почтой уже существует',
+	'JS_DECIMAL_SEPERATOR_AND_GROUPING_SEPERATOR_CANT_BE_SAME' => 'Разделитель десятичных и тысячных не могут быть одинаковыми',
 );
+
+

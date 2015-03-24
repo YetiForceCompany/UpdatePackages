@@ -9,10 +9,12 @@
  * All Rights Reserved.
  *************************************************************************************************************************************/
 $languageStrings = array(
-    'OSSProjectTemplates' => 'Шаблоны Проектов',
-    
-);
-
-$jsLanguageStrings = array(
-	'JS_FILL_REQUIRED_FIELDS' => 'Заполните обязательные поля',
+	'ModTracker' => 'Журнал изменений',
+	'LBL_MODTRACKER_SETTINGS' => 'Журнал изменений',
+	'LBL_MODTRACKER_SETTINGS_DESCRIPTION' => 'Управление и просмотр истории изменений в модулях',
+	'LBL_MODULE' => 'Модуль',
+	'LBL_ACTIVE' => 'Отслеживание изменений',
+	'LBL_TOOLS' => 'Инструменты',
+	'LBL_TRACK_CHANGES_ENABLED' => 'Отслеживание изменений включено',
+	'LBL_TRACK_CHANGES_DISABLE' => 'Отслеживание изменений выключено',
 );

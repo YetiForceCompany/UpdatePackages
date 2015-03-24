@@ -7,12 +7,15 @@
  * The Original Code is YetiForce.
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
+ * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************************************************************/
 $languageStrings = array(
-    'OSSProjectTemplates' => 'Шаблоны Проектов',
-    
+	'QuickCreateEditor'	=>	'Редактор быстрого создания',
+    'LBL_QUICK_CREATE_EDITOR'=> 'Редактор быстрого создания',
+	'LBL_QUICK_CREATE_EDITOR_DESCRIPTION' => 'В этом модуле, вы сможете настроить отображение и расположение полей в окне быстрого создания.',
+	'LBL_SEQUENCE' => 'Расположение полей',
+	'LBL_SAVE_FIELD_SEQUENCE' => 'Сохранить расположение полей',
 );
-
 $jsLanguageStrings = array(
-	'JS_FILL_REQUIRED_FIELDS' => 'Заполните обязательные поля',
+	'JS_FIELD_SEQUENCE_UPDATED' => 'Расположение полей обновлено',
 );
