@@ -6,11 +6,10 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): YetiForce.com.
  *************************************************************************************/
 
 include_once dirname(__FILE__) . '/Connectors.php';
-if(!class_exists('Vtiger_Cache_Connector')){
+
 class Vtiger_Cache_Connector {
 	protected $connection;
 
@@ -53,5 +52,4 @@ class Vtiger_Cache_Connector {
 		}
 		return $singleton;
 	}
-}
 }
