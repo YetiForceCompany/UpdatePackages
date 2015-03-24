@@ -28,6 +28,15 @@ class YetiForceUpdate{
 		'test/upload/',
 		'modules/Settings/vtigerCRM.CAB',
 		'modules/Utilities',
+		'modules/HolidaysEntitlement/schema.xml',
+		'modules/LettersIn/schema.xml',
+		'modules/LettersOut/schema.xml',
+		'modules/NewOrders/schema.xml',
+		'modules/PaymentsIn/schema.xml',
+		'modules/PaymentsOut/schema.xml',
+		'modules/QuotesEnquires/schema.xml',
+		'modules/RequirementCards/schema.xml',
+		'modules/Reservations/schema.xml',
 		'layouts/vlayout/modules/Calendar/SideBarWidgets.tpl',
 		'libraries/fullcalendar/fullcalendar-bootstrap.css',
 		'libraries/fullcalendar/fullcalendar-bootstrap.less',
@@ -1222,7 +1231,7 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 		
 		$adb->query( "delete from vtiger_role2picklist where roleid = 'H1'");
 		
-		$adb->pquery( "UPDATE vtiger_profile2utility set permission = ? WHERE tabid = ? ", array(getTabid('PaymentsOut')));
+		$adb->pquery( "UPDATE vtiger_profile2utility set permission = ? WHERE tabid = ? ", array(1, getTabid('PaymentsOut')));
 		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -1285,10 +1294,11 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 				$configContent[$key] = '$upload_dir = \'cache/upload/\';';
 			}
 			if(strpos($line, "ini_set('error_log'") !== FALSE){
-				$configContent[$key] = 'ini_set(\'error_log\',$root_directory.\'cache/logs/php_error_log.log\');';
+				$configContent[$key] = 'ini_set(\'error_log\',$root_directory.\'cache/logs/phpError.log\');';
 			}
-			if(strpos($line, "davStorageDir") !== FALSE){
-				$configContent[$key] = '
+		}
+		$content = implode("", $configContent);
+		$content = '
 //Update the current session id with a newly generated one after login
 $session_regenerate_id = false;
 
@@ -1296,10 +1306,10 @@ $session_regenerate_id = false;
 $encode_customer_portal_passwords = true;
 
 $davStorageDir = \'storage/Files\';
-$davHistoryDir = \'storage/FilesHistory\';';
-			}
-		}
-		$content = implode("", $configContent);
+$davHistoryDir = \'storage/FilesHistory\';
+
+// prod and demo
+$systemMode = \'prod\';';
 		$file = fopen($config,"w+");
 		fwrite($file,$content);
 		fclose($file);
