@@ -1109,7 +1109,7 @@ $adb->pquery( $query, array('HelpDesk','Contacts'), true );
 $query = "DELETE FROM `vtiger_relatedlists` WHERE `tabid` = ? AND `related_tabid` = ? AND `label` = ?;";
 $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'), true );
 
-		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `uitype` = ? AND columnname = ? AND tablename = ?;", array(1,'16','name', 'vtiger_ossemployees'));
+		$adb->pquery("UPDATE `vtiger_field` SET `uitype` = ? WHERE `uitype` = ? AND columnname = ? AND tablename = ?;", array(1,'16','name', 'vtiger_osstimecontrol'));
 
 		
 		$result = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE module = ? AND relmodule = ?", array('ModComments','Reservations'));
@@ -1183,9 +1183,46 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
 		}
 		$adb->pquery( "delete from vtiger_profile2field where fieldid in (".generateQuestionMarks($deleteField).")", array($deleteField));
-		$adb->pquery( "UPDATE from vtiger_field set helpinfo = '' ");
 		
-
+		$result = $adb->query( "SELECT vtiger_fieldmodulerel.fieldid FROM `vtiger_fieldmodulerel` WHERE vtiger_fieldmodulerel.fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$num = $adb->num_rows($result);
+		$deleteField = array();
+		for($i=0;$i<$num;$i++){
+			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		}
+		$adb->pquery( "delete from vtiger_fieldmodulerel where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
+		
+		$adb->query( "UPDATE vtiger_field set helpinfo = '' ");
+		
+		$result = $adb->pquery( "SELECT vtiger_field.fieldid FROM `vtiger_field` WHERE tabid = ? AND columnname = ? ", array(getTabid('OSSMailTemplates'),'oss_module_list'));
+		$num = $adb->num_rows($result);
+		if($num == 1){
+			$fieldId= $adb->query_result( $result,$i,"fieldid" );
+			
+			$result = $adb->pquery( "SELECT * FROM `vtiger_def_org_field` WHERE fieldid = ? ", array($fieldId));
+			$num = $adb->num_rows($result);
+			if($num == 0){
+				$insertQuery = 'INSERT INTO vtiger_def_org_field VALUES(?,?,?,?)';
+				$adb->pquery($insertQuery, array(getTabid('OSSMailTemplates'),$fieldId,0,0));
+			}
+			
+			$result = $adb->pquery( "SELECT * FROM `vtiger_profile2field` WHERE fieldid = ? ", array($fieldId));
+			$num = $adb->num_rows($result);
+			if($num == 0){
+				$result = $adb->pquery( "SELECT profileid FROM `vtiger_profile` ");
+				$num = $adb->num_rows($result);
+				for($i=0;$i<$num;$i++){
+					$profileId = $adb->query_result( $result,$i,"profileid" );
+					$sql = 'INSERT INTO vtiger_profile2field(profileid, tabid, fieldid, visible, readonly) VALUES (?,?,?,?,?)';
+					$params = array($profileId, getTabid('OSSMailTemplates'), $fieldId, 0, 0);
+					$adb->pquery($sql, $params);
+				}
+			}
+		}
+		
+		$adb->query( "delete from vtiger_role2picklist where roleid = 'H1'");
+		
+		$adb->pquery( "UPDATE vtiger_profile2utility set permission = ? WHERE tabid = ? ", array(getTabid('PaymentsOut')));
 		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -1302,6 +1339,235 @@ $davHistoryDir = \'storage/FilesHistory\';';
 		$query .=' END ';
         $query .= ' WHERE tabid IN ('.generateQuestionMarks($modules).')';
 		$adb->pquery($query, array($calendarId,$eventsId));
+		
+		
+		// related list
+		$relatedList = array(array('tabid'=>'Accounts','related_tabid'=>'Contacts','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'Potentials','sequence'=>'2'),
+						array('tabid'=>'Accounts','related_tabid'=>'Quotes','sequence'=>'3'),
+						array('tabid'=>'Accounts','related_tabid'=>'SalesOrder','sequence'=>'4'),
+						array('tabid'=>'Accounts','related_tabid'=>'Invoice','sequence'=>'5'),
+						array('tabid'=>'Accounts','related_tabid'=>'Calendar','sequence'=>'6'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSMailView','sequence'=>'8'),
+						array('tabid'=>'Accounts','related_tabid'=>'Calendar','sequence'=>'7'),
+						array('tabid'=>'Accounts','related_tabid'=>'Documents','sequence'=>'9'),
+						array('tabid'=>'Accounts','related_tabid'=>'HelpDesk','sequence'=>'10'),
+						array('tabid'=>'Accounts','related_tabid'=>'Products','sequence'=>'20'),
+						array('tabid'=>'Leads','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'Leads','related_tabid'=>'OSSMailView','sequence'=>'5'),
+						array('tabid'=>'Leads','related_tabid'=>'Calendar','sequence'=>'3'),
+						array('tabid'=>'Leads','related_tabid'=>'Documents','sequence'=>'4'),
+						array('tabid'=>'Leads','related_tabid'=>'Products','sequence'=>'9'),
+						array('tabid'=>'Leads','related_tabid'=>'Campaigns','sequence'=>'7'),
+						array('tabid'=>'Contacts','related_tabid'=>'Potentials','sequence'=>'1'),
+						array('tabid'=>'Contacts','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'Contacts','related_tabid'=>'OSSMailView','sequence'=>'9'),
+						array('tabid'=>'Contacts','related_tabid'=>'Calendar','sequence'=>'3'),
+						array('tabid'=>'Contacts','related_tabid'=>'Documents','sequence'=>'8'),
+						array('tabid'=>'Potentials','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'Potentials','related_tabid'=>'Contacts','sequence'=>'8'),
+						array('tabid'=>'Potentials','related_tabid'=>'Products','sequence'=>'18'),
+						array('tabid'=>'Potentials','related_tabid'=>'','sequence'=>'4'),
+						array('tabid'=>'Potentials','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'Potentials','related_tabid'=>'Quotes','sequence'=>'5'),
+						array('tabid'=>'Potentials','related_tabid'=>'SalesOrder','sequence'=>'6'),
+						array('tabid'=>'Potentials','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'Products','related_tabid'=>'HelpDesk','sequence'=>'1'),
+						array('tabid'=>'Products','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'Products','related_tabid'=>'Quotes','sequence'=>'4'),
+						array('tabid'=>'Products','related_tabid'=>'PurchaseOrder','sequence'=>'5'),
+						array('tabid'=>'Products','related_tabid'=>'SalesOrder','sequence'=>'6'),
+						array('tabid'=>'Products','related_tabid'=>'Invoice','sequence'=>'7'),
+						array('tabid'=>'Products','related_tabid'=>'PriceBooks','sequence'=>'8'),
+						array('tabid'=>'Products','related_tabid'=>'Leads','sequence'=>'9'),
+						array('tabid'=>'Products','related_tabid'=>'Accounts','sequence'=>'10'),
+						array('tabid'=>'Products','related_tabid'=>'Potentials','sequence'=>'12'),
+						array('tabid'=>'Products','related_tabid'=>'Products','sequence'=>'13'),
+						array('tabid'=>'Products','related_tabid'=>'Products','sequence'=>'14'),
+						array('tabid'=>'Emails','related_tabid'=>'Contacts','sequence'=>'1'),
+						array('tabid'=>'Emails','related_tabid'=>'','sequence'=>'2'),
+						array('tabid'=>'Emails','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Documents','sequence'=>'4'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'','sequence'=>'3'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'PriceBooks','related_tabid'=>'Products','sequence'=>'2'),
+						array('tabid'=>'Vendors','related_tabid'=>'Products','sequence'=>'1'),
+						array('tabid'=>'Vendors','related_tabid'=>'PurchaseOrder','sequence'=>'2'),
+						array('tabid'=>'Vendors','related_tabid'=>'Contacts','sequence'=>'3'),
+						array('tabid'=>'Vendors','related_tabid'=>'OSSMailView','sequence'=>'4'),
+						array('tabid'=>'Quotes','related_tabid'=>'SalesOrder','sequence'=>'1'),
+						array('tabid'=>'Quotes','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'Quotes','related_tabid'=>'Documents','sequence'=>'4'),
+						array('tabid'=>'Quotes','related_tabid'=>'Calendar','sequence'=>'3'),
+						array('tabid'=>'Quotes','related_tabid'=>'','sequence'=>'5'),
+						array('tabid'=>'PurchaseOrder','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'PurchaseOrder','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'PurchaseOrder','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'PurchaseOrder','related_tabid'=>'','sequence'=>'4'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'Documents','sequence'=>'4'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'Invoice','sequence'=>'3'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'','sequence'=>'5'),
+						array('tabid'=>'Invoice','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'Invoice','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'Invoice','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'Invoice','related_tabid'=>'','sequence'=>'4'),
+						array('tabid'=>'Calendar','related_tabid'=>'','sequence'=>'1'),
+						array('tabid'=>'Calendar','related_tabid'=>'Contacts','sequence'=>'2'),
+						array('tabid'=>'Campaigns','related_tabid'=>'Leads','sequence'=>'2'),
+						array('tabid'=>'Campaigns','related_tabid'=>'Potentials','sequence'=>'3'),
+						array('tabid'=>'Campaigns','related_tabid'=>'Calendar','sequence'=>'4'),
+						array('tabid'=>'Accounts','related_tabid'=>'Campaigns','sequence'=>'11'),
+						array('tabid'=>'Campaigns','related_tabid'=>'Accounts','sequence'=>'6'),
+						array('tabid'=>'Faq','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'PBXManager','sequence'=>'13'),
+						array('tabid'=>'Accounts','related_tabid'=>'ServiceContracts','sequence'=>'14'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Services','sequence'=>'6'),
+						array('tabid'=>'Leads','related_tabid'=>'Services','sequence'=>'17'),
+						array('tabid'=>'Accounts','related_tabid'=>'Services','sequence'=>'23'),
+						array('tabid'=>'Potentials','related_tabid'=>'Services','sequence'=>'12'),
+						array('tabid'=>'PriceBooks','related_tabid'=>'Services','sequence'=>'3'),
+						array('tabid'=>'Accounts','related_tabid'=>'Assets','sequence'=>'21'),
+						array('tabid'=>'Products','related_tabid'=>'Assets','sequence'=>'15'),
+						array('tabid'=>'Invoice','related_tabid'=>'Assets','sequence'=>'5'),
+						array('tabid'=>'Accounts','related_tabid'=>'Project','sequence'=>'15'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'HelpDesk','sequence'=>'4'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'Documents','sequence'=>'3'),
+						array('tabid'=>'Services','related_tabid'=>'HelpDesk','sequence'=>'1'),
+						array('tabid'=>'Services','related_tabid'=>'Quotes','sequence'=>'2'),
+						array('tabid'=>'Services','related_tabid'=>'PurchaseOrder','sequence'=>'3'),
+						array('tabid'=>'Services','related_tabid'=>'SalesOrder','sequence'=>'4'),
+						array('tabid'=>'Services','related_tabid'=>'Invoice','sequence'=>'5'),
+						array('tabid'=>'Services','related_tabid'=>'PriceBooks','sequence'=>'6'),
+						array('tabid'=>'Services','related_tabid'=>'Leads','sequence'=>'7'),
+						array('tabid'=>'Services','related_tabid'=>'Accounts','sequence'=>'8'),
+						array('tabid'=>'Services','related_tabid'=>'Potentials','sequence'=>'10'),
+						array('tabid'=>'Services','related_tabid'=>'Documents','sequence'=>'11'),
+						array('tabid'=>'Assets','related_tabid'=>'HelpDesk','sequence'=>'1'),
+						array('tabid'=>'Assets','related_tabid'=>'Documents','sequence'=>'2'),
+						array('tabid'=>'ProjectTask','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Project','related_tabid'=>'ProjectTask','sequence'=>'2'),
+						array('tabid'=>'Project','related_tabid'=>'ProjectMilestone','sequence'=>'3'),
+						array('tabid'=>'Project','related_tabid'=>'Documents','sequence'=>'4'),
+						array('tabid'=>'Project','related_tabid'=>'HelpDesk','sequence'=>'5'),
+						array('tabid'=>'Project','related_tabid'=>'','sequence'=>'1'),
+						array('tabid'=>'SMSNotifier','related_tabid'=>'Accounts','sequence'=>'1'),
+						array('tabid'=>'SMSNotifier','related_tabid'=>'Contacts','sequence'=>'2'),
+						array('tabid'=>'SMSNotifier','related_tabid'=>'Leads','sequence'=>'3'),
+						array('tabid'=>'OSSTimeControl','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSTimeControl','sequence'=>'16'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'OSSTimeControl','sequence'=>'8'),
+						array('tabid'=>'Project','related_tabid'=>'OSSTimeControl','sequence'=>'8'),
+						array('tabid'=>'ProjectTask','related_tabid'=>'OSSTimeControl','sequence'=>'2'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'OSSTimeControl','sequence'=>'5'),
+						array('tabid'=>'Assets','related_tabid'=>'OSSTimeControl','sequence'=>'3'),
+						array('tabid'=>'SalesOrder','related_tabid'=>'OSSTimeControl','sequence'=>'6'),
+						array('tabid'=>'Potentials','related_tabid'=>'OSSTimeControl','sequence'=>'7'),
+						array('tabid'=>'Quotes','related_tabid'=>'OSSTimeControl','sequence'=>'6'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Accounts','sequence'=>'2'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Contacts','sequence'=>'3'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Leads','sequence'=>'4'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Potentials','sequence'=>'5'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'HelpDesk','sequence'=>'6'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Project','sequence'=>'7'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'ServiceContracts','sequence'=>'8'),
+						array('tabid'=>'OSSMailView','related_tabid'=>'Campaigns','sequence'=>'9'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'OSSMailView','sequence'=>'6'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'OSSMailView','sequence'=>'10'),
+						array('tabid'=>'Potentials','related_tabid'=>'OSSMailView','sequence'=>'11'),
+						array('tabid'=>'Project','related_tabid'=>'OSSMailView','sequence'=>'9'),
+						array('tabid'=>'Campaigns','related_tabid'=>'OSSMailView','sequence'=>'7'),
+						array('tabid'=>'Potentials','related_tabid'=>'Project','sequence'=>'10'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Assets','sequence'=>'11'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSOutsourcedServices','sequence'=>'24'),
+						array('tabid'=>'Leads','related_tabid'=>'OSSOutsourcedServices','sequence'=>'18'),
+						array('tabid'=>'Potentials','related_tabid'=>'OSSOutsourcedServices','sequence'=>'16'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSSoldServices','sequence'=>'25'),
+						array('tabid'=>'Potentials','related_tabid'=>'OSSSoldServices','sequence'=>'17'),
+						array('tabid'=>'Accounts','related_tabid'=>'OutsourcedProducts','sequence'=>'22'),
+						array('tabid'=>'Leads','related_tabid'=>'OutsourcedProducts','sequence'=>'16'),
+						array('tabid'=>'Invoice','related_tabid'=>'OSSSoldServices','sequence'=>'6'),
+						array('tabid'=>'Potentials','related_tabid'=>'OutsourcedProducts','sequence'=>'19'),
+						array('tabid'=>'Potentials','related_tabid'=>'Assets','sequence'=>'21'),
+						array('tabid'=>'Assets','related_tabid'=>'OSSPasswords','sequence'=>'4'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSPasswords','sequence'=>'17'),
+						array('tabid'=>'Products','related_tabid'=>'OSSPasswords','sequence'=>'16'),
+						array('tabid'=>'Services','related_tabid'=>'OSSPasswords','sequence'=>'12'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'OSSPasswords','sequence'=>'12'),
+						array('tabid'=>'Vendors','related_tabid'=>'OSSPasswords','sequence'=>'5'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'OSSTimeControl','sequence'=>'2'),
+						array('tabid'=>'Leads','related_tabid'=>'Contacts','sequence'=>'1'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'Project','sequence'=>'7'),
+						array('tabid'=>'Calculations','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Potentials','related_tabid'=>'Calculations','sequence'=>'22'),
+						array('tabid'=>'Calculations','related_tabid'=>'Calculations','sequence'=>'2'),
+						array('tabid'=>'Quotes','related_tabid'=>'Calculations','sequence'=>'7'),
+						array('tabid'=>'Accounts','related_tabid'=>'Calculations','sequence'=>'18'),
+						array('tabid'=>'OSSCosts','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Potentials','related_tabid'=>'OSSCosts','sequence'=>'23'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'OSSCosts','sequence'=>'13'),
+						array('tabid'=>'Project','related_tabid'=>'OSSCosts','sequence'=>'10'),
+						array('tabid'=>'Accounts','related_tabid'=>'OSSCosts','sequence'=>'19'),
+						array('tabid'=>'Vendors','related_tabid'=>'OSSCosts','sequence'=>'6'),
+						array('tabid'=>'Calculations','related_tabid'=>'OSSTimeControl','sequence'=>'3'),
+						array('tabid'=>'Leads','related_tabid'=>'OSSTimeControl','sequence'=>'6'),
+						array('tabid'=>'Project','related_tabid'=>'Calendar','sequence'=>'6'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'Calendar','sequence'=>'1'),
+						array('tabid'=>'Calculations','related_tabid'=>'Quotes','sequence'=>'4'),
+						array('tabid'=>'Contacts','related_tabid'=>'CallHistory','sequence'=>'26'),
+						array('tabid'=>'Accounts','related_tabid'=>'CallHistory','sequence'=>'26'),
+						array('tabid'=>'Leads','related_tabid'=>'CallHistory','sequence'=>'19'),
+						array('tabid'=>'Vendors','related_tabid'=>'CallHistory','sequence'=>'7'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'CallHistory','sequence'=>'3'),
+						array('tabid'=>'Potentials','related_tabid'=>'CallHistory','sequence'=>'24'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'CallHistory','sequence'=>'14'),
+						array('tabid'=>'Ideas','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'RequirementCards','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'RequirementCards','related_tabid'=>'Quotes','sequence'=>'3'),
+						array('tabid'=>'QuotesEnquires','related_tabid'=>'Documents','sequence'=>'2'),
+						array('tabid'=>'Campaigns','related_tabid'=>'Calendar','sequence'=>'5'),
+						array('tabid'=>'Project','related_tabid'=>'Calendar','sequence'=>'7'),
+						array('tabid'=>'ServiceContracts','related_tabid'=>'Calendar','sequence'=>'2'),
+						array('tabid'=>'PaymentsIn','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'PaymentsIn','sequence'=>'27'),
+						array('tabid'=>'Invoice','related_tabid'=>'PaymentsIn','sequence'=>'7'),
+						array('tabid'=>'PaymentsOut','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'PaymentsOut','sequence'=>'28'),
+						array('tabid'=>'Invoice','related_tabid'=>'PaymentsOut','sequence'=>'8'),
+						array('tabid'=>'LettersIn','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'LettersIn','sequence'=>'29'),
+						array('tabid'=>'Leads','related_tabid'=>'LettersIn','sequence'=>'20'),
+						array('tabid'=>'LettersOut','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'LettersOut','sequence'=>'30'),
+						array('tabid'=>'Leads','related_tabid'=>'LettersOut','sequence'=>'21'),
+						array('tabid'=>'Vendors','related_tabid'=>'LettersOut','sequence'=>'8'),
+						array('tabid'=>'Vendors','related_tabid'=>'LettersIn','sequence'=>'9'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'LettersOut','sequence'=>'5'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'LettersIn','sequence'=>'6'),
+						array('tabid'=>'OSSEmployees','related_tabid'=>'HolidaysEntitlement','sequence'=>'4'),
+						array('tabid'=>'Accounts','related_tabid'=>'RequirementCards','sequence'=>'31'),
+						array('tabid'=>'RequirementCards','related_tabid'=>'OSSTimeControl','sequence'=>'4'),
+						array('tabid'=>'QuotesEnquires','related_tabid'=>'OSSTimeControl','sequence'=>'3'),
+						array('tabid'=>'NewOrders','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Reservations','related_tabid'=>'Documents','sequence'=>'1'),
+						array('tabid'=>'Accounts','related_tabid'=>'Reservations','sequence'=>'32'),
+						array('tabid'=>'Leads','related_tabid'=>'Reservations','sequence'=>'22'),
+						array('tabid'=>'Vendors','related_tabid'=>'Reservations','sequence'=>'8'),
+						array('tabid'=>'Potentials','related_tabid'=>'Reservations','sequence'=>'27'),
+						array('tabid'=>'Project','related_tabid'=>'Reservations','sequence'=>'13'),
+						array('tabid'=>'HelpDesk','related_tabid'=>'Reservations','sequence'=>'17'));
+
+		$query = 'UPDATE vtiger_relatedlists SET ';
+		$query .=' sequence= CASE ';
+		foreach($relatedList as $related ) {
+				$query .= ' WHEN tabid="'.getTabid($related['tabid']).'" AND related_tabid = "'.getTabid($related['related_tabid']).'" THEN '.$related['sequence'];
+		}
+		$query .=' END ';
+		$adb->query($query);
 		$log->debug("Exiting VT620_to_YT::rebootSeq() method ...");
 	}
 	public function picklists(){
@@ -1494,7 +1760,7 @@ $davHistoryDir = \'storage/FilesHistory\';';
 		array(51,1707,'quotesenquiresid','vtiger_osstimecontrol',1,'10','quotesenquiresid','QuotesEnquires',1,2,'',100,14,129,1,'V~O',1,NULL,'BAS',1,'',0,'',"int(19)","LBL_BLOCK",array(),array('QuotesEnquires'))
 		);
 		$Quotes = array(
-		array('20','1585','requirementcards_id','vtiger_quotes','1','10','requirementcards_id','RequirementCards','1','2','','100','28','49','1','V~O','1','','BAS','1','0','','',"int(19)","LBL_QUOTE_INFORMATION",array(),array('RequirementCards'))
+		array('20','1585','requirementcards_id','vtiger_quotes','1','10','requirementcards_id','RequirementCards','1','2','','100','28','49','1','V~M','1','','BAS','1','0','','',"int(19)","LBL_QUOTE_INFORMATION",array(),array('RequirementCards'))
 		);
 		$Calculations = array(
 		array(70,1601,'currency_id','vtiger_calculations',1,'117','currency_id','Currency',1,2,'1',100,11,182,3,'I~O',3,NULL,'BAS',1,0,0,'',"int(19)","LBL_INFORMATION",array(),array()),
@@ -1746,6 +2012,7 @@ Backup has been made.');
 					$importInstance->_modulexml = simplexml_load_file('cache/updates/'.$module.'.xml');
 					$importInstance->import_Module();
 					self::addModuleToMenu($module, (string)$importInstance->_modulexml->parent);
+					unlink('cache/updates/'.$module.'.xml');
 				}
 			} catch (Exception $e) {
 				echo $e->getMessage();
