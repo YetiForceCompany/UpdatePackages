@@ -1260,6 +1260,9 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 		$modules = array(getTabid('QuotesEnquires'),getTabid('LettersOut'),getTabid('LettersIn'),getTabid('PaymentsOut'),getTabid('OSSPasswords'),getTabid('RequirementCards'),getTabid('Quotes'),getTabid('OSSMailView'));
 		$adb->pquery( "UPDATE `vtiger_links` set handler_path = 'modules/ModTracker/ModTracker.php', handler_class = 'ModTracker', handler = 'isViewPermitted' WHERE linklabel = 'View History' AND tabid IN (".generateQuestionMarks($modules).") ", $modules);
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
+		
+		$adb->query( 'ALTER TABLE roundcube_identities CHANGE `signature` `signature` LONGTEXT NULL;');
+		$adb->pquery( "INSERT INTO roundcube_system (name, value) VALUES ('roundcube-version', '2014042900');");
 	}
 	public function roundcubeConfig(){
 		global $log,$adb,$root_directory;
