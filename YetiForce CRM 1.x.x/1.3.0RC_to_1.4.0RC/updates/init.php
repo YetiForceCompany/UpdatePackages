@@ -1223,8 +1223,7 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 		$result = $adb->pquery( "SELECT vtiger_field.fieldid FROM `vtiger_field` WHERE tabid = ? AND columnname = ? ", array(getTabid('OSSMailTemplates'),'oss_module_list'));
 		$num = $adb->num_rows($result);
 		if($num == 1){
-			$fieldId= $adb->query_result( $result,$i,"fieldid" );
-			
+			$fieldId= $adb->query_result( $result,0,"fieldid" );
 			$result = $adb->pquery( "SELECT * FROM `vtiger_def_org_field` WHERE fieldid = ? ", array($fieldId));
 			$num = $adb->num_rows($result);
 			if($num == 0){
