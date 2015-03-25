@@ -1332,7 +1332,7 @@ $adb->pquery( $query, array(getTabid('Contacts'),getTabid('HelpDesk'),'HelpDesk'
 $session_regenerate_id = false;
 
 //Would you like to encode passwords for Customer Portal
-$encode_customer_portal_passwords = true;
+$encode_customer_portal_passwords = false;
 
 $davStorageDir = \'storage/Files\';
 $davHistoryDir = \'storage/FilesHistory\';
