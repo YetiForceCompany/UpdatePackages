@@ -13,7 +13,12 @@ class YetiForceUpdate{
 	var $modulenode;
 	var $return = true;
 	var $dropTablePicklist = array();
-	var $filesToDelete = array(	);
+	var $filesToDelete = array(
+		'logs',
+		'includes',
+		'session',
+		'test',
+	);
 	
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
