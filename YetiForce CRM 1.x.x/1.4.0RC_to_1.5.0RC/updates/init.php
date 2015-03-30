@@ -56,6 +56,7 @@ class YetiForceUpdate{
 			}
 		}
 		self::recurseCopy('cache/updates/files_new','', true);
+		$this->recurseDelete('cache/updates');
 		Vtiger_Deprecated::createModuleMetaFile();
 		Vtiger_Access::syncSharingAccess();
 		return true;
@@ -170,6 +171,7 @@ class YetiForceUpdate{
 		global $log,$adb;
 		$log->debug("Entering YetiForceUpdate::databaseData() method ...");
 		$this->addFields();
+		$adb->query("UPDATE vtiger_eventhandlers_seq SET `id` = (SELECT MAX(eventhandler_id) FROM `vtiger_eventhandlers`);");
 		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", array('vtiger.entity.link.after', 'HelpDeskHandler'));
 		if($adb->num_rows($result) == 0){
 			$addHandler = array();
