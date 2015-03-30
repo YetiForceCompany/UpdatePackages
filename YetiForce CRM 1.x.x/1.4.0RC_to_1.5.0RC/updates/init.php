@@ -28,7 +28,9 @@ class YetiForceUpdate{
 		'include/events/runtime/cache',
 		'include/events/runtime/Cache.php',
 		'languages/pt_br/Migration.php',
-		'languages/pt_br/EmailTemplates.php'
+		'languages/pt_br/EmailTemplates.php',
+		'include/events/runtime/cache/Connector.php',
+		'include/events/runtime/cache/Connectors.php'
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -44,6 +46,7 @@ class YetiForceUpdate{
 		$this->roundcubeConfig();
 		$this->databaseStructureExceptDeletedTables();
 		$this->databaseData();
+		$this->specialScripta();
 	}
 	
 	function postupdate() {
@@ -106,6 +109,41 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE `vtiger_settings_field_seq` SET id = ?;', array(self::countRow('vtiger_settings_field', 'fieldid')));
 
 		$log->debug("Exiting YetiForceUpdate::settingsReplace() method ...");
+	}
+	function specialScripta() {
+		global $log,$adb;
+		$log->debug("Entering YetiForceUpdate::specialScripta() method ...");
+		$actions = [17=>'MassEdit',18=>'MassDelete',19=>'MassAddComment',20=>'MassComposeEmail',21=>'MassSendSMS',22=>'MassTransferOwnership',23=>'MassMoveDocuments'];
+		foreach ($actions as $key =>$action) {
+			$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+
+			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
+			$result = $adb->query($sql);
+			
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			for($i = 0; $i < $adb->num_rows($resultP); $i++){
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				for($i = 0; $i < $adb->num_rows($result); $i++){
+					$insert = false;
+					$row = $adb->query_result_rowdata($result, $i);
+					$tabid = $row['tabid'];
+					if( $key == 23 && $row['name'] == 'Documents'){
+						$insert = true;
+					}
+					if( ($key == 20 || $key == 21 || $key == 22) && in_array($row['name'] , ['Accounts','Contacts','Leads','Vendors']) ){
+						$insert = true;
+					}
+					if( !($key == 22 && $row['name'] == 'PriceBooks') && $key != 23 && $key != 20 && $key != 21){
+						$insert = true;
+					}
+					if($insert){
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
+						$licznik++;
+					}
+				}
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::specialScripta() method ...");
 	}
 	public function getBlockId($label){
 		global $adb;

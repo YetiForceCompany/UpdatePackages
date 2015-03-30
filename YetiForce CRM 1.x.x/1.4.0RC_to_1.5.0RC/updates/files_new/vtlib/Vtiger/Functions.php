@@ -1011,8 +1011,6 @@ class Vtiger_Functions {
 	}
 	
 	public function recurseDelete($src) {
-		global $log;
-		$log->debug("Entering YetiForceUpdate::recurseDelete() method ...");
 		$rootDir = vglobal('root_directory');
 		if (!file_exists($rootDir . $src))
 			return;
@@ -1036,21 +1034,17 @@ class Vtiger_Functions {
 	}
 
 	public function recurseCopy($src, $dest, $delete = false) {
-		global $log,$adb;
-		$log->debug("Entering YetiForceUpdate::recurseDelete() method ...");
 		$rootDir = vglobal('root_directory');
 		if (!file_exists($rootDir . $src))
 			return;
 
 		foreach ($iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($src, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
-			$log->debug("Entering ".$iterator->getSubPathName().", ".$rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName()." YetiForceUpdate::recurseDelete(".$item.") method ...");
 			if ($item->isDir() && !file_exists($rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName())) {
 				mkdir($rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
 			} elseif(!$item->isDir())  {
 				copy($item, $rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
 			}
 		}
-		
 	}
 
 }
