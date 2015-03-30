@@ -17,15 +17,18 @@ class YetiForceUpdate{
 	var $modulenode;
 	var $return = true;
 	var $dropTablePicklist = array();
-	var $filesToDelete = array(
+	var $filesToDelete = array();
+	var $filesToDeleteNew = array(
 		'logs',
 		'includes',
 		'session',
 		'test',
 		'storage/Files',
-		'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
+		//'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
 		'include/events/runtime/cache',
 		'include/events/runtime/Cache.php',
+		'languages/pt_br/Migration.php',
+		'languages/pt_br/EmailTemplates.php'
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -33,6 +36,7 @@ class YetiForceUpdate{
 	}
 	function preupdate() {
 		//$this->package->_errorText = 'Errot';
+		
 		return true;
 	}
 	
@@ -43,6 +47,12 @@ class YetiForceUpdate{
 	}
 	
 	function postupdate() {
+		if ($this->filesToDeleteNew) {
+			foreach ($this->filesToDeleteNew as $path) {
+				$this->recurseDelete($path);
+			}
+		}
+		self::recurseCopy('cache/updates/files_new','', true);
 		Vtiger_Deprecated::createModuleMetaFile();
 		Vtiger_Access::syncSharingAccess();
 		return true;
@@ -435,5 +445,41 @@ class YetiForceUpdate{
 			$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = ? WHERE `ossmailtemplates_type` = ?;", array(0, 'PLL_MODULE'));
 		}
 		
+	}
+	public function recurseDelete($src) {
+		$rootDir = vglobal('root_directory');
+		if (!file_exists($rootDir . $src))
+			return;
+		$dirs = [];
+		@chmod($root_dir . $src, 0777);
+		if(is_dir($src)) {
+			foreach ($iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($src, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+				if ($item->isDir()) {
+					$dirs[] = $rootDir . $src . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+				} else {
+					unlink($rootDir . $src . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
+				}
+			}
+			arsort($dirs);
+			foreach ($dirs as $dir) {
+				rmdir($dir);
+			}
+		} else {
+			unlink($rootDir . $src);
+		}
+	}
+
+	public function recurseCopy($src, $dest, $delete = false) {
+		$rootDir = vglobal('root_directory');
+		if (!file_exists($rootDir . $src))
+			return;
+
+		foreach ($iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($src, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+			if ($item->isDir() && !file_exists($rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName())) {
+				mkdir($rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
+			} elseif(!$item->isDir())  {
+				copy($item, $rootDir . $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
+			}
+		}
 	}
 }
