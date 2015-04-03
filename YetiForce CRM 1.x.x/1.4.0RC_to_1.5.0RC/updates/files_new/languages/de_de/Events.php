@@ -81,12 +81,13 @@ $languageStrings = array(
 	'LBL_NO_DESCRIPTION'		 => 'Keine Beschreibung',
 	'All day' => 'Alle Tage',
 	'LBL_STATE' => 'Status',
-	'PLL_OPAQUE' => '__No_Translated__',
-	'PLL_TRANSPARENT' => '__No_Translated__',
+	'PLL_OPAQUE' => 'beschäftigt',
+	'PLL_TRANSPARENT' => 'frei',
 	'Duration' => 'Dauer',
 	'Duration Minutes' => 'Dauer in Minuten',
 	'No Time' => 'Keine Dauer',
 	'Time Start' => 'Beginnt um',
 	'End Time' => 'Endet um',
-	
+	'Relation' => '__UNTRANSLATED__',
+	'Process' => '__UNTRANSLATED__',
 );

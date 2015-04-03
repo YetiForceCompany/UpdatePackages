@@ -1,1 +1,1 @@
-Update packages YetiForce CRM from 1.4.0RC to 1.5.0 RC
+Update packages YetiForce CRM from 1.4.0RC to 1.5.0 RCRequired PHP version needs to be equal or greater than 5.4.  The update package introduces changes in relations so some data is deleted.

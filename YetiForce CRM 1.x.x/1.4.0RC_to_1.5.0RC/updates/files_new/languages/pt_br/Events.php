@@ -82,7 +82,9 @@ $languageStrings = array(
 	'High' => 'Alta',
 	'Medium' => 'Média',
 	'Low' => 'Baixa',
-	'LBL_STATE' => '__No_Translated__',
-	'PLL_OPAQUE' => '__No_Translated__',
-	'PLL_TRANSPARENT' => '__No_Translated__',
+	'LBL_STATE' => 'Exibir como',
+	'PLL_OPAQUE' => 'Ocupado',
+	'PLL_TRANSPARENT' => 'Livre',
+	'Relation' => '__UNTRANSLATED__',
+	'Process' => '__UNTRANSLATED__',
 );
