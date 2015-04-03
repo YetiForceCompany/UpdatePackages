@@ -23,7 +23,6 @@ class YetiForceUpdate{
 		'includes',
 		'session',
 		'test',
-		'storage/Files',
 		//'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
 		'include/events/runtime/cache',
 		'include/events/runtime/Cache.php',
@@ -434,16 +433,15 @@ class YetiForceUpdate{
 				[6,'vtiger_contactdetails','smownerid']);
 		$adb->query("insert  into `vtiger_support_processes`(`id`,`ticket_status_indicate_closing`) values (1,'');");
 		$result = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_seactivityrel','crmid',getTabid('Calendar')));
+		$result2 = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_seactivityrel','crmid',getTabid('Events')));
+		
 		if($adb->num_rows($result) == 1){
 			$quickcreatesequence = $adb->query_result($result, 0, 'quickcreatesequence');
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=? WHERE tablename = ? AND columnname = ? ;', 
 					['process','vtiger_activity','process','Process','1','vtiger_seactivityrel','crmid']);
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=?, uitype=?, quickcreatesequence=?, summaryfield=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', 
 					['link','vtiger_activity','link','Relation','2','67',$quickcreatesequence,'1','vtiger_cntactivityrel','contactid',getTabid('Calendar')]);
-		}
-		$result = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_cntactivityrel','contactid',getTabid('Events')));
-		if($adb->num_rows($result) == 1){
-			$quickcreatesequence = $adb->query_result($result, 0, 'quickcreatesequence');
+			$quickcreatesequence = $adb->query_result($result2, 0, 'quickcreatesequence');
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=?, uitype=?, quickcreatesequence=?, summaryfield=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', 
 				['link','vtiger_activity','link','Relation','2','67',$quickcreatesequence,'1','vtiger_cntactivityrel','contactid',getTabid('Events')]);
 		}
@@ -655,7 +653,7 @@ class YetiForceUpdate{
 			$dirs[] =$src;
 			arsort($dirs);
 			foreach ($dirs as $dir) {
-				rmdir($dir);
+				@rmdir($dir);
 			}
 		} else {
 			unlink($rootDir . $src);
