@@ -415,10 +415,15 @@ class YetiForceUpdate{
 			$taskRecordModel->save();
 		}
 		$adb->pquery('UPDATE `vtiger_field` SET uitype = ? WHERE tabid = ? AND columnname = ? ;', array(19,getTabid('Emails'), 'description'));
-		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
-				[3,'vtiger_activity','date_start']);
-		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
-				[4,'vtiger_activity','due_date']);
+		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?  AND tabid =?;', 
+				[3,'vtiger_activity','date_start',getTabid('Calendar')]);
+		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?  AND tabid =?;', 
+				[10,'vtiger_activity','date_start',getTabid('Events')]);
+		
+		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid =?;', 
+				[4,'vtiger_activity','due_date',getTabid('Calendar')]);
+		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid =?;', 
+				[11,'vtiger_activity','due_date',getTabid('Events')]);
 		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
 				[1,'vtiger_contactdetails','firstname']);
 		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
@@ -436,7 +441,7 @@ class YetiForceUpdate{
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=?, uitype=?, quickcreatesequence=?, summaryfield=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', 
 					['link','vtiger_activity','link','Relation','2','67',$quickcreatesequence,'1','vtiger_cntactivityrel','contactid',getTabid('Calendar')]);
 		}
-		$result = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_seactivityrel','crmid',getTabid('Events')));
+		$result = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_cntactivityrel','contactid',getTabid('Events')));
 		if($adb->num_rows($result) == 1){
 			$quickcreatesequence = $adb->query_result($result, 0, 'quickcreatesequence');
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=?, uitype=?, quickcreatesequence=?, summaryfield=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', 
@@ -647,6 +652,7 @@ class YetiForceUpdate{
 					unlink($rootDir . $src . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
 				}
 			}
+			$dirs[] =$src;
 			arsort($dirs);
 			foreach ($dirs as $dir) {
 				rmdir($dir);
