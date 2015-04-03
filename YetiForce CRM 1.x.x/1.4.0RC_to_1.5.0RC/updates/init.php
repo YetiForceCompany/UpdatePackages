@@ -137,6 +137,10 @@ class YetiForceUpdate{
 				  `value` text,
 				  UNIQUE KEY `type` (`type`,`name`)
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$result = $adb->query("SHOW COLUMNS FROM `yetiforce_mail_config`;");
+		if($adb->num_rows($result) > 0){
+			$adb->query("ALTER TABLE yetiforce_mail_config CHANGE `value` `value` TEXT NULL, ADD UNIQUE INDEX (`type`, `name`);");
+		}
 		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_mail_quantities` (
 				  `userid` int(10) unsigned NOT NULL,
 				  `num` int(10) unsigned DEFAULT '0',
