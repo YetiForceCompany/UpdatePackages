@@ -83,6 +83,8 @@ class YetiForceUpdate{
 		'layouts/vlayout/skins/images/Services256.png',
 		'layouts/vlayout/skins/images/SMSNotifier256.png',
 		'layouts/vlayout/skins/images/Vendors256.png',
+		'layouts/vlayout/modules/Vtiger/browsercompatibility/hourGlass.png',
+		'layouts/vlayout/modules/Vtiger/browsercompatibility/vtiger_logo.png',
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -137,8 +139,8 @@ class YetiForceUpdate{
 				  `value` text,
 				  UNIQUE KEY `type` (`type`,`name`)
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		$result = $adb->query("SHOW COLUMNS FROM `yetiforce_mail_config`;");
-		if($adb->num_rows($result) > 0){
+		$result = $adb->query("SHOW INDEX  FROM `yetiforce_mail_config` WHERE COLUMN_NAME = 'type';");
+		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE yetiforce_mail_config CHANGE `value` `value` TEXT NULL, ADD UNIQUE INDEX (`type`, `name`);");
 		}
 		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_mail_quantities` (
@@ -498,19 +500,27 @@ class YetiForceUpdate{
 	}
 	
 	public function roundcubeConfig(){
-		global $log,$adb,$root_directory;
+		global $log, $adb, $root_directory;
 		$log->debug("Entering YetiForceUpdate::roundcubeConfig() method ...");
-		if(!$root_directory)
+		if (!$root_directory)
 			$root_directory = getcwd();
-		$fileName = $root_directory.'/modules/OSSMail/roundcube/config/config.inc.php';
-		$completeData = file_get_contents($fileName);
-		if(strpos($completeData,"yt_new_user") !== FALSE){
-			return;
+		$fileName = $root_directory . '/modules/OSSMail/roundcube/config/config.inc.php';
+
+		$configContent = file($fileName);
+		foreach($configContent as $key => $line){
+			if(	strpos($line, '$config[\'plugins\']') !== FALSE){
+				if (strpos($line, 'yt_new_user') === FALSE) {
+					$configContent[$key] = str_replace(");", ",'yt_new_user');", $configContent[$key]);
+				}
+				if (strpos($line, 'yt_signature') === FALSE) {
+					$configContent[$key] = str_replace(");", ",'yt_signature');", $configContent[$key]);
+				}
+			}
 		}
-		$completeData = str_replace("'autologon'", "'yt_new_user','autologon'", $completeData); 	
-		$filePointer = fopen($fileName, 'w');
-		fwrite($filePointer, $completeData);
-		fclose($filePointer);
+		$content = implode("", $configContent);
+		$file = fopen($fileName,"w+");
+		fwrite($file,$content);
+		fclose($file);
 		$log->debug("Exiting YetiForceUpdate::roundcubeConfig() method ...");
 	}
 	public function picklists(){
