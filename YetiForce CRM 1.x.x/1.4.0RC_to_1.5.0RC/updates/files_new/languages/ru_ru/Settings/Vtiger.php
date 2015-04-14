@@ -242,7 +242,6 @@ $languageStrings = array(
 	'Mail View'	=>	'Просмотр почты',
 
 	/* settings menu */
-	'Menu Manager' => 'Редактор меню',
     'LBL_QUICK_CREATE_EDITOR'=> 'Редактор быстрого создания',
 	'LBL_QUICK_CREATE_EDITOR_DESCRIPTION' => 'В этом модуле, вы сможете настроить отображение и расположение полей в окне быстрого создания.',
 	'LBL_API_ADDRESS' => 'Поиск адресов',
@@ -281,6 +280,16 @@ $languageStrings = array(
 	'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION' => 'Настройка конфигурации почты в системе',
 	'LBL_SUPPORT_PROCESSES' => 'Support processes',
 	'LBL_SUPPORT_PROCESSES_DESCRIPTION' => '',
+	'LBL_REALIZATION_PROCESSES' => 'Realization processes',
+	'LBL_REALIZATION_PROCESSES_DESCRIPTION' => ' ',
+	'LBL_FINANCIAL_PROCESSES' => 'Financial processes',
+	'LBL_FINANCIAL_PROCESSES_DESCRIPTION' => ' ',
+	'LBL_MARKETING_PROCESSES' => 'Marketing processes',
+	'LBL_MARKETING_PROCESSES_DESCRIPTION' => ' ',
+	'LBL_COLORS' => 'Colors',
+	'LBL_COLORS_DESCRIPTION' => ' ',
+	'LBL_MENU_BUILDER' => 'Menu',
+	'LBL_MENU_BUILDER_DESCRIPTION' => ' ',
 	
 	/* Role */
 	'Board of Management'	=> 'Управляющий',

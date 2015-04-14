@@ -85,6 +85,14 @@ class YetiForceUpdate{
 		'layouts/vlayout/skins/images/Vendors256.png',
 		'layouts/vlayout/modules/Vtiger/browsercompatibility/hourGlass.png',
 		'layouts/vlayout/modules/Vtiger/browsercompatibility/vtiger_logo.png',
+		'modules/Settings/Leads/views/ConvertToAccount.php',
+		'layouts/vlayout/modules/Settings/Leads/ConvertToAccount.tpl',
+		'libraries/jquery/jstree/jquery.hotkeys.js',
+		'modules/Vtiger/models/MenuStructure.php',
+		'layouts/vlayout/modules/Settings/Leads/resources/ConvertToAccount.js',
+		'modules/CallHistory/schema.xml',
+		'modules/Users/views/Colors.php',
+		'libraries/html5shim/html5.js',
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -108,6 +116,7 @@ class YetiForceUpdate{
 			'Users'=>['signature']
 		];
 		$this->deleteFields($fieldsToDelete);
+		$this->removeModules();
 	}
 	
 	function postupdate() {
@@ -159,6 +168,57 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_users` ADD COLUMN `emailoptout` varchar(3) NOT NULL DEFAULT '1' after `is_owner` ;");
 		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_groups` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_groups` ADD COLUMN `color` varchar(25) NULL DEFAULT '#E6FAD8' after `description` ;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ticketpriorities` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_ticketpriorities` ADD COLUMN `color` varchar(25) NULL DEFAULT '	#E6FAD8' after `sortorderid` ;");
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_realization_process`(
+					`module_id` int(11) NOT NULL  , 
+					`status_indicate_closing` varchar(255) COLLATE utf8_general_ci NULL  
+				) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+				
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_sales_stage` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_sales_stage` ADD COLUMN `color` varchar(25) DEFAULT '#E6FAD8' ;");
+		}	
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_leadstatus` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_leadstatus` ADD COLUMN `color` varchar(25) DEFAULT '#E6FAD8' ;");
+		}	
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ticketstatus` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_ticketstatus` ADD COLUMN `color` varchar(25) DEFAULT '#E6FAD8' ;");
+		}	
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_projectstatus` LIKE 'color';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_projectstatus` ADD COLUMN `color` varchar(25) DEFAULT '#E6FAD8' ;");
+		}	
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_menu` (
+					  `id` int(19) unsigned NOT NULL AUTO_INCREMENT,
+					  `role` int(19) DEFAULT NULL,
+					  `parentid` int(19) DEFAULT '0',
+					  `type` tinyint(1) DEFAULT NULL,
+					  `sequence` int(3) DEFAULT NULL,
+					  `module` int(19) DEFAULT NULL,
+					  `label` varchar(100) DEFAULT NULL,
+					  `newwindow` tinyint(1) DEFAULT '0',
+					  `dataurl` text,
+					  `showicon` tinyint(1) DEFAULT '0',
+					  `icon` varchar(255) DEFAULT NULL,
+					  `sizeicon` varchar(255) DEFAULT NULL,
+					  `hotkey` varchar(30) DEFAULT NULL,
+					  PRIMARY KEY (`id`),
+					  KEY `parent_id` (`parentid`),
+					  KEY `role` (`role`),
+					  KEY `module` (`module`),
+					  CONSTRAINT `yetiforce_menu_ibfk_1` FOREIGN KEY (`module`) REFERENCES `vtiger_tab` (`tabid`) ON DELETE CASCADE
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+					
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	function settingsReplace() {
@@ -170,6 +230,10 @@ class YetiForceUpdate{
 		$settings_field[] = array('LBL_MAIL','LBL_AUTOLOGIN',NULL,'LBL_AUTOLOGIN_DESCRIPTION','index.php?parent=Settings&module=Mail&view=Autologin','2','0','0');
 		$settings_field[] = array('LBL_MAIL','LBL_MAIL_GENERAL_CONFIGURATION',NULL,'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION','index.php?parent=Settings&module=Mail&view=Config','1','0','0');
 		$settings_field[] = array('LBL_PROCESSES','LBL_SUPPORT_PROCESSES',NULL,'LBL_SUPPORT_PROCESSES_DESCRIPTION','index.php?module=SupportProcesses&view=Index&parent=Settings','3','0','0');
+		$settings_field[] = array('LBL_STUDIO','LBL_COLORS',NULL,'LBL_COLORS_DESCRIPTION','index.php?module=Users&parent=Settings&view=Colors',19,0,0);
+		$settings_field[] = array('LBL_PROCESSES','LBL_REALIZATION_PROCESSES','','LBL_REALIZATION_PROCESSES_DESCRIPTION','index.php?module=RealizationProcesses&view=Index&parent=Settings',4,0,0);
+		$settings_field[] = array('LBL_PROCESSES','LBL_MARKETING_PROCESSES','','LBL_MARKETING_PROCESSES_DESCRIPTION','index.php?module=MarketingProcesses&view=Index&parent=Settings',4,0,0);
+		$settings_field[] = array('LBL_PROCESSES','LBL_FINANCIAL_PROCESSES','','LBL_FINANCIAL_PROCESSES_DESCRIPTION','index.php?module=FinancialProcesses&view=Index&parent=Settings',4,0,0);
 		
 		foreach ($settings_field AS $field){
 			if(!self::checkFieldExists( $field, 'Settings' )){
@@ -451,6 +515,14 @@ class YetiForceUpdate{
 			$adb->pquery('UPDATE `vtiger_field` SET columnname=?,tablename=?,fieldname=?,fieldlabel=?, quickcreate=?, uitype=?, quickcreatesequence=?, summaryfield=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', 
 				['link','vtiger_activity','link','Relation','2','67',$quickcreatesequence,'1','vtiger_cntactivityrel','contactid',getTabid('Events')]);
 		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_realization_process`;");
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("INSERT INTO vtiger_realization_process(module_id, status_indicate_closing) VALUES(?,?)", array(getTabid('Project'), ''));
+		}
+		$adb->pquery("DELETE FROM vtiger_settings_field WHERE name = ?;", array('LBL_CONVERSION_TO_ACCOUNT'));
+		$adb->pquery('UPDATE `vtiger_settings_field` SET `name` = ?, `description` = ?, `linkto` = ? WHERE `name` = ? AND `description` = ? ;', ['LBL_MENU_BUILDER','LBL_MENU_BUILDER_DESCRIPTION','index.php?module=Menu&view=Index&parent=Settings','Menu Manager','LBL_MENU_DESC']);
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -788,4 +860,365 @@ class YetiForceUpdate{
 		fwrite($file,$content);
 		fclose($file);
 	}
+	public function checkModuleExists($moduleName){
+		global $log;
+		$log->debug("Entering YetiForceUpdate::checkModuleExists(".$moduleName.") method ...");
+		global $adb;
+		$result = $adb->pquery('SELECT * FROM vtiger_tab WHERE name = ?', array($moduleName));
+		if(!$adb->num_rows($result)) {
+			$log->debug("Exiting YetiForceUpdate::checkModuleExists() method ...");
+			return false;
+		}
+		$log->debug("Exiting YetiForceUpdate::checkModuleExists() method ...");
+		return true;
+	}
+	function removeModules(){
+		global $log;
+		$log->debug("Entering YetiForceUpdate::removeModules() method ...");
+		$removeModules = ['OSSMenuManager'=>['table_list'=>['vtiger_ossmenumanager'],'supported_languages'=>['en_us','pl_pl','de_de','pt_br','ru_ru'],'tabid'=>getTabid('OSSMenuManager')]];
+		foreach($removeModules as $moduleName=>$removeModule){
+			if(!self::checkModuleExists($moduleName))
+				continue;
+			$moduleInstance = Vtiger_Module::getInstance($moduleName);
+			$moduleInstance->delete();
+			$obiekt = new RemoveModule( $moduleName );
+			foreach($removeModule AS $key=>$value){
+				$obiekt->$key = $value;
+			}
+			$obiekt->DeleteAll();
+		}
+		$log->debug("Exiting YetiForceUpdate::removeModules() method ...");
+	}
+}
+
+class RemoveModule {
+
+	var $module_name;
+	var $tabid;
+	var $cvid;
+	var $table_list = array( );
+	var $added_links = array();
+	var $added_fields = array();
+	var $added_handlers = array();
+	// supported languages
+	var $supported_languages = array();
+	// setting links in "crm settings"
+	var $settings_links = array();
+
+	function __construct( $module_name ) 
+	{
+		global $adb;
+		
+		$this->module_name = $module_name;
+		$take_tabid = $adb->query( "select tabid from vtiger_tab where name = '".$this->module_name."'");
+		if( $adb->num_rows( $take_tabid ) > 0 )
+		{
+			$this->tabid = $adb->query_result( $take_tabid,0,"tabid" );
+		}
+		$take_cvid = $adb->query( "select cvid from vtiger_customview where entitytype = '".$this->module_name."'");
+		if( $adb->num_rows( $take_cvid ) > 0 )
+		{
+			$this->cvid = $take_cvid->GetArray();
+			
+		}
+
+		$take_info = $adb->query( "select * from vtiger_field where tabid = '$field_tabid' and uitype = '15'");
+		if( $adb->num_rows( $take_info ) > 0 )
+		{
+			$_SESSION['picklist_tables'][$adb->query_result( $take_info,0,"fieldname" )] = $adb->query_result( $take_info,0,"fieldname" );
+		}
+	}
+	
+	function DeleteAll()
+	{
+		$this->DeleteHandlers();
+		$this->DeleteAddedFields();
+		$this->DeleteALLFields();
+		$this->DeleteLinks();
+		$this->DeletePicklistsTables();
+		$this->DeleteFromProfile2Field();
+		$this->DeleteFromModentitynum();
+		$this->DeleteDefOrgInformations();
+		$this->DeleteTables();
+		$this->DeleteFromCronTask();
+		$this->DeleteFromCRMEntity();
+		$this->DeleteBlocks();
+		$this->DeleteCustomview();
+		$this->DeleteEntityname();
+		$this->DeleteTab();
+		$this->DeleteWsEntity();
+		$this->recurseDelete( 'modules/'.$this->module_name );
+		$this->recurseDelete( 'modules/Settings/'.$this->module_name );
+		$this->recurseDelete( 'layouts/vlayout/modules/'.$this->module_name );
+		$this->DeleteLanguageFiles();
+		$this->DeleteRelatedLists();
+		$this->DeleteSettingsField();
+		$this->DeleteWorkflows();
+		$this->DeleteCrmentityrel();
+        $this->DeleteIcon();
+	}
+	
+	function DeleteAddedFields()
+	{
+	global $adb;
+	include_once('vtlib/Vtiger/Module.php');
+		if( count( $this->added_fields ) > 0 )
+		{
+			foreach( $this->added_fields as $single_field )
+			{
+			$take_tabid = $adb->query( "select tabid from vtiger_tab where name = '".$single_field['module']."'", true, "Error DeleteAddedFields()" );
+				if( $adb->num_rows( $take_tabid ) > 0 )
+				{
+					$field_tabid = $adb->query_result( $take_tabid, 0, "tabid" );
+					
+					$take_info = $adb->query( "select * from vtiger_field where tabid = '$field_tabid' and fieldname = '".$single_field['fieldname']."'" , true, "Error DeleteAddedFields()" );
+					if( $adb->num_rows( $take_info ) > 0 )
+					{
+					$valuemap = array();
+						$moduleInstance = Vtiger_Module::getInstance( $single_field['module'] );
+						$valuemap['fieldid'] = $adb->query_result( $take_info, 0, 'fieldid');
+						$valuemap['fieldname']=$adb->query_result( $take_info, 0, 'fieldname'); 
+						$valuemap['fieldlabel'] = $adb->query_result( $take_info, 0, 'fieldlabel');
+						$valuemap['columnname'] =$adb->query_result( $take_info, 0, 'columnname');
+						$valuemap['tablename']  =$adb->query_result( $take_info, 0, 'tablename'); 
+						$valuemap['uitype'] = $adb->query_result( $take_info, 0, 'uitype');
+						$valuemap['typeofdata'] = $adb->query_result( $take_info, 0, 'typeofdata'); 
+						$valuemap['block'] = $adb->query_result( $take_info, 0, "block" );
+						$fieldInstance = new Vtiger_Field();
+						$fieldInstance->initialize( $valuemap, $moduleInstance );
+						$fieldInstance->delete();
+					}
+				}
+			}
+		}
+		
+		$delete = $adb->query( "delete from vtiger_fieldmodulerel where module = '".$this->module_name."' or relmodule = '".$this->module_name."' ", true, "Error DeleteAddedFields()");
+	}
+	function DeleteALLFields()
+	{
+	global $adb;
+	include_once('vtlib/Vtiger/Module.php');
+
+			$take_info = $adb->query( "select * from vtiger_field where tabid = '".$this->tabid."'" , true, "Error DeleteAddedFields()" );
+	
+			foreach( $take_info as $single_field )
+			{
+				$take_info = $adb->query( "select * from vtiger_field where tabid = '".$single_field['tabid']."' and fieldname = '".$single_field['fieldname']."'" , true, "Error DeleteAddedFields()" );
+				if( $adb->num_rows( $take_info ) > 0 )
+				{
+				$valuemap = array();
+					$moduleInstance = Vtiger_Module::getInstance( $single_field['module'] );
+					$valuemap['fieldid'] = $adb->query_result( $take_info, 0, 'fieldid');
+					$valuemap['fieldname']=$adb->query_result( $take_info, 0, 'fieldname'); 
+					$valuemap['fieldlabel'] = $adb->query_result( $take_info, 0, 'fieldlabel');
+					$valuemap['columnname'] =$adb->query_result( $take_info, 0, 'columnname');
+					$valuemap['tablename']  =$adb->query_result( $take_info, 0, 'tablename'); 
+					$valuemap['uitype'] = $adb->query_result( $take_info, 0, 'uitype');
+					$valuemap['typeofdata'] = $adb->query_result( $take_info, 0, 'typeofdata'); 
+					$valuemap['block'] = $adb->query_result( $take_info, 0, "block" );
+					$fieldInstance = new Vtiger_Field();
+					$fieldInstance->initialize( $valuemap, $moduleInstance );
+					$fieldInstance->delete();
+				}
+			}
+
+		
+		$delete = $adb->query( "delete from vtiger_fieldmodulerel where module = '".$this->module_name."' or relmodule = '".$this->module_name."' ", true, "Error DeleteAddedFields()");
+	}
+	
+	function DeleteLinks()
+	{
+		global $adb;
+		if( count( $this->added_links ) > 0 )
+		{
+			foreach( $this->added_links as $single_link )
+			{
+				$drop_table_query = $adb->query( "DELETE FROM vtiger_links WHERE linktype='".$single_link['type']."' AND linklabel='".$single_link['label']."'", true, "Error DeleteLinks()" );
+			}
+		}
+		$adb->query( "DELETE FROM vtiger_links WHERE linkurl like '%module=".$this->module_name."%'", true, "Error DeleteLinks()" );
+	}
+	
+	function DeleteHandlers()
+	{
+		global $adb;
+		require_once( 'include/events/include.inc' );
+		if( count( $this->added_handlers ) > 0 )
+		{
+			foreach( $this->added_handlers as $handler )
+			{
+				$delete = $adb->query("delete from vtiger_eventhandlers where handler_class='".$handler['class']."' and event_name = '".$handler['type']."'", true, "Error DeleteHandlers()");
+				$delete = $adb->query("delete from vtiger_eventhandler_module where handler_class='".$handler['class']."'", true, "Error DeleteHandlers()");
+			}
+		}
+	}
+	
+	function DeleteTables()
+	{
+		global $adb;
+		if( count( $this->table_list ) > 0 )
+		{
+			foreach( $this->table_list as $tablename )
+			{
+				$drop_table_query = $adb->query( "drop table if exists $tablename", true, "Error DeleteTables()" );
+			}
+		}
+	}
+	function DeleteEntityname()
+	{
+		global $adb;
+		$delete = $adb->query( "delete from vtiger_entityname where tabid = '".$this->tabid."'", true,  "Error DeleteEntityname()" );
+	}
+	function DeleteBlocks()
+	{
+		global $adb;
+		$delete = $adb->query( "delete from vtiger_blocks where tabid = '".$this->tabid."'", true,  "Error DeleteBlocks()" );
+	}
+	function DeleteCustomview()
+	{
+		if(count($this->cvid) >0){
+		foreach( $this->cvid as $cvid ){
+			$customViewModel = CustomView_Record_Model::getInstanceById($cvid[0]);
+			$customViewModel->delete();
+		}
+		}
+	}
+	function DeletePicklistsTables()
+	{
+		global $adb;
+		
+		
+		
+		if( isset( $_SESSION['picklist_tables'] ) && count( $_SESSION['picklist_tables'] ) > 0 )
+		{
+			foreach( $_SESSION['picklist_tables'] as $picklist_name )
+			{
+				$drop_table_query = $adb->query( "drop table if exists vtiger_".$picklist_name, true, "Error DeletePicklistsTables()" );
+				$drop_table_query = $adb->query( "drop table if exists vtiger_".$picklist_name."_seq", true, "Error DeletePicklistsTables()" );
+				$select = $adb->query( "select picklistid from vtiger_picklist where name = '$picklist_name'", true, "Error DeletePicklistsTables()" );
+				$picklistid = $adb->query_result( $select,0,"picklistid" );
+				$delete_from = $adb->query( "delete from vtiger_role2picklist where picklistid = '$picklistid'", true, "Error DeletePicklistsTables()" );
+				$delete_from = $adb->query( "delete from vtiger_picklist where name = '$picklist_name'", true, "Error DeletePicklistsTables()" );
+			}
+		}
+	}
+	function DeleteFromProfile2Field()
+	{
+		global $adb;
+		$delete = $adb->query( "delete from vtiger_profile2field where tabid = '".$this->tabid."'", true,  "Error DeleteFromProfile2Field()" );
+		$delete = $adb->query( "delete from vtiger_profile2standardpermissions where tabid = '".$this->tabid."'", true,  "Error DeleteFromProfile2Field()" );
+		$delete = $adb->query( "delete from vtiger_profile2tab where tabid = '".$this->tabid."'", true,  "Error DeleteFromProfile2Field()" );
+	}
+	
+	function DeleteFromModentitynum()
+	{
+		global $adb; 
+		$delete = $adb->query( "delete from vtiger_modentity_num where semodule = '".$this->module_name."'", true,  "Error DeleteFromModentitynum()" );
+	}
+	function DeleteDefOrgInformations()
+	{
+		global $adb;
+		
+		$delete = $adb->query( "delete from vtiger_def_org_field where tabid = '".$this->tabid."'", true,  "Error DeleteDefOrgInformations()" );
+		$delete = $adb->query( "delete from vtiger_def_org_share where tabid = '".$this->tabid."'", true,  "Error DeleteDefOrgInformations()" );
+		$delete = $adb->query( "delete from vtiger_org_share_action2tab where tabid = '".$this->tabid."'", true,  "Error DeleteDefOrgInformations()" );
+	}
+	
+	function DeleteFromCronTask()
+	{
+		global $adb;
+		
+		$delete = $adb->query( "delete from vtiger_cron_task where module = '".$this->module_name."'", true,  "Error DeleteFromCronTask()" );
+	}
+	
+	function DeleteFromCRMEntity()
+	{
+		global $adb;
+		
+		$delete = $adb->query( "delete from vtiger_crmentity where setype = '".$this->module_name."'", true,  "Error DeleteFromCRMEntity()" );
+	}
+	function DeleteTab()
+	{
+		global $adb,$log;
+		$log->debug("Entering RemoveModule::DeleteTab(".$this->tabid.") method ...");
+		$delete = $adb->query( "delete from vtiger_tab where tabid = '".$this->tabid."'");
+		$delete = $adb->query( "delete from vtiger_tab_info where tabid = '".$this->tabid."'");
+		$log->debug("Exiting RemoveModule::DeleteTab() method ...");
+	}
+	function DeleteWsEntity()
+	{
+		global $adb;
+		
+		$delete = $adb->query( "delete from vtiger_ws_entity where name = '".$this->module_name."'", true,  "Error DeleteWsEntity()" );
+	}
+	public function recurseDelete($src) {
+		$rootDir = vglobal('root_directory');
+		if (!file_exists($rootDir . $src))
+			return;
+		$dirs = [];
+		@chmod($root_dir . $src, 0777);
+		if(is_dir($src)) {
+			foreach ($iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($src, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+				if ($item->isDir()) {
+					$dirs[] = $rootDir . $src . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+				} else {
+					unlink($rootDir . $src . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
+				}
+			}
+			$dirs[] =$src;
+			arsort($dirs);
+			foreach ($dirs as $dir) {
+				@rmdir($dir);
+			}
+		} else {
+			unlink($rootDir . $src);
+		}
+	}
+	
+    // dodano 2013-10-03
+    function DeleteLanguageFiles() {
+        if( count( $this->supported_languages ) > 0 ) {
+			foreach( $this->supported_languages as $lang ) {
+				@unlink( "languages/$lang/".$this->module_name.".php" );
+			}
+		}
+    }
+    
+    function DeleteRelatedLists() {
+        global $adb;
+		
+		$delete = $adb->query( "DELETE FROM `vtiger_relatedlists` WHERE `label` = '".$this->module_name."'", true,  
+        "Error DeleteRelatedLists()" );
+    }
+    
+    function DeleteSettingsField() {
+		 global $adb;
+        if( count( $this->settings_links ) > 0 ) {
+			foreach( $this->settings_links as $setting ) { print_r($setting);
+				$delete = $adb->query( "DELETE FROM `vtiger_settings_field` WHERE `name` = '".$setting['name']."' AND `linkto` = '".$setting['linkto']."'", true,  
+                            "Error DeleteSettingsField()" );
+			}
+		}
+		$adb->query( "DELETE FROM `vtiger_settings_field` WHERE `linkto` like '%module=".$this->module_name."%'", true,  
+                            "Error DeleteSettingsField()" );
+    }
+    function DeleteWorkflows() {
+		global $adb;
+		$adb->query( "DELETE com_vtiger_workflows,com_vtiger_workflowtasks FROM `com_vtiger_workflows` 
+			LEFT JOIN `com_vtiger_workflowtasks` ON com_vtiger_workflowtasks.workflow_id = com_vtiger_workflows.workflow_id
+			WHERE `module_name` = '".$this->module_name."'", true,  
+                            "Error DeleteWorkflows()" );
+    }  
+    function DeleteCrmentityrel() {
+		global $adb;
+		$adb->query( "DELETE FROM `vtiger_crmentityrel` WHERE `module` = '".$this->module_name."' OR `relmodule` = '".$this->module_name."'", true,  
+                            "Error DeleteCrmentityrel()" );
+    }
+    function DeleteIcon() {
+        $filename = "layouts/vlayout/skins/images/".$this->module_name.".png";
+        
+        if ( file_exists( $filename ) ) {
+            @unlink( $filename );
+        }
+    }
 }
