@@ -501,7 +501,10 @@ class YetiForceUpdate{
 				[3,'vtiger_contactdetails','email']);
 		$adb->pquery('UPDATE `vtiger_field` SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
 				[6,'vtiger_contactdetails','smownerid']);
-		$adb->query("insert  into `vtiger_support_processes`(`id`,`ticket_status_indicate_closing`) values (1,'');");
+		$result = $adb->pquery("SELECT * FROM `vtiger_support_processes`;");
+		if($adb->num_rows($result) == 0){		
+			$adb->query("insert  into `vtiger_support_processes`(`id`,`ticket_status_indicate_closing`) values (1,'');");
+		}
 		$result = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_seactivityrel','crmid',getTabid('Calendar')));
 		$result2 = $adb->pquery('SELECT quickcreatesequence FROM `vtiger_field` WHERE tablename = ? AND columnname = ? AND tabid =?;', array('vtiger_seactivityrel','crmid',getTabid('Events')));
 		
