@@ -252,30 +252,33 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::specialScripta() method ...");
 		$actions = [17=>'MassEdit',18=>'MassDelete',19=>'MassAddComment',20=>'MassComposeEmail',21=>'MassSendSMS',22=>'MassTransferOwnership',23=>'MassMoveDocuments'];
 		foreach ($actions as $key =>$action) {
-			$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;',[$action]);
+			if($adb->num_rows($result) == 0){
+				$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
 
-			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
-			$result = $adb->query($sql);
-			
-			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
-			for($i = 0; $i < $adb->num_rows($resultP); $i++){
-				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
-				for($i = 0; $i < $adb->num_rows($result); $i++){
-					$insert = false;
-					$row = $adb->query_result_rowdata($result, $i);
-					$tabid = $row['tabid'];
-					if( $key == 23 && $row['name'] == 'Documents'){
-						$insert = true;
-					}
-					if( ($key == 20 || $key == 21 || $key == 22) && in_array($row['name'] , ['Accounts','Contacts','Leads','Vendors']) ){
-						$insert = true;
-					}
-					if( !($key == 22 && $row['name'] == 'PriceBooks') && $key != 23 && $key != 20 && $key != 21){
-						$insert = true;
-					}
-					if($insert){
-						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
-						$licznik++;
+				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
+				$result = $adb->query($sql);
+
+				$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+				for($i = 0; $i < $adb->num_rows($resultP); $i++){
+					$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+					for($i = 0; $i < $adb->num_rows($result); $i++){
+						$insert = false;
+						$row = $adb->query_result_rowdata($result, $i);
+						$tabid = $row['tabid'];
+						if( $key == 23 && $row['name'] == 'Documents'){
+							$insert = true;
+						}
+						if( ($key == 20 || $key == 21 || $key == 22) && in_array($row['name'] , ['Accounts','Contacts','Leads','Vendors']) ){
+							$insert = true;
+						}
+						if( !($key == 22 && $row['name'] == 'PriceBooks') && $key != 23 && $key != 20 && $key != 21){
+							$insert = true;
+						}
+						if($insert){
+							$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
+							$licznik++;
+						}
 					}
 				}
 			}
@@ -531,7 +534,10 @@ class YetiForceUpdate{
 	public function changeCalendarRelationships(){
 		global $log,$adb;
 		$log->debug("Entering YetiForceUpdate::changeCalendarRelationships() method ...");
-		$adb->query("ALTER TABLE vtiger_activity ADD COLUMN `link` INT(19) NULL AFTER `state`, ADD COLUMN `process` INT(19) NULL AFTER `link`, ADD INDEX (`link`), ADD INDEX (`process`);");
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_activity` LIKE 'link';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE vtiger_activity ADD COLUMN `link` INT(19) NULL AFTER `state`, ADD COLUMN `process` INT(19) NULL AFTER `link`, ADD INDEX (`link`), ADD INDEX (`process`);");
+		}
 		$adb->pquery('UPDATE vtiger_ws_fieldtype SET uitype = ? WHERE fieldtypeid = ?;', 
 				[67,35]);
 		$adb->pquery('DELETE FROM vtiger_ws_referencetype WHERE `fieldtypeid` = ? AND `type` = ?;', 
@@ -540,37 +546,43 @@ class YetiForceUpdate{
 				[34,'Leads']);
 		$adb->pquery('DELETE FROM vtiger_ws_referencetype WHERE `fieldtypeid` = ? AND `type` = ?;', 
 				[35,'Users']);
-		$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Accounts');");
-		$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Contacts');");
-		$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Leads');");
-		$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'OSSEmployees');");
-		$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Vendors');");
+		$result = $adb->pquery('SELECT * FROM vtiger_ws_referencetype WHERE type = ?;',['Accounts']);
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Accounts');");
+			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Contacts');");
+			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Leads');");
+			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'OSSEmployees');");
+			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Vendors');");
+		}
 		$adb->query("DELETE FROM vtiger_relatedlists WHERE `tabid` IN (".getTabid('Quotes').",".getTabid('PurchaseOrder').",".getTabid('SalesOrder').",".getTabid('Invoice').") AND `name` IN ('get_activities','get_history') ;");
 
-		$result = $adb->query("SELECT * FROM vtiger_cntactivityrel;");
-		for($i = 0; $i < $adb->num_rows($result); $i++){
-			$contactid = $adb->query_result_raw($result, $i, 'contactid');
-			$activityid = $adb->query_result_raw($result, $i, 'activityid');
-			$adb->pquery('UPDATE vtiger_activity SET link = ? WHERE activityid = ?;', [$contactid,$activityid]);
-			//$adb->pquery('DELETE FROM vtiger_cntactivityrel WHERE contactid = ? AND activityid = ?;',[$contactid,$activityid]);
-		}
-		$result = $adb->query("SELECT vtiger_seactivityrel.*, vtiger_crmentity.setype FROM vtiger_seactivityrel INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = vtiger_seactivityrel.crmid;");
-		for($i = 0; $i < $adb->num_rows($result); $i++){
-			$crmid = $adb->query_result_raw($result, $i, 'crmid');
-			$activityid = $adb->query_result_raw($result, $i, 'activityid');
-			$setype = $adb->query_result_raw($result, $i, 'setype');
-			if(in_array($setype, ['Accounts','Leads'])){
-				$adb->pquery('UPDATE vtiger_activity SET link = ? WHERE activityid = ?;', [$crmid,$activityid]);
+		$result = $adb->query("SHOW TABLES LIKE 'vtiger_cntactivityrel';");
+		if($adb->num_rows($result) > 0){
+			$result = $adb->query("SELECT * FROM vtiger_cntactivityrel;");
+			for($i = 0; $i < $adb->num_rows($result); $i++){
+				$contactid = $adb->query_result_raw($result, $i, 'contactid');
+				$activityid = $adb->query_result_raw($result, $i, 'activityid');
+				$adb->pquery('UPDATE vtiger_activity SET link = ? WHERE activityid = ?;', [$contactid,$activityid]);
+				//$adb->pquery('DELETE FROM vtiger_cntactivityrel WHERE contactid = ? AND activityid = ?;',[$contactid,$activityid]);
 			}
-			if(in_array($setype, ['Campaigns','HelpDesk','Potentials','Project','ServiceContracts'])){
-				$adb->pquery('UPDATE vtiger_activity SET process = ? WHERE activityid = ?;', [$crmid,$activityid]);
+			$result = $adb->query("SELECT vtiger_seactivityrel.*, vtiger_crmentity.setype FROM vtiger_seactivityrel INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = vtiger_seactivityrel.crmid;");
+			for($i = 0; $i < $adb->num_rows($result); $i++){
+				$crmid = $adb->query_result_raw($result, $i, 'crmid');
+				$activityid = $adb->query_result_raw($result, $i, 'activityid');
+				$setype = $adb->query_result_raw($result, $i, 'setype');
+				if(in_array($setype, ['Accounts','Leads'])){
+					$adb->pquery('UPDATE vtiger_activity SET link = ? WHERE activityid = ?;', [$crmid,$activityid]);
+				}
+				if(in_array($setype, ['Campaigns','HelpDesk','Potentials','Project','ServiceContracts'])){
+					$adb->pquery('UPDATE vtiger_activity SET process = ? WHERE activityid = ?;', [$crmid,$activityid]);
+				}
+				//$adb->pquery('DELETE FROM vtiger_seactivityrel WHERE crmid = ? AND activityid = ?;',[$crmid,$activityid]);
 			}
-			//$adb->pquery('DELETE FROM vtiger_seactivityrel WHERE crmid = ? AND activityid = ?;',[$crmid,$activityid]);
-		}
 
-		$adb->query('DROP TABLE vtiger_cntactivityrel;');
-		$adb->query('DROP TABLE vtiger_seactivityrel;');
-		$adb->query('DROP TABLE vtiger_seactivityrel_seq;');
+			$adb->query('DROP TABLE vtiger_cntactivityrel;');
+			$adb->query('DROP TABLE vtiger_seactivityrel;');
+			$adb->query('DROP TABLE vtiger_seactivityrel_seq;');
+		}
 		$log->debug("Exiting YetiForceUpdate::changeCalendarRelationships() method ...");
 	}
 	
