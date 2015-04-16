@@ -93,6 +93,9 @@ class YetiForceUpdate{
 		'modules/CallHistory/schema.xml',
 		'modules/Users/views/Colors.php',
 		'libraries/html5shim/html5.js',
+		'layouts/vlayout/skins/images/OSSMenuManager128.png',
+		'layouts/vlayout/skins/images/OSSMenuManager48.png',
+		'layouts/vlayout/skins/images/OSSMenuManager64.png',
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -218,7 +221,16 @@ class YetiForceUpdate{
 					  KEY `module` (`module`),
 					  CONSTRAINT `yetiforce_menu_ibfk_1` FOREIGN KEY (`module`) REFERENCES `vtiger_tab` (`tabid`) ON DELETE CASCADE
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-					
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_marketing_processes` (
+					  `module_id` int(11) NOT NULL,
+					  `data` varchar(255) DEFAULT NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_auth` (
+					  `type` varchar(20) DEFAULT NULL,
+					  `param` varchar(20) DEFAULT NULL,
+					  `value` text,
+					  UNIQUE KEY `type` (`type`,`param`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	function settingsReplace() {
@@ -234,6 +246,7 @@ class YetiForceUpdate{
 		$settings_field[] = array('LBL_PROCESSES','LBL_REALIZATION_PROCESSES','','LBL_REALIZATION_PROCESSES_DESCRIPTION','index.php?module=RealizationProcesses&view=Index&parent=Settings',4,0,0);
 		$settings_field[] = array('LBL_PROCESSES','LBL_MARKETING_PROCESSES','','LBL_MARKETING_PROCESSES_DESCRIPTION','index.php?module=MarketingProcesses&view=Index&parent=Settings',4,0,0);
 		$settings_field[] = array('LBL_PROCESSES','LBL_FINANCIAL_PROCESSES','','LBL_FINANCIAL_PROCESSES_DESCRIPTION','index.php?module=FinancialProcesses&view=Index&parent=Settings',4,0,0);
+		$settings_field[] = array('LBL_USER_MANAGEMENT','LBL_AUTHORIZATION',NULL,'LBL_AUTHORIZATION_DESCRIPTION','index.php?module=Users&view=Auth&parent=Settings',8,0,0);
 		
 		foreach ($settings_field AS $field){
 			if(!self::checkFieldExists( $field, 'Settings' )){
@@ -529,6 +542,90 @@ class YetiForceUpdate{
 		$adb->pquery("DELETE FROM vtiger_settings_field WHERE name = ?;", array('LBL_CONVERSION_TO_ACCOUNT'));
 		$adb->pquery('UPDATE `vtiger_settings_field` SET `name` = ?, `description` = ?, `linkto` = ? WHERE `name` = ? AND `description` = ? ;', ['LBL_MENU_BUILDER','LBL_MENU_BUILDER_DESCRIPTION','index.php?module=Menu&view=Index&parent=Settings','Menu Manager','LBL_MENU_DESC']);
 		
+		$result = $adb->pquery("SELECT * FROM `yetiforce_auth`;");
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','active','false');");
+			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','server','testlab.local');");
+			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','port','389');");
+			$adb->pquery("insert  into `yetiforce_auth`(`type`,`param`,`value`) values (?,?,?);", ['ldap','users',NULL]);
+		}
+		$result = $adb->pquery("SELECT * FROM `yetiforce_menu`;");
+		if($adb->num_rows($result) == 0){
+			$menu[] = array(44,0,0,2,1,NULL,'MEN_VIRTUAL_DESK',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(45,0,44,0,0,getTabid('Home'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(46,0,44,0,1,getTabid('Calendar'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(47,0,0,2,2,NULL,'MEN_LEADS',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(48,0,47,0,0,getTabid('Leads'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(49,0,47,0,1,getTabid('Contacts'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(50,0,47,0,2,getTabid('Vendors'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(51,0,47,0,3,getTabid('Accounts'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(52,0,0,2,3,NULL,'MEN_SALES',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(54,0,52,0,0,getTabid('Campaigns'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(55,0,52,0,1,getTabid('Potentials'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(56,0,52,0,2,getTabid('QuotesEnquires'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(57,0,52,0,3,getTabid('RequirementCards'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(58,0,52,0,4,getTabid('Calculations'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(59,0,52,0,5,getTabid('Quotes'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(60,0,52,0,6,getTabid('SalesOrder'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(61,0,52,0,7,getTabid('PurchaseOrder'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(62,0,52,0,8,getTabid('PriceBooks'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(63,0,0,2,5,NULL,'MEN_SUPPORT',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(64,0,63,0,0,getTabid('HelpDesk'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(65,0,63,0,1,getTabid('ServiceContracts'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(66,0,63,0,2,getTabid('Faq'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(67,0,0,2,4,NULL,'MEN_PROJECTS',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(68,0,67,0,0,getTabid('Project'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(69,0,67,0,1,getTabid('ProjectMilestone'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(70,0,67,0,2,getTabid('ProjectTask'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(71,0,0,2,6,NULL,'MEN_BOOKKEEPING',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(72,0,71,0,3,getTabid('PaymentsIn'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(73,0,71,0,2,getTabid('PaymentsOut'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(74,0,71,0,1,getTabid('Invoice'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(75,0,71,0,0,getTabid('OSSCosts'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(76,0,0,2,7,NULL,'MEN_HUMAN_RESOURCES',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(77,0,76,0,0,getTabid('OSSEmployees'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(78,0,76,0,1,getTabid('OSSTimeControl'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(79,0,76,0,2,getTabid('HolidaysEntitlement'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(80,0,0,2,8,NULL,'MEN_SECRETARY',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(81,0,80,0,0,getTabid('LettersIn'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(82,0,80,0,1,getTabid('LettersOut'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(83,0,80,0,2,getTabid('Reservations'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(84,0,0,2,9,NULL,'MEN_DATABESES',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(85,0,84,2,0,NULL,'MEN_PRODUCTBASE',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(86,0,84,0,1,getTabid('Products'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(87,0,84,0,2,getTabid('OutsourcedProducts'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(88,0,84,0,3,getTabid('Assets'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(89,0,84,3,4,NULL,NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(90,0,84,2,5,NULL,'MEN_SERVICESBASE',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(91,0,84,0,6,getTabid('Services'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(92,0,84,0,7,getTabid('OSSOutsourcedServices'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(93,0,84,0,8,getTabid('OSSSoldServices'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(94,0,84,3,9,NULL,NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(95,0,84,2,10,NULL,'MEN_LISTS',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(96,0,84,0,11,getTabid('OSSMailView'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(97,0,84,0,12,getTabid('SMSNotifier'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(98,0,84,0,13,getTabid('PBXManager'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(99,0,84,0,14,getTabid('OSSMailTemplates'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(100,0,84,0,15,getTabid('Documents'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(102,0,84,0,16,getTabid('OSSPdf'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(106,0,84,0,18,getTabid('CallHistory'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(107,0,84,3,19,NULL,NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(108,0,84,0,21,getTabid('NewOrders'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(109,0,84,0,17,getTabid('OSSPasswords'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(110,0,0,2,10,NULL,'MEN_TEAMWORK',0,NULL,0,NULL,NULL,"");
+			$menu[] = array(111,0,110,0,0,getTabid('Ideas'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(112,0,0,6,0,getTabid('Home'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(113,0,44,0,2,getTabid('OSSMail'),NULL,0,NULL,0,NULL,NULL,"");
+			$menu[] = array(114,0,84,0,20,getTabid('Reports'),NULL,0,NULL,0,NULL,NULL,"");
+			foreach($menu AS $m){
+				$adb->pquery("insert  into `yetiforce_menu`(`id`,`role`,`parentid`,`type`,`sequence`,`module`,`label`,`newwindow`,`dataurl`,`showicon`,`icon`,`sizeicon`,`hotkey`) values (". generateQuestionMarks($m) .");",array($m));
+			}
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linktype = ? AND linklabel = ? AND tabid = ? ;", ['DASHBOARDWIDGET','Calendar',getTabid('Home')]);
+		if($adb->num_rows($result) == 0){
+			$instanceModule = Vtiger_Module::getInstance('Home');
+			$instanceModule->addLink('DASHBOARDWIDGET', 'Calendar', 'index.php?module=Home&view=ShowWidget&name=Calendar');
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -546,7 +643,7 @@ class YetiForceUpdate{
 				[34,'Leads']);
 		$adb->pquery('DELETE FROM vtiger_ws_referencetype WHERE `fieldtypeid` = ? AND `type` = ?;', 
 				[35,'Users']);
-		$result = $adb->pquery('SELECT * FROM vtiger_ws_referencetype WHERE type = ?;',['Accounts']);
+		$result = $adb->pquery('SELECT * FROM vtiger_ws_referencetype WHERE `fieldtypeid` = ? AND type = ?;',[35,'Accounts']);
 		if($adb->num_rows($result) == 0){
 			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Accounts');");
 			$adb->pquery("INSERT INTO vtiger_ws_referencetype (`fieldtypeid`, `type`) VALUES ('35', 'Contacts');");

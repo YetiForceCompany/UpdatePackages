@@ -8,7 +8,6 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-
 $languageStrings = array(
 	'Users' => 'Usuários',
     'USER_MAIL_EXIST' => 'Já existe um Usuário com este endereço de e-mail',
@@ -25,8 +24,17 @@ $languageStrings = array(
 	'LBL_GROUP_NAME' => 'Nome grupo',
 	'LBL_COLORS' => 'Cores',
 	'LBL_PRIORITY' => 'Priority',
+	
+	//Auth
+	'LBL_AUTHORIZATION' => 'Authorization',
+	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
+	'LBL_LDAP_AUTH' => 'LDAP',
+	'LBL_ACTIVE_LDAP_AUTH' => 'Authorization with LDAP',
+	'LBL_LDAP_SERVER' => 'Server address',
+	'LBL_LDAP_PORT' => 'Port',
+	'LBL_LDAP_USERS' => 'Auto login active for users',
+	'LBL_SAVE_CONFIG' => 'Configuration has been saved',
 );
-
 $jsLanguageStrings = array(
     'JS_USER_MAIL_EXIST' => 'Já existe um Usuário com este endereço de e-mail',
 	'JS_DECIMAL_SEPERATOR_AND_GROUPING_SEPERATOR_CANT_BE_SAME' => 'O separador de casas decimais e separador de milhar não podem ser iguais',
