@@ -96,6 +96,30 @@ class YetiForceUpdate{
 		'layouts/vlayout/skins/images/OSSMenuManager128.png',
 		'layouts/vlayout/skins/images/OSSMenuManager48.png',
 		'layouts/vlayout/skins/images/OSSMenuManager64.png',
+		'libraries/jquery/jstree/themes/default/style.min.css',
+		// > vr. 1.4.120
+		'libraries/jquery/jstree3/themes/default/style.css',
+		'libraries/jquery/jstree3/themes/default/style.min.css',
+		'libraries/jquery/jstree3/themes/default/throbber.gif',
+		'libraries/jquery/jstree/jquery.jstree.js',
+		'libraries/jquery/jstree/themes/apple/bg.jpg',
+		'libraries/jquery/jstree/themes/apple/d.png',
+		'libraries/jquery/jstree/themes/apple/dot_for_ie.gif',
+		'libraries/jquery/jstree/themes/apple/style.css',
+		'libraries/jquery/jstree/themes/apple/throbber.gif',
+		'libraries/jquery/jstree/themes/classic/d.gif',
+		'libraries/jquery/jstree/themes/classic/d.png',
+		'libraries/jquery/jstree/themes/classic/dot_for_ie.gif',
+		'libraries/jquery/jstree/themes/classic/style.css',
+		'libraries/jquery/jstree/themes/classic/throbber.gif',
+		'libraries/jquery/jstree/themes/default-rtl/d.gif',
+		'libraries/jquery/jstree/themes/default-rtl/d.png',
+		'libraries/jquery/jstree/themes/default-rtl/dots.gif',
+		'libraries/jquery/jstree/themes/default-rtl/style.css',
+		'libraries/jquery/jstree/themes/default-rtl/throbber.gif',
+		'libraries/jquery/jstree/themes/default/d.gif',
+		'libraries/jquery/jstree/themes/default/d.png',
+		'libraries/jquery/jstree3',
 	);
 	
 	function YetiForceUpdate($modulenode) {
@@ -231,6 +255,11 @@ class YetiForceUpdate{
 					  `value` text,
 					  UNIQUE KEY `type` (`type`,`param`)
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+					
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_publicholiday` LIKE 'holidaytype';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_publicholiday` ADD COLUMN `holidaytype` varchar(25) DEFAULT NULL COMMENT 'type of holiday' ;");
+		}	
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	function settingsReplace() {
@@ -542,13 +571,18 @@ class YetiForceUpdate{
 		$adb->pquery("DELETE FROM vtiger_settings_field WHERE name = ?;", array('LBL_CONVERSION_TO_ACCOUNT'));
 		$adb->pquery('UPDATE `vtiger_settings_field` SET `name` = ?, `description` = ?, `linkto` = ? WHERE `name` = ? AND `description` = ? ;', ['LBL_MENU_BUILDER','LBL_MENU_BUILDER_DESCRIPTION','index.php?module=Menu&view=Index&parent=Settings','Menu Manager','LBL_MENU_DESC']);
 		
-		$result = $adb->pquery("SELECT * FROM `yetiforce_auth`;");
+		$result = $adb->query("SELECT * FROM `yetiforce_auth`;");
 		if($adb->num_rows($result) == 0){
 			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','active','false');");
 			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','server','testlab.local');");
 			$adb->query("insert  into `yetiforce_auth`(`type`,`param`,`value`) values ('ldap','port','389');");
 			$adb->pquery("insert  into `yetiforce_auth`(`type`,`param`,`value`) values (?,?,?);", ['ldap','users',NULL]);
 		}
+		$result = $adb->pquery("SELECT * FROM `yetiforce_auth` WHERE `param` = ?;", ['domain']);
+		if($adb->num_rows($result) == 0){
+			$adb->pquery("insert  into `yetiforce_auth`(`type`,`param`,`value`) values (?,?,?);",['ldap','domain',NULL]);
+		}
+		
 		$result = $adb->pquery("SELECT * FROM `yetiforce_menu`;");
 		if($adb->num_rows($result) == 0){
 			$menu[] = array(44,0,0,2,1,NULL,'MEN_VIRTUAL_DESK',0,NULL,0,NULL,NULL,"");
