@@ -8,16 +8,17 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-$languageStrings = array(
-	'LBL_PROJECT_CONFIGURATION' => 'Project',
-	'LBL_INFO' => 'Information',
-	'LBL_TYPE' => 'Status',
-	'LBL_PROJECT' => 'Project',
-	'LBL_PROJECT_STATUS_INFO' => 'Statuses determining that the project is closed',
-	'LBL_SAVE_CONFIG_OK' => 'Changes saved successfully.',
-	'LBL_SAVE_CONFIG_ERROR' => 'Failed to save changes.',
-);
+$languageStrings = [
+	'RealizationProcesses' => 'Процесс Реализации',
+	'LBL_PROJECT_CONFIGURATION' => 'Проект',
+	'LBL_INFO' => 'Информация',
+	'LBL_TYPE' => 'Состояние',
+	'LBL_PROJECT' => 'Проект',
+	'LBL_PROJECT_STATUS_INFO' => 'Состояние определяющее закрытие проекта',
+	'LBL_SAVE_CONFIG_OK' => 'Изменения успешно сохранены',
+	'LBL_SAVE_CONFIG_ERROR' => 'Ошибка сохранения изменений',
+];
 
-$jsLanguageStrings = array(
+$jsLanguageStrings = [
 	
-);
+];

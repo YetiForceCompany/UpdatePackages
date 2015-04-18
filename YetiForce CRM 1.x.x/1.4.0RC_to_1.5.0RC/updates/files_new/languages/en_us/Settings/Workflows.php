@@ -7,7 +7,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'ADD_CONDITIONS' => 'Add Conditions',
 	'ADD_TASKS' => 'Add Tasks',
 	'Calendar' => 'To Do',
@@ -137,6 +137,7 @@ $languageStrings = array(
 	'LBL_ALL_TASKS' => 'All Tasks', 
 	'LBL_ACTIVE_TASKS' => 'Active Tasks',
 	'LBL_DO_NOT_DUPLICATE_RECORDS' => 'Do not duplicate records',
+	'LBL_DUPLICATE_STATUS' => '__UNTRANSLATED__',
 	
 	//workflow task
 	'EmailTempleteList' => 'Select a template email to be sent',
@@ -157,13 +158,13 @@ $languageStrings = array(
 	'Update Closed Time' => 'Update Closed Time',
 	'Send Notification' => 'Invitees - Send Notification',
 	'Create Address Book' => 'Create Address Book',
-);
+];
 
-$jsLanguageStrings = array(
+$jsLanguageStrings = [
 	'JS_SAME_FIELDS_SELECTED_MORE_THAN_ONCE' => 'Same fields selected more than once',
 	'JS_STATUS_CHANGED_SUCCESSFULLY' => 'Status changed successfully',
 	'JS_TASK_DELETED_SUCCESSFULLY' => 'Task deleted successfully',
 	'JS_WORKFLOW_SAVED_SUCCESSFULLY' => 'Workflow saved successfully',
 	'LBL_STATUS_CONFIRMATION' => 'Are you sure you want to change statuses for all Tasks?',
 	'JS_TASKS_STATUS_GETTING_CHANGED' => 'Changing statuses for Tasks...',
-);
+];

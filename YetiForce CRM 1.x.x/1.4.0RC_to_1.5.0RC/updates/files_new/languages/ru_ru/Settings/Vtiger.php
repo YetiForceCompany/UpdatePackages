@@ -9,7 +9,7 @@
  * Contributor(s): YetiForce.com
  * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'LBL_PUBLICHOLIDAY_CONFIGURATION_DESCRIPTION' => 'Изменяйте и редактируйте Прздники',
 	'Public Holidays' => 'Праздники',
 	'LBL_CALENDAR_CONFIG_DESCRIPTION' => 'Управление настройками Календаря',
@@ -278,20 +278,20 @@ $languageStrings = array(
 	'LBL_AUTOLOGIN_DESCRIPTION' => 'Здесь вы можете настроить параметры входа в почту',
 	'LBL_MAIL_GENERAL_CONFIGURATION' => 'Общие настройки почты',
 	'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION' => 'Настройка конфигурации почты в системе',
-	'LBL_SUPPORT_PROCESSES' => 'Support processes',
+	'LBL_SUPPORT_PROCESSES' => 'Процесс поддержки',
 	'LBL_SUPPORT_PROCESSES_DESCRIPTION' => '',
-	'LBL_REALIZATION_PROCESSES' => 'Realization processes',
-	'LBL_REALIZATION_PROCESSES_DESCRIPTION' => ' ',
-	'LBL_FINANCIAL_PROCESSES' => 'Financial processes',
-	'LBL_FINANCIAL_PROCESSES_DESCRIPTION' => ' ',
-	'LBL_MARKETING_PROCESSES' => 'Marketing processes',
-	'LBL_MARKETING_PROCESSES_DESCRIPTION' => ' ',
-	'LBL_COLORS' => 'Colors',
-	'LBL_COLORS_DESCRIPTION' => ' ',
-	'LBL_MENU_BUILDER' => 'Menu',
-	'LBL_MENU_BUILDER_DESCRIPTION' => ' ',
-	'LBL_AUTHORIZATION' => 'Authorization',
-	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
+	'LBL_REALIZATION_PROCESSES' => 'Процесс реализации',
+	'LBL_REALIZATION_PROCESSES_DESCRIPTION' => ' Настройка процесса реализации',
+	'LBL_FINANCIAL_PROCESSES' => 'Финансовый процесс',
+	'LBL_FINANCIAL_PROCESSES_DESCRIPTION' => ' Настройка финансового процесса',
+	'LBL_MARKETING_PROCESSES' => 'Процесс Маркетинга',
+	'LBL_MARKETING_PROCESSES_DESCRIPTION' => ' Настройка процесса Маркетинга',
+	'LBL_COLORS' => 'Цвета',
+	'LBL_COLORS_DESCRIPTION' => ' Настройка цветов',
+	'LBL_MENU_BUILDER' => 'Редактор Меню',
+	'LBL_MENU_BUILDER_DESCRIPTION' => ' Настройка меню',
+	'LBL_AUTHORIZATION' => 'Авторизация',
+	'LBL_AUTHORIZATION_DESCRIPTION' => ' Настройка метода авторизации',
 	
 	/* Role */
 	'Board of Management'	=> 'Управляющий',
@@ -314,9 +314,10 @@ $languageStrings = array(
 	'LBL_SALES_PROCESSES' => 'Процессы продаж',
 	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Настройка процессов продаж',
 	'INVENTORYTERMSANDCONDITIONS' => 'Сроки и условия',
-);
+	'LBL_SAVE_CONFIG' => 'Изменения успешно сохранены',
+];
 
-$jsLanguageStrings = array(
+$jsLanguageStrings = [
 	'LangManagement'	=>	'Редактор языков',
 	'JS_ANNOUNCEMENT_SAVED' => 'Оповещение сохранено',
 	'JS_CONFIGURATION_DETAILS_SAVED' => 'Конфигурация сохранена',
@@ -339,4 +340,4 @@ $jsLanguageStrings = array(
 	'LBL_WRONG_IMAGE_TYPE' => 'Не поддерживаемый формат изображения',
 	'JS_COLUMN_ADDED' => 'Поле успешно добавлено',
 	'JS_COLUMN_EXIST' => 'Ошибка добавления поля',
-);
+];

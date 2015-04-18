@@ -8,13 +8,10 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-$languageStrings = array(
-	'LBL_SALES_PROCESSES'													=> 'Vertriebsprozess',
-	'LBL_SALES_PROCESSES_DESCRIPTION'										=> 'Einstellungen zu den Vertriebsprozessen',
-	'LBL_SAVE_CONFIG_OK'													=> 'Vertriebsprozesseinstellungen erfolgreich gesichert.',
-	'LBL_SAVE_CONFIG_ERROR'													=> 'Fehler beim Sichern.',
-	'LBL_PRODUCTS_REL_DESCRIPTION'											=> 'Erlaubt nur Produkte aus der zugeordneten Verkaufschance zu wählen. Wird von folgenden Modulen unterstützt: Kalkulationen, Angebote, Bestellungen und Rechnungen.',
-);
-$jsLanguageStrings = array(
-
-);
+$languageStrings = [
+	'LBL_SALES_PROCESSES' => 'Vertriebsprozess',
+	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Einstellungen zu den Vertriebsprozessen',
+	'LBL_LIMIT_PRODUCT_AND_SERVICE' => 'Erlaubt nur Produkte aus der zugeordneten Verkaufschance zu wählen. Wird von folgenden Modulen unterstützt: Kalkulationen, Angebote, Bestellungen und Rechnungen.',
+	'LBL_PRODUCTS_AND_SERVICES_POPUP' => '__NOT_TRANSLATED__',
+	'LBL_UPDATE_SHARED_PERMISSIONS' => '__NOT_TRANSLATED__',
+];

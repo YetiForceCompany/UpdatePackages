@@ -11,6 +11,7 @@
 require_once 'modules/com_vtiger_workflow/include.inc';
 require_once 'modules/com_vtiger_workflow/tasks/VTEntityMethodTask.inc';
 require_once 'modules/com_vtiger_workflow/VTEntityMethodManager.inc';
+require_once('include/events/include.inc');
 
 class YetiForceUpdate{
 	var $package;
@@ -97,7 +98,6 @@ class YetiForceUpdate{
 		'layouts/vlayout/skins/images/OSSMenuManager48.png',
 		'layouts/vlayout/skins/images/OSSMenuManager64.png',
 		'libraries/jquery/jstree/themes/default/style.min.css',
-		// > vr. 1.4.120
 		'libraries/jquery/jstree3/themes/default/style.css',
 		'libraries/jquery/jstree3/themes/default/style.min.css',
 		'libraries/jquery/jstree3/themes/default/throbber.gif',
@@ -120,8 +120,29 @@ class YetiForceUpdate{
 		'libraries/jquery/jstree/themes/default/d.gif',
 		'libraries/jquery/jstree/themes/default/d.png',
 		'libraries/jquery/jstree3',
+		'languages/de_de/Settings/MenuEditor.php',
+		'languages/en_us/Settings/MenuEditor.php',
+		'languages/pt_br/Settings/MenuEditor.php',
+		'languages/ru_ru/Settings/MenuEditor.php',
+		'languages/pl_pl/Settings/MenuEditor.php',
+		'layouts/vlayout/modules/Settings/MenuEditor/Color.tpl',
+		'layouts/vlayout/modules/Settings/MenuEditor/resources/MenuEditor.js',
+		'modules/Settings/MenuEditor/actions/SaveAjax.php',
+		'modules/Settings/MenuEditor/models/Module.php',
+		'modules/Settings/MenuEditor/views/Colors.php',
+		'modules/Settings/MenuEditor/',
+		'modules/Settings/OSSMenuManager/',
+		'layouts/vlayout/modules/Settings/MenuEditor/',
+		'modules/Settings/Leads/models/ConvertToAccount.php',
+		'modules/Settings/MarketingProcesses/actions/Save.php',
+		'layouts/vlayout/modules/Settings/SalesProcesses/Configuration.tpl',
+		'layouts/vlayout/modules/Settings/SalesProcesses/resources/SalesProcesses.js',
+		'modules/Settings/SalesProcesses/actions/SaveProcess.php',
+		'modules/Settings/Leads/actions/ConvertToAccountSave.php',
+		'modules/Settings/SalesProcesses/views/Configuration.php',
+		'layouts/vlayout/modules/HelpDesk/dashboards/OpenTicketsContents.tpl',
 	);
-	
+
 	function YetiForceUpdate($modulenode) {
 		$this->modulenode = $modulenode;
 	}
@@ -659,6 +680,37 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$instanceModule = Vtiger_Module::getInstance('Home');
 			$instanceModule->addLink('DASHBOARDWIDGET', 'Calendar', 'index.php?module=Home&view=ShowWidget&name=Calendar');
+		}
+		
+		$adb->query('DROP TABLE IF EXISTS vtiger_converttoaccount_settings;');
+		$adb->query('DROP TABLE IF EXISTS vtiger_marketing_processes;');
+		$adb->query('DROP TABLE IF EXISTS vtiger_proc_marketing;');
+		$adb->query('DROP TABLE IF EXISTS vtiger_salesprocesses_settings;');
+		$adb->pquery('DELETE FROM vtiger_settings_field WHERE name = ?;', array('LBL_MDULES_COLOR_EDITOR'));
+		
+		$adb->query("CREATE TABLE `yetiforce_proc_marketing` (
+  `type` varchar(30) DEFAULT NULL,
+  `param` varchar(30) DEFAULT NULL,
+  `value` varchar(200) DEFAULT NULL,
+  KEY `type` (`type`,`param`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE `yetiforce_proc_sales` (
+  `type` varchar(30) DEFAULT NULL,
+  `param` varchar(30) DEFAULT NULL,
+  `value` varchar(200) DEFAULT NULL,
+  KEY `type` (`type`,`param`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('conversion','change_owner','false');");
+		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','groups','');");
+		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','status','');");
+		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','currentuser_status','false');");
+		$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','limit_product_service','false');");
+		$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','update_shared_permissions','false');");
+		$adb->pquery('UPDATE `vtiger_settings_field` SET linkto = ? WHERE name = ?;', ['index.php?module=SalesProcesses&view=Index&parent=Settings','LBL_SALES_PROCESSES']);
+		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", ['vtiger.entity.link.after','Vtiger_SharingPrivileges_Handler']);
+		if($adb->num_rows($result) == 0){
+			$em = new VTEventsManager($adb);
+			$em->registerHandler('vtiger.entity.link.after', 'modules/Vtiger/handlers/SharingPrivileges.php', 'Vtiger_SharingPrivileges_Handler');
 		}
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}

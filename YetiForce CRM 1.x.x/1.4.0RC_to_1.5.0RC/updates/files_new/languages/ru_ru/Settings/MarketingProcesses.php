@@ -8,11 +8,16 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-$languageStrings = array(
-	'LBL_CONVERSION_TO_ACCOUNT_INFO' => 'Если вы отметите эту опцию, пользователь, который производит преобразование Обращения, станет владельцем записи.',
-);
+$languageStrings = [
+	'MarketingProcesses' => 'Процесс Маркетинга',
+	'LBL_CONVERSION' => 'Преобразование',
+	'LBL_CONVERSION_TO_ACCOUNT' => 'Изменение владельца записи',
+	'LBL_CONVERSION_TO_ACCOUNT_INFO' => 'Назначить владельцем, лицо выполняющее преобразование',
+	'LBL_LEADS' => 'Обращение',
+	'LBL_INFO' => 'Информация',
+	'LBL_VALUES' => 'Значение',
+	'LBL_GROUPS_INFO' => 'Информация группы',
+	'LBL_LEAD_STATUS' => 'Состояние Обращения',
+	'LBL_CURRENTUSER_STATUS' => 'Назначить владельцем лицо вносящее изменение',
+];
 
-$jsLanguageStrings = array(
-	'JS_CONVERSION_STATE_SUCCES' => 'Изменения успешно сохранены',
-	'JS_CONVERSION_STATE_FAILURE' => 'Изменения не сохранены',
-);

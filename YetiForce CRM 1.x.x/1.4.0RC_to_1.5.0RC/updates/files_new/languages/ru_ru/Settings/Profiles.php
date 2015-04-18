@@ -8,7 +8,7 @@
  * All Rights Reserved.
  * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'LBL_VIEW_PRVILIGE' => 'Просматривать',
 	'LBL_ADD_RECORD' => 'Добавить Профиль',
 	'LBL_CHOOSE_PROFILES' => 'Выбрать профили',
@@ -55,14 +55,14 @@ $languageStrings = array(
 	'DuplicateRecord'  => 'Дублировать записи',
 	'EditableComments'  => 'Редактировать комментарии',
 	'TagCloud' => 'Теги',
-	'MassEdit' => 'Mass edit',
-	'MassDelete' => 'Mass delete',
-	'MassAddComment' => 'Mass add comments',
-	'MassComposeEmail' => 'Mass emails',
-	'MassSendSMS' => 'Mass SMS',
-	'MassTransferOwnership' => 'Mass transfer ownership',
-	'MassMoveDocuments' => 'Mass move documents',
-);
-$jsLanguageStrings = array(
+	'MassEdit' => 'Массовое редактирование',
+	'MassDelete' => 'Массовое удаление',
+	'MassAddComment' => 'Массовое комментирование',
+	'MassComposeEmail' => 'Массовая рассылка',
+	'MassSendSMS' => 'Массовая отправка SMS',
+	'MassTransferOwnership' => 'Массовое изменение ответственного',
+	'MassMoveDocuments' => 'Массовое перемещение документов',
+];
+$jsLanguageStrings = [
 	'JS_RECORD_DELETED_SUCCESSFULLY' => 'Профиль успешно удален',
-);
+];

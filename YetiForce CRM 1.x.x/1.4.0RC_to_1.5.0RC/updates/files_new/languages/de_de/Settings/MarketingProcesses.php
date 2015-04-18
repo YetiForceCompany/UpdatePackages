@@ -8,11 +8,15 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-$languageStrings = array(
-	'LBL_CONVERSION_TO_ACCOUNT_INFO' => 'Bei gesetzt, wird die Person welche ein Lead in eine Verkaufschance konvertiert zum Besitzer des Datensatzes.',
-);
+$languageStrings = [
+	'LBL_CONVERSION' => '__UNTRANSLATED__',
+	'LBL_CONVERSION_TO_ACCOUNT' => '__UNTRANSLATED__',
+	'LBL_CONVERSION_TO_ACCOUNT_INFO' => '__UNTRANSLATED__',
+	'LBL_LEADS' => '__UNTRANSLATED__',
+	'LBL_INFO' => '__UNTRANSLATED__',
+	'LBL_VALUES' => '__UNTRANSLATED__',
+	'LBL_GROUPS_INFO' => '__UNTRANSLATED__',
+	'LBL_LEAD_STATUS' => '__UNTRANSLATED__',
+	'LBL_CURRENTUSER_STATUS' => '__UNTRANSLATED__',
+];
 
-$jsLanguageStrings = array(
-	'JS_CONVERSION_STATE_SUCCES' => 'Konvertierung erfolgreich',
-	'JS_CONVERSION_STATE_FAILURE' => 'Konvertierung abgebrochen',
-);

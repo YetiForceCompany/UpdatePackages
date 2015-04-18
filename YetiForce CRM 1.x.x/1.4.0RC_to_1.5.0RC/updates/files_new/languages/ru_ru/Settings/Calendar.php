@@ -9,7 +9,7 @@
  * All Rights Reserved.
  * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'PLL_HOLIDAY_TIME' => 'Отпуск',
 	'PLL_BREAK_TIME' => 'Обед',
 	'LBL_UPDATE_EVENT' => 'Обновление даты',
@@ -35,9 +35,9 @@ $languageStrings = array(
 	'LBL_BREAK_TIME' => 'Обед',
 	'LBL_HOLIDAY' => 'Праздник',
 	'LBL_SAVE_CHANGES' => 'Изменения сохранены',
-	'LBL_GENERATE_COLOR' => 'Generate random color',
-	'LBL_GENERATED_COLOR' => 'Color generated',
-);
-$jsLanguageStrings = array(
+	'LBL_GENERATE_COLOR' => 'Генерировать случайный цвет',
+	'LBL_GENERATED_COLOR' => 'Генерировать цвет',
+];
+$jsLanguageStrings = [
 
-);
+];

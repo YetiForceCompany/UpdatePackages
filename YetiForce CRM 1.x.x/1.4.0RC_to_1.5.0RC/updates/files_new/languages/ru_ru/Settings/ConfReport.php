@@ -9,7 +9,7 @@
  * All Rights Reserved.
  * VERSION YetiForceCRM: 1.1.0 RC
  *************************************************************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'Logo Directory' => 'Папка хранения Логотипа компании',
 	'Contact Image Directory' => 'Папка хранения изображения Контакта',
 	'User Image Directory' => 'Папка хранения изображения Пользователя',
@@ -32,7 +32,7 @@ $languageStrings = array(
 	'LBL_PARAMETER'	=>	'Параметр',
 	'LBL_VALUE'	=>	'Текущее значение',
 	'LBL_RECOMMENDED'	=>	'Рекомендуемое значение',
-	'LBL_FILES_PERMISSIONS'	=>	'Files/Folders',
+	'LBL_FILES_PERMISSIONS' => 'Папки / Файлы',
 	'LBL_FILE'	=>	'Название',
 	'LBL_PATH'	=>	'Путь к файлу',
 	'LBL_PERMISSION'	=>	'Запись в файл',
@@ -41,6 +41,6 @@ $languageStrings = array(
 	'On'	=>	'Вкл.',
 	'Off'	=>	'Выкл.',
 	'NOT RECOMMENDED'	=>	'Не рекомендуется',
-	'LBL_YETIFORCE_ENGINE' => 'YetiForce Engine',
-	'LBL_CHECK_CONFIG' => 'RoundCube Engine',
-);
+	'LBL_YETIFORCE_ENGINE' => 'Движок YetiForce',
+	'LBL_CHECK_CONFIG' => 'Движок RoundCube',
+];

@@ -8,7 +8,7 @@
  * Contributor(s): YetiForce.com
  * Contributor(s): Valmir C. Trindade - Brazilian Portuguese Translation - valmir@ttcasolucoes.com.br
  ************************************************************************************/
-$languageStrings = array(
+$languageStrings = [
 	'dd-mm-yyyy' => 'dd-mm-yyyy',
 	'mm-dd-yyyy' => 'mm-dd-yyyy',
 	'yyyy-mm-dd' => 'yyyy-mm-dd',
@@ -312,9 +312,12 @@ $languageStrings = array(
         'Secondary Email'=>'Email Secundário',
         'Secondary Phone'=>'Telefone Secundário',
         'Reminder Interval'=>'Intervalo Lembrete',
-);
+		
+	'LBL_GENERATED_COLOR' => 'Cor gerada',
+	'LBL_SAVE_COLOR' => 'Cor salva',
+];
 
-$jsLanguageStrings = array(
+$jsLanguageStrings = [
 	//Curency seperator validation messages
 	'JS_DECIMAL_SEPERATOR_AND_GROUPING_SEPERATOR_CANT_BE_SAME' => 'O separador de casas decimais e separador de milhar não podem ser os mesmos',
 	'JS_ENTER_CONFIRMATION_PASSWORD'=>'Por favor, digite confirmação da senha.',
@@ -325,4 +328,4 @@ $jsLanguageStrings = array(
 	'JS_PASSWORD_CHANGE_FAILED_2'=>' falhou.  Uma nova senha deve ser definida.',
 	'JS_PASSWORD_INCORRECT_OLD'=>'A senha antiga está incorreta. Redigite a senha.',
 	'JS_REENTER_PASSWORDS'=>'Por favor, redigite suas senhas.  Os valores da \"nova senha\" e \"senha de confirmação\" não combinam.',
-);
+];

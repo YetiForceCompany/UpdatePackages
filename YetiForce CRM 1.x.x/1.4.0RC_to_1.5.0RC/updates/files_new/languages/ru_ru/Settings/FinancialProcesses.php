@@ -8,10 +8,11 @@
  * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
  * All Rights Reserved.
  *************************************************************************************************************************************/
-$languageStrings = array(
-	'LBL_GENERAL' => 'General',
-);
+$languageStrings = [
+	'FinancialProcesses' => 'Финансовый процесс',
+	'LBL_GENERAL' => 'Основное',
+];
 
-$jsLanguageStrings = array(
+$jsLanguageStrings = [
 	
-);
+];
