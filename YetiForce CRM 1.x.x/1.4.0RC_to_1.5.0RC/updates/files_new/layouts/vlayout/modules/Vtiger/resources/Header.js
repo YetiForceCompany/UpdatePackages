@@ -459,16 +459,19 @@ jQuery.Class("Vtiger_Header_Js", {
 			BtnLink = item[1];
 			;
 		}
-		jQuery(".breadcrumbsContainer .goBack").attr('href', BtnLink);
-		var htmlContent = '<ul class="dropdown-menu pull-left" role="menu">';
+		var htmlContent = '<ul class="dropdown-menu pull-right" role="menu">';
+		var date = new Date().getTime();
 		if (sp != null) {
 			for (var i = sp.length - 1; i >= 0; i--) {
 				item = sp[i].toString().split("|");
-				htmlContent += '<li><a href="' + item[1] + '">' + item[0] + '</a></li>';
+				var d = new Date();
+				d.setTime(item[2]);
+				var format = $('#userDateFormat').val() + '' + $('#userDateFormat').val();
+				htmlContent += '<li><a href="' + item[1] + '">'+ app.formatDate(d) + ' | ' + item[0] + '</a></li>';
 			}
 			var Label = this.getHistoryLabel();
 			if (Label.length > 1 && document.URL != BtnLink) {
-				sp.push(this.getHistoryLabel() + '|' + document.URL);
+				sp.push(this.getHistoryLabel() + '|' + document.URL + '|' + date);
 			}
 			if (sp.length >= maxValues) {
 				sp.splice(0, 1);
@@ -478,13 +481,13 @@ jQuery.Class("Vtiger_Header_Js", {
 			var stack = new Array();
 			var Label = this.getHistoryLabel();
 			if (Label.length > 1) {
-				stack.push(this.getHistoryLabel() + '|' + document.URL);
+				stack.push(this.getHistoryLabel() + '|' + document.URL+ '|' + date);
 				localStorage.history = stack.toString();
 			}
 		}
 		htmlContent += '<li class="divider"></li><li><a class="clearHistory" href="#">' + app.vtranslate('JS_CLEAR_HISTORY') + '</a></li>';
 		htmlContent += '</ul>';
-		$(".breadcrumbsContainer .showHistory").after(htmlContent);
+		$(".showHistoryBtn").after(htmlContent);
 		this.registerClearHistory();
 	},
 	getHistoryLabel: function () {
@@ -495,10 +498,10 @@ jQuery.Class("Vtiger_Header_Js", {
 		return label;
 	},
 	registerClearHistory: function () {
-		$(".breadcrumbsIcon .clearHistory").click(function () {
+		$(".historyBtn .clearHistory").click(function () {
 			localStorage.history = "";
 			var htmlContent = '<li class="divider"></li><li><a class="clearHistory" href="#">' + app.vtranslate('JS_CLEAR_HISTORY') + '</a></li>';
-			$(".breadcrumbsContainer .dropdown-menu").html(htmlContent);
+			$(".historyBtn .dropdown-menu").html(htmlContent);
 		});
 	},
 	registerHotKeys: function () {

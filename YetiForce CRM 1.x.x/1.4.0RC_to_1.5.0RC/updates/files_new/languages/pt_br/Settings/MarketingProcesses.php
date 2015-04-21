@@ -9,14 +9,14 @@
  * All Rights Reserved. Contributor: Valmir Carlos Trindade - Brazilian Language Translation - valmir@ttcasolucoes.com.br
  *************************************************************************************************************************************/
 $languageStrings = [
-	'LBL_CONVERSION' => '__UNTRANSLATED__',
-	'LBL_CONVERSION_TO_ACCOUNT' => '__UNTRANSLATED__',
-	'LBL_CONVERSION_TO_ACCOUNT_INFO' => '__UNTRANSLATED__',
-	'LBL_LEADS' => '__UNTRANSLATED__',
-	'LBL_INFO' => '__UNTRANSLATED__',
-	'LBL_VALUES' => '__UNTRANSLATED__',
-	'LBL_GROUPS_INFO' => '__UNTRANSLATED__',
-	'LBL_LEAD_STATUS' => '__UNTRANSLATED__',
-	'LBL_CURRENTUSER_STATUS' => '__UNTRANSLATED__',
+	'LBL_CONVERSION' => 'Conversão',
+	'LBL_CONVERSION_TO_ACCOUNT' => 'Responsável pela alteração',
+	'LBL_CONVERSION_TO_ACCOUNT_INFO' => 'Quando esta opção estiver marcada, o Usuário que converter o Lead para Organização tornar-se-á seu Responsável',
+	'LBL_LEADS' => 'Leads',
+	'LBL_INFO' => 'Informação',
+	'LBL_VALUES' => 'Valores',
+	'LBL_GROUPS_INFO' => 'Grupos sem um Responsável',
+	'LBL_LEAD_STATUS' => 'Os status indicam final do trabalho com Leads',
+	'LBL_CURRENTUSER_STATUS' => 'Alteração do Responsável para um Usuário que editou um registro',
 ];
 

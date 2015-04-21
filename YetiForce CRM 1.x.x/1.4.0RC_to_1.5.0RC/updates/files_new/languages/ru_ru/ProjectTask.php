@@ -35,4 +35,7 @@ $languageStrings = [
 	'high' => 'Высокий',
 	'low' => 'Низкий',
 	'normal' => 'Нормальный',
+	'administrative' => 'Внутренний',
+	'operative' => 'Внешний',
+	'other' => 'Общий',
 ];

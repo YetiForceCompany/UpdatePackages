@@ -107,10 +107,9 @@ $languageStrings = [
 	'Attention' => 'Kommentare',
 	"Attorney General's Office" => "Generalstaatsanwaltschaft",
 	'Orders accepted' => 'Aufträge angenommen',
-	'LBL_RELATION' => 'Relation',
-	'LBL_LEGAL_FORM' => 'Legal form',
+	'LBL_RELATION' => 'Beziehung',
+	'LBL_LEGAL_FORM' => 'Rechtsform',
 ];
-
 $jsLanguageStrings = [
 	'JS_SELECT_CONTACTS' => 'Wähle Kontakte zum fortführen',
 	'JS_SELECT_ORGANIZATION_OR_CONTACT_TO_CONVERT_LEAD' => 'Zum Konvertieren wählen Sie einen Kontakt oder eine Organisationen',

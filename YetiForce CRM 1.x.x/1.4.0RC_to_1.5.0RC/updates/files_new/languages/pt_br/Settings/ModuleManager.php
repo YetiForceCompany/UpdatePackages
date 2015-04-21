@@ -35,6 +35,9 @@ $languageStrings = [
 	'LBL_VERIFY_IMPORT_DETAILS' => 'Verificar Detalhes Importação',
 	'LBL_MODULE_NAME' => 'Nome Módulo',
 	'LBL_REQ_YETIFORCE_VERSION' => 'Versão YetiForce',
+	'LBL_MODULE_VERSION' => 'Bundle version',
+	'LBL_UPDATE_FROM_VERSION' => 'From version',
+	'LBL_UPDATE_TO_VERSION' => 'To version',
 	'LBL_LICENSE_ACCEPT_AGREEMENT' => 'Aceito os termos da Licença.',
 	'LBL_EXISTS'=>'Existe',
 	'LBL_PROCEED_WITH_IMPORT' => 'Deseja prosseguir com a importação?',
@@ -53,6 +56,7 @@ $languageStrings = [
 	'LBL_ERROR_VERSION' => 'Versão do módulo incorreta, versão __MODULEVERSION__, contudo, deveria ser maior que __CRMVERSION__',
 	'LBL_ERROR_NO_DEFAULT_LANGUAGE' => 'O módulo não possui o idioma padrão (__DEFAULTLANGUAGE__).',
 	'LBL_ERROR_NO_LAYOUT_FILE' => 'Nenhum arquivo',
+	'LBL_IMPORT' => 'Import',
 
 	'LBL_CREATE_MODULE' => 'Criar módulo',
 	'LBL_CREATING_MODULE' => 'Criando novo módulo',

@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*+***********************************************************************************************************************************
  * The contents of this file are subject to the YetiForce Public License Version 1.1 (the "License"); you may not use this file except
  * in compliance with the License.
@@ -30,7 +30,7 @@ $languageStrings = [
 	'Size'	=> 'Spalte',
 	'Label'	=> 'Bezeichnung',
 	'Add button' => 'Knopf hinzufügen',
-	'Select button' => 'Select button',
+	'Select button' => 'Auswahl Button',
 	'Limit entries'	=> 'Limit von Einträgen',
 	'Columns'	=> 'Spalten',
 	'No left margin' => 'Kein linker Rand',

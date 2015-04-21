@@ -1,16 +1,14 @@
 <?xml version='1.0'?>
 <module>
-    <exporttime>2015-01-28 17:28:36</exporttime>
     <name>Update package</name>
     <label>Update package</label>
-	<parent></parent>
 	<type>update</type>
     <version>1.00</version>
 	<from_version>1.4.0 RC</from_version>
-	<to_version>1.4.145 RC</to_version>
+	<to_version>1.4.188 RC</to_version>
     <dependencies>
 		<vtiger_version>1.4.0</vtiger_version>
-		<vtiger_max_version>1.4.145</vtiger_max_version>
+		<vtiger_max_version>1.5.0</vtiger_max_version>
     </dependencies>
 	<license><file>license.txt</file></license>
 </module>

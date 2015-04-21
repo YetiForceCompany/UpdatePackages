@@ -35,6 +35,9 @@ $languageStrings = [
 	'LBL_VERIFY_IMPORT_DETAILS' => 'Verify Import Details',
 	'LBL_MODULE_NAME' => 'Module Name',
 	'LBL_REQ_YETIFORCE_VERSION' => 'YetiForce Version',
+	'LBL_MODULE_VERSION' => 'Bundle version',
+	'LBL_UPDATE_FROM_VERSION' => 'From version',
+	'LBL_UPDATE_TO_VERSION' => 'To version',
 	'LBL_LICENSE_ACCEPT_AGREEMENT' => 'I accept the license agreement.',
 	'LBL_EXISTS'=>'Exists',
 	'LBL_PROCEED_WITH_IMPORT' => 'Do you want to proceed with the import?',
@@ -53,6 +56,7 @@ $languageStrings = [
 	'LBL_ERROR_VERSION' => 'Wrong version of module, module version __MODULEVERSION__ but it should be greater than __CRMVERSION__',
 	'LBL_ERROR_NO_DEFAULT_LANGUAGE' => 'Module does not contain default language (__DEFAULTLANGUAGE__).',
 	'LBL_ERROR_NO_LAYOUT_FILE' => 'No Smart files',
+	'LBL_IMPORT' => 'Import',
 	
 	'LBL_CREATE_MODULE' => 'Create module',
 	'LBL_CREATING_MODULE' => 'Creating new module',

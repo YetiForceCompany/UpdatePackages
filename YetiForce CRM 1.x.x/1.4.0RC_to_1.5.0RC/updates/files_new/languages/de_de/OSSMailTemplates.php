@@ -27,9 +27,9 @@ $languageStrings = [
     'No' => 'Nein',
 	'MAIL_TPL_LIST' => 'E-Mail-Vorlage auswählen',
 	'LBL_COPY_TO_CLIPBOARD_TITLE' => 'In die Zwischenablage kopieren',
-	'LBL_TYPE' => 'Type',
-	'PLL_MODULE' => 'Module',
-	'PLL_RECORD' => 'Record',
+	'LBL_TYPE' => 'Typ',
+	'PLL_MODULE' => 'Modul',
+	'PLL_RECORD' => 'Datensatz',
 	
 	/// special_functions
 	'CurrentDate' => 'Aktuelles Datum',

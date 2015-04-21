@@ -209,7 +209,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 	detailViewDetailsTabLabel : 'LBL_RECORD_DETAILS',
 	detailViewSummaryTabLabel : 'LBL_RECORD_SUMMARY',
 	detailViewRecentCommentsTabLabel : 'ModComments',
-	detailViewRecentActivitiesTabLabel : 'Activities',
+	detailViewRecentActivitiesTabLabel : 'Upcoming Activities',
 	detailViewRecentUpdatesTabLabel : 'LBL_UPDATES',
 	detailViewRecentDocumentsTabLabel : 'Documents',
 
@@ -1453,10 +1453,10 @@ jQuery.Class("Vtiger_Detail_Js",{
 							fieldnameElement.data('prevValue', ajaxEditNewValue);
 							if('Held' == ajaxEditNewValue || 'Completed' == ajaxEditNewValue){
 								var recordWidget = currentTarget.closest('.activityEntries');
-								var hrElement = recordWidget.next('hr');
 								recordWidget.find('popoverTooltip').popover('hide');
-								recordWidget.remove();
-								hrElement.remove();
+								var widget = currentTarget.closest('.widgetContentBlock');
+								var widgetContainer = jQuery(widget);
+								thisInstance.loadWidget(widgetContainer);
 							}
 						}
 					);

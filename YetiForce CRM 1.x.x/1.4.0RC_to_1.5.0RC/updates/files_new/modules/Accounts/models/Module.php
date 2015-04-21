@@ -102,14 +102,15 @@ class Accounts_Module_Model extends Vtiger_Module_Model {
 				$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status not in ('Completed','Deferred'))
 				OR (vtiger_activity.activitytype not in ('Emails','Task') and vtiger_activity.eventstatus not in ('','Held')))";
 			} else {
-				$query .= " AND (vtiger_activity.status = 'Completed' OR vtiger_activity.status = 'Deferred' OR (vtiger_activity.eventstatus = 'Held' AND vtiger_activity.eventstatus != ''))";
+				$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status in ('Completed','Deferred'))
+				OR (vtiger_activity.activitytype not in ('Emails','Task') and  vtiger_activity.eventstatus in ('','Held')))";
 			}
 			$relatedModuleName = $relatedModule->getName();
 			$query .= $this->getSpecificRelationQuery($relatedModuleName);
-			$nonAdminQuery = $this->getNonAdminAccessControlQueryForRelation($relatedModuleName);
-			if ($nonAdminQuery) {
-				$query = appendFromClauseToQuery($query, $nonAdminQuery);
-			}
+			$instance = CRMEntity::getInstance($relatedModuleName);
+			$securityParameter = $instance->getUserAccessConditionsQuerySR($relatedModuleName);
+			if ($securityParameter != '')
+				$sql .= ' ' . $securityParameter;
 
 			// There could be more than one contact for an activity.
 			$query .= ' GROUP BY vtiger_activity.activityid';

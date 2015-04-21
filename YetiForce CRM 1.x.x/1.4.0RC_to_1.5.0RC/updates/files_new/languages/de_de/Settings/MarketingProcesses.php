@@ -9,14 +9,14 @@
  * All Rights Reserved.
  *************************************************************************************************************************************/
 $languageStrings = [
-	'LBL_CONVERSION' => '__UNTRANSLATED__',
-	'LBL_CONVERSION_TO_ACCOUNT' => '__UNTRANSLATED__',
-	'LBL_CONVERSION_TO_ACCOUNT_INFO' => '__UNTRANSLATED__',
-	'LBL_LEADS' => '__UNTRANSLATED__',
-	'LBL_INFO' => '__UNTRANSLATED__',
-	'LBL_VALUES' => '__UNTRANSLATED__',
-	'LBL_GROUPS_INFO' => '__UNTRANSLATED__',
-	'LBL_LEAD_STATUS' => '__UNTRANSLATED__',
-	'LBL_CURRENTUSER_STATUS' => '__UNTRANSLATED__',
+	'LBL_CONVERSION' => 'Übertragen',
+	'LBL_CONVERSION_TO_ACCOUNT' => 'Zuständigkeit übertragen',
+	'LBL_CONVERSION_TO_ACCOUNT_INFO' => 'Ist diese Option gewählt, so wird dem Benutzer die Zuständigkeit für die Organisation übertragen, der diese aus einem Lead erzeugt',
+	'LBL_LEADS' => 'Leads',
+	'LBL_INFO' => 'Information',
+	'LBL_VALUES' => 'Werte',
+	'LBL_GROUPS_INFO' => 'Gruppen ohne Zuständigkeit',
+	'LBL_LEAD_STATUS' => 'Status welche die Leadbearbeitung beenden',
+	'LBL_CURRENTUSER_STATUS' => 'Ändere die Zuständigkeit zu dem bearbeitenden Benutzer',
 ];
 

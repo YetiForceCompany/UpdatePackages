@@ -75,6 +75,9 @@
 	right: -8px;
 	left: auto;
 }
+ul.dropdown-menu{
+top: 36px;
+}
 #headerLinks{
 margin-left: 0px;
 }
@@ -157,5 +160,5 @@ nav.menu{width: 80%;}
 #moreMenu > ul.dropdown-menu{
 max-height: 500px;
 overflow-x: hidden;
-top: 90%;
+top: 30px;
 }

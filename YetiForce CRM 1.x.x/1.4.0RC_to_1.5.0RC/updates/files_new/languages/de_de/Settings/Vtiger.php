@@ -268,10 +268,10 @@ $languageStrings = [
 	'LBL_MARKETING_PROCESSES_DESCRIPTION' => ' ',
 	'LBL_COLORS' => 'Farbverwaltung',
 	'LBL_COLORS_DESCRIPTION' => ' ',
-	'LBL_MENU_BUILDER' => 'Menu',
+	'LBL_MENU_BUILDER' => 'Menüverwaltung',
 	'LBL_MENU_BUILDER_DESCRIPTION' => ' ',
-	'LBL_AUTHORIZATION' => 'Authorization',
-	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
+	'LBL_AUTHORIZATION' => 'Authorisierung',
+	'LBL_AUTHORIZATION_DESCRIPTION' => 'Verwalten der Anmeldemöglichkeitne (LDAP)',
 	
 	/* Role */
 	'Board of Management'	=> 'Vorstand',
@@ -294,9 +294,8 @@ $languageStrings = [
 	'LBL_SALES_PROCESSES' => 'Verkaufsprozess',
 	'LBL_SALES_PROCESSES_DESCRIPTION' => '',
 	'INVENTORYTERMSANDCONDITIONS' => 'Allgemeine Geschäftsbedingungen',
-	'LBL_SAVE_CONFIG' => '__UNTRANSLATED__',
+	'LBL_SAVE_CONFIG' => 'Changes have been saved',
 ];
-
 $jsLanguageStrings = [
 	'JS_ANNOUNCEMENT_SAVED' => 'Bekanntmachung gespeichert',
 	'JS_CONFIGURATION_DETAILS_SAVED' => 'Konfigurationsdetails gespeichert',

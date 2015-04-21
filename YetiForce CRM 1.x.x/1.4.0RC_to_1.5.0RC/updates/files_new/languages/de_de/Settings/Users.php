@@ -24,18 +24,17 @@ $languageStrings = [
 	'LBL_GROUPS_COLORS' => 'Farbgruppe',
 	'LBL_GROUP_NAME' => 'Gruppenname',
 	'LBL_PRIORITY' => 'Priorität',
-	'LBL_MODULE' => 'Module',
 	
 	//Auth
-	'LBL_AUTHORIZATION' => 'Authorization',
+	'LBL_AUTHORIZATION' => 'Authorisierung',
 	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
 	'LBL_LDAP_AUTH' => 'LDAP',
-	'LBL_ACTIVE_LDAP_AUTH' => 'Authorization with LDAP',
-	'LBL_LDAP_SERVER' => 'Server address',
+	'LBL_ACTIVE_LDAP_AUTH' => 'Authorisierung mit LDAP',
+	'LBL_LDAP_SERVER' => 'Serveraddresse',
 	'LBL_LDAP_PORT' => 'Port',
-	'LBL_LDAP_USERS' => 'Auto login active for users',
-	'LBL_SAVE_CONFIG' => 'Configuration has been saved',
-	'LBL_LDAP_DOMAIN' => '__UNTRANSLATED__',
+	'LBL_LDAP_USERS' => 'Auto login Aktiv für Benutzer',
+	'LBL_SAVE_CONFIG' => 'Konfiguration wurde gespeichert',
+	'LBL_LDAP_DOMAIN' => 'LDAP Domäne',
 ];
 $jsLanguageStrings = [
     'JS_USER_MAIL_EXIST' => 'Benutzer mit dieser E-Mail-Adresse existiert bereits',
