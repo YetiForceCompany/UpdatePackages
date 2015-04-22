@@ -705,13 +705,13 @@ class YetiForceUpdate{
 		$adb->query('DROP TABLE IF EXISTS vtiger_salesprocesses_settings;');
 		$adb->pquery('DELETE FROM vtiger_settings_field WHERE name = ?;', array('LBL_MDULES_COLOR_EDITOR'));
 		
-		$adb->query("CREATE TABLE `yetiforce_proc_marketing` (
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_proc_marketing` (
   `type` varchar(30) DEFAULT NULL,
   `param` varchar(30) DEFAULT NULL,
   `value` varchar(200) DEFAULT NULL,
   KEY `type` (`type`,`param`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		$adb->query("CREATE TABLE `yetiforce_proc_sales` (
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_proc_sales` (
   `type` varchar(30) DEFAULT NULL,
   `param` varchar(30) DEFAULT NULL,
   `value` varchar(200) DEFAULT NULL,
