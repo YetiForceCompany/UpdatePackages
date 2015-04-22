@@ -177,13 +177,14 @@ class YetiForceUpdate{
 				$this->recurseDelete($path);
 			}
 		}
+		$result = true;
 		self::recurseCopy('cache/updates/files_new','', true);
 		$this->recurseDelete('cache/updates');
 		Vtiger_Deprecated::createModuleMetaFile();
 		Vtiger_Access::syncSharingAccess();
 		$adb->query('SET FOREIGN_KEY_CHECKS = 1;');
 		$currentUser = Users_Record_Model::getCurrentUserModel();
-		$adb->query("INSERT INTO `yetiforce_updates` (`user`, `name`, `from_version`, `to_version`, `result`) VALUES ('" . $currentUser->get('user_name') . "', '" . $modulenode->label . "', '" . $modulenode->from_version . "', '" . $modulenode->to_version . "','" . $result . "');", true);
+		$adb->query("INSERT INTO `yetiforce_updates` (`user`, `name`, `from_version`, `to_version`, `result`) VALUES ('" . $currentUser->get('user_name') . "', '" . $this->modulenode->label . "', '" . $this->modulenode->from_version . "', '" . $this->modulenode->to_version . "','" . $result . "');", true);
 
 		if ($result) {
 			$adb->query("UPDATE vtiger_version SET current_version = '" . $this->modulenode->to_version . "';");
