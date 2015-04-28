@@ -677,50 +677,57 @@ class Vtiger_Module_Model extends Vtiger_Module {
 	 * @param <array> $restrictedModulesList
 	 * @return <array> List of module models <Vtiger_Module_Model>
 	 */
-	public static function getAll($presence = array(), $restrictedModulesList = array()) {
+	public static function getAll($presence = [], $restrictedModulesList = [], $isEntityType = false) {
 		$db = PearDatabase::getInstance();
 		self::preModuleInitialize2();
-        $moduleModels = Vtiger_Cache::get('vtiger', 'modules');
+		$moduleModels = Vtiger_Cache::get('vtiger', 'modules');
 
+		if (!$moduleModels) {
+			$moduleModels = [];
 
-        if(!$moduleModels){
-            $moduleModels = array();
+			$query = 'SELECT * FROM vtiger_tab';
+			$params = [];
+			$where = [];
+			if ($presence) {
+				$where[] = 'presence IN (' . generateQuestionMarks($presence) . ')';
+				array_push($params, $presence);
+			}
+			if ($isEntityType) {
+				$where[] = 'isentitytype = ?';
+				array_push($params, 1);
+			}
+			if($where){
+				$query .= ' WHERE '.implode(' AND ', $where) ;
+			}
+			
+			$result = $db->pquery($query, $params);
+			$noOfModules = $db->num_rows($result);
+			for ($i = 0; $i < $noOfModules; ++$i) {
+				$row = $db->query_result_rowdata($result, $i);
+				$moduleModels[$row['tabid']] = self::getInstanceFromArray($row);
+				Vtiger_Cache::set('module', $row['tabid'], $moduleModels[$row['tabid']]);
+				Vtiger_Cache::set('module', $row['name'], $moduleModels[$row['tabid']]);
+			}
+			if (!$presence) {
+				Vtiger_Cache::set('vtiger', 'modules', $moduleModels);
+			}
+		}
 
-            $query = 'SELECT * FROM vtiger_tab';
-            $params = array();
-            if($presence) {
-                $query .= ' WHERE presence IN ('. generateQuestionMarks($presence) .')';
-                array_push($params, $presence);
-            }
+		if ($presence && $moduleModels) {
+			foreach ($moduleModels as $key => $moduleModel) {
+				if (!in_array($moduleModel->get('presence'), $presence)) {
+					unset($moduleModels[$key]);
+				}
+			}
+		}
 
-            $result = $db->pquery($query, $params);
-            $noOfModules = $db->num_rows($result);
-            for($i=0; $i<$noOfModules; ++$i) {
-                $row = $db->query_result_rowdata($result, $i);
-                $moduleModels[$row['tabid']] = self::getInstanceFromArray($row);
-                Vtiger_Cache::set('module',$row['tabid'], $moduleModels[$row['tabid']]);
-                Vtiger_Cache::set('module',$row['name'], $moduleModels[$row['tabid']]);
-            }
-            if(!$presence){
-                Vtiger_Cache::set('vtiger', 'modules',$moduleModels);
-            }
-        }
-
-        if($presence && $moduleModels){
-            foreach ($moduleModels as $key => $moduleModel){
-                if(!in_array($moduleModel->get('presence'), $presence)){
-                    unset($moduleModels[$key]);
-                }
-            }
-        }
-
-        if($restrictedModulesList && $moduleModels) {
-            foreach ($moduleModels as $key => $moduleModel){
-                if(in_array($moduleModel->getName(), $restrictedModulesList)){
-                    unset($moduleModels[$key]);
-                }
-            }
-        }
+		if ($restrictedModulesList && $moduleModels) {
+			foreach ($moduleModels as $key => $moduleModel) {
+				if (in_array($moduleModel->getName(), $restrictedModulesList)) {
+					unset($moduleModels[$key]);
+				}
+			}
+		}
 
 		return $moduleModels;
 	}
@@ -746,7 +753,7 @@ class Vtiger_Module_Model extends Vtiger_Module {
 	 * Function to get the list of all accessible modules for Quick Create
 	 * @return <Array> - List of Vtiger_Record_Model or Module Specific Record Model instances
 	 */
-	public static function getQuickCreateModules() {
+	public static function getQuickCreateModules($restrictList = false) {
 		$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 		$db = PearDatabase::getInstance();
 		self::preModuleInitialize2();
@@ -755,6 +762,9 @@ class Vtiger_Module_Model extends Vtiger_Module {
 					FROM vtiger_field
 					INNER JOIN vtiger_tab ON vtiger_tab.tabid = vtiger_field.tabid
 					WHERE (quickcreate=0 OR quickcreate=2) AND vtiger_tab.presence != 1';
+		if($restrictList){
+			$sql .= " AND vtiger_tab.name NOT IN ('ModComments','PriceBooks','Events')";
+		}
 		$params = array();
 		$result = $db->pquery($sql, $params);
 		$noOfModules = $db->num_rows($result);
@@ -762,7 +772,7 @@ class Vtiger_Module_Model extends Vtiger_Module {
 		$quickCreateModules = array();
 		for($i=0; $i<$noOfModules; ++$i) {
 			$row = $db->query_result_rowdata($result, $i);
-			if($userPrivModel->hasModuleActionPermission($row['name'], 'EditView')) {
+			if($userPrivModel->hasModuleActionPermission($row['tabid'], 'EditView')) {
 				$moduleModel = self::getInstanceFromArray($row);
 				$quickCreateModules[$row['name']] = $moduleModel;
 			}
@@ -1015,15 +1025,25 @@ class Vtiger_Module_Model extends Vtiger_Module {
 		$query = "SELECT vtiger_crmentity.crmid, crmentity2.crmid AS parent_id, vtiger_crmentity.description as description, vtiger_crmentity.smownerid, vtiger_crmentity.smcreatorid, vtiger_crmentity.setype, vtiger_activity.* FROM vtiger_activity
 					INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = vtiger_activity.activityid
 					INNER JOIN vtiger_crmentity AS crmentity2 ON vtiger_activity.".$relationField." = crmentity2.crmid AND crmentity2.deleted = 0 AND crmentity2.setype = ?
-					LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid WHERE vtiger_crmentity.deleted=0
-					AND (vtiger_activity.activitytype NOT IN ('Emails'))
+					LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid WHERE vtiger_crmentity.deleted=0";
+		if ($recordId) 
+			$query .= ' AND vtiger_activity.'.$relationField.' = ?';
+		
+		if($mode === 'current') {
+			$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status not in ('Completed','Deferred'))
+			OR (vtiger_activity.activitytype not in ('Emails','Task') and vtiger_activity.eventstatus not in ('','Held')))";
+		} elseif ($mode === 'history') {
+			$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status in ('Completed','Deferred'))
+			OR (vtiger_activity.activitytype not in ('Emails','Task') and  vtiger_activity.eventstatus in ('','Held')))";
+		} elseif ($mode === 'upcoming') {
+			$query .= " AND (vtiger_activity.activitytype NOT IN ('Emails'))
 					AND (vtiger_activity.status is NULL OR vtiger_activity.status NOT IN ('Completed', 'Deferred'))
 					AND (vtiger_activity.eventstatus is NULL OR vtiger_activity.eventstatus NOT IN ('Held'))";
-		if ($recordId) {
-			$query .= ' AND vtiger_activity.'.$relationField.' = ?';
-		} elseif ($mode === 'upcoming') {
 			$query .= " AND due_date >= '$currentDate'";
 		} elseif ($mode === 'overdue') {
+			$query .= " AND (vtiger_activity.activitytype NOT IN ('Emails'))
+					AND (vtiger_activity.status is NULL OR vtiger_activity.status NOT IN ('Completed', 'Deferred'))
+					AND (vtiger_activity.eventstatus is NULL OR vtiger_activity.eventstatus NOT IN ('Held'))";
 			$query .= " AND due_date < '$currentDate'";
 		}
 
@@ -1561,6 +1581,7 @@ class Vtiger_Module_Model extends Vtiger_Module {
 		$data['Calculations']['requirementcardsid'] = array( 'RequirementCards' => array('potentialid'=>array('potentialid'),'quotesenquiresid'=>array('quotesenquiresid'),'relatedid'=>array('accountid') ) );
 		$data['Potentials']['contact_id'] = array( 'Contacts' => array('related_to'=>array('parent_id')) );
 		$data['ProjectTask']['projectmilestoneid'] = array( 'ProjectMilestone' => array('projectid'=>array('projectid')) );
+		$data['ProjectTask']['parentid'] = array( 'ProjectTask' => array('projectid'=>array('projectid'),'projectmilestoneid'=>array('projectmilestoneid')) );
 		$data['Quotes']['potential_id'] = array( 'Potentials' => array('account_id'=>array('related_to')) );
 		$data['Quotes']['contact_id'] = array( 'Contacts' => array('account_id'=>array('parent_id')) );
 		$data['Quotes']['requirementcards_id'] = array( 'RequirementCards' => array('potential_id'=>array('potential_id'),'account_id'=>array('accountid')) );
@@ -1589,6 +1610,7 @@ class Vtiger_Module_Model extends Vtiger_Module {
 			// [target module][Source module] = ( target field => (source module field, source field) )
 			$mapping['OSSTimeControl']['HelpDesk'] = array( 'contactid' => array('Contacts','contact_id'), 'accountid' => array('Accounts','parent_id') );
 			$mapping['OutsourcedProducts']['Potentials'] = array( 'parent_id' => array('Accounts','related_to') );
+			$mapping['Calendar']['Potentials'] = array( 'link' => array('Accounts','related_to') );
 			
 			if(!$mapping[$moduleName][$sourceModule])
 				return $data;

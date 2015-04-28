@@ -299,6 +299,21 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_publicholiday` ADD COLUMN `holidaytype` varchar(25) DEFAULT NULL COMMENT 'type of holiday' ;");
 		}	
+		$adb->query("ALTER TABLE `vtiger_users` CHANGE `user_name` `user_name` varchar(32) NULL after `id`;");
+		
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_group2modules` (
+				  `groupid` int(19) NOT NULL,
+				  `tabid` int(19) NOT NULL,
+				  KEY `groupid` (`groupid`),
+				  KEY `tabid` (`tabid`),
+				  CONSTRAINT `vtiger_group2modules_ibfk_1` FOREIGN KEY (`groupid`) REFERENCES `vtiger_groups` (`groupid`) ON DELETE CASCADE,
+				  CONSTRAINT `vtiger_group2modules_ibfk_2` FOREIGN KEY (`tabid`) REFERENCES `vtiger_tab` (`tabid`) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+				
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_groups` LIKE 'modules';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_groups` ADD COLUMN `modules` varchar(255) NULL after `color`;");
+		}
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	function settingsReplace() {
@@ -343,9 +358,9 @@ class YetiForceUpdate{
 				$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
 				for($i = 0; $i < $adb->num_rows($resultP); $i++){
 					$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
-					for($i = 0; $i < $adb->num_rows($result); $i++){
+					for($k = 0; $k < $adb->num_rows($result); $k++){
 						$insert = false;
-						$row = $adb->query_result_rowdata($result, $i);
+						$row = $adb->query_result_rowdata($result, $k);
 						$tabid = $row['tabid'];
 						if( $key == 23 && $row['name'] == 'Documents'){
 							$insert = true;
@@ -358,9 +373,25 @@ class YetiForceUpdate{
 						}
 						if($insert){
 							$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
-							$licznik++;
 						}
 					}
+				}
+			}
+		}
+		$actions = [24=>'ReadRecord',25=>'WorkflowTrigger'];
+		foreach ($actions as $key =>$action) {
+			$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+
+			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
+			$result = $adb->query($sql);
+			
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			for($i = 0; $i < $adb->num_rows($resultP); $i++){
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				for($k = 0; $k < $adb->num_rows($result); $k++){
+					$row = $adb->query_result_rowdata($result, $k);
+					$tabid = $row['tabid'];
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
 				}
 			}
 		}
@@ -816,6 +847,97 @@ class YetiForceUpdate{
 		
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tabid = ? AND columnname = ? ;', 
 				[6,getTabid('Contacts'),'smownerid']);
+				
+		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE handler_class = ?;", array('ProjectTaskHandler'));
+		if($adb->num_rows($result) == 0){
+			$em = new VTEventsManager($adb);
+			$em->registerHandler('vtiger.entity.aftersave.final', 'modules/ProjectTask/handlers/ProjectTaskHandler.php', 'ProjectTaskHandler');
+			$em->registerHandler('vtiger.entity.afterdelete', 'modules/ProjectTask/handlers/ProjectTaskHandler.php', 'ProjectTaskHandler');
+			$em->registerHandler('vtiger.entity.afterrestore', 'modules/ProjectTask/handlers/ProjectTaskHandler.php', 'ProjectTaskHandler');
+		}
+		$adb->pquery('UPDATE vtiger_relatedlists SET label = ? WHERE label = ?;', ['Activities','Upcoming Activities']);
+		$adb->pquery('DELETE FROM vtiger_relatedlists WHERE `tabid` IN (?,?,?,?,?,?,?,?) AND `label` = ?;', [getTabid('Accounts'),getTabid('Leads'),getTabid('Contacts'),getTabid('Potentials'),getTabid('HelpDesk'),getTabid('Campaigns'),getTabid('ServiceContracts'),getTabid('Project'),'Activity History']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', [4,'vtiger_potential','related_to']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', [5,'vtiger_potential','closingdate']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', [3,'vtiger_potential','sales_stage']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',2]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [7,'vtiger_osssoldservices','ssservicesstatus']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [9,'vtiger_osssoldservices','pscategory']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_osssoldservices','datesold']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('OSSSoldServices')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_osssoldservices','invoiceid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [6,'vtiger_osssoldservices','parent_id']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [4,'vtiger_osssoldservices','serviceid']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_paymentsin','paymentsname']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('PaymentsIn')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [8,'vtiger_paymentsin','paymentsin_status']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [7,'vtiger_paymentsin','relatedid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [6,'vtiger_paymentsin','salesid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [1,'vtiger_paymentsin','paymentsvalue']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_paymentsin','paymentstitle']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [4,'vtiger_paymentsin','bank_account']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [1,'vtiger_lettersin','title']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('LettersIn')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [1,'vtiger_lettersout','title']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('LettersOut')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [1,'vtiger_quotesenquires','subject']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [4,'vtiger_quotesenquires','potentialid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('QuotesEnquires')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_quotesenquires','quotesenquires_stage']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_account','phone']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [4,'vtiger_account','website']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('Accounts')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_vendor','phone']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [4,'vtiger_vendor','email']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('Vendors')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [2,'vtiger_osstimecontrol','osstimecontrol_status']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [6,'vtiger_osstimecontrol','date_start']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_osstimecontrol','time_start']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [7,'vtiger_osstimecontrol','time_end']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [8,'vtiger_osstimecontrol','due_date']);
+		
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_ossemployees','private_phone']);
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [2,'vtiger_ossemployees','business_mail']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [9,'vtiger_crmentity','description',getTabid('OSSTimeControl')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [2,'vtiger_holidaysentitlement','holidaysentitlement_year']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ?, quickcreate = ?, masseditable = ? WHERE tablename = ? AND columnname = ?;', [3,2,2,'vtiger_holidaysentitlement','days']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [1,'vtiger_holidaysentitlement','ossemployeesid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_crmentity','smownerid',getTabid('HolidaysEntitlement')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_account','legal_form']);
+		
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_leaddetails','industry']);
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [8,'vtiger_leaddetails','subindustry']);
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [9,'vtiger_crmentity','was_read',getTabid('Leads')]);
+		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [10,'vtiger_leaddetails','leads_relation']);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [8,'vtiger_crmentity','smownerid',getTabid('Calendar')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_activity','due_date',getTabid('Calendar')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ?, quickcreate = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [6,2,'vtiger_activity','process',getTabid('Calendar')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_activity','link',getTabid('Calendar')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [1,'vtiger_activity','subject',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [9,'vtiger_crmentity','smownerid',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [3,'vtiger_activity','date_start',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_activity','due_date',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ?, quickcreate = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [6,2,'vtiger_activity','process',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_activity','eventstatus',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_activity','activitytype',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [8,'vtiger_activity','link',getTabid('Events')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_activity','allday',getTabid('Events')]);
+		
+		$adb->pquery('UPDATE vtiger_homestuff SET `visible` = ? WHERE `stufftype` = ? ;', [1,'Tag Cloud']);
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -971,8 +1093,17 @@ class YetiForceUpdate{
 		$Users = array(
 		array('29','1740','emailoptout','vtiger_users','1','56','emailoptout','Approval for email','1','0','','50','22','79','1','V~O','1',NULL,'BAS','1','','0','',"varchar(3)","LBL_MORE_INFORMATION",array(),array())
 		);
-		
-		$setToCRM = array('OSSMailTemplates'=>$OSSMailTemplates,'Users'=>$Users);
+		$ProjectMilestone = array(
+		array('41','1741','projectmilestone_priority','vtiger_projectmilestone','1','15','projectmilestone_priority','LBL_PRIORITY','1','2','','100','10','101','1','V~O','1',NULL,'BAS','1','','0','',"varchar(255)","LBL_PROJECT_MILESTONE_INFORMATION",array('PLL_LOW','PLL_NORMAL','PLL_HIGH'),array()),
+		array('41','1743','projectmilestone_progress','vtiger_projectmilestone','1','1','projectmilestone_progress','LBL_PROGRESS','1','2','','100','11','101','10','V~O','1',NULL,'BAS','1','','0','',"varchar(10)","LBL_PROJECT_MILESTONE_INFORMATION",array(),array())
+		);
+		$ProjectTask = array(
+		array('42','1742','estimated_work_time','vtiger_projecttask','1','7','estimated_work_time','LBL_ESTIMATED_WORK_TIME','1','2','','100','9','105','1','NN~M','1',NULL,'BAS','1','','0','',"decimal(8,2)","LBL_CUSTOM_INFORMATION",array(),array())
+		);
+		$Contacts = array(
+		array('4','1744','jobtitle','vtiger_contactdetails','1','1','jobtitle','Job title','1','2','','100','31','4','1','V~O','1',NULL,'BAS','1','','0','',"varchar(100)","LBL_CONTACT_INFORMATION",array(),array())
+		);
+		$setToCRM = array('OSSMailTemplates'=>$OSSMailTemplates,'Users'=>$Users,'ProjectMilestone'=>$ProjectMilestone,'ProjectTask'=>$ProjectTask,'Contacts'=>$Contacts);
 
 		$setToCRMAfter = array();
 		foreach($setToCRM as $nameModule=>$module){
@@ -1161,6 +1292,14 @@ class YetiForceUpdate{
 		$file = fopen($config,"w+");
 		fwrite($file,$content);
 		fclose($file);
+		if(strpos(file_get_contents( $config ),'lifetime of session') !== FALSE){
+				return;
+			}
+		$configC = "
+// lifetime of session
+ini_set('session.gc_maxlifetime','1800'); //30 min
+";
+		file_put_contents( $config, $configC, FILE_APPEND );
 	}
 	public function checkModuleExists($moduleName){
 		global $log;
@@ -1204,6 +1343,10 @@ class YetiForceUpdate{
 		$docelowy_Module = Vtiger_Module::getInstance('OSSSoldServices');
 		$moduleInstance = Vtiger_Module::getInstance('Documents');
 		$docelowy_Module->setRelatedList($moduleInstance, 'Documents', array('add','select'),'get_attachments');
+		
+		$moduleInstance = Vtiger_Module::getInstance('ProjectTask');
+		$docelowy_Module = Vtiger_Module::getInstance('ProjectMilestone');
+		$docelowy_Module->setRelatedList($moduleInstance, 'ProjectTask', array('ADD'),'get_dependents_list');
     }
 }
 

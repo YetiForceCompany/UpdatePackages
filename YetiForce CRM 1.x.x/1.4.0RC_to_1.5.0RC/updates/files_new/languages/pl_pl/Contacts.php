@@ -9,7 +9,7 @@
  * All Rights Reserved.
  *************************************************************************************************************************************/
 $languageStrings = [
-	'Member Of' => 'Powiązane z',
+	'Member Of' => 'Firma',
 	'Birthdate' => 'Data urodzin',
 	'Contact Id' => 'Numer',
 	'Contact Image' => 'Zdjęcie kontaktu',
@@ -32,6 +32,7 @@ $languageStrings = [
     'Support Start Date' => 'Data rozpoczęcia wsparcia',
 	'Title' => 'Tytuł',
 	'User List'=>'Lista użytkowników',
+	'Job title' => 'Stanowisko',
 	
 	//Added for Picklist Values
 	'Dr.'=>'dr',

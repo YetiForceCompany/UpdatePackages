@@ -167,90 +167,6 @@ class Leads_Module_Model extends Vtiger_Module_Model {
 		}
 		return $response;
 	}
-	
-	/**
-	 * Function returns Leads grouped by Source
-	 * @param type $data
-	 * @return <Array>
-	 */
-	public function getLeadsBySource($owner,$dateFilter) {
-		$db = PearDatabase::getInstance();
-
-		$ownerSql = $this->getOwnerWhereConditionForDashBoards($owner);
-		if(!empty($ownerSql)) {
-			$ownerSql = ' AND '.$ownerSql;
-		}
-		
-		$params = array();
-		if(!empty($dateFilter)) {
-			$dateFilterSql = ' AND createdtime BETWEEN ? AND ? ';
-			//client is not giving time frame so we are appending it
-			$params[] = $dateFilter['start']. ' 00:00:00';
-			$params[] = $dateFilter['end']. ' 23:59:59';
-		}
-		
-		$result = $db->pquery('SELECT COUNT(*) as count, CASE WHEN vtiger_leaddetails.leadsource IS NULL OR vtiger_leaddetails.leadsource = "" THEN "" 
-						ELSE vtiger_leaddetails.leadsource END AS leadsourcevalue FROM vtiger_leaddetails 
-						INNER JOIN vtiger_crmentity ON vtiger_leaddetails.leadid = vtiger_crmentity.crmid
-						AND deleted=0 AND converted = 0 '.Users_Privileges_Model::getNonAdminAccessControlQuery($this->getName()). $ownerSql .' '.$dateFilterSql.
-						'INNER JOIN vtiger_leadsource ON vtiger_leaddetails.leadsource = vtiger_leadsource.leadsource 
-						GROUP BY leadsourcevalue ORDER BY vtiger_leadsource.sortorderid', $params);
-		
-		$response = array();
-		for($i=0; $i<$db->num_rows($result); $i++) {
-			$row = $db->query_result_rowdata($result, $i);
-			$response[$i][0] = $row['count'];
-			$leadSourceVal =  $row['leadsourcevalue'];
-			if($leadSourceVal == '') {
-				$leadSourceVal = 'LBL_BLANK';
-			}
-			$response[$i][1] = vtranslate($leadSourceVal, $this->getName());
-			$response[$i][2] = $leadSourceVal;
-		}
-		return $response;
-	}
-
-	/**
-	 * Function returns Leads grouped by Industry
-	 * @param type $data
-	 * @return <Array>
-	 */
-	public function getLeadsByIndustry($owner,$dateFilter) {
-		$db = PearDatabase::getInstance();
-
-		$ownerSql = $this->getOwnerWhereConditionForDashBoards($owner);
-		if(!empty($ownerSql)) {
-			$ownerSql = ' AND '.$ownerSql;
-		}
-		
-		$params = array();
-		if(!empty($dateFilter)) {
-			$dateFilterSql = ' AND createdtime BETWEEN ? AND ? ';
-			//client is not giving time frame so we are appending it
-			$params[] = $dateFilter['start']. ' 00:00:00';
-			$params[] = $dateFilter['end']. ' 23:59:59';
-		}
-		
-		$result = $db->pquery('SELECT COUNT(*) as count, CASE WHEN vtiger_leaddetails.industry IS NULL OR vtiger_leaddetails.industry = "" THEN "" 
-						ELSE vtiger_leaddetails.industry END AS industryvalue FROM vtiger_leaddetails 
-						INNER JOIN vtiger_crmentity ON vtiger_leaddetails.leadid = vtiger_crmentity.crmid
-						AND deleted=0 AND converted = 0 '.Users_Privileges_Model::getNonAdminAccessControlQuery($this->getName()). $ownerSql .' '.$dateFilterSql.'
-						INNER JOIN vtiger_industry ON vtiger_leaddetails.industry = vtiger_industry.industry 
-						GROUP BY industryvalue ORDER BY vtiger_industry.sortorderid', $params);
-		
-		$response = array();
-		for($i=0; $i<$db->num_rows($result); $i++) {
-			$row = $db->query_result_rowdata($result, $i);
-			$response[$i][0] = $row['count'];
-			$industyValue = $row['industryvalue'];
-			if($industyValue == '') {
-				$industyValue = 'LBL_BLANK';
-			}
-			$response[$i][1] = vtranslate($industyValue, $this->getName());
-			$response[$i][2] = $industyValue;
-		}
-		return $response;
-	}
 
 	/**
 	 * Function to get relation query for particular module with function name
@@ -260,7 +176,7 @@ class Leads_Module_Model extends Vtiger_Module_Model {
 	 * @return <String>
 	 */
 	public function getRelationQuery($recordId, $functionName, $relatedModule,$relationModel = false) {
-		if ($functionName === 'get_activities' || $functionName === 'get_history') {
+		if ($functionName === 'get_activities') {
 			$userNameSql = getSqlForNameInDisplayFormat(array('first_name' => 'vtiger_users.first_name', 'last_name' => 'vtiger_users.last_name'), 'Users');
 
 			$query = "SELECT CASE WHEN (vtiger_users.user_name not like '') THEN $userNameSql ELSE vtiger_groups.groupname END AS user_name,
@@ -272,10 +188,12 @@ class Leads_Module_Model extends Vtiger_Module_Model {
 						LEFT JOIN vtiger_users ON vtiger_users.id = vtiger_crmentity.smownerid
 						LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid
 						WHERE vtiger_crmentity.deleted = 0 AND vtiger_activity.link = ".$recordId;
-			if($functionName === 'get_activities') {
+			$time = vtlib_purify($_REQUEST['time']);
+			if($time == 'current') {
 				$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status not in ('Completed','Deferred'))
-				OR (vtiger_activity.activitytype not in ('Emails','Task') and  vtiger_activity.eventstatus not in ('','Held')))";
-			} else {
+				OR (vtiger_activity.activitytype not in ('Emails','Task') and vtiger_activity.eventstatus not in ('','Held')))";
+			}
+			if($time == 'history') {
 				$query .= " AND ((vtiger_activity.activitytype='Task' and vtiger_activity.status in ('Completed','Deferred'))
 				OR (vtiger_activity.activitytype not in ('Emails','Task') and  vtiger_activity.eventstatus in ('','Held')))";
 			}

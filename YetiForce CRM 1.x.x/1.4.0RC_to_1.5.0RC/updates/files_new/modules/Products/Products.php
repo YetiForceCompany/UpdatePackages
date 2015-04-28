@@ -475,7 +475,7 @@ class Products extends CRMEntity {
 		$userNameSql = getSqlForNameInDisplayFormat(array('first_name'=>
 							'vtiger_users.first_name', 'last_name' => 'vtiger_users.last_name'), 'Users');
 		$query = "SELECT vtiger_potential.potentialid, vtiger_crmentity.crmid,
-			vtiger_potential.potentialname, vtiger_account.accountname, vtiger_potential.related_to, vtiger_potential.contact_id,
+			vtiger_potential.potentialname, vtiger_account.accountname, vtiger_potential.related_to,
 			vtiger_potential.sales_stage, vtiger_potential.amount, vtiger_potential.closingdate,
 			case when (vtiger_users.user_name not like '') then $userNameSql else
 			vtiger_groups.groupname end as user_name, vtiger_crmentity.smownerid,
@@ -486,7 +486,6 @@ class Products extends CRMEntity {
 			INNER JOIN vtiger_products ON vtiger_seproductsrel.productid = vtiger_products.productid
 			INNER JOIN vtiger_potentialscf ON vtiger_potential.potentialid = vtiger_potentialscf.potentialid
 			LEFT JOIN vtiger_account ON vtiger_potential.related_to = vtiger_account.accountid
-			LEFT JOIN vtiger_contactdetails ON vtiger_potential.contact_id = vtiger_contactdetails.contactid
 			LEFT JOIN vtiger_users ON vtiger_users.id = vtiger_crmentity.smownerid
 			LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid
 			WHERE vtiger_crmentity.deleted = 0 AND vtiger_products.productid = ".$id;
@@ -1060,7 +1059,7 @@ class Products extends CRMEntity {
 	/** Function to check if the product is parent of any other product
 	*/
 	function isparent_check(){
-		global $adb;
+		$adb = PearDatabase::getInstance();
 		$isparent_query = $adb->pquery(getListQuery("Products")." AND (vtiger_products.productid IN (SELECT productid from vtiger_seproductsrel WHERE vtiger_seproductsrel.productid = ? AND vtiger_seproductsrel.setype='Products'))",array($this->id));
 		$isparent = $adb->num_rows($isparent_query);
 		return $isparent;
@@ -1069,7 +1068,7 @@ class Products extends CRMEntity {
 	/** Function to check if the product is member of other product
 	*/
 	function ismember_check(){
-		global $adb;
+		$adb = PearDatabase::getInstance();
 		$ismember_query = $adb->pquery(getListQuery("Products")." AND (vtiger_products.productid IN (SELECT crmid from vtiger_seproductsrel WHERE vtiger_seproductsrel.crmid = ? AND vtiger_seproductsrel.setype='Products'))",array($this->id));
 		$ismember = $adb->num_rows($ismember_query);
 		return $ismember;
@@ -1197,7 +1196,7 @@ class Products extends CRMEntity {
 	}
 
 	function deleteProduct2ProductRelation($record,$return_id,$is_parent){
-		global $adb;
+		$adb = PearDatabase::getInstance();
 		if($is_parent==0){
 			$sql = "delete from vtiger_seproductsrel WHERE crmid = ? AND productid = ?";
 			$adb->pquery($sql, array($record,$return_id));

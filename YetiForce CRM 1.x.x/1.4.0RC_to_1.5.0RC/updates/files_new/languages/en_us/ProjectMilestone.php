@@ -25,9 +25,14 @@ $languageStrings = [
 	'Project Milestone Name' => 'Project Milestone Name',
 	'Milestone Date' => 'Milestone Date',
 	'Project Milestone No' => 'Project Milestone Number',
+	'LBL_PRIORITY' => 'Priority',
+	'LBL_PROGRESS' => 'Progress',
 	//PICKLIST
 	'PLL_INTERNAL' => 'Internal',
 	'PLL_EXTERNAL' => 'External',
 	'PLL_SHARED' => 'Shared',
+	'PLL_LOW'=>'Low',
+	'PLL_NORMAL'=>'Normal',
+	'PLL_HIGH'=>'High',
 	
 ];

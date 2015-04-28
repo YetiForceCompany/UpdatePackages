@@ -97,7 +97,7 @@ function getListQuery($module, $where = '') {
 			vtiger_potential.related_to, vtiger_potential.potentialname,
 			vtiger_potential.sales_stage, vtiger_potential.amount,
 			vtiger_potential.currency, vtiger_potential.closingdate,
-			vtiger_potential.typeofrevenue, vtiger_potential.contact_id,
+			vtiger_potential.typeofrevenue,
 			vtiger_potentialscf.*
 			FROM vtiger_potential
 			INNER JOIN vtiger_crmentity
@@ -106,8 +106,6 @@ function getListQuery($module, $where = '') {
 				ON vtiger_potentialscf.potentialid = vtiger_potential.potentialid
 			LEFT JOIN vtiger_account
 				ON vtiger_potential.related_to = vtiger_account.accountid
-			LEFT JOIN vtiger_contactdetails
-				ON vtiger_potential.contact_id = vtiger_contactdetails.contactid
 			LEFT JOIN vtiger_campaign
 				ON vtiger_campaign.campaignid = vtiger_potential.campaignid
 			LEFT JOIN vtiger_groups
@@ -663,7 +661,7 @@ function textlength_check($field_val) {
  * @return string $data - the first related module
  */
 function getFirstModule($module, $fieldname) {
-	global $adb;
+	$adb = PearDatabase::getInstance();
 	$sql = "select fieldid, uitype from vtiger_field where tabid=? and fieldname=?";
 	$result = $adb->pquery($sql, array(getTabid($module), $fieldname));
 
@@ -776,7 +774,7 @@ function counterValue() {
 }
 
 function getUsersPasswordInfo(){
-	global $adb;
+	$adb = PearDatabase::getInstance();
 	$sql = "SELECT user_name, user_hash FROM vtiger_users WHERE deleted=?";
 	$result = $adb->pquery($sql, array(0));
 	$usersList = array();

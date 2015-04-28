@@ -186,7 +186,8 @@ function load_action(inframe, params) {
     $(inframe.find('#message-oss-header .oss-add-task')).click(function() {
         params['sourceModule'] = $(this).attr('data-module');
         params['crmid'] = $(this).attr('data-crmid');
-        oss_add_task(params);
+		params['mode'] = 'task';
+		loadQuickCreateForm('Calendar', params, inframe);
     });
     $(inframe.find('#message-oss-header .oss-add-products')).click(function() {
         params['rel_new_mod'] = $(this).attr('data-module')
@@ -247,13 +248,10 @@ function executeActions(action_name, param) {
     Connectorparams.data = {module: 'OSSMail', action: 'executeActions', action_name: action_name, params: param}
     Connectorparams.async = false;
     Connectorparams.dataType = 'json';
-    //console.log(param);
     AppConnector.request(Connectorparams).then(
             function(data) {
                 var response = data['result'];
-                //console.log(response['data']);
                 if (response['success']) {
-                    console.log(response['data']);
                     var notify_params = {
                         text: response['data'],
                         type: 'info',
@@ -501,9 +499,7 @@ function get_module_permissions(crm_path) {
     return resp;
 }
 function getAbsolutePath() {
-    var loc = window.location;
-    var pathName = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
-    return loc.href.substring(0, loc.href.length - ((loc.pathname + loc.search + loc.hash).length - pathName.length));
+    return jQuery('#site_URL').val();
 }
 function oss_get_config() {
     var params = {};
@@ -599,31 +595,37 @@ function get_crm_id(param) {
     return jqxhr;
 }
 function loadQuickCreateForm(moduleName, params, inframe) {
+    var quickCreateParams = {};
+    var relatedParams = {};
     if (params['crmid']) {
         if (params['sourceModule']) {
             var sourceModule = params['sourceModule'];
         } else {
             var sourceModule = 'OSSMailView';
         }
-        if (params['no_rel'] != 'true') {
-            console.log(params['crmid']);
-            console.log(params['no_rel']);
-            var preQuickCreateSave = function(data) {
-                var index, queryParam, queryParamComponents;
-                if (moduleName == 'Calendar') {
-                    jQuery('<input type="hidden" name="parent_id" value="' + params['crmid'] + '">').appendTo(data);
-                }
-                jQuery('<input type="hidden" name="sourceModule" value="' + sourceModule + '" />').appendTo(data);
-                jQuery('<input type="hidden" name="sourceRecord" value="' + params['crmid'] + '" />').appendTo(data);
-                jQuery('<input type="hidden" name="relationOperation" value="true" />').appendTo(data);
-            }
-        }
+		var preQuickCreateSave = function(data) {
+			var index, queryParam, queryParamComponents;
+			if (params['mode'] == 'task') {
+				data.find('a[data-tab-name="Task"]').trigger('click');
+			}
+			if (params['no_rel'] != 'true') {
+				jQuery('<input type="hidden" name="sourceModule" value="' + sourceModule + '" />').appendTo(data);
+				jQuery('<input type="hidden" name="sourceRecord" value="' + params['crmid'] + '" />').appendTo(data);
+				jQuery('<input type="hidden" name="relationOperation" value="true" />').appendTo(data);
+			}
+		}
+		var links = ['Leads','Contacts','Vendors','Accounts'];
+		var process = ['Campaigns','HelpDesk','Potentials','Project','ServiceContracts'];
+		if ($.inArray( params['sourceModule'], links ) > 0) {
+			relatedParams['link'] =  params['crmid'];
+		}
+		if ($.inArray( params['sourceModule'], process ) > 0) {
+			relatedParams['process'] =  params['crmid'];
+		}
     }
     var postQuickCreateSave = function(data) {
         load_all_widgets();
     }
-    var quickCreateParams = {};
-    var relatedParams = {};
     var quickcreateUrl = 'index.php?module=' + moduleName + '&view=QuickCreateAjax';
     relatedParams['email'] = params['from_email'];
     relatedParams['potentialname'] = params['title'];
@@ -677,7 +679,6 @@ function get_mail_by_id(inframe, input, name_mod, ids) {
                 if (exits_emails != '') {
                     exits_emails = exits_emails + ',';
                 }
-                console.log(resp);
                 if (resp.length > 1) {
                     var getConfig = jQuery.ajax({
                         type: "GET",

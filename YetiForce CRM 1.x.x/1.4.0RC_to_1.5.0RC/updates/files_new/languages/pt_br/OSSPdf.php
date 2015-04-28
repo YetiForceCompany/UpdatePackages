@@ -26,7 +26,7 @@ $languageStrings = [
     'Enable Footer' => 'Habilitar Rodapé',
     'Enable Header' => 'Habilitar Cabeçalho',
     'LBL_FOOTER_HEADER' => 'Variáveis do documento',
-    'TAXES_IN_PLN' => 'Tax in PLN',
+    'TAXES_IN_PLN' => 'Imposto em R$',
     'LBL_NO_CHECKED_TEMPLATES' => 'Erro! Você não escolheu nenhum modelo!',
     'LBL_TRUE' => 'Sim',
     'LBL_FALSE' => 'Não',
@@ -464,6 +464,9 @@ $languageStrings = [
     'Document summary: show tax amount :' => 'Resumo do Documento: exibir valor imposto:',
     'Show document summary :' => 'Exibir resumo do Documento:',
 	'LBL_SELECT_OPTION' => 'Selecionar uma Opção',
+	'Content' => 'Conteúdo',
+	'Field' => 'Campo',
+	'Label' => 'Rótulo',
 ];
 
 $jsLanguageStrings = [
@@ -536,13 +539,4 @@ $jsLanguageStrings = [
     'Current date (mm-dd-yyyy)' => 'Data atual (mm-dd-yyyy)',
     'Current date (yyyy-mm-dd)' => 'Data atual (yyyy-mm-dd)',
         //
-];
-
-$languageStrings = [
-	'LBL_AND' => 'e',
-	'LBL_OR' => 'ou',
-	'LBL_NONE' => 'Nada',
-	'Content' => 'Conteúdo',
-	'Field' => 'Campo',
-	'Label' => 'Rótulo',
 ];

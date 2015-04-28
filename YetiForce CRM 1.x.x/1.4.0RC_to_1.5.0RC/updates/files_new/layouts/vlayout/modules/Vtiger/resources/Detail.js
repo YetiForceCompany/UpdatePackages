@@ -199,7 +199,80 @@ jQuery.Class("Vtiger_Detail_Js",{
 		var pageNumber = jQuery('[name="currentPageNum"]').val();
 		var detailInstance = Vtiger_Detail_Js.getInstance();
 		detailInstance.loadRelatedList(pageNumber);
-	}
+	},
+	
+    showWorkflowTriggerView: function(instance){
+		$( instance ).popover('hide');
+		var detailInstance = Vtiger_Detail_Js.getInstance();
+		var params = {
+			module: app.getModuleName(),
+			view: 'WorkflowTrigger',
+			record: detailInstance.getRecordId()
+		}
+		var callback = function (data) {
+			data.find('[type="submit"]').click(function(e) {
+				var ids = [];
+				data.find('input[type="checkbox"]:checked').each(function( index ) {
+					ids.push($( this ).val());
+				});
+				if(ids.length == 0){
+					var params = {
+						title : app.vtranslate('JS_INFORMATION'),
+						text: app.vtranslate('JS_NOT_SELECTED_WORKFLOW_TRIGGER'),
+						type: 'error',
+						animation: 'show'
+					};
+					Vtiger_Helper_Js.showPnotify(params);
+				}else{
+					var params = {
+						title : app.vtranslate('JS_MESSAGE'),
+						text: app.vtranslate('JS_STARTED_PERFORM_WORKFLOW'),
+						type: 'info',
+						animation: 'show'
+					};
+					Vtiger_Helper_Js.showPnotify(params);
+					var postData = {
+						module: app.getModuleName(),
+						action: 'Workflow',
+						mode: 'execute',
+						record: detailInstance.getRecordId(),
+						ids: ids
+					}
+					AppConnector.request(postData).then(
+						function(data){
+							var params = {
+								title : app.vtranslate('JS_MESSAGE'),
+								text: app.vtranslate('JS_COMPLETED_PERFORM_WORKFLOW'),
+								type: 'success',
+								animation: 'show'
+							};
+							Vtiger_Helper_Js.showPnotify(params);
+							app.hideModalWindow();
+							detailInstance.loadWidgets();
+						},
+						function(error,err){
+							var params = {
+								title : app.vtranslate('JS_ERROR'),
+								text: app.vtranslate('JS_ERROR_DURING_TRIGGER_OF_WORKFLOW'),
+								type: 'error',
+								animation: 'show'
+							};
+							Vtiger_Helper_Js.showPnotify(params);
+							app.hideModalWindow();
+						}
+					);
+				}
+			});
+		}
+        AppConnector.request(params).then(
+			function(data) {
+				if(data) {
+					app.showModalWindow(data,'',callback);
+				}
+			},
+			function(error,err){}
+		);
+    },
 
 },{
 	targetPicklistChange : false,  
@@ -209,7 +282,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 	detailViewDetailsTabLabel : 'LBL_RECORD_DETAILS',
 	detailViewSummaryTabLabel : 'LBL_RECORD_SUMMARY',
 	detailViewRecentCommentsTabLabel : 'ModComments',
-	detailViewRecentActivitiesTabLabel : 'Upcoming Activities',
+	detailViewRecentActivitiesTabLabel : 'Activities',
 	detailViewRecentUpdatesTabLabel : 'LBL_UPDATES',
 	detailViewRecentDocumentsTabLabel : 'Documents',
 
@@ -1335,6 +1408,24 @@ jQuery.Class("Vtiger_Detail_Js",{
 			);
 	   })
 	},
+	
+	registerChangeSwitchForWidget : function(){
+		var thisInstance = this;
+		$('.widget_header .switchBtn').on('switchChange.bootstrapSwitch', function(e, state) {
+			var currentElement = jQuery(e.currentTarget);
+			var summaryWidgetContainer = currentElement.closest('.summaryWidgetContainer');
+			var widget = summaryWidgetContainer.find('.widgetContentBlock');
+			var url = widget.data('url');
+			url = url.replace('&type=current', '');
+			url += '&type=';
+			if(state)
+				url += 'current';
+			else
+				url += 'history';
+			widget.data('url',url);
+			thisInstance.loadWidget($(widget));
+		});
+	},
 	/**
 	 * Function to register all the events related to summary view widgets
 	 */
@@ -1342,6 +1433,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 		var thisInstance = this;
 		this.registerEventForActivityWidget();
 		this.registerChangeFilterForWidget();
+		this.registerChangeSwitchForWidget();
 		this.registerFilterForAddingModuleRelatedRecordFromSummaryWidget();
 		if(Vtiger_Detail_Js.SaveResultInstance == false){
 			Vtiger_Detail_Js.SaveResultInstance = new SaveResult();
@@ -1930,6 +2022,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 					app.registerEventForDatePickerFields(detailContentsHolder);
 					//Attach time picker event to time fields
 					app.registerEventForTimeFields(detailContentsHolder);
+					app.showBtnSwitch(detailContentsHolder.find('.switchBtn'));
 					Vtiger_Helper_Js.showHorizontalTopScrollBar();
 					element.progressIndicator({'mode': 'hide'});
 					thisInstance.registerHelpInfo();
@@ -2480,6 +2573,20 @@ jQuery.Class("Vtiger_Detail_Js",{
 
 		detailContentsHolder.on('click','.moreRecentActivities', function(){
 			var recentActivitiesTab = thisInstance.getTabByLabel(thisInstance.detailViewRecentActivitiesTabLabel);
+			recentActivitiesTab.trigger('click');
+		});
+
+		detailContentsHolder.on('switchChange.bootstrapSwitch','.relatedContainer .switchBtn', function(e, state){
+			var recentActivitiesTab = thisInstance.getTabByLabel(thisInstance.detailViewRecentActivitiesTabLabel);
+			var url = recentActivitiesTab.data('url');
+			url = url.replace('&time=current', '');
+			url = url.replace('&time=history', '');
+			url += '&time=';
+			if(state)
+				url += 'current';
+			else
+				url += 'history';
+			recentActivitiesTab.data('url',url);
 			recentActivitiesTab.trigger('click');
 		});
 

@@ -42,17 +42,47 @@
                             </span>
                         </div>
                     </div>
-                    <div class="nav quickActions btn-toolbar span marginLeftZero">
-                        <div class="pull-right commonActionsButtonContainer">
-                            {if !empty($announcement)}
-                                <div class="btn-group cursorPointer">
-                                    <img class='alignMiddle' src="{vimage_path('btnAnnounceOff.png')}" alt="{vtranslate('LBL_ANNOUNCEMENT',$MODULE)}" title="{vtranslate('LBL_ANNOUNCEMENT',$MODULE)}" id="announcementBtn" />
-                                </div>&nbsp;
-                            {/if}
-							<div class="btn-group cursorPointer historyBtn">
-								<img width="28px" class='alignMiddle showHistoryBtn popoverTooltip' src="{vimage_path('history.png')}" alt="{vtranslate('LBL_PAGES_HISTORY',$MODULE)}" class="dropdown-toggle" data-content="{vtranslate('LBL_PAGES_HISTORY')}" data-placement="left" data-toggle="dropdown" aria-expanded="false"/>
+                    <div class="nav quickActions btn-toolbar span marginLeftZero pull-right commonActionsButtonContainer">
+						{if !empty($announcement)}
+							<div class="btn-group cursorPointer">
+								<img class='alignMiddle' src="{vimage_path('btnAnnounceOff.png')}" alt="{vtranslate('LBL_ANNOUNCEMENT',$MODULE)}" title="{vtranslate('LBL_ANNOUNCEMENT',$MODULE)}" id="announcementBtn" />
 							</div>&nbsp;
-                        </div>
+						{/if}
+						<div class="btn-group cursorPointer">
+							<img id="menubar_quickCreate" width="24px" src="{vimage_path('plus.png')}" class="alignMiddle" alt="{vtranslate('LBL_QUICK_CREATE',$MODULE)}" title="{vtranslate('LBL_QUICK_CREATE',$MODULE)}" data-toggle="dropdown" />
+							<ul class="dropdown-menu dropdownStyles commonActionsButtonDropDown">
+								<li class="title"><strong>{vtranslate('LBL_QUICK_CREATE',$MODULE)}</strong></li><hr/>
+								<li id="quickCreateModules">
+									<div class="row-fluid">
+										<div class="span12">
+											{foreach key=NAME item=MODULEMODEL from=Vtiger_Module_Model::getQuickCreateModules(true)}
+												{assign var='quickCreateModule' value=$MODULEMODEL->isQuickCreateSupported()}
+												{assign var='singularLabel' value=$MODULEMODEL->getSingularLabelKey()}
+												{if $singularLabel == 'SINGLE_Calendar'}
+													{assign var='singularLabel' value='LBL_EVENT_OR_TASK'}
+												{/if}	
+												{if $quickCreateModule == '1'}
+													{if $count % 3 == 0}
+														<div class="row-fluid">
+													{/if}
+													<div class="span4">
+														<a id="menubar_quickCreate_{$NAME}" class="quickCreateModule" data-name="{$NAME}"
+														   data-url="{$MODULEMODEL->getQuickCreateUrl()}" href="javascript:void(0)" title="{vtranslate($singularLabel,$NAME)}">{vtranslate($singularLabel,$NAME)}</a>
+													</div>
+													{if $count % 3 == 2}
+														</div>
+													{/if}
+													{assign var='count' value=$count+1}
+												{/if}
+											{/foreach}
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>&nbsp;
+						<div class="btn-group cursorPointer historyBtn">
+							<img width="28px" class='alignMiddle showHistoryBtn popoverTooltip' src="{vimage_path('history.png')}" alt="{vtranslate('LBL_PAGES_HISTORY',$MODULE)}" class="dropdown-toggle" data-content="{vtranslate('LBL_PAGES_HISTORY')}" data-placement="left" data-toggle="dropdown" aria-expanded="false"/>
+						</div>&nbsp;
                     </div>
                 </div>
             </div>
