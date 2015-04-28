@@ -5,7 +5,7 @@
 	<type>update</type>
     <version>1.00</version>
 	<from_version>1.4.0 RC</from_version>
-	<to_version>1.4.188 RC</to_version>
+	<to_version>1.4.260 RC</to_version>
     <dependencies>
 		<vtiger_version>1.4.0</vtiger_version>
 		<vtiger_max_version>1.5.0</vtiger_max_version>

@@ -380,18 +380,21 @@ class YetiForceUpdate{
 		}
 		$actions = [24=>'ReadRecord',25=>'WorkflowTrigger'];
 		foreach ($actions as $key =>$action) {
-			$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;',[$action]);
+			if($adb->num_rows($result) == 0){
+				$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
 
-			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
-			$result = $adb->query($sql);
-			
-			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
-			for($i = 0; $i < $adb->num_rows($resultP); $i++){
-				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
-				for($k = 0; $k < $adb->num_rows($result); $k++){
-					$row = $adb->query_result_rowdata($result, $k);
-					$tabid = $row['tabid'];
-						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
+				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
+				$result = $adb->query($sql);
+				
+				$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+				for($i = 0; $i < $adb->num_rows($resultP); $i++){
+					$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+					for($k = 0; $k < $adb->num_rows($result); $k++){
+						$row = $adb->query_result_rowdata($result, $k);
+						$tabid = $row['tabid'];
+							$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
+					}
 				}
 			}
 		}
