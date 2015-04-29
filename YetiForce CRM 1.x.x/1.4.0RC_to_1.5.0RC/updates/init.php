@@ -143,6 +143,8 @@ class YetiForceUpdate{
 		'modules/Settings/SalesProcesses/views/Configuration.php',
 		'layouts/vlayout/modules/HelpDesk/dashboards/OpenTicketsContents.tpl',
 		'libraries/Smarty/',
+		'modules/Potentials/actions/SaveAjax.php',
+		'modules/Potentials/actions/Save.php',
 	);
 
 	function YetiForceUpdate($modulenode) {
@@ -351,29 +353,29 @@ class YetiForceUpdate{
 			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;',[$action]);
 			if($adb->num_rows($result) == 0){
 				$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+			}
+			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
+			$result = $adb->query($sql);
 
-				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
-				$result = $adb->query($sql);
-
-				$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
-				for($i = 0; $i < $adb->num_rows($resultP); $i++){
-					$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
-					for($k = 0; $k < $adb->num_rows($result); $k++){
-						$insert = false;
-						$row = $adb->query_result_rowdata($result, $k);
-						$tabid = $row['tabid'];
-						if( $key == 23 && $row['name'] == 'Documents'){
-							$insert = true;
-						}
-						if( ($key == 20 || $key == 21 || $key == 22) && in_array($row['name'] , ['Accounts','Contacts','Leads','Vendors']) ){
-							$insert = true;
-						}
-						if( !($key == 22 && $row['name'] == 'PriceBooks') && $key != 23 && $key != 20 && $key != 21){
-							$insert = true;
-						}
-						if($insert){
-							$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
-						}
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			for($i = 0; $i < $adb->num_rows($resultP); $i++){
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				for($k = 0; $k < $adb->num_rows($result); $k++){
+					$insert = false;
+					$row = $adb->query_result_rowdata($result, $k);
+					$tabid = $row['tabid'];
+					if( $key == 23 && $row['name'] == 'Documents'){
+						$insert = true;
+					}
+					if( ($key == 20 || $key == 21 || $key == 22) && in_array($row['name'] , ['Accounts','Contacts','Leads','Vendors']) ){
+						$insert = true;
+					}
+					if( !($key == 22 && $row['name'] == 'PriceBooks') && $key != 23 && $key != 20 && $key != 21){
+						$insert = true;
+					}
+					$resultC = $adb->pquery("SELECT activityid FROM vtiger_profile2utility WHERE profileid=? AND tabid=? AND activityid=? ;",[$profileId, $tabid, $key]);
+					if($insert && $adb->num_rows($resultC) == 0){
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
 					}
 				}
 			}
@@ -383,17 +385,19 @@ class YetiForceUpdate{
 			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;',[$action]);
 			if($adb->num_rows($result) == 0){
 				$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');",[$key,$action]);
+			}
+			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
+			$result = $adb->query($sql);
 
-				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
-				$result = $adb->query($sql);
-				
-				$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
-				for($i = 0; $i < $adb->num_rows($resultP); $i++){
-					$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
-					for($k = 0; $k < $adb->num_rows($result); $k++){
-						$row = $adb->query_result_rowdata($result, $k);
-						$tabid = $row['tabid'];
-							$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			for($i = 0; $i < $adb->num_rows($resultP); $i++){
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				for($k = 0; $k < $adb->num_rows($result); $k++){
+					$row = $adb->query_result_rowdata($result, $k);
+					$tabid = $row['tabid'];
+					$resultC = $adb->pquery("SELECT activityid FROM vtiger_profile2utility WHERE profileid=? AND tabid=? AND activityid=? ;",[$profileId, $tabid, $key]);
+					if($adb->num_rows($resultC) == 0){
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $key, 0));
 					}
 				}
 			}
@@ -752,12 +756,18 @@ class YetiForceUpdate{
   `value` varchar(200) DEFAULT NULL,
   KEY `type` (`type`,`param`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('conversion','change_owner','false');");
-		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','groups','');");
-		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','status','');");
-		$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','currentuser_status','false');");
-		$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','limit_product_service','false');");
-		$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','update_shared_permissions','false');");
+		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_marketing` WHERE type = ? AND param = ?;", ['conversion','change_owner']);
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('conversion','change_owner','false');");
+			$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','groups','');");
+			$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','status','');");
+			$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','currentuser_status','false');");
+		}
+		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_sales` WHERE type = ? AND param = ?;", ['popup','limit_product_service']);
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','limit_product_service','false');");
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','update_shared_permissions','false');");
+		}
 		$adb->pquery('UPDATE `vtiger_settings_field` SET linkto = ? WHERE name = ?;', ['index.php?module=SalesProcesses&view=Index&parent=Settings','LBL_SALES_PROCESSES']);
 		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", ['vtiger.entity.link.after','Vtiger_SharingPrivileges_Handler']);
 		if($adb->num_rows($result) == 0){
@@ -907,6 +917,7 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [5,'vtiger_osstimecontrol','time_start']);
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [7,'vtiger_osstimecontrol','time_end']);
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [8,'vtiger_osstimecontrol','due_date']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_osstimecontrol','timecontrol_type']);
 		
 		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_ossemployees','private_phone']);
 		$adb->pquery('UPDATE vtiger_field SET sequence = ? WHERE tablename = ? AND columnname = ?;', [2,'vtiger_ossemployees','business_mail']);
@@ -940,6 +951,8 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_activity','allday',getTabid('Events')]);
 		
 		$adb->pquery('UPDATE vtiger_homestuff SET `visible` = ? WHERE `stufftype` = ? ;', [1,'Tag Cloud']);
+		
+		$adb->pquery('UPDATE vtiger_field SET typeofdata = ? WHERE tablename = ? AND columnname = ?;', 	['D~M','vtiger_projectmilestone','projectmilestonedate']);
 		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -1014,6 +1027,9 @@ class YetiForceUpdate{
 				if (strpos($line, 'yt_signature') === FALSE) {
 					$configContent[$key] = str_replace(");", ",'yt_signature');", $configContent[$key]);
 				}
+			}
+			if (strpos($line, '$GEBUG_CONFIG') !== FALSE) {
+				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
 			}
 		}
 		$content = implode("", $configContent);
