@@ -784,9 +784,9 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
 				[7,'vtiger_projecttask','projecttaskstatus']);
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
-				[3,'vtiger_projecttask','projectmilestoneid']);
+				[2,'vtiger_projecttask','projectmilestoneid']);
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
-				[5,'vtiger_projecttask','targetenddate']);
+				[6,'vtiger_projecttask','targetenddate']);
 		
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? ;', 
 				[1,'vtiger_requirementcards','subject']);
@@ -954,6 +954,48 @@ class YetiForceUpdate{
 		
 		$adb->pquery('UPDATE vtiger_field SET typeofdata = ? WHERE tablename = ? AND columnname = ?;', 	['D~M','vtiger_projectmilestone','projectmilestonedate']);
 		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_notes','filename',getTabid('Documents')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_crmentity','smownerid',getTabid('Documents')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_notes','filelocationtype',getTabid('Documents')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [3,'vtiger_notes','folderid',getTabid('Documents')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [1,'vtiger_modcomments','commentcontent',getTabid('ModComments')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_crmentity','smownerid',getTabid('ModComments')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [3,'vtiger_modcomments','related_to',getTabid('ModComments')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_projecttask','projectid',getTabid('ProjectTask')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [8,'vtiger_crmentity','smownerid',getTabid('ProjectTask')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_projecttask','startdate',getTabid('ProjectTask')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_projecttask','projecttaskstatus',getTabid('ProjectTask')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [1,'vtiger_osspasswords','passwordname',getTabid('OSSPasswords')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_osspasswords','username',getTabid('OSSPasswords')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_osspasswords','password',getTabid('OSSPasswords')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_osspasswords','link_adres',getTabid('OSSPasswords')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [3,'vtiger_crmentity','smownerid',getTabid('OSSPasswords')]);
+		
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [4,'vtiger_ossemployees','employee_status',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [3,'vtiger_crmentity','smownerid',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [2,'vtiger_ossemployees','last_name',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [17,'vtiger_ossemployees','pesel',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [18,'vtiger_ossemployees','id_card',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [5,'vtiger_ossemployees','employee_education',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [6,'vtiger_ossemployees','birth_date',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [19,'vtiger_ossemployees','business_phone',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [16,'vtiger_ossemployees','private_phone',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [21,'vtiger_ossemployees','business_mail',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [20,'vtiger_ossemployees','private_mail',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [22,'vtiger_ossemployees','street',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [13,'vtiger_ossemployees','code',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [9,'vtiger_ossemployees','city',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [8,'vtiger_ossemployees','state',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [10,'vtiger_ossemployees','country',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [11,'vtiger_ossemployees','ship_street',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [15,'vtiger_ossemployees','ship_code',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [12,'vtiger_ossemployees','ship_city',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [14,'vtiger_ossemployees','ship_state',getTabid('OSSEmployees')]);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_ossemployees','ship_country',getTabid('OSSEmployees')]);
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -1023,14 +1065,21 @@ class YetiForceUpdate{
 			if(	strpos($line, '$config[\'plugins\']') !== FALSE){
 				if (strpos($line, 'yt_new_user') === FALSE) {
 					$configContent[$key] = str_replace(");", ",'yt_new_user');", $configContent[$key]);
-				}
-				if (strpos($line, 'yt_signature') === FALSE) {
+				}if (strpos($line, 'yt_signature') === FALSE) {
 					$configContent[$key] = str_replace(");", ",'yt_signature');", $configContent[$key]);
+				}if (strpos($line, 'yt_user') === FALSE) {
+					$configContent[$key] = str_replace(");", ",'yt_user');", $configContent[$key]);
 				}
 			}
 			if (strpos($line, '$GEBUG_CONFIG') !== FALSE) {
 				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
 			}
+			if (strpos($line, 'devel_mode') !== FALSE) {
+				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
+			}
+		}
+		if(strpos(file_get_contents( $fileName ),'devel_mode') === FALSE){
+			$configContent[] = "\n\$config['devel_mode'] = \$DEBUG_CONFIG['ROUNDCUBE_DEVEL_MODE'];";
 		}
 		$content = implode("", $configContent);
 		$file = fopen($fileName,"w+");
@@ -1043,6 +1092,7 @@ class YetiForceUpdate{
 		$log->debug("Entering YetiForceUpdate::picklists() method ...");
 		$addPicklists = [];
 		$addPicklists['ProjectMilestone'][] = array('name'=>'projectmilestonetype','uitype'=>'15','add_values'=>array('PLL_INTERNAL','PLL_EXTERNAL','PLL_SHARED'),'remove_values'=>array('administrative','operative','other'));
+		$addPicklists['LettersOut'][] = array('name'=>'lout_status','uitype'=>'16','add_values'=>array('PLL_NEW','PLL_SETTLED'),'remove_values'=>array('PLL_A','PLL_B'));
 		
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array();
@@ -1079,6 +1129,12 @@ class YetiForceUpdate{
 					}if($piscklist['name'] == 'other' && $moduleName == 'ProjectMilestone'){
 						$adb->pquery("UPDATE `vtiger_projectmilestone` SET `projectmilestonetype` = ? WHERE `projectmilestonetype` = ? ;", array($piscklist['name'], 'PLL_SHARED'));
 					}
+					// replace ?
+					/*if($piscklist['name'] == 'PLL_A' && $moduleName == 'LettersOut'){
+						$adb->pquery("UPDATE `vtiger_lettersout` SET `lout_status` = ? WHERE `lout_status` = ? ;", array($piscklist['name'], 'PLL_NEW'));
+					}if($piscklist['name'] == 'PLL_B' && $moduleName == 'LettersOut'){
+						$adb->pquery("UPDATE `vtiger_lettersout` SET `lout_status` = ? WHERE `lout_status` = ? ;", array($piscklist['name'], 'PLL_SETTLED'));
+					}*/
 				}
 			}
 		}
@@ -1117,7 +1173,7 @@ class YetiForceUpdate{
 		array('41','1743','projectmilestone_progress','vtiger_projectmilestone','1','1','projectmilestone_progress','LBL_PROGRESS','1','2','','100','11','101','10','V~O','1',NULL,'BAS','1','','0','',"varchar(10)","LBL_PROJECT_MILESTONE_INFORMATION",array(),array())
 		);
 		$ProjectTask = array(
-		array('42','1742','estimated_work_time','vtiger_projecttask','1','7','estimated_work_time','LBL_ESTIMATED_WORK_TIME','1','2','','100','9','105','1','NN~M','1',NULL,'BAS','1','','0','',"decimal(8,2)","LBL_CUSTOM_INFORMATION",array(),array())
+		array('42','1742','estimated_work_time','vtiger_projecttask','1','7','estimated_work_time','LBL_ESTIMATED_WORK_TIME','1','2','','100','9','105','1','NN~M','1',3,'BAS','1','','0','',"decimal(8,2)","LBL_CUSTOM_INFORMATION",array(),array())
 		);
 		$Contacts = array(
 		array('4','1744','jobtitle','vtiger_contactdetails','1','1','jobtitle','Job title','1','2','','100','31','4','1','V~O','1',NULL,'BAS','1','','0','',"varchar(100)","LBL_CONTACT_INFORMATION",array(),array())
@@ -1155,6 +1211,7 @@ class YetiForceUpdate{
 					$fieldInstance->columntype = $field['columntype'];
 					$fieldInstance->presence = $field['presence'];
 					$fieldInstance->maximumlength = $field['maximumlength'];
+					$fieldInstance->quicksequence = $field['quicksequence'];
 					$fieldInstance->info_type = $field['info_type'];
 					$fieldInstance->helpinfo = $field['helpinfo'];
 					$fieldInstance->summaryfield = $field['summaryfield'];
@@ -1319,6 +1376,16 @@ class YetiForceUpdate{
 ini_set('session.gc_maxlifetime','1800'); //30 min
 ";
 		file_put_contents( $config, $configC, FILE_APPEND );
+		
+		if(strpos(file_get_contents( $config ),'forceSSL') !== FALSE){
+			return;
+		}
+		$configC = "
+// Force site access to always occur under SSL (https) for selected areas. You will not be able to access selected areas under non-ssl. Note, you must have SSL enabled on your server to utilise this option.
+\$forceSSL = FALSE;
+";
+		file_put_contents( $config, $configC, FILE_APPEND );
+		
 	}
 	public function checkModuleExists($moduleName){
 		global $log;
