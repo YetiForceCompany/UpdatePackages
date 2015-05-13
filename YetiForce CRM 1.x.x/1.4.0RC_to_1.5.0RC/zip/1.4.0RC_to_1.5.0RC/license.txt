@@ -1,3 +1,0 @@
-Required PHP version needs to be equal or greater than 5.4.  
-The update package introduces changes in relations so some data is deleted.
-Attention: You will be redirected to Home page when update is completed.

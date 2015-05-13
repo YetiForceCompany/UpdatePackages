@@ -1,4 +1,0 @@
-<?php
-$languageStrings = [
-	'AJAXChat'  => 'Chat',
-];

@@ -1044,12 +1044,13 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_ossemployees','ship_country',getTabid('OSSEmployees')]);
 		
 		
-		$adb->pquery('UPDATE vtiger_field SET defaultvalue = ? WHERE tablename = ? AND columnname = ?;', ['PLL_WAITING_FOR_VERIFICATION','vtiger_calculations','calculationsstatus']);
+		$adb->pquery('UPDATE vtiger_field SET defaultvalue = ?, summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['PLL_WAITING_FOR_VERIFICATION',1,'vtiger_calculations','calculationsstatus']);
 		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','name']);
 		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','relatedid']);
 		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','potentialid']);
 		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','requirementcardsid']);
-		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','quotesenquiresid']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ?, displaytype = ? WHERE tablename = ? AND columnname = ?;', ['1',1,'vtiger_calculations','quotesenquiresid']);
+		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ?;', [3,'vtiger_projecttask','estimated_work_time']);
 		
 		
 		$widgets[] = array(53,'Calculations','Summary',NULL,1,0,NULL,'[]');
