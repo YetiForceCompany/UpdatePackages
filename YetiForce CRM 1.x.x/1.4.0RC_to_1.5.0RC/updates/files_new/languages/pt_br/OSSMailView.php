@@ -17,7 +17,7 @@ $languageStrings = [
 	'LBL_RECORDS_LIST' => 'Lista de e-mails',
 
 	// Blocks
-	'LBL_INFORMATION' => 'Infomação geral',
+	'LBL_INFORMATION' => 'Informação geral',
 
 	//Field Labels
     'relatedid' => 'Relacionado à',
@@ -51,13 +51,14 @@ $languageStrings = [
 	'List open email'=>'Quando você clicar no botão abrir o',
 	'emailPreviewHeader'=>'Visualizar seus e-mails',
 	'Email_list'=>'E-mail',
-	'Email_list'=>'E-mail',
     'LBL_CREATEMAIL' => 'Enviar e-mail',
     'LBL_OUTCOMING' => 'Saída',
     'LBL_INCOMING' => 'Entrada',
     'LBL_INTERNAL' => 'Interno',
 	'LBL_REPLYALLL' => 'Responder para todos',
 	'LBL_PRINT' => 'Impressão',
+	'Date of receipt' => 'Dados recebidor',
+	'LBL_FORWARD' => 'Avançar',
 
 	'LBL_VERIFY' => 'Para verificação',
 	'LBL_REL_MOD' => 'Módulos relacionados',

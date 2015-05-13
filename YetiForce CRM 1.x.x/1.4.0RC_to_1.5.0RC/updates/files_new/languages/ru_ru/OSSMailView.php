@@ -62,13 +62,13 @@ $languageStrings = [
 	'List open email'	=>	'Выберите, как открывать письмо',
 	'emailPreviewHeader'	=>	'Предварительный просмотр',
 	'Email_list'	=>	'Просмотр почты',
-	'Email_list'	=>	'Просмотр почты',
 	'LBL_CREATEMAIL'	=>	'Написать Письмо',
 	'LBL_OUTCOMING'	=>	'Исходящие',
 	'LBL_INCOMING'	=>	'Входящие',
 	'Internal'	=>	'Внутренний',
 	'LBL_REPLYALLL'	=>	'Ответить всем',
 	'LBL_PRINT'	=>	'Печатать',
+	'LBL_FORWARD' => 'Forward',
 	'LBL_VERIFY'	=>	'Контроллер',
 	'LBL_REL_MOD'	=>	'Связанный модуль',
 	'LBL_BindMailsOK'	=>	'Помеченные письма на связываются, при следующем запуске обработчика сообщение будет связано с записью',
@@ -79,6 +79,7 @@ $languageStrings = [
 	'Alert_ChangeType_desc'	=>	'Все виды выбранный адрес электронной почты будет изменен, без возможности отменить изменения.',
 	'LBL_ChangeTypeOK'	=>	'Изменен статус сообщения',
 	'Configuration'	=>	'Настройка просмотра почты',
+	'Date of receipt' => 'Received date',
 	
 	//dashboards
 	'Graf'	=>	'Письма по статусу',

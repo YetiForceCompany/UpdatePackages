@@ -36,6 +36,13 @@ $languageStrings = [
 	'Friday'																=> 'Freitag',
 	'Saturday'																=> 'Samstag',
 	'Sunday'																=> 'Sonntag',
+	'LBL_HOLIDAY_TYPE' => 'Art des Feiertages',
+	'LBL_NATIONAL' => 'gesetzlicher',
+	'LBL_ECCLESIASTICAL' => 'kirchlich',
+	'ecclesiastical' => 'kirchlich',
+	'national' => 'gesetzlicher',
+	
+	'LBL_VIEW_CONFIGURATION' => 'Public Holidays',
 ];
 $jsLanguageStrings = [
 	'JS_FILL_FORM_ERROR'													=> 'Es müssen alle Felder im Formular befüllt werden',

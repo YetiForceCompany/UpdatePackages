@@ -138,6 +138,9 @@ $languageStrings = [
 	'LBL_ACTIVE_TASKS' => 'Active Tasks',
 	'LBL_DO_NOT_DUPLICATE_RECORDS' => 'Do not duplicate records',
 	'LBL_DUPLICATE_STATUS' => 'Do not duplicate if status veries',
+	'LBL_VALUE_OF_FIELDS' => 'Value from field',
+	'LBL_VALUE_OF_SERVER' => 'Value from server',
+	'LBL_WORKFLOWS_RUN_TIME' => 'Workflow run time and date',
 	
 	//workflow task
 	'EmailTempleteList' => 'Select a template email to be sent',

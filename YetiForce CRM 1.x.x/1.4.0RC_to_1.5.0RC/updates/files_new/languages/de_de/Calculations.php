@@ -48,15 +48,12 @@ $languageStrings = [
 	'LBL_PROS' => 'Vorteile',
 	
 	//pick list values
-	'PLL_WAITING_FOR_VERIFICATION' => 'Warten auf Überprüfung',
-	'PLL_VERIFICATION_PROCESS' => 'in Prüfung',
-	'PLL_INTERNAL_CONSULTATION_REQUIRED' => 'Interne Klärung erforderlich',
-	'PLL_EXTERNAL_CONSULTATION_REQUIRED' => 'Externe Klärung erforderlich',
-	'PLL_WAITING_FOR_VENDORS_QUOTE' => 'Warten auf Angebot',
-	'PLL_WAITING_FOR_CUSTOMERS_REPLY' => 'Warten auf Kundenrückmeldung',
-	'PLL_IN_PREPARATION' => 'In Bearbeitung',
-	'LBL_DECLINED' => 'Abgelehnt',
-	'LBL_ACCEPTED' => 'Angenommen',
+	'PLL_DRAFT' => 'Entwurf',
+	'PLL_IN_REALIZATION' => 'In Berarbeitung',
+	'PLL_WAITING_FOR_QUOTATION' => 'Warten auf Angebot',
+	'PLL_WAITING_FOR_ACCEPTANCE' => 'Warten auf Annahme',
+	'PLL_ACCEPTED' => 'Angenommen',
+	'PLL_REQUIRES_AMENDMENTS' => 'benötigt Anpassungen',
 	'PLL_DIFFICULT_REALIZATION' => 'Schwierige Umsetzung',
 	'PLL_DIFFICULT_ORDER' => 'Schwierige Bestellung',
 	'PLL_DIFFICULT_SHIPMENT' => 'Schwierige Lieferung',
@@ -74,4 +71,3 @@ $languageStrings = [
 	'Conversion Rate' => 'Umrechnungskurs',
 	'Currency' => 'Währung',
 ];
-

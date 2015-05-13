@@ -14,7 +14,7 @@ $languageStrings = [
 	'Existing Business'=>'Wznowiona sprzedaż',
 	'Forecast Amount' => 'Szacowana wartość',
 	'Forecast' => 'Prognoza sprzedaży',
-	'Funnel' => 'Lejek sprzedaży',
+	'Funnel' => 'Szanse wg etapu',
 	'LBL_ADD_RECORD' => 'Dodaj rekord',
 	'LBL_EXPECTED_CLOSE_DATE_ON' => 'Biznes zamykany',
 	'LBL_OPPORTUNITY_INFORMATION' => 'Szczegóły podstawowe',
@@ -82,4 +82,5 @@ $languageStrings = [
 	'Potential Name' => 'Nazwa',
 	'LBL_FINANSIAL_SUMMARY' => 'Podsumowanie finansowe',
 	'Average profit sales order' => 'Średnia marża',
+	'PotentialsList'=>'Szanse sprzedaży',
 ];

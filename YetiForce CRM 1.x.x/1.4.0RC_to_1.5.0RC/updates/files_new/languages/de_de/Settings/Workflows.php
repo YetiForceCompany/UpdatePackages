@@ -123,7 +123,10 @@ $languageStrings = [
 	'LBL_ALL_TASKS' => 'Alle Aufgaben',
 	'LBL_ACTIVE_TASKS' => 'Aktive Aufgaben',
 	'LBL_DO_NOT_DUPLICATE_RECORDS' => 'Kein Datensätze dublizieren',
-	'LBL_DUPLICATE_STATUS' => 'Do not duplicate if status veries',
+	'LBL_DUPLICATE_STATUS' => 'Nicht Duplizieren wenn der Status variiert',
+	'LBL_VALUE_OF_FIELDS' => 'Wert vom Feld',
+	'LBL_VALUE_OF_SERVER' => 'Wert vom Server',
+	'LBL_WORKFLOWS_RUN_TIME' => 'Workflow Laufzeit und Datum',
 	
 	//workflow task
 	'EmailTempleteList' => ' Wählen Sie eine E-Mail-Vorlage zum versenden',

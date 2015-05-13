@@ -30,12 +30,10 @@ $languageStrings = [
 	'Notes' => 'Notas',
 
 	/*picklist values*/
-	'In Service'=>'Em Serviço',
-	'Out-of-service'=>'Fora Serviço',
 	'Draft'=>'Projeto',
-	'Realization proceeding'=>'Em execução',
-	'Warranty proceeding'=>'Garantia',
-	'Delivered to Organization'=>'Entregue',
+	'Realization proceeding'=>'Suporte Garantia',
+	'Warranty proceeding'=>'Suporte Pos-garantia',
+	'Delivered to Organization'=>'Sem Suporte',
 
 	//YetiForce
 	'description'=>'Descrição',
@@ -46,4 +44,5 @@ $languageStrings = [
 	'Potential renewal'=>'Renovação Oportunidade',
 	'LBL_GENERATE_EXTENSION' => 'Gerar extensão',
 	'LBL_ORDER_TIME'=>'Hora Pedido',
+	'LBL_EXPIRING_SOLD_PRODUCTS' => 'Produtos vendidos expirando',
 ];

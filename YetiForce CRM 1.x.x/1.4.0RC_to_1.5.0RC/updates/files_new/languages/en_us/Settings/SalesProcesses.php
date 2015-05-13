@@ -14,4 +14,12 @@ $languageStrings = [
 	'LBL_LIMIT_PRODUCT_AND_SERVICE' => 'Allows to choose from products list only those that are related to chosen oportunity. Provided for: Calculations, Quotes, Sales Orders and Invoices.',
 	'LBL_PRODUCTS_AND_SERVICES_POPUP' => 'Products and Services selection list',
 	'LBL_UPDATE_SHARED_PERMISSIONS' => 'Updates sharing permissions from product/service in opportunity when relation between opportunity and product/service is created.',
+	'LBL_CALCULATIONS' => 'Calculations',
+	'LBL_STATUSES_CLOSED_CALCULATION' => 'Statuses determining that calculation is closed',
+	'LBL_POTENTIALS' => 'Opportunities',
+	'LBL_STATUSES_CLOSED_POTENTIAL' => 'Statuses determining that opportunity is closed',
+	'LBL_ASSETS' => 'Sold products',
+	'LBL_STATUSES_CLOSED_ASSETS' => 'Statuses determining that sold product is closed',
+	'LBL_CREATE_POTENTIALS' => 'Blocked the creation of Opportunities for Accounts/Organizations in which Assigned To is not a user',
 ];
+

@@ -36,6 +36,13 @@ $languageStrings = [
 	'Friday'																=> 'Friday',
 	'Saturday'																=> 'Saturday',
 	'Sunday'																=> 'Sunday',
+	'LBL_HOLIDAY_TYPE' => 'Holiday type',
+	'LBL_NATIONAL' => 'national',
+	'LBL_ECCLESIASTICAL' => 'ecclesiastical',
+	'ecclesiastical' => 'ecclesiastical',
+	'national' => 'national',
+	
+	'LBL_VIEW_CONFIGURATION' => 'Public Holidays',
 ];
 $jsLanguageStrings = [
 	'JS_FILL_FORM_ERROR'													=> 'You must fill all fields in the form',

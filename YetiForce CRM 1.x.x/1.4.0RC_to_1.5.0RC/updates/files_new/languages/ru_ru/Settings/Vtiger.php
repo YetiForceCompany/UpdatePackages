@@ -279,7 +279,7 @@ $languageStrings = [
 	'LBL_MAIL_GENERAL_CONFIGURATION' => 'Общие настройки почты',
 	'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION' => 'Настройка конфигурации почты в системе',
 	'LBL_SUPPORT_PROCESSES' => 'Процесс поддержки',
-	'LBL_SUPPORT_PROCESSES_DESCRIPTION' => '',
+	'LBL_SUPPORT_PROCESSES_DESCRIPTION' => 'Manage support processes',
 	'LBL_REALIZATION_PROCESSES' => 'Процесс реализации',
 	'LBL_REALIZATION_PROCESSES_DESCRIPTION' => ' Настройка процесса реализации',
 	'LBL_FINANCIAL_PROCESSES' => 'Финансовый процесс',
@@ -292,6 +292,7 @@ $languageStrings = [
 	'LBL_MENU_BUILDER_DESCRIPTION' => ' Настройка меню',
 	'LBL_AUTHORIZATION' => 'Авторизация',
 	'LBL_AUTHORIZATION_DESCRIPTION' => ' Настройка метода авторизации',
+	'LBL_BACKUP_DESCRIPTION'	=>	'Создание резервных копий системы',
 	
 	/* Role */
 	'Board of Management'	=> 'Управляющий',
@@ -315,6 +316,15 @@ $languageStrings = [
 	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Настройка процессов продаж',
 	'INVENTORYTERMSANDCONDITIONS' => 'Сроки и условия',
 	'LBL_SAVE_CONFIG' => 'Изменения успешно сохранены',
+	
+	'LBL_VIEW_LICENSE' => 'License',
+	'LBL_VIEW_CONFIGEDITORDETAIL' => 'Configuration Editor',
+	'LBL_VIEW_TAXINDEX' => 'Tax Calculations',
+	'LBL_VIEW_CUSTOMRECORDNUMBERING' => 'Customize Record Numbering',
+	'LBL_VIEW_TERMSANDCONDITIONSEDIT' => 'Terms and Conditions',
+	'LBL_VIEW_COMPANYDETAILS' => 'Company Details',
+	'LBL_VIEW_ANNOUNCEMENTEDIT' => 'Announcements',
+	'LBL_VIEW_OUTGOINGSERVERDETAIL' => 'Outgoing Server',
 ];
 
 $jsLanguageStrings = [

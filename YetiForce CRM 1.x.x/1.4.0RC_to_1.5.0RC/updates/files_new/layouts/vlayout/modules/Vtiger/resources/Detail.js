@@ -1226,14 +1226,6 @@ jQuery.Class("Vtiger_Detail_Js",{
 				taskGoToFullFormButton.data('editViewUrl', taskFullFormUrl);
 				eventsGoToFullFormButton.data('editViewUrl', eventsFullFormUrl);
 
-				/*
-				 thisInstance.getPlannedEvents();
-				 jQuery('[name="date_start"]').on('change', function() {
-				 thisInstance.getPlannedEventsClearTable();
-				 thisInstance.getPlannedEvents();
-				 });
-				 jQuery('.modal-body').css({'max-height' : '500px', 'overflow-y': 'auto'});
-				 */
 			}
 
 			var callbackFunction = function () {
@@ -1264,19 +1256,6 @@ jQuery.Class("Vtiger_Detail_Js",{
 			Vtiger_Header_Js.getInstance().quickCreateModule(referenceModuleName, QuickCreateParams);
 		});
 	},
-    getPlannedEventsClearTable: function() {
-        jQuery('#cur_events .table tr').next().remove();
-        jQuery('#prev_events .table tr').next().remove();
-        jQuery('#next_events  .table tr').next().remove();
-    },
-    getPlannedEvents: function() {
-        this.getSingleEventType('0', 'cur_events', 'MultipleEvents');
-        this.getSingleEventType('0', 'cur_events', 'Calendar');
-        this.getSingleEventType('-1', 'prev_events', 'MultipleEvents');
-        this.getSingleEventType('-1', 'prev_events', 'Calendar');
-        this.getSingleEventType('+1', 'next_events', 'MultipleEvents');
-        this.getSingleEventType('+1', 'next_events', 'Calendar');
-    },
 
     getEndDate: function(startDate) {
         var dateTab = startDate.split('-');
@@ -1411,7 +1390,7 @@ jQuery.Class("Vtiger_Detail_Js",{
 	
 	registerChangeSwitchForWidget : function(){
 		var thisInstance = this;
-		$('.widget_header .switchBtn').on('switchChange.bootstrapSwitch', function(e, state) {
+		$('.activityWidgetContainer .switchBtn').on('switchChange.bootstrapSwitch', function(e, state) {
 			var currentElement = jQuery(e.currentTarget);
 			var summaryWidgetContainer = currentElement.closest('.summaryWidgetContainer');
 			var widget = summaryWidgetContainer.find('.widgetContentBlock');
@@ -1422,6 +1401,36 @@ jQuery.Class("Vtiger_Detail_Js",{
 				url += 'current';
 			else
 				url += 'history';
+			widget.data('url',url);
+			thisInstance.loadWidget($(widget));
+		});
+		$('.calculationsWidgetContainer .calculationsSwitch').on('switchChange.bootstrapSwitch', function(e, state) {
+			var currentElement = jQuery(e.currentTarget);
+			var summaryWidgetContainer = currentElement.closest('.summaryWidgetContainer');
+			var widget = summaryWidgetContainer.find('.widgetContentBlock');
+			var url = widget.data('url');
+			url = url.replace('&showtype=open', '');
+			url = url.replace('&showtype=archive', '');
+			url += '&showtype=';
+			if(state)
+				url += 'open';
+			else
+				url += 'archive';
+			widget.data('url',url);
+			thisInstance.loadWidget($(widget));
+		});
+		$('.potentialsWidgetContainer .potentialsSwitch').on('switchChange.bootstrapSwitch', function(e, state) {
+			var currentElement = jQuery(e.currentTarget);
+			var summaryWidgetContainer = currentElement.closest('.summaryWidgetContainer');
+			var widget = summaryWidgetContainer.find('.widgetContentBlock');
+			var url = widget.data('url');
+			url = url.replace('&showtype=open', '');
+			url = url.replace('&showtype=archive', '');
+			url += '&showtype=';
+			if(state)
+				url += 'open';
+			else
+				url += 'archive';
 			widget.data('url',url);
 			thisInstance.loadWidget($(widget));
 		});
@@ -1525,7 +1534,6 @@ jQuery.Class("Vtiger_Detail_Js",{
 						Vtiger_Helper_Js.addClickOutSideEvent(currentDiv, callbackFunction);   
 					return;   
 					}
-					currentDiv.progressIndicator();
 					editElement.addClass('hide');
 					var params = {
 						action : 'SaveAjax',
@@ -1538,7 +1546,6 @@ jQuery.Class("Vtiger_Detail_Js",{
 
 					AppConnector.request(params).then(
 						function(data) {
-							currentDiv.progressIndicator({'mode':'hide'});
 							detailViewElement.removeClass('hide');
 							currentTarget.show();
 							detailViewElement.html(ajaxEditNewLable);
@@ -2305,6 +2312,29 @@ jQuery.Class("Vtiger_Detail_Js",{
 			}
 		);
 	},
+	
+	registerRelatedModulesRecordCount : function(){
+		var thisInstance = new Vtiger_Detail_Js();
+		$('.related .nav li').each(function (n, item) {
+			var url = $(item).data('url');
+			if ($(item).hasClass('relatedNav') && $(item).data('count') == '1') {
+				var params = {
+					'module' : app.getModuleName(),
+					'action' : 'RelationAjax',
+					'record' : thisInstance.getRecordId(),
+					'relatedModule' : $(item).data('reference'),
+					'mode' : 'getRelatedListPageCount',
+				}
+				AppConnector.request(params).then(function (response) {
+					if (response.success) {
+						$(item).find('.count').text("(" + response.result.numberOfRecords + ")");
+					}
+				});
+
+			}
+		});
+	},	
+	
 	registerEvents : function(){
 		var thisInstance = this;
 		//thisInstance.triggerDisplayTypeEvent();
@@ -2591,11 +2621,13 @@ jQuery.Class("Vtiger_Detail_Js",{
 		});
 
 		thisInstance.getForm().validationEngine(app.validationEngineOptions);
-
 		thisInstance.loadWidgets();
 
 		app.registerEventForTextAreaFields(jQuery('.commentcontent'));
 		this.registerEventForTotalRecordsCount();
 		this.registerGetAllTagCloudWidgetLoad();
+		this.registerRelatedModulesRecordCount();
+		var header = Vtiger_Header_Js.getInstance();
+		header.registerQuickCreateCallBack(this.registerRelatedModulesRecordCount);
 	}
 });

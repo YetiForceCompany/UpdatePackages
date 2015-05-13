@@ -612,7 +612,7 @@ $languageStrings = [
 	'Total' => 'Netto',
 	'Trade Show' => 'Targi / Szkolenia',
 	'Type' => 'Rodzaj',
-	'Upcoming Activities' => 'Kalendarz - oczekujące',
+	'Upcoming Activities' => 'Sprawy bierzące',
 	'Activity History' => 'Kalendarz - wykonane',
 	'Delagated Events/To Dos' => 'Zlecone terminy/zadania',
 	'Delegated (overdue) Events/ToDos' => 'Zlecone (nieterminowe) terminy/zadania',
@@ -766,6 +766,7 @@ $languageStrings = [
 	'Other'=>'Pozostałe',
 	'Generate default PDF'=>'Generuj PDF',
 	'LBL_LEFT_PANEL_SHOW_HIDE'=>'Lewy panel (ukryj/pokaż)', 
+	'LBL_RIGHT_PANEL_SHOW_HIDE'=>'Prawy panel (ukryj/pokaż)', 
 	/* YetiForce */
 	'COPY_ADRESS_FROM'=>'Kopiuj adres z:',  
 	'LBL_WIDGETS_MANAGMENT'=>'Widgety',
@@ -906,6 +907,10 @@ $languageStrings = [
 	'PLL_BREAK_TIME' => 'Przerwa w pracy',
 	'PLL_WORKING_TIME' => 'Czas pracy',
 	'PLL_HOLIDAY_TIME' => 'Urlop',
+	'LBL_OWNER' => 'Moje',
+	'LBL_COMMON' => 'Wspólne',
+	'LBL_OPEN' => 'Otwate',
+	'LBL_ARCHIVE' => 'Archiwum',
 	
 	//Gantt
 	'LBL_FILTERING' => 'Filtr',
@@ -1083,6 +1088,7 @@ $jsLanguageStrings = [
 	'JS_NAME'=>'Nazwa',
 	'JS_PRIORITY'=>'Priorytet',
 	'JS_PROGRESS' => 'Postęp',
+	'JS_ALL_DAY' => 'Całodniowe',
 	'JS_APR' => 'Kwi',
 	'JS_APRIL' => 'Kwiecień',
 	'JS_AUG' => 'Sie',

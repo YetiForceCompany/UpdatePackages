@@ -145,6 +145,14 @@ class YetiForceUpdate{
 		'libraries/Smarty/',
 		'modules/Potentials/actions/SaveAjax.php',
 		'modules/Potentials/actions/Save.php',
+		'libraries/jquery/rochal-jQuery-slimScroll/slimScroll.js',
+		'libraries/jquery/rochal-jQuery-slimScroll/slimScroll.min.js',
+		'modules/OSSMail/roundcube/plugins/yt_new_user/yt_new_user.php',
+		'modules/OSSMail/roundcube/plugins/yt_signature',
+		'modules/OSSMail/roundcube/plugins/yt_user',
+		'modules/OSSMail/roundcube/plugins/yt_attachments',
+		'layouts/vlayout/modules/Calendar/UsersList.tpl',
+		'modules/Calendar/views/UsersList.php',
 	);
 
 	function YetiForceUpdate($modulenode) {
@@ -316,6 +324,34 @@ class YetiForceUpdate{
 		if($adb->num_rows($result) == 0){
 			$adb->query("ALTER TABLE `vtiger_groups` ADD COLUMN `modules` varchar(255) NULL after `color`;");
 		}
+		
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossmailview` LIKE 'date';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_ossmailview` ADD COLUMN `date` datetime  NULL after `rel_mod`;");
+			$adb->query("ALTER TABLE `vtiger_ossmailview` CHANGE `type` `type` tinyint(1) NULL after `rc_user`;");
+			
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_ossmailview_relation` (
+				  `ossmailviewid` int(19) NOT NULL,
+				  `crmid` int(19) NOT NULL,
+				  `date` datetime DEFAULT NULL,
+				  `deleted` tinyint(1) DEFAULT '0',
+				  KEY `ossmailviewid` (`ossmailviewid`),
+				  KEY `crmid` (`crmid`,`deleted`),
+				  CONSTRAINT `vtiger_ossmailview_relation_ibfk_1` FOREIGN KEY (`ossmailviewid`) REFERENCES `vtiger_ossmailview` (`ossmailviewid`) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_backup_users` (
+				  `id` int(11) DEFAULT NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");		
+		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_backup_settings` (
+					  `type` varchar(100) DEFAULT NULL,
+					  `param` varchar(100) DEFAULT NULL,
+					  `value` varchar(255) DEFAULT NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8;;");		
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossmailview` LIKE 'date';");
+				
+				
+				
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
 	function settingsReplace() {
@@ -343,6 +379,8 @@ class YetiForceUpdate{
 		}
 		$adb->pquery('UPDATE `vtiger_settings_field_seq` SET id = ?;', array(self::countRow('vtiger_settings_field', 'fieldid')));
 
+		
+		
 		$log->debug("Exiting YetiForceUpdate::settingsReplace() method ...");
 	}
 	function specialScripta() {
@@ -768,6 +806,15 @@ class YetiForceUpdate{
 			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','limit_product_service','false');");
 			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('popup','update_shared_permissions','false');");
 		}
+		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_sales` WHERE type = ? AND param = ?;", ['calculation','calculationsstatus']);
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('calculation','calculationsstatus','');");
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('potential','salesstage','');");
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('asset','assetstatus','');");
+			$adb->query("insert  into `yetiforce_proc_sales`(`type`,`param`,`value`) values ('potential','add_potential','false');");
+		}
+		
+		
 		$adb->pquery('UPDATE `vtiger_settings_field` SET linkto = ? WHERE name = ?;', ['index.php?module=SalesProcesses&view=Index&parent=Settings','LBL_SALES_PROCESSES']);
 		$result = $adb->pquery("SELECT * FROM `vtiger_eventhandlers` WHERE event_name = ? AND handler_class = ?;", ['vtiger.entity.link.after','Vtiger_SharingPrivileges_Handler']);
 		if($adb->num_rows($result) == 0){
@@ -996,6 +1043,85 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [14,'vtiger_ossemployees','ship_state',getTabid('OSSEmployees')]);
 		$adb->pquery('UPDATE vtiger_field SET quickcreatesequence = ? WHERE tablename = ? AND columnname = ? AND tabid = ? ;', [7,'vtiger_ossemployees','ship_country',getTabid('OSSEmployees')]);
 		
+		
+		$adb->pquery('UPDATE vtiger_field SET defaultvalue = ? WHERE tablename = ? AND columnname = ?;', ['PLL_WAITING_FOR_VERIFICATION','vtiger_calculations','calculationsstatus']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','name']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','relatedid']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','potentialid']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','requirementcardsid']);
+		$adb->pquery('UPDATE vtiger_field SET summaryfield = ? WHERE tablename = ? AND columnname = ?;', ['1','vtiger_calculations','quotesenquiresid']);
+		
+		
+		$widgets[] = array(53,'Calculations','Summary',NULL,1,0,NULL,'[]');
+		$widgets[] = array(54,'Calculations','RelatedModule','',2,1,NULL,'{"limit":"5","relatedmodule":"8","columns":"3","action":"1","filter":"-"}');		
+		foreach($widgets as $widget){
+			if(self::checkModuleExists($widget[1])){
+				$result = $adb->pquery('SELECT * FROM vtiger_widgets WHERE tabid = ? AND `type` = ? AND `label` = ?', array(getTabid($widget[1]),$widget[2], $widget[3]));
+				if(!$adb->num_rows($result)) {
+					$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
+					$adb->pquery($sql, array( getTabid($widget[1]), $widget[2], $widget[3], $widget[4], $widget[5], $widget[6], $widget[7]));
+				}
+			}
+		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linktype = ? AND linklabel = ? AND tabid = ? ;", ['DASHBOARDWIDGET','Calculations',getTabid('Home')]);
+		if($adb->num_rows($result) == 0){
+			$instanceModule = Vtiger_Module::getInstance('Home');
+			$instanceModule->addLink('DASHBOARDWIDGET', 'Calculations', 'index.php?module=Calculations&view=ShowWidget&name=Calculations');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linktype = ? AND linklabel = ? AND tabid = ? ;", ['DASHBOARDWIDGET','PotentialsList',getTabid('Home')]);
+		if($adb->num_rows($result) == 0){
+			$instanceModule = Vtiger_Module::getInstance('Home');
+			$instanceModule->addLink('DASHBOARDWIDGET', 'PotentialsList', 'index.php?module=Potentials&view=ShowWidget&name=PotentialsList');
+		}
+		
+		// copy values from_portal in HelpDesk
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_troubletickets` LIKE 'from_portal';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_troubletickets` ADD COLUMN `from_portal` varchar(3) NULL after `ordertime` ;");
+			$adb->query('UPDATE vtiger_troubletickets LEFT JOIN vtiger_ticketcf ON vtiger_troubletickets.ticketid = vtiger_ticketcf.ticketid SET vtiger_troubletickets.from_portal=vtiger_ticketcf.from_portal;');			
+			$adb->pquery('UPDATE `vtiger_field` SET tablename=? WHERE tablename = ? AND columnname = ? AND tabid = ?;', ['vtiger_troubletickets','vtiger_ticketcf','from_portal',getTabid('HelpDesk')]);
+			$adb->pquery('alter table vtiger_ticketcf drop column from_portal');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` = ? ;", ['info','notworkingdays']);
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('info','notworkingdays ','LBL_NOTWORKING_DAYS',NULL);");
+		}
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linklabel = ? ", array('LBL_SHOW_ACCOUNT_HIERARCHY'));
+		if($adb->num_rows($result) > 0){
+			$mods = Vtiger_Module::getInstance( "Accounts" );
+            $mods->deleteLink('DETAILVIEWBASIC', 'LBL_SHOW_ACCOUNT_HIERARCHY', 'index.php?module=Accounts&action=AccountHierarchy&accountid=$RECORD$');
+			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = ? WHERE `linklabel`= ? ;", array('icon-file', 'LBL_ADD_NOTE'));
+			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = 'icon-file'  WHERE `linklabel` = ?;", array('Add Note'));
+			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = 'icon-tasks' WHERE `linklabel` = ?;", array('Add Project Task'));
+			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = 'icon-user' WHERE `linklabel` = ?;", array('LBL_SHOW_EMPLOYEES_HIERARCHY'));
+		}
+		$result = $adb->query("SELECT * FROM `vtiger_backup_settings`;");
+		if($adb->num_rows($result) == 0){
+			$adb->query("insert  into `vtiger_backup_settings`(`type`,`param`,`value`) values ('folder','storage_folder','false');");
+			$adb->query("insert  into `vtiger_backup_settings`(`type`,`param`,`value`) values ('folder','storage_folder','false');");
+		}
+		
+		// change related list
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Accounts'),'change'=>array('name'=>'get_accounts_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Contacts'),'change'=>array('name'=>'get_contacts_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Leads'),'change'=>array('name'=>'get_leads_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Potentials'),'change'=>array('name'=>'get_potentials_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('HelpDesk'),'change'=>array('name'=>'get_helpdesk_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Project'),'change'=>array('name'=>'get_project_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('ServiceContracts'),'change'=>array('name'=>'get_servicecontracts_mail'));
+		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Campaigns'),'change'=>array('name'=>'get_campaigns_mail'));
+
+		foreach($update as $presents){
+			$sql = 'UPDATE `vtiger_relatedlists` SET ';
+			foreach($presents['change'] as $column=>$value){
+				$sql .= $column.' = ? ';
+				$sql .= 'WHERE `tabid` = ? AND `related_tabid` = ? ;';
+				$adb->pquery($sql, array($value,$presents['tabid'],$presents['related_tabid']), true);
+			}
+		}
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -1050,11 +1176,15 @@ class YetiForceUpdate{
 			$adb->query('DROP TABLE vtiger_seactivityrel;');
 			$adb->query('DROP TABLE vtiger_seactivityrel_seq;');
 		}
+		
+		
+		
+		
 		$log->debug("Exiting YetiForceUpdate::changeCalendarRelationships() method ...");
 	}
 	
 	public function roundcubeConfig(){
-		global $log, $adb, $root_directory;
+		global $log, $adb, $root_directory, $site_URL;
 		$log->debug("Entering YetiForceUpdate::roundcubeConfig() method ...");
 		if (!$root_directory)
 			$root_directory = getcwd();
@@ -1063,13 +1193,7 @@ class YetiForceUpdate{
 		$configContent = file($fileName);
 		foreach($configContent as $key => $line){
 			if(	strpos($line, '$config[\'plugins\']') !== FALSE){
-				if (strpos($line, 'yt_new_user') === FALSE) {
-					$configContent[$key] = str_replace(");", ",'yt_new_user');", $configContent[$key]);
-				}if (strpos($line, 'yt_signature') === FALSE) {
-					$configContent[$key] = str_replace(");", ",'yt_signature');", $configContent[$key]);
-				}if (strpos($line, 'yt_user') === FALSE) {
-					$configContent[$key] = str_replace(");", ",'yt_user');", $configContent[$key]);
-				}
+				$configContent[$key] = "\$config['plugins'] = array('autologon','identity_smtp','ical_attachments','yetiforce')\n;";
 			}
 			if (strpos($line, '$GEBUG_CONFIG') !== FALSE) {
 				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
@@ -1080,6 +1204,23 @@ class YetiForceUpdate{
 		}
 		if(strpos(file_get_contents( $fileName ),'devel_mode') === FALSE){
 			$configContent[] = "\n\$config['devel_mode'] = \$DEBUG_CONFIG['ROUNDCUBE_DEVEL_MODE'];";
+		}
+		if(strpos(file_get_contents( $fileName ),'imap_conn_options') === FALSE){
+			$configContent[] = "\n\$config['imap_conn_options'] = [
+	'ssl' => [
+		'verify_peer'       => false,
+		'verfify_peer_name' => false,
+	],
+];
+\$config['smtp_timeout'] = 5;
+\$config['smtp_conn_options'] = [
+	'ssl' => [
+		'verify_peer'       => false,
+		'verfify_peer_name' => false,
+	],
+];
+\$config['root_directory'] = $root_directory;
+\$config['site_URL'] = $site_URL;";
 		}
 		$content = implode("", $configContent);
 		$file = fopen($fileName,"w+");
@@ -1093,6 +1234,8 @@ class YetiForceUpdate{
 		$addPicklists = [];
 		$addPicklists['ProjectMilestone'][] = array('name'=>'projectmilestonetype','uitype'=>'15','add_values'=>array('PLL_INTERNAL','PLL_EXTERNAL','PLL_SHARED'),'remove_values'=>array('administrative','operative','other'));
 		$addPicklists['LettersOut'][] = array('name'=>'lout_status','uitype'=>'16','add_values'=>array('PLL_NEW','PLL_SETTLED'),'remove_values'=>array('PLL_A','PLL_B'));
+		$addPicklists['Assets'][] = array('name'=>'assetstatus','uitype'=>'15','add_values'=>array('PLL_DRAFT','PLL_WARRANTY_SUPPORT','PLL_POST_WARRANTY_SUPPORT','PLL_NO_SUPPORT'),'remove_values'=>array('Draft','Realization proceeding','Warranty proceeding','Delivered to Organization'));
+		$addPicklists['Calculations'][] = array('name'=>'calculationsstatus','uitype'=>'15','add_values'=>array('PLL_DRAFT','PLL_IN_REALIZATION','PLL_WAITING_FOR_QUOTATION','PLL_WAITING_FOR_ACCEPTANCE','PLL_ACCEPTED','PLL_REQUIRES_AMENDMENTS'),'remove_values'=>array('PLL_WAITING_FOR_VERIFICATION','PLL_VERIFICATION_PROCESS','PLL_INTERNAL_CONSULTATION_REQUIRED','PLL_EXTERNAL_CONSULTATION_REQUIRED','PLL_WAITING_FOR_VENDORS_QUOTE','PLL_WAITING_FOR_CUSTOMERS_REPLY','PLL_IN_PREPARATION','LBL_DECLINED','LBL_ACCEPTED'));
 		
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array();
@@ -1135,6 +1278,19 @@ class YetiForceUpdate{
 					}if($piscklist['name'] == 'PLL_B' && $moduleName == 'LettersOut'){
 						$adb->pquery("UPDATE `vtiger_lettersout` SET `lout_status` = ? WHERE `lout_status` = ? ;", array($piscklist['name'], 'PLL_SETTLED'));
 					}*/
+					if($piscklist['name'] == 'Draft' && $moduleName == 'Assets'){
+						$adb->pquery("UPDATE `vtiger_assets` SET `assetstatus` = ? WHERE `assetstatus` = ? ;", array($piscklist['name'], 'PLL_DRAFT'));
+					}
+					// replace ?
+					/*
+					if($piscklist['name'] == 'Realization proceeding' && $moduleName == 'Assets'){
+						$adb->pquery("UPDATE `vtiger_assets` SET `assetstatus` = ? WHERE `assetstatus` = ? ;", array($piscklist['name'], 'PLL_WARRANTY_SUPPORT'));
+					}if($piscklist['name'] == 'Warranty proceeding' && $moduleName == 'Assets'){
+						$adb->pquery("UPDATE `vtiger_assets` SET `assetstatus` = ? WHERE `assetstatus` = ? ;", array($piscklist['name'], 'PLL_POST_WARRANTY_SUPPORT'));
+					}if($piscklist['name'] == 'Delivered to Organization' && $moduleName == 'Assets'){
+						$adb->pquery("UPDATE `vtiger_assets` SET `assetstatus` = ? WHERE `assetstatus` = ? ;", array($piscklist['name'], 'PLL_NO_SUPPORT'));
+					}
+					*/
 				}
 			}
 		}
@@ -1178,7 +1334,11 @@ class YetiForceUpdate{
 		$Contacts = array(
 		array('4','1744','jobtitle','vtiger_contactdetails','1','1','jobtitle','Job title','1','2','','100','31','4','1','V~O','1',NULL,'BAS','1','','0','',"varchar(100)","LBL_CONTACT_INFORMATION",array(),array())
 		);
-		$setToCRM = array('OSSMailTemplates'=>$OSSMailTemplates,'Users'=>$Users,'ProjectMilestone'=>$ProjectMilestone,'ProjectTask'=>$ProjectTask,'Contacts'=>$Contacts);
+		$OSSMailView = array(
+		array('54','1745','date','vtiger_ossmailview','1','70','date','Date of receipt','1','2','','100','24','134','2','DT~O','1',NULL,'BAS','1','','0','',"datetime","LBL_INFORMATION",array(),array())
+		);
+		
+		$setToCRM = array('OSSMailTemplates'=>$OSSMailTemplates,'Users'=>$Users,'ProjectMilestone'=>$ProjectMilestone,'ProjectTask'=>$ProjectTask,'Contacts'=>$Contacts,'OSSMailView'=>$OSSMailView);
 
 		$setToCRMAfter = array();
 		foreach($setToCRM as $nameModule=>$module){
@@ -1368,24 +1528,40 @@ class YetiForceUpdate{
 		$file = fopen($config,"w+");
 		fwrite($file,$content);
 		fclose($file);
-		if(strpos(file_get_contents( $config ),'lifetime of session') !== FALSE){
-				return;
-			}
-		$configC = "
+		if(strpos(file_get_contents( $config ),'lifetime of session') === FALSE){
+			$configC = "
+			
 // lifetime of session
 ini_set('session.gc_maxlifetime','1800'); //30 min
 ";
-		file_put_contents( $config, $configC, FILE_APPEND );
-		
-		if(strpos(file_get_contents( $config ),'forceSSL') !== FALSE){
-			return;
+			file_put_contents( $config, $configC, FILE_APPEND );
 		}
-		$configC = "
+		
+		
+		if(strpos(file_get_contents( $config ),'forceSSL') === FALSE){
+			$configC = "
 // Force site access to always occur under SSL (https) for selected areas. You will not be able to access selected areas under non-ssl. Note, you must have SSL enabled on your server to utilise this option.
 \$forceSSL = FALSE;
 ";
-		file_put_contents( $config, $configC, FILE_APPEND );
-		
+			file_put_contents( $config, $configC, FILE_APPEND );
+		}
+		if(strpos(file_get_contents( $config ),'forceSSL') === FALSE){
+			$configC = "
+// Force site access to always occur under SSL (https) for selected areas. You will not be able to access selected areas under non-ssl. Note, you must have SSL enabled on your server to utilise this option.
+\$forceSSL = FALSE;
+";
+			file_put_contents( $config, $configC, FILE_APPEND );
+		}
+		if(strpos(file_get_contents( $config ),'showRecordsCount') === FALSE){
+			$configC = "
+// show record count in tabs related modules
+\$showRecordsCount = TRUE;
+
+// Maximum number of records in a mass edition
+\$listMaxEntriesMassEdit = 500;
+";
+			file_put_contents( $config, $configC, FILE_APPEND );
+		}
 	}
 	public function checkModuleExists($moduleName){
 		global $log;

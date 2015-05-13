@@ -812,6 +812,7 @@ $languageStrings = [
 	'Media'=>'Media',
     'COPY_ADRESS_FROM'=>'Copy address from:', 
     'LBL_LEFT_PANEL_SHOW_HIDE'=>'Left Panel Show/Hide', 
+	'LBL_RIGHT_PANEL_SHOW_HIDE'=>'Right Panel Show/Hide', 
 	/* modules */
     'OSSCosts' => 'Costs',
 	'Key Metrics' => 'Key Metrics',
@@ -894,6 +895,10 @@ $languageStrings = [
 	'PLL_HOLIDAY_TIME' => 'Holiday',
 	'PLL_BREAK_TIME' => 'Break from work',
 	'PLL_WORKING_TIME' => 'Working time',
+	'LBL_OWNER' => 'Mine',
+	'LBL_COMMON' => 'Shared',
+	'LBL_OPEN' => 'Open',
+	'LBL_ARCHIVE' => 'Archive',
 	
 	//Gantt
 	'LBL_FILTERING' => 'Filtering',

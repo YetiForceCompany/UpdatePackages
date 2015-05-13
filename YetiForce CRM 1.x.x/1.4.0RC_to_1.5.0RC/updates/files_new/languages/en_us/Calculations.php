@@ -27,7 +27,7 @@ $languageStrings = [
 	
 	//Field Labels
     'Title' => 'Title',
-	'Number' => 'Nr',
+	'Number' => 'No.',
 	'Related to' => 'Organization',
 	'Potential' => 'Opportunity',
 	'Comments' => 'Comments',
@@ -48,15 +48,12 @@ $languageStrings = [
 	'LBL_PROS' => 'Advantages',
 	
 	//pick list values
-	'PLL_WAITING_FOR_VERIFICATION' => 'Waiting for verification',
-	'PLL_VERIFICATION_PROCESS' => 'Verification process',
-	'PLL_INTERNAL_CONSULTATION_REQUIRED' => 'Internal consultation required',
-	'PLL_EXTERNAL_CONSULTATION_REQUIRED' => 'External consultation required',
-	'PLL_WAITING_FOR_VENDORS_QUOTE' => 'Waiting for vendor\'s quote',
-	'PLL_WAITING_FOR_CUSTOMERS_REPLY' => 'Waiting for customer\'s reply',
-	'PLL_IN_PREPARATION' => 'In preparation',
-	'LBL_DECLINED' => 'Declined',
-	'LBL_ACCEPTED' => 'Accepted',
+	'PLL_DRAFT' => 'Draft',
+	'PLL_IN_REALIZATION' => 'In realization',
+	'PLL_WAITING_FOR_QUOTATION' => 'Waiting for quotation',
+	'PLL_WAITING_FOR_ACCEPTANCE' => 'Waiting for acceptance',
+	'PLL_ACCEPTED' => 'Accepted',
+	'PLL_REQUIRES_AMENDMENTS' => 'Requires amendments',
 	'PLL_DIFFICULT_REALIZATION' => 'Difficult realization',
 	'PLL_DIFFICULT_ORDER' => 'Difficult order',
 	'PLL_DIFFICULT_SHIPMENT' => 'Difficult shipment',
