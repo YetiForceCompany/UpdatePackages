@@ -468,6 +468,7 @@ $languageStrings = [
 	'LBL_PRIVACY_POLICY' => 'Datenschutz-Bestimmungen',
 	'LBL_PROFILE_PASSWORD' => 'Profil / Passwort',
 	'LBL_QTY' => 'Menge',
+	'LBL_UNIT' => 'Unit',
 	'LBL_QTY_IN_STOCK' => 'Bestand',
 	'LBL_QUICK_CREATE' => 'Schnellerfassung', //Löschen
 	'LBL_READ_LICENSE' => 'Lizenz lesen',
@@ -776,6 +777,9 @@ $languageStrings = [
 	'HolidaysEntitlement' => 'Urlaubsanspruch',
 	'Calculations' => 'Kalkulationen',
 	'LBL_SEARCH_IN_SUBCATEGORIES' => 'Suche in Unterkategorien',
+	'LBL_SEARCH_MODULE' => 'Durchsuche Modul',
+	'LBL_SELECT_SINGLE_ROW' => 'Wählen Sie eine einzelne Zeile',
+	'LBL_CUSTOM_FILTER' => 'eigener Filter',
 
 	/* industry */
 	'Administration'=>'Verwaltung',

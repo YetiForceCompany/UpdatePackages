@@ -454,6 +454,7 @@ $languageStrings = [
 	'LBL_PRIVACY_POLICY' => 'Privacy Policy',
 	'LBL_PROFILE_PASSWORD' => 'Profile / Password',
 	'LBL_QTY' => 'Quantity',
+	'LBL_UNIT' => 'Unit',
 	'LBL_QTY_IN_STOCK' => 'Stock',
 	'LBL_QUICK_CREATE' => 'Quick Create',
 	'LBL_READ_LICENSE' => 'Read License',
@@ -754,6 +755,9 @@ $languageStrings = [
 	'OSSEmployees' => 'Employees',
 	'HolidaysEntitlement' => 'Annual holiday entitlement',
 	'Calculations' => 'Calculations',
+	'LBL_SEARCH_MODULE' => 'Search module',
+	'LBL_SELECT_SINGLE_ROW' => 'Select single row',
+	'LBL_CUSTOM_FILTER' => 'Custom filters',
 
 	/* industry */
 	'Administration'=>'Administration',

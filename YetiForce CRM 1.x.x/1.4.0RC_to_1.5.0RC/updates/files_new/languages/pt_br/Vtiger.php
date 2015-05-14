@@ -299,7 +299,6 @@ $languageStrings = [
 	'LBL_Feb' => 'Fev',
   	'LBL_FEEDBACK' => 'Feedback',
 	'LBL_FIELDS' => 'Campos',
-	'LBL_FILTER' => 'Filtro',
 	'LBL_FILTER_CONDITIONS'=> 'Condições de Filtro' ,
 	'LBL_FILTER_ON_DATE' => 'Filtrar data',
 	'LBL_FINAL_DISCOUNT_AMOUNT'=> 'Soma Final Desconto' ,
@@ -454,6 +453,7 @@ $languageStrings = [
 	'LBL_PRIVACY_POLICY' => 'Política de Privacidade',
 	'LBL_PROFILE_PASSWORD' => 'Perfil / Senha',
 	'LBL_QTY' => 'Quantidade' ,
+	'LBL_UNIT' => 'Unit',
 	'LBL_QTY_IN_STOCK' => 'Estoque',
 	'LBL_QUICK_CREATE' => 'Criar Rápido' ,
 	'LBL_READ_LICENSE' => 'Ler a Licença',
@@ -754,6 +754,9 @@ $languageStrings = [
 	'OSSEmployees' => 'Empregados',
 	'HolidaysEntitlement' => 'Direito férias anuais',
 	'Calculations' => 'Cálculos',
+	'LBL_SEARCH_MODULE' => 'Search module',
+	'LBL_SELECT_SINGLE_ROW' => 'Select single row',
+	'LBL_CUSTOM_FILTER' => 'Custom filters',
 
 	/* industry */
 	'Administration'=>'Administração',

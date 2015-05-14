@@ -1089,10 +1089,11 @@ class YetiForceUpdate{
 			$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('info','notworkingdays ','LBL_NOTWORKING_DAYS',NULL);");
 		}
 		
-		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linklabel = ? ", array('LBL_SHOW_ACCOUNT_HIERARCHY'));
-		if($adb->num_rows($result) > 0){
-			$mods = Vtiger_Module::getInstance( "Accounts" );
-            $mods->deleteLink('DETAILVIEWBASIC', 'LBL_SHOW_ACCOUNT_HIERARCHY', 'index.php?module=Accounts&action=AccountHierarchy&accountid=$RECORD$');
+		$result = $adb->pquery("SELECT * FROM `vtiger_links` WHERE linklabel = ? AND linkicon = ? ; ", array('LBL_SHOW_ACCOUNT_HIERARCHY','icon-align-justify'));
+		if($adb->num_rows($result) == 0){
+			//$mods = Vtiger_Module::getInstance( "Accounts" );
+           // $mods->deleteLink('DETAILVIEWBASIC', 'LBL_SHOW_ACCOUNT_HIERARCHY', 'index.php?module=Accounts&action=AccountHierarchy&accountid=$RECORD$');
+			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = ? WHERE `linklabel`= ? ;", array('icon-align-justify', 'LBL_SHOW_ACCOUNT_HIERARCHY'));
 			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = ? WHERE `linklabel`= ? ;", array('icon-file', 'LBL_ADD_NOTE'));
 			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = 'icon-file'  WHERE `linklabel` = ?;", array('Add Note'));
 			$adb->pquery("UPDATE `vtiger_links` SET `linkicon` = 'icon-tasks' WHERE `linklabel` = ?;", array('Add Project Task'));
@@ -1194,7 +1195,7 @@ class YetiForceUpdate{
 		$configContent = file($fileName);
 		foreach($configContent as $key => $line){
 			if(	strpos($line, '$config[\'plugins\']') !== FALSE){
-				$configContent[$key] = "\$config['plugins'] = array('autologon','identity_smtp','ical_attachments','yetiforce')\n;";
+				$configContent[$key] = "\$config['plugins'] = array('autologon','identity_smtp','ical_attachments','yetiforce');\n;";
 			}
 			if (strpos($line, '$GEBUG_CONFIG') !== FALSE) {
 				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
@@ -1220,8 +1221,8 @@ class YetiForceUpdate{
 		'verfify_peer_name' => false,
 	],
 ];
-\$config['root_directory'] = $root_directory;
-\$config['site_URL'] = $site_URL;";
+\$config['root_directory'] = \$root_directory;
+\$config['site_URL'] = \$site_URL;";
 		}
 		$content = implode("", $configContent);
 		$file = fopen($fileName,"w+");
