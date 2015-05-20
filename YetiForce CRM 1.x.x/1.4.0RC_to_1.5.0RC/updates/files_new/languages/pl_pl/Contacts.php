@@ -55,10 +55,14 @@ $languageStrings = [
 	'LBL_LANGUAGE_NOTIFICATIONS' => 'Język powiadomień',
 	'SINGLE_Leads' => 'Lead',
 	'SINGLE_Vendors' => 'Dostawca',
+	'Decision maker' => 'Osoba decyzyjna',
 
 	//Activity Types
 	'End of support for contact' => 'Koniec wsparcia kontaktu',
 	'Birthdays of contacts' => 'Urodziny kontaktów',
+	
+	'LBL_SWITCH_ON_DECISION_MAKER' => 'Decyzyjna',
+	'LBL_SWITCH_OFF_DECISION_MAKER' => 'Wszystkie',
 ];
 
 $jsLanguageStrings = [

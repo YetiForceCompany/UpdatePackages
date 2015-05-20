@@ -147,6 +147,7 @@ $languageStrings = [
 	'High' => 'High',
 	'History' => 'History', //Duplicated key-value pairs
 
+
 	'In Progress' => 'In Progress',
 	'Invoice' => 'Invoice',
 	'Is Converted From Lead' => 'Is Converted From Lead',
@@ -758,7 +759,24 @@ $languageStrings = [
 	'LBL_SEARCH_MODULE' => 'Search module',
 	'LBL_SELECT_SINGLE_ROW' => 'Select single row',
 	'LBL_CUSTOM_FILTER' => 'Custom filters',
-
+	'LBL_ADD_TAG' => 'Add tag',
+	'LBL_CHANGE_ACTIVITY_TYPE' => 'Change activity type',
+	'LBL_CHANGE_MAIL_TYPE' => 'Change email type',
+	'LBL_EXPAND_BLOCK' => 'Expand block',
+	'LBL_COLLAPSE_BLOCK' => 'Collapse block',
+	'Sales Stage' => 'Sales stage',
+	'LBL_HISTORY_TYPE' => 'History type',
+	'LBL_TASK' => 'Task',
+	'LBL_METTING' => 'Metting',
+	'LBL_CALL' => 'Call',
+	'LBL_MAIL_USERS_LIST' => 'Mail users list',
+	'LBL_RECORD_SWITCH' => 'Only my records or Share records',
+	'LBL_SELECT_USER' => 'Select user',
+	'LBL_CHOOSE_DATE' => 'Choose date',
+	'LBL_RECORDS_LIMIT' => 'Records limit',
+	'LBL_EMPLOYEESTATUS' => 'Status',
+	'LBL_EDUCATION' => 'Education',
+	'LBL_RELATED_MODULE_TYPE' => 'Related module type',
 	/* industry */
 	'Administration'=>'Administration',
 	'Construction Industry'=>'Construction Industry',
@@ -1070,7 +1088,8 @@ $jsLanguageStrings = [
 	'JS_H' => 'h',
 	'JS_D' => 'd',
 	'JS_CONTACT_NAME' => 'Contact Name',
-	'JS_PARENT_ID' => 'Related to',
+	'JS_RELATION' => 'Relation',
+	'JS_PROCESS' => 'Process',
 	
 	'JS_MOBILE_PERFORM_CALL_OK' => 'Phone number has been sent to your phone',
 	'JS_MOBILE_PERFORM_CALL_ERROR' => 'Error while trying to send a phone number',

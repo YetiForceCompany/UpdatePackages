@@ -240,8 +240,11 @@ var Vtiger_Index_Js = {
 		if(record.contact_id != '' && record.contact_id != undefined){
 			data_info += '<span class="span12">'+app.vtranslate('JS_CONTACT_NAME')+' : <b>'+record.contact_id+'</b></span>';
 		}
-		if(record.parent_id != '' && record.parent_id != undefined){
-			data_info += '<span class="span12">'+app.vtranslate('JS_PARENT_ID')+' : <b>'+record.parent_id+'</b></span>';
+		if(record.link != '' && record.link != undefined){
+			data_info += '<span class="span12">'+app.vtranslate('JS_RELATION')+' : <b>'+record.link+'</b></span>';
+		}
+		if(record.process != '' && record.process != undefined){
+			data_info += '<span class="span12">'+app.vtranslate('JS_PROCESS')+' : <b>'+record.process+'</b></span>';
 		}
 		if(record.location != '' && record.location != undefined){
 			data_info += '<span class="span12" style="margin-top: 5px;"><a class="btn " target="_blank" href="https://www.google.com/maps/search/'+record.location+'"><i class="icon-map-marker"></i>&nbsp;'+record.location+'</a></span>';
@@ -257,7 +260,7 @@ var Vtiger_Index_Js = {
 				<span class="span12">'+app.vtranslate('JS_START_DATE_TIME')+' : '+record.date_start+'</span>\n\
 				<span class="span12">'+app.vtranslate('JS_END_DATE_TIME')+' : '+record.due_date+'</span>'
 				+data_info+
-				'<span class="span12" style="margin-top: 5px;"><button title="' + app.vtranslate('NOTIFICATION_ACCEPTED') + '" class="btn btn-success btn-small reminder_accept"><i class="icon-ok icon-white"></i></button>&nbsp;&nbsp;'+
+				'<span class="span12" style="margin-top: 5px;"><button title="' + app.vtranslate('NOTIFICATION_ACCEPTED') + '" class="btn btn-success btn-small reminder_accept"><span class="icon-ok icon-white"></span></button>&nbsp;&nbsp;'+
 				'<button class="btn btn-small btn-primary reminder_postpone" data-time="15m">15'+app.vtranslate('JS_M')+'</button>&nbsp;&nbsp;'+
 				'<button class="btn btn-small btn-primary reminder_postpone" data-time="30m">30'+app.vtranslate('JS_M')+'</button>&nbsp;&nbsp;'+
 				'<button class="btn btn-small btn-primary reminder_postpone" data-time="1h">1'+app.vtranslate('JS_H')+'</button>&nbsp;&nbsp;'+

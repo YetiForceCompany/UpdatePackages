@@ -153,6 +153,7 @@ class YetiForceUpdate{
 		'modules/OSSMail/roundcube/plugins/yt_attachments',
 		'layouts/vlayout/modules/Calendar/UsersList.tpl',
 		'modules/Calendar/views/UsersList.php',
+		'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
 	);
 
 	function YetiForceUpdate($modulenode) {
@@ -350,7 +351,10 @@ class YetiForceUpdate{
 					) ENGINE=InnoDB DEFAULT CHARSET=utf8;;");		
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_ossmailview` LIKE 'date';");
 				
-				
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_contactdetails` LIKE 'decision_maker';");
+		if($adb->num_rows($result) == 0){
+			$adb->query("ALTER TABLE `vtiger_contactdetails` ADD COLUMN `decision_maker` tinyint(1) DEFAULT '0';");
+		}
 				
 		$log->debug("Exiting YetiForceUpdate::databaseStructureExceptDeletedTables() method ...");
 	}
@@ -1057,7 +1061,7 @@ class YetiForceUpdate{
 		$widgets[] = array(54,'Calculations','RelatedModule','',2,1,NULL,'{"limit":"5","relatedmodule":"8","columns":"3","action":"1","filter":"-"}');		
 		foreach($widgets as $widget){
 			if(self::checkModuleExists($widget[1])){
-				$result = $adb->pquery('SELECT * FROM vtiger_widgets WHERE tabid = ? AND `type` = ? AND `label` = ?', array(getTabid($widget[1]),$widget[2], $widget[3]));
+				$result = $adb->pquery('SELECT * FROM vtiger_widgets WHERE tabid = ? AND `type` = ?', array(getTabid($widget[1]),$widget[2]));
 				if(!$adb->num_rows($result)) {
 					$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
 					$adb->pquery($sql, array( getTabid($widget[1]), $widget[2], $widget[3], $widget[4], $widget[5], $widget[6], $widget[7]));
@@ -1114,16 +1118,52 @@ class YetiForceUpdate{
 		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Project'),'change'=>array('name'=>'get_project_mail'));
 		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('ServiceContracts'),'change'=>array('name'=>'get_servicecontracts_mail'));
 		$update[] = array('tabid'=>getTabid('OSSMailView'), 'related_tabid'=>getTabid('Campaigns'),'change'=>array('name'=>'get_campaigns_mail'));
+		
+		$update[] = array('tabid'=>getTabid('Contacts'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails'));
+		$update[] = array('tabid'=>getTabid('Leads'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails'));
+		$update[] = array('tabid'=>getTabid('Accounts'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails'));
+		$update[] = array('tabid'=>getTabid('Vendors'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails'));
+		$update[] = array('tabid'=>getTabid('ServiceContracts'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails','actions'=>''));
+		$update[] = array('tabid'=>getTabid('HelpDesk'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails','actions'=>''));
+		$update[] = array('tabid'=>getTabid('Potentials'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails','actions'=>''));
+		$update[] = array('tabid'=>getTabid('Campaigns'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails','actions'=>''));
+		$update[] = array('tabid'=>getTabid('Project'), 'related_tabid'=>getTabid('OSSMailView'),'change'=>array('name'=>'get_emails','actions'=>''));
 
 		foreach($update as $presents){
-			$sql = 'UPDATE `vtiger_relatedlists` SET ';
+			$sql1 = 'UPDATE `vtiger_relatedlists` SET ';
 			foreach($presents['change'] as $column=>$value){
-				$sql .= $column.' = ? ';
+				$sql = $sql1.$column.' = ? ';
 				$sql .= 'WHERE `tabid` = ? AND `related_tabid` = ? ;';
 				$adb->pquery($sql, array($value,$presents['tabid'],$presents['related_tabid']), true);
 			}
 		}
 		
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('OSSMailView'),getTabid('Vendors'),'get_vendor_mail','Vendors'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Vendors');
+			$target_Module = Vtiger_Module::getInstance('OSSMailView');
+			$target_Module->setRelatedList($moduleInstance, 'Vendors', array('ADD,SELECT'),'get_vendor_mail');
+		}
+		//mailview relation
+		$module = 'OSSMailView';
+		$sql = 'SELECT * FROM vtiger_crmentityrel WHERE module = ? OR relmodule = ?';
+		$result1 = $adb->pquery($sql, [$module, $module]);
+		for ($i = 0; $i < $adb->num_rows($result1); $i++) {
+			$row = $adb->raw_query_result_rowdata($result1, $i);
+			$id = ($row['module'] == $module) ? $row['relcrmid'] : $row['crmid'];
+			$mailID = ($row['module'] != $module) ? $row['relcrmid'] : $row['crmid'];
+
+			$sql = 'SELECT createdtime FROM vtiger_crmentity WHERE crmid = ?';
+			$result2 = $adb->pquery($sql, [$mailID]);
+			if ($adb->num_rows($result2) > 0) {
+				$createdtime = $adb->query_result($result2, 0, 'createdtime');
+				$adb->pquery('INSERT INTO vtiger_ossmailview_relation VALUES(?,?,?,?)', [$mailID, $id, $createdtime,0]);
+				$adb->pquery('DELETE FROM vtiger_crmentityrel WHERE crmid = ? AND relcrmid = ?; ', [$row['crmid'] , $row['relcrmid'] ]);
+			}
+		}
+		$adb->pquery('UPDATE `vtiger_ossmailview` LEFT JOIN `vtiger_crmentity` ON `vtiger_ossmailview`.`ossmailviewid` = `vtiger_crmentity`.`crmid`
+		SET `vtiger_ossmailview`.`date` = vtiger_crmentity.`modifiedtime` WHERE `vtiger_ossmailview`.`date` IS NULL OR `vtiger_ossmailview`.`date` = ?', ['0000-00-00 00:00:00']);
+
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -1195,7 +1235,10 @@ class YetiForceUpdate{
 		$configContent = file($fileName);
 		foreach($configContent as $key => $line){
 			if(	strpos($line, '$config[\'plugins\']') !== FALSE){
-				$configContent[$key] = "\$config['plugins'] = array('autologon','identity_smtp','ical_attachments','yetiforce');\n;";
+				$configContent[$key] = "\$config['plugins'] = array('autologon','identity_smtp','ical_attachments','yetiforce');\n";
+			}
+			if (strpos($line, ';$config') !== FALSE) {
+				$configContent[$key] = str_replace(';$config','$config', $configContent[$key]);
 			}
 			if (strpos($line, '$GEBUG_CONFIG') !== FALSE) {
 				$configContent[$key] = str_replace('$GEBUG_CONFIG','$DEBUG_CONFIG', $configContent[$key]);
@@ -1223,6 +1266,9 @@ class YetiForceUpdate{
 ];
 \$config['root_directory'] = \$root_directory;
 \$config['site_URL'] = \$site_URL;";
+		}
+		if(strpos(file_get_contents( $fileName ),'imap_open_add_connection_type') === FALSE){
+			$configContent[] = "\n\$config['imap_open_add_connection_type'] = true;";
 		}
 		$content = implode("", $configContent);
 		$file = fopen($fileName,"w+");
@@ -1334,7 +1380,8 @@ class YetiForceUpdate{
 		array('42','1742','estimated_work_time','vtiger_projecttask','1','7','estimated_work_time','LBL_ESTIMATED_WORK_TIME','1','2','','100','9','105','1','NN~M','1',3,'BAS','1','','0','',"decimal(8,2)","LBL_CUSTOM_INFORMATION",array(),array())
 		);
 		$Contacts = array(
-		array('4','1744','jobtitle','vtiger_contactdetails','1','1','jobtitle','Job title','1','2','','100','31','4','1','V~O','1',NULL,'BAS','1','','0','',"varchar(100)","LBL_CONTACT_INFORMATION",array(),array())
+		array('4','1744','jobtitle','vtiger_contactdetails','1','1','jobtitle','Job title','1','2','','100','31','4','1','V~O','1',NULL,'BAS','1','','0','',"varchar(100)","LBL_CONTACT_INFORMATION",array(),array()),
+		array(4,1746,'decision_maker','vtiger_contactdetails',1,'56','decision_maker','Decision maker',1,2,'',100,9,5,1,'C~O',1,NULL,'BAS',1,'',0,'',"tinyint(1)","LBL_CUSTOM_INFORMATION",array(),array())
 		);
 		$OSSMailView = array(
 		array('54','1745','date','vtiger_ossmailview','1','70','date','Date of receipt','1','2','','100','24','134','2','DT~O','1',NULL,'BAS','1','','0','',"datetime","LBL_INFORMATION",array(),array())
@@ -1561,6 +1608,16 @@ ini_set('session.gc_maxlifetime','1800'); //30 min
 
 // Maximum number of records in a mass edition
 \$listMaxEntriesMassEdit = 500;
+";
+			file_put_contents( $config, $configC, FILE_APPEND );
+		}
+		if(strpos(file_get_contents( $config ),'backgroundClosingModal') === FALSE){
+			$configC = "
+// enable closing of mondal window by clicking on the background
+\$backgroundClosingModal = TRUE;
+
+// enable CSRF-protection
+\$csrfProtection = TRUE;
 ";
 			file_put_contents( $config, $configC, FILE_APPEND );
 		}
