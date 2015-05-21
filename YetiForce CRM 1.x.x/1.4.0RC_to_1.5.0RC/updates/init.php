@@ -156,7 +156,7 @@ class YetiForceUpdate{
 		'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
 		'layouts/vlayout/modules/OSSEmployees/dashboards/TimeControl.tpl',
 		'layouts/vlayout/modules/OSSEmployees/dashboards/TimeControlContents.tpl',
-		'modules/OSSEmployees/dashboards/TimeControl.php',
+		'modules/OSSEmployees/dashboards/',
 	);
 
 	function YetiForceUpdate($modulenode) {
