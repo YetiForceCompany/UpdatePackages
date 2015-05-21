@@ -114,7 +114,7 @@ class OSSMailView extends CRMEntity {
 	/**	Constructor which will set the column_fields in this object
 	 */
 	function __construct() {
-		global $log;
+		$log = vglobal('log');
 		$this->column_fields = getColumnFields(get_class($this));
 		$this->db = PearDatabase::getInstance();
 		$this->log = $log;
@@ -179,7 +179,7 @@ class OSSMailView extends CRMEntity {
 	 * Apply security restriction (sharing privilege) query part for List view.
 	 */
 	function getListViewSecurityParameter($module) {
-		global $current_user;
+		$current_user  = vglobal('current_user');
 		require('user_privileges/user_privileges_'.$current_user->id.'.php');
 		require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 
@@ -225,7 +225,7 @@ class OSSMailView extends CRMEntity {
 	 */
 	function create_export_query($where)
 	{
-		global $current_user;
+		$current_user  = vglobal('current_user');
 
 		include("include/utils/ExportUtils.php");
 
@@ -317,7 +317,7 @@ class OSSMailView extends CRMEntity {
 	}
 	// Function to unlink all the dependent entities of the given Entity by Id
 	function unlinkDependencies($module, $id) {
-		global $log;
+		$log = vglobal('log');
 		parent::unlinkDependencies($module, $id);
 	}
 
@@ -355,20 +355,15 @@ class OSSMailView extends CRMEntity {
 				$moduleInstance=Vtiger_Module::getInstance($tabid);
 				$moduleInstance->addLink('DETAILVIEWBASIC', 'View History', "javascript:ModTrackerCommon.showhistory('\$RECORD\$')",'','',array('path'=>'modules/ModTracker/ModTracker.php','class'=>'ModTracker','method'=>'isViewPermitted'));
 			}
-			$this->add_relation();
 			$registerLink = true;
 			$Module = Vtiger_Module::getInstance($moduleName);
 			$user_id = Users_Record_Model::getCurrentUserModel()->get('user_name');
 			$adb->pquery("INSERT INTO vtiger_ossmails_logs (`action`, `info`, `user`) VALUES (?, ?, ?);", array('Action_InstallModule', $moduleName . ' ' .$Module->version, $user_id),false);
-			$this->turn_on($moduleName);
 		} else if($eventType == 'module.disabled') {
-			$this->turn_off($moduleName);
 			$registerLink = false;
 		// TODO Handle actions when this module is disabled.
 		} else if($eventType == 'module.enabled') {
-			$this->turn_on($moduleName);
 			$registerLink = true;
-			$this->add_relation();
 		// TODO Handle actions when this module is enabled.
 		} else if($eventType == 'module.preuninstall') {
 		// TODO Handle actions when this module is about to be deleted.
@@ -394,44 +389,7 @@ class OSSMailView extends CRMEntity {
 			$adb->pquery("DELETE FROM vtiger_settings_field WHERE name=?", array($displayLabel));
 		}
  	}
-    function turn_on($moduleName) {
-		$adb = PearDatabase::getInstance();
 
-		$adb->pquery("UPDATE vtiger_relatedlists SET related_tabid = ?,name = ?,actions = '',label = 'OSSMailView' WHERE name = ? ", array(Vtiger_Functions::getModuleId('OSSMailView'),'get_related_list','get_emails') );
-		$user_id = Users_Record_Model::getCurrentUserModel()->get('user_name');
-		$adb->pquery("INSERT INTO vtiger_ossmails_logs (`action`, `info`, `user`) VALUES (?, ?,?);", array('Action_EnabledModule', $moduleName, $user_id),false);
-    }
-    function turn_off($moduleName) {
-		$adb = PearDatabase::getInstance();
-
-		$adb->pquery("UPDATE vtiger_relatedlists SET related_tabid = ?,name = ?,actions = 'add',label = 'Emails' WHERE related_tabid = ? ", array(Vtiger_Functions::getModuleId('Emails'),'get_emails',Vtiger_Functions::getModuleId('OSSMailView')) );
-		$user_id = Users_Record_Model::getCurrentUserModel()->get('user_name');
-		$adb->pquery("INSERT INTO vtiger_ossmails_logs (`action`, `info`, `user`) VALUES (?, ?, ?);", array('Action_DisabledModule', $moduleName, $user_id),false);
-    }
-	function add_relation() {
-		$displayLabel = 'OSSMailView';
-		$moduleInstance = Vtiger_Module::getInstance($displayLabel);
-		$docelowy_Module = Vtiger_Module::getInstance('ServiceContracts');
-		if($docelowy_Module){
-			$docelowy_Module->setRelatedList($moduleInstance, $displayLabel, array('select'),'get_related_list');
-		}
-		$docelowy_Module = Vtiger_Module::getInstance('HelpDesk');
-		if($docelowy_Module){
-			$docelowy_Module->setRelatedList($moduleInstance, $displayLabel, array('select'),'get_related_list');
-		}
-		$docelowy_Module = Vtiger_Module::getInstance('Potentials');
-		if($docelowy_Module){
-			$docelowy_Module->setRelatedList($moduleInstance, $displayLabel, array('select'),'get_related_list');
-		}
-		$docelowy_Module = Vtiger_Module::getInstance('Project');
-		if($docelowy_Module){
-			$docelowy_Module->setRelatedList($moduleInstance, $displayLabel, array('select'),'get_related_list');
-		}
-		$docelowy_Module = Vtiger_Module::getInstance('Campaigns');
-		if($docelowy_Module){
-			$docelowy_Module->setRelatedList($moduleInstance, $displayLabel, array('select'),'get_related_list');
-		}
-	}
 	function get_attachments($id, $cur_tab_id, $rel_tab_id, $actions = false) {
 		global $currentModule, $app_strings, $singlepane_view;
 		$this_module = $currentModule;

@@ -154,6 +154,9 @@ class YetiForceUpdate{
 		'layouts/vlayout/modules/Calendar/UsersList.tpl',
 		'modules/Calendar/views/UsersList.php',
 		'modules/OSSMail/roundcube/program/steps/mail/autocomplete_org.inc',
+		'layouts/vlayout/modules/OSSEmployees/dashboards/TimeControl.tpl',
+		'layouts/vlayout/modules/OSSEmployees/dashboards/TimeControlContents.tpl',
+		'modules/OSSEmployees/dashboards/TimeControl.php',
 	);
 
 	function YetiForceUpdate($modulenode) {
@@ -1164,6 +1167,113 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE `vtiger_ossmailview` LEFT JOIN `vtiger_crmentity` ON `vtiger_ossmailview`.`ossmailviewid` = `vtiger_crmentity`.`crmid`
 		SET `vtiger_ossmailview`.`date` = vtiger_crmentity.`modifiedtime` WHERE `vtiger_ossmailview`.`date` IS NULL OR `vtiger_ossmailview`.`date` = ?', ['0000-00-00 00:00:00']);
 
+		$result = $adb->pquery('SELECT * FROM `roundcube_system` WHERE name = ?;', array('roundcube-version'));
+		if($adb->num_rows($result) == 1){
+			$adb->pquery('UPDATE `roundcube_system` SET `value` = ? WHERE `name` = ?;', ['2015030800','roundcube-version']);
+		}else {
+			$adb->pquery('INSERT INTO `roundcube_system`(`name`,`value`) values (?,?);', ['2015030800','roundcube-version']);
+		}
+		
+		//
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Project'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('Project');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('Project'),'get_related_list','Project'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Project');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'Project', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Quotes'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('Quotes');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('Quotes'),'get_related_list','Quotes'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Quotes');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'Quotes', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Calculations'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('Calculations');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('Calculations'),'get_related_list','Calculations'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Calculations');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'Calculations', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('QuotesEnquires'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('QuotesEnquires');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('QuotesEnquires'),'get_related_list','QuotesEnquires'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('QuotesEnquires');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'QuotesEnquires', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('SalesOrder'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('SalesOrder');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('SalesOrder'),'get_related_list','SalesOrder'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('SalesOrder');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'SalesOrder', array('ADD,SELECT'),'get_related_list');
+		}
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('PurchaseOrder'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('PurchaseOrder');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('PurchaseOrder'),'get_related_list','PurchaseOrder'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('PurchaseOrder');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'PurchaseOrder', array('ADD,SELECT'),'get_related_list');
+		}
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Invoice'),getTabid('Contacts'),'get_related_list','Contacts'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Contacts');
+			$target_Module = Vtiger_Module::getInstance('Invoice');
+			$target_Module->setRelatedList($moduleInstance, 'Contacts', array('ADD,SELECT'),'get_related_list');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_relatedlists` WHERE tabid = ? AND related_tabid = ? AND name = ? AND label = ?;", array(getTabid('Contacts'),getTabid('Invoice'),'get_related_list','Invoice'));
+		if($adb->num_rows($result) == 0){
+			$moduleInstance = Vtiger_Module::getInstance('Invoice');
+			$target_Module = Vtiger_Module::getInstance('Contacts');
+			$target_Module->setRelatedList($moduleInstance, 'Invoice', array('ADD,SELECT'),'get_related_list');
+		}
+		
+		
+		$adb->pquery('UPDATE vtiger_field SET typeofdata = ? WHERE tablename = ? AND columnname = ?;', ['D~M','vtiger_calculations','date']);
+		
+		$result = $adb->pquery("SELECT * FROM `vtiger_dataaccess` WHERE module_name = ? AND `summary` = ?;", ['Events','Adding time period to status change']);
+		if($adb->num_rows($result) == 0){
+			$adb->pquery('insert  into `vtiger_dataaccess`(`module_name`,`summary`,`data`) values (?,?,?)',['Events','Adding time period to status change','a:1:{i:0;a:3:{s:2:"an";s:25:"Vtiger!!show_quick_create";s:7:"modules";s:14:"OSSTimeControl";s:2:"cf";b:1;}}']);
+			$recordId = $adb->getLastInsertID();
+			$adb->pquery('insert  into `vtiger_dataaccess_cnd`(`dataaccessid`,`fieldname`,`comparator`,`val`,`required`,`field_type`) values (?,?,?,?,?,?);',[$recordId,'eventstatus','has changed','Held',1,'picklist']);
+		}
+		$adb->pquery('UPDATE vtiger_links SET linkurl = ? WHERE linklabel = ?;', ['index.php?module=OSSTimeControl&view=ShowWidget&name=TimeControl','Employees Time Control']);
+		$adb->pquery('DELETE FROM `vtiger_ws_entity` WHERE `name` = ? LIMIT 1;',['OSSDocumentControl']);
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
@@ -1284,6 +1394,7 @@ class YetiForceUpdate{
 		$addPicklists['LettersOut'][] = array('name'=>'lout_status','uitype'=>'16','add_values'=>array('PLL_NEW','PLL_SETTLED'),'remove_values'=>array('PLL_A','PLL_B'));
 		$addPicklists['Assets'][] = array('name'=>'assetstatus','uitype'=>'15','add_values'=>array('PLL_DRAFT','PLL_WARRANTY_SUPPORT','PLL_POST_WARRANTY_SUPPORT','PLL_NO_SUPPORT'),'remove_values'=>array('Draft','Realization proceeding','Warranty proceeding','Delivered to Organization'));
 		$addPicklists['Calculations'][] = array('name'=>'calculationsstatus','uitype'=>'15','add_values'=>array('PLL_DRAFT','PLL_IN_REALIZATION','PLL_WAITING_FOR_QUOTATION','PLL_WAITING_FOR_ACCEPTANCE','PLL_ACCEPTED','PLL_REQUIRES_AMENDMENTS'),'remove_values'=>array('PLL_WAITING_FOR_VERIFICATION','PLL_VERIFICATION_PROCESS','PLL_INTERNAL_CONSULTATION_REQUIRED','PLL_EXTERNAL_CONSULTATION_REQUIRED','PLL_WAITING_FOR_VENDORS_QUOTE','PLL_WAITING_FOR_CUSTOMERS_REPLY','PLL_IN_PREPARATION','LBL_DECLINED','LBL_ACCEPTED'));
+		$addPicklists['OSSMailView'][] = array('name'=>'ossmailview_sendtype','uitype'=>'15','add_values'=>array(),'remove_values'=>array('Sent'));
 		
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array();
@@ -1312,7 +1423,7 @@ class YetiForceUpdate{
 						if($deletePicklistValueId)
 							$adb->pquery("DELETE FROM `vtiger_role2picklist` WHERE picklistvalueid = ? ", array($deletePicklistValueId));
 					}
-					$adb->pquery("DELETE FROM `vtiger_".$piscklist['name']."` WHERE ".$piscklist['name']." = ? ", array($newValue));
+					$adb->pquery("DELETE FROM `vtiger_".$piscklist['name']."` WHERE ".$piscklist['name']." = ? LIMIT 1", array($newValue));
 					if($piscklist['name'] == 'administrative' && $moduleName == 'ProjectMilestone'){
 						$adb->pquery("UPDATE `vtiger_projectmilestone` SET `projectmilestonetype` = ? WHERE `projectmilestonetype` = ? ;", array($piscklist['name'], 'PLL_INTERNAL'));
 					}if($piscklist['name'] == 'operative' && $moduleName == 'ProjectMilestone'){
