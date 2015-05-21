@@ -798,6 +798,10 @@ $languageStrings = [
 	'LBL_RELATED_MODULE_TYPE' => 'Related module type',
 	'LBL_DUPLICATE_RECORD' => 'Duplicate record',
 	'LBL_DELETE_RECORD' => 'Delete record',
+	'LBL_CHOOSE_FIELD' => 'Choose field',
+	'LBL_COMAPARATOR_TYPE' => 'Comparator type',
+	'LBL_FILTER_NAME' => 'Filter name',
+	'Leads by Status Converted' => 'Leads by Status Converted',
 	/* industry */
 	'Administration'=>'Verwaltung',
 	'Construction Industry'=>'Baubranche',

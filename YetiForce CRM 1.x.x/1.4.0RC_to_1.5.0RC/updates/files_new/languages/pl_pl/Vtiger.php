@@ -611,7 +611,7 @@ $languageStrings = [
 	'Total' => 'Netto',
 	'Trade Show' => 'Targi/Szkolenia',
 	'Type' => 'Rodzaj',
-	'Upcoming Activities' => 'Sprawy bierzące',
+	'Upcoming Activities' => 'Sprawy bieżące',
 	'Activity History' => 'Kalendarz - wykonane',
 	'Delagated Events/To Dos' => 'Zlecone terminy/zadania',
 	'Delegated (overdue) Events/ToDos' => 'Zlecone (nieterminowe) terminy/zadania',
@@ -639,7 +639,7 @@ $languageStrings = [
 	'EmailTemplate' => 'Szablony mailowe',
 	'Support End Date' => 'Data zakończenia wsparcia',
 	'Key Metrics' => 'Podsumowanie',
-	'Open Tickets' => 'Otwartych zgłoszeń',
+	'Open Tickets' => 'Otwarte zgłoszenia',
 	'Email Templates' => 'Szablony mailowe',
 	'LBL_NO_FOUND_RECORDS' => 'Nie znaleźliśmy żadnych rekordów w module: ', //OpenSaaS
 	
@@ -728,6 +728,10 @@ $languageStrings = [
 	'LBL_RELATED_MODULE_TYPE' => 'Typ powiązanego modułu',
 	'LBL_DUPLICATE_RECORD' => 'Duplikuj rekord',
 	'LBL_DELETE_RECORD' => 'Usuń rekord',
+	'LBL_CHOOSE_FIELD' => 'Wybierz pole',
+	'LBL_COMAPARATOR_TYPE' => 'Rodzaj porównania',
+	'LBL_FILTER_NAME' => 'Nazwa filtru',
+	'Leads by Status Converted' => 'Leady skonwertowane według statusu',
 	
 	/* industry */
 	'Administration'=>'Administracja',
