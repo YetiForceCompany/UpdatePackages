@@ -16,6 +16,7 @@ include_once('vtlib/Vtiger/Module.php');
 
 class YetiForceUpdate
 {
+
 	var $package;
 	var $modulenode;
 	var $return = true;
@@ -143,6 +144,7 @@ class YetiForceUpdate
 		if (file_exists($config)) {
 			$configContent = file($config);
 			$emptyLine = false;
+			$backupVariable = true;
 			foreach ($configContent as $key => $line) {
 				if ($emptyLine && strlen($line) == 1) {
 					unset($configContent[$key]);
@@ -179,13 +181,18 @@ class YetiForceUpdate
 				if (strpos($line, "dbconfig['db_hostname'] =") !== FALSE) {
 					$configContent[$key] = str_replace("\$dbconfig['db_port']", "':'.\$dbconfig['db_port']", $configContent[$key]);
 				}
+				if (strpos($line, "encryptBackup") !== FALSE) {
+					$backupVariable = false;
+				}
 			}
 			$content = implode("", $configContent);
-			$content .= '
+			if ($backupVariable) {
+				$content .= '
 // Enable encrypt backup, Support from PHP 5.6.x
 $encryptBackup = false;
 ';
-			$log->debug("Entering YetiForceUpdate::updateFiles() method ... alle string ".$content);
+			}
+			$log->debug("Entering YetiForceUpdate::updateFiles() method ... alle string " . $content);
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
 			fclose($file);
@@ -258,6 +265,7 @@ $encryptBackup = false;
 				ADD COLUMN `status` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `endtime` , 
 				ADD COLUMN `backuptime` decimal(8,3) unsigned   NOT NULL DEFAULT 0.000 after `status` , 
 				CHANGE `how_many` `backupcount` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `backuptime` , 
+				DROP COLUMN `create_time` ,
 				DROP KEY `PRIMARY`, ADD PRIMARY KEY(`id`) ;");
 		}
 		$result = $adb->query("SHOW KEYS FROM `vtiger_backup_settings` WHERE Key_name='param';");
@@ -351,19 +359,19 @@ $encryptBackup = false;
 			FROM information_schema.columns
 			WHERE TABLE_NAME = 'vtiger_module_dashboard';");
 		while ($row = $adb->fetch_array($result)) {
-			if ($row['COLUMN_NAME'] == 'filterid' && $row['DATA_TYPE'] == 'int') {
+			if (($row['COLUMN_NAME'] == 'filterid' || $row['column_name'] == 'filterid') && (in_array($row['DATA_TYPE'], ['int', 'INT']) || in_array($row['data_type'], ['int', 'INT']))) {
 				$adb->query("ALTER TABLE `vtiger_module_dashboard` 
-				CHANGE `id` `id` int(19)   NOT NULL auto_increment first , 
-				CHANGE `blockid` `blockid` int(19)   NOT NULL after `id` , 
-				CHANGE `filterid` `filterid` varchar(100)  COLLATE utf8_general_ci NULL after `linkid` , 
-				CHANGE `limit` `limit` tinyint(2)   NULL after `size` , 
-				CHANGE `isdefault` `isdefault` tinyint(1)   NOT NULL DEFAULT 0 after `limit`
-				DROP FOREIGN KEY `vtiger_module_dashboard_ibfk_1` ;");
+					CHANGE `id` `id` int(19)   NOT NULL auto_increment first , 
+					CHANGE `blockid` `blockid` int(19)   NOT NULL after `id` , 
+					CHANGE `filterid` `filterid` varchar(100)  COLLATE utf8_general_ci NULL after `linkid` , 
+					CHANGE `limit` `limit` tinyint(2)   NULL after `size` , 
+					CHANGE `isdefault` `isdefault` tinyint(1)   NOT NULL DEFAULT 0 after `limit`,
+					DROP FOREIGN KEY `vtiger_module_dashboard_ibfk_1` ;");
 				$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` 
-				CHANGE `filterid` `filterid` varchar(100)  COLLATE utf8_general_ci NULL after `templateid` , 
-				CHANGE `limit` `limit` tinyint(2)   NULL after `size` , 
-				CHANGE `isdefault` `isdefault` tinyint(1)   NULL DEFAULT 0 after `position` , 
-				CHANGE `active` `active` tinyint(1)   NULL DEFAULT 0 after `isdefault`;");
+					CHANGE `filterid` `filterid` varchar(100)  COLLATE utf8_general_ci NULL after `templateid` , 
+					CHANGE `limit` `limit` tinyint(2)   NULL after `size` , 
+					CHANGE `isdefault` `isdefault` tinyint(1)   NULL DEFAULT 0 after `position` , 
+					CHANGE `active` `active` tinyint(1)   NULL DEFAULT 0 after `isdefault`;");
 				break;
 			}
 		}
@@ -641,6 +649,8 @@ $encryptBackup = false;
 				$adb->pquery("UPDATE `vtiger_osspdf` SET `content` = ? WHERE `title` = ? ;", [$row['title'], $pdfContent[$row['title']]]);
 			}
 		}
+
+		$adb->query("UPDATE `vtiger_users` SET `theme` = 'twilight';");
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
