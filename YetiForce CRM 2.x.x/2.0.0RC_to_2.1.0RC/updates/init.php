@@ -20,94 +20,56 @@ class YetiForceUpdate
 	var $package;
 	var $modulenode;
 	var $return = true;
-	var $filesToDelete = ['api/customerportal.php',
-		'api/firefoxtoolbar.php',
-		'api/thunderbirdplugin.php',
-		'api/wordplugin.php',
-		'layouts/vlayout/modules/OSSMail/resources/mailtemplate.js',
-		'libraries/chartjs/Chartmin.js',
-		'libraries/guidersjs/guider_arrows.png',
-		'libraries/guidersjs/guiders-1.2.6.css',
-		'libraries/guidersjs/guiders-1.2.6.js',
-		'libraries/guidersjs/README.html',
-		'libraries/guidersjs/README.md',
-		'libraries/guidersjs/x_close_button.jpg',
-		'libraries/jquery/datatables/extensions/ColReorder/Readme.txt',
-		'libraries/jquery/datatables/extensions/ColVis/Readme.txt',
-		'libraries/jquery/datatables/extensions/FixedColumns/Readme.txt',
-		'libraries/jquery/datatables/media/images/back_disabled.png',
-		'libraries/jquery/datatables/media/images/back_enabled.png',
-		'libraries/jquery/datatables/media/images/back_enabled_hover.png',
-		'libraries/jquery/datatables/media/images/forward_disabled.png',
-		'libraries/jquery/datatables/media/images/forward_enabled.png',
-		'libraries/jquery/datatables/media/images/forward_enabled_hover.png',
-		'libraries/jquery/datatables/bower.json',
-		'libraries/jquery/datatables/composer.json',
-		'libraries/jquery/datatables/dataTables.jquery.json',
-		'libraries/jquery/datatables/package.json',
-		'libraries/jquery/jqplot/excanvas.js',
-		'libraries/jquery/jqplot/jquery.jqplot.css',
-		'libraries/jquery/jqplot/jquery.jqplot.js',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_flat_0_aaaaaa_40x100.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_glass_55_fbf9ee_1x400.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_glass_65_ffffff_1x400.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_glass_75_dadada_1x400.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_glass_75_e6e6e6_1x400.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_glass_75_ffffff_1x400.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_highlight-soft_75_cccccc_1x100.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-bg_inset-soft_95_fef1ec_1x100.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_222222_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_2e83ff_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_454545_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_888888_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_cd0a0a_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/images/ui-icons_f6cf3b_256x240.png',
-		'libraries/jquery/jquery-ui/css/custom-theme/jquery-ui-1.8.16.custom.css',
-		'libraries/jquery/jquery-ui/css/custom-theme/jquery.ui.1.8.16.ie.css',
-		'libraries/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-Date-Range-Picker/css/ui.daterangepicker.css',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-Date-Range-Picker/js/date.js',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-Date-Range-Picker/js/daterangepicker.jQuery.compressed.js',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-Date-Range-Picker/js/daterangepicker.jQuery.js',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-Date-Range-Picker/index.html',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/css/enhanced.css',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/images/icon-generic.gif',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/images/icon-image.gif',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/images/icon-media.gif',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/images/icon-zip.gif',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/js/enhance.min.js',
-		'libraries/jquery/jquery-ui/third-party/jQuery-UI-FileInput/js/fileinput.jquery.js',
-		'libraries/jquery/jquery-ui/third-party/wijmo/jquery.bgiframe-2.1.3-pre.js',
-		'libraries/jquery/jquery-ui/third-party/wijmo/jquery.mousewheel.min.js',
-		'libraries/jquery/jquery-ui/third-party/wijmo/jquery.wijmo-open.1.5.0.css',
-		'libraries/jquery/jquery-ui/third-party/wijmo/jquery.wijmo-open.1.5.0.min.js',
-		'libraries/jquery/jquery-ui/README.md',
-		'libraries/jquery/pnotify/use for pines style icons/jquery.pnotify.default.icons.css',
-		'libraries/jquery/pnotify/jquery.pnotify.default.css',
-		'libraries/jquery/pnotify/jquery.pnotify.js',
-		'libraries/jquery/pnotify/jquery.pnotify.min.js',
-		'libraries/jquery/select2/component.json',
-		'libraries/jquery/select2/LICENSE',
-		'libraries/jquery/select2/release.sh',
-		'libraries/jquery/select2/select2.png',
-		'libraries/jquery/select2/select2x2.png',
-		'libraries/jquery/select2/spinner.gif',
-		'modules/Contacts/actions/TransferOwnership.php',
-		'modules/OSSMailTemplates/actions/GetListModule.php',
-		'modules/OSSMailTemplates/actions/GetListTpl.php',
-		'modules/RequirementCards/models/Module.php',
-		'modules/Settings/BackUp/actions/CreateBackUp.php',
-		'modules/Settings/BackUp/actions/CreateFileBackUp.php',
-		'modules/Settings/BackUp/actions/SaveFTPConfig.php',
-		'modules/Vtiger/resources/validator/EmailValidator.js',
-		'libraries/adodb',
-		'libraries/guidersjs',
-		'libraries/jquery/jquery-ui/css',
-		'libraries/jquery/jquery-ui/js',
-		'libraries/jquery/jquery-ui/third-party',
-		'libraries/jquery/pnotify/use for pines style icons',
-		'modules/Accounts/actions'
-	];
+	var $filesToDelete = ['api\customerportal.php',
+		'api\firefoxtoolbar.php',
+		'api\thunderbirdplugin.php',
+		'api\wordplugin.php',
+		'layouts\vlayout\modules\OSSMail\resources\mailtemplate.js',
+		'layouts\vlayout\modules\OSSMailTemplates\Config.tpl',
+		'layouts\vlayout\skins\images\btnAdd.png',
+		'libraries\adodb',
+		'libraries\chartjs\Chartmin.js',
+		'libraries\guidersjs',
+		'libraries\jquery\datatables\bower.json',
+		'libraries\jquery\datatables\composer.json',
+		'libraries\jquery\datatables\dataTables.jquery.json',
+		'libraries\jquery\datatables\extensions\ColReorder\Readme.txt',
+		'libraries\jquery\datatables\extensions\ColVis\Readme.txt',
+		'libraries\jquery\datatables\extensions\FixedColumns\Readme.txt',
+		'libraries\jquery\datatables\media\images\back_disabled.png',
+		'libraries\jquery\datatables\media\images\back_enabled.png',
+		'libraries\jquery\datatables\media\images\back_enabled_hover.png',
+		'libraries\jquery\datatables\media\images\forward_disabled.png',
+		'libraries\jquery\datatables\media\images\forward_enabled.png',
+		'libraries\jquery\datatables\media\images\forward_enabled_hover.png',
+		'libraries\jquery\datatables\package.json',
+		'libraries\jquery\jqplot\excanvas.js',
+		'libraries\jquery\jqplot\jquery.jqplot.css',
+		'libraries\jquery\jqplot\jquery.jqplot.js',
+		'libraries\jquery\jquery-ui\css',
+		'libraries\jquery\jquery-ui\js',
+		'libraries\jquery\jquery-ui\README.md',
+		'libraries\jquery\jquery-ui\third-party',
+		'libraries\jquery\pnotify\jquery.pnotify.default.css',
+		'libraries\jquery\pnotify\jquery.pnotify.js',
+		'libraries\jquery\pnotify\jquery.pnotify.min.js',
+		'libraries\jquery\pnotify\use for pines style icons\jquery.pnotify.default.icons.css',
+		'libraries\jquery\select2\component.json',
+		'libraries\jquery\select2\LICENSE',
+		'libraries\jquery\select2\release.sh',
+		'libraries\jquery\select2\select2.png',
+		'libraries\jquery\select2\select2x2.png',
+		'libraries\jquery\select2\spinner.gif',
+		'modules\Accounts\actions',
+		'modules\Contacts\actions\TransferOwnership.php',
+		'modules\ModComments\actions\Delete.php',
+		'modules\OSSMailTemplates\actions\GetListModule.php',
+		'modules\OSSMailTemplates\actions\GetListTpl.php',
+		'modules\RequirementCards\models\Module.php',
+		'modules\Settings\BackUp\actions\CreateBackUp.php',
+		'modules\Settings\BackUp\actions\CreateFileBackUp.php',
+		'modules\Settings\BackUp\actions\SaveFTPConfig.php',
+		'modules\Vtiger\resources\validator\EmailValidator.js'];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -179,7 +141,10 @@ class YetiForceUpdate
 					}
 				}
 				if (strpos($line, "dbconfig['db_hostname'] =") !== FALSE) {
-					$configContent[$key] = str_replace("\$dbconfig['db_port']", "':'.\$dbconfig['db_port']", $configContent[$key]);
+					$number = strpos($line, ':');
+					if ($number !== FALSE) {
+						$configContent[$key] = str_replace("\$dbconfig['db_port']", "':'.\$dbconfig['db_port']", $configContent[$key]);
+					}
 				}
 				if (strpos($line, "encryptBackup") !== FALSE) {
 					$backupVariable = false;
@@ -381,6 +346,19 @@ $encryptBackup = false;
 			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD COLUMN `module` int(10)   NULL DEFAULT 0 after `owners`;");
 		}
 
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_role` LIKE 'changeowner';");
+		if (!$adb->num_rows($result)) {
+			$adb->query("ALTER TABLE `vtiger_role` 
+					CHANGE `allowassignedrecordsto` `allowassignedrecordsto` tinyint(1)   NOT NULL DEFAULT 1 after `depth` , 
+					ADD COLUMN `changeowner` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `allowassignedrecordsto` , 
+					ADD COLUMN `searchunpriv` text NULL after `changeowner` ;");
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_proc_tc` (
+				`type` varchar(30) DEFAULT NULL,
+				`param` varchar(30) DEFAULT NULL,
+				`value` varchar(200) DEFAULT NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -394,6 +372,7 @@ $encryptBackup = false;
 
 		$addHandler[] = ['vtiger.entity.link.after', 'modules/ModTracker/handlers/ModTrackerHandler.php', 'ModTrackerHandler', '', 1, '[]'];
 		$addHandler[] = ['vtiger.entity.unlink.after', 'modules/ModTracker/handlers/ModTrackerHandler.php', 'ModTrackerHandler', '', 1, '[]'];
+		$addHandler[] = ['user.logout.before', 'modules/Users/handlers/LogoutHandler.php', 'LogoutHandler', '', 1, '[]'];
 		foreach ($addHandler as $handler) {
 			if (!$em) {
 				$em = new VTEventsManager($adb);
@@ -429,7 +408,7 @@ $encryptBackup = false;
 			$adb->pquery("UPDATE `vtiger_backup_settings` SET `param` = ? WHERE `type` = ? AND `param` = ? LIMIT 1 ;", ['backup_folder', 'folder', 'storage_folder']);
 		}
 		$result = $adb->pquery("SELECT * FROM `vtiger_backup_settings` WHERE `type` = ? AND `param` = ?;", ['notifications', 'users']);
-		if ($adb->num_rows($result) == 1) {
+		if ($adb->num_rows($result) == 0) {
 			$adb->pquery("insert  into `vtiger_backup_settings`(`type`,`param`,`value`) values (?,?,?);", ['notifications', 'users', '']);
 			$adb->pquery("insert  into `vtiger_backup_settings`(`type`,`param`,`value`) values (?,?,?);", ['main', 'type', 'false']);
 			$adb->pquery("insert  into `vtiger_backup_settings`(`type`,`param`,`value`) values (?,?,?);", ['ftp', 'host', '']);
@@ -475,7 +454,7 @@ $encryptBackup = false;
 			$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = 1 WHERE `ossmailtemplates_type` = ? ;", ['ossmailtemplates_type']);
 		}
 
-		$adb->pquery("UPDATE `vtiger_field` SET `generatedtype` = ?, `presence` = ?, `typeofdata` = ?, `quickcreate` = ? WHERE `columnname` = ? AND `tablename` = ?;", [2, 2, 'V~M', 2, 'related_to', 'vtiger_potential']);
+		$adb->pquery("UPDATE `vtiger_field` SET `generatedtype` = ?, `presence` = ?, `typeofdata` = ?, `quickcreate` = ? WHERE `columnname` = ? AND `tablename` = ?;", [1, 2, 'V~M', 2, 'related_to', 'vtiger_potential']);
 
 		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = '' WHERE tabid = ? AND related_tabid = ? AND name = ?;", [getTabid('Quotes'), getTabid('Calculations'), 'get_related_list']);
 		$adb->pquery("UPDATE `com_vtiger_workflow_tasktypes` SET modules = ? WHERE tasktypename = ?;", ['{"include":["Contacts","OSSEmployees","Accounts","Leads","Vendors"],"exclude":[]}', 'VTAddressBookTask']);
@@ -610,6 +589,7 @@ $encryptBackup = false;
 		</tr>
 	</tbody>
 </table>', 'Calculation PDF']);
+$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?;", ['Calculation PDF']);
 		}
 		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_marketing` WHERE `param` = 'create_always';");
 		if (!$adb->num_rows($result)) {
@@ -619,7 +599,7 @@ $encryptBackup = false;
 		$adb->pquery("UPDATE `vtiger_field` SET `fieldlabel` = ? WHERE `columnname` = ? AND `tablename` = ?;", ['Id', 'id', 'vtiger_ossmailview']);
 		$adb->pquery("UPDATE `vtiger_def_org_share` SET `editstatus` = ? WHERE `ruleid` = ? AND `tabid` = ?;", [0, 5, 'Calendar']);
 
-		$actions = [26 => 'Dashboard', 27 => 'CreateDashboardFilter'];
+		$actions = [26 => 'Dashboard', 27 => 'CreateDashboardFilter', 28 => 'QuickExportToExcel'];
 		foreach ($actions as $key => $action) {
 			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;', [$action]);
 			if ($adb->num_rows($result) == 0) {
@@ -646,9 +626,75 @@ $encryptBackup = false;
 		$pdfContent = $this->pdfContent();
 		while ($row = $adb->fetch_array($result)) {
 			if (array_key_exists($row['title'], $pdfContent) && strpos($row['content'], '#Contacts_lastname#') !== FALSE) {
-				$adb->pquery("UPDATE `vtiger_osspdf` SET `content` = ? WHERE `title` = ? ;", [$row['title'], $pdfContent[$row['title']]]);
+				$adb->pquery("UPDATE `vtiger_osspdf` SET `content` = ? WHERE `title` = ? ;", [$pdfContent[$row['title']],$row['title']]);
 			}
 		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` = ? ", ['colors', 'Call']);
+		if (!$adb->num_rows($result)) {
+			$adb->query("insert  into `vtiger_calendar_config`(`type`,`name`,`label`,`value`) values ('colors','Call','Call','#80B584');");
+		}
+		$result = $adb->query('SELECT MAX(linkid) AS max_linkId FROM `vtiger_links`;');
+		$maxLink = $adb->query_result_rowdata($result, 0);
+		$adb->pquery("UPDATE `vtiger_links_seq` SET `id` = " . $maxLink[0] . ";");
+
+		//sequance
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [7, getTabid('HelpDesk'), 'smownerid']);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [2, getTabid('HelpDesk'), 'parent_id']);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [5, getTabid('HelpDesk'), 'priority']);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [4, getTabid('HelpDesk'), 'status']);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [6, getTabid('HelpDesk'), 'description']);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [3, getTabid('HelpDesk'), 'projectid']);
+
+		$adb->pquery("UPDATE `vtiger_field` SET `typeofdata` = ? WHERE `tabid` = ? AND `columnname` = ?;", ['V~M', getTabid('SalesOrder'), 'recurring_frequency']);
+		$adb->pquery("UPDATE `vtiger_field` SET `typeofdata` = ? WHERE `tabid` = ? AND `columnname` = ?;", ['D~M', getTabid('SalesOrder'), 'start_period']);
+		$adb->pquery("UPDATE `vtiger_field` SET `typeofdata` = ? WHERE `tabid` = ? AND `columnname` = ?;", ['D~M~OTH~G~start_period~Start Period', getTabid('SalesOrder'), 'end_period']);
+		$adb->pquery("UPDATE `vtiger_field` SET `typeofdata` = ? WHERE `tabid` = ? AND `columnname` = ?;", ['V~M', getTabid('SalesOrder'), 'payment_duration']);
+
+		$adb->pquery("UPDATE `vtiger_field` SET `summaryfield` = ? WHERE `tabid` = ? AND `columnname` = ?;", [0, getTabid('OSSPasswords'), 'link_adres']);
+
+		$adb->pquery("UPDATE `vtiger_field` SET `generatedtype` = ? WHERE `tabid` = ? AND `columnname` = ?;", [1, getTabid('Contacts'), 'smownerid']);
+
+		$adb->pquery("UPDATE `vtiger_field` 
+					SET	fieldlabel = (
+						CASE
+						  WHEN columnname = 'name' 
+						  THEN 'LBL_ATTACHMENT' 
+						  WHEN columnname = 'from_email' 
+						  THEN 'LBL_FROM' 
+						  WHEN columnname = 'to_email' 
+						  THEN 'LBL_TO' 
+						  WHEN columnname = 'cc_email' 
+						  THEN 'LBL_CC' 
+						  WHEN columnname = 'bcc_email' 
+						  THEN 'LBL_BCC' 
+						  ELSE fieldlabel 
+						END
+					  ) 
+					WHERE tabid = ? AND columnname IN ('name','from_email','to_email','cc_email','bcc_email');", [getTabid('Emails')]);
+
+		$adb->pquery("UPDATE `com_vtiger_workflows` SET `test` = ? WHERE `module_name` = ? AND `summary` = ?;", ['[{"fieldname":"(related_to : (HelpDesk) from_portal)","operation":"is","value":"1","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', 'ModComments', 'New comment added to ticket from portal']);
+
+		$adb->pquery("UPDATE `vtiger_field` SET `fieldlabel` = ? WHERE `fieldlabel` = ?;", ['Verification data', 'Werification data']);
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_TIMECONTROL_PROCESSES']);
+		if (!$adb->num_rows($result)) {
+			$blockid = $adb->query_result(
+				$adb->pquery("SELECT blockid FROM vtiger_settings_blocks WHERE label='LBL_PROCESSES'", array()), 0, 'blockid');
+			$sequence = (int) $adb->query_result($adb->pquery("SELECT max(sequence) as sequence FROM vtiger_settings_field WHERE blockid=?", array($blockid)), 0, 'sequence') + 1;
+			$fieldid = $adb->getUniqueId('vtiger_settings_field');
+			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
+			VALUES (?,?,?,?,?,?,?)", array($fieldid, $blockid, $sequence, 'LBL_TIMECONTROL_PROCESSES', '', 'LBL_TIMECONTROL_PROCESSES_DESCRIPTION', 'index.php?module=TimeControlProcesses&parent=Settings&view=Index'));
+
+			$adb->pquery("insert  into `yetiforce_proc_tc`(`type`,`param`,`value`) values ('general','oneDay','false');");
+			$adb->pquery("insert  into `yetiforce_proc_tc`(`type`,`param`,`value`) values ('general','timeOverlap','false')");
+		}
+
+		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_marketing` WHERE `type` = ? AND `param` =? ;", ['conversion', 'mapping']);
+		if (!$adb->num_rows($result)) {
+			$adb->pquery("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values (?,?,?);", ['conversion', 'mapping', '[{"company":"accountname"}]']);
+		}
+
+		$adb->pquery("UPDATE `vtiger_currencies` SET `currency_symbol` = ? WHERE `currency_name` = ?;", ['₽', 'Russia, Rubles']);
 
 		$adb->query("UPDATE `vtiger_users` SET `theme` = 'twilight';");
 
@@ -699,7 +745,7 @@ $encryptBackup = false;
 		$log->debug("Exiting YetiForceUpdate::picklists() method ...");
 	}
 
-	public function getPicklistId($fieldName, $value)
+	function getPicklistId($fieldName, $value)
 	{
 		global $log, $adb;
 		$log->debug("Entering YetiForceUpdate::getPicklistId(" . $fieldName . ',' . $value . ") method ...");
