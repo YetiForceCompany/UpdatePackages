@@ -1,3 +1,3 @@
 Required PHP version needs to be equal or greater than 5.4.  
-The update package introduces changes in relations so some data is deleted.
+During the update the entire history of backup copies will be lost.
 Attention: You will be redirected to Home page when update is completed.

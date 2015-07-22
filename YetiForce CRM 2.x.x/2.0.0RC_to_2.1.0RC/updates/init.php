@@ -69,7 +69,9 @@ class YetiForceUpdate
 		'modules\Settings\BackUp\actions\CreateBackUp.php',
 		'modules\Settings\BackUp\actions\CreateFileBackUp.php',
 		'modules\Settings\BackUp\actions\SaveFTPConfig.php',
-		'modules\Vtiger\resources\validator\EmailValidator.js'];
+		'modules\Vtiger\resources\validator\EmailValidator.js',
+		'layouts\vlayout\modules\OSSMailTemplates\Config.tpl',
+		'layouts\vlayout\skins\images\btnAdd.png'];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -142,7 +144,7 @@ class YetiForceUpdate
 				}
 				if (strpos($line, "dbconfig['db_hostname'] =") !== FALSE) {
 					$number = strpos($line, ':');
-					if ($number !== FALSE) {
+					if ($number === FALSE) {
 						$configContent[$key] = str_replace("\$dbconfig['db_port']", "':'.\$dbconfig['db_port']", $configContent[$key]);
 					}
 				}
@@ -157,11 +159,11 @@ class YetiForceUpdate
 $encryptBackup = false;
 ';
 			}
-			$log->debug("Entering YetiForceUpdate::updateFiles() method ... alle string " . $content);
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
 			fclose($file);
 		}
+		$log->debug("Exiting YetiForceUpdate::updateFiles() method ... ");
 	}
 
 	function roundcubeConfig()
@@ -186,6 +188,7 @@ $encryptBackup = false;
 			fwrite($file, $content);
 			fclose($file);
 		}
+		$log->debug("Exiting YetiForceUpdate::roundcubeConfig() method ... ");
 	}
 
 	function databaseSchema()
@@ -443,7 +446,7 @@ $encryptBackup = false;
 				}
 			}
 		}
-		$result = $adb->pquery("SELECT * FROM `vtiger_no_of_currency_decimals` WHERE `no_of_currency_decimalsid` = 0;");
+		$result = $adb->pquery("SELECT * FROM `vtiger_no_of_currency_decimals` WHERE `no_of_currency_decimals` = 0;");
 		if (!$adb->num_rows($result)) {
 			$adb->query("insert  into `vtiger_no_of_currency_decimals`(`no_of_currency_decimalsid`,`no_of_currency_decimals`,`sortorderid`,`presence`) values (0,'0',0,1)");
 			$adb->query("insert  into `vtiger_no_of_currency_decimals`(`no_of_currency_decimalsid`,`no_of_currency_decimals`,`sortorderid`,`presence`) values (1,'1',1,1)");
@@ -589,7 +592,7 @@ $encryptBackup = false;
 		</tr>
 	</tbody>
 </table>', 'Calculation PDF']);
-$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?;", ['Calculation PDF']);
+			$adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?;", ['Calculation PDF']);
 		}
 		$result = $adb->pquery("SELECT * FROM `yetiforce_proc_marketing` WHERE `param` = 'create_always';");
 		if (!$adb->num_rows($result)) {
@@ -597,7 +600,7 @@ $adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?
 		}
 
 		$adb->pquery("UPDATE `vtiger_field` SET `fieldlabel` = ? WHERE `columnname` = ? AND `tablename` = ?;", ['Id', 'id', 'vtiger_ossmailview']);
-		$adb->pquery("UPDATE `vtiger_def_org_share` SET `editstatus` = ? WHERE `ruleid` = ? AND `tabid` = ?;", [0, 5, 'Calendar']);
+		$adb->pquery("UPDATE `vtiger_def_org_share` SET `editstatus` = ? WHERE `ruleid` = ? AND `tabid` = ?;", [0, 5, getTabid('Calendar')]);
 
 		$actions = [26 => 'Dashboard', 27 => 'CreateDashboardFilter', 28 => 'QuickExportToExcel'];
 		foreach ($actions as $key => $action) {
@@ -605,7 +608,7 @@ $adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?
 			if ($adb->num_rows($result) == 0) {
 				$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?,'0');", [$key, $action]);
 			}
-			$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
+			$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` not in ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
 			$result = $adb->query($sql);
 
 			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
@@ -626,7 +629,7 @@ $adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?
 		$pdfContent = $this->pdfContent();
 		while ($row = $adb->fetch_array($result)) {
 			if (array_key_exists($row['title'], $pdfContent) && strpos($row['content'], '#Contacts_lastname#') !== FALSE) {
-				$adb->pquery("UPDATE `vtiger_osspdf` SET `content` = ? WHERE `title` = ? ;", [$pdfContent[$row['title']],$row['title']]);
+				$adb->pquery("UPDATE `vtiger_osspdf` SET `content` = ? WHERE `title` = ? ;", [$pdfContent[$row['title']], $row['title']]);
 			}
 		}
 		$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` = ? ", ['colors', 'Call']);
@@ -696,9 +699,136 @@ $adb->pquery("UPDATE `vtiger_osspdf` SET `footer_content` = '' WHERE `title` = ?
 
 		$adb->pquery("UPDATE `vtiger_currencies` SET `currency_symbol` = ? WHERE `currency_name` = ?;", ['₽', 'Russia, Rubles']);
 
+		$adb->query('delete from vtiger_def_org_share where tabid NOT IN (SELECT tabid FROM `vtiger_field`)');
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_def_org_share` WHERE `tabid` IN (?,?) ", [getTabid('Faq'), getTabid('PriceBooks')]);
+		if (!$adb->num_rows($result)) {
+			$moduleInstance = Vtiger_Module::getInstance('Faq');
+			Vtiger_Access::setDefaultSharing($moduleInstance, 'public_readwritedelete');
+			Vtiger_Access::initSharing($moduleInstance);
+			$moduleInstance = Vtiger_Module::getInstance('PriceBooks');
+			Vtiger_Access::setDefaultSharing($moduleInstance, 'public_readwritedelete');
+			Vtiger_Access::initSharing($moduleInstance);
+		}
+
+		$this->rebootSeq();
+
+		$languageInformation = ['prefix' => 'nl_nl', 'label' => 'Dutch'];
+		$result = $adb->pquery('SELECT * FROM `vtiger_language` WHERE `prefix` = ?;', ['nl_nl']);
+		if (!$adb->num_rows($result)) {
+			$adb->pquery('INSERT INTO vtiger_language (id,name,prefix,label,lastupdated,isdefault,active) VALUES(?,?,?,?,?,?,?)', [$adb->getUniqueId('vtiger_language'), $languageInformation['label'], $languageInformation['prefix'],
+				$languageInformation['label'], date('Y-m-d H:i:s'), 0, 1]);
+		}
+
+		$actions = ['Import', 'Export', 'DuplicatesHandling', 'Dashboard', 'CreateDashboardFilter'];
+		foreach ($actions as $action) {
+			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;', [$action]);
+			if ($adb->num_rows($result) == 0) {
+				continue;
+			} else {
+				$actionId = $adb->query_result_raw($result, 0, 'actionid');
+			}
+			$tabids = [];
+			if (in_array($action, ['Import', 'Export', 'DuplicatesHandling'])) {
+				$tabids[] = getTabid('PriceBooks');
+			} else {
+				$tabids[] = getTabid('OSSMailView');
+				$tabids[] = getTabid('CallHistory');
+			}
+			$permission = 0;
+			if (in_array($action, ['Import', 'Export'])) {
+				$permission = 1;
+			}
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			for ($i = 0; $i < $adb->num_rows($resultP); $i++) {
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				foreach ($tabids as $tabid) {
+					$resultC = $adb->pquery("SELECT activityid FROM vtiger_profile2utility WHERE profileid=? AND tabid=? AND activityid=? ;", [$profileId, $tabid, $actionId]);
+					if ($adb->num_rows($resultC) == 0) {
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", array($profileId, $tabid, $actionId, $permission));
+					}
+				}
+			}
+		}
+
+		$adb->query("UPDATE `yetiforce_menu` SET `label` = 'MEN_COMPANIES_CONTACTS' WHERE `label` = 'MEN_LEADS' AND `role` = 0;");
+		$adb->pquery("UPDATE `yetiforce_menu` SET `sequence` = '24' WHERE `module` = ? AND `role` = 0 AND `type` = 0;", [getTabid('NewOrders')]);
+		$adb->pquery("UPDATE `yetiforce_menu` SET `sequence` = '23' WHERE `module` = ? AND `role` = 0 AND `type` = 0;", [getTabid('Reports')]);
+
+		$modules = [getTabid('Rss') => [0, 84, 0, 20, getTabid('Rss'), NULL, 0, NULL, 0, NULL, NULL, ''], getTabid('Portal') => [0, 84, 0, 21, getTabid('Portal'), NULL, 0, NULL, 0, NULL, NULL, ''], 'isNull' => [0, 84, 3, 22, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL]];
+		$result2 = $adb->pquery('SELECT * FROM yetiforce_menu WHERE role = ? AND `label` = ? AND parentid = ?;', [0, 'MEN_DATABESES', 0]);
+		$parent = (int) $adb->query_result_raw($result2, 0, 'id');
+		foreach ($modules as $tabid => $params) {
+			if ($tabid != 'isNull') {
+				$result = $adb->pquery("SELECT * FROM `yetiforce_menu` WHERE `type` = ? AND `role` =? AND `module` = ? AND parentid = ?;", [0, 0, $tabid, $parent]);
+			} else {
+				$result = $adb->pquery("SELECT * FROM `yetiforce_menu` WHERE `type` = ? AND `role` =? AND parentid = ? AND `module` IS NULL ;", [3, 0, $parent]);
+			}
+			if (!$adb->num_rows($result) || $adb->num_rows($result) == 3) {
+				$params[1] = $parent;
+				$adb->pquery("insert  into `yetiforce_menu`(`role`,`parentid`,`type`,`sequence`,`module`,`label`,`newwindow`,`dataurl`,`showicon`,`icon`,`sizeicon`,`hotkey`) values (" . generateQuestionMarks($params) . ");", $params);
+			}
+		}
+
+		$adb->query('delete from vtiger_def_org_share where tabid NOT IN (SELECT tabid FROM `vtiger_field`)');
+		
+		$adb->query('delete from vtiger_backup;');
+		$adb->query('delete from vtiger_backup_db;');
+		$adb->query('delete from vtiger_backup_files;');
+		$adb->query('delete from vtiger_backup_tmp;');
+		
 		$adb->query("UPDATE `vtiger_users` SET `theme` = 'twilight';");
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
+	}
+
+	public function rebootSeq()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::rebootSeq() method ...");
+		$rebootSeq['osscosts_no'] = 3;
+		$rebootSeq['smownerid'] = 2;
+		$rebootSeq['name'] = 1;
+		$rebootSeq['parentid'] = 4;
+		$rebootSeq['potentialid'] = 5;
+		$rebootSeq['projectid'] = 6;
+		$rebootSeq['ticketid'] = 7;
+		$rebootSeq['relategid'] = 8;
+		$rebootSeq['street'] = 1;
+		$rebootSeq['code'] = 3;
+		$rebootSeq['city'] = 4;
+		$rebootSeq['country'] = 5;
+		$rebootSeq['state'] = 6;
+		$rebootSeq['createdtime'] = 1;
+		$rebootSeq['modifiedtime'] = 2;
+		$rebootSeq['modifiedby'] = 3;
+		$rebootSeq['description'] = 1;
+		$rebootSeq['total'] = 13;
+		$rebootSeq['subtotal'] = 14;
+		$rebootSeq['taxtype'] = 14;
+		$rebootSeq['discount_percent'] = 14;
+		$rebootSeq['discount_amount'] = 14;
+		$rebootSeq['currency_id'] = 20;
+		$rebootSeq['conversion_rate'] = 21;
+		$rebootSeq['pre_tax_total'] = 23;
+		$rebootSeq['attention'] = 2;
+		$rebootSeq['total_purchase'] = 4;
+		$rebootSeq['total_margin'] = 5;
+		$rebootSeq['total_marginp'] = 6;
+		$rebootSeq['inheritsharing'] = 1;
+		$rebootSeq['shownerid'] = 2;
+		$rebootSeq['closedtime'] = 7;
+		$rebootSeq['was_read'] = 9;
+
+		$query = 'UPDATE vtiger_field SET ';
+		$query .=' sequence = CASE ';
+		foreach ($rebootSeq as $field => $sequence) {
+			$query .= ' WHEN columnname="' . $field . '" THEN ' . $sequence;
+		}
+		$query .=' ELSE sequence END ';
+		$query .= ' WHERE tabid = ?';
+		$adb->pquery($query, [getTabid('OSSCosts')]);
+		$log->debug("Exiting YetiForceUpdate::rebootSeq() method ...");
 	}
 
 	function picklists()
