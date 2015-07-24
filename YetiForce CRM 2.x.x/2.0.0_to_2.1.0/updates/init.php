@@ -71,7 +71,13 @@ class YetiForceUpdate
 		'modules\Settings\BackUp\actions\SaveFTPConfig.php',
 		'modules\Vtiger\resources\validator\EmailValidator.js',
 		'layouts\vlayout\modules\OSSMailTemplates\Config.tpl',
-		'layouts\vlayout\skins\images\btnAdd.png'];
+		'layouts\vlayout\skins\images\btnAdd.png',
+		'\config.csrf-secret.php',
+		'languages\de_de\Install.php',
+		'languages\en_us\Install.php',
+		'languages\pl_pl\Install.php',
+		'languages\pt_br\Install.php',
+		'languages\ru_ru\Install.php'];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -323,11 +329,15 @@ $encryptBackup = false;
 			FOREIGN KEY (`id`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE 
 		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
 
-		$result = $adb->pquery("SELECT COLUMN_NAME,DATA_TYPE
-			FROM information_schema.columns
-			WHERE TABLE_NAME = 'vtiger_module_dashboard';");
+		$result = $adb->pquery("SHOW COLUMNS FROM `vtiger_module_dashboard`;");
 		while ($row = $adb->fetch_array($result)) {
-			if (($row['COLUMN_NAME'] == 'filterid' || $row['column_name'] == 'filterid') && (in_array($row['DATA_TYPE'], ['int', 'INT']) || in_array($row['data_type'], ['int', 'INT']))) {
+			$type = '';
+			if($row['Type']){
+				$type = $row['Type'];
+			}else{
+				$type = $row['type'];
+			}
+			if (($row['Field'] == 'filterid' || $row['field'] == 'filterid') && (strpos($type, 'varchar') === FALSE )) {
 				$adb->query("ALTER TABLE `vtiger_module_dashboard` 
 					CHANGE `id` `id` int(19)   NOT NULL auto_increment first , 
 					CHANGE `blockid` `blockid` int(19)   NOT NULL after `id` , 
@@ -456,13 +466,11 @@ $encryptBackup = false;
 			$adb->query("insert  into `vtiger_no_of_currency_decimals`(`no_of_currency_decimalsid`,`no_of_currency_decimals`,`sortorderid`,`presence`) values (1,'1',1,1)");
 		}
 		$this->picklists();
-		$result = $adb->pquery("SELECT * FROM `vtiger_ossmailtemplates_type` WHERE `ossmailtemplates_type` = 'PLL_RECORD' AND `presence` = 0 ;");
-		if ($adb->num_rows($result)) {
-			$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = 1 WHERE `ossmailtemplates_type` = ? ;", ['ossmailtemplates_type']);
-		}
-
+		
 		$adb->pquery("UPDATE `vtiger_field` SET `generatedtype` = ?, `presence` = ?, `typeofdata` = ?, `quickcreate` = ? WHERE `columnname` = ? AND `tablename` = ?;", [1, 2, 'V~M', 2, 'related_to', 'vtiger_potential']);
 
+		$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = 0 WHERE `ossmailtemplates_type` IN (?,?) ;", ['PLL_RECORD','PLL_MAIL']);
+		
 		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = '' WHERE tabid = ? AND related_tabid = ? AND name = ?;", [getTabid('Quotes'), getTabid('Calculations'), 'get_related_list']);
 		$adb->pquery("UPDATE `com_vtiger_workflow_tasktypes` SET modules = ? WHERE tasktypename = ?;", ['{"include":["Contacts","OSSEmployees","Accounts","Leads","Vendors"],"exclude":[]}', 'VTAddressBookTask']);
 		$adb->pquery("UPDATE `vtiger_links` 
@@ -642,7 +650,12 @@ $encryptBackup = false;
 		}
 		$result = $adb->query('SELECT MAX(linkid) AS max_linkId FROM `vtiger_links`;');
 		$maxLink = $adb->query_result_rowdata($result, 0);
-		$adb->pquery("UPDATE `vtiger_links_seq` SET `id` = " . $maxLink[0] . ";");
+		if($maxLink[0]){
+			$maxLink = $maxLink[0];
+		}else{
+			$maxLink = $maxLink['max_linkId'];
+		}
+		$adb->pquery("UPDATE `vtiger_links_seq` SET `id` = " . $maxLink . ";");
 
 		//sequance
 		$adb->pquery("UPDATE `vtiger_field` SET `quickcreatesequence` = ? WHERE `tabid` = ? AND `columnname` = ?;", [7, getTabid('HelpDesk'), 'smownerid']);
@@ -836,13 +849,21 @@ $encryptBackup = false;
 			}
 		}
 
-		$result = $adb->pquery('SELECT accountid FROM `vtiger_account` INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_account.accountid WHERE vtiger_crmentity.deleted=0;');
+		$result = $adb->query('SELECT accountid FROM `vtiger_account` INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_account.accountid WHERE vtiger_crmentity.deleted=0;');
 		$num = $adb->num_rows($result);
 		for($i=0;$i<$num;$i++){
 			$accountId = $adb->query_result($result, $i, 'accountid');
 			$adb->query("UPDATE `vtiger_account` SET `sum_time` = (SELECT SUM(sum_time) FROM vtiger_osstimecontrol
 				INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_osstimecontrol.osstimecontrolid
 				WHERE vtiger_crmentity.deleted=0 AND  vtiger_osstimecontrol.accountid = ".$accountId." AND osstimecontrol_status = '".'Accepted'."') WHERE vtiger_account.accountid = ".$accountId." ;");
+		}
+		
+		$result = $adb->query("SELECT * FROM `vtiger_crmentity` WHERE `label` = 'Send Notification Email to Record Owner' AND `searchlabel` = 'Send Notification Email to Record Owner';");
+		$num = $adb->num_rows($result);
+		if($num > 1){
+			$result = $adb->query("SELECT ossmailtemplatesid FROM `vtiger_ossmailtemplates` WHERE `name` = 'Send invitations';");
+			$ossmailtemplatesid = $adb->query_result($result, 0, 'ossmailtemplatesid');
+			$adb->pquery("UPDATE `vtiger_crmentity` SET `label` = ?, `searchlabel` = ? WHERE `crmid` = ? ;",['Send invitations','Send invitations',$ossmailtemplatesid]);
 		}
 		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
