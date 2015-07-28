@@ -97,7 +97,8 @@ class YetiForceUpdate
 		'layouts/vlayout/modules/QuotesEnquires/DetailViewSummaryContents.tpl',
 		'layouts/vlayout/modules/RequirementCards/DetailViewSummaryContents.tpl',
 		'layouts/vlayout/modules/Reservations/DetailViewSummaryContents.tpl',
-		'config/config.template.php'
+		'config/config.template.php',
+		'config.csrf-secret.php',
 		];
 
 	function YetiForceUpdate($modulenode)
@@ -122,6 +123,8 @@ class YetiForceUpdate
 
 	function postupdate()
 	{
+		header('Location: '.vglobal('site_URL'));
+		exit;
 		return true;
 	}
 
