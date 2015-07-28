@@ -77,7 +77,28 @@ class YetiForceUpdate
 		'languages\en_us\Install.php',
 		'languages\pl_pl\Install.php',
 		'languages\pt_br\Install.php',
-		'languages\ru_ru\Install.php'];
+		'languages\ru_ru\Install.php',
+		'layouts/vlayout/modules/Accounts/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Calculations/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Contacts/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/HelpDesk/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/HolidaysEntitlement/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Ideas/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Leads/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/LettersIn/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/LettersOut/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/NewOrders/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/OSSEmployees/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/OSSMailView/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/OSSTimeControl/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Potentials/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Project/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/ProjectTask/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/QuotesEnquires/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/RequirementCards/DetailViewSummaryContents.tpl',
+		'layouts/vlayout/modules/Reservations/DetailViewSummaryContents.tpl',
+		'config/config.template.php'
+		];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -115,6 +136,7 @@ class YetiForceUpdate
 			$configContent = file($config);
 			$emptyLine = false;
 			$backupVariable = true;
+			$gsAutocomplete = true;
 			foreach ($configContent as $key => $line) {
 				if ($emptyLine && strlen($line) == 1) {
 					unset($configContent[$key]);
@@ -157,14 +179,27 @@ class YetiForceUpdate
 				if (strpos($line, "encryptBackup") !== FALSE) {
 					$backupVariable = false;
 				}
+				if (strpos($line, "gsAutocomplete") !== FALSE) {
+					$gsAutocomplete = false;
+				}
 			}
 			$content = implode("", $configContent);
 			if ($backupVariable) {
 				$content .= '
 // Enable encrypt backup, Support from PHP 5.6.x
 $encryptBackup = false;
-';
-			}
+';			}
+			if ($gsAutocomplete) {
+				$content .= '
+// autocomplete global search - Whether or not automated search should be turned on"
+$gsAutocomplete = 1; // 0 or 1
+
+// autocomplete global search - The minimum number of characters a user must type before a search is performed. 
+$gsMinLength = 3;
+
+// autocomplete global search - Amount of returned results.
+$gsAmountResponse = 10;
+';}
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
 			fclose($file);

@@ -994,7 +994,7 @@ li.ui-timepicker-selected,
   }
 }*/
 .recordEditView .contentHeader {
-	padding: 1.5% 0;
+	padding: 0.5% 0 1% 0;
 }
 .recordEditView .table .fieldLabel,
 .recordEditView .table .fieldValue {
@@ -3383,9 +3383,39 @@ span[name=existingImages] img{
 .paddingLeftMd{
 	padding-left: 15px;
 }
-.widget_header div:nth-child(2).btn-toolbar{
+.widget_header div:nth-child(2).btn-toolbar,.editViewContainer .contentHeader.row div:nth-child(2){
 	margin-top: 20px;
 }
 .fieldLabel .referenceMandatory{
 	margin-right: -12px;
+}
+.ui-widget-content{
+	padding: .8em;
+}
+.ui-autocomplete .ui-autocomplete-category {
+	font-weight: bold;
+	line-height: 1.5;
+}
+.ui-autocomplete .ui-autocomplete-category:first-child {
+	margin: .8em 0 .2em;
+}
+.ui-autocomplete .ui-menu-item {
+	padding: .2em .8em;
+}
+.ui-autocomplete .ui-state-focus{
+	border: none;
+	background: #ebebeb;
+}
+.widgetHr{
+	margin-top: 0;
+}
+.headerLinksMails .btn-group{
+	margin-top: 11px;
+}
+.finalDiscountUI,.finalTaxUI{
+	bottom: 5px;
+}
+ 
+.sideBarTitle{
+	font-size: 20px
 }
