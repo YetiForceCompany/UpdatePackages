@@ -72,7 +72,6 @@ class YetiForceUpdate
 		'modules\Vtiger\resources\validator\EmailValidator.js',
 		'layouts\vlayout\modules\OSSMailTemplates\Config.tpl',
 		'layouts\vlayout\skins\images\btnAdd.png',
-		'\config.csrf-secret.php',
 		'languages\de_de\Install.php',
 		'languages\en_us\Install.php',
 		'languages\pl_pl\Install.php',
@@ -123,6 +122,16 @@ class YetiForceUpdate
 
 	function postupdate()
 	{
+		global $log, $adb;
+		$dirName = 'cache/updates';
+		$result = true;
+		$adb->query('SET FOREIGN_KEY_CHECKS = 1;');
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$adb->query("INSERT INTO `yetiforce_updates` (`user`, `name`, `from_version`, `to_version`, `result`) VALUES ('" . $currentUser->get('user_name') . "', '" . $this->modulenode->label . "', '" . $this->modulenode->from_version . "', '" . $this->modulenode->to_version . "','" . $result . "');", true);
+		$adb->query("UPDATE vtiger_version SET `current_version` = '" . $this->modulenode->to_version . "';");
+		Vtiger_Functions::recurseDelete($dirName . '/files');
+		Vtiger_Functions::recurseDelete($dirName . '/init.php');
+		Vtiger_Functions::recurseDelete('cache/templates_c');
 		header('Location: '.vglobal('site_URL'));
 		exit;
 		return true;
