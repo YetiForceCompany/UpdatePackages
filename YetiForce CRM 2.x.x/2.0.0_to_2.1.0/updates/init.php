@@ -98,7 +98,16 @@ class YetiForceUpdate
 		'layouts/vlayout/modules/Reservations/DetailViewSummaryContents.tpl',
 		'config/config.template.php',
 		'config.csrf-secret.php',
-		];
+		'modules/OSSMail/roundcube/plugins/oss_addressbook',
+		'languages/de_de/Password.php',
+		'languages/en_us/Password.php',
+		'languages/nl_nl/Password.php',
+		'languages/pl_pl/Password.php',
+		'languages/pt_br/Password.php',
+		'languages/ru_ru/Password.php',
+		'vtlib/ModuleDir/BaseModule/languages/en_us/ModuleName.php',
+		'vtlib/ModuleDir/BaseModule/ModuleName.php'
+	];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -125,6 +134,8 @@ class YetiForceUpdate
 		global $log, $adb;
 		$dirName = 'cache/updates';
 		$result = true;
+		Vtiger_Deprecated::createModuleMetaFile();
+		Vtiger_Access::syncSharingAccess();
 		$adb->query('SET FOREIGN_KEY_CHECKS = 1;');
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$adb->query("INSERT INTO `yetiforce_updates` (`user`, `name`, `from_version`, `to_version`, `result`) VALUES ('" . $currentUser->get('user_name') . "', '" . $this->modulenode->label . "', '" . $this->modulenode->from_version . "', '" . $this->modulenode->to_version . "','" . $result . "');", true);
@@ -132,7 +143,7 @@ class YetiForceUpdate
 		Vtiger_Functions::recurseDelete($dirName . '/files');
 		Vtiger_Functions::recurseDelete($dirName . '/init.php');
 		Vtiger_Functions::recurseDelete('cache/templates_c');
-		header('Location: '.vglobal('site_URL'));
+		header('Location: ' . vglobal('site_URL'));
 		exit;
 		return true;
 	}
@@ -200,7 +211,8 @@ class YetiForceUpdate
 				$content .= '
 // Enable encrypt backup, Support from PHP 5.6.x
 $encryptBackup = false;
-';			}
+';
+			}
 			if ($gsAutocomplete) {
 				$content .= '
 // autocomplete global search - Whether or not automated search should be turned on"
@@ -211,7 +223,8 @@ $gsMinLength = 3;
 
 // autocomplete global search - Amount of returned results.
 $gsAmountResponse = 10;
-';}
+';
+			}
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
 			fclose($file);
@@ -379,9 +392,9 @@ $gsAmountResponse = 10;
 		$result = $adb->pquery("SHOW COLUMNS FROM `vtiger_module_dashboard`;");
 		while ($row = $adb->fetch_array($result)) {
 			$type = '';
-			if($row['Type']){
+			if ($row['Type']) {
 				$type = $row['Type'];
-			}else{
+			} else {
 				$type = $row['type'];
 			}
 			if (($row['Field'] == 'filterid' || $row['field'] == 'filterid') && (strpos($type, 'varchar') === FALSE )) {
@@ -513,11 +526,11 @@ $gsAmountResponse = 10;
 			$adb->query("insert  into `vtiger_no_of_currency_decimals`(`no_of_currency_decimalsid`,`no_of_currency_decimals`,`sortorderid`,`presence`) values (1,'1',1,1)");
 		}
 		$this->picklists();
-		
+
 		$adb->pquery("UPDATE `vtiger_field` SET `generatedtype` = ?, `presence` = ?, `typeofdata` = ?, `quickcreate` = ? WHERE `columnname` = ? AND `tablename` = ?;", [1, 2, 'V~M', 2, 'related_to', 'vtiger_potential']);
 
-		$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = 0 WHERE `ossmailtemplates_type` IN (?,?) ;", ['PLL_RECORD','PLL_MAIL']);
-		
+		$adb->pquery("UPDATE `vtiger_ossmailtemplates_type` SET `presence` = 0 WHERE `ossmailtemplates_type` IN (?,?) ;", ['PLL_RECORD', 'PLL_MAIL']);
+
 		$adb->pquery("UPDATE `vtiger_relatedlists` SET actions = '' WHERE tabid = ? AND related_tabid = ? AND name = ?;", [getTabid('Quotes'), getTabid('Calculations'), 'get_related_list']);
 		$adb->pquery("UPDATE `com_vtiger_workflow_tasktypes` SET modules = ? WHERE tasktypename = ?;", ['{"include":["Contacts","OSSEmployees","Accounts","Leads","Vendors"],"exclude":[]}', 'VTAddressBookTask']);
 		$adb->pquery("UPDATE `vtiger_links` 
@@ -697,9 +710,9 @@ $gsAmountResponse = 10;
 		}
 		$result = $adb->query('SELECT MAX(linkid) AS max_linkId FROM `vtiger_links`;');
 		$maxLink = $adb->query_result_rowdata($result, 0);
-		if($maxLink[0]){
+		if ($maxLink[0]) {
 			$maxLink = $maxLink[0];
-		}else{
+		} else {
 			$maxLink = $maxLink['max_linkId'];
 		}
 		$adb->pquery("UPDATE `vtiger_links_seq` SET `id` = " . $maxLink . ";");
@@ -898,21 +911,25 @@ $gsAmountResponse = 10;
 
 		$result = $adb->query('SELECT accountid FROM `vtiger_account` INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_account.accountid WHERE vtiger_crmentity.deleted=0;');
 		$num = $adb->num_rows($result);
-		for($i=0;$i<$num;$i++){
+		for ($i = 0; $i < $num; $i++) {
 			$accountId = $adb->query_result($result, $i, 'accountid');
 			$adb->query("UPDATE `vtiger_account` SET `sum_time` = (SELECT SUM(sum_time) FROM vtiger_osstimecontrol
 				INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid=vtiger_osstimecontrol.osstimecontrolid
-				WHERE vtiger_crmentity.deleted=0 AND  vtiger_osstimecontrol.accountid = ".$accountId." AND osstimecontrol_status = '".'Accepted'."') WHERE vtiger_account.accountid = ".$accountId." ;");
+				WHERE vtiger_crmentity.deleted=0 AND  vtiger_osstimecontrol.accountid = " . $accountId . " AND osstimecontrol_status = '" . 'Accepted' . "') WHERE vtiger_account.accountid = " . $accountId . " ;");
 		}
-		
+
 		$result = $adb->query("SELECT * FROM `vtiger_crmentity` WHERE `label` = 'Send Notification Email to Record Owner' AND `searchlabel` = 'Send Notification Email to Record Owner';");
 		$num = $adb->num_rows($result);
-		if($num > 1){
+		if ($num > 1) {
 			$result = $adb->query("SELECT ossmailtemplatesid FROM `vtiger_ossmailtemplates` WHERE `name` = 'Send invitations';");
 			$ossmailtemplatesid = $adb->query_result($result, 0, 'ossmailtemplatesid');
-			$adb->pquery("UPDATE `vtiger_crmentity` SET `label` = ?, `searchlabel` = ? WHERE `crmid` = ? ;",['Send invitations','Send invitations',$ossmailtemplatesid]);
+			$adb->pquery("UPDATE `vtiger_crmentity` SET `label` = ?, `searchlabel` = ? WHERE `crmid` = ? ;", ['Send invitations', 'Send invitations', $ossmailtemplatesid]);
 		}
-		
+		$result = $adb->query('SELECT * FROM `vtiger_module_dashboard_widgets` WHERE `module` NOT IN (0)');
+		if (!$adb->num_rows($result)) {
+			$adb->query("UPDATE `vtiger_module_dashboard_widgets` w, `vtiger_links` l SET `module` = l.tabid WHERE w.linkid = l.linkid;");
+		}
+
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 
