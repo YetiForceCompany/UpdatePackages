@@ -96,18 +96,40 @@ class Vtiger_Functions
 		return self::$userIdCurrencyIdCache[$userid];
 	}
 
-	protected static $currencyInfoCache = array();
+	protected static $currencyInfoCache = [];
 
 	protected static function getCurrencyInfo($currencyid)
 	{
-		$adb = PearDatabase::getInstance();
 		if (!isset(self::$currencyInfoCache[$currencyid])) {
-			$result = $adb->pquery('SELECT * FROM vtiger_currency_info', array());
-			while ($row = $adb->fetch_array($result)) {
+			$db = PearDatabase::getInstance();
+			$result = $db->query('SELECT * FROM vtiger_currency_info');
+			while ($row = $db->fetch_array($result)) {
 				self::$currencyInfoCache[$row['id']] = $row;
 			}
 		}
 		return self::$currencyInfoCache[$currencyid];
+	}
+
+	public static function getAllCurrency($onlyActive = false)
+	{
+		if (count(self::$currencyInfoCache) == 0) {
+			$db = PearDatabase::getInstance();
+			$result = $db->query('SELECT * FROM vtiger_currency_info');
+			while ($row = $db->fetch_array($result)) {
+				self::$currencyInfoCache[$row['id']] = $row;
+			}
+		}
+		if ($onlyActive) {
+			$currencies = [];
+			foreach (self::$currencyInfoCache as $currency) {
+				if ($currency['currency_status'] == 'Active') {
+					$currencies[$currency['id']] = $currency;
+				}
+			}
+			return $currencies;
+		} else {
+			return self::$currencyInfoCache;
+		}
 	}
 
 	static function getCurrencyName($currencyid, $show_symbol = true)
@@ -359,6 +381,7 @@ class Vtiger_Functions
 	}
 
 	protected static $ownerRecordLabelCache = [];
+
 	static function getOwnerRecordLabel($id)
 	{
 		if (!isset(self::$ownerRecordLabelCache[$id])) {
@@ -426,7 +449,7 @@ class Vtiger_Functions
 
 				$moduleInfo = self::getModuleFieldInfos($module);
 				$moduleInfoExtend = [];
-				if(count($moduleInfo) > 0){
+				if (count($moduleInfo) > 0) {
 					foreach ($moduleInfo as $field => $fieldInfo) {
 						$moduleInfoExtend[$fieldInfo['columnname']] = $fieldInfo;
 					}
@@ -1045,7 +1068,7 @@ class Vtiger_Functions
 		}
 	}
 
-	static function removeHtmlTags(array $tag, $html)
+	static function removeHtmlTags(array $tags, $html)
 	{
 		$crmUrl = vglobal($key);
 		$doc = new DOMDocument();
@@ -1055,28 +1078,24 @@ class Vtiger_Functions
 		libxml_clear_errors();
 		libxml_use_internal_errors($previous_value);
 
-		for ($i = 0; $i < count($tag); $i++) {
-			$nodeList = $doc->getElementsByTagName($tag[$i]);
-
-			if ('img' === $tag[$i]) {
-				foreach ($nodeList as $nodeKey => $singleNode) {
-					$htmlNode = $singleNode->ownerDocument->saveHTML($singleNode);
+		foreach ($tags as $tag) {
+			$xPath = new DOMXPath($doc);
+			$nodes = $xPath->query('//' . $tag);
+			for ($i = 0; $i < $nodes->length; $i++) {
+				if ('img' === $tag) {
+					$htmlNode = $nodes->item($i)->ownerDocument->saveHTML($nodes->item($i));
 					$imgDom = new DOMDocument();
 					$imgDom->loadHTML($htmlNode);
 					$xpath = new DOMXPath($imgDom);
 					$src = $xpath->evaluate("string(//img/@src)");
-
-					if (0 !== strpos('index.php', $src) || FALSE === strpos($crmUrl, $src)) {
-						$singleNode->parentNode->removeChild($singleNode);
+					if ($src == '' || 0 !== strpos('index.php', $src) || FALSE === strpos($crmUrl, $src)) {
+						$nodes->item($i)->parentNode->removeChild($nodes->item($i));
 					}
-				}
-			} else {
-				foreach ($nodeList as $nodeKey => $singleNode) {
-					$singleNode->parentNode->removeChild($singleNode);
+				} else {
+					$nodes->item($i)->parentNode->removeChild($nodes->item($i));
 				}
 			}
 		}
-
 		return $doc->saveHTML();
 	}
 
@@ -1284,7 +1303,7 @@ class Vtiger_Functions
 		}
 		return $return;
 	}
-	
+
 	public static function getInitials($name)
 	{
 		$initial = '';

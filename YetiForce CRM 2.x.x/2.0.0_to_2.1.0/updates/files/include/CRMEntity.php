@@ -52,6 +52,7 @@ class CRMEntity
 			$module = 'Calendar';
 			$modName = 'Activity';
 		}
+
 		// File access security check
 		if (!class_exists($modName)) {
 			if (file_exists("custom/modules/$module/$modName.php")) {
@@ -64,6 +65,7 @@ class CRMEntity
 		}
 		$focus = new $modName();
 		$focus->moduleName = $module;
+
 		return $focus;
 	}
 

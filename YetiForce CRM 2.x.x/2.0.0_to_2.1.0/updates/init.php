@@ -106,7 +106,8 @@ class YetiForceUpdate
 		'languages/pt_br/Password.php',
 		'languages/ru_ru/Password.php',
 		'vtlib/ModuleDir/BaseModule/languages/en_us/ModuleName.php',
-		'vtlib/ModuleDir/BaseModule/ModuleName.php'
+		'vtlib/ModuleDir/BaseModule/ModuleName.php',
+		'api/webservice/modules/Users.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -929,10 +930,111 @@ $gsAmountResponse = 10;
 		if (!$adb->num_rows($result)) {
 			$adb->query("UPDATE `vtiger_module_dashboard_widgets` w, `vtiger_links` l SET `module` = l.tabid WHERE w.linkid = l.linkid;");
 		}
-
+		$this->addFields();
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 
+	public function addFields(){
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::addFields() method ...");
+		include_once('vtlib/Vtiger/Module.php'); 
+		
+		$columnName = array("tabid","id","column","table","generatedtype","uitype","name","label","readonly","presence","defaultvalue","maximumlength","sequence","block","displaytype","typeofdata","quickcreate","quicksequence","info_type","masseditable","helpinfo","summaryfield","fieldparams","columntype","blocklabel","setpicklistvalues","setrelatedmodules");
+
+		$Calculations = array(
+		array('70','1748','productid','vtiger_calculationsproductrel','1','10','productid','Item Name','0','2','','100','1','113','5','V~M','1',NULL,'BAS','0','','0','',"int(19)","LBL_ITEM_DETAILS",[],['Products','Services']),
+		array('70','1749','quantity','vtiger_calculationsproductrel','1','7','quantity','Quantity','0','2','','100','2','113','5','N~O','1',NULL,'BAS','0','','0','',"decimal(25,3)","LBL_ITEM_DETAILS",[],[]),
+		array('70','1750','listprice','vtiger_calculationsproductrel','1','71','listprice','List Price','0','2','','100','3','113','5','N~O','1',NULL,'BAS','0','','0','',"decimal(27,8)","LBL_ITEM_DETAILS",[],[]),
+		array('70','1751','subtotal','vtiger_calculations','1','72','hdnSubTotal','Sub Total','1','2','','100','14','190','3','N~O','3','0','BAS','1','','0','',"decimal(25,8)","",[],[]),
+		array('70','1752','pre_tax_total','vtiger_calculations','1','72','pre_tax_total','Pre Tax Total','1','2','','100','23','185','3','N~O','1',NULL,'BAS','1','','0','',"decimal(25,8)","LBL_PRODUCT_INFORMATION",[],[])
+		);
+		$OSSCosts = array(
+		array('71','1753','productid','vtiger_inventoryproductrel','1','10','productid','Item Name','0','2','','100','1','188','5','V~M','1',NULL,'BAS','0','','0','',"int(19)","LBL_CUSTOM_INFORMATION",[],['Products','Services']),
+		array('71','1754','quantity','vtiger_inventoryproductrel','1','7','quantity','Quantity','0','2','','100','2','188','5','N~O','1',NULL,'BAS','0','','0','',"decimal(25,3)","LBL_CUSTOM_INFORMATION",[],[]),
+		array('71','1755','listprice','vtiger_inventoryproductrel','1','71','listprice','List Price','0','2','','100','3','188','5','N~O','1',NULL,'BAS','0','','0','',"decimal(27,8)","LBL_CUSTOM_INFORMATION",[],[]),
+		);
+		
+		$setToCRM = array('Calculations'=>$Calculations,'OSSCosts'=>$OSSCosts);
+
+		$setToCRMAfter = array();
+		foreach($setToCRM as $nameModule=>$module){
+			if(!$module)
+				continue;
+			foreach($module as $key=>$fieldValues){
+				for($i=0;$i<count($fieldValues);$i++){
+					$setToCRMAfter[$nameModule][$key][$columnName[$i]] = $fieldValues[$i];
+				}
+			}
+		}
+		foreach($setToCRMAfter as $moduleName=>$fields){
+			foreach($fields as $field){
+				if(self::checkFieldExists($field, $moduleName)){
+					continue;
+				}
+				$moduleInstance = Vtiger_Module::getInstance($moduleName);
+				$blockInstance = Vtiger_Block::getInstance($field['blocklabel'],$moduleInstance);
+				$id = $adb->getUniqueID('vtiger_field');
+				if($blockInstance){
+					$blockId = $blockInstance->id;
+				}else{
+					$blockId = $field['block'];
+				}
+				$adb->pquery("INSERT INTO vtiger_field (tabid, fieldid, columnname, tablename, generatedtype,
+				uitype, fieldname, fieldlabel, readonly, presence, defaultvalue, maximumlength, sequence,
+				block, displaytype, typeofdata, quickcreate, quickcreatesequence, info_type, helpinfo, summaryfield, fieldparams,masseditable) 
+				VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [getTabid($moduleName), $id, $field['column'], $field['table'], $field['generatedtype'],
+							$field['uitype'], $field['name'], $field['label'], $field['readonly'], $field['presence'], $field['defaultvalue'],
+							$field['maximumlength'],$field['sequence'], $blockId, $field['displaytype'], $field['typeofdata'],
+							$field['quickcreate'], $field['quicksequence'],$field['info_type'], $field['helpinfo'], $field['summaryfield'], $field['fieldparams'], $field['masseditable']]);
+				if (!empty($field['columntype']) && in_array($field['column'],['subtotal','pre_tax_total'])) {
+					$columntype = $field['columntype'];
+					if ($field['uitype'] == 10)
+						$columntype .= ', ADD INDEX (`' . $field['column'] . '`)';
+					Vtiger_Utils::AddColumn($field['table'], $field['column'], $columntype);
+				}
+				if($field['setrelatedmodules'] && $field['uitype'] == 10){
+					$this->setRelatedModules($field['setrelatedmodules'],$id,$moduleName);
+				}
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::addFields() method ...");
+	}
+	function setRelatedModules($moduleNames,$id,$moduleName)
+	{
+		global $log, $adb;
+		if (count($moduleNames) == 0) {
+			$log->debug("Setting (setRelatedModules) relation ERROR: No module names");
+			return false;
+		}
+		// We need to create core table to capture the relation between the field and modules.
+		if (!Vtiger_Utils::CheckTable('vtiger_fieldmodulerel')) {
+			Vtiger_Utils::CreateTable(
+				'vtiger_fieldmodulerel', '(fieldid INT NOT NULL, module VARCHAR(100) NOT NULL, relmodule VARCHAR(100) NOT NULL, status VARCHAR(10), sequence INT)', true
+			);
+		}
+		// END
+		foreach ($moduleNames as $relmodule) {
+			$checkres = $adb->pquery('SELECT * FROM vtiger_fieldmodulerel WHERE fieldid=? AND module=? AND relmodule=?', [$id, $moduleName, $relmodule]);
+			// If relation already exist continue
+			if ($adb->num_rows($checkres))
+				continue;
+			$adb->pquery('INSERT INTO vtiger_fieldmodulerel(fieldid, module, relmodule) VALUES(?,?,?)', [$id, $moduleName, $relmodule]);
+			$log->debug("Setting $moduleName relation with $relmodule ... DONE");
+		}
+		return true;
+	}
+	public function checkFieldExists($field, $moduleName){
+		global $adb;
+		if($moduleName == 'Settings')
+			$result = $adb->pquery("SELECT * FROM vtiger_settings_field WHERE name = ? AND linkto = ? ;", array($field[1],$field[4]));
+		else
+			$result = $adb->pquery("SELECT * FROM vtiger_field WHERE columnname = ? AND tablename = ? AND tabid = ?;", array($field['column'],$field['table'], getTabid($moduleName)));
+		if(!$adb->num_rows($result)) {
+			return false;
+		}
+		return true;
+	}
+	
 	public function rebootSeq()
 	{
 		global $log, $adb;
