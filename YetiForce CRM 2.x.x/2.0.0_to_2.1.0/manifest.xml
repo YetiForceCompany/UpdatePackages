@@ -1,0 +1,14 @@
+<?xml version='1.0'?>
+<module>
+    <name>Update package</name>
+    <label>Update package</label>
+	<type>update</type>
+    <version>1.0.5</version>
+	<from_version>2.0.0</from_version>
+	<to_version>2.0.736</to_version>
+    <dependencies>
+		<vtiger_version>2.0.0</vtiger_version>
+		<vtiger_max_version>2.0.736</vtiger_max_version>
+    </dependencies>
+	<license><file>license.txt</file></license>
+</module>
