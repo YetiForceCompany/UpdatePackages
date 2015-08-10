@@ -35,6 +35,7 @@ class YetiForceUpdate
 
 	function update()
 	{
+		$this->databaseData();
 	}
 
 	function postupdate()
@@ -42,4 +43,20 @@ class YetiForceUpdate
 		return true;
 	}
 
+	function databaseData()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::databaseData() method ...");
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_blocks` WHERE `blocklabel` = ? AND `tabid` = ?;", ['Oryginalna wiadomość', getTabid('OSSMailView')]);
+		if ($adb->num_rows($result)) {
+			$adb->pquery("UPDATE `vtiger_blocks` SET `blocklabel` = ? WHERE `blocklabel` = ? AND `tabid` = ?;", ['LBL_ORIGN_MESSAGE', 'Oryginalna wiadomość', getTabid('OSSMailView')]);
+		}
+		$result = $adb->query("SELECT * FROM `vtiger_field` WHERE `fieldlabel` = 'Treść' AND `columnname` = 'orginal_mail';");
+		if ($adb->num_rows($result)) {
+			$adb->pquery("UPDATE `vtiger_field` SET `fieldlabel` = ? WHERE `fieldlabel` = ? AND `columnname` = ?;", ['Content', 'Treść', 'orginal_mail']);
+		}
+
+		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
+	}
 }
