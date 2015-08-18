@@ -35,12 +35,31 @@ class YetiForceUpdate
 
 	function update()
 	{
+		$this->databaseSchema();
 		$this->databaseData();
 	}
 
 	function postupdate()
 	{
 		return true;
+	}
+
+	function databaseSchema()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::databaseSchema() method ...");
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_activitytype` LIKE 'color';");
+		if (!$adb->num_rows($result)) {
+			$adb->query("ALTER TABLE `vtiger_activitytype` ADD COLUMN `color` varchar(25) NULL after `sortorderid`;");
+			$result = $adb->pquery("SELECT * FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` IN (?,?);", ['colors', 'Meeting', 'Call']);
+			while ($row = $adb->fetch_array($result)) {
+				$adb->pquery("UPDATE `vtiger_activitytype` SET `color` = ? WHERE `activitytype` = ? ;", [$row['value'], $row['name']]);
+			}
+			$adb->pquery('DELETE FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` IN (?,?);', ['colors', 'Meeting', 'Call']);
+		}
+
+		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
 	function databaseData()
@@ -57,6 +76,49 @@ class YetiForceUpdate
 			$adb->pquery("UPDATE `vtiger_field` SET `fieldlabel` = ? WHERE `fieldlabel` = ? AND `columnname` = ?;", ['Content', 'Treść', 'orginal_mail']);
 		}
 
+		$this->relatedList();
+
+		$result = $adb->query("SELECT * FROM `yetiforce_proc_marketing` WHERE `type` = 'lead' AND `param` = 'convert_status';");
+		if (!$adb->num_rows($result)) {
+			$adb->query("insert  into `yetiforce_proc_marketing`(`type`,`param`,`value`) values ('lead','convert_status','LBL_LEAD_ACQUIRED');");
+		}
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_CUSTOM_FIELD_MAPPING']);
+		if (!$adb->num_rows($result)) {
+			$blockid = $adb->query_result($adb->pquery("SELECT blockid FROM vtiger_settings_blocks WHERE label='LBL_STUDIO'", []), 0, 'blockid');
+			$sequence = (int) $adb->query_result($adb->pquery("SELECT max(sequence) as sequence FROM vtiger_settings_field WHERE blockid=?", [$blockid]), 0, 'sequence') + 1;
+			$fieldid = $adb->getUniqueId('vtiger_settings_field');
+			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
+			VALUES (?,?,?,?,?,?,?)", array($fieldid, $blockid, $sequence, 'LBL_CUSTOM_FIELD_MAPPING', '', 'LBL_CUSTOM_FIELD_MAPPING_DESCRIPTION', 'index.php?parent=Settings&module=Leads&view=MappingDetail'));
+		}
+
+		$mailTemplates = ['Notify Owner On Ticket Change', 'Notify Account On Ticket Change', 'Notify Contact On Ticket Closed', 'Notify Account On Ticket Closed', 'Notify Contact On Ticket Create', 'Notify Account On Ticket Create', 'Notify Contact On Ticket Change', 'Notify Owner On Ticket Closed', 'Notify Owner On Ticket Create'];
+		$result = $adb->pquery("SELECT `content`,`name` FROM `vtiger_ossmailtemplates` WHERE `name` IN (" . generateQuestionMarks($mailTemplates) . ") AND `oss_module_list` = ?;", [$mailTemplates, 'HelpDesk']);
+		while ($row = $adb->fetch_array($result)) {
+			$content = str_replace('
+	<li>#b#718#bEnd#: #a#718#aEnd#</li>', '', $row['content']);
+			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE `name` = ? AND `oss_module_list` = ?;", [$content, $row['name'], 'HelpDesk']);
+		}
+
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
+	}
+
+	public function relatedList()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::relatedList() method ...");
+
+		$addRelations = [];
+		$addRelations['LettersIn'][] = ['related_tabid' => 'Contacts', 'label' => 'Contacts', 'actions' => 'ADD,SELECT', 'name' => 'get_related_list'];
+		$addRelations['LettersOut'][] = ['related_tabid' => 'Contacts', 'label' => 'Contacts', 'actions' => 'ADD,SELECT', 'name' => 'get_related_list'];
+
+		foreach ($addRelations as $moduleName => $relations) {
+			$moduleInstance = Vtiger_Module::getInstance($moduleName);
+			foreach ($relations as $relation) {
+				$relatedInstance = Vtiger_Module::getInstance($relation['related_tabid']);
+				$moduleInstance->setRelatedList($relatedInstance, $relation['label'], $relation['actions'], $relation['name']);
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::relatedList() method ...");
 	}
 }
