@@ -59,6 +59,13 @@ class YetiForceUpdate
 			$adb->pquery('DELETE FROM `vtiger_calendar_config` WHERE `type` = ? AND `name` IN (?,?);', ['colors', 'Meeting', 'Call']);
 		}
 
+		$result = $adb->pquery("SHOW COLUMNS FROM `vtiger_crmentity` LIKE 'shownerid';");
+		$row = $adb->fetch_array($result);
+		if ($row && (strpos($row['Type'], 'varchar') === false )) {
+			$adb->query("ALTER TABLE `vtiger_crmentity` CHANGE `shownerid` `shownerid` varchar(255) NOT NULL after `smownerid`;");
+			$adb->query("UPDATE `vtiger_crmentity` SET shownerid = '' WHERE shownerid IS NULL;");
+		}
+		
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
