@@ -65,7 +65,7 @@ class YetiForceUpdate
 			$adb->query("ALTER TABLE `vtiger_crmentity` CHANGE `shownerid` `shownerid` varchar(255) NOT NULL after `smownerid`;");
 			$adb->query("UPDATE `vtiger_crmentity` SET shownerid = '' WHERE shownerid IS NULL;");
 		}
-		
+
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -105,6 +105,18 @@ class YetiForceUpdate
 			$content = str_replace('
 	<li>#b#718#bEnd#: #a#718#aEnd#</li>', '', $row['content']);
 			$adb->pquery("UPDATE `vtiger_ossmailtemplates` SET `content` = ? WHERE `name` = ? AND `oss_module_list` = ?;", [$content, $row['name'], 'HelpDesk']);
+		}
+
+		$result = $adb->query("SELECT * FROM `vtiger_entityname` WHERE `fieldname` = 'holidaysentitlement_year' AND `modulename` = 'HolidaysEntitlement';");
+		if ($adb->num_rows($result)) {
+			$adb->pquery("UPDATE `vtiger_entityname` SET `fieldname` = ?, `searchcolumn` = ? WHERE `modulename` = ?;", ['ossemployeesid,days', 'ossemployeesid', 'HolidaysEntitlement']);
+			Settings_Search_Module_Model::UpdateLabels(['tabid' => getTabid('HolidaysEntitlement')]);
+		}
+
+		$result = $adb->query("SELECT * FROM `vtiger_links` WHERE `linklabel` = 'LBL_CREATED_BY_ME_BUT_NOT_MINE_ACTIVITIES' AND `linktype` = 'DASHBOARDWIDGET';");
+		if (!$adb->num_rows($result)) {
+			$linkModule = Vtiger_Module::getInstance('Home');
+			$linkModule->addLink('DASHBOARDWIDGET', "LBL_CREATED_BY_ME_BUT_NOT_MINE_ACTIVITIES", 'index.php?module=Home&view=ShowWidget&name=CreatedNotMineActivities');
 		}
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
