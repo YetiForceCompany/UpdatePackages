@@ -1274,10 +1274,9 @@ class YetiForceUpdate{
 		$adb->pquery('UPDATE vtiger_links SET linkurl = ? WHERE linklabel = ?;', ['index.php?module=OSSTimeControl&view=ShowWidget&name=TimeControl','Employees Time Control']);
 		$adb->pquery('DELETE FROM `vtiger_ws_entity` WHERE `name` = ? LIMIT 1;',['OSSDocumentControl']);
 		
-		$adb->query("UPDATE vtiger_widgets SET data = '{\"limit\":\"5\",\"relatedmodule\":\"42\",\"columns\":\"3\",\"action\":\"1\",\"filter\":\"-\",\"checkbox_selected\":\"\",\"checkbox\":\"-\"}' WHERE type = 'RelatedModule' AND label = 'ProjectTask';");
-		$adb->query("UPDATE vtiger_widgets SET data = '{\"limit\":\"5\",\"relatedmodule\":\"41\",\"columns\":\"3\",\"action\":\"1\",\"filter\":\"-\",\"checkbox_selected\":\"\",\"checkbox\":\"-\"}' WHERE type = 'RelatedModule' AND label = 'ProjectMilestone';");
+		$adb->pquery("UPDATE vtiger_widgets SET data = ?  WHERE type = 'RelatedModule' AND label = 'ProjectTask';", ['{"limit":"5","relatedmodule":"'.getTabid('ProjectTask').'","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']);
+		$adb->pquery("UPDATE vtiger_widgets SET data = ? WHERE type = 'RelatedModule' AND label = 'ProjectMilestone';", ['{"limit":"5","relatedmodule":"'.getTabid('ProjectMilestone').'","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']);
 		$adb->query("UPDATE vtiger_widgets SET label = 'Documents' WHERE type = 'RelatedModule' AND tabid = '".getTabid('Calculations')."';");
-		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 	public function changeCalendarRelationships(){
