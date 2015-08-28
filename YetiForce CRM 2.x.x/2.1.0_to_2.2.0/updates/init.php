@@ -20,7 +20,16 @@ class YetiForceUpdate
 	var $package;
 	var $modulenode;
 	var $return = true;
-	var $filesToDelete = [];
+	var $filesToDelete = [
+		'api/webservice/Portal/modules/Users/Authentication.php',
+		'layouts/vlayout/modules/OSSMailView/przychodzaca.png',
+		'layouts/vlayout/modules/OSSMailView/wewnetrzna.png',
+		'layouts/vlayout/modules/OSSMailView/wychodzaca.png',
+		'layouts/vlayout/modules/OSSMailView/zalacznik.png',
+		'modules/OSSMailScanner/views/index.php',
+		'modules/Settings/OSSMailScanner/views/index.php',
+		'layouts/vlayout/modules/OSSMailScanner'
+	];
 
 	function YetiForceUpdate($modulenode)
 	{
@@ -35,6 +44,7 @@ class YetiForceUpdate
 
 	function update()
 	{
+		$this->updateFiles();
 		$this->databaseSchema();
 		$this->databaseData();
 	}
@@ -42,6 +52,26 @@ class YetiForceUpdate
 	function postupdate()
 	{
 		return true;
+	}
+	
+	function updateFiles()
+	{
+		global $log, $root_directory;
+		$log->debug("Entering YetiForceUpdate::updateFiles() method ...");
+		if (!$root_directory)
+			$root_directory = getcwd();
+		$config = $root_directory . '/config/config.inc.php';
+		if (file_exists($config)) {
+			if(strpos(file_get_contents( $config ),'isActiveSendingMails') === FALSE){
+			$configC = '
+
+// Is sending emails active. 
+$isActiveSendingMails = false;
+';
+				file_put_contents( $config, $configC, FILE_APPEND );
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::updateFiles() method ... ");
 	}
 
 	function databaseSchema()
@@ -66,6 +96,34 @@ class YetiForceUpdate
 			$adb->query("UPDATE `vtiger_crmentity` SET shownerid = '' WHERE shownerid IS NULL;");
 		}
 
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_currencyupdate` (
+					`id` int(19) NOT NULL AUTO_INCREMENT,
+					`currency_id` int(19) NOT NULL,
+					`fetch_date` date NOT NULL,
+					`exchange_date` date NOT NULL,
+					`exchange` decimal(10,4) NOT NULL,
+					`bank_id` int(19) NOT NULL,
+					PRIMARY KEY (`id`),
+					KEY `fk_1_vtiger_osscurrencies` (`currency_id`),
+					CONSTRAINT `fk_1_vtiger_osscurrencies` FOREIGN KEY (`currency_id`) REFERENCES `vtiger_currency_info` (`id`) ON DELETE CASCADE
+				  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		$adb->query("CREATE TABLE IF NOT EXISTS `yetiforce_currencyupdate_banks` (
+					`id` int(19) NOT NULL AUTO_INCREMENT,
+					`bank_name` varchar(255) NOT NULL,
+					`active` int(1) NOT NULL,
+					PRIMARY KEY (`id`)
+				  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		
+		$result = $adb->pquery("SHOW COLUMNS FROM `vtiger_ossmailview`;");
+		while ($row = $adb->fetch_array($result)) {
+			if ($row['Field'] == 'from_id' && (strpos($row['Type'], 'varchar') === false )) {
+				$adb->query("ALTER TABLE `vtiger_ossmailview` CHANGE `from_id` `from_id` varchar(50) NOT NULL after `type`;");
+			}
+			if ($row['Field'] == 'to_id' && (strpos($row['Type'], 'varchar') === false )) {
+				$adb->query("ALTER TABLE `vtiger_ossmailview` CHANGE `to_id` `to_id` varchar(100) NOT NULL after `from_id`;");
+			}
+		}
+		
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -118,6 +176,29 @@ class YetiForceUpdate
 			$linkModule = Vtiger_Module::getInstance('Home');
 			$linkModule->addLink('DASHBOARDWIDGET', "LBL_CREATED_BY_ME_BUT_NOT_MINE_ACTIVITIES", 'index.php?module=Home&view=ShowWidget&name=CreatedNotMineActivities');
 		}
+		
+		$result = $adb->query("SELECT * FROM `vtiger_cron_task` WHERE `module` = 'CurrencyUpdate';");
+		if (!$adb->num_rows($result)) {
+			$cron = ['LBL_CURRENCY_UPDATE','modules/Settings/CurrencyUpdate/cron/CurrencyUpdateCron.php',86400,NULL,NULL,1,'CurrencyUpdate',4,'Recommended frequency for Currency Update is 24 hours'];
+			Vtiger_Cron::register($cron[0],$cron[1],$cron[2],$cron[6],$cron[5],0,$cron[8]);
+		}
+
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_CURRENCY_UPDATE']);
+		if (!$adb->num_rows($result)) {
+			$blockid = $adb->query_result($adb->pquery("SELECT blockid FROM vtiger_settings_blocks WHERE label='LBL_OTHER_SETTINGS'", []), 0, 'blockid');
+			$sequence = (int) $adb->query_result($adb->pquery("SELECT max(sequence) as sequence FROM vtiger_settings_field WHERE blockid=?", [$blockid]), 0, 'sequence') + 1;
+			$fieldid = $adb->getUniqueId('vtiger_settings_field');
+			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
+			VALUES (?,?,?,?,?,?,?)", [$fieldid, $blockid, $sequence, 'LBL_CURRENCY_UPDATE', '', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings']);
+		}
+		
+		$result = $adb->query("SELECT * FROM `vtiger_ossmailscanner_config` WHERE `conf_type` = 'exceptions';");
+		if (!$adb->num_rows($result)) {
+			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);',['exceptions','crating_mails',NULL]);
+			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);',['exceptions','crating_mails',NULL]);
+		}
+		
+		$adb->pquery("UPDATE `vtiger_settings_field` SET `linkto` = ? WHERE `linkto` = ?;", ['index.php?module=OSSMailScanner&parent=Settings&view=Index','index.php?module=OSSMailScanner&parent=Settings&view=index']);
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
