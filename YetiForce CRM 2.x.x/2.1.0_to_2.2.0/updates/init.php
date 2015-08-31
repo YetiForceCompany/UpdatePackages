@@ -54,7 +54,7 @@ class YetiForceUpdate
 	{
 		return true;
 	}
-	
+
 	function updateFiles()
 	{
 		global $log, $root_directory;
@@ -63,13 +63,13 @@ class YetiForceUpdate
 			$root_directory = getcwd();
 		$config = $root_directory . '/config/config.inc.php';
 		if (file_exists($config)) {
-			if(strpos(file_get_contents( $config ),'isActiveSendingMails') === FALSE){
-			$configC = '
+			if (strpos(file_get_contents($config), 'isActiveSendingMails') === FALSE) {
+				$configC = '
 
 // Is sending emails active. 
 $isActiveSendingMails = false;
 ';
-				file_put_contents( $config, $configC, FILE_APPEND );
+				file_put_contents($config, $configC, FILE_APPEND);
 			}
 		}
 		$log->debug("Exiting YetiForceUpdate::updateFiles() method ... ");
@@ -114,7 +114,7 @@ $isActiveSendingMails = false;
 					`active` int(1) NOT NULL,
 					PRIMARY KEY (`id`)
 				  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		
+
 		$result = $adb->pquery("SHOW COLUMNS FROM `vtiger_ossmailview`;");
 		while ($row = $adb->fetch_array($result)) {
 			if ($row['Field'] == 'from_id' && (strpos($row['Type'], 'varchar') === false )) {
@@ -124,7 +124,7 @@ $isActiveSendingMails = false;
 				$adb->query("ALTER TABLE `vtiger_ossmailview` CHANGE `to_id` `to_id` varchar(100) NOT NULL after `from_id`;");
 			}
 		}
-		
+
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -177,11 +177,11 @@ $isActiveSendingMails = false;
 			$linkModule = Vtiger_Module::getInstance('Home');
 			$linkModule->addLink('DASHBOARDWIDGET', "LBL_CREATED_BY_ME_BUT_NOT_MINE_ACTIVITIES", 'index.php?module=Home&view=ShowWidget&name=CreatedNotMineActivities');
 		}
-		
+
 		$result = $adb->query("SELECT * FROM `vtiger_cron_task` WHERE `module` = 'CurrencyUpdate';");
 		if (!$adb->num_rows($result)) {
-			$cron = ['LBL_CURRENCY_UPDATE','modules/Settings/CurrencyUpdate/cron/CurrencyUpdateCron.php',86400,NULL,NULL,1,'CurrencyUpdate',4,'Recommended frequency for Currency Update is 24 hours'];
-			Vtiger_Cron::register($cron[0],$cron[1],$cron[2],$cron[6],$cron[5],0,$cron[8]);
+			$cron = ['LBL_CURRENCY_UPDATE', 'modules/Settings/CurrencyUpdate/cron/CurrencyUpdateCron.php', 86400, NULL, NULL, 1, 'CurrencyUpdate', 4, 'Recommended frequency for Currency Update is 24 hours'];
+			Vtiger_Cron::register($cron[0], $cron[1], $cron[2], $cron[6], $cron[5], 0, $cron[8]);
 		}
 
 		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_CURRENCY_UPDATE']);
@@ -192,14 +192,33 @@ $isActiveSendingMails = false;
 			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
 			VALUES (?,?,?,?,?,?,?)", [$fieldid, $blockid, $sequence, 'LBL_CURRENCY_UPDATE', '', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings']);
 		}
-		
+
 		$result = $adb->query("SELECT * FROM `vtiger_ossmailscanner_config` WHERE `conf_type` = 'exceptions';");
 		if (!$adb->num_rows($result)) {
-			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);',['exceptions','crating_mails',NULL]);
-			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);',['exceptions','crating_mails',NULL]);
+			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);', ['exceptions', 'crating_mails', NULL]);
+			$adb->pquery('insert  into `vtiger_ossmailscanner_config`(`conf_type`,`parameter`,`value`) values (?,?,?);', ['exceptions', 'crating_mails', NULL]);
 		}
-		
-		$adb->pquery("UPDATE `vtiger_settings_field` SET `linkto` = ? WHERE `linkto` = ?;", ['index.php?module=OSSMailScanner&parent=Settings&view=Index','index.php?module=OSSMailScanner&parent=Settings&view=index']);
+
+		$adb->pquery("UPDATE `vtiger_settings_field` SET `linkto` = ? WHERE `linkto` = ?;", ['index.php?module=OSSMailScanner&parent=Settings&view=Index', 'index.php?module=OSSMailScanner&parent=Settings&view=index']);
+
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['parent_id', 'vtiger_troubletickets']);
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($adb->num_rows($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'HelpDesk','Vendors');");
+		}
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['linktoaccountscontacts', 'vtiger_project']);
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($adb->num_rows($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'Project','Vendors');");
+		}
+
+		$moduleInstance = Vtiger_Module::getInstance('HelpDesk');
+		$target_Module = Vtiger_Module::getInstance('Vendors');
+		$target_Module->setRelatedList($moduleInstance, 'HelpDesk', array('add'), 'get_dependents_list');
+
+		$moduleInstance = Vtiger_Module::getInstance('Project');
+		$target_Module = Vtiger_Module::getInstance('Vendors');
+		$target_Module->setRelatedList($moduleInstance, 'Project', array('add'), 'get_dependents_list');
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
