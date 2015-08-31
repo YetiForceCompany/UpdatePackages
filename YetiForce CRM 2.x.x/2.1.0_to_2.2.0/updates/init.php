@@ -28,7 +28,8 @@ class YetiForceUpdate
 		'layouts/vlayout/modules/OSSMailView/zalacznik.png',
 		'modules/OSSMailScanner/views/index.php',
 		'modules/Settings/OSSMailScanner/views/index.php',
-		'layouts/vlayout/modules/OSSMailScanner'
+		'layouts/vlayout/modules/OSSMailScanner',
+		'layouts/vlayout/skins/images/line.PNG'
 	];
 
 	function YetiForceUpdate($modulenode)
