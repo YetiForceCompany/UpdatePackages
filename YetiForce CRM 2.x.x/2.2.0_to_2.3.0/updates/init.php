@@ -165,12 +165,26 @@ $maxExecutionCronTime = 3600;
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_role` LIKE 'listrelatedrecord';");
 		if (!$adb->getRowCount($result)) {
-			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `listrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `clendarallorecords`;");
+			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `listrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `clendarallorecords`;");
 		}
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_role` LIKE 'previewrelatedrecord';");
 		if (!$adb->getRowCount($result)) {
-			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `previewrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `listrelatedrecord`;");
+			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `previewrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `listrelatedrecord`;");
 		}
+		
+		$adb->query("CREATE TABLE IF NOT EXISTS `s_yf_accesstorecord` (
+				`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
+				`username` varchar(50) NOT NULL,
+				`date` datetime NOT NULL,
+				`ip` varchar(100) NOT NULL,
+				`record` int(19) NOT NULL,
+				`module` varchar(30) NOT NULL,
+				`url` varchar(300) NOT NULL,
+				`description` varchar(300) NOT NULL,
+				`agent` varchar(255) NOT NULL,
+				PRIMARY KEY (`id`)
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+		
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -252,6 +266,9 @@ $maxExecutionCronTime = 3600;
 		if ($num > 1) {
 			$adb->pquery('UPDATE `vtiger_ossmailscanner_config` SET `parameter` = ?, `value` = ? WHERE `parameter` = ? AND `conf_type` = ? LIMIT 1;', ['crating_tickets', '', 'crating_mails', 'exceptions']);
 		}
+		
+		$adb->pquery("UPDATE `vtiger_relatedlists` SET `actions` = ?, `name` = ?  WHERE tabid = ? AND `related_tabid` = ? AND `name` = ?;", ['ADD','get_dependents_list',getTabid('Vendors'),getTabid('Contacts'), 'get_contacts']);
+		
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
 
