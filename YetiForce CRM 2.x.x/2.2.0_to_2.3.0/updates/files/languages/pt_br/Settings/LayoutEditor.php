@@ -85,7 +85,12 @@ $languageStrings = [
 	'LBL_TREE_TEMPLATE' => 'Árvore',
 	'Tree' => 'Campos da árvore',
 	'LBL_FIELD_MASK_INFO' => 'Definição de mascaras padrão <br />9: numérico<br />a: alfabético<br />*: Alfanumérico<br /><br />Examplo:<br />(99) 9999-9999<br />+55 999-999-999<br />aaa_999_aaa<br />dd/mm/yyyy',
-
+	'MultiReferenceValue' => 'Values from the related module',
+	'LBL_MULTI_REFERENCE_VALUE_MODULES' => 'Related module',
+	'LBL_MULTI_REFERENCE_VALUE_FIELDS' => 'Related field',
+	'LBL_MULTI_REFERENCE_VALUE_FILTER_FIELD' => 'Filter by field',
+	'LBL_MULTI_REFERENCE_VALUE_FILTER_VALUE' => 'Filter by value',
+	
 	'LBL_ADD_RELATION' => 'Adicionar relação',
 	'LBL_REMOVE_RELATION' => 'Remove relation',
 	'LBL_RELATION_TYPE' => 'Tipo Relação',
@@ -118,6 +123,8 @@ $languageStrings = [
 	'LBL_DISPLAY_TYPE' => 'Field type',
 	'LBL_EDITABLE' => 'Editable',
 	'LBL_READONLY' => 'Read-only',
+	'LBL_FIELDS_EXISTS_IN_BLOCK' => 'Fields exists for the block',
+	'LBL_DELETE_CUSTOM_BLOCKS' => 'Cannot delete non custom blocks',
 ];
 
 $jsLanguageStrings = [
