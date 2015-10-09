@@ -36,6 +36,7 @@ class YetiForceUpdate
 		'languages/pt_br/Test.php',
 		'languages/ru_ru/Test.php',
 		'modules/Test/Test.php',
+		'layouts/vlayout/modules/Events/uitypes/FollowUp.tpl',
 		'modules/Vtiger/innventoryFields'
 	];
 
@@ -55,6 +56,7 @@ class YetiForceUpdate
 		$this->updateFiles();
 		$this->databaseSchema();
 		$this->databaseData();
+		$this->cleanDB();
 		$this->verificationOfPowers();
 	}
 
@@ -472,7 +474,20 @@ $maxExecutionCronTime = 3600;
 		$this->updateForgotPassword();
 		$this->changeOutgoingServerFile();
 
-		$adb->pquery("UPDATE `vtiger_field` SET `quickcreate` = ? WHERE `fieldname` = ? AND tabid IN (?,?);", [2, 'shownerid', getTabid('Events'), getTabid('Calendar')]);
+		$adb->pquery("UPDATE `vtiger_field` SET `quickcreate` = ?, `quickcreatesequence` = ? WHERE `fieldname` = ? AND tabid IN (?,?);", [2, 8, 'shownerid', getTabid('Events'), getTabid('Calendar')]);
+
+		$integrationBlock = $adb->pquery('SELECT * FROM vtiger_settings_blocks WHERE label=?', ['LBL_OTHER_SETTINGS']);
+		$blockid = 0;
+		if ($adb->getRowCount($integrationBlock) > 0) {
+			$blockid = $adb->query_result($integrationBlock, 0, 'blockid');
+		}
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_SWITCH_USERS']);
+		if (!$adb->getRowCount($result) && $blockid) {
+			$sequence = (int) $adb->query_result($adb->pquery("SELECT max(sequence) as sequence FROM vtiger_settings_field WHERE blockid=?", [$blockid]), 0, 'sequence') + 1;
+			$fieldid = $adb->getUniqueId('vtiger_settings_field');
+			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
+			VALUES (?,?,?,?,?,?,?)", [$fieldid, $blockid, $sequence, 'LBL_SWITCH_USERS', '', 'LBL_SWITCH_USERS_DESCRIPTION', 'index.php?module=Users&view=SwitchUsers&parent=Settings']);
+		}
 
 		$log->debug("Exiting YetiForceUpdate::databaseData() method ...");
 	}
@@ -499,9 +514,15 @@ $maxExecutionCronTime = 3600;
 		$Calendar = [
 			['9', '1761', 'followup', 'vtiger_activity', '2', '10', 'followup', 'LBL_FOLLOWUP', '1', '2', '', '100', '25', '19', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_TASK_INFORMATION", [], ['Calendar']]
 		];
+		$PriceBooks = [
+			['6', '20', 'smownerid', 'vtiger_crmentity', '1', '53', 'assigned_user_id', 'Assigned To', '1', '0', '', '100', '6', '9', '1', 'V~M', '0', '2', 'BAS', '1', '', '1', '', "int(19)", "LBL_PRICEBOOK_INFORMATION", [], []]
+		];
+		$Faq = [
+			['6', '20', 'smownerid', 'vtiger_crmentity', '1', '53', 'assigned_user_id', 'Assigned To', '1', '0', '', '100', '6', '9', '1', 'V~M', '0', '2', 'BAS', '1', '', '1', '', "int(19)", "LBL_FAQ_INFORMATION", [], []]
+		];
 
 
-		$setToCRM = ['Accounts' => $Accounts, 'Products' => $Products, 'Events' => $Events, 'Calendar' => $Calendar];
+		$setToCRM = ['Accounts' => $Accounts, 'Products' => $Products, 'Events' => $Events, 'Calendar' => $Calendar, 'Faq' => $Faq, 'PriceBooks' => $PriceBooks];
 
 		$setToCRMAfter = [];
 		foreach ($setToCRM as $nameModule => $module) {
@@ -595,17 +616,6 @@ $maxExecutionCronTime = 3600;
 			foreach ($fields['showners'] as $showner) {
 				if ($assignedTab['tabid'] == $showner['tabid']) {
 					$move[] = ['fieldid' => $showner['fieldid'], 'sequence' => (int) $assignedTab['sequence'] + 1, 'block' => $assignedTab['block']];
-				} elseif (getTabid('Faq') == $showner['tabid']) {
-					$result = $adb->query("SELECT * FROM vtiger_field WHERE columnname = 'faq_no' AND tablename = 'vtiger_faq';");
-					while ($row = $adb->fetch_array($result)) {
-						$move[] = ['fieldid' => $showner['fieldid'], 'sequence' => (int) $row['sequence'] + 1, 'block' => $row['block']];
-					}
-				} elseif (getTabid('PriceBooks') == $showner['tabid']) {
-					$result = $adb->query("SELECT * FROM vtiger_field WHERE columnname = 'pricebook_no' AND tablename = 'vtiger_pricebook';");
-					while ($row = $adb->fetch_array($result)) {
-						$maxSeq = $this->getNextSequence($row['tabid'], $row['block']);
-						$move[] = ['fieldid' => $showner['fieldid'], 'sequence' => ++$maxSeq, 'block' => $row['block']];
-					}
 				}
 			}
 			if ($fields['others']) {
@@ -852,6 +862,32 @@ $maxExecutionCronTime = 3600;
 			}
 		}
 		$log->debug("Exiting YetiForceUpdate::addCron() method ...");
+	}
+	
+	public function cleanDB()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::cleanDB() method ...");
+		$result = $adb->query( "SELECT vtiger_def_org_field.tabid,vtiger_def_org_field.fieldid FROM `vtiger_def_org_field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$num = $adb->getRowCount($result);
+		$deleteField = [];
+		for($i=0;$i<$num;$i++){
+			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		}
+		if($deleteField){
+			$adb->pquery( "delete from vtiger_def_org_field where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
+		}
+		
+		$result = $adb->query( "SELECT vtiger_profile2field.tabid,vtiger_profile2field.fieldid FROM `vtiger_profile2field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$num = $adb->getRowCount($result);
+		$deleteField = [];
+		for($i=0;$i<$num;$i++){
+			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		}
+		if($deleteField){
+			$adb->pquery( "delete from vtiger_profile2field where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
+		}
+		$log->debug("Exiting YetiForceUpdate::cleanDB() method ...");
 	}
 
 	public function verificationOfPowers()
