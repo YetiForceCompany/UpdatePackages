@@ -54,6 +54,7 @@ class YetiForceUpdate
 	function update()
 	{
 		$this->updateFiles();
+		$this->roundcubeConfig();
 		$this->databaseSchema();
 		$this->databaseData();
 		$this->cleanDB();
@@ -115,6 +116,34 @@ class YetiForceUpdate
 		$log->debug("Exiting YetiForceUpdate::updateForgotPassword() method ...");
 	}
 
+	function roundcubeConfig()
+	{
+		global $log, $root_directory;
+		$log->debug("Entering YetiForceUpdate::roundcubeConfig() method ...");
+		if (!$root_directory)
+			$root_directory = getcwd();
+		$fileName = $root_directory . '/modules/OSSMail/roundcube/config/config.inc.php';
+		if (file_exists($fileName)) {
+			$config = OSSMail_Record_Model::getViewableData();
+			if (!is_array($config['default_host'])) {
+				$fileContent = file_get_contents($fileName);
+				$value = $config['default_host'];
+				if ($value == 'ssl://imap.gmail.com') {
+					$value = 'ssl://smtp.gmail.com';
+				}
+				$saveValue = "['$value' => '$value',]";
+				$patternString = "\$config['default_host'] = %s;";
+				$pattern = '/(\$config\[\'default_host\'\])[\s]+=([^;]+);/';
+				$replacement = sprintf($patternString, $saveValue);
+				$fileContent = preg_replace($pattern, $replacement, $fileContent);
+				$filePointer = fopen($fileName, 'w');
+				fwrite($filePointer, $fileContent);
+				fclose($filePointer);
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::roundcubeConfig() method ... ");
+	}
+
 	function updateFiles()
 	{
 		global $log, $root_directory;
@@ -125,13 +154,16 @@ class YetiForceUpdate
 		if (file_exists($config)) {
 			$configContent = file($config);
 			$unblockedTimeoutCronTasks = true;
-			$gsAutocomplete = true;
+			$langInLoginView = true;
 			foreach ($configContent as $key => $line) {
 				if (strpos($line, 'isActiveSendingMails') !== false) {
 					$configContent[$key] = str_replace(['false', 'FALSE'], ['true', 'true'], $configContent[$key]);
 				}
 				if (strpos($line, "unblockedTimeoutCronTasks") !== false) {
 					$unblockedTimeoutCronTasks = false;
+				}
+				if (strpos($line, "langInLoginView") !== false) {
+					$langInLoginView = false;
 				}
 			}
 			$content = implode("", $configContent);
@@ -144,6 +176,12 @@ $unblockedTimeoutCronTasks = true;
 $maxExecutionCronTime = 3600;
 
 ';
+			}
+			if ($langInLoginView) {
+				$content .= "// System's language selection in the login window (true/false).
+\$langInLoginView = false;
+
+";
 			}
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
@@ -232,19 +270,6 @@ $maxExecutionCronTime = 3600;
 			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `previewrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `listrelatedrecord`;");
 		}
 
-		$adb->query("CREATE TABLE IF NOT EXISTS `s_yf_accesstorecord` (
-				`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
-				`username` varchar(50) NOT NULL,
-				`date` datetime NOT NULL,
-				`ip` varchar(100) NOT NULL,
-				`record` int(19) NOT NULL,
-				`module` varchar(30) NOT NULL,
-				`url` varchar(300) NOT NULL,
-				`description` varchar(300) NOT NULL,
-				`agent` varchar(255) NOT NULL,
-				PRIMARY KEY (`id`)
-			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_role` LIKE 'editrelatedrecord';");
 		if (!$adb->num_rows($result)) {
 			$adb->query("ALTER TABLE `vtiger_role` ADD COLUMN `editrelatedrecord` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `previewrelatedrecord`;");
@@ -309,6 +334,41 @@ $maxExecutionCronTime = 3600;
 		if (!$adb->num_rows($result)) {
 			$adb->query("ALTER TABLE `vtiger_vendor` ADD KEY `vendorname`(`vendorname`) ;;");
 		}
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `l_yf_access_to_record` (
+				`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
+				`username` varchar(50) NOT NULL,
+				`date` datetime NOT NULL,
+				`ip` varchar(100) NOT NULL,
+				`record` int(19) NOT NULL,
+				`module` varchar(30) NOT NULL,
+				`url` varchar(300) NOT NULL,
+				`agent` varchar(255) NOT NULL,
+				PRIMARY KEY (`id`)
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `l_yf_switch_users` (
+				`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
+				`date` datetime NOT NULL,
+				`status` varchar(10) NOT NULL,
+				`baseid` int(19) NOT NULL,
+				`destid` int(19) NOT NULL,
+				`busername` varchar(50) NOT NULL,
+				`dusername` varchar(50) NOT NULL,
+				`ip` varchar(100) NOT NULL,
+				`agent` varchar(255) NOT NULL,
+				PRIMARY KEY (`id`),
+				KEY `baseid` (`baseid`),
+				KEY `destid` (`destid`)
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+		$adb->query('DROP TABLE IF EXISTS `s_yf_accesstorecord`;');
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_modtracker_basic` LIKE 'whodidsu';");
+		if (!$adb->num_rows($result)) {
+			$adb->query("ALTER TABLE `vtiger_modtracker_basic` ADD COLUMN `whodidsu` int(20) DEFAULT NULL ;");
+		}
+
 		$log->debug("Exiting YetiForceUpdate::databaseSchema() method ...");
 	}
 
@@ -822,8 +882,15 @@ $maxExecutionCronTime = 3600;
 				. "WHEN activitystatus = 'Not Started' THEN 'PLL_PLANNED' "
 				. "WHEN activitystatus = 'In Progress' THEN 'PLL_IN_REALIZATION' "
 				. "WHEN activitystatus = 'Deferred' THEN 'PLL_OVERDUE' "
-				. "WHEN activitystatus = 'Pending Input' THEN 'PLL_POSTPONED'  ELSE activitystatus END  ;");
+				. "WHEN activitystatus = 'Pending Input' THEN 'PLL_POSTPONED' ELSE activitystatus END  ;");
 		}
+		$adb->query("UPDATE vtiger_activitystatus SET sortorderid = CASE "
+			. " WHEN activitystatus = 'PLL_CANCELLED' THEN '4' "
+			. "WHEN activitystatus = 'PLL_COMPLETED' THEN '5' "
+			. "WHEN activitystatus = 'PLL_PLANNED' THEN '0' "
+			. "WHEN activitystatus = 'PLL_IN_REALIZATION' THEN '1' "
+			. "WHEN activitystatus = 'PLL_OVERDUE' THEN '2' "
+			. "WHEN activitystatus = 'PLL_POSTPONED' THEN '3' ELSE sortorderid END  ;");
 
 		$this->addHandler([['vtiger.entity.beforesave', 'modules/Calendar/handlers/CalendarHandler.php', 'CalendarHandler', '', 1, '[]']]);
 		$this->addCron([['Activity state', 'modules/Calendar/cron/ActivityState.php', '1800', NULL, NULL, '1', 'Calendar', 0, '']]);
@@ -863,29 +930,29 @@ $maxExecutionCronTime = 3600;
 		}
 		$log->debug("Exiting YetiForceUpdate::addCron() method ...");
 	}
-	
+
 	public function cleanDB()
 	{
 		global $log, $adb;
 		$log->debug("Entering YetiForceUpdate::cleanDB() method ...");
-		$result = $adb->query( "SELECT vtiger_def_org_field.tabid,vtiger_def_org_field.fieldid FROM `vtiger_def_org_field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+		$result = $adb->query("SELECT vtiger_def_org_field.tabid,vtiger_def_org_field.fieldid FROM `vtiger_def_org_field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
 		$num = $adb->getRowCount($result);
 		$deleteField = [];
-		for($i=0;$i<$num;$i++){
-			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		for ($i = 0; $i < $num; $i++) {
+			$deleteField[] = $adb->query_result($result, $i, "fieldid");
 		}
-		if($deleteField){
-			$adb->pquery( "delete from vtiger_def_org_field where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
+		if ($deleteField) {
+			$adb->pquery("delete from vtiger_def_org_field where fieldid in (" . generateQuestionMarks($deleteField) . ")", $deleteField);
 		}
-		
-		$result = $adb->query( "SELECT vtiger_profile2field.tabid,vtiger_profile2field.fieldid FROM `vtiger_profile2field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
+
+		$result = $adb->query("SELECT vtiger_profile2field.tabid,vtiger_profile2field.fieldid FROM `vtiger_profile2field` WHERE fieldid NOT IN (SELECT fieldid FROM `vtiger_field`)");
 		$num = $adb->getRowCount($result);
 		$deleteField = [];
-		for($i=0;$i<$num;$i++){
-			$deleteField[] = $adb->query_result( $result,$i,"fieldid" );
+		for ($i = 0; $i < $num; $i++) {
+			$deleteField[] = $adb->query_result($result, $i, "fieldid");
 		}
-		if($deleteField){
-			$adb->pquery( "delete from vtiger_profile2field where fieldid in (".generateQuestionMarks($deleteField).")", $deleteField);
+		if ($deleteField) {
+			$adb->pquery("delete from vtiger_profile2field where fieldid in (" . generateQuestionMarks($deleteField) . ")", $deleteField);
 		}
 		$log->debug("Exiting YetiForceUpdate::cleanDB() method ...");
 	}
