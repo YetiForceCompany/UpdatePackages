@@ -692,7 +692,7 @@ $maxExecutionCronTime = 3600;
 			Settings_LayoutEditor_Block_Model::updateFieldSequenceNumber($move);
 		}
 		if ($moveOtherFields) {
-			Settings_LayoutEditor_Block_Model::updateFieldSequenceNumber($move);
+			Settings_LayoutEditor_Block_Model::updateFieldSequenceNumber($moveOtherFields);
 		}
 		$this->deleteBlocks($fields['blocks']);
 		$log->debug("Exiting YetiForceUpdate::move() method ...");
