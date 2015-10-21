@@ -158,6 +158,13 @@ class YetiForceUpdate
 		$sql = 'UPDATE vtiger_relatedlists SET `related_tabid` = ?, `label` = ? WHERE `related_tabid` = ?';
 		$adb->pquery($sql, [getTabid('OSSMailView'),'OSSMailView', getTabid('Emails')]);
 
+		$sortOrderResult = $adb->pquery("SELECT sortorderid FROM vtiger_time_zone WHERE time_zone = ?", ['Asia/Yakutsk']);
+		if ($adb->num_rows($sortOrderResult)) {
+			$sortOrderId = $adb->query_result($sortOrderResult, 0, 'sortorderid');
+			$adb->pquery('UPDATE vtiger_time_zone SET sortorderid = (sortorderid + 1) WHERE sortorderid > ?', [$sortOrderId]);
+			$adb->pquery('INSERT INTO vtiger_time_zone (time_zone, sortorderid, presence) VALUES (?, ?, ?)', ['Etc/GMT-11', ($sortOrderId + 1), 1]);
+		}
+		
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
