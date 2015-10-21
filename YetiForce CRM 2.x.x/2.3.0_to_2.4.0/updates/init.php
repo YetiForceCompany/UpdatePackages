@@ -154,6 +154,10 @@ class YetiForceUpdate
 		$adb->query('DROP TABLE IF EXISTS `vtiger_sqltimelog`');
 
 		$this->addHandler([['vtiger.entity.aftersave.final', 'modules/Vtiger/handlers/MultiReferenceUpdater.php', 'Vtiger_MultiReferenceUpdater_Handler', '', '1', '[]']]);
+		
+		$sql = 'UPDATE vtiger_relatedlists SET `related_tabid` = ?, `label` = ? WHERE `related_tabid` = ?';
+		$adb->pquery($sql, [getTabid('OSSMailView'),'OSSMailView', getTabid('Emails')]);
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
