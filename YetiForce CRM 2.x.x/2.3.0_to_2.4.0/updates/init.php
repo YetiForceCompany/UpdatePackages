@@ -386,26 +386,23 @@ $defaultLayout = \'vlayout\';
 			$recordModel->save();
 		}
 
-		$record = ['109', 'Notify Account On New comment added to ticket', 'NewCommentAddedToTicketAccount', 'ModComments', '#t#LBL_ADDED_COMMENT_TO_TICKET#tEnd#', '<div>
-<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
-#t#LBL_NEW_COMMENT_FOR_TICKET#tEnd# (#t#LBL_NOTICE_CREATED#tEnd# #a#745#aEnd#).
-
-<hr /> #b#597#bEnd#: #a#597#aEnd#
-<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
-
-		$result = $adb->pquery('SELECT ossmailtemplatesid FROM vtiger_ossmailtemplates WHERE `sysname` = ?;', ['NewCommentAddedToTicketAccount']);
-		if (!$adb->getRowCount($result)) {
-			$user = Users_Record_Model::getCurrentUserModel();
-			$instance = new $moduleName();
-			$instance->column_fields['assigned_user_id'] = $user->id;
-			$instance->column_fields['name'] = $record[1];
-			$instance->column_fields['oss_module_list'] = $record[3];
-			$instance->column_fields['subject'] = $record[4];
-			$instance->column_fields['content'] = $record[5];
-			$instance->column_fields['ossmailtemplates_type'] = $record[6];
-			$save = $instance->save($moduleName);
-			$adb->update('vtiger_ossmailtemplates', ['sysname' => $record[2]], 'name = ? AND oss_module_list = ?', [$record[1], $record[3]]);
+		$mailTemplates = $this->getMailTemplate();
+		foreach ($mailTemplates as $mailTemplate) {
+			$result = $adb->pquery('SELECT ossmailtemplatesid FROM vtiger_ossmailtemplates WHERE `sysname` = ?;', [$mailTemplate[2]]);
+			if (!$adb->getRowCount($result)) {
+				$user = Users_Record_Model::getCurrentUserModel();
+				$instance = new $moduleName();
+				$instance->column_fields['assigned_user_id'] = $user->id;
+				$instance->column_fields['name'] = $mailTemplate[1];
+				$instance->column_fields['oss_module_list'] = $mailTemplate[3];
+				$instance->column_fields['subject'] = $mailTemplate[4];
+				$instance->column_fields['content'] = $mailTemplate[5];
+				$instance->column_fields['ossmailtemplates_type'] = $mailTemplate[6];
+				$save = $instance->save($moduleName);
+				$adb->update('vtiger_ossmailtemplates', ['sysname' => $mailTemplate[2]], 'ossmailtemplatesid = ?', [$instance->id]);
+			}
 		}
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -482,6 +479,86 @@ $defaultLayout = \'vlayout\';
 		$adb->update('com_vtiger_workflowtasks_entitymethod', ['method_name' => 'HeldDeskNewCommentAccount', 'function_path' => 'modules/HelpDesk/workflows/HelpDeskWorkflow.php', 'function_name' => 'HeldDeskNewCommentAccount'], 'method_name = ?', ['CustomerCommentFromPortal']);
 		$adb->update('com_vtiger_workflowtasks_entitymethod', ['method_name' => 'HeldDeskNewCommentContacts', 'function_path' => 'modules/HelpDesk/workflows/HelpDeskWorkflow.php', 'function_name' => 'HeldDeskNewCommentContacts'], 'method_name = ?', ['TicketOwnerComments']);
 
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	public function getMailTemplate()
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+		$mailTemplate[] = ['94', 'Activity Reminder Notification', 'ActivityReminderNotificationEvents', 'Events', 'Reminder: #a#255#aEnd#', '<span style="line-height:20.7999992370605px;">This is a reminder notification for the Activity:</span><br style="line-height:20.7999992370605px;" /><span style="line-height:20.7999992370605px;">Subject:</span>#a#255#aEnd#<br style="line-height:20.7999992370605px;" /><span style="line-height:20.7999992370605px;">Date & Time: </span>#a#257#aEnd# #a#258#aEnd#<br style="line-height:20.7999992370605px;" /><span style="line-height:20.7999992370605px;color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;">Contact Name: </span>#a#277#aEnd#<br style="line-height:20.7999992370605px;color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;" /><span style="line-height:20.7999992370605px;color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;">Related To: </span>#a#264#aEnd#<br style="line-height:20.7999992370605px;color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;" /><span style="line-height:20.7999992370605px;color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;">Description: </span>#a#275#aEnd#', 'PLL_RECORD'];
+
+		$mailTemplate[] = ['93', 'Activity Reminder Notification', 'ActivityReminderNotificationTask', 'Calendar', 'Reminder:  #a#231#aEnd#', 'This is a reminder notification for the Activity:<br />Subject: #a#231#aEnd#<br />Date & Time: #a#233#aEnd# #a#234#aEnd#<br /><span style="color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;line-height:20.7999992370605px;">Contact Name: </span>#a#238#aEnd#<br style="color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;line-height:20.7999992370605px;" /><span style="color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;line-height:20.7999992370605px;">Related To: </span>#a#237#aEnd#<br style="color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;line-height:20.7999992370605px;" /><span style="color:rgb(43,43,43);font-family:\'Helvetica Neue\', Helvetica, Arial, sans-serif;line-height:20.7999992370605px;">Description: </span>#a#247#aEnd#', 'PLL_RECORD'];
+
+		$mailTemplate[] = ['108', 'Backup has been made', 'BackupHasBeenMade', 'Contacts', 'Backup has been made notification', 'Dear User,<br />
+Backup has been made.', 'PLL_MODULE'];
+		$mailTemplate[] = ['107', 'Security risk has been detected - Brute Force', 'BruteForceSecurityRiskHasBeenDetected', 'Contacts', 'Security risk has been detected', '<span class="value">Dear user,<br />
+Failed login attempts have been detected. </span>', 'PLL_MODULE'];
+		$mailTemplate[] = ['109', 'Notify Account On New comment added to ticket', 'NewCommentAddedToTicketAccount', 'ModComments', '#t#LBL_ADDED_COMMENT_TO_TICKET#tEnd#', '<div>
+<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
+#t#LBL_NEW_COMMENT_FOR_TICKET#tEnd# (#t#LBL_NOTICE_CREATED#tEnd# #a#745#aEnd#).
+
+<hr /> #b#597#bEnd#: #a#597#aEnd#
+<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['106', 'Notify Contact On New comment added to ticket', 'NewCommentAddedToTicketContact', 'ModComments', '#t#LBL_ADDED_COMMENT_TO_TICKET#tEnd#', '<div>
+<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
+#t#LBL_NEW_COMMENT_FOR_TICKET#tEnd# (#t#LBL_NOTICE_CREATED#tEnd# #a#745#aEnd#).
+
+<hr /> #b#597#bEnd#: #a#597#aEnd#
+<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['105', 'Notify Owner On new comment added to ticket from portal', 'NewCommentAddedToTicketOwner', 'ModComments', '#t#LBL_ADDED_COMMENT_TO_TICKET#tEnd#', '<div>
+<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
+#t#LBL_NEW_COMMENT_FOR_TICKET#tEnd# (#t#LBL_NOTICE_CREATED#tEnd# #a#691#aEnd#).
+
+<hr /> #b#597#bEnd#: #a#597#aEnd#
+</div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['41', 'Notify Contact On Ticket Change', 'NotifyContactOnTicketChange', 'HelpDesk', '#t#LBL_NOTICE_MODIFICATION#tEnd# #a#155#aEnd#: #a#169#aEnd#', '<div>
+<h3><span>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></span></h3>
+#t#SINGLE_HelpDesk#tEnd# #a#155#aEnd# #t#LBL_NOTICE_UPDATED#tEnd# #a#168#aEnd#). #s#ChangesList#sEnd#
+
+<hr /><h1><a href="%23s%23LinkToPortalRecord%23sEnd%23">#t#LBL_NOTICE_MODIFICATION#tEnd# #a#155#aEnd#: #a#169#aEnd#</a></h1>
+
+<ul><li>#b#161#bEnd#: #a#161#aEnd#</li>
+	<li>#b#158#bEnd#: #a#158#aEnd#</li>
+	<li>#b#156#bEnd#: #a#156#aEnd#</li>
+	<li>#b#157#bEnd#: #a#157#aEnd#</li>
+</ul><hr /> #b#170#bEnd#: #a#170#aEnd#
+<hr /> #b#171#bEnd#: #a#171#aEnd#
+<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['37', 'Notify Contact On Ticket Closed', 'NotifyContactOnTicketClosed', 'HelpDesk', '#t#LBL_NOTICE_CLOSE#tEnd# #a#155#aEnd#: #a#169#aEnd#', '<div>
+<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
+#t#SINGLE_HelpDesk#tEnd# #a#155#aEnd# #t#LBL_NOTICE_CLOSED#tEnd# #a#168#aEnd#). #s#ChangesList#sEnd#
+
+<hr /><h1><a href="%23s%23LinkToPortalRecord%23sEnd%23">#t#LBL_NOTICE_CLOSE#tEnd# #a#155#aEnd#: #a#169#aEnd#</a></h1>
+
+<ul><li>#b#161#bEnd#: #a#161#aEnd#</li>
+	<li>#b#158#bEnd#: #a#158#aEnd#</li>
+	<li>#b#156#bEnd#: #a#156#aEnd#</li>
+	<li>#b#157#bEnd#: #a#157#aEnd#</li>
+</ul><hr /> #b#170#bEnd#: #a#170#aEnd#
+<hr /> #b#171#bEnd#: #a#171#aEnd#
+<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['39', 'Notify Contact On Ticket Create', 'NotifyContactOnTicketCreate', 'HelpDesk', '#t#LBL_NOTICE_CREATE#tEnd# #a#155#aEnd#: #a#169#aEnd#', '<div>
+<h3>#t#LBL_NOTICE_WELCOME#tEnd# <strong>YetiForce Sp. z o.o.</strong></h3>
+#t#SINGLE_HelpDesk#tEnd# #a#155#aEnd# (#t#LBL_NOTICE_CREATED#tEnd# #a#168#aEnd#).
+
+<hr /><h1><a href="%23s%23LinkToPortalRecord%23sEnd%23">#t#LBL_NOTICE_CREATE#tEnd# #a#155#aEnd#: #a#169#aEnd#</a></h1>
+
+<ul><li>#b#161#bEnd#: #a#161#aEnd#</li>
+	<li>#b#158#bEnd#: #a#158#aEnd#</li>
+	<li>#b#156#bEnd#: #a#156#aEnd#</li>
+	<li>#b#157#bEnd#: #a#157#aEnd#</li>
+</ul><hr /> #b#170#bEnd#: #a#170#aEnd#
+<hr /><span><em>#t#LBL_NOTICE_FOOTER#tEnd#</em></span></div>', 'PLL_RECORD'];
+		$mailTemplate[] = ['95', 'Test mail about the mail server configuration.', 'TestMailAboutTheMailServerConfiguration', 'Users', 'Test mail about the mail server configuration.', '<span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Dear </span>#a#478#aEnd# #a#479#aEnd#<span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">, </span><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><b style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">This is a test mail sent to confirm if a mail is actually being sent through the smtp server that you have configured. </b><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Feel free to delete this mail. </span><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Thanks and Regards,</span><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" /><span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Team YetiForce</span>', 'PLL_RECORD'];
+		$mailTemplate[] = ['103', 'ForgotPassword', 'UsersForgotPassword', 'Users', 'Request: ForgotPassword', 'Dear #a#67#aEnd# #a#70#aEnd#,<br /><br />
+You recently requested a reminder of your access data for the YetiForce Portal.<br /><br />
+You can login by entering the following data:<br /><br />
+Your username: #a#80#aEnd#<br />
+Your password: #s#ContactsPortalPass#sEnd#<br /><br /><br />
+Regards,<br />
+YetiForce CRM Support Team.', 'PLL_RECORD'];
+		return $mailTemplate;
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 }
