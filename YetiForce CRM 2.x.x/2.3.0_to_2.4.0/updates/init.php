@@ -84,6 +84,23 @@ class YetiForceUpdate
 		'layouts/vlayout/modules/RecycleBin/RecycleBinContents.tpl',
 		'modules/Settings/Vtiger/views/ListUI5.php',
 		'config/config.template.php',
+		'layouts/vlayout/modules/Settings/PDF/AdvanceFilterCondition.tpl',
+		'layouts/vlayout/modules/Settings/PDF/FieldExpressions.tpl',
+		'layouts/vlayout/modules/Settings/PDF/resources/AdvanceFilter.js',
+		'layouts/vlayout/modules/Settings/PDF/resources/AdvanceFilter.min.js',
+		'layouts/vlayout/modules/Settings/PDF/resources/ExportPDF.min.js',
+		'layouts/vlayout/modules/Settings/PDF/resources/watermark_images/dummy.txt',
+		'modules/Settings/PDF/actions/DeleteWatermark.php',
+		'modules/Settings/PDF/actions/GetSpecialFunctions.php',
+		'modules/Settings/PDF/actions/ValidateRecords.php',
+		'modules/Settings/PDF/helpers/upload_watermark.php',
+		'modules/Settings/PDF/models/Field.php',
+		'modules/Settings/PDF/models/FilterRecordStructure.php',
+		'modules/Settings/PDF/models/RecordStructure.php',
+		'modules/Settings/PDF/special_functions/example.php',
+		'modules/Settings/PDF/views/ExportPDF.php',
+		'layouts/vlayout/modules/Settings/SupportProcesses/resources/SupportProcesses.js',
+		'modules/Settings/SupportProcesses/actions/SaveGeneral.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -110,11 +127,66 @@ class YetiForceUpdate
 		$this->deleteWorkflow();
 		$this->AddWorkflows();
 		$this->worflowEnityMethod();
+		$this->addSalesProcessField();
+		$this->databaseOtherData();
+		$this->addActionMap();
 	}
 
 	function postupdate()
 	{
 		return true;
+	}
+
+	public function addActionMap()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::addActionMap() method ...");
+		$actions = ['ExportPdf'];
+		foreach ($actions as $action) {
+			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;', [$action]);
+			if ($adb->getRowCount($result)) {
+				continue;
+			}
+			$key = $this->getMax('vtiger_actionmapping', 'actionid');
+			$securitycheck = 0;
+			$adb->pquery("INSERT INTO `vtiger_actionmapping` (`actionid`, `actionname`, `securitycheck`) VALUES (?, ?, ?);", [$key, $action, $securitycheck]);
+
+			$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` NOT IN ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
+
+			$result = $adb->query($sql);
+			$rowCount = $adb->getRowCount($result);
+
+			$resultP = $adb->query("SELECT profileid FROM vtiger_profile;");
+			$rowCountP = $adb->getRowCount($resultP);
+			for ($i = 0; $i < $rowCountP; $i++) {
+				$profileId = $adb->query_result_raw($resultP, $i, 'profileid');
+				for ($k = 0; $k < $rowCount; $k++) {
+					$row = $adb->query_result_rowdata($result, $k);
+					$tabid = $row['tabid'];
+					$resultC = $adb->pquery("SELECT activityid FROM vtiger_profile2utility WHERE profileid=? AND tabid=? AND activityid=? ;", [$profileId, $tabid, $key]);
+					if ($adb->num_rows($resultC) == 0) {
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", [$profileId, $tabid, $key, 0]);
+					}
+				}
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::addActionMap() method ...");
+	}
+
+	public function databaseOtherData()
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+		$adb = PearDatabase::getInstance();
+		$result = $adb->pquery("SELECT * FROM `vtiger_settings_field` WHERE `name` = ? ", ['LBL_PDF']);
+		if (!$adb->num_rows($result)) {
+			$blockid = $adb->query_result($adb->pquery("SELECT blockid FROM vtiger_settings_blocks WHERE label='LBL_OTHER_SETTINGS'", []), 0, 'blockid');
+			$sequence = (int) $adb->query_result($adb->pquery("SELECT max(sequence) as sequence FROM vtiger_settings_field WHERE blockid=?", [$blockid]), 0, 'sequence') + 1;
+			$fieldid = $adb->getUniqueId('vtiger_settings_field');
+			$adb->pquery("INSERT INTO vtiger_settings_field (fieldid,blockid,sequence,name,iconpath,description,linkto)
+			VALUES (?,?,?,?,?,?,?)", [$fieldid, $blockid, $sequence, 'LBL_PDF', '', 'LBL_PDF_DESCRIPTION', 'index.php?module=PDF&parent=Settings&view=List']);
+		}
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
 	public function changeActivity()
@@ -138,6 +210,24 @@ class YetiForceUpdate
 			$cvid = $adb->query_result($result, 0, 'cvid');
 			$adb->delete('vtiger_customview', 'cvid = ?', [$cvid]);
 			$adb->delete('vtiger_cvcolumnlist', 'cvid = ?', [$cvid]);
+		}
+
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	public function addSalesProcessField()
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+
+		$adb = PearDatabase::getInstance();
+		$result = $adb->pquery('SELECT 1 FROM yetiforce_proc_sales WHERE `type` = ?', ['squoteenquiries']);
+		if ($result->rowCount() == 0) {
+			$adb->update('yetiforce_proc_sales', ['type' => 'scalculations', 'param' => 'statuses_close'], 'type = ?', ['calculation']);
+			$adb->insert('yetiforce_proc_sales', ['type' => 'squoteenquiries', 'param' => 'statuses_close', 'value' => '']);
+			$adb->insert('yetiforce_proc_sales', ['type' => 'ssalesorder', 'param' => 'statuses_close', 'value' => '']);
+			$adb->insert('yetiforce_proc_sales', ['type' => 'squotes', 'param' => 'statuses_close', 'value' => '']);
+			$adb->insert('yetiforce_proc_sales', ['type' => 'srequirementscard', 'param' => 'statuses_close', 'value' => '']);
 		}
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
@@ -182,7 +272,10 @@ class YetiForceUpdate
 		if ($adb->num_rows($sortOrderResult)) {
 			$sortOrderId = $adb->query_result($sortOrderResult, 0, 'sortorderid');
 			$adb->pquery('UPDATE vtiger_time_zone SET sortorderid = (sortorderid + 1) WHERE sortorderid > ?', [$sortOrderId]);
-			$adb->pquery('INSERT INTO vtiger_time_zone (time_zone, sortorderid, presence) VALUES (?, ?, ?)', ['Etc/GMT-11', ($sortOrderId + 1), 1]);
+			$sortOrderResult = $adb->pquery("SELECT 1 FROM vtiger_time_zone WHERE time_zone = ?", ['Etc/GMT-11']);
+			if (!$adb->num_rows($sortOrderResult)) {
+				$adb->pquery('INSERT INTO vtiger_time_zone (time_zone, sortorderid, presence) VALUES (?, ?, ?)', ['Etc/GMT-11', ($sortOrderId + 1), 1]);
+			}
 		}
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_layout` (
@@ -199,6 +292,52 @@ class YetiForceUpdate
 		if ($result->rowCount() == 0) {
 			$adb->query("ALTER TABLE `vtiger_ossmailtemplates` ADD COLUMN `sysname` varchar(50) NULL DEFAULT '' after `name`;");
 		}
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_timecontrol_type` LIKE 'color';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_timecontrol_type` ADD COLUMN `color` varchar(25) NULL DEFAULT '#E6FAD8';");
+			$adb->pquery("UPDATE vtiger_timecontrol_type SET `color` = CASE "
+				. " WHEN timecontrol_type = 'PLL_WORKING_TIME' THEN ? "
+				. " WHEN timecontrol_type = 'PLL_BREAK_TIME' THEN ? "
+				. " WHEN timecontrol_type = 'PLL_HOLIDAY' THEN ? "
+				. " ELSE timecontrol_type END WHERE timecontrol_type IN (?,?,?) ", ['#EDC240', '#AFD8F8', '#CB4B4B', 'PLL_WORKING_TIME', 'PLL_BREAK_TIME', 'PLL_HOLIDAY']);
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `a_yf_pdf` (
+				`pdfid` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of record',
+				`module_name` varchar(25) NOT NULL COMMENT 'name of the module',
+				`header_content` text NOT NULL,
+				`body_content` text NOT NULL,
+				`footer_content` text NOT NULL,
+				`status` set('active','inactive') NOT NULL,
+				`primary_name` varchar(255) NOT NULL,
+				`secondary_name` varchar(255) NOT NULL,
+				`meta_author` varchar(255) NOT NULL,
+				`meta_creator` varchar(255) NOT NULL,
+				`meta_keywords` varchar(255) NOT NULL,
+				`metatags_status` tinyint(1) NOT NULL,
+				`meta_subject` varchar(255) NOT NULL,
+				`meta_title` varchar(255) NOT NULL,
+				`page_format` varchar(255) NOT NULL,
+				`margin_chkbox` tinyint(1) DEFAULT NULL,
+				`margin_top` smallint(2) unsigned NOT NULL,
+				`margin_bottom` smallint(2) unsigned NOT NULL,
+				`margin_left` smallint(2) unsigned NOT NULL,
+				`margin_right` smallint(2) unsigned NOT NULL,
+				`page_orientation` set('PLL_PORTRAIT','PLL_LANDSCAPE') NOT NULL,
+				`language` varchar(7) NOT NULL,
+				`filename` varchar(255) NOT NULL,
+				`visibility` set('PLL_LISTVIEW','PLL_DETAILVIEW') NOT NULL,
+				`default` tinyint(1) DEFAULT NULL,
+				`conditions` text NOT NULL,
+				`watermark_type` set('text','image') NOT NULL,
+				`watermark_text` varchar(255) NOT NULL,
+				`watermark_size` tinyint(2) unsigned NOT NULL,
+				`watermark_angle` smallint(3) unsigned NOT NULL,
+				`watermark_image` varchar(255) NOT NULL,
+				`template_members` varchar(255) NOT NULL,
+				PRIMARY KEY (`pdfid`),
+				KEY `module_name` (`module_name`,`status`)
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}

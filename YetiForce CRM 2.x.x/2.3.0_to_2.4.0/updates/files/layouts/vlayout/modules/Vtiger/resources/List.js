@@ -559,7 +559,35 @@ jQuery.Class("Vtiger_List_Js", {
 	triggerListSearch: function () {
 		var listInstance = Vtiger_List_Js.getInstance();
 		var listViewContainer = listInstance.getListViewContentContainer();
-		listViewContainer.find('button[data-trigger="listSearch"]').trigger("click");
+		listViewContainer.find('[data-trigger="listSearch"]').trigger("click");
+	},
+	getSelectedRecordsParams: function () {
+		var listInstance = Vtiger_List_Js.getInstance();
+		var validationResult = listInstance.checkListRecordSelected();
+		if (validationResult != true) {
+			// Compute selected ids, excluded ids values, along with cvid value and pass as url parameters
+			var selectedIds = listInstance.readSelectedIds(true);
+			var excludedIds = listInstance.readExcludedIds(true);
+			var cvId = listInstance.getCurrentCvId();
+			var postData = {
+				viewname: cvId,
+				selected_ids: selectedIds,
+				excluded_ids: excludedIds
+			};
+
+			var searchValue = listInstance.getAlphabetSearchValue();
+			if ((typeof searchValue != "undefined") && (searchValue.length > 0)) {
+				postData['search_key'] = listInstance.getAlphabetSearchField();
+				postData['search_value'] = searchValue;
+				postData['operator'] = "s";
+			}
+
+			postData.search_params = JSON.stringify(listInstance.getListSearchParams());
+			return postData;
+		} else {
+			listInstance.noRecordSelectedAlert();
+		}
+		return false;
 	},
 }, {
 	//contains the List View element.
@@ -615,13 +643,13 @@ jQuery.Class("Vtiger_List_Js", {
 		var orderBy = jQuery('#orderBy').val();
 		var sortOrder = jQuery("#sortOrder").val();
 		var params = {
-			'module': module,
-			'parent': parent,
-			'page': pageNumber,
-			'view': "List",
-			'viewname': cvId,
-			'orderby': orderBy,
-			'sortorder': sortOrder
+			module: module,
+			parent: parent,
+			page: pageNumber,
+			view: "List",
+			viewname: cvId,
+			orderby: orderBy,
+			sortorder: sortOrder
 		}
 
 		var searchValue = this.getAlphabetSearchValue();
@@ -1865,8 +1893,7 @@ jQuery.Class("Vtiger_List_Js", {
 			jQuery('.paginationDiv').html(data);
 			thisInstance.registerPageNavigationEvents();
 		});
-	},	
-	
+	},
 	/**
 	 * Function to show total records count in listview on hover
 	 * of pageNumber text
@@ -1946,10 +1973,12 @@ jQuery.Class("Vtiger_List_Js", {
 		listViewContainer.find('.listViewEntriesTable .select2noactive').each(function (index, domElement) {
 			var select = $(domElement);
 			app.showSelect2ElementView(select, {placeholder: app.vtranslate('JS_SELECT_AN_OPTION')});
-			select.on("change", function (e) {
-				Vtiger_List_Js.triggerListSearch();
-			})
 		});
+		if (app.getMainParams('autoRefreshListOnChange') == '1') {
+			listViewContainer.find('.listViewEntriesTable select').on("change", function (e) {
+				Vtiger_List_Js.triggerListSearch();
+			});
+		}
 	},
 	registerListViewSpecialOptiopn: function () {
 		var listViewContainer = this.getListViewContentContainer();
@@ -2008,8 +2037,11 @@ jQuery.Class("Vtiger_List_Js", {
 				//continue
 				return true;
 			}
+
 			var searchOperator = 'c';
-			if (fieldInfo.type == "date" || fieldInfo.type == "datetime") {
+			if (fieldInfo.hasOwnProperty("searchOperator")) {
+				searchOperator = fieldInfo.searchOperator;
+			} else if (fieldInfo.type == "date" || fieldInfo.type == "datetime") {
 				searchOperator = 'bw';
 			} else if (fieldInfo.type == "boolean" || fieldInfo.type == "picklist" || fieldInfo.type == "tree") {
 				searchOperator = 'e';
@@ -2027,6 +2059,7 @@ jQuery.Class("Vtiger_List_Js", {
 					searchOperator = 'e';
 				}
 			}
+
 			searchInfo.push(fieldName);
 			searchInfo.push(searchOperator);
 			searchInfo.push(searchValue);
