@@ -34,8 +34,8 @@
 	font-family: 'Open Sans';
 	font-style: normal;
 	font-weight: 400;
-	src: url('../../../../layouts/vlayout/resources/fonts/OpenSans-Regular-webfont.eot');
-	src: url('../../../../layouts/vlayout/resources/fonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'), url('../../../../layouts/vlayout/resources/fonts/OpenSans-Regular-webfont.woff') format('woff'), url('../../../../layouts/vlayout/resources/fonts/OpenSans-Regular-webfont.ttf') format('truetype'), url('../../../../layouts/vlayout/resources/fonts/OpenSans-Regular-webfont.svg#open_sansregular') format('svg');
+	src: url('../../../../libraries/resources/fonts/OpenSans-Regular-webfont.eot');
+	src: url('../../../../libraries/resources/fonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'), url('../../../../libraries/resources/fonts/OpenSans-Regular-webfont.woff') format('woff'), url('../../../../libraries/resources/fonts/OpenSans-Regular-webfont.ttf') format('truetype'), url('../../../../libraries/resources/fonts/OpenSans-Regular-webfont.svg#open_sansregular') format('svg');
 }
 
 body {
@@ -2347,7 +2347,7 @@ th.htColHeader,
 .fc-content td:hover {
 	background: #f3f3f3;
 }
-.calendarPopover .popover{
+.calendarPopover.popover{
 	max-width: 100%;
 }
 .btn:focus {
@@ -2752,6 +2752,9 @@ a:focus {
 	font-size: 18px;
 	line-height: 28px;
 }
+.font-larger {
+	font-size: larger;
+}
 /*//
 img {
   max-width: 95%;
@@ -2855,7 +2858,12 @@ textarea {
 	word-wrap: break-word;
 	width: 100%;
 }
-
+table.summary-table{
+	table-layout: fixed;
+}
+table.summary-table .summaryViewEdit{
+	padding-left: 0;
+}
 .textOverflowEllipsis {
 	overflow: hidden;
 	padding-bottom: 2px;
@@ -2937,6 +2945,9 @@ textarea {
 }
 .padding1per {
 	padding: 1%;
+}
+.paddingTop10 {
+	padding-top: 10px;
 }
 .paddingTop20 {
 	padding-top: 20px;
@@ -3723,10 +3734,10 @@ span[name=existingImages] img{
 .quickCreateContent .addedNearCalendarEvent .popover-content{
 	font-size: 12px;
 }
-#activityStateModal .form-horizontal .form-group{
+.modalEditStatus .form-horizontal .form-group{
 	margin-bottom: 2px;
 }
-#activityStateModal .form-horizontal .form-group .control-label{
+.modalEditStatus .form-horizontal .form-group .control-label{
 	padding-top: 0;
 }
 .mainContainer.mailContainer{
@@ -3754,4 +3765,63 @@ span[name=existingImages] img{
 }
 .publicHolidayModal .dateField{
 	width: 100%;
+}
+#rssFeedHeading h3{
+	margin-top: 0;
+}
+.globalSearchResults .nav li a{
+	padding: 10px 0;
+}
+.bootbox .btn-warning{
+	margin-left: 5px;
+}
+.publicHolidayContent.layoutContent{
+	border-top: 0px;
+}
+.modalEditStatus .popover.fade
+{
+	min-width: 400px;
+}
+.statsContainer .widgetChartContainer{
+	width: 100%;
+	height: 300px;
+}
+.jstree-proton .jstree-search {
+	color:#fff !important;
+	background: #d9534f;
+	border-radius:3px;
+}
+#treePopupContainer{
+	overflow: auto;
+	max-height: 500px;
+}
+.siteBarRight{
+	border-left: 1px solid #dddddd;
+	background: #FFF;
+}
+.toggleSiteBarRightButton{
+	background: #eeeff2;
+	font-weight: bold;
+	padding: 15px 0px !important;
+	position: absolute;
+	top: 400px;
+	left: -16px;
+	cursor: pointer;
+	width: 17px;
+	z-index: 100;
+	border: 1px solid #dddddd;
+	border-right: 0;
+	display: inline-block;
+	border-radius: 0;
+}
+.padding0{
+	padding: 0 !important;
+}
+.hideSiteBar{
+	width: 0px;
+	position: absolute;
+	right: 1px;
+}
+.hideSiteBar .siteBarContent{
+	overflow: auto;
 }

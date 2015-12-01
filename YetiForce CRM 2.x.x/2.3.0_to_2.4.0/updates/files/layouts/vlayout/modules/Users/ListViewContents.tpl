@@ -40,7 +40,7 @@
 					{/foreach}
 					<td class="alphabetSearch textAlignCenter cursorPointer">
 						<a href="index.php?view=List&module=Users&parent=Settings" >
-							<span class="glyphicon glyphicon-remove"></span>
+							<span class="glyphicon glyphicon-remove" title="{vtranslate('LBL_REMOVE_ALPH_SEARCH_INFO')}"></span>
 						</a>
 					</td>
 				</tr>
@@ -87,11 +87,11 @@
 						<td>
 							{assign var=FIELD_UI_TYPE_MODEL value=$LISTVIEW_HEADER->getUITypeModel()}
 							{include file=vtemplate_path($FIELD_UI_TYPE_MODEL->getListSearchTemplateName(),$MODULE_NAME)
-                    FIELD_MODEL= $LISTVIEW_HEADER SEARCH_INFO=$SEARCH_DETAILS[$LISTVIEW_HEADER->getName()] USER_MODEL=$CURRENT_USER_MODEL}
+                    FIELD_MODEL= $LISTVIEW_HEADER SEARCH_INFO=$SEARCH_DETAILS[$LISTVIEW_HEADER->getName()] USER_MODEL=$USER_MODEL}
 						</td>
 					{/foreach}
 					<td width="5%">
-						<button class="btn btn-default" data-trigger="listSearch">{vtranslate('LBL_SEARCH', $MODULE )}</button>
+						<button class="btn btn-default" data-trigger="listSearch" title="{vtranslate('LBL_SEARCH')}">{vtranslate('LBL_SEARCH', $MODULE )}</button>
 					</td>
 				</tr>
 			{/if}

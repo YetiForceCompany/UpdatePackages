@@ -24,7 +24,7 @@ $languageStrings = [
 	'LBL_ADD_CUSTOM_FIELD' => 'Add Custom Field',
 	'LBL_ALWAYS_SHOW' => 'Always Show',
 	'LBL_ARRANGE_RELATED_LIST' => 'Arrange Related List',
-	'LBL_ARRANGE_RELATED_TABS' => 'Arrange Related Tabs',
+	'LBL_ARRANGE_RELATED_TABS' => 'Modules – Relations',
 	'LBL_BLOCK_NAME' => 'Block Name',
 	'LBL_CLICK_HERE_TO_EDIT' => 'Click here to edit',
 	'LBL_CREATE_CUSTOM_FIELD' => 'Create Custom Field',
@@ -100,6 +100,7 @@ $languageStrings = [
 	'LBL_RELATION_LABLE' => 'Label',
 	'PLL_RELATED_LIST' => 'Many to many',
 	'PLL_DEPENDENTS_LIST' => 'One to many',
+	'PLL_SPLITED_RELATED_LIST' => 'Many to many - With separation of data',
 	'PLL_ADD' => 'Add',
 	'PLL_SELECT' => 'Select',
 	

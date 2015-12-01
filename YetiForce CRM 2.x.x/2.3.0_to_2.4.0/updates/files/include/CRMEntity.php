@@ -128,7 +128,7 @@ class CRMEntity
 	 *      @param array $file_details  - array which contains the file information(name, type, size, tmp_name and error)
 	 *      return void
 	 */
-	function uploadAndSaveFile($id, $module, $file_details, $attachmentType ='Attachment')
+	function uploadAndSaveFile($id, $module, $file_details, $attachmentType = 'Attachment')
 	{
 		$log = vglobal('log');
 		$log->debug("Entering into uploadAndSaveFile($id,$module,$file_details) method.");
@@ -957,7 +957,7 @@ class CRMEntity
 		$adb = PearDatabase::getInstance();
 		$query = "select * from " . $adb->sql_escape_string($tablename);
 		$result = $this->db->pquery($query, array());
-		$testrow = $this->db->num_fields($result);
+		$testrow = $this->db->getFieldsCount($result);
 		if ($testrow > 1) {
 			$exists = true;
 		} else {
@@ -2446,10 +2446,9 @@ class CRMEntity
 
 		if ($is_admin == false && $profileGlobalPermission[1] == 1 && $profileGlobalPermission[2] == 1 && $defaultOrgSharingPermission[$tabId] == 3) {
 			$securityParameter = $this->getUserAccessConditionsQuery($module, $current_user);
-			foreach (array_merge([$current_user->id], $current_user_groups) as $id) {
-				$sharedParameter .= ' OR FIND_IN_SET( ' . $id . ', vtiger_crmentity.shownerid )';
-			}
-			$sharedParameter = trim($sharedParameter, ' OR');
+			$shownerid = array_merge([$current_user->id], $current_user_groups);
+			$shownersTable = Vtiger_SharedOwner_UIType::getShownerTable($module);
+			$sharedParameter .= 'vtiger_crmentity.crmid IN (SELECT DISTINCT crmid FROM '.$shownersTable.' WHERE userid IN ('.implode(',', $shownerid).'))';
 		}
 		if ($shared_owners == true) {
 			if ($securityParameter != '') {

@@ -9,9 +9,9 @@
  * All Rights Reserved.
  *************************************************************************************************************************************/
 $languageStrings = [
-	'LBL_DAV_KEYS' => 'Klucze aplikacji DAV',
+	'LBL_DAV_KEYS' => 'Aplikacje DAV',
 	'LBL_DAV_KEYS_DESCRIPTION' => 'Tworzenie i zarządzanie kluczami aplikacji DAV',
-	'LBL_KEY' => 'Klucz:',
+	'LBL_KEY' => 'Klucz',
 	'LBL_TOOLS' => 'Narzędzia',
 	'LBL_DELETE_KEY' => 'Usuń klucz',
 	'LBL_ADD_KEY' => 'Dodaj klucz',

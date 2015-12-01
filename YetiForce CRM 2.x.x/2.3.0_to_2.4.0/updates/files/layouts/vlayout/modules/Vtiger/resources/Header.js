@@ -592,11 +592,9 @@ jQuery.Class("Vtiger_Header_Js", {
 			bodyHeight = jQuery('.editViewContainer').outerHeight();
 		} else if (app.getViewName() === 'List') {
 			bodyHeight = jQuery('.remindersNoticeContainer').outerHeight() - 5;
-			jQuery(".contentsDiv").css('min-height', bodyHeight);
 			jQuery(".bodyContents").css('min-height', bodyHeight);
 		} else if (app.getViewName() === 'Calendar') {
 			bodyHeight = jQuery('.calendarViewContainer').outerHeight();
-			jQuery(".contentsDiv").css('height', bodyHeight);
 		} else if (app.getViewName() === 'DashBoard') {
 			bodyHeight = jQuery('.remindersNoticeContainer').outerHeight() - 55;
 			jQuery("div.gridster").css('min-height', jQuery('.contentsDiv').outerHeight() + 24);
@@ -607,6 +605,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		} else {
 			bodyHeight = jQuery('.bodyContents').css('min-height');//.outerHeight();
 		}
+
 		var styles = {
 			'min-height': bodyHeight,
 			'margin-bottom': navBottom + 'px',
@@ -615,6 +614,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		jQuery(".mainContainer").css(styles);
 		jQuery(".mainContainer > .col-md-2 ").css({'margin-bottom': navBottom + 'px', });
 		jQuery(".contentsDiv").css({'margin-bottom': navBottom + 'px', });
+		jQuery(".contentsDiv").css('min-height', bodyHeight);
 		Vtiger_Helper_Js.showHorizontalTopScrollBar();
 	},
 	recentPageViews: function () {
@@ -722,7 +722,12 @@ jQuery.Class("Vtiger_Header_Js", {
 	},
 	registerEvents: function () {
 		var thisInstance = this;
+		thisInstance.setContentsHeight();
 		thisInstance.recentPageViews();
+
+		jQuery(window).resize(function () {
+			thisInstance.setContentsHeight();
+		})
 
 		jQuery('#globalSearch').click(function () {
 			var advanceSearchInstance = new Vtiger_AdvanceSearch_Js();
@@ -793,14 +798,18 @@ jQuery.Class("Vtiger_Header_Js", {
 	showPdfModal: function (url) {
 		var params = {};
 		if (app.getViewName() == 'List') {
-			var selected = Vtiger_List_Js.getSelectedRecordsParams();
-			if(selected === false){
-				return false;
-			}
+			var selected = Vtiger_List_Js.getSelectedRecordsParams(false);
 			jQuery.extend(params, selected);
 		}
 		url += '&' + jQuery.param(params);
 		app.showModalWindow(null, url);
+	},
+	/**
+	 * Function which will set the contents height to window height
+	 */
+	setContentsHeight: function () {
+		var borderTopWidth = parseInt(jQuery(".mainContainer").css('margin-top')) + 21; // (footer height 21px)
+		jQuery('.bodyContents').css('min-height', (jQuery(window).innerHeight() - borderTopWidth));
 	},
 });
 jQuery(document).ready(function () {

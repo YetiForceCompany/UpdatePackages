@@ -272,7 +272,7 @@ class Vtiger_Functions
 			}
 			$data['fieldname'] = $fieldnames;
 			$colums = [];
-			foreach (explode(',', $info['fieldname']) as &$fieldname) {
+			foreach (explode(',', $info['fieldname']) as $fieldname) {
 				$colums[] = $info['tablename'] . '.' . $fieldname;
 			}
 			$data['colums'] = implode(',', $colums);
@@ -309,7 +309,7 @@ class Vtiger_Functions
 		}
 
 		if ($missing) {
-			$sql = sprintf("SELECT crmid, setype, deleted, smownerid, shownerid, label, searchlabel FROM vtiger_crmentity WHERE %s", implode(' OR ', array_fill(0, count($missing), 'crmid=?')));
+			$sql = sprintf("SELECT crmid, setype, deleted, smownerid, label, searchlabel FROM vtiger_crmentity WHERE %s LIMIT 1", implode(' OR ', array_fill(0, count($missing), 'crmid=?')));
 			$result = $adb->pquery($sql, $missing);
 			while ($row = $adb->fetch_array($result)) {
 				self::$crmRecordIdMetadataCache[$row['crmid']] = $row;
@@ -478,7 +478,7 @@ class Vtiger_Functions
 						}
 						$entityDisplay[$row['id']] = array('name' => implode(' ', $label_name), 'search' => implode(' ', $label_search));
 					}else {
-						$entityDisplay[$row['id']] = implode(' ', $label_name);
+						$entityDisplay[$row['id']] = trim(implode(' ', $label_name));
 					}
 				}
 			}
@@ -1208,7 +1208,7 @@ class Vtiger_Functions
 
 	protected static $browerCache = false;
 
-	public function getBrowserInfo()
+	public static function getBrowserInfo()
 	{
 		if (!self::$browerCache) {
 			$HTTP_USER_AGENT = strtolower($_SERVER['HTTP_USER_AGENT']);
@@ -1387,7 +1387,7 @@ class Vtiger_Functions
 		return ['total' => $total, 'free' => $free, 'used' => $used];
 	}
 
-	public function textLength($text, $length = false, $addDots = true)
+	public static function textLength($text, $length = false, $addDots = true)
 	{
 		if (!$length) {
 			$length = vglobal('listview_max_textlength');

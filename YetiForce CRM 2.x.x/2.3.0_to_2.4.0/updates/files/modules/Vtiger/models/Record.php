@@ -16,6 +16,7 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 {
 
 	protected $module = false;
+	protected $inventoryData = false;
 	public $summaryRowCount = 4;
 
 	/**
@@ -258,9 +259,12 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 	public function save()
 	{
 		if ($this->getModule()->isInventory()) {
-			$this->saveInventoryData();
+			$this->initInventoryData();
 		}
 		$this->getModule()->saveRecord($this);
+		if ($this->getModule()->isInventory()) {
+			$this->saveInventoryData();
+		}
 	}
 
 	/**
@@ -517,20 +521,46 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 	function setRecordFieldValues($parentRecordModel)
 	{
 		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$mfInstance = Vtiger_MappedFields_Model::getInstanceByModules($parentRecordModel->getModule()->getId(), $this->getModule()->getId());
+		if ($mfInstance) {
+			$moduleFields = $this->getModule()->getFields();
+			$fieldsList = array_keys($moduleFields);
+			$parentFieldsList = array_keys($parentRecordModel->getModule()->getFields());
 
-		$fieldsList = array_keys($this->getModule()->getFields());
-		$parentFieldsList = array_keys($parentRecordModel->getModule()->getFields());
-
-		$commonFields = array_intersect($fieldsList, $parentFieldsList);
-		foreach ($commonFields as $fieldName) {
-			if (getFieldVisibilityPermission($parentRecordModel->getModuleName(), $currentUser->getId(), $fieldName) == 0) {
-				$this->set($fieldName, $parentRecordModel->get($fieldName));
+			$params = $mfInstance->get('params');
+			if ($params['autofill']) {
+				$commonFields = array_intersect($fieldsList, $parentFieldsList);
+				foreach ($commonFields as $fieldName) {
+					if (getFieldVisibilityPermission($parentRecordModel->getModuleName(), $currentUser->getId(), $fieldName) == 0) {
+						$this->set($fieldName, $parentRecordModel->get($fieldName));
+					}
+				}
 			}
-		}
-		$fieldsToGenerate = $this->getListFieldsToGenerate($parentRecordModel->getModuleName(), $this->getModuleName());
-		foreach ($fieldsToGenerate as $key => $fieldName) {
-			if (getFieldVisibilityPermission($parentRecordModel->getModuleName(), $currentUser->getId(), $key) == 0) {
-				$this->set($fieldName, $parentRecordModel->get($key));
+			if ($parentRecordModel->getModule()->isInventory() && $this->getModule()->isInventory()) {
+				$sourceInv = $parentRecordModel->getInventoryData();
+				$newInvData = [];
+			}
+			foreach ($mfInstance->getMapping() as $mapp) {
+				// TODO Validation that specifies whether a value is included in the list of values for a given module field should be added
+				if ($mapp['type'] == 'SELF' && is_object($mapp['target'])) {
+					$referenceList = $mapp['target']->getReferenceList();
+					if (in_array($parentRecordModel->getModuleName(), $referenceList)) {
+						$this->set($mapp['target']->getName(), $parentRecordModel->get($mapp['source']->getName()));
+					}
+				} elseif ($mapp['type'] == 'INVENTORY' && is_array($sourceInv)) {
+					foreach ($sourceInv as $key => $base) {
+						$newInvData[$key][$mapp['target']->getName()] = $base[$mapp['source']->getName()];
+					}
+				} elseif ((is_object($mapp['target']) && is_object($mapp['source'])) && getFieldVisibilityPermission($parentRecordModel->getModuleName(), $currentUser->getId(), $mapp['source']->getName()) == 0 && in_array($mapp['source']->getName(), $parentFieldsList)) {
+					$value = $parentRecordModel->get($mapp['source']->getName());
+					if (!$value) {
+						$value = $mapp['default'];
+					}
+					$this->set($mapp['target']->getName(), $value);
+				}
+			}
+			if ($newInvData) {
+				$this->inventoryData = $newInvData;
 			}
 		}
 	}
@@ -549,27 +579,68 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 	{
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__);
+		if(!$this->inventoryData){
+			$module = $this->getModuleName();
+			$record = $this->getId();
+			if (empty($record)) {
+				$record = $this->get('record_id');
+			}
+			if (empty($record)) {
+				return [];
+			}
 
-		$module = $this->getModuleName();
-		$record = $this->getId();
-		if (empty($record)) {
-			$record = $this->get('record_id');
+			$db = PearDatabase::getInstance();
+			$inventoryField = Vtiger_InventoryField_Model::getInstance($module);
+			$table = $inventoryField->getTableName('data');
+			$result = $db->pquery('SELECT * FROM ' . $table . ' WHERE id = ? ORDER BY seq', [$record]);
+			$fields = [];
+			while ($row = $db->fetch_array($result)) {
+				$fields[] = $row;
+			}
+			$this->inventoryData = $fields;
 		}
-		if (empty($record)) {
-			return [];
-		}
-
-		$db = PearDatabase::getInstance();
-		$inventoryField = Vtiger_InventoryField_Model::getInstance($module);
-		$table = $inventoryField->getTableName('data');
-		$result = $db->pquery('SELECT * FROM ' . $table . ' WHERE id = ? ORDER BY seq', [$record]);
-		$fields = [];
-		while ($row = $db->fetch_array($result)) {
-			$fields[] = $row;
-		}
-
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__);
-		return $fields;
+		return $this->inventoryData;
+	}
+
+	/**
+	 * Save the inventory data
+	 */
+	public function initInventoryData()
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__);
+		$moduleName = $this->getModuleName();
+		$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
+		$fields = $inventory->getColumns();
+		$table = $inventory->getTableName('data');
+		$summaryFields = $inventory->getSummaryFields();
+		$inventoryData = $summary = [];
+		$request = new Vtiger_Request($_REQUEST, $_REQUEST);
+		$numRow = $request->get('inventoryItemsNo');
+
+		for ($i = 1; $i <= $numRow; $i++) {
+			if (!$request->has(reset($fields)) && !$request->has(reset($fields) . $i)) {
+				continue;
+			}
+			$insertData = ['seq' => $request->get('seq' . $i)];
+			foreach ($fields as $field) {
+				$value = $insertData[$field] = $inventory->getValueForSave($request, $field, $i);
+				if (in_array($field, $summaryFields)) {
+					$summary[$field] += $value;
+				}
+			}
+			$inventoryData[] = $insertData;
+		}
+
+		foreach ($summary as $fieldName => $fieldValue) {
+			if ($this->has($fieldName)) {
+				$this->set($fieldName, CurrencyField::convertToUserFormat($fieldValue, null, true));
+			}
+		}
+
+		$this->inventoryData = $inventoryData;
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__);
 	}
 
 	/**
@@ -586,10 +657,7 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 
 		$moduleName = $this->getModuleName();
 		$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
-		$fields = $inventory->getColumns();
 		$table = $inventory->getTableName('data');
-		$summaryFields = $inventory->getSummaryFields();
-		$insertDataTemp = $summary = [];
 		$request = new Vtiger_Request($_REQUEST, $_REQUEST);
 		$numRow = $request->get('inventoryItemsNo');
 
@@ -598,34 +666,18 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 			$em = new VTEventsManager($adb);
 			// Initialize Event trigger cache
 			$em->initTriggerCache();
-			$em->triggerEvent('entity.inventory.beforesave', [$this, $inventory]);
+			$em->triggerEvent('entity.inventory.beforesave', [$this, $inventory, $this->inventoryData]);
 		}
 
-		$db->pquery("delete from $table where id = ?", [$this->getId()]);
-		for ($i = 1; $i <= $numRow; $i++) {
-			if (!$request->has(reset($fields)) && !$request->has(reset($fields) . $i)) {
-				continue;
-			}
-			$insertData = ['id' => $this->getId(), 'seq' => $request->get('seq' . $i)];
-			foreach ($fields as $field) {
-				$value = $insertData[$field] = $inventory->getValueForSave($request, $field, $i);
-				if (in_array($field, $summaryFields)) {
-					$summary[$field] += $value;
-				}
-			}
+		$db->delete($table, 'id = ?', [$this->getId()]);
+		foreach ($this->inventoryData as $insertData) {
+			$insertData['id'] = $this->getId();
 			$db->insert($table, $insertData);
-			$insertDataTemp[] = $insertData;
-		}
-
-		foreach ($summary as $fieldName => $fieldValue) {
-			if ($this->has($fieldName)) {
-				$this->set($fieldName, CurrencyField::convertToUserFormat($fieldValue, null, true));
-			}
 		}
 
 		if ($em) {
 			//Event triggering code
-			$em->triggerEvent('entity.inventory.aftersave', [$this, $inventory, $insertDataTemp, $summary]);
+			$em->triggerEvent('entity.inventory.aftersave', [$this, $inventory, $this->inventoryData]);
 		}
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__);

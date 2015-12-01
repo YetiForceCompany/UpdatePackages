@@ -160,7 +160,8 @@ $languageStrings = [
 	'PLL_POSTPONED' => 'Postponed',
 	'PLL_CANCELLED' => 'Cancelled',
 	'PLL_COMPLETED' => 'Completed',
-
+	'LBL_RECURRENCE_INFORMATION' => 'Повторить',
+	'LBL_RELATED_TO' => 'Связан с',
 	'LBL_NO_AVAILABLE_ACTIONS' => 'No available actions',
 ];
 $jsLanguageStrings = [
@@ -299,4 +300,5 @@ $jsLanguageStrings = [
     'JS_RECORD_DELETED' => 'Запись удалена',
 	'JS_TASK_IS_SUCCESSFULLY_ADDED_TO_YOUR_CALENDAR'	=>	'Задача добавлена в Ваш календарь',
 	'JS_CHANGE_ACTIVITY_TIME' => 'Изменить статус Календаря: В работе - В ожидании',
+	'JS_ASSIGNED_TO' => 'Ответственный',
 ];

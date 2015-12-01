@@ -70,11 +70,16 @@ class Settings_Users_Module_Model extends Settings_Vtiger_Module_Model
 		}
 		$content .= '];' . PHP_EOL . '$switchUsers = [';
 		foreach ($map as $user => $accessList) {
-			$users = '';
-			foreach (array_unique($accessList) as $ID) {
-				$users .= "$ID => '" . $this->getUserName($ID) . "',";
+			$usersForSort = [];
+			foreach ($accessList as $ID) {
+				$usersForSort[$ID] = $this->getUserName($ID);
 			}
-			$content .= "'$user'=>[$users],";
+			asort($usersForSort);
+			$users = "$user => '" . $this->getUserName($user) . "',";
+			foreach ($usersForSort as $ID => $name) {
+				$users .= "$ID => '" . $name . "',";
+			}
+			$content .= "'$user'=>[".trim($users,',')."],";
 		}
 		$content .= '];';
 		$file = 'user_privileges/switchUsers.php';
@@ -149,11 +154,16 @@ class Settings_Users_Module_Model extends Settings_Vtiger_Module_Model
 
 		$content .= '];' . PHP_EOL . '$switchUsers = [';
 		foreach ($map as $user => $accessList) {
-			$users = '';
-			foreach (array_unique($accessList) as $ID) {
-				$users .= "$ID => '" . $this->getUserName($ID) . "',";
+			$usersForSort = [];
+			foreach ($accessList as $ID) {
+				$usersForSort[$ID] = $this->getUserName($ID);
 			}
-			$content .= "'$user'=>[$users],";
+			asort($usersForSort);
+			$users = "$user => '" . $this->getUserName($user) . "',";
+			foreach ($usersForSort as $ID => $name) {
+				$users .= "$ID => '" . $name . "',";
+			}
+			$content .= "'$user'=>[".trim($users,',')."],";
 		}
 		$content .= '];';
 		$file = 'user_privileges/switchUsers.php';

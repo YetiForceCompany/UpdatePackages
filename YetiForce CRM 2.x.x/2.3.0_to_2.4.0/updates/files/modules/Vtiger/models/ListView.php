@@ -227,10 +227,6 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 			}
 		}
 
-		$srcRecord = $this->get('src_record');
-		if ($moduleName == $this->get('src_module') && !empty($srcRecord)) {
-			$queryGenerator->addCondition('id', $srcRecord, 'n');
-		}
 		$listQuery = $this->getQuery();
 		if ($searchResult && $searchResult != '' && is_array($searchResult)) {
 			$listQuery .= " AND vtiger_crmentity.crmid IN (" . implode(',', $searchResult) . ") ";
@@ -245,7 +241,7 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 				}
 			}
 		}
-
+		
 		$startIndex = $pagingModel->getStartIndex();
 		$pageLimit = $pagingModel->getPageLimit();
 
@@ -289,7 +285,6 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 		ListViewSession::setSessionQuery($moduleName, $listQuery, $viewid);
 
 		$listQuery .= " LIMIT $startIndex," . ($pageLimit + 1);
-
 		$listResult = $db->pquery($listQuery, array());
 
 		$listViewRecordModels = array();
@@ -365,7 +360,7 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 		}
 		$position = stripos($listQuery, ' from ');
 		if ($position) {
-			$split = spliti(' from ', $listQuery);
+			$split = explode(' FROM ', $listQuery);
 			$splitCount = count($split);
 			$listQuery = 'SELECT count(*) AS count ';
 			for ($i = 1; $i < $splitCount; $i++) {
@@ -518,7 +513,18 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 				'linkicon' => ''
 			);
 		}
-
+		if (Users_Privileges_Model::isPermitted($moduleModel->getName(), 'RecordMappingList')) {
+			$handlerClass = Vtiger_Loader::getComponentClassName('Model', 'MappedFields', $moduleName);
+			$mfModel = new $handlerClass();
+			$templates = $mfModel->getActiveTemplatesForModule($moduleModel->getName(), 'List');
+			if (count($templates) > 0) {
+				$advancedLinks[] = [
+					'linktype' => 'LISTVIEW',
+					'linklabel' => 'LBL_GENERATE_RECORDS',
+					'linkurl' => 'javascript:Vtiger_List_Js.triggerGenerateRecords("index.php?module=' . $moduleModel->getName() . '&view=GenerateModal&fromview=List");',
+				];
+			}
+		}
 		return $advancedLinks;
 	}
 	/*
@@ -537,19 +543,32 @@ class Vtiger_ListView_Model extends Vtiger_Base_Model
 
 	public function getBasicLinks()
 	{
-		$basicLinks = array();
+		$basicLinks = [];
 		$moduleModel = $this->getModule();
 		$createPermission = Users_Privileges_Model::isPermitted($moduleModel->getName(), 'EditView');
 		if ($createPermission) {
-			$basicLinks[] = array(
+			$basicLinks[] = [
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => 'LBL_ADD_RECORD',
 				'linkurl' => $moduleModel->getCreateRecordUrl(),
 				'linkclass' => 'addButton',
 				'linkicon' => ''
-			);
+			];
 		}
-
+		
+		if (Users_Privileges_Model::isPermitted($moduleModel->getName(), 'ExportPdf')) {
+			$handlerClass = Vtiger_Loader::getComponentClassName('Model', 'PDF', $moduleModel->getName());
+			$pdfModel = new $handlerClass();
+			$templates = $pdfModel->getActiveTemplatesForModule($moduleModel->getName(), 'List');
+			if (count($templates) > 0) {
+				$basicLinks[] = [
+					'linktype' => 'LISTVIEWBASIC',
+					'linkurl' => 'javascript:Vtiger_Header_Js.getInstance().showPdfModal("index.php?module=' . $moduleModel->getName() . '&view=PDF&fromview=List");',
+					'linkicon' => 'glyphicon glyphicon-save-file',
+					'title' => vtranslate('LBL_EXPORT_PDF')
+				];
+			}
+		}
 		return $basicLinks;
 	}
 

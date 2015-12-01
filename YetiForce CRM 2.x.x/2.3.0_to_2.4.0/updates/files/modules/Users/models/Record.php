@@ -388,7 +388,7 @@ class Users_Record_Model extends Vtiger_Record_Model
 		$accessibleUser = Vtiger_Cache::get('vtiger-' . $this->getRole() . '-' . $currentUserRoleModel->get('allowassignedrecordsto'), 'accessibleusers');
 		if (empty($accessibleUser)) {
 			if ($currentUserRoleModel->get('allowassignedrecordsto') == '1' || $private == 'Public') {
-				$accessibleUser = get_user_array(false, "ACTIVE", "", $private, $module);
+				$accessibleUser = get_user_array(false, 'ACTIVE', '', $private, $module);
 			} else if ($currentUserRoleModel->get('allowassignedrecordsto') == '2') {
 				$accessibleUser = $this->getSameLevelUsersWithSubordinates();
 			} else if ($currentUserRoleModel->get('allowassignedrecordsto') == '3') {
@@ -459,10 +459,11 @@ class Users_Record_Model extends Vtiger_Record_Model
 			}
 			$entityData = Vtiger_Functions::getEntityModuleSQLColumnString('Users');
 			$query = 'SELECT id, ' . $entityData['colums'] . ' FROM vtiger_users WHERE status = ? AND id IN (' . generateQuestionMarks($userIds) . ')';
+			$query .= ' order by last_name ASC, first_name ASC';
 			$result = $db->pquery($query, array('ACTIVE', $userIds));
 			while ($row = $db->fetch_array($result)) {
 				$colums = [];
-				foreach (explode(',', $entityData['fieldname']) as &$fieldname) {
+				foreach (explode(',', $entityData['fieldname']) as $fieldname) {
 					$colums[] = $row[$fieldname];
 				}
 				$subUsers[$row['id']] = implode(' ', $colums);
@@ -742,6 +743,8 @@ class Users_Record_Model extends Vtiger_Record_Model
 
 		$sql = 'DELETE FROM vtiger_users WHERE id=?';
 		$db->pquery($sql, array($userId));
+		
+		deleteUserRelatedSharingRules($userId);
 	}
 
 	/**
@@ -769,6 +772,7 @@ class Users_Record_Model extends Vtiger_Record_Model
 			$queryGenerator->addCustomColumn($table . '.' . $column);
 		}
 		$listQuery = $queryGenerator->getQuery('SELECT DISTINCT');
+		$listQuery .= ' ORDER BY last_name ASC, first_name ASC';
 		$result = $db->query($listQuery);
 
 		$users = $group = [];

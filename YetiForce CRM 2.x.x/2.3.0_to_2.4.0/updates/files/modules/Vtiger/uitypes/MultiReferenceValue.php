@@ -83,7 +83,7 @@ class Vtiger_MultiReferenceValue_UIType extends Vtiger_Base_UIType
 	 * @param string $destinationModule Destination module name
 	 * @return array
 	 */
-	public function getRelatedModules($moduleName)
+	public static function getRelatedModules($moduleName)
 	{
 		$return = Vtiger_Cache::get('mrvf', $moduleName);
 		if (!$return) {
@@ -243,10 +243,11 @@ class Vtiger_MultiReferenceValue_UIType extends Vtiger_Base_UIType
 		$result = $db->query($listQuery);
 
 		$values = [];
-		while ($value = $db->getSingleValue($result)) {
+		while (($value = $db->getSingleValue($result)) !== false) {
 			$value = explode(self::COMMA, trim($value, self::COMMA));
 			$values = array_merge($values, $value);
 		}
+		
 		return array_unique($values);
 	}
 }

@@ -46,7 +46,10 @@ $languageStrings = [
 	'LBL_RIGHT' => 'Prawy',
 	'LBL_BOTTOM' => 'Dolny',
 	'LBL_LEFT' => 'Lewy',
-	'LBL_IN_MILIMETERS' => 'W milimetrach',
+	'LBL_TOP_IN_MILIMETERS' => 'Margines górny w milimetrach',
+	'LBL_BOTTOM_IN_MILIMETERS' => 'Margines dolny w milimetrach',
+	'LBL_LEFT_IN_MILIMETERS' => 'Margines lewy w milimetrach',
+	'LBL_RIGHT_IN_MILIMETERS' => 'Margines prawy w milimetrach',
 	'LBL_PAGE_ORIENTATION' => 'Orientacja dokumentu',
 	'PLL_LANDSCAPE' => 'Pozioma',
 	'PLL_PORTRAIT' => 'Pionowa',
@@ -74,7 +77,6 @@ $languageStrings = [
 	'LBL_EXPRESSION' => 'Wyrażenie',
 	'LBL_ANNUAL_REVENUE' => 'annual_revenue',
 	'LBL_EXPRESSION_EXAMPLE2' => "if mailingcountry == 'India' then concat(firstname,' ',lastname) else concat(lastname,' ',firstname) end",
-	'LBL_VTIGER' => 'Vtiger',
 	'LBL_EXAMPLE_FIELD_NAME' => 'Pole',
 	'LBL_NOTIFY_OWNER' => 'notify_owner',
 	'LBL_WATERMARK_DETAILS' => 'Edycja znaku wodnego',
@@ -97,6 +99,9 @@ $languageStrings = [
 	'LBL_GO_TO_TEMPLATE' => 'Kliknij aby przejść do zaimportowanego szablonu.',
 	'LBL_RETURN' => 'Wróć',
 	'LBL_PERMISSIONS_DETAILS' => 'Uprawnienia',
+	'LBL_INSERT' => 'Wstaw',
+	'PAGENO' => 'Liczba stron',
+	'PAGENUM' => 'Numer strony',
 	// page format names
 	'4A0' => '4A0',
 	'2A0' => '2A0',
@@ -154,7 +159,6 @@ $languageStrings = [
 	'DEMY' => 'Demy',
 	'ROYAL' => 'Rotyal'
 ];
-
 $jsLanguageStrings = [
 	'JS_PDF_SAVED_SUCCESSFULLY' => 'Szablon pdf został zapisany.',
 	'LBL_NOTIFY_COPY_TEXT' => 'Skopiowano do schowka',

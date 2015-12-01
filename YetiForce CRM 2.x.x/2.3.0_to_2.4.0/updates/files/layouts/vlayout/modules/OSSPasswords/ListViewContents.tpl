@@ -37,7 +37,7 @@
 			{/foreach}
 			<td class="alphabetSearch textAlignCenter cursorPointer">
 				<a href="index.php?view=List&module={$MODULE}" >
-					<span class="glyphicon glyphicon-remove"></span>
+					<span class="glyphicon glyphicon-remove" title="{vtranslate('LBL_REMOVE_ALPH_SEARCH_INFO')}"></span>
 				</a>
 			</td>
 			</tr>
@@ -63,7 +63,7 @@
 		<img class="listViewLoadingImage" src="{vimage_path('loading.gif')}" alt="no-image" title="{vtranslate('LBL_LOADING', $MODULE)}"/>
 		<p class="listViewLoadingMsg">{vtranslate('LBL_LOADING_LISTVIEW_CONTENTS', $MODULE)}........</p>
 	</span>
-	{assign var=WIDTHTYPE value=$CURRENT_USER_MODEL->get('rowheight')}
+	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 	<table class="table table-bordered listViewEntriesTable">
 		<thead>
 			<tr class="listViewHeaders">
@@ -82,19 +82,19 @@
         <tr>
             <td>
 				<a class="btn btn-default" data-trigger="listSearch" href="javascript:void(0);">
-					<span class="glyphicon glyphicon-search"></span>
+					<span class="glyphicon glyphicon-search" title="{vtranslate('LBL_SEARCH')}"></span>
 				</a>
 			</td>
 			{foreach item=LISTVIEW_HEADER from=$LISTVIEW_HEADERS}
              <td>
                  {assign var=FIELD_UI_TYPE_MODEL value=$LISTVIEW_HEADER->getUITypeModel()}
                 {include file=vtemplate_path($FIELD_UI_TYPE_MODEL->getListSearchTemplateName(),$MODULE_NAME)
-                    FIELD_MODEL= $LISTVIEW_HEADER SEARCH_INFO=$SEARCH_DETAILS[$LISTVIEW_HEADER->getName()] USER_MODEL=$CURRENT_USER_MODEL}
+                    FIELD_MODEL= $LISTVIEW_HEADER SEARCH_INFO=$SEARCH_DETAILS[$LISTVIEW_HEADER->getName()] USER_MODEL=$USER_MODEL}
              </td>
 			{/foreach}
 			<td>
 				<a class="btn btn-default" href="index.php?view=List&module={$MODULE}" >
-					<span class="glyphicon glyphicon-remove"></span>
+					<span class="glyphicon glyphicon-remove"  title="{vtranslate('LBL_REMOVE_SEARCH_OPTION_INFO')}"></span>
 				</a>
 			</td>
         </tr>

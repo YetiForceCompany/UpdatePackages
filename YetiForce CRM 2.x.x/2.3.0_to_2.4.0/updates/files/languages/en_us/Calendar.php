@@ -137,7 +137,8 @@ $languageStrings = [
 	'PLL_POSTPONED' => 'Postponed',
 	'PLL_CANCELLED' => 'Cancelled',
 	'PLL_COMPLETED' => 'Completed',
-	
+	'LBL_RECURRENCE_INFORMATION' => 'Recurrence Details',
+	'LBL_RELATED_TO' => 'Related To',
 	'LBL_NO_AVAILABLE_ACTIONS' => 'No available actions',
 ];
 
@@ -184,4 +185,5 @@ $jsLanguageStrings = [
 	'JS_Public' => 'Public',
 	'Mobile Call' => 'Mobile Call',
 	'JS_CHANGE_ACTIVITY_TIME' => 'Change status to: for processing or history',
+	'JS_ASSIGNED_TO' => 'Assigned To',
 ];

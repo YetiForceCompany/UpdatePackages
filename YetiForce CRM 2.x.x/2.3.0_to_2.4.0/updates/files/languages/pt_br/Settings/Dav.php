@@ -9,9 +9,9 @@
  * All Rights Reserved. Contributor: Valmir Carlos Trindade - valmir@ttcasolucoes.com.br
  *************************************************************************************************************************************/
 $languageStrings = [
-	'LBL_DAV_KEYS' => 'Chaves Aplicativo DAV',
+	'LBL_DAV_KEYS' => 'DAV Applications',
 	'LBL_DAV_KEYS_DESCRIPTION' => 'Criar e gerenciar chave aplicações DAV',
-	'LBL_KEY' => 'Chave:',
+	'LBL_KEY' => 'Chave',
 	'LBL_TOOLS' => 'Ferramentas',
 	'LBL_DELETE_KEY' => 'Apagar',
 	'LBL_ADD_KEY' => 'Adicionar Chave',

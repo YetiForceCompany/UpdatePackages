@@ -24,7 +24,7 @@ $languageStrings = [
 	'LBL_ADD_CUSTOM_FIELD' => 'Dodaj nowe pole',
 	'LBL_ALWAYS_SHOW' => 'Zawsze widoczne',
 	'LBL_ARRANGE_RELATED_LIST' => 'Powiązane moduły',
-	'LBL_ARRANGE_RELATED_TABS' => 'Moduły powiązane',
+	'LBL_ARRANGE_RELATED_TABS' => 'Moduły - powiązania',
 	'LBL_BLOCK_NAME' => 'Nazwa bloku',
 	'LBL_CLICK_HERE_TO_EDIT' => 'Kliknij, aby edytować',
 	'LBL_CREATE_CUSTOM_FIELD' => 'Utwórz nowe pole',
@@ -99,6 +99,7 @@ $languageStrings = [
 	'LBL_RELATION_LABLE' => 'Etykieta',
 	'PLL_RELATED_LIST' => 'Wiele do wielu',
 	'PLL_DEPENDENTS_LIST' => 'Jeden do wielu',
+	'PLL_SPLITED_RELATED_LIST' => 'Wiele do wielu - Z separacją danych',
 	'PLL_ADD' => 'Tworzenie',
 	'PLL_SELECT' => 'Wybieranie',
 	// inventory tab

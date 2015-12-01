@@ -292,6 +292,7 @@ jQuery.Class("Vtiger_List_Js", {
 		}
 	},
 	deleteRecord: function (recordId) {
+		var aDeferred = jQuery.Deferred();
 		var listInstance = Vtiger_List_Js.getInstance();
 		var message = app.vtranslate('LBL_DELETE_CONFIRMATION');
 		Vtiger_Helper_Js.showConfirmationBox({'message': message}).then(
@@ -328,6 +329,7 @@ jQuery.Class("Vtiger_List_Js", {
 									jQuery('#totalPageCount').text('');
 									listInstance.getListViewRecords(urlParams).then(function () {
 										listInstance.updatePagination();
+										aDeferred.resolve();
 									});
 								} else {
 									var params = {
@@ -345,6 +347,7 @@ jQuery.Class("Vtiger_List_Js", {
 				function (error, err) {
 				}
 		);
+		return aDeferred.promise();
 	},
 	triggerMassAction: function (massActionUrl, callBackFunction, beforeShowCb, css) {
 
@@ -561,10 +564,9 @@ jQuery.Class("Vtiger_List_Js", {
 		var listViewContainer = listInstance.getListViewContentContainer();
 		listViewContainer.find('[data-trigger="listSearch"]').trigger("click");
 	},
-	getSelectedRecordsParams: function () {
+	getSelectedRecordsParams: function (checkList) {
 		var listInstance = Vtiger_List_Js.getInstance();
-		var validationResult = listInstance.checkListRecordSelected();
-		if (validationResult != true) {
+		if (checkList == false || listInstance.checkListRecordSelected() != true) {
 			// Compute selected ids, excluded ids values, along with cvid value and pass as url parameters
 			var selectedIds = listInstance.readSelectedIds(true);
 			var excludedIds = listInstance.readExcludedIds(true);
