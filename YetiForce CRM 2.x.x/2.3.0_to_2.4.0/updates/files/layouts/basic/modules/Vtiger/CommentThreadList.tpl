@@ -9,16 +9,16 @@
 *
  ********************************************************************************/
 -->*}
-<div class="commentDiv cursorPointer">
+<div class="commentDiv">
 	<div class="singleComment">
-		<div class="commentInfoHeader row"  data-commentid="{$COMMENT->getId()}" data-parentcommentid="{$COMMENT->get('parent_comments')}">
+		<div class="commentInfoHeader"  data-commentid="{$COMMENT->getId()}" data-parentcommentid="{$COMMENT->get('parent_comments')}">
 			<div class="commentTitle" id="{$COMMENT->getId()}">
 				{assign var=PARENT_COMMENT_MODEL value=$COMMENT->getParentCommentModel()}
 				{assign var=CHILD_COMMENTS_MODEL value=$COMMENT->getChildComments()}
 				<div class="row">
-					<div class="col-md-1">
+					<div class="">
 						{assign var=IMAGE_PATH value=$COMMENT->getImagePath()}
-						<img class="alignMiddle pull-left" alt="" src="{if !empty($IMAGE_PATH)}{$IMAGE_PATH}{else}{vimage_path('DefaultUserIcon.png')}{/if}">
+						<img class="alignMiddle pull-left" width="48px" alt="" src="{if !empty($IMAGE_PATH)}{$IMAGE_PATH}{else}{vimage_path('DefaultUserIcon.png')}{/if}">
 					</div>
 					<div class="col-md-11 commentorInfo">
 						{assign var=COMMENTOR value=$COMMENT->getCommentedByModel()}
@@ -36,57 +36,49 @@
 				</div>
 			</div>
 		</div>
-		<div class="row commentActionsContainer">
+		<div class="commentActionsContainer row no-margin ">
 			
 			{assign var="REASON_TO_EDIT" value=$COMMENT->get('reasontoedit')}
-			<div class="row editedStatus"  name="editStatus">
-				<div class="row">
-					<p class="col-md-6 marginLeftZero"><small>
-					<span class="{if empty($REASON_TO_EDIT)}hide{/if} col-md-6 marginLeftZero editReason">
-						[ {vtranslate('LBL_EDIT_REASON',$MODULE_NAME)} ] : <span  name="editReason" class="textOverflowEllipsis">{nl2br($REASON_TO_EDIT)}</span>
-					</span>
-					</small></p>
-					{if $COMMENT->getCommentedTime() neq $COMMENT->getModifiedTime()}
-						<span class="{if empty($REASON_TO_EDIT)}row{else} col-md-6{/if}">
-							<span class="pull-right">
-								<p class="muted"><small title="{Vtiger_Util_Helper::formatDateTimeIntoDayString($COMMENT->getModifiedTime())}">{Vtiger_Util_Helper::formatDateDiffInStrings($COMMENT->getModifiedTime())}</small></p>
-							</span>
+			<div class="editedStatus col-xs-6"  name="editStatus">
+				<p class="col-xs-6 marginLeftZero">
+					<small>
+						<span class="{if empty($REASON_TO_EDIT)}hide{/if} marginLeftZero editReason">
+							[ {vtranslate('LBL_EDIT_REASON',$MODULE_NAME)} ] : <span  name="editReason" class="textOverflowEllipsis">{nl2br($REASON_TO_EDIT)}</span>
 						</span>
-					{/if}
-					
-				</div>
+					</small>
+				</p>
+				{if $COMMENT->getCommentedTime() neq $COMMENT->getModifiedTime()}
+					<span class="{if empty($REASON_TO_EDIT)}row{else} col-xs-6 paddingRightZero{/if}">
+						<span class="pull-right">
+							<p class="muted"><small title="{Vtiger_Util_Helper::formatDateTimeIntoDayString($COMMENT->getModifiedTime())}">{Vtiger_Util_Helper::formatDateDiffInStrings($COMMENT->getModifiedTime())}</small></p>
+						</span>
+					</span>
+				{/if}
 			</div>
-			<div class="row commentActionsDiv">
+			<div class="commentActionsDiv">
 				{assign var=COMMENTS_MODULE_MODEL value = Vtiger_Module_Model::getInstance('ModComments')}
 					<span class="pull-right commentActions">
 						{assign var=CHILD_COMMENTS_COUNT value=$COMMENT->getChildCommentsCount()}
 						{if $COMMENTS_MODULE_MODEL->isPermitted('EditView')}
 							<span>
 								<a class="cursorPointer replyComment">&nbsp;
-									<i class="icon-share-alt"></i>
+									<span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>&nbsp;
 									{vtranslate('LBL_REPLY',$MODULE_NAME)}
 								</a>
 								{if Users_Privileges_Model::isPermitted('ModComments','EditableComments') && $CURRENTUSER->getId() eq $COMMENT->get('userid')}
 									&nbsp;<span style="color:black">|</span>&nbsp;
 									<a class="cursorPointer editComment feedback">
-										{vtranslate('LBL_EDIT',$MODULE_NAME)}
+										<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>&nbsp;{vtranslate('LBL_EDIT',$MODULE_NAME)}
 									</a>
 								{/if}
-							</span>
-						{/if}
-						{if $CHILD_COMMENTS_COUNT neq 0}
-							{if $COMMENTS_MODULE_MODEL->isPermitted('EditView')}&nbsp;<span style="color:black">|</span>&nbsp;{/if}
-							<span class="hide viewThreadBlock" data-child-comments-count="{$COMMENT->getChildCommentsCount()}">
-									<a class="cursorPointer viewThread">
-										<span class="childCommentsCount">{$COMMENT->getChildCommentsCount()}</span>&nbsp;{if $CHILD_COMMENTS_COUNT eq 1}{vtranslate('LBL_REPLY',$MODULE_NAME)}{else}{vtranslate('LBL_REPLIES',$MODULE_NAME)}{/if}&nbsp;
-										<img class="alignMiddle" src="{vimage_path('rightArrowSmall.png')}" />
-									</a>
-							</span>
-							<span class="hideThreadBlock" data-child-comments-count="{$COMMENT->getChildCommentsCount()}">
-								<a class="cursorPointer hideThread">
-									<span class="childCommentsCount">{$COMMENT->getChildCommentsCount()}</span>&nbsp;{if $CHILD_COMMENTS_COUNT eq 1}{vtranslate('LBL_REPLY',$MODULE_NAME)}{else}{vtranslate('LBL_REPLIES',$MODULE_NAME)}{/if}&nbsp;
-									<img class="alignMiddle" src="{vimage_path('downArrowSmall.png')}" />
-								</a>
+								{if $COMMENTS_MODULE_MODEL->isPermitted('Delete')}
+									<span>
+										<span style="color:black">|</span>&nbsp;
+										<a class="cursorPointer deleteComment">
+											<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;{vtranslate('LBL_DELETE',$MODULE_NAME)}
+										</a>
+									</span>
+								{/if}
 							</span>
 						{/if}
 					</span>

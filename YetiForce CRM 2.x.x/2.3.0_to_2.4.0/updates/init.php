@@ -27,9 +27,6 @@ class YetiForceUpdate
 		'api/firefoxtoolbar.php',
 		'api/thunderbirdplugin.php',
 		'api/wordplugin.php',
-		'layouts/vlayout/modules/OSSMail/resources/mailtemplate.js',
-		'layouts/vlayout/modules/OSSMailTemplates/Config.tpl',
-		'layouts/vlayout/skins/images/btnAdd.png',
 		'libraries/adodb',
 		'libraries/chartjs/Chartmin.js',
 		'libraries/guidersjs',
@@ -73,23 +70,13 @@ class YetiForceUpdate
 		'modules/Settings/BackUp/actions/CreateFileBackUp.php',
 		'modules/Settings/BackUp/actions/SaveFTPConfig.php',
 		'modules/Vtiger/resources/validator/EmailValidator.js',
-		'layouts/vlayout/modules/OSSMailTemplates/Config.tpl',
-		'layouts/vlayout/skins/images/btnAdd.png',
 		'languages/de_de/Install.php',
 		'languages/en_us/Install.php',
 		'languages/pl_pl/Install.php',
 		'languages/pt_br/Install.php',
 		'languages/ru_ru/Install.php',
-		'layouts/vlayout/modules/RecycleBin/RecycleBin.tpl',
-		'layouts/vlayout/modules/RecycleBin/RecycleBinContents.tpl',
 		'modules/Settings/Vtiger/views/ListUI5.php',
 		'config/config.template.php',
-		'layouts/vlayout/modules/Settings/PDF/AdvanceFilterCondition.tpl',
-		'layouts/vlayout/modules/Settings/PDF/FieldExpressions.tpl',
-		'layouts/vlayout/modules/Settings/PDF/resources/AdvanceFilter.js',
-		'layouts/vlayout/modules/Settings/PDF/resources/AdvanceFilter.min.js',
-		'layouts/vlayout/modules/Settings/PDF/resources/ExportPDF.min.js',
-		'layouts/vlayout/modules/Settings/PDF/resources/watermark_images/dummy.txt',
 		'modules/Settings/PDF/actions/DeleteWatermark.php',
 		'modules/Settings/PDF/actions/GetSpecialFunctions.php',
 		'modules/Settings/PDF/actions/ValidateRecords.php',
@@ -99,9 +86,7 @@ class YetiForceUpdate
 		'modules/Settings/PDF/models/RecordStructure.php',
 		'modules/Settings/PDF/special_functions/example.php',
 		'modules/Settings/PDF/views/ExportPDF.php',
-		'layouts/vlayout/modules/Settings/SupportProcesses/resources/SupportProcesses.js',
 		'modules/Settings/SupportProcesses/actions/SaveGeneral.php',
-		'layouts/vlayout/modules/Vtiger/ExportPDF.css',
 		'modules/Settings/Vtiger/views/UI5Embed.php',
 		'modules/Vtiger/views/UI5Embed.php',
 		'modules/QuotesEnquires/models/DetailView.php',
@@ -117,19 +102,10 @@ class YetiForceUpdate
 		'modules/Users/views/Detail.php',
 		'modules/Users/views/Edit.php',
 		'modules/Vtiger/handlers/SharedOwnerUpdater.php',
-		'layouts/vlayout/resources',
-		'layouts/vlayout/skins/almond',
-		'layouts/vlayout/skins/alphagrey',
-		'layouts/vlayout/skins/bluelagoon',
-		'layouts/vlayout/skins/firebrick',
-		'layouts/vlayout/skins/nature',
-		'layouts/vlayout/skins/orchid',
-		'layouts/vlayout/skins/softed',
-		'layouts/vlayout/skins/vtiger',
-		'layouts/vlayout/skins/woodspice',
 		'modules/QuotesEnquires/models',
 		'modules/RequirementCards/models',
-		'layouts/vlayout/skins/glabal_style.css',
+		'layouts/vlayout',
+		'libraries/mPDF/examples',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -149,7 +125,6 @@ class YetiForceUpdate
 		$this->deleteCustomView();
 		$this->databaseSchema();
 		$this->removeHandler(['Vtiger_SharedOwnerUpdater_Handler']);
-		$this->updateFiles();
 		$this->enableTracking();
 		$this->addCurrencies();
 		$this->addTimeZone();
@@ -166,13 +141,80 @@ class YetiForceUpdate
 		$this->addModules();
 		$this->updateMenu();
 		$this->sharedOwner();
+		$this->relations();
+		$this->deleteLang();
 	}
 
 	function postupdate()
 	{
+		global $log, $adb;
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+		$this->updateFiles();
+		$dirName = 'cache/updates';
+		$result = true;
+		Vtiger_Deprecated::createModuleMetaFile();
+		Vtiger_Access::syncSharingAccess();
+		$adb->query('SET FOREIGN_KEY_CHECKS = 1;');
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$adb->query("INSERT INTO `yetiforce_updates` (`user`, `name`, `from_version`, `to_version`, `result`) VALUES ('" . $currentUser->get('user_name') . "', '" . $this->modulenode->label . "', '" . $this->modulenode->from_version . "', '" . $this->modulenode->to_version . "','" . $result . "');", true);
+		$adb->query("UPDATE vtiger_version SET `current_version` = '" . $this->modulenode->to_version . "';");
+		Vtiger_Functions::recurseDelete($dirName . '/files');
+		Vtiger_Functions::recurseDelete($dirName . '/init.php');
+		Vtiger_Functions::recurseDelete('cache/templates_c');
+		$this->removeFolder(['layouts/vlayout','libraries/mPDF/examples']);
+		header('Location: ' . vglobal('site_URL'));
+		exit;
 		return true;
+	}
+
+	function removeFolder($srcs){
+		$rootDir = vglobal('root_directory');
+		foreach($srcs as $src){
+			$dir = $rootDir . $src;
+			if (file_exists($dir)) {
+				$folder = scandir($dir);
+				$folder = is_array($folder) ? $folder : [];
+				$key = array_search('.', $folder);
+				$key2 = array_search('..', $folder);
+				unset($folder[$key]);
+				unset($folder[$key2]);
+				if (empty($folder)) {
+					rmdir($dir);
+				}
+			}
+		}
+	}
+	
+	function deleteLang()
+	{
+		Settings_LangManagement_Module_Model::delete(['prefix' => 'nl_nl']);
+	}
+
+	function relations()
+	{
+		$db = PearDatabase::getInstance();
+		$moduleInstance = Vtiger_Module::getInstance('PaymentsOut');
+		$targetModule = Vtiger_Module::getInstance('Vendors');
+		$targetModule->setRelatedList($moduleInstance, 'PaymentsOut', ['add'], 'get_dependents_list');
+		$result1 = $db->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsout']);
+		$result2 = $db->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$db->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($db->getRowCount($result2) == 0) {
+			$db->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $db->query_result($result1, 0, 'fieldid') . ",'PaymentsOut','Vendors');");
+		}
+
+		$moduleInstance = Vtiger_Module::getInstance('PaymentsIn');
+		$targetModule = Vtiger_Module::getInstance('Vendors');
+		$targetModule->setRelatedList($moduleInstance, 'PaymentsIn', ['add'], 'get_dependents_list');
+		$result1 = $db->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsin']);
+		$result2 = $db->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$db->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($db->getRowCount($result2) == 0) {
+			$db->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $db->query_result($result1, 0, 'fieldid') . ",'PaymentsIn','Vendors');");
+		}
+
+		$moduleInstance = Vtiger_Module::getInstance('Documents');
+		$targetModule = Vtiger_Module::getInstance('Vendors');
+		$targetModule->setRelatedList($moduleInstance, 'Documents', ['add', 'select'], 'get_attachments');
 	}
 
 	public function sharedOwner()
@@ -182,38 +224,49 @@ class YetiForceUpdate
 		$db = PearDatabase::getInstance();
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 
-		$result = $db->pquery('SELECT DISTINCT vtiger_tab.name FROM vtiger_field LEFT JOIN vtiger_tab ON vtiger_tab.tabid = vtiger_field.tabid WHERE uitype = 120');
-		while ($module = $db->getSingleValue($result)) {
-			$table = 'vtiger_' . strtolower(rtrim($module, 's')) . '_showners';
-			if (!Vtiger_Utils::CheckTable($table)) {
-				Vtiger_Utils::CreateTable(
-					$table, '(crmid int(19), userid int(19),UNIQUE KEY `mix` (`crmid`,`userid`),KEY `crmid` (`crmid`),  KEY `userid` (`userid`),   CONSTRAINT `fk_' . $table . '` FOREIGN KEY (`crmid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE)', true);
-			}
-		}
+		$result = $db->query("SHOW TABLES LIKE 'u_yf_crmentity_showners';");
+		if (!$db->getRowCount($result)) {
+			$db->query("CREATE TABLE IF NOT EXISTS `u_yf_crmentity_showners`(
+				`crmid` int(19) NULL  , 
+				`userid` int(19) NULL  , 
+				UNIQUE KEY `mix`(`crmid`,`userid`) , 
+				KEY `crmid`(`crmid`) , 
+				KEY `userid`(`userid`) , 
+				CONSTRAINT `fk_u_yf_crmentity_showners` 
+				FOREIGN KEY (`crmid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE 
+			) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
 
-		$result = $db->pquery("SELECT `setype`, `crmid`, `shownerid` FROM vtiger_crmentity WHERE `setype` IN (SELECT DISTINCT `name` FROM vtiger_tab INNER JOIN vtiger_field ON vtiger_tab.tabid = vtiger_field.tabid WHERE uitype = 120) AND `shownerid` NOT IN ('', '0')");
+			$assignedToValues = [];
+			$assignedToValues[] = $currentUser->getAccessibleUsers();
+			$assignedToValues[] = $currentUser->getAccessibleGroups();
 
-		$assignedToValues = [];
-		$assignedToValues[] = $currentUser->getAccessibleUsers();
-		$assignedToValues[] = $currentUser->getAccessibleGroups();
-		while ($row = $db->fetch_array($result)) {
-			$table = 'vtiger_' . strtolower(rtrim($row['setype'], 's')) . '_showners';
-			$userIds = explode(',', $row['shownerid']);
-			$result = $db->query('SELECT crmid FROM '.$table.' ;');
-			if(!$db->getRowCount($result)){
-				foreach ($userIds as $userId) {
-					foreach ($assignedToValues as $accessibleIds) {
-						if (array_key_exists($userId, $accessibleIds)) {
-							$db->insert($table, [
-								'crmid' => $row['crmid'],
-								'userid' => $userId,
-							]);
-							break;
+			$result = $db->query("SHOW TABLES LIKE '%_showners';");
+			if ($db->getRowCount($result) > 1) {
+				while ($row = $db->fetch_array($result)) {
+					if('u_yf_crmentity_showners' !=  current($row)){
+						$query = "INSERT INTO u_yf_crmentity_showners (crmid, userid) SELECT crmid, userid FROM " . current($row) . ";";
+						$db->query($query);
+						$db->query('DROP TABLE IF EXISTS ' . current($row) . ';');
+					}
+				}
+			} else {
+				$result = $db->pquery("SELECT `setype`, `crmid`, `shownerid` FROM vtiger_crmentity WHERE `setype` IN (SELECT DISTINCT `name` FROM vtiger_tab INNER JOIN vtiger_field ON vtiger_tab.tabid = vtiger_field.tabid WHERE uitype = 120) AND `shownerid` NOT IN ('', '0')");
+				while ($row = $db->fetch_array($result)) {
+					$userIds = explode(',', $row['shownerid']);
+					foreach ($userIds as $userId) {
+						foreach ($assignedToValues as $accessibleIds) {
+							if (array_key_exists($userId, $accessibleIds)) {
+								$db->insert('u_yf_crmentity_showners', [
+									'crmid' => $row['crmid'],
+									'userid' => $userId,
+								]);
+								break;
+							}
 						}
 					}
 				}
 			}
-			
+			$db->query("UPDATE `vtiger_crmentity` SET `shownerid` = '0';");
 		}
 		$db->query('ALTER TABLE `vtiger_crmentity` CHANGE `shownerid` `shownerid` tinyint(1)   NULL after `smownerid` ;');
 		$log->debug("Exiting YetiForceUpdate::sharedOwner() method ...");
@@ -385,7 +438,7 @@ class YetiForceUpdate
 		global $log, $adb;
 		$log->debug("Entering YetiForceUpdate::addActionMap() method ...");
 		$adb = PearDatabase::getInstance();
-		$actions = ['ExportPdf', 'PrintMail', 'RecordMapping', 'RecordMappingList', 'OpenRecord', 'CloseRecord', 'DuplicatesHandling'];
+		$actions = ['ExportPdf', 'PrintMail', 'RecordMapping', 'RecordMappingList', 'OpenRecord', 'CloseRecord', 'DuplicatesHandling', 'FavoriteRecords'];
 		foreach ($actions as $action) {
 			$result = $adb->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=?;', [$action]);
 			if ($adb->getRowCount($result) && 'DuplicatesHandling' != $action) {
@@ -401,6 +454,7 @@ class YetiForceUpdate
 			if (in_array($action, ['OpenRecord', 'CloseRecord'])) {
 				continue;
 			}
+			$permission = 0;
 			if (in_array($action, ['RecordMapping', 'RecordMappingList'])) {
 				$modules = Settings_Vtiger_CustomRecordNumberingModule_Model::getSupportedModules();
 				unset($modules[getTabid('OSSMailView')]);
@@ -408,6 +462,7 @@ class YetiForceUpdate
 			} elseif ($action == 'PrintMail') {
 				$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` = 'OSSMailView';";
 			} elseif ($action == 'DuplicatesHandling') {
+				$permission = 1;
 				$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` = 'OSSTimeControl';";
 			} else {
 				$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` NOT IN ('SMSNotifier','ModComments','PBXManager','Events','Emails','CallHistory','OSSMailView','');";
@@ -424,7 +479,7 @@ class YetiForceUpdate
 					$tabid = $row['tabid'];
 					$resultC = $adb->pquery("SELECT activityid FROM vtiger_profile2utility WHERE profileid=? AND tabid=? AND activityid=? ;", [$profileId, $tabid, $key]);
 					if ($adb->num_rows($resultC) == 0) {
-						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", [$profileId, $tabid, $key, 0]);
+						$adb->pquery("INSERT INTO vtiger_profile2utility (profileid, tabid, activityid, permission) VALUES  (?, ?, ?, ?)", [$profileId, $tabid, $key, $permission]);
 					}
 				}
 			}
@@ -456,6 +511,13 @@ class YetiForceUpdate
 		if (!$adb->getRowCount($result)) {
 			$key = $this->getMax('vtiger_ws_fieldtype', 'fieldtypeid');
 			$adb->pquery('insert  into `vtiger_ws_fieldtype`(`fieldtypeid`,`uitype`,`fieldtype`) values (?,?,?);', [$key, '306', 'streetAddress']);
+		}
+		
+		$result = $adb->query('SELECT * FROM `vtiger_organizationdetails`');
+		while ($row = $adb->fetch_array($result)) {
+			if(empty($row['panellogoname'])){
+				$adb->update('vtiger_organizationdetails', ['panellogoname' => $row['logoname']], '`organization_id` = ?', [$row['organization_id']]);
+			}
 		}
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -550,6 +612,9 @@ class YetiForceUpdate
 		foreach ($menu as $row) {
 			$parent = $row[1] != 0 ? $parents[$row[1]] : 0;
 			$module = $row[2] == 0 ? getTabid($row[4]) : $row[4];
+			if ($row[2] == 0 && !vtlib_isModuleActive($row[4])) {
+				continue;
+			}
 			$result = $adb->insert('yetiforce_menu', ['role' => 0, 'parentid' => $parent, 'type' => $row[2], 'sequence' => $row[3], 'module' => $module, 'label' => $row[5], 'icon' => $row[6]]);
 			if (is_array($result) && $row[1] == 0) {
 				$parents[$row[0]] = $result['id'];
@@ -600,6 +665,7 @@ class YetiForceUpdate
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$adb = PearDatabase::getInstance();
+
 		$menu = [
 			['LBL_USER_MANAGEMENT', 'LBL_USERS', 'adminIcon-user', 'LBL_USER_DESCRIPTION', 'index.php?module=Users&parent=Settings&view=List', '1', '0', '1'],
 			['LBL_USER_MANAGEMENT', 'LBL_ROLES', 'adminIcon-roles', 'LBL_ROLE_DESCRIPTION', 'index.php?module=Roles&parent=Settings&view=Index', '2', '0', '0'],
@@ -681,7 +747,8 @@ class YetiForceUpdate
 			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTS', 'adminIcon-discount-base', 'LBL_DISCOUNTS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Discounts', '3', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_TAXCONFIGURATION', 'adminIcon-taxes-caonfiguration', 'LBL_TAXCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=TaxConfiguration', '4', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTCONFIGURATION', 'adminIcon-discount-configuration', 'LBL_DISCOUNTCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=DiscountConfiguration', '2', '0', '0'],
-			['LBL_MAIL_TOOLS', 'Mail', 'adminIcon-mail-download-history', 'LBL_OSSMAIL_DESCRIPTION', 'index.php?module=OSSMail&parent=Settings&view=index', '2', '0', '0']
+			['LBL_MAIL_TOOLS', 'Mail', 'adminIcon-mail-download-history', 'LBL_OSSMAIL_DESCRIPTION', 'index.php?module=OSSMail&parent=Settings&view=index', '2', '0', '0'],
+			['LBL_STUDIO', 'LBL_MAPPEDFIELDS', '', 'LBL_MAPPEDFIELDS_DESCRIPTION', 'index.php?module=MappedFields&parent=Settings&view=List', '16', '0', '0']
 		];
 		$blocks = [];
 		$delete = ['LBL_TAX_SETTINGS', 'PDF'];
@@ -762,18 +829,25 @@ class YetiForceUpdate
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 
 		$adb = PearDatabase::getInstance();
+		$adb->query("CREATE TABLE IF NOT EXISTS `s_yf_multireference` (
+				`source_module` varchar(50) NOT NULL,
+				`dest_module` varchar(50) NOT NULL,
+				`lastid` int(19) unsigned NOT NULL DEFAULT '0',
+				`type` tinyint(1) NOT NULL DEFAULT '0',
+				KEY `source_module` (`source_module`,`dest_module`)
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 		$result = $adb->query("SHOW COLUMNS FROM `s_yf_multireference` LIKE 'type';");
 		if ($result->rowCount() == 0) {
 			$adb->query("ALTER TABLE `s_yf_multireference` ADD COLUMN `type` TINYINT(1) DEFAULT 0 NOT NULL AFTER `lastid`;");
 		}
 		$adb->query("CREATE TABLE IF NOT EXISTS `l_yf_sqltime` (
-  `id` int(19) DEFAULT NULL,
-  `type` varchar(20) DEFAULT NULL,
-  `data` text,
-  `date` datetime DEFAULT NULL,
-  `qtime` decimal(20,3) DEFAULT NULL,
-  KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			`id` int(19) DEFAULT NULL,
+			`type` varchar(20) DEFAULT NULL,
+			`data` text,
+			`date` datetime DEFAULT NULL,
+			`qtime` decimal(20,3) DEFAULT NULL,
+			KEY `id` (`id`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 		$adb->query('DROP TABLE IF EXISTS `vtiger_sqltimelog`');
 
 		$this->addHandler([['vtiger.entity.aftersave.final', 'modules/Vtiger/handlers/MultiReferenceUpdater.php', 'Vtiger_MultiReferenceUpdater_Handler', '', '1', '[]']]);
@@ -861,17 +935,7 @@ class YetiForceUpdate
 				PRIMARY KEY (`pdfid`),
 				KEY `module_name` (`module_name`,`status`)
 			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-		$adb->query("CREATE TABLE IF NOT EXISTS `l_yf_access_to_record` (
-					`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
-					`username` varchar(50) NOT NULL,
-					`date` datetime NOT NULL,
-					`ip` varchar(100) NOT NULL,
-					`record` int(19) NOT NULL,
-					`module` varchar(30) NOT NULL,
-					`url` varchar(300) NOT NULL,
-					`agent` varchar(255) NOT NULL,
-					PRIMARY KEY (`id`)
-				  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+
 		$adb->query("CREATE TABLE IF NOT EXISTS `l_yf_switch_users` (
 					`id` int(19) unsigned NOT NULL AUTO_INCREMENT,
 					`date` datetime NOT NULL,
@@ -927,85 +991,215 @@ class YetiForceUpdate
 			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_datashare_rs2us` (
-  `shareid` int(19) NOT NULL,
-  `share_roleandsubid` varchar(255) DEFAULT NULL,
-  `to_userid` int(19) DEFAULT NULL,
-  `permission` int(19) DEFAULT NULL,
-  PRIMARY KEY (`shareid`),
-  KEY `datashare_rs2us_share_roleandsubid_idx` (`share_roleandsubid`),
-  KEY `datashare_rs2us_to_userid_idx` (`to_userid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+			`shareid` int(19) NOT NULL,
+			`share_roleandsubid` varchar(255) DEFAULT NULL,
+			`to_userid` int(19) DEFAULT NULL,
+			`permission` int(19) DEFAULT NULL,
+			PRIMARY KEY (`shareid`),
+			KEY `datashare_rs2us_share_roleandsubid_idx` (`share_roleandsubid`),
+			KEY `datashare_rs2us_to_userid_idx` (`to_userid`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_datashare_us2grp` (
-  `shareid` int(19) NOT NULL,
-  `share_userid` int(19) DEFAULT NULL,
-  `to_groupid` int(19) DEFAULT NULL,
-  `permission` int(19) DEFAULT NULL,
-  PRIMARY KEY (`shareid`),
-  KEY `datashare_us2grp_share_userid_idx` (`share_userid`),
-  KEY `datashare_us2grp_to_groupid_idx` (`to_groupid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+			`shareid` int(19) NOT NULL,
+			`share_userid` int(19) DEFAULT NULL,
+			`to_groupid` int(19) DEFAULT NULL,
+			`permission` int(19) DEFAULT NULL,
+			PRIMARY KEY (`shareid`),
+			KEY `datashare_us2grp_share_userid_idx` (`share_userid`),
+			KEY `datashare_us2grp_to_groupid_idx` (`to_groupid`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_datashare_us2role` (
-  `shareid` int(19) NOT NULL,
-  `share_userid` int(19) DEFAULT NULL,
-  `to_roleid` varchar(255) DEFAULT NULL,
-  `permission` int(19) DEFAULT NULL,
-  PRIMARY KEY (`shareid`),
-  KEY `idx_datashare_us2role_share_userid` (`share_userid`),
-  KEY `idx_datashare_us2role_to_roleid` (`to_roleid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+			`shareid` int(19) NOT NULL,
+			`share_userid` int(19) DEFAULT NULL,
+			`to_roleid` varchar(255) DEFAULT NULL,
+			`permission` int(19) DEFAULT NULL,
+			PRIMARY KEY (`shareid`),
+			KEY `idx_datashare_us2role_share_userid` (`share_userid`),
+			KEY `idx_datashare_us2role_to_roleid` (`to_roleid`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_datashare_us2rs` (
-  `shareid` int(19) NOT NULL,
-  `share_userid` int(19) DEFAULT NULL,
-  `to_roleandsubid` varchar(255) DEFAULT NULL,
-  `permission` int(19) DEFAULT NULL,
-  PRIMARY KEY (`shareid`),
-  KEY `datashare_us2rs_share_userid_idx` (`share_userid`),
-  KEY `datashare_us2rs_to_roleandsubid_idx` (`to_roleandsubid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+			`shareid` int(19) NOT NULL,
+			`share_userid` int(19) DEFAULT NULL,
+			`to_roleandsubid` varchar(255) DEFAULT NULL,
+			`permission` int(19) DEFAULT NULL,
+			PRIMARY KEY (`shareid`),
+			KEY `datashare_us2rs_share_userid_idx` (`share_userid`),
+			KEY `datashare_us2rs_to_roleandsubid_idx` (`to_roleandsubid`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `vtiger_datashare_us2us` (
-  `shareid` int(19) NOT NULL,
-  `share_userid` int(19) DEFAULT NULL,
-  `to_userid` int(19) DEFAULT NULL,
-  `permission` int(19) DEFAULT NULL,
-  PRIMARY KEY (`shareid`),
-  KEY `datashare_us2us_share_userid_idx` (`share_userid`),
-  KEY `datashare_us2us_to_userid_idx` (`to_userid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+			`shareid` int(19) NOT NULL,
+			`share_userid` int(19) DEFAULT NULL,
+			`to_userid` int(19) DEFAULT NULL,
+			`permission` int(19) DEFAULT NULL,
+			PRIMARY KEY (`shareid`),
+			KEY `datashare_us2us_share_userid_idx` (`share_userid`),
+			KEY `datashare_us2us_to_userid_idx` (`to_userid`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `a_yf_mapped_config`(
-	`id` int(19) NOT NULL  auto_increment , 
-	`tabid` int(19) NULL  , 
-	`reltabid` int(19) NULL  , 
-	`status` set('active','inactive')  NULL  , 
-	`conditions` text  NULL  , 
-	`permissions` varchar(255)  NULL  , 
-	`params` varchar(255)  NULL  , 
-	PRIMARY KEY (`id`) ,
-	KEY `tabid`(`tabid`) , 
-	KEY `reltabid`(`reltabid`) 
-) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
+			`id` int(19) NOT NULL  auto_increment , 
+			`tabid` int(19) NULL  , 
+			`reltabid` int(19) NULL  , 
+			`status` set('active','inactive')  NULL  , 
+			`conditions` text  NULL  , 
+			`permissions` varchar(255)  NULL  , 
+			`params` varchar(255)  NULL  , 
+			PRIMARY KEY (`id`) ,
+			KEY `tabid`(`tabid`) , 
+			KEY `reltabid`(`reltabid`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
 
 		$adb->query("CREATE TABLE IF NOT EXISTS `a_yf_mapped_fields`(
-	`id` int(19) NOT NULL  auto_increment , 
-	`mappedid` int(19) NULL  , 
-	`type` varchar(30)  NULL  , 
-	`source` varchar(30)  NULL  , 
-	`target` varchar(30)  NULL  , 
-	`default` varchar(255)  NULL  , 
-	PRIMARY KEY (`id`) , 
-	KEY `a_yf_mapped_fields_ibfk_1`(`mappedid`) , 
-	CONSTRAINT `a_yf_mapped_fields_ibfk_1` 
-	FOREIGN KEY (`mappedid`) REFERENCES `a_yf_mapped_config` (`id`) ON DELETE CASCADE 
-) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
+		`id` int(19) NOT NULL  auto_increment , 
+		`mappedid` int(19) NULL  , 
+		`type` varchar(30)  NULL  , 
+		`source` varchar(30)  NULL  , 
+		`target` varchar(30)  NULL  , 
+		`default` varchar(255)  NULL  , 
+		PRIMARY KEY (`id`) , 
+		KEY `a_yf_mapped_fields_ibfk_1`(`mappedid`) , 
+		CONSTRAINT `a_yf_mapped_fields_ibfk_1` 
+		FOREIGN KEY (`mappedid`) REFERENCES `a_yf_mapped_config` (`id`) ON DELETE CASCADE 
+	) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
 
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_trees_templates_data` LIKE 'icon';");
 		if ($result->rowCount() == 0) {
 			$adb->query("ALTER TABLE `vtiger_trees_templates_data` 	ADD COLUMN `icon` varchar(255) NULL after `state` ;");
 		}
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard` LIKE 'cache';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_module_dashboard` ADD COLUMN `cache` tinyint(1) NULL DEFAULT 0 after `owners` ;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_module_dashboard_widgets` LIKE 'cache';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_module_dashboard_widgets` ADD COLUMN `cache` tinyint(1)   NULL DEFAULT 0 after `module` ;");
+		}
+		$adb->query("CREATE TABLE IF NOT EXISTS `u_yf_favorites`(
+			`crmid` int(19) NULL  , 
+			`module` varchar(30)  NULL  , 
+			`relcrmid` int(19) NULL  , 
+			`relmodule` varchar(30)  NULL  , 
+			`userid` int(19) NULL  , 
+			`data` timestamp NULL  DEFAULT CURRENT_TIMESTAMP , 
+			KEY `crmid`(`crmid`) , 
+			KEY `relcrmid`(`relcrmid`) , 
+			KEY `mix`(`crmid`,`module`,`relcrmid`,`relmodule`,`userid`) , 
+			CONSTRAINT `fk_1_u_yf_favorites` 
+			FOREIGN KEY (`relcrmid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE , 
+			CONSTRAINT `fk_u_yf_favorites` 
+			FOREIGN KEY (`crmid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8' ;");
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_relatedlists` LIKE 'favorites';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_relatedlists` ADD COLUMN `favorites` tinyint(1)   NULL DEFAULT 0 after `actions` ;");
+		}
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `o_yf_access_for_admin`(
+				`id` int(19) unsigned NOT NULL  auto_increment , 
+				`username` varchar(50) NOT NULL  , 
+				`date` datetime NOT NULL  , 
+				`ip` varchar(100) NOT NULL  , 
+				`module` varchar(30) NOT NULL  , 
+				`url` varchar(300) NOT NULL  , 
+				`agent` varchar(255) NOT NULL  , 
+				`request` varchar(300) NOT NULL  , 
+				PRIMARY KEY (`id`) 
+			) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `o_yf_access_for_api`(
+			`id` int(19) unsigned NOT NULL  auto_increment , 
+			`username` varchar(50) NOT NULL  , 
+			`date` datetime NOT NULL  , 
+			`ip` varchar(100) NOT NULL  , 
+			`url` varchar(300) NOT NULL  , 
+			`agent` varchar(255) NOT NULL  , 
+			`request` varchar(300) NOT NULL  , 
+			PRIMARY KEY (`id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+		$adb->query("CREATE TABLE IF NOT EXISTS `o_yf_access_for_user`(
+			`id` int(19) unsigned NOT NULL  auto_increment , 
+			`username` varchar(50) NOT NULL  , 
+			`date` datetime NOT NULL  , 
+			`ip` varchar(100) NOT NULL  , 
+			`module` varchar(30) NOT NULL  , 
+			`url` varchar(300) NOT NULL  , 
+			`agent` varchar(255) NOT NULL  , 
+			`request` varchar(300) NOT NULL  , 
+			PRIMARY KEY (`id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+
+		$result = $adb->query("SHOW TABLES LIKE 'l_yf_access_to_record';");
+		if ($adb->getRowCount($result)) {
+			$adb->query('RENAME TABLE `l_yf_access_to_record` TO `o_yf_access_to_record`;');
+			$result = $adb->query("SHOW COLUMNS FROM `o_yf_access_to_record` LIKE 'request';");
+			if ($result->rowCount() == 0) {
+				$adb->query("ALTER TABLE `o_yf_access_to_record` ADD COLUMN `request` varchar(300) NOT NULL;");
+			}
+		} else {
+			$adb->query("CREATE TABLE IF NOT EXISTS `o_yf_access_to_record`(
+				`id` int(19) unsigned NOT NULL  auto_increment , 
+				`username` varchar(50) NOT NULL  , 
+				`date` datetime NOT NULL  , 
+				`ip` varchar(100) NOT NULL  , 
+				`record` int(19) NOT NULL  , 
+				`module` varchar(30) NOT NULL  , 
+				`url` varchar(300) NOT NULL  , 
+				`agent` varchar(255) NOT NULL  , 
+				`request` varchar(300) NOT NULL  , 
+				PRIMARY KEY (`id`) 
+			) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+		}
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `o_yf_csrf`(
+			`id` int(19) unsigned NOT NULL  auto_increment , 
+			`username` varchar(50) NOT NULL  , 
+			`date` datetime NOT NULL  , 
+			`ip` varchar(100) NOT NULL  , 
+			`referer` varchar(300) NOT NULL  , 
+			`url` varchar(300) NOT NULL  , 
+			`agent` varchar(255) NOT NULL  , 
+			PRIMARY KEY (`id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+		$adb->query("CREATE TABLE IF NOT EXISTS `p_yf_servers`(
+			`id` int(10) NOT NULL  auto_increment , 
+			`name` varchar(200) NULL  , 
+			`acceptable_url` varchar(200) NULL  , 
+			`status` tinyint(1) NULL  DEFAULT 0 , 
+			`api_key` varchar(100) NULL  , 
+			PRIMARY KEY (`id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+		$adb->query("CREATE TABLE IF NOT EXISTS `p_yf_sessions`(
+			`id` varchar(32) NOT NULL  , 
+			`user_id` int(19) NULL  , 
+			`language` varchar(10) NULL  , 
+			`created` datetime NULL  , 
+			`changed` datetime NULL  , 
+			`ip` varchar(100) NULL  , 
+			PRIMARY KEY (`id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+		$adb->query("CREATE TABLE IF NOT EXISTS `p_yf_users`(
+			`id` int(19) NOT NULL  auto_increment , 
+			`server_id` int(10) NULL  , 
+			`status` tinyint(1) NULL  DEFAULT 0 , 
+			`user_name` varchar(50) NOT NULL  , 
+			`password_h` varchar(200) NULL  , 
+			`password_t` varchar(200) NULL  , 
+			`type` varchar(30) NULL  , 
+			`parent_id` int(19) NULL  , 
+			`login_time` datetime NULL  , 
+			`logout_time` datetime NULL  , 
+			`first_name` varchar(200) NULL  , 
+			`last_name` varchar(200) NULL  , 
+			`language` varchar(10) NULL  , 
+			PRIMARY KEY (`id`) , 
+			UNIQUE KEY `user_name`(`user_name`) , 
+			KEY `user_name_2`(`user_name`,`status`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -1057,6 +1251,7 @@ class YetiForceUpdate
 			$showNameRelatedModules = true;
 			foreach ($configContent as $key => $line) {
 				if (strpos($line, 'defaultLayout') !== false) {
+					$configContent[$key] = str_replace('vlayout', 'basic', $configContent[$key]);
 					$defaultLayout = false;
 				}
 				if (strpos($line, 'layoutInLoginView') !== false) {
@@ -1071,12 +1266,18 @@ class YetiForceUpdate
 				if (strpos($line, 'support@vtiger.com') !== false) {
 					$configContent[$key] = str_replace('vtiger', 'yetiforce', $configContent[$key]);
 				}
+				if (strpos($line, 'ini_set') !== false) {
+					$configContent[$key] = str_replace('ini_set', 'AppConfig::iniSet', $configContent[$key]);
+				}
+				if (strpos($line, "include_once('config/version.php')") !== false) {
+					unset($configContent[$key]);
+				}
 			}
 			$content = implode("", $configContent);
 			if ($defaultLayout) {
 				$content .= '
 // Set the default layout 
-$defaultLayout = \'vlayout\';
+$defaultLayout = \'basic\';
 
 ';
 			}

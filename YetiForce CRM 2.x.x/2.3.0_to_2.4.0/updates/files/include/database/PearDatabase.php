@@ -12,8 +12,8 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  * ****************************************************************************** */
-require_once('include/logging.php');
-require_once('include/runtime/Globals.php');
+require_once 'include/logging.php';
+require_once 'include/runtime/Globals.php';
 
 class PearDatabase
 {
@@ -60,8 +60,8 @@ class PearDatabase
 	{
 		$this->log = LoggerManager::getLogger('DB');
 		$this->loadDBConfig($dbtype, $host, $dbname, $username, $passwd, $port);
-		$this->isdb_default_utf8_charset = PerformancePrefs::getBoolean('DB_DEFAULT_CHARSET_UTF8');
-		$this->setDieOnError(SysDebug::get('SQL_DIE_ON_ERROR'));
+		$this->isdb_default_utf8_charset = AppConfig::performance('DB_DEFAULT_CHARSET_UTF8');
+		$this->setDieOnError(AppConfig::debug('SQL_DIE_ON_ERROR'));
 		$this->connect();
 	}
 
@@ -178,8 +178,7 @@ class PearDatabase
 			$this->rollbackTransaction();
 		}
 		if ($this->dieOnError || $dieOnError) {
-			if (SysDebug::get('DISPLAY_DEBUG_BACKTRACE')) {
-
+			if (AppConfig::debug('DISPLAY_DEBUG_BACKTRACE')) {
 				$queryInfo = '';
 				if ($query !== false) {
 					$queryInfo .= 'Query: ' . $query . PHP_EOL;
@@ -292,6 +291,11 @@ class PearDatabase
 		return $result->fetchAll(PDO::FETCH_ASSOC);
 	}
 
+	public function getArrayColumn(&$result, $column = 0)
+	{
+		return $result->fetchAll(PDO::FETCH_COLUMN, $column);
+	}
+
 	public function disconnect()
 	{
 		$this->log('Database disconnect');
@@ -331,7 +335,7 @@ class PearDatabase
 		$params = $this->flatten_array($params);
 		if (count($params) > 0) {
 			$this->log('Query parameters: [' . implode(",", $params) . ']');
-		}else{
+		} else {
 			return $this->query($query, $dieOnError, $msg);
 		}
 
@@ -429,9 +433,9 @@ class PearDatabase
 		if ($where != '')
 			$where = 'WHERE ' . $where;
 		if (count($params) === 0) {
-			$this->query("DELETE FROM $table $where");
+			$this->query('DELETE FROM ' . $table . ' ' . $where);
 		} else {
-			$this->pquery("DELETE FROM $table $where", $params);
+			$this->pquery('DELETE FROM ' . $table . ' ' . $where, $params);
 		}
 		return $this->stmt->rowCount();
 	}
@@ -446,10 +450,10 @@ class PearDatabase
 	 */
 	public function update($table, array $columns, $where = false, array $params = [])
 	{
-		$this->log('Update | table: ' . $table . ',columns:' . print_r($columns, true) . ',where:' . $where . ',params:' . print_r($params, true));
+		$this->log('Update | table: ' . $table . ',columns:' . implode(',', $columns) . ',where:' . $where . ',params:' . implode(',', $params));
 		$query = "UPDATE $table SET ";
 		foreach ($columns as $column => $value) {
-			$query .= $column . ' = ?,';
+			$query .= $this->quote($column, false) . ' = ?,';
 			$values[] = $value;
 		}
 		$query = trim($query, ',');
@@ -798,7 +802,7 @@ class PearDatabase
 
 	public function logSqlTime($startat, $endat, $sql, $params = false)
 	{
-		if (!PerformancePrefs::getBoolean('SQL_LOG_INCLUDE_CALLER', false)) {
+		if (!AppConfig::performance('SQL_LOG_INCLUDE_CALLER')) {
 			return;
 		}
 		$db = PearDatabase::getInstance('log');

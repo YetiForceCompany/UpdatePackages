@@ -10,7 +10,12 @@
  ********************************************************************************/
 -->*}
 {strip}
-<div style="padding-left: 15px;">
+<div class='widget_header row '>
+	<div class="col-xs-12">
+		{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
+	</div>
+</div>
+<div>
 	<form action="index.php" enctype="multipart/form-data" method="POST" name="importAdvanced">
 		<input type="hidden" name="module" value="{$FOR_MODULE}" />
 		<input type="hidden" name="view" value="Import" />
@@ -24,12 +29,7 @@
 
 		<input type="hidden" id="mandatory_fields" name="mandatory_fields" value='{$ENCODED_MANDATORY_FIELDS}' />
 
-		<table style=" width:90%;margin-left: 5%" cellpadding="2" cellspacing="12" class="searchUIBasic">
-			<tr>
-				<td class="font-x-large" align="left" colspan="2">
-					<strong>{'LBL_IMPORT'|@vtranslate:$MODULE} {$FOR_MODULE|@vtranslate:$FOR_MODULE}</strong>
-				</td>
-			</tr>
+		<table  class="searchUIBasic col-xs-12 no-margin paddingLRZero">
 			{if $ERROR_MESSAGE neq ''}
 			<tr>
 				<td class="style1" align="left" colspan="2">

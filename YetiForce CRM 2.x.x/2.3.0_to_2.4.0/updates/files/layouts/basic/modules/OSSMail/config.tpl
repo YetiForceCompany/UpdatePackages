@@ -16,8 +16,10 @@
         background-color: #f2dede;
     }
 </style>
-<div class="widget_header">
-	{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
+<div class='widget_header row '>
+	<div class="col-xs-12">
+		{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
+	</div>
 </div>
 <ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin: 0px;">
     <li class="active"><a href="#tab_rc_config" data-toggle="tab">{vtranslate('Roundcube config', 'OSSMail')}</a></li>
@@ -48,7 +50,7 @@
                                         </select>
                                     </div>
                                 {else if $FIELD_DETAILS['fieldType'] == 'multipicklist'}
-                                    <div class="col-md-8">
+                                    <div class="row col-md-8">
                                         <select class="form-control" name="{$FIELD_NAME}" multiple>
                                             {foreach item=ITEM key=KEY from=$FIELD_DATA[$FIELD_NAME]}
                                                 <option value="{$KEY}" selected>{$KEY}</option>

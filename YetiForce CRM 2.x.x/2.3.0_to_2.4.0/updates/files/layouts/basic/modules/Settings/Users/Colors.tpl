@@ -17,7 +17,6 @@
 			{vtranslate('LBL_COLORS_DESCRIPTION', $QUALIFIED_MODULE)}
 		</div>		
 	</div>
-	<hr>
 	<div class="">
 		<div class="contents tabbable">
 			<ul class="nav nav-tabs layoutTabs massEditTabs">
@@ -120,7 +119,7 @@
 										<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#{$TABLE}">
 											{assign var=MODULE_NAME value=Vtiger_Functions::getModuleName($ITEM.tabid)}
 											{vtranslate($MODULE_NAME, $MODULE_NAME)}
-											&ensp;:&ensp;
+											:&ensp;
 											{vtranslate($ITEM.fieldlabel, $MODULE_NAME)}
 										</a>
 									</div>

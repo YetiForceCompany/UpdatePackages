@@ -387,7 +387,7 @@ $languageStrings = [
 	'LBL_PERMISSION_DENIED' => 'Brak uprawnień',
 	'LBL_NO_PERMISSIONS_FOR_THE_RECORD' => 'Próbujesz przeglądać/edytować rekord do którego nie masz wystarczających uprawnień. Jeśli powinieneś mieć do niego dostęp zgłoś problem administratorowi.',
 	'LBL_PLEASE_SELECT_MODULE' => 'Proszę wybrać moduł',
-	'LBL_POST' => 'Zatwierdź',
+	'LBL_POST' => 'Dodaj',
 	'LBL_PREVIOUS_FQ' => 'Poprzedni kwartał',
 	'LBL_PREVIOUS_FY' => 'Poprzedni rok',
 	'LBL_PRE_TAX_TOTAL' => 'Wartość po rabacie (netto)',
@@ -1065,8 +1065,7 @@ $languageStrings = [
 	'Sales' => 'Sprzedaż',
 	'BTN_READ_RECORD' => 'Za pomocą tego przycisku oznaczysz, że zapoznałeś się ze wszystkimi zmianami na rekordzie',
 	'LBL_MARK_AS_HELD' => 'Oznacz jako wykonane',
-	'LBL_VTIGER_LAYOUT' => 'Domyślny',
-	'LBL_DEFAULT' => 'Responsywny',
+	'LBL_DEFAULT' => 'Default',
 	'BTN_GENERATE_RECORD' => 'Generuj rekord',
 	'LBL_GENERATE_RECORD_FOR_MODULE' => 'Generuj rekord dla modułu',
 	'LBL_REMOVE_SEARCH_OPTION_INFO' => 'Wyczyść parametry wyszukiwań',
@@ -1097,7 +1096,10 @@ $languageStrings = [
 	'SINGLE_SRequirementsCards' => 'Karta wymagań',
 	'SQuotes' => 'Oferty',
 	'SINGLE_SQuotes' => 'Oferta',
-	
+	'LBL_NR' => 'L.p',
+	'LBL_ADD_TO_FAVORITES' => 'Dodaj do ulubionych',
+	'LBL_REMOVE_FROM_FAVORITES' => 'Usuń z ulubionych',
+	'LBL_TIMELINE' => 'Oś czasu',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Podsumowanie',
@@ -1341,4 +1343,6 @@ $jsLanguageStrings = [
 	'JS_YESTERDAY' => 'Wczoraj',
 	'JS_OLDER' => 'Starsze',
 	'JS_SELECTED_ELEMENTS' => 'Ilość zaznaczonych elementów',
+	'JS_REMOVED_FROM_FAVORITES' => 'Usunięto z ulubionych',
+	'JS_ADDED_TO_FAVORITES' => 'Dodano do ulubionych',
 ];

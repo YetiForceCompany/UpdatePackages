@@ -35,15 +35,7 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$displayValue = '';
 
-		if ($recordInstance !== false) {
-			$moduleName = $recordInstance->getModuleName();
-		} elseif ($record !== false) {
-			$recordMetaData = Vtiger_Functions::getCRMRecordMetadata($record);
-			$moduleName = $recordMetaData['setype'];
-		}
-
-		$shownersTable = self::getShownerTable($moduleName);
-		$result = $db->pquery('SELECT DISTINCT userid FROM ' . $shownersTable . ' WHERE crmid = ?', [$record]);
+		$result = $db->pquery('SELECT DISTINCT userid FROM u_yf_crmentity_showners WHERE crmid = ?', [$record]);
 		while (($shownerid = $db->getSingleValue($result)) !== false) {
 			if (Vtiger_Owner_UIType::getOwnerType($shownerid) === 'User') {
 				if ($currentUser->isAdminUser() && !$rawText) {
@@ -69,15 +61,11 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 	 */
 	public function getEditViewDisplayValue($value, $record = false)
 	{
-		if($record === false){
+		if ($record == false) {
 			return [];
 		}
 		$db = PearDatabase::getInstance();
-		$recordMetaData = Vtiger_Functions::getCRMRecordMetadata($record);
-		$moduleName = $recordMetaData['setype'];
-		$shownersTable = self::getShownerTable($moduleName);
-		
-		$result = $db->pquery('SELECT DISTINCT userid FROM '.$shownersTable.' WHERE crmid = ?', [$record]);
+		$result = $db->pquery('SELECT DISTINCT userid FROM u_yf_crmentity_showners WHERE crmid = ?', [$record]);
 		$values = [];
 		while (($shownerid = $db->getSingleValue($result)) !== false) {
 			$values[] = $shownerid;
@@ -97,14 +85,9 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 		if ($shownerid) {
 			return $shownerid;
 		}
-		
+
 		$db = PearDatabase::getInstance();
-		if ($moduleName === false) {
-			$recordMetaData = Vtiger_Functions::getCRMRecordMetadata($parentRecord);
-			$moduleName = $recordMetaData['setype'];
-		}
-		$shownersTable = self::getShownerTable($moduleName);
-		$result = $db->pquery('SELECT DISTINCT userid FROM ' . $shownersTable . ' WHERE crmid = ?', [$record]);
+		$result = $db->pquery('SELECT DISTINCT userid FROM u_yf_crmentity_showners WHERE crmid = ?', [$record]);
 		$values = [];
 		while (($shownerid = $db->getSingleValue($result)) !== false) {
 			$values[] = $shownerid;
@@ -112,9 +95,76 @@ class Vtiger_SharedOwner_UIType extends Vtiger_Base_UIType
 		Vtiger_Cache::set('SharedOwner', $record, $values);
 		return $values;
 	}
-
-	public static function getShownerTable($module)
+	public function getSearchViewList($module, $view)
 	{
-		return 'vtiger_' . strtolower(rtrim($module, 's')) . '_showners';
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$db = PearDatabase::getInstance();
+
+		$queryGenerator = new QueryGenerator($module, $currentUser);
+		$meta = $queryGenerator->getMeta($module);
+		$baseTable = $meta->getEntityBaseTable();
+		$tableIndexList = $meta->getEntityTableIndexList();
+		$baseTableIndex = $tableIndexList[$baseTable];
+
+		$queryGenerator->initForCustomViewById($view);
+		$queryGenerator->setFields([]);
+		$queryGenerator->addCustomColumn('userid');
+		$queryGenerator->addCustomFrom([
+			'joinType' => 'INNER',
+			'relatedTable' => 'u_yf_crmentity_showners',
+			'relatedIndex' => 'crmid',
+			'baseTable' => $baseTable,
+			'baseIndex' => $baseTableIndex,
+		]);
+		$listQuery = $queryGenerator->getQuery('SELECT DISTINCT');
+		$result = $db->query($listQuery);
+
+		$users = $group = [];
+		while ($id = $db->getSingleValue($result)) {
+			$name = self::getUserName($id);
+			if($name !== false){
+				$users[$id] = $name;
+				continue;
+			}
+			$name = self::getGroupName($id);
+			if($name !== false){
+				$group[$id] = $name;
+				continue;
+			}
+		}
+		asort ($users);
+		asort ($group);
+		return [ 'users' => $users, 'group' => $group];
+	}
+
+	protected static $groupIdNameCache = [];
+
+	public static function getGroupName($id)
+	{
+		$adb = PearDatabase::getInstance();
+		if (!isset(self::$groupIdNameCache[$id])) {
+			$result = $adb->query('SELECT groupname, groupid FROM vtiger_groups');
+			while ($row = $adb->getRow($result)) {
+				self::$groupIdNameCache[$row['groupid']] = trim($row['groupname']);
+			}
+		}
+		return (isset(self::$groupIdNameCache[$id])) ? self::$groupIdNameCache[$id] : false;
+	}
+
+	protected static $userIdNameCache = [];
+
+	public static function getUserName($id)
+	{
+		$adb = PearDatabase::getInstance();
+		if (!isset(self::$userIdNameCache[$id])) {
+			$userModuleInfo = Vtiger_Functions::getEntityModuleSQLColumnString('Users');
+			$result = $adb->query('SELECT id,' . $userModuleInfo['colums'] . ' FROM vtiger_users');
+			while ($row = $adb->getRow($result)) {
+				$userid = $row['id'];
+				unset($row['id']);
+				self::$userIdNameCache[$userid] = trim(implode(' ', $row));
+			}
+		}
+		return (isset(self::$userIdNameCache[$id])) ? self::$userIdNameCache[$id] : false;
 	}
 }

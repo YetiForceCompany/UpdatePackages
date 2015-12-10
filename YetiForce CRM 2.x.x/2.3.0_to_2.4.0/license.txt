@@ -1,2 +1,3 @@
 Required PHP version needs to be equal or greater than 5.4.
 During the update process some of the configuration files, such as .htaccess, performance.php, developer.php, will be overwritten.
+Attention: You will be redirected to Home page when update is completed.

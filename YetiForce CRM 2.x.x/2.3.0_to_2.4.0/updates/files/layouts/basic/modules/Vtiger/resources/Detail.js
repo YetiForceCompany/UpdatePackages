@@ -907,6 +907,47 @@ jQuery.Class("Vtiger_Detail_Js", {
 					}
 			);
 		});
+		
+		detailContentsHolder.on('click', 'a.favorites', function (e) {
+			var progressInstance = jQuery.progressIndicator({
+				'position': 'html',
+				'blockInfo': {
+					'enabled': true
+				}
+			});
+			var element = jQuery(e.currentTarget);
+			var instance = Vtiger_Detail_Js.getInstance();
+
+			var row = element.closest('tr');
+			var relatedRecordid = row.data('id');
+			var widget_contents = element.closest('.widget_contents');
+			var selectedTabElement = thisInstance.getSelectedTab();
+			var relatedModuleName = thisInstance.getRelatedModuleName();
+			if (relatedModuleName == undefined) {
+				relatedModuleName = widget_contents.find('.relatedModuleName').val();
+			}
+			var relatedController = new Vtiger_RelatedList_Js(thisInstance.getRecordId(), app.getModuleName(), selectedTabElement, relatedModuleName);
+			relatedController.favoritesRelation(relatedRecordid, element.data('state')).then(function (response) {
+				if(response){
+					var state = element.data('state') ? 0 : 1;
+					element.data('state', state);
+					element.find('.glyphicon').each(function () {
+						if (jQuery(this).hasClass('hide')) {
+							jQuery(this).removeClass('hide');
+						} else {
+							jQuery(this).addClass('hide');
+						}
+					})
+					progressInstance.progressIndicator({'mode': 'hide'});
+					var text = app.vtranslate('JS_REMOVED_FROM_FAVORITES');
+					if(state){
+						text = app.vtranslate('JS_ADDED_TO_FAVORITES');
+					}
+					Vtiger_Helper_Js.showPnotify({text: text, type: 'success', animation: 'show'});
+				}
+				
+			});
+		});
 	},
 	registerBlockAnimationEvent: function () {
 		var detailContentsHolder = this.getContentHolder();
@@ -2324,7 +2365,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var commentInfoContent = commentInfoBlock.find('.commentInfoContent');
 			var commentReason = commentInfoBlock.find('[name="editReason"]');
 			var editCommentBlock = thisInstance.getEditCommentBlock();
-			editCommentBlock.find('.commentcontent').text(commentInfoContent.text());
+			editCommentBlock.find('.commentcontent').val(commentInfoContent.text());
 			editCommentBlock.find('[name="reasonToEdit"]').val(commentReason.text());
 			commentInfoContent.hide();
 			commentInfoBlock.find('.commentActionsContainer').hide();
@@ -2351,6 +2392,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 									commentDetails.fadeOut(400, function () {
 										commentDetails.remove();
 									});
+									thisInstance.registerRefreshTimeline('last');
 								} else {
 									Vtiger_Helper_Js.showPnotify(data.error.message);
 								}
@@ -2387,6 +2429,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 					var commentInfoBlock = currentTarget.closest('.singleComment');
 					commentTextAreaElement.val('');
 					if (mode == "add") {
+						thisInstance.registerRefreshTimeline('last');
 						var commentId = data['result']['id'];
 						var commentHtml = thisInstance.getCommentUI(commentId);
 						commentHtml.then(function (data) {
@@ -2412,11 +2455,11 @@ jQuery.Class("Vtiger_Detail_Js", {
 								}
 							} else {
 								jQuery('<ul class="liStyleNone"><li class="commentDetails">' + data + '</li></ul>').prependTo(closestAddCommentBlock.closest('.commentContainer').find('.commentsList'));
-								commentTextAreaElement.css({height: '71px'});
 							}
 							commentInfoBlock.find('.commentActionsContainer').show();
 						});
 					} else if (mode == "edit") {
+						thisInstance.registerRefreshTimeline(commentInfoBlock.find('.commentInfoHeader').data('commentid'));
 						var modifiedTime = commentInfoBlock.find('.commentModifiedTime');
 						var commentInfoContent = commentInfoBlock.find('.commentInfoContent');
 						var commentEditStatus = commentInfoBlock.find('[name="editStatus"]');
@@ -2439,7 +2482,20 @@ jQuery.Class("Vtiger_Detail_Js", {
 				});
 			}
 		});
-
+		detailContentsHolder.find('.commentsBar .switchBtn').on('switchChange.bootstrapSwitch',  function (e, state) {
+			if(state){
+				thisInstance.registerRefreshTimeline();
+			}
+			else{
+				var params = {
+					module: app.getModuleName(),
+					view: 'Detail',
+					mode: 'ShowListComments',
+					record: thisInstance.getRecordId()
+				};
+				
+			}
+		});
 		detailContentsHolder.on('click', '.moreRecentComments', function () {
 			var recentCommentsTab = thisInstance.getTabByLabel(thisInstance.detailViewRecentCommentsTabLabel);
 			recentCommentsTab.trigger('click');
@@ -2586,6 +2642,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 	registerBasicEvents: function () {
 		var thisInstance = this;
 		var detailContentsHolder = thisInstance.getContentHolder();
+		var selectedTabElement = thisInstance.getSelectedTab();
 		//register all the events for summary view container
 		thisInstance.registerSummaryViewContainerEvents(detailContentsHolder);
 		thisInstance.registerCommentEvents(detailContentsHolder);
@@ -2594,7 +2651,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 		app.registerEventForTimeFields(detailContentsHolder);
 
 		detailContentsHolder.on('click', '#detailViewNextRecordButton', function (e) {
-			var selectedTabElement = thisInstance.getSelectedTab();
 			var url = selectedTabElement.data('url');
 			var currentPageNum = thisInstance.getRelatedListCurrentPageNum();
 			var requestedPage = parseInt(currentPageNum) + 1;
@@ -2603,7 +2659,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 		});
 
 		detailContentsHolder.on('click', '#detailViewPreviousRecordButton', function (e) {
-			var selectedTabElement = thisInstance.getSelectedTab();
 			var url = selectedTabElement.data('url');
 			var currentPageNum = thisInstance.getRelatedListCurrentPageNum();
 			var requestedPage = parseInt(currentPageNum) - 1;
@@ -2720,6 +2775,9 @@ jQuery.Class("Vtiger_Detail_Js", {
 		thisInstance.registerEventForRelatedListPagination();
 		thisInstance.registerBlockAnimationEvent();
 		thisInstance.registerMailPreviewWidget(detailContentsHolder.find('.widgetContentBlock[data-type="EmailList"]'));
+		if(selectedTabElement.data('reference') == 'Comments'){
+			thisInstance.registerRefreshTimeline();
+		}
 	},
 	refreshRelatedList: function(){
 		var container = jQuery('.related');	
@@ -2730,7 +2788,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		var mainNavWidth = 0;
 		var freeSpace = 0;
 		container.find('.nav .mainNav').each(function (e) {
-			mainNavWidth += jQuery(this).width() + margin;
+			mainNavWidth += Math.ceil(jQuery(this).width() + margin);
 		});	
 		moreBtn.removeClass('hide');
 		var widthMoreBtn = moreBtn.width();
@@ -2740,7 +2798,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			jQuery(this).removeClass('hide');
 			if(freeSpace  > jQuery(this).width()){
 				moreList.find('[data-reference="' + jQuery(this).data('reference')+'"]').addClass('hide');				
-				freeSpace -= jQuery(this).width() + margin ;
+				freeSpace -= Math.ceil(jQuery(this).width() + margin) ;
 			}
 			else{
 				if(freeSpace !== 0){
@@ -2749,6 +2807,79 @@ jQuery.Class("Vtiger_Detail_Js", {
 				freeSpace = 0;
 				jQuery(this).addClass('hide');
 				moreList.find('[data-reference="' + jQuery(this).data('reference') + '"]').removeClass('hide');
+			}
+		});
+	},
+	refreshCommentContainer: function(commentId){
+		var thisInstance = this;
+		var commentContainer = $('.commentsBody');
+		var params = {
+			module: app.getModuleName(),
+			view: 'Detail',
+			record: thisInstance.getRecordId(),
+			mode: 'showThreadComments',
+			commentid: commentId
+		}
+		var progressIndicatorElement = jQuery.progressIndicator({
+			position: 'html',
+		});
+		AppConnector.request(params).then(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			commentContainer.html(data);
+		});
+	},
+	registerRefreshTimeline: function(currentComment){
+		var thisInstance = this;
+		var options = {
+			width: '100%',
+			height: '100%',
+			layout: 'portrait',
+			timenav_position: 'top', 
+			marker_height_min: 48,
+			marker_width_min: 150,
+			marker_padding: 5,
+			scale_factor: 1,
+			optimal_tick_width: 500,
+			slide_padding_lr: 100, 
+			slide_default_fade: "0%",
+			language: app.getLanguage().substring(0,2) 
+		};
+		var params = {
+			module: 'ModComments',
+			action: 'TimelineAjax',
+			record: thisInstance.getRecordId()
+		};
+		var progressIndicatorElement = jQuery.progressIndicator({
+			position: 'html',
+		});
+		if(typeof currentComment == 'undefined'){
+			currentComment = $('#currentComment').val();
+		}	
+		AppConnector.request(params).then(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var allComments = data.result;
+			if(allComments !== '[]'){
+				var allComments = JSON.parse(allComments);
+				var timeline = new TL.Timeline('timeline', allComments, options);
+				timeline.on('change', function(data) {
+					var uniqueId = data.unique_id;
+					thisInstance.refreshCommentContainer(uniqueId.substr(2, uniqueId.length - 2));
+				});
+				if (!currentComment || currentComment == 'last'){
+					if(allComments.events.length == 1){
+						var uniqueId = allComments.events[0].unique_id;
+						thisInstance.refreshCommentContainer(uniqueId.substr(2, uniqueId.length - 2));
+					}
+					else{
+						timeline.goToEnd();
+					}
+				}
+				else if(allComments.events[allComments.events.length - 1].unique_id == 'Id' + currentComment){
+					thisInstance.refreshCommentContainer(currentComment);
+				}
+				else{
+					timeline.goToId('Id' + currentComment);
+				}
 			}
 		});
 	},

@@ -11,9 +11,11 @@
 -->*}
 {strip}
 	<div class="" id="importModules">
-		<div class="widget_header">
-			<h3>{vtranslate('LBL_IMPORT_MODULE_FROM_FILE', $QUALIFIED_MODULE)}</h3>
-		</div><hr>
+		<div class='widget_header row '>
+			<div class="col-xs-12">
+				{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
+			</div>
+		</div>
 		<div class="contents">
 			<div>
 				<div id="vtlib_modulemanager_import_div">
@@ -107,6 +109,10 @@
 									{/foreach}
 								</tbody>
 							</table>
+							{if $MODULEIMPORT_DIR_EXISTS eq 'true'}
+								<br/>
+								<div class="alert alert-danger" role="alert">{vtranslate('LBL_DELETE_EXIST_DIRECTORY', $QUALIFIED_MODULE)}</div>
+							{/if}
 							<div class="modal-footer">
 								{if $MODULEIMPORT_EXISTS eq 'true' || $MODULEIMPORT_DIR_EXISTS eq 'true'}
 									<input type="hidden" name="view" value="List">
@@ -124,8 +130,6 @@
 										<input type="checkbox" class="pull-right" onclick="this.form.mode.value = 'updateUserModuleStep3';
 											this.form.submit();" >
 										<span class="pull-right">I would like to update now.&nbsp;</span>
-									{else}
-										<p class="alert-info">{vtranslate('LBL_DELETE_EXIST_DIRECTORY', $QUALIFIED_MODULE)}</p>
 									{/if}
 								{else}
 									<input type="hidden" name="view" value="ModuleImport">

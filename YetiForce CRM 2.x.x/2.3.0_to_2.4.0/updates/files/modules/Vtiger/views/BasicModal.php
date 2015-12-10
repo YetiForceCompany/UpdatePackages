@@ -13,14 +13,16 @@ class Vtiger_BasicModal_View extends Vtiger_IndexAjax_View
 	{
 		$moduleName = $request->getModule();
 		if (!Users_Privileges_Model::isPermitted($moduleName, $actionName)) {
-			throw new AppException(vtranslate('LBL_PERMISSION_DENIED'));
+			throw new NoPermittedException(vtranslate('LBL_PERMISSION_DENIED'));
 		}
 	}
 
 	public function preProcess(Vtiger_Request $request)
 	{
-		echo '<div class="modal fade"><div class="modal-dialog"><div class="modal-content">';
-		foreach ($this->getModalCss($request) as &$style) {
+		$moduleName = $request->getModule();
+		$viewName = $request->get('view');
+		echo '<div class="modal fade modal'.$moduleName.''.$viewName.'"><div class="modal-dialog"><div class="modal-content">';
+		foreach ($this->getModalCss($request) as $style) {
 			echo '<link rel="stylesheet" href="'.$style->getHref().'">';
 		}
 	}

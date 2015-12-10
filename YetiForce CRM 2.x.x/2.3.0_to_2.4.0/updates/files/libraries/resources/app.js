@@ -48,6 +48,12 @@ var app = {
 		return recordId;
 	},
 	/**
+	 * Function to get language
+	 */
+	getLanguage: function () {
+		return jQuery('body').data('language');
+	},
+	/**
 	 * Function to get the contents container
 	 * @returns jQuery object
 	 */
@@ -150,6 +156,23 @@ var app = {
 
 		return selectElement;
 
+	},
+	/**
+	 * Function to destroy the selectize element
+	 */
+	destroySelectizeElement: function (parent) {
+		var selectElements = jQuery();
+		if (typeof parent == 'undefined') {
+			parent = jQuery('body');
+		}
+		selectElements = jQuery('.selectized', parent);
+		//parent itself is the element
+		if (parent.is('select.selectized')) {
+			selectElements = parent;
+		}
+		selectElements.each(function(){
+			$(this)[0].selectize.destroy();
+		});
 	},
 	/**
 	 * Function which will show the select2 element for select boxes . This will use select2 library

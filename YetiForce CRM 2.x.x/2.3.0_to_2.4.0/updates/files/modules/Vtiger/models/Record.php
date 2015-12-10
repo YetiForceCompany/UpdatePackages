@@ -261,8 +261,10 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		if ($this->getModule()->isInventory()) {
 			$this->initInventoryData();
 		}
+
 		$this->getModule()->saveRecord($this);
-		if ($this->getModule()->isInventory()) {
+
+		if ($this->getModule()->isInventory() && count($this->inventoryData) > 0) {
 			$this->saveInventoryData();
 		}
 	}
@@ -323,17 +325,29 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 	 */
 	public static function getSearchResult($searchKey, $module = false, $limit = false)
 	{
-		global $max_number_search_result;
-
 		$db = PearDatabase::getInstance();
-		$query = 'SELECT label, searchlabel, crmid, setype, createdtime, smownerid FROM vtiger_crmentity crm INNER JOIN vtiger_entityname e ON crm.setype = e.modulename WHERE searchlabel LIKE ? AND turn_off = ? AND crm.deleted = 0';
-		$params = array("%$searchKey%", 1);
+		$params = ["%$searchKey%"];
+		$sortColumns = $join = $where = '';
 
 		if ($module !== false) {
-			$query .= ' AND setype = ?';
+			$where .= ' AND vtiger_crmentity.setype = ?';
 			$params[] = $module;
+		} else {
+			$join = 'INNER JOIN vtiger_entityname ON vtiger_crmentity.setype = vtiger_entityname.modulename';
+			$where .= ' AND vtiger_entityname.turn_off = ?';
+			$sortColumns .= 'vtiger_entityname.sequence ASC,';
+			$params[] = 1;
 		}
-		$query .= ' ORDER BY sequence ASC, createdtime DESC';
+
+		if (AppConfig::performance('SORT_SEARCH_RESULTS')) {
+			$sortColumns .= 'vtiger_crmentity.label ASC,';
+		}
+
+		$query = 'SELECT label, searchlabel, crmid, setype, createdtime, smownerid FROM vtiger_crmentity ' . $join . ' WHERE vtiger_crmentity.searchlabel LIKE ? AND vtiger_crmentity.deleted = 0' . $where;
+		if (!empty($sortColumns)) {
+			$query .= ' ORDER BY ' . $sortColumns;
+			$query = rtrim($query, ',');
+		}
 
 		$result = $db->pquery($query, $params);
 		$noOfRows = $db->num_rows($result);
@@ -351,7 +365,7 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		$roleInstance = Settings_Roles_Record_Model::getInstanceById($user->get('roleid'));
 		$searchunpriv = $roleInstance->get('searchunpriv');
 
-		for ($i = 0, $recordsCount = 0; $i < $noOfRows && $recordsCount < $max_number_search_result; ++$i) {
+		for ($i = 0, $recordsCount = 0; $i < $noOfRows && $recordsCount < vglobal('max_number_search_result'); ++$i) {
 			$row = $db->query_result_rowdata($result, $i);
 			if ($row['setype'] === 'Leads' && $convertedInfo[$row['crmid']]) {
 				continue;
@@ -579,7 +593,7 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 	{
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__);
-		if(!$this->inventoryData){
+		if (!$this->inventoryData) {
 			$module = $this->getModuleName();
 			$record = $this->getId();
 			if (empty($record)) {
@@ -616,29 +630,33 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		$table = $inventory->getTableName('data');
 		$summaryFields = $inventory->getSummaryFields();
 		$inventoryData = $summary = [];
-		$request = new Vtiger_Request($_REQUEST, $_REQUEST);
-		$numRow = $request->get('inventoryItemsNo');
-
-		for ($i = 1; $i <= $numRow; $i++) {
-			if (!$request->has(reset($fields)) && !$request->has(reset($fields) . $i)) {
-				continue;
+		if ($this->has('inventoryData')) {
+			$request = $this->get('inventoryData');
+		} else {
+			$request = new Vtiger_Request($_REQUEST, $_REQUEST);
+		}
+		if ($request->has('inventoryItemsNo')) {
+			$numRow = $request->get('inventoryItemsNo');
+			for ($i = 1; $i <= $numRow; $i++) {
+				if (!$request->has(reset($fields)) && !$request->has(reset($fields) . $i)) {
+					continue;
+				}
+				$insertData = ['seq' => $request->get('seq' . $i)];
+				foreach ($fields as $field) {
+					$value = $insertData[$field] = $inventory->getValueForSave($request, $field, $i);
+					if (in_array($field, $summaryFields)) {
+						$summary[$field] += $value;
+					}
+				}
+				$inventoryData[] = $insertData;
 			}
-			$insertData = ['seq' => $request->get('seq' . $i)];
-			foreach ($fields as $field) {
-				$value = $insertData[$field] = $inventory->getValueForSave($request, $field, $i);
-				if (in_array($field, $summaryFields)) {
-					$summary[$field] += $value;
+
+			foreach ($summary as $fieldName => $fieldValue) {
+				if ($this->has($fieldName)) {
+					$this->set($fieldName, CurrencyField::convertToUserFormat($fieldValue, null, true));
 				}
 			}
-			$inventoryData[] = $insertData;
 		}
-
-		foreach ($summary as $fieldName => $fieldValue) {
-			if ($this->has($fieldName)) {
-				$this->set($fieldName, CurrencyField::convertToUserFormat($fieldValue, null, true));
-			}
-		}
-
 		$this->inventoryData = $inventoryData;
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__);
 	}
@@ -658,7 +676,11 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		$moduleName = $this->getModuleName();
 		$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
 		$table = $inventory->getTableName('data');
-		$request = new Vtiger_Request($_REQUEST, $_REQUEST);
+		if ($this->has('inventoryData')) {
+			$request = $this->get('inventoryData');
+		} else {
+			$request = new Vtiger_Request($_REQUEST, $_REQUEST);
+		}
 		$numRow = $request->get('inventoryItemsNo');
 
 		//In Bulk mode stop triggering events

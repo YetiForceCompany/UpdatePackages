@@ -18,11 +18,20 @@ class Vtiger_RelationAjax_Action extends Vtiger_Action_Controller
 		$this->exposeMethod('deleteRelation');
 		$this->exposeMethod('updateRelation');
 		$this->exposeMethod('getRelatedListPageCount');
+		$this->exposeMethod('updateFavoriteForRecord');
 	}
 
-	function checkPermission(Vtiger_Request $request)
+	public function checkPermission(Vtiger_Request $request)
 	{
-		
+		$moduleName = $request->getModule();
+		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
+
+		$userPrivilegesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
+		$permission = $userPrivilegesModel->hasModulePermission($moduleModel->getId());
+
+		if (!$permission) {
+			throw new NoPermittedException('LBL_PERMISSION_DENIED');
+		}
 	}
 
 	function preProcess(Vtiger_Request $request)
@@ -132,21 +141,21 @@ class Vtiger_RelationAjax_Action extends Vtiger_Action_Controller
 		$relatedModuleModel = Vtiger_Module_Model::getInstance($relatedModule);
 		$relationModel = Vtiger_Relation_Model::getInstance($sourceModuleModel, $relatedModuleModel);
 
-		if(!empty($toAdd)) {
+		if (!empty($toAdd)) {
 			foreach ($toAdd as $relatedRecordId) {
-				if(substr($relatedRecordId, 0,1) != 'T'){
+				if (substr($relatedRecordId, 0, 1) != 'T') {
 					$relationModel->addRelation($sourceRecordId, $relatedRecordId);
 				}
 			}
 		}
-		if(!empty($toRemove)) {
+		if (!empty($toRemove)) {
 			foreach ($toRemove as $relatedRecordId) {
-				if(substr($relatedRecordId, 0,1) != 'T'){
+				if (substr($relatedRecordId, 0, 1) != 'T') {
 					$relationModel->deleteRelation($sourceRecordId, $relatedRecordId);
 				}
 			}
 		}
-		
+
 		$response = new Vtiger_Response();
 		$response->setResult(true);
 		$response->emit();
@@ -177,6 +186,25 @@ class Vtiger_RelationAjax_Action extends Vtiger_Action_Controller
 		$result['page'] = $pageCount;
 		$response = new Vtiger_Response();
 		$response->setResult($result);
+		$response->emit();
+	}
+
+	function updateFavoriteForRecord(Vtiger_Request $request)
+	{
+		$sourceModule = $request->getModule();
+		$relatedModule = $request->get('relatedModule');
+		$actionMode = $request->get('actionMode');
+
+		$sourceModuleModel = Vtiger_Module_Model::getInstance($sourceModule);
+		$relatedModuleModel = Vtiger_Module_Model::getInstance($relatedModule);
+		$relationModel = Vtiger_Relation_Model::getInstance($sourceModuleModel, $relatedModuleModel);
+
+		if (!empty($relationModel)) {
+			$result = $relationModel->updateFavoriteForRecord($actionMode, ['crmid' => $request->get('record'), 'relcrmid' => $request->get('relcrmid')]);
+		}
+
+		$response = new Vtiger_Response();
+		$response->setResult((bool) $result);
 		$response->emit();
 	}
 

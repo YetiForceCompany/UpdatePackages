@@ -8,12 +8,11 @@
 *************************************************************************************}
 {strip}
 	<div class="">
-		<div class="widget_header row">
-			<div class="col-xsd-12">
+		<div class="row widget_header">
+			<div class="col-xs-12">
 				{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
 			</div> 
 		</div>
-		<hr>
 		<form name="EditRole" action="index.php" method="post" id="EditView" class="form-horizontal">
 			<input type="hidden" name="module" value="Roles">
 			<input type="hidden" name="action" value="Save">
@@ -150,7 +149,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="pull-right marginRight10px">
+			<div class="pull-right marginRight10px paddingTop20">
 				<button class="btn btn-success" type="submit">{vtranslate('LBL_SAVE',$MODULE)}</button>
 				<button class="cancelLink btn btn-warning" onclick="javascript:window.history.back();" type="reset">{vtranslate('LBL_CANCEL',$MODULE)}</button>
 			</div>

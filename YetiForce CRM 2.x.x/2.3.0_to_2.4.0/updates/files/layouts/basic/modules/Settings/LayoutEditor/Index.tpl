@@ -9,31 +9,26 @@
 * Contributor(s): YetiForce.com
 ********************************************************************************/
 -->*}
-<style type="text/css">
-	.fieldDetailsForm .zeroOpacity{
-		display: none;
-	}
-</style>
 {strip}
     <div id="layoutEditorContainer">
 
         <input id="selectedModuleName" type="hidden" value="{$SELECTED_MODULE_NAME}" />
         <div class="widget_header row">
-		<div class="col-md-6">
-		    {include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
-		</div>
-		<div class="pull-right col-md-6 form-inline">
-			<div class="form-group pull-right col-md-6">
-				<select class="select2 form-control" name="layoutEditorModules">
-					{foreach item=MODULE_NAME from=$SUPPORTED_MODULES}
-						<option value="{$MODULE_NAME}" {if $MODULE_NAME eq $SELECTED_MODULE_NAME} selected {/if}>{vtranslate($MODULE_NAME, $MODULE_NAME)}</option>
-					{/foreach}
-				</select>
+			<div class="col-md-6">
+				{include file='BreadCrumbs.tpl'|@vtemplate_path:$MODULE}
 			</div>
-			<div class="form-group pull-right">
-				<input id="inventorySwitch" title="{vtranslate('LBL_CHANGE_BLOCK_ADVANCED', $QUALIFIED_MODULE)}" class="switchBtn" type="checkbox" data-label-width="5" data-handle-width="100" data-on-text="{vtranslate('LBL_BASIC_MODULE',$QUALIFIED_MODULE)}" data-off-text="{vtranslate('LBL_ADVANCED_MODULE',$QUALIFIED_MODULE)}" {if !$IS_INVENTORY}checked{/if} >
+			<div class="pull-right col-md-6 form-inline">
+				<div class="form-group pull-right col-md-6">
+					<select class="select2 form-control" name="layoutEditorModules">
+						{foreach item=MODULE_NAME from=$SUPPORTED_MODULES}
+							<option value="{$MODULE_NAME}" {if $MODULE_NAME eq $SELECTED_MODULE_NAME} selected {/if}>{vtranslate($MODULE_NAME, $MODULE_NAME)}</option>
+						{/foreach}
+					</select>
+				</div>
+				<div class="form-group pull-right">
+					<input id="inventorySwitch" title="{vtranslate('LBL_CHANGE_BLOCK_ADVANCED', $QUALIFIED_MODULE)}" class="switchBtn" type="checkbox" data-label-width="5" data-handle-width="100" data-on-text="{vtranslate('LBL_BASIC_MODULE',$QUALIFIED_MODULE)}" data-off-text="{vtranslate('LBL_ADVANCED_MODULE',$QUALIFIED_MODULE)}" {if !$IS_INVENTORY}checked{/if} >
+				</div>
 			</div>
-		</div>
         </div>
         <hr>
         <div class="contents tabbable">
@@ -51,7 +46,7 @@
                     {assign var=ALL_BLOCK_LABELS value=[]}
                     {if $IS_SORTABLE}
                         <div class="btn-toolbar" id="layoutEditorButtons">
-                            <button class="btn btn-default addButton addCustomBlock" type="button">
+                            <button class="btn btn-success addButton addCustomBlock" type="button">
                                 <span class="glyphicon glyphicon-plus"></span>&nbsp;
                                 <strong>{vtranslate('LBL_ADD_CUSTOM_BLOCK', $QUALIFIED_MODULE)}</strong>
                             </button>
@@ -76,13 +71,13 @@
                                     <div class="col-md-6 col-sm-6 marginLeftZero " ><div class="pull-right btn-toolbar blockActions" style="margin: 4px;">
                                             {if $BLOCK_MODEL->isAddCustomFieldEnabled()}
                                                 <div class="btn-group">
-                                                    <button class="btn btn-default addCustomField" type="button">
+                                                    <button class="btn btn-success addCustomField" type="button">
                                                         <strong>{vtranslate('LBL_ADD_CUSTOM_FIELD', $QUALIFIED_MODULE)}</strong>
                                                     </button>
                                                 </div>
                                             {/if}
                                             {if $BLOCK_MODEL->isActionsAllowed()}
-                                                <div class="btn-group"><button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                                <div class="btn-group"><button class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                         <strong>{vtranslate('LBL_ACTIONS', $QUALIFIED_MODULE)}</strong>&nbsp;&nbsp;
                                                         <span class="caret"></span>
                                                     </button>
@@ -255,7 +250,7 @@
 																							</div>
 																						</div>
 																					{/if}
-																					{if SysDeveloper::get('CHANGE_VISIBILITY')}
+																					{if AppConfig::developer('CHANGE_VISIBILITY')}
 																						<hr />
 																						<span>
 																							<label class="checkbox" style="padding-left: 5px;">
@@ -271,7 +266,7 @@
 																							</div>
 																						</span>
 																					{/if}
-																					{if SysDeveloper::get('CHANGE_GENERATEDTYPE')}
+																					{if AppConfig::developer('CHANGE_GENERATEDTYPE')}
 																						<span>
 																							<label class="checkbox" style="padding-left: 25px; padding-top: 5px;">
 																								&nbsp;{vtranslate('LBL_GENERATED_TYPE', $QUALIFIED_MODULE)}
@@ -447,7 +442,7 @@
 																							</div>
 																						</div>
 																					{/if}
-																					{if SysDeveloper::get('CHANGE_VISIBILITY')}
+																					{if AppConfig::developer('CHANGE_VISIBILITY')}
 																						<hr />
 																						<span>
 																							<label class="checkbox" style="padding-left: 5px;">
@@ -463,7 +458,7 @@
 																							</div>
 																						</span>
 																					{/if}
-																					{if SysDeveloper::get('CHANGE_GENERATEDTYPE')}
+																					{if AppConfig::developer('CHANGE_GENERATEDTYPE')}
 																						<span>
 																							<label class="checkbox" style="padding-left: 25px; padding-top: 5px;">
 																								&nbsp;{vtranslate('LBL_GENERATED_TYPE', $QUALIFIED_MODULE)}
@@ -609,7 +604,7 @@
 																<span class="input-group-addon"><span class="glyphicon glyphicon-info-sign popoverTooltip" data-placement="top" data-content="{vtranslate('LBL_FIELD_MASK_INFO', $QUALIFIED_MODULE)}"></span></span>
 															</div>
 														</div>
-														{if SysDeveloper::get('CHANGE_VISIBILITY')}
+														{if AppConfig::developer('CHANGE_VISIBILITY')}
 															<hr />
 															<span>
 																<label class="checkbox" style="padding-left: 5px;">
@@ -622,7 +617,7 @@
 																</label>
 															</span>
 														{/if}
-														{if SysDeveloper::get('CHANGE_GENERATEDTYPE')}
+														{if AppConfig::developer('CHANGE_GENERATEDTYPE')}
 															<span>
 																<label class="checkbox" style="padding-left: 25px; padding-top: 5px;">
 																	&nbsp;{vtranslate('LBL_GENERATED_TYPE', $QUALIFIED_MODULE)}
