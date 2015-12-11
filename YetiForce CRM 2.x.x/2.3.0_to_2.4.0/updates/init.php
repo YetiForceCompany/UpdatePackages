@@ -143,6 +143,8 @@ class YetiForceUpdate
 		$this->sharedOwner();
 		$this->relations();
 		$this->deleteLang();
+		$this->addFields();
+		$this->addTree();
 	}
 
 	function postupdate()
@@ -162,15 +164,33 @@ class YetiForceUpdate
 		Vtiger_Functions::recurseDelete($dirName . '/files');
 		Vtiger_Functions::recurseDelete($dirName . '/init.php');
 		Vtiger_Functions::recurseDelete('cache/templates_c');
-		$this->removeFolder(['layouts/vlayout','libraries/mPDF/examples']);
+		$this->removeFolder(['layouts/vlayout', 'libraries/mPDF/examples']);
 		header('Location: ' . vglobal('site_URL'));
 		exit;
 		return true;
 	}
 
-	function removeFolder($srcs){
+	function addTree()
+	{
+		$db = PearDatabase::getInstance();
+		$tabId = getTabid('Assets');
+		$result = $db->pquery("SELECT templateid FROM vtiger_trees_templates WHERE module IN (?);", [$tabId]);
+		if (!$db->getRowCount($result)) {
+			$templateid = (int) $db->getSingleValue($result);
+			$sql = 'INSERT INTO vtiger_trees_templates(`name`, `module`, `access`) VALUES (?,?,?)';
+			$db->pquery($sql, ['Category', $tabId, 0]);
+			$newtempateId = $db->getLastInsertID();
+			$sql = 'INSERT INTO vtiger_trees_templates_data(templateid, name, tree, parenttrre, depth, label, state) VALUES (?,?,?,?,?,?,?)';
+			$params = [$newtempateId, 'None', 'T1', 'T1', '0', 'None', ''];
+			$db->pquery($sql, $params);
+			$db->pquery('UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `tabid` = ? AND columnname = ?;', [$newtempateId, $tabId, 'pscategory']);
+		}
+	}
+
+	function removeFolder($srcs)
+	{
 		$rootDir = vglobal('root_directory');
-		foreach($srcs as $src){
+		foreach ($srcs as $src) {
 			$dir = $rootDir . $src;
 			if (file_exists($dir)) {
 				$folder = scandir($dir);
@@ -185,7 +205,7 @@ class YetiForceUpdate
 			}
 		}
 	}
-	
+
 	function deleteLang()
 	{
 		Settings_LangManagement_Module_Model::delete(['prefix' => 'nl_nl']);
@@ -243,7 +263,7 @@ class YetiForceUpdate
 			$result = $db->query("SHOW TABLES LIKE '%_showners';");
 			if ($db->getRowCount($result) > 1) {
 				while ($row = $db->fetch_array($result)) {
-					if('u_yf_crmentity_showners' !=  current($row)){
+					if ('u_yf_crmentity_showners' != current($row)) {
 						$query = "INSERT INTO u_yf_crmentity_showners (crmid, userid) SELECT crmid, userid FROM " . current($row) . ";";
 						$db->query($query);
 						$db->query('DROP TABLE IF EXISTS ' . current($row) . ';');
@@ -383,6 +403,10 @@ class YetiForceUpdate
 			['76', 'SSingleOrders', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
 			['77', 'SSingleOrders', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
 			['78', 'SSingleOrders', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'SSingleOrders', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
+		$widgets['SSalesProcesses'] = [['75', 'SSalesProcesses', 'Summary', NULL, '1', '0', NULL, '[]'],
+			['76', 'SSalesProcesses', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
+			['77', 'SSalesProcesses', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
+			['78', 'SSalesProcesses', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'SSalesProcesses', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
 
 		if ($widgets[$module]) {
 			foreach ($widgets[$module] as $widget) {
@@ -512,11 +536,18 @@ class YetiForceUpdate
 			$key = $this->getMax('vtiger_ws_fieldtype', 'fieldtypeid');
 			$adb->pquery('insert  into `vtiger_ws_fieldtype`(`fieldtypeid`,`uitype`,`fieldtype`) values (?,?,?);', [$key, '306', 'streetAddress']);
 		}
-		
+
 		$result = $adb->query('SELECT * FROM `vtiger_organizationdetails`');
 		while ($row = $adb->fetch_array($result)) {
-			if(empty($row['panellogoname'])){
+			if (empty($row['panellogoname'])) {
 				$adb->update('vtiger_organizationdetails', ['panellogoname' => $row['logoname']], '`organization_id` = ?', [$row['organization_id']]);
+			}
+		}
+		$multiModule = [['source_module' => 'Accounts', 'dest_module' => 'Products'], ['source_module' => 'Accounts', 'dest_module' => 'Services']];
+		foreach ($multiModule as $row) {
+			$result = $adb->pquery('SELECT * FROM `s_yf_multireference` WHERE source_module = ? AND dest_module = ?;', [$row['source_module'], $row['dest_module']]);
+			if (!$adb->getRowCount($result)) {
+				$adb->insert('s_yf_multireference', ['source_module' => $row['source_module'], 'dest_module' => $row['dest_module'], 'lastid' => 0, 'type' => 0]);
 			}
 		}
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
@@ -531,72 +562,72 @@ class YetiForceUpdate
 		$menu = [
 			['44', '0', '2', '1', NULL, 'MEN_VIRTUAL_DESK', 'userIcon-virtual-desk'],
 			['45', '44', '0', '0', 'Home', 'Home page', 'userIcon-my-home-page'],
-			['46', '44', '0', '1', 'Calendar', NULL, 'userIcon-Calendar'],
+			['46', '44', '0', '1', 'Calendar', NULL, ''],
 			['47', '0', '2', '2', NULL, 'MEN_COMPANIES_CONTACTS', 'userIcon-compaines-and-contacts'],
-			['48', '47', '0', '0', 'Leads', NULL, 'userIcon-Leads'],
-			['49', '47', '0', '1', 'Contacts', NULL, 'userIcon-Contacts'],
-			['50', '47', '0', '2', 'Vendors', NULL, 'userIcon-Vendors'],
-			['51', '47', '0', '3', 'Accounts', NULL, 'userIcon-Accounts'],
+			['48', '47', '0', '0', 'Leads', NULL, ''],
+			['49', '47', '0', '1', 'Contacts', NULL, ''],
+			['50', '47', '0', '2', 'Vendors', NULL, ''],
+			['51', '47', '0', '3', 'Accounts', NULL, ''],
 			['52', '0', '2', '3', NULL, 'MEN_SALES', 'userIcon-sales'],
-			['54', '52', '0', '0', 'Campaigns', NULL, 'userIcon-Campaigns'],
-			['55', '52', '0', '1', 'Potentials', NULL, 'userIcon-Potentials'],
-			['56', '52', '0', '2', 'QuotesEnquires', NULL, 'userIcon-QuotesEnquires'],
-			['57', '52', '0', '3', 'RequirementCards', NULL, 'userIcon-RequirementCards'],
-			['58', '52', '0', '4', 'Calculations', NULL, 'userIcon-Calculations'],
-			['59', '52', '0', '5', 'Quotes', NULL, 'userIcon-Quotes'],
-			['60', '52', '0', '6', 'SalesOrder', NULL, 'userIcon-SalesOrder'],
-			['61', '52', '0', '7', 'PurchaseOrder', NULL, 'userIcon-PurchaseOrder'],
-			['62', '52', '0', '8', 'PriceBooks', NULL, 'userIcon-PriceBooks'],
+			['54', '52', '0', '0', 'Campaigns', NULL, ''],
+			['55', '52', '0', '1', 'Potentials', NULL, ''],
+			['56', '52', '0', '2', 'QuotesEnquires', NULL, ''],
+			['57', '52', '0', '3', 'RequirementCards', NULL, ''],
+			['58', '52', '0', '4', 'Calculations', NULL, ''],
+			['59', '52', '0', '5', 'Quotes', NULL, ''],
+			['60', '52', '0', '6', 'SalesOrder', NULL, ''],
+			['61', '52', '0', '7', 'PurchaseOrder', NULL, ''],
+			['62', '52', '0', '8', 'PriceBooks', NULL, ''],
 			['63', '0', '2', '5', NULL, 'MEN_SUPPORT', 'userIcon-support'],
-			['64', '63', '0', '0', 'HelpDesk', NULL, 'userIcon-HelpDesk'],
-			['65', '63', '0', '1', 'ServiceContracts', NULL, 'userIcon-ServiceContracts'],
-			['66', '63', '0', '2', 'Faq', NULL, 'userIcon-Faq'],
+			['64', '63', '0', '0', 'HelpDesk', NULL, ''],
+			['65', '63', '0', '1', 'ServiceContracts', NULL, ''],
+			['66', '63', '0', '2', 'Faq', NULL, ''],
 			['67', '0', '2', '4', NULL, 'MEN_PROJECTS', 'userIcon-projects'],
-			['68', '67', '0', '0', 'Project', NULL, 'userIcon-Project'],
-			['69', '67', '0', '1', 'ProjectMilestone', NULL, 'userIcon-ProjectMilestone'],
-			['70', '67', '0', '2', 'ProjectTask', NULL, 'userIcon-ProjectTask'],
+			['68', '67', '0', '0', 'Project', NULL, ''],
+			['69', '67', '0', '1', 'ProjectMilestone', NULL, ''],
+			['70', '67', '0', '2', 'ProjectTask', NULL, ''],
 			['71', '0', '2', '6', NULL, 'MEN_BOOKKEEPING', 'userIcon-bookkeeping'],
-			['72', '71', '0', '3', 'PaymentsIn', NULL, 'userIcon-PaymentsIn'],
-			['73', '71', '0', '2', 'PaymentsOut', NULL, 'userIcon-PaymentsOut'],
-			['74', '71', '0', '1', 'Invoice', NULL, 'userIcon-Invoice'],
-			['75', '71', '0', '0', 'OSSCosts', NULL, 'userIcon-OSSCosts'],
+			['72', '71', '0', '3', 'PaymentsIn', NULL, ''],
+			['73', '71', '0', '2', 'PaymentsOut', NULL, ''],
+			['74', '71', '0', '1', 'Invoice', NULL, ''],
+			['75', '71', '0', '0', 'OSSCosts', NULL, ''],
 			['76', '0', '2', '7', NULL, 'MEN_HUMAN_RESOURCES', 'userIcon-human-resources'],
-			['77', '76', '0', '0', 'OSSEmployees', NULL, 'userIcon-OSSEmployees'],
-			['78', '76', '0', '1', 'OSSTimeControl', NULL, 'userIcon-OSSTimeControl'],
-			['79', '76', '0', '2', 'HolidaysEntitlement', NULL, 'userIcon-HolidaysEntitlement'],
+			['77', '76', '0', '0', 'OSSEmployees', NULL, ''],
+			['78', '76', '0', '1', 'OSSTimeControl', NULL, ''],
+			['79', '76', '0', '2', 'HolidaysEntitlement', NULL, ''],
 			['80', '0', '2', '8', NULL, 'MEN_SECRETARY', 'userIcon-secretary'],
-			['81', '80', '0', '0', 'LettersIn', NULL, 'userIcon-LettersIn'],
-			['82', '80', '0', '1', 'LettersOut', NULL, 'userIcon-LettersOut'],
-			['83', '80', '0', '2', 'Reservations', NULL, 'userIcon-Reservations'],
+			['81', '80', '0', '0', 'LettersIn', NULL, ''],
+			['82', '80', '0', '1', 'LettersOut', NULL, ''],
+			['83', '80', '0', '2', 'Reservations', NULL, ''],
 			['84', '0', '2', '9', NULL, 'MEN_DATABESES', 'userIcon-database'],
 			['85', '84', '2', '0', NULL, 'MEN_PRODUCTBASE', NULL],
-			['86', '84', '0', '1', 'Products', NULL, 'userIcon-Products'],
-			['87', '84', '0', '2', 'OutsourcedProducts', NULL, 'userIcon-OutsourcedProducts'],
-			['88', '84', '0', '3', 'Assets', NULL, 'userIcon-Assets'],
+			['86', '84', '0', '1', 'Products', NULL, ''],
+			['87', '84', '0', '2', 'OutsourcedProducts', NULL, ''],
+			['88', '84', '0', '3', 'Assets', NULL, ''],
 			['89', '84', '3', '4', NULL, NULL, NULL],
 			['90', '84', '2', '5', NULL, 'MEN_SERVICESBASE', NULL],
-			['91', '84', '0', '6', 'Services', NULL, 'userIcon-Services'],
-			['92', '84', '0', '7', 'OSSOutsourcedServices', NULL, 'userIcon-OSSOutsourcedServices'],
-			['93', '84', '0', '8', 'OSSSoldServices', NULL, 'userIcon-OSSSoldServices'],
+			['91', '84', '0', '6', 'Services', NULL, ''],
+			['92', '84', '0', '7', 'OSSOutsourcedServices', NULL, ''],
+			['93', '84', '0', '8', 'OSSSoldServices', NULL, ''],
 			['94', '84', '3', '9', NULL, NULL, NULL],
 			['95', '84', '2', '10', NULL, 'MEN_LISTS', NULL],
-			['96', '84', '0', '11', 'OSSMailView', NULL, 'userIcon-OSSMailView'],
-			['97', '84', '0', '12', 'SMSNotifier', NULL, 'userIcon-SMSNotifier'],
-			['98', '84', '0', '13', 'PBXManager', NULL, 'userIcon-PBXManager'],
-			['99', '84', '0', '14', 'OSSMailTemplates', NULL, 'userIcon-OSSMailTemplates'],
-			['100', '84', '0', '15', 'Documents', NULL, 'userIcon-Documents'],
-			['102', '84', '0', '16', 'OSSPdf', NULL, 'userIcon-OSSPdf'],
-			['106', '84', '0', '18', 'CallHistory', NULL, 'userIcon-CallHistory'],
+			['96', '84', '0', '11', 'OSSMailView', NULL, ''],
+			['97', '84', '0', '12', 'SMSNotifier', NULL, ''],
+			['98', '84', '0', '13', 'PBXManager', NULL, ''],
+			['99', '84', '0', '14', 'OSSMailTemplates', NULL, ''],
+			['100', '84', '0', '15', 'Documents', NULL, ''],
+			['102', '84', '0', '16', 'OSSPdf', NULL, ''],
+			['106', '84', '0', '18', 'CallHistory', NULL, ''],
 			['107', '84', '3', '19', NULL, NULL, NULL],
-			['108', '84', '0', '24', 'NewOrders', NULL, 'userIcon-NewOrders'],
-			['109', '84', '0', '17', 'OSSPasswords', NULL, 'userIcon-OSSPasswords'],
+			['108', '84', '0', '24', 'NewOrders', NULL, ''],
+			['109', '84', '0', '17', 'OSSPasswords', NULL, ''],
 			['110', '0', '2', '10', NULL, 'MEN_TEAMWORK', 'userIcon-team-work'],
-			['111', '110', '0', '0', 'Ideas', NULL, 'userIcon-Ideas'],
+			['111', '110', '0', '0', 'Ideas', NULL, ''],
 			['112', '0', '6', '0', '3', NULL, NULL],
-			['113', '44', '0', '2', 'OSSMail', NULL, 'userIcon-OSSMail'],
-			['114', '84', '0', '23', 'Reports', NULL, 'userIcon-Reports'],
-			['115', '84', '0', '20', 'Rss', NULL, 'userIcon-Rss'],
-			['116', '84', '0', '21', 'Portal', NULL, 'userIcon-Portal'],
+			['113', '44', '0', '2', 'OSSMail', NULL, ''],
+			['114', '84', '0', '23', 'Reports', NULL, ''],
+			['115', '84', '0', '20', 'Rss', NULL, ''],
+			['116', '84', '0', '21', 'Portal', NULL, ''],
 			['117', '84', '3', '22', NULL, NULL, NULL],
 			['118', '0', '2', '11', NULL, 'MEN_SALE_PROCESSES', ''],
 			['119', '118', '0', '0', 'SSalesProcesses', NULL, ''],
@@ -1201,6 +1232,19 @@ class YetiForceUpdate
 			KEY `user_name_2`(`user_name`,`status`) 
 		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
 
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_account` LIKE 'products';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_account` ADD COLUMN `products` text  NULL after `creditlimit`;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_account` LIKE 'services';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_account` ADD COLUMN `services` text  NULL after `products` ;");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_assets` LIKE 'pscategory';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_assets` ADD COLUMN `pscategory` varchar(255)  DEFAULT '' after `ordertime` ;");
+		}
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -1249,6 +1293,7 @@ class YetiForceUpdate
 			$layoutInLoginView = true;
 			$isVisibleLogoInFooter = true;
 			$showNameRelatedModules = true;
+			$defaultViewInComments = true;
 			foreach ($configContent as $key => $line) {
 				if (strpos($line, 'defaultLayout') !== false) {
 					$configContent[$key] = str_replace('vlayout', 'basic', $configContent[$key]);
@@ -1259,6 +1304,9 @@ class YetiForceUpdate
 				}
 				if (strpos($line, 'isVisibleLogoInFooter') !== false) {
 					$isVisibleLogoInFooter = false;
+				}
+				if (strpos($line, 'defaultViewInComments') !== false) {
+					$defaultViewInComments = false;
 				}
 				if (strpos($line, 'showNameRelatedModules') !== false) {
 					$showNameRelatedModules = false;
@@ -1297,6 +1345,12 @@ $isVisibleLogoInFooter = true;
 				$content .= '
 // show names related modules
 $showNameRelatedModules = true;
+';
+			}
+			if ($defaultViewInComments) {
+				$content .= '
+// default view in Comments (Timeline/List)
+$defaultViewInComments = \'Timeline\';
 ';
 			}
 			$file = fopen($config, "w+");
@@ -1623,5 +1677,86 @@ Regards,<br />
 YetiForce CRM Support Team.', 'PLL_RECORD'];
 		return $mailTemplate;
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	public function addFields()
+	{
+		global $log, $adb;
+		$log->debug("Entering YetiForceUpdate::addFields() method ...");
+		include_once('vtlib/Vtiger/Module.php');
+
+		$columnName = ["tabid", "id", "column", "table", "generatedtype", "uitype", "name", "label", "readonly", "presence", "defaultvalue", "maximumlength", "sequence", "block", "displaytype", "typeofdata", "quickcreate", "quicksequence", "info_type", "masseditable", "helpinfo", "summaryfield", "fieldparams", "columntype", "blocklabel", "setpicklistvalues", "setrelatedmodules"];
+
+		$Accounts = [
+			['6', '1945', 'products', 'vtiger_account', '2', '305', 'products', 'Products', '1', '2', '', '100', '10', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Products","field":"173","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []],
+			['6', '1946', 'services', 'vtiger_account', '2', '305', 'services', 'Services', '1', '2', '', '100', '11', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Services","field":"560","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []]
+		];
+
+		$Assets = [
+			['37', '1947', 'pscategory', 'vtiger_assets', '2', '302', 'pscategory', 'Category', '1', '2', '', '100', '17', '95', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '15', "varchar(255)", "LBL_ASSET_INFORMATION", [], []]
+		];
+
+		$setToCRM = ['Accounts' => $Accounts, 'Assets' => $Assets];
+
+		$setToCRMAfter = [];
+		foreach ($setToCRM as $nameModule => $module) {
+			if (!$module)
+				continue;
+			foreach ($module as $key => $fieldValues) {
+				for ($i = 0; $i < count($fieldValues); $i++) {
+					$setToCRMAfter[$nameModule][$key][$columnName[$i]] = $fieldValues[$i];
+				}
+			}
+		}
+		foreach ($setToCRMAfter as $moduleName => $fields) {
+			foreach ($fields as $field) {
+				if (self::checkFieldExists($field, $moduleName)) {
+					continue;
+				}
+				$moduleInstance = Vtiger_Module::getInstance($moduleName);
+				$blockInstance = Vtiger_Block::getInstance($field['blocklabel'], $moduleInstance);
+				$fieldInstance = new Vtiger_Field();
+				$fieldInstance->column = $field['column'];
+				$fieldInstance->name = $field['name'];
+				$fieldInstance->label = $field['label'];
+				$fieldInstance->table = $field['table'];
+				$fieldInstance->uitype = $field['uitype'];
+				$fieldInstance->typeofdata = $field['typeofdata'];
+				$fieldInstance->readonly = $field['readonly'];
+				$fieldInstance->displaytype = $field['displaytype'];
+				$fieldInstance->masseditable = $field['masseditable'];
+				$fieldInstance->quickcreate = $field['quickcreate'];
+				$fieldInstance->columntype = $field['columntype'];
+				$fieldInstance->presence = $field['presence'];
+				$fieldInstance->maximumlength = $field['maximumlength'];
+				$fieldInstance->quicksequence = $field['quicksequence'];
+				$fieldInstance->info_type = $field['info_type'];
+				$fieldInstance->helpinfo = $field['helpinfo'];
+				$fieldInstance->summaryfield = $field['summaryfield'];
+				$fieldInstance->generatedtype = $field['generatedtype'];
+				$fieldInstance->defaultvalue = $field['defaultvalue'];
+				$fieldInstance->fieldparams = $field['fieldparams'];
+				$blockInstance->addField($fieldInstance);
+				if ($field['setpicklistvalues'] && ($field['uitype'] == 15 || $field['uitype'] == 16 || $field['uitype'] == 33 ))
+					$fieldInstance->setPicklistValues($field['setpicklistvalues']);
+				if ($field['setrelatedmodules'] && $field['uitype'] == 10) {
+					$fieldInstance->setRelatedModules($field['setrelatedmodules']);
+				}
+			}
+		}
+		$log->debug("Exiting YetiForceUpdate::addFields() method ...");
+	}
+
+	public function checkFieldExists($field, $moduleName)
+	{
+		global $adb;
+		if ($moduleName == 'Settings')
+			$result = $adb->pquery("SELECT * FROM vtiger_settings_field WHERE name = ? AND linkto = ? ;", [$field[1], $field[4]]);
+		else
+			$result = $adb->pquery("SELECT * FROM vtiger_field WHERE columnname = ? AND tablename = ? AND tabid = ?;", [$field['column'], $field['table'], getTabid($moduleName)]);
+		if (!$adb->getRowCount($result)) {
+			return false;
+		}
+		return true;
 	}
 }
