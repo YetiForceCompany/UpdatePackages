@@ -810,22 +810,6 @@ function getParentRecordOwner($tabid, $parModId, $record_id)
 	return $parentRecOwner;
 }
 
-/** Function to get potential related accounts
- * @param $record_id -- record id :: Type integer
- * @returns $accountid -- accountid:: Type integer
- */
-function getPotentialsRelatedAccounts($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getPotentialsRelatedAccounts(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select related_to from vtiger_potential where potentialid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$accountid = $adb->query_result($result, 0, 'related_to');
-	$log->debug("Exiting getPotentialsRelatedAccounts method ...");
-	return $accountid;
-}
-
 /** Function to get email related accounts
  * @param $record_id -- record id :: Type integer
  * @returns $accountid -- accountid:: Type integer
@@ -872,118 +856,6 @@ function getHelpDeskRelatedAccounts($record_id)
 	$accountid = $adb->query_result($result, 0, 'parent_id');
 	$log->debug("Exiting getHelpDeskRelatedAccounts method ...");
 	return $accountid;
-}
-
-/** Function to get Quotes related Accounts
- * @param $record_id -- record id :: Type integer
- * @returns $accountid -- accountid:: Type integer
- */
-function getQuotesRelatedAccounts($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getQuotesRelatedAccounts(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select accountid from vtiger_quotes where quoteid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$accountid = $adb->query_result($result, 0, 'accountid');
-	$log->debug("Exiting getQuotesRelatedAccounts method ...");
-	return $accountid;
-}
-
-/** Function to get Quotes related Potentials
- * @param $record_id -- record id :: Type integer
- * @returns $potid -- potid:: Type integer
- */
-function getQuotesRelatedPotentials($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getQuotesRelatedPotentials(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select potentialid from vtiger_quotes where quoteid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$potid = $adb->query_result($result, 0, 'potentialid');
-	$log->debug("Exiting getQuotesRelatedPotentials method ...");
-	return $potid;
-}
-
-/** Function to get Quotes related Potentials
- * @param $record_id -- record id :: Type integer
- * @returns $accountid -- accountid:: Type integer
- */
-function getSalesOrderRelatedAccounts($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getSalesOrderRelatedAccounts(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select accountid from vtiger_salesorder where salesorderid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$accountid = $adb->query_result($result, 0, 'accountid');
-	$log->debug("Exiting getSalesOrderRelatedAccounts method ...");
-	return $accountid;
-}
-
-/** Function to get SalesOrder related Potentials
- * @param $record_id -- record id :: Type integer
- * @returns $potid -- potid:: Type integer
- */
-function getSalesOrderRelatedPotentials($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getSalesOrderRelatedPotentials(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select potentialid from vtiger_salesorder where salesorderid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$potid = $adb->query_result($result, 0, 'potentialid');
-	$log->debug("Exiting getSalesOrderRelatedPotentials method ...");
-	return $potid;
-}
-
-/** Function to get SalesOrder related Quotes
- * @param $record_id -- record id :: Type integer
- * @returns $qtid -- qtid:: Type integer
- */
-function getSalesOrderRelatedQuotes($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getSalesOrderRelatedQuotes(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select quoteid from vtiger_salesorder where salesorderid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$qtid = $adb->query_result($result, 0, 'quoteid');
-	$log->debug("Exiting getSalesOrderRelatedQuotes method ...");
-	return $qtid;
-}
-
-/** Function to get Invoice related Accounts
- * @param $record_id -- record id :: Type integer
- * @returns $accountid -- accountid:: Type integer
- */
-function getInvoiceRelatedAccounts($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getInvoiceRelatedAccounts(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select accountid from vtiger_invoice where invoiceid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$accountid = $adb->query_result($result, 0, 'accountid');
-	$log->debug("Exiting getInvoiceRelatedAccounts method ...");
-	return $accountid;
-}
-
-/** Function to get Invoice related SalesOrder
- * @param $record_id -- record id :: Type integer
- * @returns $soid -- soid:: Type integer
- */
-function getInvoiceRelatedSalesOrder($record_id)
-{
-	$log = vglobal('log');
-	$log->debug("Entering getInvoiceRelatedSalesOrder(" . $record_id . ") method ...");
-	$adb = PearDatabase::getInstance();
-	$query = "select salesorderid from vtiger_invoice where invoiceid=?";
-	$result = $adb->pquery($query, array($record_id));
-	$soid = $adb->query_result($result, 0, 'salesorderid');
-	$log->debug("Exiting getInvoiceRelatedSalesOrder method ...");
-	return $soid;
 }
 
 /**
@@ -1499,7 +1371,7 @@ function getRelationTables($module, $secmodule)
 function DeleteEntity($destinationModule, $sourceModule, $focus, $destinationRecordId, $sourceRecordId)
 {
 	$adb = PearDatabase::getInstance();
-	$log = vglobal('log');
+	$log = LoggerManager::getInstance();
 	$log->debug("Entering DeleteEntity method ($destinationModule, $sourceModule, $destinationRecordId, $sourceRecordId)");
 	require_once('include/events/include.inc');
 	if ($destinationModule != $sourceModule && !empty($sourceModule) && !empty($sourceRecordId)) {
@@ -1971,7 +1843,7 @@ function getCurrencyDecimalPlaces()
 
 function getInventoryModules()
 {
-	$inventoryModules = array('Invoice', 'Quotes', 'PurchaseOrder', 'SalesOrder', 'Calculations', 'OSSCosts');
+	$inventoryModules = [];
 	return $inventoryModules;
 }
 /* Function to only initialize the update of Vtlib Compliant modules

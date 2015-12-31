@@ -81,19 +81,7 @@ var Vtiger_Index_Js = {
 	loadWidgetsOnLoad: function () {
 		var widgets = jQuery('div.widgetContainer');
 		widgets.each(function (index, element) {
-			var widgetContainer = jQuery(element);
-			var key = widgetContainer.attr('id');
-			var value = app.cacheGet(key);
-			if (value != null) {
-				if (value == 1) {
-					Vtiger_Index_Js.loadWidgets(widgetContainer);
-					widgetContainer.addClass('in');
-				} else {
-					var imageEle = widgetContainer.parent().find('.imageElement');
-					var imagePath = imageEle.data('rightimage');
-					imageEle.attr('src', imagePath);
-				}
-			}
+			Vtiger_Index_Js.loadWidgets(jQuery(element));
 		});
 	},
 	/**
@@ -384,25 +372,6 @@ var Vtiger_Index_Js = {
 			});
 		}
 	},
-	registerShowHideRightPanelEvent: function () {
-		jQuery('#toggleRightPanelButton').click(function (e) {
-			e.preventDefault();
-			var centerContents = jQuery('#centerPanel');
-			var rightPanel = jQuery('#rightPanel');
-			var tButtonImage = jQuery('#tRightPanelButtonImage');
-			if (rightPanel.attr('class').indexOf('move-action') == -1) {
-				rightPanel.addClass('move-action');
-				jQuery(this).addClass('hideRightPanelButton');
-				centerContents.removeClass('col-md-10').addClass('col-md-12');
-				tButtonImage.removeClass('glyphicon-chevron-right').addClass("glyphicon-chevron-left");
-			} else {
-				rightPanel.removeClass('move-action');
-				jQuery(this).removeClass('hideRightPanelButton');
-				centerContents.removeClass('col-md-12').addClass('col-md-10');
-				tButtonImage.removeClass('glyphicon-chevron-left').addClass("glyphicon-chevron-right");
-			}
-		});
-	},
 	loadPreSaveRecord: function (form) {
 		SaveResult = new SaveResult()
 		return SaveResult.checkData(form);
@@ -414,7 +383,6 @@ var Vtiger_Index_Js = {
 		Vtiger_Index_Js.adjustTopMenuBarItems();
 		Vtiger_Index_Js.registerPostAjaxEvents();
 		Vtiger_Index_Js.changeSkin();
-		Vtiger_Index_Js.registerShowHideRightPanelEvent();
 		Vtiger_Index_Js.registerResizeEvent();
 	},
 	registerPostAjaxEvents: function () {

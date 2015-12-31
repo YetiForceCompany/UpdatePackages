@@ -151,7 +151,7 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 	public function getAddRelationLinks()
 	{
 		$relationModel = $this->getRelationModel();
-		$addLinkModel = array();
+		$addLinkModel = [];
 
 		if (!$relationModel->isAddActionSupported()) {
 			return $addLinkModel;
@@ -159,33 +159,33 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 		$relatedModel = $relationModel->getRelationModuleModel();
 
 		if ($relatedModel->get('label') == 'Calendar') {
-			$addLinkList[] = array(
+			$addLinkList[] = [
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => vtranslate('LBL_ADD_EVENT'),
 				'linkurl' => $this->getCreateEventRecordUrl(),
-				'linkicon' => '',
-			);
-			$addLinkList[] = array(
+				'linkqcs' => $relatedModel->isQuickCreateSupported(),
+				'linkicon' => ''
+			];
+			$addLinkList[] = [
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => vtranslate('LBL_ADD_TASK'),
 				'linkurl' => $this->getCreateTaskRecordUrl(),
-				'linkicon' => '',
-			);
+				'linkqcs' => $relatedModel->isQuickCreateSupported(),
+				'linkicon' => ''
+			];
 		} else {
-			$addLinkList = array(
-				array(
-					'linktype' => 'LISTVIEWBASIC',
-					// NOTE: $relatedModel->get('label') assuming it to be a module name - we need singular label for Add action.
-					//'linklabel' => vtranslate('LBL_ADD')." ".vtranslate('SINGLE_' . $relatedModel->getName(), $relatedModel->getName()),
-					'linklabel' => vtranslate('LBL_ADD_RELATION'),
-					'linkurl' => $this->getCreateViewUrl(),
-					'linkqcs' => $relatedModel->isQuickCreateSupported(),
-					'linkicon' => '',
-				)
-			);
+			$addLinkList = [[
+				'linktype' => 'LISTVIEWBASIC',
+				// NOTE: $relatedModel->get('label') assuming it to be a module name - we need singular label for Add action.
+				//'linklabel' => vtranslate('LBL_ADD')." ".vtranslate('SINGLE_' . $relatedModel->getName(), $relatedModel->getName()),
+				'linklabel' => vtranslate('LBL_ADD_RELATION'),
+				'linkurl' => $this->getCreateViewUrl(),
+				'linkqcs' => $relatedModel->isQuickCreateSupported(),
+				'linkicon' => ''
+			]];
 		}
 
-		foreach ($addLinkList as $addLink) {
+		foreach ($addLinkList as &$addLink) {
 			$addLinkModel[] = Vtiger_Link_Model::getInstanceFromValues($addLink);
 		}
 		return $addLinkModel;
@@ -258,13 +258,13 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 			}
 		}
 		$limitQuery = $query . ' LIMIT ' . $startIndex . ',' . $pageLimit;
-		$result = $db->pquery($limitQuery, array());
-		$relatedRecordList = array();
+		$result = $db->query($limitQuery);
+		$relatedRecordList = [];
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$groupsIds = Vtiger_Util_Helper::getGroupsIdsForUsers($currentUser->getId());
 		while ($row = $db->fetchByAssoc($result)) {
 			$recordId = $row['crmid'];
-			$newRow = array();
+			$newRow = [];
 			foreach ($row as $col => $val) {
 				if (array_key_exists($col, $relatedColumnFields)) {
 					if ($relationModuleName == 'Documents' && $col == 'filename') {
@@ -320,7 +320,20 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 					unset($newRow['visibility']);
 				}
 			}
-
+			if ($relationModel->showCreatorDetail()) {
+				if (!empty($row['rel_created_user'])) {
+					$newRow['relCreatedUser'] = getOwnerName($row['rel_created_user']);
+				}
+				if (!empty($row['rel_created_time'])) {
+					$newRow['relCreatedTime'] = Vtiger_Datetime_UIType::getDisplayDateTimeValue($row['rel_created_time']);
+				}
+			}
+			if ($relationModel->showComment()) {
+				if (strlen($row['rel_comment']) > AppConfig::relation('COMMENT_MAX_LENGTH')) {
+					$newRow['relCommentFull'] = $row['rel_comment'];
+				}
+				$newRow['relComment'] = Vtiger_Functions::textLength($row['rel_comment'], AppConfig::relation('COMMENT_MAX_LENGTH'));
+			}
 			$record = Vtiger_Record_Model::getCleanInstance($relationModule->get('name'));
 			$record->setData($newRow)->setModuleFromInstance($relationModule);
 			$record->setId($row['crmid']);
@@ -382,7 +395,7 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 		}
 		$searchParams = $this->get('search_params');
 		if (empty($searchParams)) {
-			$searchParams = array();
+			$searchParams = [];
 		}
 
 		$relatedModuleModel = $this->getRelatedModuleModel();
@@ -474,10 +487,10 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 		$relationQuery = preg_replace("/[ \t\n\r]+/", " ", $relationQuery);
 		$position = stripos($relationQuery, ' from ');
 		if ($position) {
-			$relationQuery = str_replace('FROM', 'from', $relationQuery); 
+			$relationQuery = str_replace('FROM', 'from', $relationQuery);
 			$split = explode(' from ', $relationQuery);
 			$splitCount = count($split);
-			$relationQuery = 'SELECT COUNT(DISTINCT vtiger_crmentity.crmid) AS count';
+			$relationQuery = 'SELECT COUNT(1) AS count';
 			for ($i = 1; $i < $splitCount; $i++) {
 				$relationQuery = $relationQuery . ' FROM ' . $split[$i];
 			}
@@ -540,19 +553,12 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 
 			$result = $db->pquery($query, array($recordId));
 			return $db->query_result($result, 0, 'currency_symbol');
-		} else if (($tableName == 'vtiger_invoice' || $tableName == 'vtiger_quotes' || $tableName == 'vtiger_purchaseorder' || $tableName == 'vtiger_salesorder') &&
-			($columnName == 'total' || $columnName == 'subtotal' || $columnName == 'discount_amount' || $columnName == 'paid' ||
-			$columnName == 'balance' || $columnName == 'received' || $columnName == 'listprice' || $columnName == 'pre_tax_total')) {
-			$focus = CRMEntity::getInstance($moduleName);
-			$query = "SELECT currency_symbol FROM vtiger_currency_info WHERE id = ( SELECT currency_id FROM " . $tableName . " WHERE " . $focus->table_index . " = ? )";
-			$result = $db->pquery($query, array($recordId));
-			return $db->query_result($result, 0, 'currency_symbol');
 		} else {
 			$fieldInfo = $fieldModel->getFieldInfo();
 			return $fieldInfo['currency_symbol'];
 		}
 	}
-	
+
 	public function getFavoriteRecords()
 	{
 		$db = PearDatabase::getInstance();
@@ -571,5 +577,70 @@ class Vtiger_RelationListView_Model extends Vtiger_Base_Model
 			$favorites[$row['relcrmid']] = $row;
 		}
 		return $favorites;
+	}
+
+	public function getTreeViewModel()
+	{
+		return Vtiger_TreeCategoryModal_Model::getInstance($this->getRelatedModuleModel());
+	}
+
+	public function getTreeHeaders()
+	{
+		$fields = $this->getTreeViewModel()->getTreeField();
+		return [
+			'name' => $fields['fieldlabel']
+		];
+	}
+
+	public function getTreeEntries()
+	{
+		$db = PearDatabase::getInstance();
+		$recordId = $this->getParentRecordModel()->getId();
+		$relModuleId = $this->getRelatedModuleModel()->getId();
+		$relModuleName = $this->getRelatedModuleModel()->getName();
+		$treeViewModel = $this->getTreeViewModel();
+		$relationModel = $this->getRelationModel();
+		$fields = $treeViewModel->getTreeField();
+		$template = $treeViewModel->getTemplate();
+
+		$result = $db->pquery('SELECT tr.*,rel.crmid,rel.rel_created_time,rel.rel_created_user,rel.rel_comment FROM vtiger_trees_templates_data tr '
+			. 'INNER JOIN u_yf_crmentity_rel_tree rel ON rel.tree = tr.tree '
+			. 'WHERE tr.templateid = ? AND rel.crmid = ? AND rel.relmodule = ?', [$template, $recordId, $relModuleId]);
+		$trees = [];
+		while ($row = $db->getRow($result)) {
+			$treeID = $row['tree'];
+			$pieces = explode('::', $row['parenttrre']);
+			end($pieces);
+			$parent = prev($pieces);
+			$parentName = '';
+			if ($row['depth'] > 0) {
+				$result2 = $db->pquery('SELECT name FROM vtiger_trees_templates_data WHERE templateid = ? AND tree = ?', [$template, $parent]);
+				$parentName = $db->getSingleValue($result2);
+				$parentName = '(' . vtranslate($parentName, $relModuleName) . ') ';
+			}
+			$tree = [
+				'id' => $treeID,
+				'name' => $parentName . vtranslate($row['name'], $relModuleName),
+				'parent' => $parent == 0 ? '#' : $parent
+			];
+
+			if ($relationModel->showCreatorDetail()) {
+				$tree['relCreatedUser'] = getOwnerName($row['rel_created_user']);
+				$tree['relCreatedTime'] = Vtiger_Datetime_UIType::getDisplayDateTimeValue($row['rel_created_time']);
+			}
+			if ($relationModel->showComment()) {
+				if (strlen($row['rel_comment']) > AppConfig::relation('COMMENT_MAX_LENGTH')) {
+					$tree['relCommentFull'] = $row['rel_comment'];
+				}
+				$tree['relComment'] = Vtiger_Functions::textLength($row['rel_comment'], AppConfig::relation('COMMENT_MAX_LENGTH'));
+			}
+
+			if (!empty($row['icon'])) {
+				$tree['icon'] = $row['icon'];
+			}
+			$trees[] = $tree;
+		}
+
+		return $trees;
 	}
 }

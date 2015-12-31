@@ -15,7 +15,6 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 	var $moduleName = 'Calendar';
 	var $relationAcounts = [
 		'Contacts' => ['vtiger_contactdetails', 'contactid', 'parentid'],
-		'Potentials' => ['vtiger_potential', 'potentialid', 'related_to'],
 		'Project' => ['vtiger_project', 'projectid', 'linktoaccountscontacts'],
 		'HelpDesk' => ['vtiger_troubletickets', 'ticketid', 'parent_id'],
 		'ServiceContracts' => ['vtiger_servicecontracts', 'servicecontractsid', 'sc_related_to'],
@@ -31,7 +30,8 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 		$db = PearDatabase::getInstance();
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$query = "SELECT vtiger_activity.activityid as act_id,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.setype,
-		vtiger_activity.*, relcrm.setype AS linkmod, relcrm.label AS linklabel, procrm.label AS processlabel, procrm.setype AS processmod
+		vtiger_activity.*, relcrm.setype AS linkmod, relcrm.label AS linklabel, procrm.label AS processlabel, procrm.setype AS processmod,
+		subprocrm.label AS subprocesslabel, subprocrm.setype AS subprocessmod
 		FROM vtiger_activity
 		LEFT JOIN vtiger_activitycf
 			ON vtiger_activitycf.activityid = vtiger_activity.activityid
@@ -41,6 +41,8 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 			ON relcrm.crmid = vtiger_activity.link
 		LEFT JOIN vtiger_crmentity procrm
 			ON procrm.crmid = vtiger_activity.process
+		LEFT JOIN vtiger_crmentity subprocrm
+			ON subprocrm.crmid = vtiger_activity.subprocess
 		WHERE vtiger_crmentity.deleted = 0 AND activitytype != 'Emails' ";
 		$instance = CRMEntity::getInstance($this->getModuleName());
 		$securityParameter = $instance->getUserAccessConditionsQuerySR($this->getModuleName(), $currentUser);
@@ -124,7 +126,11 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 			$item['process'] = $record['process'];
 			$item['procl'] = $record['processlabel'];
 			$item['procm'] = $record['processmod'];
-
+			//Subprocess
+			$item['subprocess'] = $record['subprocess'];
+			$item['subprocl'] = $record['subprocesslabel'];
+			$item['subprocm'] = $record['subprocessmod'];
+			
 			if ($record['linkmod'] != 'Accounts' && (!empty($record['link']) || !empty($record['process']))) {
 				$findId = 0;
 				$findMod = '';
@@ -150,6 +156,8 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 
 			$dateTimeFieldInstance = new DateTimeField($record['date_start'] . ' ' . $record['time_start']);
 			$userDateTimeString = $dateTimeFieldInstance->getFullcalenderDateTimevalue($currentUser);
+			$startDateTimeDisplay = $dateTimeFieldInstance->getDisplayDateTimeValue();
+			$startTimeDisplay = $dateTimeFieldInstance->getDisplayTime();
 			$dateTimeComponents = explode(' ', $userDateTimeString);
 			$dateComponent = $dateTimeComponents[0];
 			$startTimeFormated = $dateTimeComponents[1];
@@ -158,6 +166,7 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 
 			$dateTimeFieldInstance = new DateTimeField($record['due_date'] . ' ' . $record['time_end']);
 			$userDateTimeString = $dateTimeFieldInstance->getFullcalenderDateTimevalue($currentUser);
+			$endDateTimeDisplay = $dateTimeFieldInstance->getDisplayDateTimeValue();
 			$dateTimeComponents = explode(' ', $userDateTimeString);
 			$dateComponent = $dateTimeComponents[0];
 			$endTimeFormated = $dateTimeComponents[1];
@@ -166,6 +175,13 @@ class Calendar_Calendar_Model extends Vtiger_Base_Model
 
 			$item['start'] = $startDateFormated . ' ' . $startTimeFormated;
 			$item['end'] = $endDateFormated . ' ' . $endTimeFormated;
+
+			// display date time values
+			$item['start_display'] = $startDateTimeDisplay;
+			$item['end_display'] = $endDateTimeDisplay;
+			$item['hour_start'] = $startTimeDisplay;
+			$hours = Vtiger_Functions::getDateTimeHoursDiff($item['start'], $item['end']);
+			$item['hours'] = Vtiger_Functions::decimalTimeFormat($hours)['short'];
 			$item['allDay'] = $record['allday'] == 1 ? true : false;
 			$item['className'] = ' userCol_' . $record['smownerid'] . ' calCol_' . $activitytype;
 			$return[] = $item;

@@ -167,7 +167,7 @@ class ModComments_Record_Model extends Vtiger_Record_Model {
 		$queryGenerator = $listView->get('query_generator');
 		$queryGenerator->setFields(array('parent_comments', 'createdtime', 'modifiedtime', 'related_to',
 									'assigned_user_id', 'commentcontent', 'creator', 'id', 'customer', 'reasontoedit', 'userid', 'from_mailconverter'));
-		$queryGenerator->addSourceRecord($parentRecordId);
+		$queryGenerator->setSourceRecord($parentRecordId);
 		$query = $queryGenerator->getQuery();
 		$query = $query ." AND related_to = ? ORDER BY vtiger_crmentity.createdtime DESC
 							LIMIT $startIndex, $limit";
@@ -196,7 +196,7 @@ class ModComments_Record_Model extends Vtiger_Record_Model {
 		$queryGenerator = $listView->get('query_generator');
 		$queryGenerator->setFields(array('parent_comments', 'createdtime', 'modifiedtime', 'related_to', 'id',
 											'assigned_user_id', 'commentcontent', 'creator', 'customer', 'reasontoedit', 'userid'));
-		$queryGenerator->addSourceRecord($parentId);
+		$queryGenerator->setSourceRecord($parentId);
 		$query = $queryGenerator->getQuery();
 
 		//Condition are directly added as query_generator transforms the
@@ -230,6 +230,26 @@ class ModComments_Record_Model extends Vtiger_Record_Model {
 		} else {
 			return 0;
 		}
+	}
+	
+	/**
+	 * Function returns all the comment count
+	 * @return <int>
+	 */
+	public static function getCommentsCount($recordId)
+	{
+		$db = PearDatabase::getInstance();
+		if (empty($recordId))
+			return;
+		$query = 'SELECT COUNT(modcommentsid) AS count FROM
+					vtiger_modcomments 
+				INNER JOIN vtiger_crmentity 
+					ON vtiger_modcomments.modcommentsid = vtiger_crmentity.crmid 
+				WHERE vtiger_crmentity.deleted = 0 
+					AND vtiger_modcomments.modcommentsid > 0 
+					AND related_to = ?';
+		$result = $db->pquery($query, [$recordId]);
+		return (int) $db->getSingleValue($result);
 	}
 
 	/**
@@ -278,13 +298,9 @@ class ModComments_Record_Model extends Vtiger_Record_Model {
 			foreach($parentComments as $comment){
 				$createdTime = $comment->get('createdtime');
 				$date = DateTime::createFromFormat('Y-m-d H:i:s',$createdTime);
-				$ownerComment = Users_Privileges_Model::getInstanceById($comment->get('userid'));
-				$icon = $ownerComment->getImageDetails();
-				if(empty($icon [0]['path'])){
-					$iconPath = 'layouts/basic/skins/images/DefaultUserIcon.png';
-				}
-				else{
-					$iconPath = $icon [0]['path'].'_'.$icon [0]['orgname'];
+				$iconPath = $comment->getImagePath();
+				if(!$iconPath){
+					$iconPath = vimage_path('DefaultUserIcon.png');
 				}
 				$allComments ["events"][] = [
 									"start_date" => [
@@ -297,7 +313,7 @@ class ModComments_Record_Model extends Vtiger_Record_Model {
 										"format" => $formatDate
 									],
 									"media" => [
-										"caption" => $ownerComment->getName(),
+										"caption" => $comment->getCommentedByModel()->getName(),
 										"url"=> $iconPath,
 										"thumbnail" => $iconPath
 									],

@@ -59,8 +59,8 @@ function vtlib_getModuleNameById($tabid)
 function vtlib_getModuleNameForSharing()
 {
 	$adb = PearDatabase::getInstance();
-	$std_modules = array('Calendar', 'Leads', 'Accounts', 'Contacts', 'Potentials',
-		'HelpDesk', 'Campaigns', 'Quotes', 'PurchaseOrder', 'SalesOrder', 'Invoice', 'Events');
+	$std_modules = array('Calendar', 'Leads', 'Accounts', 'Contacts',
+		'HelpDesk', 'Campaigns', 'Events');
 	$modulesList = getSharingModuleList($std_modules);
 	return $modulesList;
 }
@@ -331,51 +331,6 @@ function __vtlib_get_modulevar_value($module, $varname)
 			'table_name' => 'vtiger_campaign',
 			'table_index' => 'campaignid',
 			'popup_fields' => Array('campaignname'),
-		),
-		'Potentials' =>
-		Array(
-			'IsCustomModule' => false,
-			'table_name' => 'vtiger_potential',
-			'table_index' => 'potentialid',
-			// NOTE: UIType 10 is being used instead of direct relationship from 5.1.0
-			//'related_tables' => Array ('vtiger_account' => Array('accountid')),
-			'popup_fields' => Array('potentialname'),
-			'related_tables' => Array(
-				'vtiger_potentialscf' => Array('potentialid', 'vtiger_potential', 'potentialid'),
-			),
-		),
-		'Quotes' =>
-		Array(
-			'IsCustomModule' => false,
-			'table_name' => 'vtiger_quotes',
-			'table_index' => 'quoteid',
-			'related_tables' => Array('vtiger_account' => Array('accountid')),
-			'popup_fields' => Array('subject'),
-		),
-		'SalesOrder' =>
-		Array(
-			'IsCustomModule' => false,
-			'table_name' => 'vtiger_salesorder',
-			'table_index' => 'salesorderid',
-			'related_tables' => Array('vtiger_account' => Array('accountid')),
-			'popup_fields' => Array('subject'),
-		),
-		'PurchaseOrder' =>
-		Array(
-			'IsCustomModule' => false,
-			'table_name' => 'vtiger_purchaseorder',
-			'table_index' => 'purchaseorderid',
-			'popup_fields' => Array('subject'),
-		),
-		'Invoice' =>
-		Array(
-			'IsCustomModule' => false,
-			'table_name' => 'vtiger_invoice',
-			'table_index' => 'invoiceid',
-			'popup_fields' => Array('subject'),
-			'related_tables' => Array(
-				'vtiger_invoicecf' => Array('invoiceid', 'vtiger_invoice', 'invoiceid')
-			),
 		),
 		'HelpDesk' =>
 		Array(

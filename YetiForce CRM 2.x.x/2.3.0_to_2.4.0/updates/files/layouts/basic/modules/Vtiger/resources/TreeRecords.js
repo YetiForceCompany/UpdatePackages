@@ -24,6 +24,10 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 	generateTree: function (container) {
 		var thisInstance = this;
 		thisInstance.treeInstance = container.find("#treeListContents");
+		var plugins = ["checkbox"];
+		if (app.getMainParams('isActiveCategory') == '1') {
+			plugins.push("category");
+		}
 		thisInstance.treeInstance.jstree({
 			core: {
 				data: thisInstance.getTreeListValues(container),
@@ -32,14 +36,13 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 					responsive: true
 				}
 			},
-			plugins: [
-				"checkbox",
-			]
+			plugins: plugins
 		});
 	},
 	getRecordsParams: function (container) {
 		var thisInstance = this;
 		var selectedFilter = container.find('#moduleFilter').val();
+
 		var selected = [];
 		$.each(thisInstance.treeInstance.jstree("get_selected", true), function (index, value) {
 			selected.push(value.original.record_id);
@@ -48,8 +51,11 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 			module: app.getModuleName(),
 			view: app.getViewName(),
 			branches: selected,
-			filter: selectedFilter,
+			filter: selectedFilter
 		};
+		if (app.getMainParams('isActiveCategory') == '1') {
+			params.category = thisInstance.treeInstance.jstree("getCategory");
+		}
 		return params;
 	},
 	getRecordsList: function () {
@@ -58,13 +64,6 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 		var progressIndicator = jQuery.progressIndicator({message: app.vtranslate('JS_LOADING_OF_RECORDS'), blockInfo: {enabled: true}});
 
 		$.extend($.fn.dataTable.defaults, {
-			//searching: true,
-			//ordering: false,
-			//bFilter: false,
-			//bLengthChange: false,
-			//bPaginate: false,
-			//bInfo: false,
-			//pageLength: -1,
 			language: {
 				sLengthMenu: app.vtranslate('JS_S_LENGTH_MENU'),
 				sZeroRecords: app.vtranslate('JS_NO_RESULTS_FOUND'),
@@ -109,27 +108,10 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 			thisInstance.getRecordsList();
 		});
 	},
-	registerShowHideRightPanelEvent: function (container) {
-		container.find('.toggleSiteBarRightButton').click(function (e) {
-			var siteBarRight = $(this).closest('.siteBarRight');
-			var content = $(this).closest('.row').find('.rowContent');
-			var buttonImage = $(this).find('.glyphicon');
-			if (siteBarRight.hasClass('hideSiteBar')) {
-				siteBarRight.removeClass('hideSiteBar');
-				content.removeClass('col-md-12').addClass('col-md-9');
-				buttonImage.removeClass('glyphicon-chevron-left').addClass("glyphicon-chevron-right");
-			} else {
-				siteBarRight.addClass('hideSiteBar');
-				content.removeClass('col-md-9').addClass('col-md-12');
-				buttonImage.removeClass('glyphicon-chevron-right').addClass("glyphicon-chevron-left");
-			}
-		});
-	},
 	registerEvents: function () {
 		var container = this.getContainer();
 		this.generateTree(container);
 		this.registerFilterChangeEvent(container);
 		this.registerSelectBrancheEvent(container);
-		this.registerShowHideRightPanelEvent(container);
 	}
 });

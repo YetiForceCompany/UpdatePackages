@@ -16,23 +16,22 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 
 	public function getBasicLinks()
 	{
-		$basicLinks = array();
+		$basicLinks = [];
 		$moduleModel = $this->getModule();
 		$createPermission = Users_Privileges_Model::isPermitted($moduleModel->getName(), 'EditView');
 		if ($createPermission) {
-			$basicLinks[] = array(
-				'linktype' => 'LISTVIEWBASIC',
-				'linklabel' => 'LBL_ADD_TASK',
-				'linkurl' => $this->getModule()->getCreateTaskRecordUrl(),
-				'linkicon' => ''
-			);
-
-			$basicLinks[] = array(
+			$basicLinks[] = [
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => 'LBL_ADD_EVENT',
 				'linkurl' => $this->getModule()->getCreateEventRecordUrl(),
 				'linkicon' => ''
-			);
+			];
+			$basicLinks[] = [
+				'linktype' => 'LISTVIEWBASIC',
+				'linklabel' => 'LBL_ADD_TASK',
+				'linkurl' => $this->getModule()->getCreateTaskRecordUrl(),
+				'linkicon' => ''
+			];
 		}
 		return $basicLinks;
 	}
@@ -197,10 +196,10 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 			$columnFieldMapping = $moduleModel->getColumnFieldMapping();
 			$orderByFieldName = $columnFieldMapping[$orderBy];
 			$orderByFieldModel = $moduleModel->getField($orderByFieldName);
-			if ($orderByFieldModel && $orderByFieldModel->getFieldDataType() == Vtiger_Field_Model::REFERENCE_TYPE) {
+			if ($orderByFieldModel && $orderByFieldModel->isReferenceField()) {
 				//IF it is reference add it in the where fields so that from clause will be having join of the table
 				$queryGenerator = $this->get('query_generator');
-				$queryGenerator->addWhereField($orderByFieldName);
+				$queryGenerator->setConditionField($orderByFieldName);
 				//$queryGenerator->whereFields[] = $orderByFieldName;
 			}
 		}

@@ -319,7 +319,6 @@ class Users_Privileges_Model extends Users_Record_Model
 		$modulesSchema[$moduleName] = [];
 		$modulesSchema['Accounts'] = [
 			'Contacts' => ['key' => 'contactid', 'table' => 'vtiger_contactdetails', 'relfield' => 'parentid'],
-			'Potentials' => ['key' => 'potentialid', 'table' => 'vtiger_potential', 'relfield' => 'related_to'],
 			'Campaigns' => ['key' => 'campaignid', 'table' => 'vtiger_campaignaccountrel', 'relfield' => 'accountid'],
 			'Project' => ['key' => 'projectid', 'table' => 'vtiger_project', 'relfield' => 'linktoaccountscontacts'],
 			'HelpDesk' => ['key' => 'ticketid', 'table' => 'vtiger_troubletickets', 'relfield' => 'parent_id']
@@ -328,14 +327,8 @@ class Users_Privileges_Model extends Users_Record_Model
 			'ProjectMilestone' => ['key' => 'projectmilestoneid', 'table' => 'vtiger_projectmilestone', 'relfield' => 'projectid'],
 			'ProjectTask' => ['key' => 'projecttaskid', 'table' => 'vtiger_projecttask', 'relfield' => 'projectid']
 		];
-		$modulesSchema['Potentials'] = [
-			'Quotes' => ['key' => 'quoteid', 'table' => 'vtiger_quotes', 'relfield' => 'potentialid'],
-			'SalesOrder' => ['key' => 'salesorderid', 'table' => 'vtiger_salesorder', 'relfield' => 'potentialid'],
-			'Invoice' => ['key' => 'invoiceid', 'table' => 'vtiger_invoice', 'relfield' => 'potentialid'],
-			'Calculations' => ['key' => 'calculationsid', 'table' => 'vtiger_calculations', 'relfield' => 'potentialid']
-		];
 		$modulesSchema['HelpDesk'] = [
-			'OSSTimeControl' => ['key' => 'osstimecontrolid', 'table' => 'vtiger_osstimecontrol', 'relfield' => 'ticketid']
+			'OSSTimeControl' => ['key' => 'osstimecontrolid', 'table' => 'vtiger_osstimecontrol', 'relfield' => 'link']
 		];
 		$sql = '';
 		$params = [];
@@ -378,7 +371,7 @@ class Users_Privileges_Model extends Users_Record_Model
 			$parentModelFields = $parentModuleModel->getFields();
 
 			foreach ($parentModelFields as $fieldName => $fieldModel) {
-				if ($fieldModel->getFieldDataType() == Vtiger_Field_Model::REFERENCE_TYPE && count(array_intersect($parentModule, $fieldModel->getReferenceList())) > 0) {
+				if ($fieldModel->isReferenceField() && count(array_intersect($parentModule, $fieldModel->getReferenceList())) > 0) {
 					$recordModel = Vtiger_Record_Model::getInstanceById($record);
 					$value = $recordModel->get($fieldName);
 					if ($value != '' && $value != 0) {

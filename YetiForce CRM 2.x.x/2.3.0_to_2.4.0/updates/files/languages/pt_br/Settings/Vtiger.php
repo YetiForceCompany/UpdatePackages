@@ -216,7 +216,6 @@ $languageStrings = [
 	'Mail View' => 'Emails',
 	'Mail' => 'Mail – RoundCube',
 	'GlobalPermission' => 'Permissão Global',
-	'OSSCosts' => 'Custos',
 	'LBL_ADDING_ERROR' => 'Erro ao adicionar um campo',
 	'LBL_ADDED_COMPANY_FIELD' => 'Campo adicionado',
 	'LBL_FIELD_NOT_VALID' => 'O campo deve conter somente letras',
@@ -276,7 +275,6 @@ $languageStrings = [
 	'LBL_CALENDAR_CONFIG_DESCRIPTION' => 'Gerenciar Configuração Agenda',
 	'LBL_AUTHORIZATION' => 'Autorização',
 	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
-	'LBL_OSSPDF_INFO' => 'Gerenciar Configurações PDF',
 	'LBL_BACKUP_DESCRIPTION' => 'Criar arquivo de backup.',
 	'LBL_SCHEDULER_DESCRIPTION' => 'Gerenciar Agendador',
 	'LBL_OSSMAIL_DESCRIPTION' => 'Gerenciar Cliente E-mail',
@@ -303,6 +301,7 @@ $languageStrings = [
 	'Document Control' => 'Controle de Documento',
 	'Time control' => 'Controle de Tempo',
 	"Credits" => 'Contributors',
+	"LBL_VIEW_CREDITS" => 'Contributors',
 	'LBL_PROCESSES' => 'Processos',
 	'LBL_SALES_PROCESSES' => 'Processo de Vendas',
 	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Gerenciar Processo de Vendas',
@@ -330,6 +329,20 @@ $languageStrings = [
 	'LBL_HREF_MAX_LEGTH' => 'Maximum length for href tag ',
 	//end config editor
 	'LBL_VIEW_SWITCHUSERS' => 'Switch users',
+	// custom record numbering variables
+	'LBL_USE_POSTFIX' => 'Use postfix',
+	'LBL_USE_CUSTOME_VARIABLES' => 'System variables for building prefixes',
+	'LBL_CUSTOME_VARIABLES' => 'Choose variable',
+	'LBL_COPY_CV' => 'Copy variable',
+	'LBL_NO_PREFIX' => 'No prefix',
+	'LBL_NO_POSTFIX' => 'No postfix',
+	'LBL_CV_FULL_YEAR' => 'Full year (ex. 2015)',
+	'LBL_CV_FULL_MONTH' => 'Month (ex. 01, 05, 12)',
+	'LBL_CV_FULL_DAY' => 'Day (ex. 01, 05, 25)',
+	'LBL_CV_YEAR' => 'Year (ex. 15)',
+	'LBL_CV_MONTH' => 'Month (exp. 1, 5, 12)',
+	'LBL_CV_DAY' => 'Day (ex. 1, 5, 25)',
+	// end of custom record numbering variables
 ];
 
 $jsLanguageStrings = [

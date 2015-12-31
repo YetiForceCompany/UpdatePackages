@@ -5,12 +5,11 @@
 	{vtranslate('LBL_SALES_PROCESSES_DESCRIPTION', $QUALIFIED_MODULE)}
 	<hr>
 	<ul id="tabs" class="nav nav-tabs layoutTabs massEditTabs" data-tabs="tabs">
-		<li class="active"><a href="#Potentials" data-toggle="tab">{vtranslate('LBL_POTENTIALS', $QUALIFIED_MODULE)} </a></li>
 		<li><a href="#qe" data-toggle="tab">{vtranslate('LBL_SQUOTEENQUIRIES', $QUALIFIED_MODULE)} </a></li>
 		<li><a href="#rc" data-toggle="tab">{vtranslate('LBL_SREQUIREMENTSCARD', $QUALIFIED_MODULE)} </a></li>
 		<li><a href="#calculations" data-toggle="tab">{vtranslate('LBL_SCALCULATIONS', $QUALIFIED_MODULE)} </a></li>
 		<li><a href="#quotes" data-toggle="tab">{vtranslate('LBL_SQUOTES', $QUALIFIED_MODULE)} </a></li>
-		<li><a href="#so" data-toggle="tab">{vtranslate('LBL_SSALESORDER', $QUALIFIED_MODULE)} </a></li>
+{*		<li><a href="#so" data-toggle="tab">{vtranslate('LBL_SSALESORDER', $QUALIFIED_MODULE)} </a></li>*}
 		<li><a href="#Assets" data-toggle="tab">{vtranslate('LBL_ASSETS', $QUALIFIED_MODULE)} </a></li>
 		<li><a href="#popup" data-toggle="tab">{vtranslate('LBL_PRODUCTS_AND_SERVICES_POPUP', $QUALIFIED_MODULE)} </a></li>
 	</ul>
@@ -34,34 +33,13 @@
 					<label class='control-label'>{vtranslate('LBL_STATUSES_CLOSED_CALCULATION', $QUALIFIED_MODULE)}</label>
 					<div class="">
 						<select class="selectize configField" multiple data-type="scalculations" name="statuses_close" placeholder='{vtranslate('LBL_SELECT_SOME_OPTIONS')}'>
-							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('calculationsstatus')}
-								<option value="{$ITEM}" {if in_array($ITEM, $SCALCULATIONS['statuses_close'])} selected {/if}>{vtranslate($ITEM,'Calculations')}</option>
+							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('scalculations_status')}
+								<option value="{$ITEM}" {if in_array($ITEM, $SCALCULATIONS['statuses_close'])} selected {/if}>{vtranslate($ITEM,'SCalculations')}</option>
 							{/foreach}
 						</select>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="tab-pane active" id="Potentials">
-			{assign var=POTENTIALS value=$CONFIG['potential']}
-			<table class="table table-bordered table-condensed themeTableColor userTable listViewEntries">
-				<tbody>
-					<tr>
-						<td><label for="add_potential">{vtranslate('LBL_CREATE_POTENTIALS',$QUALIFIED_MODULE)}</label></td>
-						<td><input class="configField" type="checkbox" data-type="potential" name="add_potential" id="add_potential" value="1"  {if $POTENTIALS['add_potential']=='true'}checked=""{/if} /></td>
-					</tr>
-					<tr>
-						<td><label>{vtranslate('LBL_STATUSES_CLOSED_POTENTIAL', $QUALIFIED_MODULE)}</label></td>
-						<td class="col-xs-6">
-							<select class="chzn-select col-md-8 configField" multiple data-type="potential" name="salesstage">
-								{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('sales_stage')}
-									<option value="{$ITEM}" {if in_array($ITEM, $POTENTIALS['salesstage'])} selected {/if}  >{vtranslate($ITEM,'Potentials')}</option>
-								{/foreach}
-							</select>
-						</td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
 		<div class="tab-pane" id="Assets">
 			{assign var=ASSETS value=$CONFIG['asset']}
@@ -87,8 +65,8 @@
 					<label class='control-label'>{vtranslate('LBL_STATUSES_CLOSED_SQUOTEENQUIRIES', $QUALIFIED_MODULE)}</label>
 					<div class="">
 						<select class="selectize configField" multiple data-type="squoteenquiries" name="statuses_close"  placeholder='{vtranslate('LBL_SELECT_SOME_OPTIONS')}'>
-							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('quotesenquires_stage')}
-								<option value="{$ITEM}" {if in_array($ITEM, $SQUOTEENQUIRIES['statuses_close'])} selected {/if}>{vtranslate($ITEM,'QuotesEnquires')}</option>
+							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('squoteenquiries_status')}
+								<option value="{$ITEM}" {if in_array($ITEM, $SQUOTEENQUIRIES['statuses_close'])} selected {/if}>{vtranslate($ITEM,'SQuoteEnquiries')}</option>
 							{/foreach}
 						</select>
 					</div>
@@ -102,8 +80,8 @@
 					<label class='control-label'>{vtranslate('LBL_STATUSES_CLOSED_SREQUIREMENTSCARD', $QUALIFIED_MODULE)}</label>
 					<div class="">
 						<select class="selectize configField" multiple data-type="srequirementscard" name="statuses_close"  placeholder='{vtranslate('LBL_SELECT_SOME_OPTIONS')}'>
-							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('requirementcards_status')}
-								<option value="{$ITEM}" {if in_array($ITEM, $SREQUIREMENTSCARD['statuses_close'])} selected {/if}>{vtranslate($ITEM,'RequirementCards')}</option>
+							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('srequirementscards_status')}
+								<option value="{$ITEM}" {if in_array($ITEM, $SREQUIREMENTSCARD['statuses_close'])} selected {/if}>{vtranslate($ITEM,'SRequirementsCards')}</option>
 							{/foreach}
 						</select>
 					</div>
@@ -117,15 +95,15 @@
 					<label class='control-label'>{vtranslate('LBL_STATUSES_CLOSED_SQUOTES', $QUALIFIED_MODULE)}</label>
 					<div class="">
 						<select class="selectize configField" multiple data-type="squotes" name="statuses_close"  placeholder='{vtranslate('LBL_SELECT_SOME_OPTIONS')}'>
-							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('quotestage')}
-								<option value="{$ITEM}" {if in_array($ITEM, $SQUOTES['statuses_close'])} selected {/if}>{vtranslate($ITEM,'Quotes')}</option>
+							{foreach  item=ITEM from=Vtiger_Util_Helper::getPickListValues('squotes_status')}
+								<option value="{$ITEM}" {if in_array($ITEM, $SQUOTES['statuses_close'])} selected {/if}>{vtranslate($ITEM,'SQuotes')}</option>
 							{/foreach}
 						</select>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="tab-pane" id="so">
+		{*<div class="tab-pane" id="so">
 			{assign var=SSALESORDER value=$CONFIG['ssalesorder']}
 			<div class="form-horizonta">
 				<div class="form-group col-md-5">
@@ -139,7 +117,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>*}
 	</div>
 </div>
 {/strip}

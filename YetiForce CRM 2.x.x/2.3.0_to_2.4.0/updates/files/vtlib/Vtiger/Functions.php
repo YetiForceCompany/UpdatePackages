@@ -398,13 +398,14 @@ class Vtiger_Functions
 
 	static function getOwnerRecordLabels($ids)
 	{
-		if (!is_array($ids))
-			$ids = array($ids);
-
-		$nameList = array();
+		$nameList = [];
+		
+		if ($ids && !is_array($ids))
+			$ids = [$ids];
+		
 		if ($ids) {
 			$nameList = self::getCRMRecordLabels('Users', $ids);
-			$groups = array();
+			$groups = [];
 			$diffIds = array_diff($ids, array_keys($nameList));
 			if ($diffIds) {
 				$groups = self::getCRMRecordLabels('Groups', array_values($diffIds));
@@ -424,33 +425,28 @@ class Vtiger_Functions
 		$adb = PearDatabase::getInstance();
 
 		if (!is_array($ids))
-			$ids = array($ids);
+			$ids = [$ids];
 
 		if ($module == 'Events') {
 			$module = 'Calendar';
 		}
 
 		if ($module) {
-			$entityDisplay = array();
+			$entityDisplay = [];
 
 			if ($ids) {
 
 				if ($module == 'Groups') {
-					$metainfo = array('tablename' => 'vtiger_groups', 'entityidfield' => 'groupid', 'fieldname' => 'groupname');
-					/* } else if ($module == 'DocumentFolders') { 
-					  $metainfo = array('tablename' => 'vtiger_attachmentsfolder','entityidfield' => 'folderid','fieldname' => 'foldername'); */
+					$metainfo = ['tablename' => 'vtiger_groups', 'entityidfield' => 'groupid', 'fieldname' => 'groupname'];
 				} else {
 					$metainfo = self::getEntityModuleInfo($module);
 				}
 
 				$table = $metainfo['tablename'];
 				$idcolumn = $metainfo['entityidfield'];
-				$columns_name = explode(',', $metainfo['fieldname']);
-				$columns_search = explode(',', $metainfo['searchcolumn']);
-				$columns = array_unique(array_merge($columns_name, $columns_search));
-
-				$sql = sprintf('SELECT ' . implode(',', array_filter($columns)) . ', %s AS id FROM %s WHERE %s IN (%s)', $idcolumn, $table, $idcolumn, generateQuestionMarks($ids));
-				$result = $adb->pquery($sql, $ids);
+				$columnsName = explode(',', $metainfo['fieldname']);
+				$columnsSearch = explode(',', $metainfo['searchcolumn']);
+				$columns = array_unique(array_merge($columnsName, $columnsSearch));
 
 				$moduleInfo = self::getModuleFieldInfos($module);
 				$moduleInfoExtend = [];
@@ -459,24 +455,43 @@ class Vtiger_Functions
 						$moduleInfoExtend[$fieldInfo['columnname']] = $fieldInfo;
 					}
 				}
+				$leftJoin = '';
+				$leftJoinTables = [];
+				$paramsCol = [];
+				$focus = CRMEntity::getInstance($module);
+				foreach (array_filter($columns) as $column) {
+					if (array_key_exists($column, $moduleInfoExtend)) {
+						$paramsCol[] = $column;
+						if ($moduleInfoExtend[$column]['tablename'] != $table && !in_array($moduleInfoExtend[$column]['tablename'], $leftJoinTables)) {
+							$otherTable = $moduleInfoExtend[$column]['tablename'];
+							$leftJoinTables[] = $otherTable;
+							$focusTables = $focus->tab_name_index;
+							$leftJoin .= ' LEFT JOIN ' . $otherTable . ' ON ' . $otherTable . '.' . $focusTables[$otherTable] . ' = ' . $table . '.' . $focusTables[$table];
+						}
+					}
+				}
+				$paramsCol[] = $idcolumn;
+				$sql = sprintf('SELECT ' . implode(',', $paramsCol) . ' AS id FROM %s ' . $leftJoin . ' WHERE %s IN (%s)', $table, $idcolumn, generateQuestionMarks($ids));
+				$result = $adb->pquery($sql, $ids);
+
 				for ($i = 0; $i < $adb->num_rows($result); $i++) {
 					$row = $adb->raw_query_result_rowdata($result, $i);
-					$label_name = array();
-					$label_search = array();
-					foreach ($columns_name as $columnName) {
-						if ($moduleInfoExtend && in_array($moduleInfoExtend[$columnName]['uitype'], array(10, 51, 75, 81)))
+					$label_name = [];
+					$label_search = [];
+					foreach ($columnsName as $columnName) {
+						if ($moduleInfoExtend && in_array($moduleInfoExtend[$columnName]['uitype'], [10, 51, 75, 81]))
 							$label_name[] = Vtiger_Functions::getCRMRecordLabel($row[$columnName]);
 						else
 							$label_name[] = $row[$columnName];
 					}
 					if ($search) {
-						foreach ($columns_search as $columnName) {
-							if ($moduleInfoExtend && in_array($moduleInfoExtend[$columnName]['uitype'], array(10, 51, 75, 81)))
+						foreach ($columnsSearch as $columnName) {
+							if ($moduleInfoExtend && in_array($moduleInfoExtend[$columnName]['uitype'], [10, 51, 75, 81]))
 								$label_search[] = Vtiger_Functions::getCRMRecordLabel($row[$columnName]);
 							else
 								$label_search[] = $row[$columnName];
 						}
-						$entityDisplay[$row['id']] = array('name' => implode(' ', $label_name), 'search' => implode(' ', $label_search));
+						$entityDisplay[$row['id']] = ['name' => implode(' ', $label_name), 'search' => implode(' ', $label_search)];
 					}else {
 						$entityDisplay[$row['id']] = trim(implode(' ', $label_name));
 					}
@@ -895,8 +910,6 @@ class Vtiger_Functions
 			"vtiger_contactsubdetails:birthday" => "D",
 			"vtiger_contactdetails:email" => "V",
 			"vtiger_contactdetails:secondaryemail" => "V",
-			//Potential Related Fields
-			"vtiger_potential:campaignid" => "V",
 			//Account Related Fields
 			"vtiger_account:parentid" => "V",
 			"vtiger_account:email1" => "V",
@@ -918,22 +931,6 @@ class Vtiger_Functions
 			"vtiger_faq:product_id" => "V",
 			//Vendor Related Fields
 			"vtiger_vendor:email" => "V",
-			//Quotes Related Fields
-			"vtiger_quotes:potentialid" => "V",
-			"vtiger_quotes:inventorymanager" => "V",
-			"vtiger_quotes:accountid" => "V",
-			//Purchase Order Related Fields
-			"vtiger_purchaseorder:vendorid" => "V",
-			"vtiger_purchaseorder:contactid" => "V",
-			//SalesOrder Related Fields
-			"vtiger_salesorder:potentialid" => "V",
-			"vtiger_salesorder:quoteid" => "V",
-			"vtiger_salesorder:contactid" => "V",
-			"vtiger_salesorder:accountid" => "V",
-			//Invoice Related Fields
-			"vtiger_invoice:salesorderid" => "V",
-			"vtiger_invoice:contactid" => "V",
-			"vtiger_invoice:accountid" => "V",
 			//Campaign Related Fields
 			"vtiger_campaign:product_id" => "V",
 			//Related List Entries(For Report Module)
@@ -943,8 +940,6 @@ class Vtiger_Functions
 			"vtiger_campaigncontrel:contactid" => "V",
 			"vtiger_campaignleadrel:campaignid" => "V",
 			"vtiger_campaignleadrel:leadid" => "V",
-			"vtiger_contpotentialrel:contactid" => "V",
-			"vtiger_contpotentialrel:potentialid" => "V",
 			"vtiger_pricebookproductrel:pricebookid" => "V",
 			"vtiger_pricebookproductrel:productid" => "V",
 			"vtiger_senotesrel:crmid" => "V",
@@ -984,14 +979,6 @@ class Vtiger_Functions
 		$res = $adb->pquery($query, array($id));
 		$activity_type = $adb->query_result($res, 0, "activitytype");
 		return $activity_type;
-	}
-
-	static function getInvoiceStatus($id)
-	{
-		$adb = PearDatabase::getInstance();
-		$result = $adb->pquery("SELECT invoicestatus FROM vtiger_invoice where invoiceid=?", array($id));
-		$invoiceStatus = $adb->query_result($result, 0, 'invoicestatus');
-		return $invoiceStatus;
 	}
 
 	static function mkCountQuery($query)
@@ -1334,14 +1321,16 @@ class Vtiger_Functions
 		return $initial;
 	}
 
-	public function getBacktrace($ignore = 2)
+	public static function getBacktrace($ignore = 2)
 	{
 		$trace = '';
+		$rootDirectory = rtrim(AppConfig::main('root_directory'), '/');
 		foreach (debug_backtrace() as $k => $v) {
 			if ($k < $ignore) {
 				continue;
 			}
-			$trace .= '#' . ($k - $ignore) . ' ' . (isset($v['class']) ? $v['class'] . '->' : '') . $v['function'] . '() in ' . $v['file'] . '(' . $v['line'] . '): ' . PHP_EOL;
+			$file = str_replace($rootDirectory . DIRECTORY_SEPARATOR, '', $v['file']);
+			$trace .= '#' . ($k - $ignore) . ' ' . (isset($v['class']) ? $v['class'] . '->' : '') . $v['function'] . '() in ' . $file . '(' . $v['line'] . '): ' . PHP_EOL;
 		}
 
 		return $trace;
@@ -1534,5 +1523,32 @@ class Vtiger_Functions
 			$fileMimeContentType = 'application/octet-stream';
 		}
 		return $fileMimeContentType;
+	}
+
+	/**
+	 * Function returning difference in minutes between date times
+	 * @param string $startDateTime
+	 * @param string $endDateTime
+	 * @return int difference in minutes
+	 */
+	public static function getDateTimeMinutesDiff($startDateTime, $endDateTime) {
+		$start = new DateTime($startDateTime);
+		$end = new DateTime($endDateTime);
+		$interval = $start->diff($end);
+
+		$intervalInSeconds = (new DateTime())->setTimeStamp(0)->add($interval)->getTimeStamp();
+		$intervalInMinutes = ($intervalInSeconds/60);
+
+		return $intervalInMinutes;
+	}
+
+	/**
+	 * Function returning difference in hours between date times
+	 * @param string $startDateTime
+	 * @param string $endDateTime
+	 * @return int difference in hours
+	 */
+	public static function getDateTimeHoursDiff($startDateTime, $endDateTime) {
+		return self::getDateTimeMinutesDiff($startDateTime, $endDateTime)/60;
 	}
 }

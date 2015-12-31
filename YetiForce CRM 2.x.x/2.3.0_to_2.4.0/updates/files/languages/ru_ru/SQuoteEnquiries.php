@@ -14,10 +14,10 @@ $languageStrings = [
 	//FIELDS
 	'LBL_CLOSED_TIME' => 'Время закрытия',
 	'LBL_SUBJECT' => 'Тема',
-	'LBL_POTENTIAL' => 'Сделка',
 	'LBL_NUMBER' => 'Номер',
 	'LBL_STATUS' => 'Статус',
 	'LBL_RESPONSE_TIME' => 'Respone time',
+	'SINGLE_SSalesProcesses' => 'Сделка',
 
 	//PICKLIST VALUES
 	'PLL_DRAFT' => 'Draft',

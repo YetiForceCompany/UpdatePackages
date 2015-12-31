@@ -12,11 +12,11 @@ $languageStrings = [
 
 	//FIELDS
 	'LBL_SUBJECT' => 'Assunto',
-	'LBL_POTENTIAL' => 'Oportunidade',
 	'LBL_NUMBER' => 'Número',
 	'LBL_STATUS' => 'Status',
 	'LBL_CLOSED_TIME' => 'Hora Fechamento',
 	'LBL_RESPONSE_TIME' => 'Respone time',
+	'SINGLE_SSalesProcesses' => 'Oportunidade',
 
 	//PICKLIST VALUES
 	'PLL_DRAFT' => 'Draft',

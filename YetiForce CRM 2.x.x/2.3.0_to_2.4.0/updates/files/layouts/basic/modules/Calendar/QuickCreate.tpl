@@ -15,7 +15,7 @@
     {/foreach}
 	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
     <div class="modelContainer modal fade" tabindex="-1">
-		 <div class="modal-dialog modal-lg">
+		 <div class="modal-dialog modal-full">
             <div class="modal-content">
 				<form class="form-horizontal recordEditView" id="quickCreate" name="QuickCreate" method="post" action="index.php">
 					<div class="modal-header contentsBackground">
@@ -49,8 +49,8 @@
 
 			<!-- Random number is used to make specific tab is opened -->
 			{assign var="RAND_NUMBER" value=rand()}
-			<div class="modal-body tabbable" style="padding:0px">
-				<ul class="nav nav-pills" style="margin-bottom:0px;padding-left:5px">
+			<div class="modal-body row no-margin tabbable" >
+				<ul class="nav nav-pills">
 					<li class="active">
 						<a href="javascript:void(0);" data-target=".EventsQuikcCreateContents_{$RAND_NUMBER}" data-toggle="tab" data-tab-name="Event">{vtranslate('LBL_EVENT',$MODULE)}</a>
 					</li>
@@ -66,66 +66,56 @@
 						{assign var="RECORD_STRUCTURE" value=$QUICK_CREATE_CONTENTS[$MODULE_NAME]['recordStructure']}
 						{assign var="MODULE_MODEL" value=$QUICK_CREATE_CONTENTS[$MODULE_NAME]['moduleModel']}
 						<div class="quickCreateContent">
-							<div style='margin:5px'>
-								<table class="massEditTable table table-bordered">
-									<tr>
+								<div class="massEditTable row no-margin">
+									<div class="col-xs-12 paddingLRZero fieldRow">
 									{assign var=COUNTER value=0}
 									{foreach key=FIELD_NAME item=FIELD_MODEL from=$RECORD_STRUCTURE name=blockfields}
 										{assign var="isReferenceField" value=$FIELD_MODEL->getFieldDataType()}
 										{assign var="refrenceList" value=$FIELD_MODEL->getReferenceList()}
 										{assign var="refrenceListCount" value=count($refrenceList)}
 										{if $COUNTER eq 2}
-											</tr><tr>
+											</div>
+											<div class="col-xs-12 paddingLRZero fieldRow">
 											{assign var=COUNTER value=1}
 										{else}
 											{assign var=COUNTER value=$COUNTER+1}
 										{/if}
-										<td class="fieldLabel alignMiddle {$WIDTHTYPE}">
-											{if $FIELD_MODEL->isMandatory() eq true} <span class="redColor">*</span> {/if}
-											{if {$isReferenceField} eq "reference"}
-												{vtranslate($FIELD_MODEL->get('label'), $MODULE)}<br />
-												{if $refrenceListCount > 1}
-													{assign var="DISPLAYID" value=$FIELD_MODEL->get('fieldvalue')}
-													{assign var="REFERENCED_MODULE_STRUCT" value=$FIELD_MODEL->getUITypeModel()->getReferenceModule($DISPLAYID)}
-													{if !empty($REFERENCED_MODULE_STRUCT)}
-														{assign var="REFERENCED_MODULE_NAME" value=$REFERENCED_MODULE_STRUCT->get('name')}
-													{/if}
-													<select style="width: 150px;" class="chzn-select referenceModulesList" id="referenceModulesList_{$FIELD_MODEL->get('id')}">
-														<optgroup>
-															{foreach key=index item=value from=$refrenceList}
-																<option value="{$value}" {if $value eq $REFERENCED_MODULE_NAME} selected {/if} >{vtranslate($value, $value)}</option>
-															{/foreach}
-														</optgroup>
-													</select>
+										<div class="col-xs-12 col-md-6 fieldsLabelValue {$WIDTHTYPE} paddingLRZero">
+											<div class="fieldLabel col-xs-12 col-sm-5 ">
+												{assign var=HELPINFO value=explode(',',$FIELD_MODEL->get('helpinfo'))}
+												{assign var=HELPINFO_LABEL value=$MODULE|cat:'|'|cat:$FIELD_MODEL->get('label')}
+												{if in_array($VIEW,$HELPINFO) && vtranslate($HELPINFO_LABEL, 'HelpInfo') neq $HELPINFO_LABEL}
+													<a href="#" class="HelpInfoPopover pull-right" title="" data-placement="top" data-content="{htmlspecialchars(vtranslate($MODULE|cat:'|'|cat:$FIELD_MODEL->get('label'), 'HelpInfo'))}" data-original-title='{vtranslate($FIELD_MODEL->get("label"), $MODULE)}'><i class="glyphicon glyphicon-info-sign"></i></a>
 												{/if}
-											{else}
-												{vtranslate($FIELD_MODEL->get('label'), $MODULE)}
-											{/if}
-										</td>
-										<td class="fieldValue {$WIDTHTYPE}" {if $FIELD_MODEL->get('uitype') eq '19'} colspan="3" {assign var=COUNTER value=$COUNTER+1} {/if}>
-											{include file=vtemplate_path($FIELD_MODEL->getUITypeModel()->getTemplateName(),$MODULE_NAME)}
-										</td>
+												<label class="muted pull-left-xs pull-right-sm pull-right-lg">
+													{if $FIELD_MODEL->isMandatory() eq true} <span class="redColor">*</span>{/if}
+													{vtranslate($FIELD_MODEL->get('label'), $MODULE)}
+												</label>
+											</div>
+											<div class="fieldValue col-xs-12 col-sm-7 " >
+												{include file=vtemplate_path($FIELD_MODEL->getUITypeModel()->getTemplateName(),$MODULE_NAME)}
+											</div>
+										</div>
 									{/foreach}
-									</tr>
-								</table>
-								<div class="row" style="margin-top: 5px;">
-									<div class="col-md-4" id="prev_events">
+									</div>
+								</div>
+								<div class="row noSpaces col-xs-12 eventsTable" style="margin-top: 5px;">
+									<div class="col-xs-12 col-md-4 paddingLRZero" id="prev_events">
 										<table class="table">
-											<tr><th>{vtranslate('TASK_PREV', $MODULE)}</th></tr>
+											<tr><th class="taskPrev">{Vtiger_Date_UIType::getDisplayDateValue($PREVIOUSDATE)}</th></tr>
 										</table>
 									</div>
-									<div class="col-md-4" id="cur_events">
+									<div class="col-xs-12 col-md-4 paddingLRZero" id="cur_events">
 										 <table class="table">
-											<tr><th>{vtranslate('TASK_CUR', $MODULE)}</th></tr>
+											<tr><th class="taskCur">{Vtiger_Date_UIType::getDisplayDateValue($CURRENTDATE)}</th></tr>
 										</table>
 									</div>
-									<div class="col-md-4" id="next_events">
+									<div class="col-xs-12 col-md-4 paddingLRZero" id="next_events">
 										<table class="table">
-											<tr><th>{vtranslate('TASK_NEXT', $MODULE)}</th></tr>
+											<tr><th class="taskNext">{Vtiger_Date_UIType::getDisplayDateValue($NEXTDATE)}</th></tr>
 										</table>
 									</div>
 								</div>
-							</div>
 						</div>
 					</div>
 					{/foreach}

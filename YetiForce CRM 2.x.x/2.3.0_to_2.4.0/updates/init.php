@@ -13,6 +13,7 @@ require_once 'modules/com_vtiger_workflow/tasks/VTEntityMethodTask.inc';
 require_once 'modules/com_vtiger_workflow/VTEntityMethodManager.inc';
 require_once('include/events/include.inc');
 include_once('vtlib/Vtiger/Module.php');
+include_once('cache/updates/RemoveModule.php');
 
 class YetiForceUpdate
 {
@@ -102,10 +103,71 @@ class YetiForceUpdate
 		'modules/Users/views/Detail.php',
 		'modules/Users/views/Edit.php',
 		'modules/Vtiger/handlers/SharedOwnerUpdater.php',
-		'modules/QuotesEnquires/models',
-		'modules/RequirementCards/models',
+		'modules/QuotesEnquires',
+		'modules/RequirementCards',
 		'layouts/vlayout',
 		'libraries/mPDF/examples',
+		'modules/Accounts/views/AccountsListTree.php',
+		'layouts/basic/modules/Accounts/resources/AccountsListTree.min.js',
+		'layouts/basic/modules/Accounts/resources/AccountsListTree.js',
+		'layouts/basic/modules/Accounts/AccountsListTree.tpl',
+		'layouts/basic/modules/Accounts/AccountsList.tpl',
+		'languages/ru_ru/Settings/Home.php',
+		'languages/pt_br/Settings/Home.php',
+		'languages/pl_pl/Settings/Home.php',
+		'languages/en_us/Settings/Home.php',
+		'languages/de_de/Settings/Home.php',
+		'modules/Vtiger/widgets/Calculations.php',
+		'layouts/basic/modules/Vtiger/widgets/CalculationsConfig.tpl',
+		'layouts/basic/modules/Vtiger/widgets/CalculationsBasic.tpl',
+		'layouts/basic/modules/Vtiger/widgets/Calculations.tpl',
+		'cron/modules/SalesOrder/RecurringInvoice.service',
+		'modules/Settings/OSSPdf',
+		'layouts/basic/modules/Settings/OSSPdf',
+		'modules/Settings/OSSCosts/',
+		'modules/Vendors/models/DetailView.php',
+		'modules/Products/models/DetailView.php',
+		'modules/PaymentsIn/workflow/UpdateBalance.php',
+		'modules/Accounts/summary_blocks/TotalSale.php',
+		'modules/Accounts/handlers/AccountsHandler.php',
+		'modules/Vtiger/widgets/PotentialsList.php',
+		'modules/Project/views/InPotentialsRelation.php',
+		'modules/OutsourcedProducts/models/ListView.php',
+		'modules/OSSSoldServices/models/ListView.php',
+		'modules/OSSOutsourcedServices/models/ListView.php',
+		'modules/OSSMailScanner/email_actions/6_bind_Potentials.php',
+		'modules/Mobile/api/ws/models/alerts/PotentialsDueIn5Days.php',
+		'modules/Contacts/models/RelationListView.php',
+		'modules/Campaigns/dashboards/CampaignsWidget.php',
+		'modules/Assets/models/ListView.php',
+		'layouts/basic/modules/Vtiger/widgets/PotentialsListBasic.tpl',
+		'layouts/basic/modules/Vtiger/widgets/PotentialsList.tpl',
+		'modules/Accounts/views/Detail.php',
+		'modules/Leads/views/QuickCreateAjax.php',
+		'config/calendar.php',
+		'layouts/basic/modules/Vtiger/resources/TreeCategory.js',
+		'layouts/basic/modules/Vtiger/resources/TreeCategory.min.js',
+		'layouts/basic/modules/Vtiger/TreeCategory.tpl',
+		'modules/Accounts/summary_blocks/OrdersAccepted.php',
+		'modules/Accounts/summary_blocks/OrdersAll.php',
+		'modules/Competition/schema.xml',
+		'modules/Partners/schema.xml',
+		'modules/Project/views/InPotentialsRelation.php',
+		'modules/Vtiger/views/TreeCategory.php',
+		'storage/Logo/serwis_logo_yetiforce.png',
+		'modules/Inventory',
+		'layouts/basic/modules/Inventory',
+		'libraries/tcpdf',
+		'vtlib/Vtiger/PDF',
+		'libraries/mPDF/ttfonts/UnBatang_0613.ttf',
+		'libraries/mPDF/ttfonts/Sun-ExtB.ttf',
+		'libraries/mPDF/ttfonts/Sun-ExtA.ttf',
+		'libraries/mPDF/ttfonts/Jomolhari.ttf',
+		'libraries/mPDF/ttfonts/Aegyptus.otf',
+		'layouts/basic/modules/OSSTimeControl/UsersList.tpl',
+		'layouts/basic/modules/Reservations/UsersList.tpl',
+		'modules/OSSTimeControl/views/UsersList.php',
+		'modules/Reservations/views/UsersList.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -139,12 +201,394 @@ class YetiForceUpdate
 		$this->updateSettingsMenu();
 		$this->updateSettingFieldsMenu();
 		$this->addModules();
-		$this->updateMenu();
 		$this->sharedOwner();
 		$this->relations();
 		$this->deleteLang();
 		$this->addFields();
 		$this->addTree();
+		$this->dataAccess($this->accessData(2));
+		$this->dataAccess($this->accessData(3));
+
+		$this->updateMenu();
+		$this->roundcubeConfig();
+		if ((int) $this->modulenode->remove_modules == 1) {
+			$this->removeModules();
+		} else {
+			$this->reconfiguration();
+		}
+		$this->databaseNextChange();
+		$this->dataAccess($this->accessData(0), true);
+		$this->dataAccess($this->accessData(1), true);
+		$this->linkProccess();
+		$this->remove('OSSTimeControl', $this->removeFiedsData('OSSTimeControl'), 'deleteOtherFields');
+	}
+
+	function linkProccess()
+	{
+		$adb = PearDatabase::getInstance();
+		$adb->update('vtiger_ws_fieldtype', ['fieldtype' => 'referenceProcess'], 'uitype = ?', ['66']);
+		$adb->update('vtiger_ws_fieldtype', ['fieldtype' => 'referenceLink'], 'uitype = ?', ['67']);
+		$adb->update('vtiger_ws_fieldtype', ['fieldtype' => 'referenceSubProcess'], 'uitype = ?', ['68']);
+
+		$result = $adb->query("SHOW KEYS FROM `vtiger_activity` WHERE Key_name='subprocess';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_activity` ADD KEY `subprocess`(`subprocess`);");
+		}
+		$result = $adb->query("SHOW KEYS FROM `vtiger_osstimecontrol` WHERE Key_name='subprocess';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_osstimecontrol` ADD KEY `subprocess`(`subprocess`), ADD KEY `link`(`link`), ADD KEY `process`(`process`);");
+		}
+		$adb->pquery("UPDATE vtiger_field SET `fieldlabel` = CASE "
+			. " WHEN fieldlabel = 'Process' THEN 'FL_PROCESS' "
+			. " WHEN fieldlabel = 'Relation' THEN 'FL_RELATION' "
+			. " ELSE fieldlabel END WHERE columnname IN (?,?) AND tablename = ?", ['process', 'link', 'vtiger_activity']);
+		$this->addRelations();
+		$this->relatedSeq();
+		$this->ChangedFieldOrder();
+	}
+
+	function ChangedFieldOrder()
+	{
+		$adb = PearDatabase::getInstance();
+		$adb->update('vtiger_blocks', ['tabid' => getTabid('Calendar'), 'blocklabel' => 'LBL_RELATED_TO', 'sequence' => '3'], 'tabid = ? AND `blocklabel` = ?', [getTabid('Events'), 'LBL_CUSTOM_INFORMATION']);
+		$adb->update('vtiger_blocks', ['sequence' => '4'], 'tabid = ? AND `blocklabel` = ?', [getTabid('Calendar'), 'LBL_CUSTOM_INFORMATION']);
+
+		//'name','columnname','blocklabel','sequence','quickcreate','quickcreatesequence'
+		$data = [
+			['Calendar', 'smownerid', 'LBL_TASK_INFORMATION', '2', '0', '4'],
+			['Calendar', 'date_start', 'LBL_TASK_INFORMATION', '3', '0', '2'],
+			['Calendar', 'due_date', 'LBL_TASK_INFORMATION', '5', '1', '3'],
+			['Calendar', 'process', 'LBL_RELATED_TO', '2', '2', '8'],
+			['Calendar', 'link', 'LBL_RELATED_TO', '1', '2', '7'],
+			['Calendar', 'status', 'LBL_TASK_INFORMATION', '9', '1', '2'],
+			['Events', 'process', 'LBL_RELATED_TO', '2', '2', '10'],
+			['Events', 'link', 'LBL_RELATED_TO', '1', '2', '9'],
+			['Calendar', 'shownerid', 'LBL_TASK_INFORMATION', '5', '2', '6'],
+			['Calendar', 'allday', 'LBL_TASK_INFORMATION', '26', '0', '5'],
+			['Events', 'followup', 'LBL_RELATED_TO', '4', '1', NULL],
+			['Calendar', 'followup', 'LBL_RELATED_TO', '4', '1', NULL],
+			['Calendar', 'subprocess', 'LBL_RELATED_TO', '3', '1', NULL],
+			['Events', 'subprocess', 'LBL_RELATED_TO', '3', '1', NULL]
+		];
+		$tabIds = [];
+		$blockIds = ['Calendar' => [], 'Events' => []];
+		foreach ($data as $row) {
+			if (empty($tabIds[$row[0]])) {
+				$tabIds[$row[0]] = getTabid($row[0]);
+			}
+			if (empty($blockIds[$row[0]][$row[2]])) {
+				$result = $adb->pquery('SELECT blockid FROM `vtiger_blocks` WHERE `blocklabel` = ? AND `tabid` = ?;', [$row[2], $tabIds[$row[0]]]);
+				$blockIds[$row[0]][$row[2]] = $adb->getSingleValue($result);
+			}
+			if ($blockIds[$row[0]][$row[2]] && $tabIds[$row[0]]) {
+				$adb->update('vtiger_field', ['block' => $blockIds[$row[0]][$row[2]], 'sequence' => $row[3], 'quickcreate' => $row[4], 'quickcreatesequence' => $row[5]], '`tabid` = ? AND columnname = ?', [$tabIds[$row[0]], $row[1]]);
+			}
+		}
+	}
+
+	function addRelations()
+	{
+		$adb = PearDatabase::getInstance();
+		//tabid(name),'name','label','presence','actions','sequence'
+		$data['Calendar'] = [
+			['Vendors', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['OSSEmployees', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SSalesProcesses', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SQuoteEnquiries', 'get_activities', 'Activities', '0', 'ADD', '3'],
+			['SRequirementsCards', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SCalculations', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SQuotes', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SSingleOrders', 'get_activities', 'Activities', '0', 'ADD', '1'],
+			['SRecurringOrders', 'get_activities', 'Activities', '0', 'ADD', '1']
+		];
+		foreach ($data as $relModule => $modulesRel) {
+			$relInstance = Vtiger_Module::getInstance($relModule);
+			foreach ($modulesRel as $values) {
+				$targetModule = Vtiger_Module::getInstance($values[0]);
+				$targetModule->setRelatedList($relInstance, $values[2], [$values[4]], $values[1]);
+			}
+		}
+	}
+
+	function relatedSeq()
+	{
+		$adb = PearDatabase::getInstance();
+		$dataSeq = [];
+		$dataSeq['Accounts'] = [
+			['Contacts', '1'],
+			['Calendar', '2'],
+			['OSSMailView', '3'],
+			['Documents', '4'],
+			['HelpDesk', '5'],
+			['Products', '12'],
+			['Campaigns', '6'],
+			['PBXManager', '7'],
+			['ServiceContracts', '8'],
+			['Services', '15'],
+			['Assets', '13'],
+			['Project', '9'],
+			['OSSTimeControl', '10'],
+			['OSSOutsourcedServices', '16'],
+			['OSSSoldServices', '17'],
+			['OutsourcedProducts', '14'],
+			['OSSPasswords', '11'],
+			['CallHistory', '18'],
+			['PaymentsIn', '19'],
+			['PaymentsOut', '20'],
+			['LettersIn', '21'],
+			['LettersOut', '22'],
+			['Reservations', '23']
+		];
+		$dataSeq['Vendors'] = [
+			['Products', '2'],
+			['Contacts', '3'],
+			['OSSMailView', '4'],
+			['OSSPasswords', '6'],
+			['CallHistory', '7'],
+			['LettersOut', '9'],
+			['LettersIn', '10'],
+			['Reservations', '8'],
+			['HelpDesk', '11'],
+			['Project', '12'],
+			['PaymentsIn', '13'],
+			['PaymentsOut', '14'],
+			['Documents', '5'],
+			['Calendar', '1']
+		];
+		$dataSeq['Campaigns'] = [
+			['Leads', '2'],
+			['Calendar', '1'],
+			['Accounts', '3'],
+			['OSSMailView', '4']
+		];
+		$dataSeq['OSSEmployees'] = [
+			['Documents', '2'],
+			['OSSTimeControl', '3'],
+			['CallHistory', '4'],
+			['LettersOut', '6'],
+			['LettersIn', '7'],
+			['HolidaysEntitlement', '5'],
+			['Calendar', '1']
+		];
+		$dataSeq['Project'] = [
+			['ProjectTask', '2'],
+			['ProjectMilestone', '3'],
+			['Documents', '4'],
+			['HelpDesk', '5'],
+			[0, '1'],
+			['OSSTimeControl', '6'],
+			['OSSMailView', '7'],
+			['Calendar', '1'],
+			['Reservations', '8'],
+			['Contacts', '9']
+		];
+		$dataSeq['SSalesProcesses'] = [
+			['Documents', '2'],
+			['OSSMailView', '3'],
+			['SRequirementsCards', '5'],
+			['SQuoteEnquiries', '4'],
+			['SCalculations', '6'],
+			['SQuotes', '7'],
+			['SSingleOrders', '8'],
+			['SRecurringOrders', '9'],
+			['Products', '10'],
+			['OutsourcedProducts', '11'],
+			['Assets', '12'],
+			['Services', '13'],
+			['OSSOutsourcedServices', '14'],
+			['OSSSoldServices', '15'],
+			['Calendar', '1']
+		];
+
+		foreach ($dataSeq as $module => $relSeq) {
+			$query = 'UPDATE vtiger_relatedlists SET sequence = CASE ';
+			$tabId = getTabid($module);
+			foreach ($relSeq as $relModuleSeq) {
+				$relTabId = is_string($relModuleSeq[0]) ? getTabid($relModuleSeq[0]) : $relModuleSeq[0];
+				$query .= ' WHEN tabid="' . $tabId . '" AND related_tabid = ' . $relTabId . ' THEN ' . $relModuleSeq[1];
+			}
+			$query .=' ELSE sequence END ';
+			$query .= ' WHERE tabid = ?';
+			$adb->pquery($query, [$tabId]);
+		}
+	}
+
+	function remove($moduleName, $data, $action)
+	{
+		$log = vglobal('log');
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' (' . $moduleName . ',' . print_r($data, true) . ',' . $action . ')| Start');
+		$instance = new RemoveModule($moduleName);
+		$instance->init($data);
+		$instance->$action();
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' | END');
+	}
+
+	function removeFiedsData($index)
+	{
+		$modules = [
+			'OSSTimeControl' => [
+				'removeFields' => ['vtiger_osstimecontrol' => ['accountid', 'ticketid', 'projectid', 'projecttaskid', 'servicecontractsid', 'assetsid', 'leadid']]
+			]
+		];
+		return $modules[$index];
+	}
+
+	function accessData($index)
+	{
+		$data = [];
+		$data[0] = [
+			'base' => ['Accounts', 'Check for duplicates', 'a:1:{i:0;a:2:{s:2:"cf";b:0;s:2:"an";s:24:"Accounts!!unique_account";}}'],
+			'cnd' => [
+				['11', 'accountname', 'is not empty', '', '1', 'string']
+			]
+		];
+		$data[1] = [
+			'base' => ['Leads', 'Check for duplicates', 'a:1:{i:0;a:8:{s:2:"an";s:20:"Vtiger!!unique_value";s:5:"what1";s:6:"vat_id";s:6:"where1";a:2:{i:0;s:23:"vtiger_account=vat_id=6";i:1;s:27:"vtiger_leaddetails=vat_id=7";}s:5:"info0";s:0:"";s:5:"info1";s:0:"";s:5:"info2";s:0:"";s:8:"locksave";s:1:"3";s:2:"cf";b:1;}}'],
+			'cnd' => [
+				['12', 'vat_id', 'is not empty', '', '1', 'string']
+			]
+		];
+		$data[2] = [
+			'base' => ['Calendar', 'Adding time period to status change']
+		];
+		$data[3] = [
+			'base' => ['Events', 'Adding time period to status change']
+		];
+		return $data[$index];
+	}
+
+	function reconfiguration()
+	{
+		$adb = PearDatabase::getInstance();
+		$modules = ['Calculations', 'RequirementCards', 'QuotesEnquires', 'SalesOrder', 'Quotes', 'OSSPdf', 'OSSCosts', 'PurchaseOrder', 'Invoice', 'Potentials'];
+		foreach ($modules as $moduleName) {
+			$result = $adb->pquery('SELECT presence FROM vtiger_tab WHERE `name` = ?', [$moduleName]);
+			if ($adb->getRowCount($result) && !($presence = $adb->getSingleValue($result))) {
+				vtlib_toggleModuleAccess($moduleName, false);
+				$this->deleteIcons($moduleName);
+				$this->deleteLanguagesForModule($moduleName);
+				$this->deleteDir($moduleName);
+			}
+		}
+	}
+
+	/**
+	 * Function to remove files related to a module
+	 */
+	public function deleteDir($moduleName)
+	{
+		$log = vglobal('log');
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' ()| Start');
+		$modulePath = 'modules/' . $moduleName;
+		Vtiger_Functions::recurseDelete($modulePath);
+		foreach (self::getAllLayouts() as $name => $label) {
+			$layoutPath = 'layouts/' . $name . '/modules/' . $moduleName;
+			Vtiger_Functions::recurseDelete($layoutPath);
+		}
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' | END');
+	}
+
+	public static function getAllLayouts()
+	{
+		$adb = PearDatabase::getInstance();
+		$result = $adb->pquery('SELECT name,label FROM vtiger_layout');
+		$folders = [
+			'basic' => vtranslate('LBL_DEFAULT')
+		];
+		while ($row = $adb->fetch_array($result)) {
+			$folders[$row['name']] = vtranslate($row['label']);
+		}
+		return $folders;
+	}
+
+	/**
+	 * Function to remove language files related to a module
+	 */
+	function deleteLanguagesForModule($moduleName)
+	{
+		$adb = PearDatabase::getInstance();
+		$result = $adb->query('SELECT prefix FROM vtiger_language');
+		while ($lang = $adb->getSingleValue($result)) {
+			$langFilePath = "languages/$lang/" . $moduleName . ".php";
+			if (file_exists($langFilePath))
+				@unlink($langFilePath);
+		}
+	}
+
+	/**
+	 * Function to remove icons related to a module
+	 */
+	public function deleteIcons($moduleName)
+	{
+		$log = vglobal('log');
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' ()| Start');
+		$iconSize = ['', 48, 64, 128];
+		foreach ($iconSize as $value) {
+			foreach (self::getAllLayouts() as $name => $label) {
+				$fileName = "layouts/$name/skins/images/" . $moduleName . $value . ".png";
+				if (file_exists($fileName)) {
+					@unlink($fileName);
+				}
+			}
+		}
+		$log->debug(__CLASS__ . '::' . __METHOD__ . ' | END');
+	}
+
+	function removeModules()
+	{
+		$modules = [
+			'Calculations' => [
+				'removeFields' => ['vtiger_inventoryproductrel' => ['calculationsid'], 'vtiger_potential' => ['sum_time_k', 'sum_calculations']],
+				'tableList' => ['vtiger_calculationsproductrel'],
+				'links' => ['index.php?module=Calculations&view=ShowWidget&name=Calculations']
+			],
+			'RequirementCards' => [
+				'removeFields' => ['vtiger_osstimecontrol' => ['requirementcardsid']],
+			],
+			'QuotesEnquires' => [
+			],
+			'SalesOrder' => [
+				'removeFields' => ['vtiger_potential' => ['sum_time_so', 'sum_salesorders', 'average_profit_so'], 'vtiger_account' => ['average_profit_so', 'sum_salesorders']],
+				'tableList' => ['vtiger_invoice_recurring_info', 'vtiger_salesorderaddress', 'vtiger_sostatushistory'],
+				'handlers' => ['RecurringInvoiceHandler']
+			],
+			'Quotes' => [
+				'removeFields' => ['vtiger_potential' => ['sum_time_q', 'sum_quotes'], 'vtiger_purchaseorder' => ['quoteid']],
+				'tableList' => ['vtiger_quotesaddress', 'vtiger_quotestagehistory']
+			],
+			'OSSPdf' => [
+				'tableList' => ['vtiger_osspd', 'vtiger_osspdf_constraints', 'vtiger_osspdf_config'],
+				'links' => ['layouts/_layoutName_/modules/OSSPdf/resources/PDFUtils.js', 'layouts/vlayout/modules/OSSPdf/resources/PDFUtils.js', 'like' => 'module=OSSPdf']
+			],
+			'OSSCosts' => [
+				'tableList' => ['vtiger_osscosts_config'],
+				'links' => []
+			],
+			'PurchaseOrder' => [
+				'removeFields' => ['vtiger_invoice' => ['purchaseorder']],
+				'tableList' => ['vtiger_purchaseorderaddress', 'vtiger_postatushistory'],
+				'links' => []
+			],
+			'Invoice' => [
+				'removeFields' => ['vtiger_potential' => ['sum_invoices'], 'vtiger_account' => ['sum_invoices'], 'vtiger_osssoldservices' => ['invoiceid']],
+				'tableList' => ['vtiger_invoiceaddress', 'vtiger_invoicestatushistory'],
+				'links' => ['index.php?module=Potentials&view=ShowWidget&name=PipelinedAmountPerSalesPerson', 'index.php?module=Potentials&view=ShowWidget&name=FunnelAmount'],
+				'workflows' => ['PaymentsIn' => 'PaymentsIn - UpdateBalance', 'PaymentsOut' => 'PaymentsOut - UpdateBalance'],
+				'workflowsMethod' => ['UpdateBalance'],
+				'handlers' => ['PotentialsHandler', 'AccountsHandler']
+			],
+			'Potentials' => [
+				'removeFields' => ['vtiger_assets' => ['pot_renewal', 'potential'], 'vtiger_osssoldservices' => ['pot_renewal', 'potential'], 'vtiger_convertleadmapping' => ['potentialfid'], 'vtiger_ossoutsourcedservices' => ['potential'], 'vtiger_outsourcedproducts' => ['potential']],
+				'tableList' => ['vtiger_contpotentialrel', 'vtiger_potstagehistory', 'vtiger_potentialscf'],
+				'links' => ['like' => 'index.php?module=Potentials'],
+				'widgets' => ['PotentialsList']
+			]
+		];
+		foreach ($modules as $module => $valueMap) {
+			$instance = new RemoveModule($module);
+			$instance->init($valueMap);
+			$instance->delete();
+		}
 	}
 
 	function postupdate()
@@ -170,20 +614,101 @@ class YetiForceUpdate
 		return true;
 	}
 
+	function dataAccess($data, $add = false)
+	{
+		$adb = PearDatabase::getInstance();
+		$result = $adb->pquery("SELECT dataaccessid FROM vtiger_dataaccess WHERE module_name = ? AND `summary` = ?;", [$data['base'][0], $data['base'][1]]);
+		$id = $adb->getSingleValue($result);
+		if ($id && !$add) {
+			$adb->delete('vtiger_dataaccess_cnd', 'dataaccessid = ?', [$id]);
+			$adb->delete('vtiger_dataaccess', 'dataaccessid = ?', [$id]);
+		} elseif (!$id && $add) {
+			$adb->pquery('INSERT INTO vtiger_dataaccess (module_name,summary,data) VALUES(?, ?, ?)', $data['base']);
+			$id = $adb->getLastInsertID();
+			foreach ($data['cnd'] as $values) {
+				$values[0] = $id;
+				$adb->pquery('INSERT INTO vtiger_dataaccess_cnd (dataaccessid,fieldname,comparator,val,required,field_type) VALUES(?, ?, ?, ?, ?, ?)', $values);
+			}
+		}
+	}
+
+	function databaseNextChange()
+	{
+		$adb = PearDatabase::getInstance();
+		$adb->update('vtiger_relatedlists', ['creator_detail' => 0, 'relation_comment' => 1], '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?)', [getTabid('SSalesProcesses'), getTabid('OSSSoldServices'),
+			getTabid('SSalesProcesses'), getTabid('OSSOutsourcedServices'),
+			getTabid('SSalesProcesses'), getTabid('Assets'),
+			getTabid('SSalesProcesses'), getTabid('OutsourcedProducts'),
+			getTabid('Accounts'), getTabid('OSSOutsourcedServices'),
+			getTabid('Accounts'), getTabid('OSSSoldServices'),
+			getTabid('Accounts'), getTabid('OutsourcedProducts'),
+			getTabid('Leads'), getTabid('OSSOutsourcedServices'),
+			getTabid('Leads'), getTabid('OutsourcedProducts'),
+			getTabid('Accounts'), getTabid('Assets')
+		]);
+		$adb->update('vtiger_relatedlists', ['creator_detail' => 1, 'relation_comment' => 1], '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?) OR '
+			. '(`tabid` = ? AND related_tabid = ?)', [getTabid('Accounts'), getTabid('Services'),
+			getTabid('Accounts'), getTabid('Products'),
+			getTabid('Leads'), getTabid('Products'),
+			getTabid('SSalesProcesses'), getTabid('Products')]);
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_convertleadmapping` LIKE 'potentialfid';");
+		if ($result->rowCount() == 1) {
+			$adb->query("ALTER TABLE `vtiger_convertleadmapping` DROP COLUMN `potentialfid` ; ");
+		}
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_modentity_num` LIKE 'postfix';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_modentity_num` ADD COLUMN `postfix` varchar(50) NOT NULL after `prefix` ;");
+		}
+		$adb->update('vtiger_modentity_num', ['prefix' => 'PR'], 'semodule = ? AND `prefix` = ?', ['Partners', 'P']);
+		$adb->update('vtiger_modentity_num', ['prefix' => 'CMP'], 'semodule = ? AND `prefix` = ?', ['Competition', 'P']);
+		$adb->update('vtiger_modentity_num', ['prefix' => 'S-RO'], 'semodule = ? AND `prefix` = ?', ['SRecurringOrders', 'S-SO']);
+
+		$result = $adb->pquery("SELECT 1 FROM vtiger_widgets WHERE tabid = ?;", [getTabid('SSalesProcesses')]);
+		if (!$adb->getRowCount($result)) {
+			$this->addWidget('SSalesProcesses');
+		}
+
+		$result = $adb->query("SHOW KEYS FROM `vtiger_osstimecontrol` WHERE Key_name='osstimecontrol_status_8';");
+		if ($result->rowCount()) {
+			$adb->query("ALTER TABLE `vtiger_osstimecontrol` DROP KEY `osstimecontrol_status_8`;");
+		}
+		$result = $adb->query("SHOW KEYS FROM `vtiger_osstimecontrol` WHERE Key_name='osstimecontrol_status_7';");
+		if ($result->rowCount()) {
+			$adb->query("ALTER TABLE `vtiger_osstimecontrol` DROP KEY `osstimecontrol_status_7`;");
+		}
+		$result = $adb->query("SHOW KEYS FROM `vtiger_osstimecontrol` WHERE Key_name='osstimecontrol_status_5';");
+		if ($result->rowCount()) {
+			$adb->query("ALTER TABLE `vtiger_osstimecontrol` DROP KEY `osstimecontrol_status_5`,DROP KEY `osstimecontrol_status_4`,DROP KEY `osstimecontrol_status_3`,DROP KEY `osstimecontrol_status_2`,DROP KEY `osstimecontrol_status`;");
+		}
+	}
+
 	function addTree()
 	{
-		$db = PearDatabase::getInstance();
+		$adb = PearDatabase::getInstance();
 		$tabId = getTabid('Assets');
-		$result = $db->pquery("SELECT templateid FROM vtiger_trees_templates WHERE module IN (?);", [$tabId]);
-		if (!$db->getRowCount($result)) {
-			$templateid = (int) $db->getSingleValue($result);
+		$result = $adb->pquery("SELECT templateid FROM vtiger_trees_templates WHERE module IN (?);", [$tabId]);
+		if (!$adb->getRowCount($result)) {
+			$templateid = (int) $adb->getSingleValue($result);
 			$sql = 'INSERT INTO vtiger_trees_templates(`name`, `module`, `access`) VALUES (?,?,?)';
-			$db->pquery($sql, ['Category', $tabId, 0]);
-			$newtempateId = $db->getLastInsertID();
+			$adb->pquery($sql, ['Category', $tabId, 1]);
+			$newtempateId = $adb->getLastInsertID();
 			$sql = 'INSERT INTO vtiger_trees_templates_data(templateid, name, tree, parenttrre, depth, label, state) VALUES (?,?,?,?,?,?,?)';
 			$params = [$newtempateId, 'None', 'T1', 'T1', '0', 'None', ''];
-			$db->pquery($sql, $params);
-			$db->pquery('UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `tabid` = ? AND columnname = ?;', [$newtempateId, $tabId, 'pscategory']);
+			$adb->pquery($sql, $params);
+			$adb->pquery('UPDATE `vtiger_field` SET `fieldparams` = ? WHERE `tabid` = ? AND columnname = ?;', [$newtempateId, $tabId, 'pscategory']);
 		}
 	}
 
@@ -213,23 +738,23 @@ class YetiForceUpdate
 
 	function relations()
 	{
-		$db = PearDatabase::getInstance();
+		$adb = PearDatabase::getInstance();
 		$moduleInstance = Vtiger_Module::getInstance('PaymentsOut');
 		$targetModule = Vtiger_Module::getInstance('Vendors');
 		$targetModule->setRelatedList($moduleInstance, 'PaymentsOut', ['add'], 'get_dependents_list');
-		$result1 = $db->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsout']);
-		$result2 = $db->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$db->query_result($result1, 0, 'fieldid'), 'Vendors']);
-		if ($db->getRowCount($result2) == 0) {
-			$db->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $db->query_result($result1, 0, 'fieldid') . ",'PaymentsOut','Vendors');");
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsout']);
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($adb->getRowCount($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'PaymentsOut','Vendors');");
 		}
 
 		$moduleInstance = Vtiger_Module::getInstance('PaymentsIn');
 		$targetModule = Vtiger_Module::getInstance('Vendors');
 		$targetModule->setRelatedList($moduleInstance, 'PaymentsIn', ['add'], 'get_dependents_list');
-		$result1 = $db->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsin']);
-		$result2 = $db->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$db->query_result($result1, 0, 'fieldid'), 'Vendors']);
-		if ($db->getRowCount($result2) == 0) {
-			$db->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $db->query_result($result1, 0, 'fieldid') . ",'PaymentsIn','Vendors');");
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['relatedid', 'vtiger_paymentsin']);
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Vendors']);
+		if ($adb->getRowCount($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'PaymentsIn','Vendors');");
 		}
 
 		$moduleInstance = Vtiger_Module::getInstance('Documents');
@@ -241,12 +766,12 @@ class YetiForceUpdate
 	{
 		global $log;
 		$log->debug("Entering YetiForceUpdate::sharedOwner() method ...");
-		$db = PearDatabase::getInstance();
+		$adb = PearDatabase::getInstance();
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 
-		$result = $db->query("SHOW TABLES LIKE 'u_yf_crmentity_showners';");
-		if (!$db->getRowCount($result)) {
-			$db->query("CREATE TABLE IF NOT EXISTS `u_yf_crmentity_showners`(
+		$result = $adb->query("SHOW TABLES LIKE 'u_yf_crmentity_showners';");
+		if (!$adb->getRowCount($result)) {
+			$adb->query("CREATE TABLE IF NOT EXISTS `u_yf_crmentity_showners`(
 				`crmid` int(19) NULL  , 
 				`userid` int(19) NULL  , 
 				UNIQUE KEY `mix`(`crmid`,`userid`) , 
@@ -260,23 +785,23 @@ class YetiForceUpdate
 			$assignedToValues[] = $currentUser->getAccessibleUsers();
 			$assignedToValues[] = $currentUser->getAccessibleGroups();
 
-			$result = $db->query("SHOW TABLES LIKE '%_showners';");
-			if ($db->getRowCount($result) > 1) {
-				while ($row = $db->fetch_array($result)) {
+			$result = $adb->query("SHOW TABLES LIKE '%_showners';");
+			if ($adb->getRowCount($result) > 1) {
+				while ($row = $adb->fetch_array($result)) {
 					if ('u_yf_crmentity_showners' != current($row)) {
 						$query = "INSERT INTO u_yf_crmentity_showners (crmid, userid) SELECT crmid, userid FROM " . current($row) . ";";
-						$db->query($query);
-						$db->query('DROP TABLE IF EXISTS ' . current($row) . ';');
+						$adb->query($query);
+						$adb->query('DROP TABLE IF EXISTS ' . current($row) . ';');
 					}
 				}
 			} else {
-				$result = $db->pquery("SELECT `setype`, `crmid`, `shownerid` FROM vtiger_crmentity WHERE `setype` IN (SELECT DISTINCT `name` FROM vtiger_tab INNER JOIN vtiger_field ON vtiger_tab.tabid = vtiger_field.tabid WHERE uitype = 120) AND `shownerid` NOT IN ('', '0')");
-				while ($row = $db->fetch_array($result)) {
+				$result = $adb->pquery("SELECT `setype`, `crmid`, `shownerid` FROM vtiger_crmentity WHERE `setype` IN (SELECT DISTINCT `name` FROM vtiger_tab INNER JOIN vtiger_field ON vtiger_tab.tabid = vtiger_field.tabid WHERE uitype = 120) AND `shownerid` NOT IN ('', '0')");
+				while ($row = $adb->fetch_array($result)) {
 					$userIds = explode(',', $row['shownerid']);
 					foreach ($userIds as $userId) {
 						foreach ($assignedToValues as $accessibleIds) {
 							if (array_key_exists($userId, $accessibleIds)) {
-								$db->insert('u_yf_crmentity_showners', [
+								$adb->insert('u_yf_crmentity_showners', [
 									'crmid' => $row['crmid'],
 									'userid' => $userId,
 								]);
@@ -286,9 +811,9 @@ class YetiForceUpdate
 					}
 				}
 			}
-			$db->query("UPDATE `vtiger_crmentity` SET `shownerid` = '0';");
+			$adb->query("UPDATE `vtiger_crmentity` SET `shownerid` = '0';");
 		}
-		$db->query('ALTER TABLE `vtiger_crmentity` CHANGE `shownerid` `shownerid` tinyint(1)   NULL after `smownerid` ;');
+		$adb->query('ALTER TABLE `vtiger_crmentity` CHANGE `shownerid` `shownerid` tinyint(1)   NULL after `smownerid` ;');
 		$log->debug("Exiting YetiForceUpdate::sharedOwner() method ...");
 	}
 
@@ -299,7 +824,7 @@ class YetiForceUpdate
 		$adb = PearDatabase::getInstance();
 		$rootDir = vglobal('root_directory');
 		$dirName = 'cache/updates/files/';
-		$modules = ['SSalesProcesses', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders', 'SRecurringOrders'];
+		$modules = ['SSalesProcesses', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders', 'SRecurringOrders', 'Partners', 'Competition'];
 		foreach ($modules as $module) {
 			try {
 				if (file_exists('cache/updates/' . $module . '.xml') && !Vtiger_Module::getInstance($module)) {
@@ -316,7 +841,7 @@ class YetiForceUpdate
 					$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $module . '.xml');
 					$importInstance->import_Module();
 					unlink('cache/updates/' . $module . '.xml');
-					if ('SSalesProcesses' !== $module) {
+					if (!in_array($module, ['SSalesProcesses', 'Partners', 'Competition'])) {
 						$adb->update('vtiger_tab', ['type' => 1], '`name` = ?', [$module]);
 						$this->setPicklistValues($module);
 						$this->addWorkflowToNewModule($module);
@@ -328,6 +853,7 @@ class YetiForceUpdate
 				$log->fatal("ERROR YetiForceUpdate::addModules(" . $e->getMessage() . ") method ...");
 			}
 		}
+		$adb->update('vtiger_tab', ['customized' => 0], '`name` IN (' . $adb->generateQuestionMarks($modules) . ')', $modules);
 		$log->debug("Exiting YetiForceUpdate::addModules() method ...");
 	}
 
@@ -407,6 +933,14 @@ class YetiForceUpdate
 			['76', 'SSalesProcesses', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
 			['77', 'SSalesProcesses', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
 			['78', 'SSalesProcesses', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'SSalesProcesses', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
+		$widgets['Partners'] = [['75', 'Partners', 'Summary', NULL, '1', '0', NULL, '[]'],
+			['76', 'Partners', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
+			['77', 'Partners', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
+			['78', 'Partners', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'Partners', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
+		$widgets['Competition'] = [['75', 'Competition', 'Summary', NULL, '1', '0', NULL, '[]'],
+			['76', 'Competition', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
+			['77', 'Competition', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
+			['78', 'Competition', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'Competition', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
 
 		if ($widgets[$module]) {
 			foreach ($widgets[$module] as $widget) {
@@ -537,10 +1071,10 @@ class YetiForceUpdate
 			$adb->pquery('insert  into `vtiger_ws_fieldtype`(`fieldtypeid`,`uitype`,`fieldtype`) values (?,?,?);', [$key, '306', 'streetAddress']);
 		}
 
-		$result = $adb->query('SELECT * FROM `vtiger_organizationdetails`');
+		$result = $adb->query('SELECT panellogoname,organization_id FROM `vtiger_organizationdetails`');
 		while ($row = $adb->fetch_array($result)) {
 			if (empty($row['panellogoname'])) {
-				$adb->update('vtiger_organizationdetails', ['panellogoname' => $row['logoname']], '`organization_id` = ?', [$row['organization_id']]);
+				$adb->update('vtiger_organizationdetails', ['panellogoname' => 'white_logo_yetiforce.png'], '`organization_id` = ?', [$row['organization_id']]);
 			}
 		}
 		$multiModule = [['source_module' => 'Accounts', 'dest_module' => 'Products'], ['source_module' => 'Accounts', 'dest_module' => 'Services']];
@@ -550,6 +1084,12 @@ class YetiForceUpdate
 				$adb->insert('s_yf_multireference', ['source_module' => $row['source_module'], 'dest_module' => $row['dest_module'], 'lastid' => 0, 'type' => 0]);
 			}
 		}
+
+		$adb->update('vtiger_field', ['fieldlabel' => 'LBL_MENU_EXPANDED_BY_DEFAULT'], '`columnname` = ?', ['leftpanelhide']);
+
+		$adb->update('com_vtiger_workflow_tasktypes', ['modules' => '{"include":["Accounts","Contacts","Leads","OSSEmployees","Vendors","Campaigns","HelpDesk","Project","ServiceContracts"],"exclude":["Calendar","FAQ","Events"]}'], '`tasktypename` IN (?,?,?)', ['VTUpdateCalendarDates', 'VTCreateEventTask', 'VTCreateTodoTask']);
+		$adb->delete('vtiger_mobile_alerts', '`handler_class` = ? ', ['Mobile_WS_AlertModel_PotentialsDueIn5Days']);
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -558,48 +1098,39 @@ class YetiForceUpdate
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$adb = PearDatabase::getInstance();
-		$columns = ['id', 'role', 'parentid', 'type', 'sequence', 'module', 'label', 'icon'];
+		$columns = ['id', 'parentid', 'type', 'sequence', 'module', 'label', 'icon'];
 		$menu = [
-			['44', '0', '2', '1', NULL, 'MEN_VIRTUAL_DESK', 'userIcon-virtual-desk'],
-			['45', '44', '0', '0', 'Home', 'Home page', 'userIcon-my-home-page'],
+			['44', '0', '2', '0', NULL, 'MEN_VIRTUAL_DESK', 'userIcon-VirtualDesk'],
+			['45', '44', '0', '0', 'Home', 'Home page', 'userIcon-Home2'],
 			['46', '44', '0', '1', 'Calendar', NULL, ''],
-			['47', '0', '2', '2', NULL, 'MEN_COMPANIES_CONTACTS', 'userIcon-compaines-and-contacts'],
+			['47', '0', '2', '1', NULL, 'MEN_COMPANIES_CONTACTS', 'userIcon-CompainesAndContacts'],
 			['48', '47', '0', '0', 'Leads', NULL, ''],
-			['49', '47', '0', '1', 'Contacts', NULL, ''],
-			['50', '47', '0', '2', 'Vendors', NULL, ''],
-			['51', '47', '0', '3', 'Accounts', NULL, ''],
-			['52', '0', '2', '3', NULL, 'MEN_SALES', 'userIcon-sales'],
+			['49', '47', '0', '5', 'Contacts', NULL, ''],
+			['50', '47', '0', '3', 'Vendors', NULL, ''],
+			['51', '47', '0', '1', 'Accounts', NULL, ''],
+			['52', '0', '2', '2', NULL, 'MEN_MARKETING', 'userIcon-Sales'],
 			['54', '52', '0', '0', 'Campaigns', NULL, ''],
-			['55', '52', '0', '1', 'Potentials', NULL, ''],
-			['56', '52', '0', '2', 'QuotesEnquires', NULL, ''],
-			['57', '52', '0', '3', 'RequirementCards', NULL, ''],
-			['58', '52', '0', '4', 'Calculations', NULL, ''],
-			['59', '52', '0', '5', 'Quotes', NULL, ''],
-			['60', '52', '0', '6', 'SalesOrder', NULL, ''],
-			['61', '52', '0', '7', 'PurchaseOrder', NULL, ''],
-			['62', '52', '0', '8', 'PriceBooks', NULL, ''],
-			['63', '0', '2', '5', NULL, 'MEN_SUPPORT', 'userIcon-support'],
+			['62', '118', '0', '7', 'PriceBooks', NULL, ''],
+			['63', '0', '2', '5', NULL, 'MEN_SUPPORT', 'userIcon-Support'],
 			['64', '63', '0', '0', 'HelpDesk', NULL, ''],
 			['65', '63', '0', '1', 'ServiceContracts', NULL, ''],
 			['66', '63', '0', '2', 'Faq', NULL, ''],
-			['67', '0', '2', '4', NULL, 'MEN_PROJECTS', 'userIcon-projects'],
+			['67', '0', '2', '4', NULL, 'MEN_PROJECTS', 'userIcon-Projects2'],
 			['68', '67', '0', '0', 'Project', NULL, ''],
 			['69', '67', '0', '1', 'ProjectMilestone', NULL, ''],
 			['70', '67', '0', '2', 'ProjectTask', NULL, ''],
-			['71', '0', '2', '6', NULL, 'MEN_BOOKKEEPING', 'userIcon-bookkeeping'],
-			['72', '71', '0', '3', 'PaymentsIn', NULL, ''],
-			['73', '71', '0', '2', 'PaymentsOut', NULL, ''],
-			['74', '71', '0', '1', 'Invoice', NULL, ''],
-			['75', '71', '0', '0', 'OSSCosts', NULL, ''],
-			['76', '0', '2', '7', NULL, 'MEN_HUMAN_RESOURCES', 'userIcon-human-resources'],
+			['71', '0', '2', '6', NULL, 'MEN_BOOKKEEPING', 'userIcon-BookKeeping'],
+			['72', '71', '0', '1', 'PaymentsIn', NULL, ''],
+			['73', '71', '0', '0', 'PaymentsOut', NULL, ''],
+			['76', '0', '2', '7', NULL, 'MEN_HUMAN_RESOURCES', 'userIcon-HumanResources'],
 			['77', '76', '0', '0', 'OSSEmployees', NULL, ''],
 			['78', '76', '0', '1', 'OSSTimeControl', NULL, ''],
 			['79', '76', '0', '2', 'HolidaysEntitlement', NULL, ''],
-			['80', '0', '2', '8', NULL, 'MEN_SECRETARY', 'userIcon-secretary'],
+			['80', '0', '2', '8', NULL, 'MEN_SECRETARY', 'userIcon-Secretary'],
 			['81', '80', '0', '0', 'LettersIn', NULL, ''],
 			['82', '80', '0', '1', 'LettersOut', NULL, ''],
 			['83', '80', '0', '2', 'Reservations', NULL, ''],
-			['84', '0', '2', '9', NULL, 'MEN_DATABESES', 'userIcon-database'],
+			['84', '0', '2', '9', NULL, 'MEN_DATABESES', 'userIcon-Database'],
 			['85', '84', '2', '0', NULL, 'MEN_PRODUCTBASE', NULL],
 			['86', '84', '0', '1', 'Products', NULL, ''],
 			['87', '84', '0', '2', 'OutsourcedProducts', NULL, ''],
@@ -616,27 +1147,26 @@ class YetiForceUpdate
 			['98', '84', '0', '13', 'PBXManager', NULL, ''],
 			['99', '84', '0', '14', 'OSSMailTemplates', NULL, ''],
 			['100', '84', '0', '15', 'Documents', NULL, ''],
-			['102', '84', '0', '16', 'OSSPdf', NULL, ''],
-			['106', '84', '0', '18', 'CallHistory', NULL, ''],
-			['107', '84', '3', '19', NULL, NULL, NULL],
-			['108', '84', '0', '24', 'NewOrders', NULL, ''],
-			['109', '84', '0', '17', 'OSSPasswords', NULL, ''],
-			['110', '0', '2', '10', NULL, 'MEN_TEAMWORK', 'userIcon-team-work'],
-			['111', '110', '0', '0', 'Ideas', NULL, ''],
-			['112', '0', '6', '0', '3', NULL, NULL],
+			['106', '84', '0', '17', 'CallHistory', NULL, ''],
+			['107', '84', '3', '18', NULL, NULL, NULL],
+			['108', '84', '0', '23', 'NewOrders', NULL, ''],
+			['109', '84', '0', '16', 'OSSPasswords', NULL, ''],
+			['111', '44', '0', '3', 'Ideas', NULL, ''],
 			['113', '44', '0', '2', 'OSSMail', NULL, ''],
-			['114', '84', '0', '23', 'Reports', NULL, ''],
-			['115', '84', '0', '20', 'Rss', NULL, ''],
-			['116', '84', '0', '21', 'Portal', NULL, ''],
-			['117', '84', '3', '22', NULL, NULL, NULL],
-			['118', '0', '2', '11', NULL, 'MEN_SALE_PROCESSES', ''],
+			['114', '84', '0', '22', 'Reports', NULL, ''],
+			['115', '84', '0', '19', 'Rss', NULL, ''],
+			['116', '84', '0', '20', 'Portal', NULL, ''],
+			['117', '84', '3', '21', NULL, NULL, NULL],
+			['118', '0', '2', '3', NULL, 'MEN_SALES', 'userIcon-Potentials'],
 			['119', '118', '0', '0', 'SSalesProcesses', NULL, ''],
 			['120', '118', '0', '1', 'SQuoteEnquiries', NULL, ''],
 			['121', '118', '0', '2', 'SRequirementsCards', NULL, ''],
 			['122', '118', '0', '3', 'SCalculations', NULL, ''],
 			['123', '118', '0', '4', 'SQuotes', NULL, ''],
 			['124', '118', '0', '5', 'SSingleOrders', NULL, ''],
-			['125', '118', '0', '6', 'SRecurringOrders', NULL, '']
+			['125', '118', '0', '6', 'SRecurringOrders', NULL, ''],
+			['126', '47', '0', '2', 'Partners', NULL, ''],
+			['127', '47', '0', '4', 'Competition', NULL, '']
 		];
 		$adb->delete('yetiforce_menu', '`role` = ? ', [0]);
 		$parents = [];
@@ -724,7 +1254,7 @@ class YetiForceUpdate
 			['LBL_AUTOMATION', 'Scheduler', 'adminIcon-cron', 'LBL_SCHEDULER_DESCRIPTION', 'index.php?module=CronTasks&parent=Settings&view=List', '3', '0', '0'],
 			['LBL_AUTOMATION', 'LBL_WORKFLOW_LIST', 'adminIcon-workflow', 'LBL_AVAILABLE_WORKLIST_LIST', 'index.php?module=com_vtiger_workflow&action=workflowlist', '1', '0', '0'],
 			['LBL_SYSTEM_TOOLS', 'ModTracker', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_DESCRIPTION', 'index.php?module=ModTracker&action=BasicSettings&parenttab=Settings&formodule=ModTracker', '9', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_PBXMANAGER', '', 'LBL_PBXMANAGER_DESCRIPTION', 'index.php?module=PBXManager&parent=Settings&view=Index', '22', '0', '0'],
+			['LBL_INTEGRATION', 'LBL_PBXMANAGER', 'adminIcon-pbx-manager', 'LBL_PBXMANAGER_DESCRIPTION', 'index.php?module=PBXManager&parent=Settings&view=Index', '22', '0', '0'],
 			['LBL_INTEGRATION', 'LBL_CUSTOMER_PORTAL', 'adminIcon-customer-portal', 'PORTAL_EXTENSION_DESCRIPTION', 'index.php?module=CustomerPortal&action=index&parenttab=Settings', '3', '0', '0'],
 			['LBL_INTEGRATION', 'Webforms', 'adminIcon-online-forms', 'LBL_WEBFORMS_DESCRIPTION', 'index.php?module=Webforms&action=index&parenttab=Settings', '4', '0', '0'],
 			['LBL_STUDIO', 'LBL_EDIT_FIELDS', 'adminIcon-modules-fields', 'LBL_LAYOUT_EDITOR_DESCRIPTION', 'index.php?module=LayoutEditor&parent=Settings&view=Index', '2', '0', '0'],
@@ -734,7 +1264,7 @@ class YetiForceUpdate
 			['LBL_STUDIO', 'LBL_ARRANGE_RELATED_TABS', 'adminIcon-modules-relations', 'LBL_ARRANGE_RELATED_TABS', 'index.php?module=LayoutEditor&parent=Settings&view=Index&mode=showRelatedListLayout', '4', '0', '1'],
 			['LBL_MAIL_TOOLS', 'Mail Scanner', 'adminIcon-mail-scanner', 'LBL_MAIL_SCANNER_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=Index', '3', '0', '0'],
 			['LBL_LOGS', 'Mail Logs', 'adminIcon-mail-download-history', 'LBL_MAIL_LOGS_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=logs', '4', '0', '0'],
-			['LBL_MAIL_TOOLS', 'Mail View', '', 'LBL_MAIL_VIEW_DESCRIPTION', 'index.php?module=OSSMailView&parent=Settings&view=index', '21', '0', '0'],
+			['LBL_MAIL_TOOLS', 'Mail View', 'adminIcon-oss_mailview', 'LBL_MAIL_VIEW_DESCRIPTION', 'index.php?module=OSSMailView&parent=Settings&view=index', '21', '0', '0'],
 			['LBL_AUTOMATION', 'Document Control', 'adminIcon-workflow', 'LBL_DOCUMENT_CONTROL_DESCRIPTION', 'index.php?module=OSSDocumentControl&parent=Settings&view=Index', '4', '0', '0'],
 			['LBL_AUTOMATION', 'Project Templates', 'adminIcon-document-templates', 'LBL_PROJECT_TEMPLATES_DESCRIPTION', 'index.php?module=OSSProjectTemplates&parent=Settings&view=Index', '5', '0', '0'],
 			['LBL_About_YetiForce', 'License', 'adminIcon-license', 'LBL_LICENSE_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=License', '4', '0', '0'],
@@ -745,7 +1275,7 @@ class YetiForceUpdate
 			['LBL_SEARCH_AND_FILTERS', 'Search Setup', 'adminIcon-search-configuration', 'LBL_SEARCH_SETUP_DESCRIPTION', 'index.php?module=Search&parent=Settings&view=Index', '1', '0', '0'],
 			['LBL_SEARCH_AND_FILTERS', 'CustomView', 'adminIcon-filters-configuration', 'LBL_CUSTOMVIEW_DESCRIPTION', 'index.php?module=CustomView&parent=Settings&view=Index', '2', '0', '0'],
 			['LBL_STUDIO', 'Widgets', 'adminIcon-modules-widgets', 'LBL_WIDGETS_DESCRIPTION', 'index.php?module=Widgets&parent=Settings&view=Index', '3', '0', '1'],
-			['LBL_About_YetiForce', 'Credits', 'adminIcon-contributors', 'LBL_CREDITS_DESCRIPTION', 'index.php?module=Home&view=Credits&parent=Settings', '3', '0', '0'],
+			['LBL_About_YetiForce', 'Credits', 'adminIcon-contributors', 'LBL_CREDITS_DESCRIPTION', 'index.php?module=Vtiger&view=Credits&parent=Settings', '3', '0', '0'],
 			['LBL_STUDIO', 'LBL_QUICK_CREATE_EDITOR', 'adminIcon-fields-quick-create', 'LBL_QUICK_CREATE_EDITOR_DESCRIPTION', 'index.php?module=QuickCreateEditor&parent=Settings&view=Index', '8', '0', '0'],
 			['LBL_INTEGRATION', 'LBL_API_ADDRESS', 'adminIcon-address', 'LBL_API_ADDRESS_DESCRIPTION', 'index.php?module=ApiAddress&parent=Settings&view=Configuration', '5', '0', '0'],
 			['LBL_SECURITY_MANAGEMENT', 'LBL_BRUTEFORCE', 'adminIcon-brute-force', 'LBL_BRUTEFORCE_DESCRIPTION', 'index.php?module=BruteForce&parent=Settings&view=Show', '2', '0', '0'],
@@ -772,14 +1302,15 @@ class YetiForceUpdate
 			['LBL_INTEGRATION', 'LBL_AUTHORIZATION', 'adminIcon-automation', 'LBL_AUTHORIZATION_DESCRIPTION', 'index.php?module=Users&view=Auth&parent=Settings', '1', '0', '0'],
 			['LBL_PROCESSES', 'LBL_TIMECONTROL_PROCESSES', 'adminIcon-logistics', 'LBL_TIMECONTROL_PROCESSES_DESCRIPTION', 'index.php?module=TimeControlProcesses&parent=Settings&view=Index', '7', '0', '0'],
 			['LBL_STUDIO', 'LBL_CUSTOM_FIELD_MAPPING', 'adminIcon-filed-mapping', 'LBL_CUSTOM_FIELD_MAPPING_DESCRIPTION', 'index.php?parent=Settings&module=Leads&view=MappingDetail', '13', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_CURRENCY_UPDATE', 'adminIcon-currency', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings', '2', '0', '0'],
+			['LBL_INTEGRATION', 'LBL_CURRENCY_UPDATE', 'adminIcon-currencies', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings', '2', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_CREDITLIMITS', 'adminIcon-credit-limit-base_2', 'LBL_CREDITLIMITS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=CreditLimits', '5', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_TAXES', 'adminIcon-taxes-rates', 'LBL_TAXES_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Taxes', '1', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTS', 'adminIcon-discount-base', 'LBL_DISCOUNTS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Discounts', '3', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_TAXCONFIGURATION', 'adminIcon-taxes-caonfiguration', 'LBL_TAXCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=TaxConfiguration', '4', '0', '0'],
 			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTCONFIGURATION', 'adminIcon-discount-configuration', 'LBL_DISCOUNTCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=DiscountConfiguration', '2', '0', '0'],
 			['LBL_MAIL_TOOLS', 'Mail', 'adminIcon-mail-download-history', 'LBL_OSSMAIL_DESCRIPTION', 'index.php?module=OSSMail&parent=Settings&view=index', '2', '0', '0'],
-			['LBL_STUDIO', 'LBL_MAPPEDFIELDS', '', 'LBL_MAPPEDFIELDS_DESCRIPTION', 'index.php?module=MappedFields&parent=Settings&view=List', '16', '0', '0']
+			['LBL_STUDIO', 'LBL_MAPPEDFIELDS', 'adminIcon-mapped-fields', 'LBL_MAPPEDFIELDS_DESCRIPTION', 'index.php?module=MappedFields&parent=Settings&view=List', '16', '0', '0'],
+			['LBL_USER_MANAGEMENT', 'LBL_LOCKS', '', 'LBL_LOCKS_DESCRIPTION', 'index.php?module=Users&view=Locks&parent=Settings', 8, 0, 0]
 		];
 		$blocks = [];
 		$delete = ['LBL_TAX_SETTINGS', 'PDF'];
@@ -850,6 +1381,7 @@ class YetiForceUpdate
 			$adb->insert('yetiforce_proc_sales', ['type' => 'squotes', 'param' => 'statuses_close', 'value' => '']);
 			$adb->insert('yetiforce_proc_sales', ['type' => 'srequirementscard', 'param' => 'statuses_close', 'value' => '']);
 		}
+		$adb->delete('yetiforce_proc_sales', 'type = ?', ['potential']);
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -1245,6 +1777,45 @@ class YetiForceUpdate
 			$adb->query("ALTER TABLE `vtiger_assets` ADD COLUMN `pscategory` varchar(255)  DEFAULT '' after `ordertime` ;");
 		}
 
+		$result = $adb->query("SHOW KEYS FROM `vtiger_account` WHERE Key_name='parentid';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_account` ADD KEY `parentid`(`parentid`);");
+		}
+
+		$adb->query('DROP TABLE IF EXISTS vtiger_inventorynotification;');
+		$adb->query('DROP TABLE IF EXISTS vtiger_inventorynotification_seq;');
+
+		$adb->query("CREATE TABLE IF NOT EXISTS `u_yf_crmentity_rel_tree`(
+				`crmid` int(11) NOT NULL  , 
+				`module` int(11) NOT NULL  , 
+				`tree` varchar(50) NOT NULL  , 
+				`relmodule` int(11) NOT NULL  , 
+				`rel_created_user` int(11) NOT NULL  , 
+				`rel_created_time` datetime NOT NULL  , 
+				`rel_comment` varchar(255) NULL  
+			) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_relatedlists` LIKE 'creator_detail';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_relatedlists` 	ADD COLUMN `creator_detail` tinyint(1) NULL DEFAULT 0 after `favorites`, ADD COLUMN `relation_comment` tinyint(1) NULL DEFAULT 0 after `creator_detail` ;");
+		}
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_seproductsrel` LIKE 'rel_created_user';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_seproductsrel` 
+				ADD COLUMN `rel_created_user` int(11)   NOT NULL after `setype` , 
+				ADD COLUMN `rel_created_time` datetime   NOT NULL after `rel_created_user` , 
+				ADD COLUMN `rel_comment` varchar(255) NULL after `rel_created_time` ; ");
+		}
+
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_crmentityrel` LIKE 'rel_created_user';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `vtiger_crmentityrel` 
+				ADD COLUMN `rel_created_user` int(11) NULL after `relmodule` , 
+				ADD COLUMN `rel_created_time` datetime NULL after `rel_created_user` , 
+				ADD COLUMN `rel_comment` varchar(255) NULL after `rel_created_time` ; ");
+		}
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -1292,8 +1863,6 @@ class YetiForceUpdate
 			$defaultLayout = true;
 			$layoutInLoginView = true;
 			$isVisibleLogoInFooter = true;
-			$showNameRelatedModules = true;
-			$defaultViewInComments = true;
 			foreach ($configContent as $key => $line) {
 				if (strpos($line, 'defaultLayout') !== false) {
 					$configContent[$key] = str_replace('vlayout', 'basic', $configContent[$key]);
@@ -1305,19 +1874,28 @@ class YetiForceUpdate
 				if (strpos($line, 'isVisibleLogoInFooter') !== false) {
 					$isVisibleLogoInFooter = false;
 				}
-				if (strpos($line, 'defaultViewInComments') !== false) {
-					$defaultViewInComments = false;
-				}
-				if (strpos($line, 'showNameRelatedModules') !== false) {
-					$showNameRelatedModules = false;
-				}
 				if (strpos($line, 'support@vtiger.com') !== false) {
 					$configContent[$key] = str_replace('vtiger', 'yetiforce', $configContent[$key]);
 				}
 				if (strpos($line, 'ini_set') !== false) {
 					$configContent[$key] = str_replace('ini_set', 'AppConfig::iniSet', $configContent[$key]);
 				}
-				if (strpos($line, "include_once('config/version.php')") !== false) {
+				if (strpos($line, "include_once('config/version.php')") !== false ||
+					strpos($line, 'calculate_response_time') !== false ||
+					strpos($line, 'show or hide time to compose each page') !== false ||
+					strpos($line, 'in the login form for password') !== false ||
+					strpos($line, 'default_password') !== false ||
+					strpos($line, 'default username and password') !== false ||
+					strpos($line, 'create_default_user') !== false ||
+					strpos($line, 'default_user_is_admin') !== false ||
+					strpos($line, 'disable_persistent_connections') !== false ||
+					strpos($line, 'if your MySQL/PHP configuration does not support') !== false ||
+					strpos($line, 'show record count in tabs related modules') !== false ||
+					strpos($line, 'showRecordsCount') !== false ||
+					strpos($line, 'show names related modules') !== false ||
+					strpos($line, 'showNameRelatedModules') !== false ||
+					strpos($line, 'default view in Comments (Timeline/List') !== false ||
+					strpos($line, 'defaultViewInComments') !== false) {
 					unset($configContent[$key]);
 				}
 			}
@@ -1341,23 +1919,49 @@ $layoutInLoginView = false;
 $isVisibleLogoInFooter = true;
 ';
 			}
-			if ($showNameRelatedModules) {
-				$content .= '
-// show names related modules
-$showNameRelatedModules = true;
-';
-			}
-			if ($defaultViewInComments) {
-				$content .= '
-// default view in Comments (Timeline/List)
-$defaultViewInComments = \'Timeline\';
-';
-			}
 			$file = fopen($config, "w+");
 			fwrite($file, $content);
 			fclose($file);
 		}
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	function roundcubeConfig()
+	{
+		$log = vglobal('log');
+		$root_directory = vglobal('root_directory');
+		$log->debug("Entering YetiForceUpdate::roundcubeConfig() method ...");
+		if (!$root_directory)
+			$root_directory = getcwd();
+		$config = $root_directory . '/modules/OSSMail/roundcube/config/config.inc.php';
+		if (file_exists($config)) {
+			$configContent = file($config);
+			foreach ($configContent as $key => $line) {
+				if (strpos($line, 'config[') !== false) {
+					break;
+				} else {
+					unset($configContent[$key]);
+				}
+			}
+			$content = implode("", $configContent);
+			$improvedConfig = '<?php
+/*
+  Disable SSL for IMAP/SMTP
+  If your IMAP/SMTP servers are on the same host or are connected via a secure network, not using SSL connections improves performance. So don\'t use "ssl://" or "tls://" urls for \'default_host\' and \'smtp_server\' config options.
+ */
+if (!$no_include_config) {
+	$currentPath = getcwd();
+	chdir(dirname(__FILE__) . \'/../../../../\');
+	include_once(\'include/ConfigUtils.php\');
+	chdir($currentPath);
+}
+';
+			$content = $improvedConfig . $content;
+			$file = fopen($config, "w+");
+			fwrite($file, $content);
+			fclose($file);
+		}
+		$log->debug("Exiting YetiForceUpdate::roundcubeConfig() method ... ");
 	}
 
 	public function enableTracking()
@@ -1681,22 +2285,54 @@ YetiForce CRM Support Team.', 'PLL_RECORD'];
 
 	public function addFields()
 	{
-		global $log, $adb;
+		global $log;
+		$adb = PearDatabase::getInstance();
 		$log->debug("Entering YetiForceUpdate::addFields() method ...");
 		include_once('vtlib/Vtiger/Module.php');
 
 		$columnName = ["tabid", "id", "column", "table", "generatedtype", "uitype", "name", "label", "readonly", "presence", "defaultvalue", "maximumlength", "sequence", "block", "displaytype", "typeofdata", "quickcreate", "quicksequence", "info_type", "masseditable", "helpinfo", "summaryfield", "fieldparams", "columntype", "blocklabel", "setpicklistvalues", "setrelatedmodules"];
 
+		$query = "SELECT `fieldid` FROM `vtiger_field` WHERE `tabid` = '" . getTabid('Services') . "' AND  columnname = 'servicename'";
+		$result = $adb->query($query);
+		$fieldId1 = $adb->getSingleValue($result);
+		$query = "SELECT `fieldid` FROM `vtiger_field` WHERE `tabid` = '" . getTabid('Products') . "' AND  columnname = 'productname'";
+		$result = $adb->query($query);
+		$fieldId2 = $adb->getSingleValue($result);
 		$Accounts = [
-			['6', '1945', 'products', 'vtiger_account', '2', '305', 'products', 'Products', '1', '2', '', '100', '10', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Products","field":"173","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []],
-			['6', '1946', 'services', 'vtiger_account', '2', '305', 'services', 'Services', '1', '2', '', '100', '11', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Services","field":"560","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []]
+			['6', '1945', 'products', 'vtiger_account', '2', '305', 'products', 'Products', '1', '2', '', '100', '10', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Products","field":"' . $fieldId2 . '","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []],
+			['6', '1946', 'services', 'vtiger_account', '2', '305', 'services', 'Services', '1', '2', '', '100', '11', '196', '5', 'C~O', '1', NULL, 'BAS', '1', '', '0', '{"module":"Services","field":"' . $fieldId1 . '","filterField":"-","filterValue":null}', "text", "LBL_ADVANCED_BLOCK", [], []]
 		];
 
 		$Assets = [
-			['37', '1947', 'pscategory', 'vtiger_assets', '2', '302', 'pscategory', 'Category', '1', '2', '', '100', '17', '95', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '15', "varchar(255)", "LBL_ASSET_INFORMATION", [], []]
+			['37', '1947', 'pscategory', 'vtiger_assets', '2', '302', 'pscategory', 'Category', '1', '2', '', '100', '17', '95', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '15', "varchar(255)", "LBL_ASSET_INFORMATION", [], []],
+			['37', '1989', 'ssalesprocessesid', 'vtiger_assets', '2', '10', 'ssalesprocessesid', 'SSalesProcesses', '1', '2', '', '100', '18', '95', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_ASSET_INFORMATION", [], ['SSalesProcesses']]
 		];
 
-		$setToCRM = ['Accounts' => $Accounts, 'Assets' => $Assets];
+		$OutsourcedProducts = [
+			['59', '1988', 'ssalesprocessesid', 'vtiger_outsourcedproducts', '2', '10', 'ssalesprocessesid', 'SSalesProcesses', '1', '2', '', '100', '31', '144', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_INFORMATION", [], ['SSalesProcesses']]
+		];
+
+		$OSSOutsourcedServices = [
+			['57', '1990', 'ssalesprocessesid', 'vtiger_ossoutsourcedservices', '2', '10', 'ssalesprocessesid', 'SSalesProcesses', '1', '2', '', '100', '16', '138', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_INFORMATION", [], ['SSalesProcesses']]
+		];
+
+		$OSSSoldServices = [
+			['58', '1991', 'ssalesprocessesid', 'vtiger_osssoldservices', '2', '10', 'ssalesprocessesid', 'SSalesProcesses', '1', '2', '', '100', '10', '141', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_INFORMATION", [], ['SSalesProcesses']]
+		];
+
+		$Calendar = [
+			[9,1992,'subprocess','vtiger_activity',1,'68','subprocess','Sub Process',1,0,'',100,1,19,1,'I~O',1,NULL,'BAS',1,'',1,'', "int(19)", "LBL_TASK_INFORMATION", [], []]
+		];
+		$Events = [
+			['16', '1993', 'subprocess', 'vtiger_activity', '1', '68', 'subprocess', 'FL_SUB_PROCESS', '1', '0', '', '100', '3', '119', '1', 'I~O', '1', NULL, 'BAS', '1', '', '1', '', "int(19)", "LBL_RELATED_TO", [], []]
+		];
+		$OSSTimeControl = [
+			['51', '1994', 'process', 'vtiger_osstimecontrol', '1', '66', 'process', 'FL_PROCESS', '1', '2', '', '100', '11', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []],
+			['51', '1995', 'link', 'vtiger_osstimecontrol', '1', '67', 'link', 'FL_RELATION', '1', '2', '', '100', '12', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []],
+			['51', '1996', 'subprocess', 'vtiger_osstimecontrol', '1', '68', 'subprocess', 'FL_SUB_PROCESS', '1', '2', '', '100', '13', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []]
+		];
+
+		$setToCRM = ['Accounts' => $Accounts, 'Assets' => $Assets, 'OutsourcedProducts' => $OutsourcedProducts, 'OSSOutsourcedServices' => $OSSOutsourcedServices, 'OSSSoldServices' => $OSSSoldServices, 'Calendar' => $Calendar, 'Events' => $Events, 'OSSTimeControl' => $OSSTimeControl];
 
 		$setToCRMAfter = [];
 		foreach ($setToCRM as $nameModule => $module) {

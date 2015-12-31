@@ -244,7 +244,7 @@ jQuery.Class("Vtiger_Header_Js", {
 	},
 	getNearCalendarEvent: function (data, module) {
 		var thisInstance = this;
-		typeActive = data.find('ul li.active a').data('tab-name');
+		var typeActive = data.find('ul li.active a').data('tab-name');
 		var user = data.find('[name="assigned_user_id"]');
 		var dateStartEl = data.find('[name="date_start"]');
 		var dateStartVal = dateStartEl.val();
@@ -263,25 +263,26 @@ jQuery.Class("Vtiger_Header_Js", {
 			mode: 'getEvents',
 			start: validDateFromat,
 			end: dateEnd,
-			user: user.val()
+			user: user.val(),
+			time: 'current'
 		}
 		AppConnector.request(params).then(function (events) {
 			if (typeof events.result != 'undefined' && events.result.length > 0) {
 				events = events.result;
 				data.find('.modal-body').css({'max-height': '500px', 'overflow-y': 'auto'});
 				for (var ev in events) {
-					icon = 'glyphicon glyphicon-calendar';
-					linkHtml = '';
-					hidden = '';
-					helpIcon = ''
+					var icon = 'glyphicon glyphicon-calendar';
+					var linkHtml = '';
+					var hidden = '';
+					var helpIcon = ''
 					if (events[ev]['set'] == 'Task') {
 						icon = 'icon-tasks';
 					}
 					if (events[ev]['linkl']) {
 						linkHtml = '<div class="cut-string"><i class="calIcon modIcon_' + events[ev]['linkm'] + '"></i> ' + events[ev]['linkl'] + '</div>';
 					}
-					helpIcon = '<div><label> ' + app.vtranslate('JS_START_DATE') + ': &nbsp</label>' + events[ev]['start'] + ' </div>\n\
-								<div><label> ' + app.vtranslate('JS_END_DATE') + ': &nbsp</label>' + events[ev]['end'] + ' </div>\n\
+					helpIcon = '<div><label> ' + app.vtranslate('JS_START_DATE') + ': &nbsp</label>' + events[ev]['start_display'] + ' </div>\n\
+								<div><label> ' + app.vtranslate('JS_END_DATE') + ': &nbsp</label>' + events[ev]['end_display'] + ' </div>\n\
 								<div class=' + 'textOverflowEllipsis' + '><label> ' + app.vtranslate('JS_SUBJECT') + ': &nbsp</label>' + events[ev]['title'] + '</div>\n\
 								<div><label> ' + app.vtranslate('JS_STATE') + ': &nbsp</label>' + events[ev]['labels']['state'] + ' </div>\n\
 								<div><label> ' + app.vtranslate('JS_STATUS') + ': &nbsp</label>' + events[ev]['labels']['sta'] + ' </div>\n\
@@ -292,20 +293,26 @@ jQuery.Class("Vtiger_Header_Js", {
 					 hidden = 'hide';
 					 }*/
 					if (events[ev]['start'].indexOf(validDateFromat) > -1) {
-						data.find('#prev_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent" ><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['start'] + '</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span</div></a>' + linkHtml + '</td></tr>');
+						data.find('#prev_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent" ><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['hour_start'] + ' (' + events[ev]['hours'] + ')</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span</div></a>' + linkHtml + '</td></tr>');
 					} else if (events[ev]['start'].indexOf(currentDate) > -1) {
-						data.find('#cur_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent" ><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['start'] + '</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span></div></a>' + linkHtml + '</td></tr>');
+						data.find('#cur_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent" ><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['hour_start'] + ' (' + events[ev]['hours'] + ')</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span></div></a>' + linkHtml + '</td></tr>');
 					} else if (events[ev]['start'].indexOf(dateEndFirst) > -1) {
-						data.find('#next_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent"><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['start'] + '</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span</div></a>' + linkHtml + '</td></tr>');
+						data.find('#next_events .table').append('<tr class="mode_' + events[ev]['set'] + ' ' + hidden + ' addedNearCalendarEvent"><td><a target="_blank" href="' + events[ev]['url'] + '"><div class="cut-string"><i class="' + icon + '" style="vertical-align:middle; margin-bottom:4px;"></i><span><strong> ' + events[ev]['hour_start'] + ' (' + events[ev]['hours'] + ')</strong></span><span> ' + events[ev]['title'].substring(0, 22) + ' </span><span style="margin-left: 5px;margin-top: 2px;"  class="HelpInfoPopover " title="" data-placement="top" data-content="' + helpIcon + '"><i class="glyphicon glyphicon-info-sign"></i></span</div></a>' + linkHtml + '</td></tr>');
 					}
 				}
-				var quickCreateForm
+				var quickCreateForm;
 				thisInstance.registerHelpInfo(quickCreateForm);
-
 			} else {
 				data.find('.modal-body').css({'max-height': '', 'overflow-y': ''});
 			}
-		})
+		});
+
+		var dayBefore = app.getDateInVtigerFormat(dateStartFormat, new Date(validDateFromat));
+		var currentDay = app.getDateInVtigerFormat(dateStartFormat, new Date(currentDate));
+		var nextDay = app.getDateInVtigerFormat(dateStartFormat, new Date(dateEndFirst));
+		data.find('.taskPrev').html(dayBefore);
+		data.find('.taskCur').html(currentDay);
+		data.find('.taskNext').html(nextDay);
 	},
 	registerChangeNearCalendarEvent: function (data, module) {
 		var thisInstance = this;
@@ -492,6 +499,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		jQuery('.globalSearchValue').keypress(function (e) {
 			var currentTarget = jQuery(e.currentTarget)
 			if (e.which == 13) {
+				thisInstance.hideSearchMenu();
 				thisInstance.labelSearch(currentTarget);
 			}
 		});
@@ -528,6 +536,7 @@ jQuery.Class("Vtiger_Header_Js", {
 					var basicSearch = new Vtiger_BasicSearch_Js();
 					basicSearch.reduceNumberResults = app.getMainParams('gsAmountResponse');
 					basicSearch.returnHtml = false;
+					basicSearch.setMainContainer(jQuery(this).closest('.globalSearchInput'));
 					basicSearch.search(request.term).then(function (data) {
 						var data = jQuery.parseJSON(data);
 						var serverDataFormat = data.result;
@@ -547,7 +556,7 @@ jQuery.Class("Vtiger_Header_Js", {
 					}
 				},
 				close: function (event, ui) {
-					jQuery('.globalSearchValue').val('');
+					//jQuery('.globalSearchValue').val('');
 				}
 			});
 		}
@@ -561,6 +570,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		}
 		var basicSearch = new Vtiger_BasicSearch_Js();
 		var progress = jQuery.progressIndicator();
+		basicSearch.setMainContainer(currentTarget.closest('.globalSearchInput'));
 		basicSearch.search(val).then(function (data) {
 			basicSearch.showSearchResults(data);
 			progress.progressIndicator({
@@ -705,7 +715,7 @@ jQuery.Class("Vtiger_Header_Js", {
 			thisInstance.hideSearchMenu();
 			thisInstance.hideMobileMenu();
 			$('.actionMenu').toggleClass('actionMenuOn');
-			$('#quickCreateModules').click(function(){
+			$('.quickCreateModules').click(function(){
 				thisInstance.hideActionMenu();
 			});
 		});
@@ -755,10 +765,42 @@ jQuery.Class("Vtiger_Header_Js", {
 		var records = $('.customTableRWD').find('[data-toggle-visible=false]');
 		records.find('.footable-toggle').css("display", "none");
 	},
+	registerShowHideRightPanelEvent: function (container) {
+		container.find('.toggleSiteBarRightButton').click(function (e) {
+			var siteBarRight = $(this).closest('.siteBarRight');
+			var content = container.find('.rowContent');
+			var buttonImage = $(this).find('.glyphicon');
+			if (siteBarRight.hasClass('hideSiteBar')) {
+				siteBarRight.removeClass('hideSiteBar');
+				content.removeClass('col-md-12').addClass('col-md-9');
+				buttonImage.removeClass('glyphicon-chevron-left').addClass("glyphicon-chevron-right");
+			} else {
+				siteBarRight.addClass('hideSiteBar');
+				content.removeClass('col-md-9').addClass('col-md-12');
+				buttonImage.removeClass('glyphicon-chevron-right').addClass("glyphicon-chevron-left");
+			}
+		});
+	},
+	registerScrollForMenu: function() {
+		app.showScrollBar($(".slimScrollMenu"),
+		{
+			height : 'calc(100% - 24px)',
+			width : '100%',
+		});
+		app.showScrollBar($(".slimScrollSubMenu"),
+		{
+			height : 'calc(100% - 50px)',
+		});
+		$(".slimScrollSubMenu .slimScrollDiv").each(function(){
+			$(this).closest(' .slimScrollSubMenu').css('overflow','initial');
+		});
+	},
 	registerEvents: function () {
 		var thisInstance = this;
 		thisInstance.recentPageViews();
 		thisInstance.registerFooTable(); //Enable footable
+		thisInstance.registerScrollForMenu();
+		thisInstance.registerShowHideRightPanelEvent($('#centerPanel'));
 		jQuery('.globalSearch').click(function () {
 			var currentTarget = $(this);
 			thisInstance.hideSearchMenu();
@@ -788,7 +830,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		});
 
 		thisInstance.basicSearch();
-		jQuery('#quickCreateModules,#compactquickCreate,#topMenus').on("click", ".quickCreateModule", function (e, params) {
+		jQuery('.quickCreateModules,#compactquickCreate,#topMenus').on("click", ".quickCreateModule", function (e, params) {
 			var moduleName = jQuery(e.currentTarget).data('name');
 			thisInstance.quickCreateModule(moduleName);
 		});

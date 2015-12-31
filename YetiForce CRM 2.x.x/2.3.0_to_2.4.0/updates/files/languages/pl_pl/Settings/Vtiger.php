@@ -215,7 +215,6 @@ $languageStrings = [
 	'Search Setup' => 'Konfiguracja wyszukiwania',
 	'LBL_EXTENDED_MODULES' => 'Moduły rozszerzone',
 	/* modules */
-	'OSSCosts' => 'Koszty',
 	'CustomView' => 'Widoki',
 	'Widgets' => 'Widgety podsumowania rekordu',
 	'LBL_ADDING_ERROR' => 'Błąd przy dodawaniu pola',
@@ -280,7 +279,6 @@ $languageStrings = [
 	'LBL_MENU_BUILDER_DESCRIPTION' => 'Dostosuj menu określając, które moduły mają być dostępne na pasku głównym a które mają być niewidoczne',
 	'LBL_AUTHORIZATION' => 'Autoryzacja',
 	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
-	'LBL_OSSPDF_INFO' => 'Zarządzaj ustawieniami pdf',
 	'LBL_BACKUP_DESCRIPTION' => 'Tworzy kopie zapasową plików.',
 	'LBL_SCHEDULER_DESCRIPTION' => 'Zarządzaj harmonogramem',
 	'LBL_OSSMAIL_DESCRIPTION' => 'Zarządzaj klientem poczty',
@@ -305,6 +303,7 @@ $languageStrings = [
 	'Document Control' => 'Przepływ dokumentów',
 	'Time control' => 'Czas pracy',
 	'Credits' => 'O Współtwórcach',
+	'LBL_VIEW_CREDITS' => 'O Współtwórcach',
 	'LBL_PROCESSES' => 'Procesy',
 	'LBL_SALES_PROCESSES' => 'Procesy sprzedażowe',
 	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Zarządzaj procesami sprzedażowymi',
@@ -333,6 +332,20 @@ $languageStrings = [
 	'LBL_ENABLE_SHARING_RECORDS' => 'Włączenie dzielenia (udostępniania) rekordów',
 	'LBL_HREF_MAX_LEGTH' => 'Maksymalna długość dla tagu href',
 	//end config editor
+	// custom record numbering variables
+	'LBL_USE_POSTFIX' => 'Używaj postfiksu',
+	'LBL_USE_CUSTOME_VARIABLES' => 'Systemowe zmienne do budowania prefiksów',
+	'LBL_CUSTOME_VARIABLES' => 'Wybór zmiennej',
+	'LBL_COPY_CV' => 'Skopiuj zmienną',
+	'LBL_NO_PREFIX' => 'Brak prefiksu',
+	'LBL_NO_POSTFIX' => 'Brak postfiksu',
+	'LBL_CV_FULL_YEAR' => 'Pełny rok (np. 2015)',
+	'LBL_CV_FULL_MONTH' => 'Miesiąc (np. 01, 05, 12)',
+	'LBL_CV_FULL_DAY' => 'Dzień (np. 01, 05, 25)',
+	'LBL_CV_YEAR' => 'Rok (np. 15)',
+	'LBL_CV_MONTH' => 'Miesiąc (np. 1, 5, 12)',
+	'LBL_CV_DAY' => 'Dzień (np. 1, 5, 25)',
+	// end of custom record numbering variables
 ];
 
 $jsLanguageStrings = [

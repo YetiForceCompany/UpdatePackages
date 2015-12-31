@@ -19,13 +19,11 @@ $languageStrings = [
 	'LBL_CALENDAR_CONFIG' => 'Настройки Календаря',
 	'LBL_MODTRACKER_SETTINGS_DESCRIPTION' => 'Управление модулем История изменений',
 	'LBL_MODTRACKER_SETTINGS' => 'История изменений',
-	'OSSCosts' => 'Расходы',
 	'GlobalPermission' => 'Права доступа',
 	'Mail' => 'Настройка RoundCube',
 	'LBL_PBXMANAGER_DESCRIPTION' => 'Изменений и настройка Менеджера PBX',
 	'LBL_SCHEDULER_DESCRIPTION' => 'Изменение и управление Планировщиком',
 	'LBL_OSSMAIL_DESCRIPTION' => 'Почта пользователей',
-	'LBL_OSSPDF_INFO' => 'Создавайте и изменяйте Шаблоны PDF',
 	'PDF' => 'Шаблоны PDF',
 	'ApiAddress' => 'Поиск адресов',
 	'LBL_SAVE_COLOR' => 'Изменения успешно сохранены',
@@ -264,7 +262,7 @@ $languageStrings = [
 	'LBL_BRUTEFORCE' => 'Passwords - Brute force',
 	'LBL_BRUTEFORCE_DESCRIPTION' => 'Вы можете настроить максимальное количество неудачных попыток входа в систему и ограничения по времени для блокировки по IP адресу.',
 	'LBL_WIDGETS_DESCRIPTION' => 'Модуль управления Виджетами',
-	'LBL_CREDITS_DESCRIPTION' => 'Благодарности',
+	'LBL_CREDITS_DESCRIPTION' => ' ',
 	'LBL_CUSTOMVIEW_DESCRIPTION' => 'Модуль позволяет редактировать системные и пользовательские фильтры.',
 	'LBL_SEARCH_SETUP_DESCRIPTION' => 'Этот модуль позволяет настраивать механизм поиска для текстовых полей. Механизмы работают независимо друг от друга – во время поиска вы можете получить много данных, результаты которых, являются ссылками на записи.',
 	'LBL_GLOBALPERMISSION_DESCRIPTION' => 'Здесь вы можете установить, какие Профили будут иметь доступ ко всем записям, независимо от установленной Роли',
@@ -324,7 +322,8 @@ $languageStrings = [
 	'OSSPassword Configuration' => 'Passwords - Encryption',
 	'Document Control' => 'Менеджер документов',
 	'Time control' => 'Учет рабочего времени',
-	"Credits" => 'Contributors',
+	"Credits" => 'Благодарности',
+	"LBL_VIEW_CREDITS" => 'Благодарности',
 	'LBL_PROCESSES' => 'Процессы',
 	'LBL_SALES_PROCESSES' => 'Процессы продаж',
 	'LBL_SALES_PROCESSES_DESCRIPTION' => 'Настройка процессов продаж',
@@ -351,6 +350,20 @@ $languageStrings = [
 	'LBL_HREF_MAX_LEGTH' => 'Maximum length for href tag ',
 	//end config editor
 	'LBL_VIEW_SWITCHUSERS' => 'Switch users',
+	// custom record numbering variables
+	'LBL_USE_POSTFIX' => 'Use postfix',
+	'LBL_USE_CUSTOME_VARIABLES' => 'System variables for building prefixes',
+	'LBL_CUSTOME_VARIABLES' => 'Choose variable',
+	'LBL_COPY_CV' => 'Copy variable',
+	'LBL_NO_PREFIX' => 'No prefix',
+	'LBL_NO_POSTFIX' => 'No postfix',
+	'LBL_CV_FULL_YEAR' => 'Full year (ex. 2015)',
+	'LBL_CV_FULL_MONTH' => 'Month (ex. 01, 05, 12)',
+	'LBL_CV_FULL_DAY' => 'Day (ex. 01, 05, 25)',
+	'LBL_CV_YEAR' => 'Year (ex. 15)',
+	'LBL_CV_MONTH' => 'Month (exp. 1, 5, 12)',
+	'LBL_CV_DAY' => 'Day (ex. 1, 5, 25)',
+	// end of custom record numbering variables
 ];
 
 $jsLanguageStrings = [

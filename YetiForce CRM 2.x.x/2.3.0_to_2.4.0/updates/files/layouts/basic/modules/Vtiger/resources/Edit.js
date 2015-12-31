@@ -226,13 +226,9 @@ jQuery.Class("Vtiger_Edit_Js", {
 	 * @params - container <jQuery> - element in which auto complete fields needs to be searched
 	 */
 	registerClearTreeSelectionEvent: function (container) {
+		var thisInstance = this;
 		container.find('.clearTreeSelection').on('click', function (e) {
-			var element = jQuery(e.currentTarget);
-			var parentTdElement = element.closest('.fieldValue');
-			var fieldNameElement = parentTdElement.find('.sourceField');
-			var fieldName = fieldNameElement.attr('name');
-			fieldNameElement.val('');
-			parentTdElement.find('#' + fieldName + '_display').removeAttr('readonly').val('');
+			thisInstance.clearFieldValue(jQuery(e.currentTarget));
 			e.preventDefault();
 		})
 	},
@@ -355,10 +351,6 @@ jQuery.Class("Vtiger_Edit_Js", {
 			params.action = 'BasicAjax';
 		}
 
-		if (params.search_module == 'Products' || params.search_module == 'Services') {
-			params.potentialid = jQuery('[name="potentialid"]').val();
-		}
-
 		AppConnector.request(params).then(
 				function (data) {
 					aDeferred.resolve(data);
@@ -449,16 +441,20 @@ jQuery.Class("Vtiger_Edit_Js", {
 	 * @params - container <jQuery> - element in which auto complete fields needs to be searched
 	 */
 	registerClearReferenceSelectionEvent: function (container) {
+		var thisInstance = this;
 		container.on('click', '.clearReferenceSelection', function (e) {
 			var element = jQuery(e.currentTarget);
-			var parentTdElement = element.closest('.fieldValue');
-			var fieldNameElement = parentTdElement.find('.sourceField');
-			var fieldName = fieldNameElement.attr('name');
-			fieldNameElement.val('');
-			parentTdElement.find('[name="' + fieldName + '_display"]').removeAttr('readonly').val('');
-			element.trigger(Vtiger_Edit_Js.referenceDeSelectionEvent);
+			thisInstance.clearFieldValue(element);
+			element.closest('.fieldValue').find('.sourceField').trigger(Vtiger_Edit_Js.referenceDeSelectionEvent);
 			e.preventDefault();
 		})
+	},
+	clearFieldValue: function (element) {
+		var fieldValueContener = element.closest('.fieldValue');
+		var fieldNameElement = fieldValueContener.find('.sourceField');
+		var fieldName = fieldNameElement.attr('name');
+		fieldNameElement.val('');
+		fieldValueContener.find('#' + fieldName + '_display').removeAttr('readonly').val('');
 	},
 	/**
 	 * Function which will register event to prevent form submission on pressing on enter
@@ -744,12 +740,6 @@ jQuery.Class("Vtiger_Edit_Js", {
 		var BlockIds = this.addressFieldsMappingBlockID;
 
 		from = BlockIds[fromLabel];
-		if (app.getModuleName() == 'Quotes' || app.getModuleName() == 'Invoice') {
-			BlockIds = {
-				'LBL_ADDRESS_INFORMATION': 'a',
-				'LBL_ADDRESS_DELIVERY_INFORMATION': 'b'
-			};
-		}
 		if (reletedRecord === false || sourceModule === false)
 			from = BlockIds[fromLabel];
 		to = BlockIds[toLabel];
@@ -839,25 +829,6 @@ jQuery.Class("Vtiger_Edit_Js", {
 	registerMaskFields: function (container) {
 		var thisInstance = this;
 		container.find(":input").inputmask();
-	},
-	/**
-	 * Function which will register basic events which will be used in quick create as well
-	 *
-	 */
-	registerBasicEvents: function (container) {
-		this.treePopupRegisterEvent(container);
-		this.registerClearTreeSelectionEvent(container);
-		this.registerTreeAutoCompleteFields(container);
-		this.referenceModulePopupRegisterEvent(container);
-		this.registerAutoCompleteFields(container);
-		this.registerClearReferenceSelectionEvent(container);
-		this.registerPreventingEnterSubmitEvent(container);
-		this.registerTimeFields(container);
-		this.registerRecordAccessCheckEvent(container);
-		this.registerEventForPicklistDependencySetup(container);
-		this.registerRecordPreSaveEventEvent(container);
-		this.registerReferenceSelectionEvent(container);
-		this.registerMaskFields(container);
 	},
 	/**
 	 * Function to register event for image delete
@@ -1346,29 +1317,43 @@ jQuery.Class("Vtiger_Edit_Js", {
 		'road': 'addresslevel8',
 		'village': 'addresslevel5'
 	},
-	registerEvents: function () {
-		var editViewForm = this.getForm();
-		var statusToProceed = this.proceedRegisterEvents();
-		if (!statusToProceed) {
-			return;
+	setEnabledFields: function (element) {
+		var fieldValue = element.closest('.fieldValue');
+		var fieldName = fieldValue.find('input.sourceField').attr('name');
+		var fieldDisplay = fieldValue.find('#' + fieldName + '_display');
+		fieldValue.find('button').removeAttr('disabled');
+		if (fieldDisplay.val() == '') {
+			fieldValue.find('input').removeAttr('readonly');
 		}
-		this.registerHelpInfo();
-		this.registerBlockAnimationEvent();
-		this.registerBlockStatusCheckOnLoad();
-		this.registerEventForCkEditor();
-		this.stretchCKEditor();
-		this.registerBasicEvents(this.getForm());
-		this.registerEventForCopyAddress();
-		this.registerEventForImageDelete();
-		this.registerSubmitEvent();
-		this.registerLeavePageWithoutSubmit(editViewForm);
-
-		app.registerEventForDatePickerFields('#EditView');
-
+		fieldValue.find('.referenceModulesListGroup').removeClass('hide');
+		var placeholder = fieldDisplay.attr('placeholderDisabled');
+		fieldDisplay.removeAttr('placeholderDisabled');
+		fieldDisplay.attr('placeholder', placeholder);
+	},
+	setDisabledFields: function (element) {
+		var fieldValue = element.closest('.fieldValue');
+		var fieldName = fieldValue.find('input.sourceField').attr('name');
+		var fieldDisplay = fieldValue.find('#' + fieldName + '_display');
+		fieldValue.find('input').attr('readonly', 'readonly');
+		fieldValue.find('button').attr('disabled', 'disabled');
+		fieldValue.find('.referenceModulesListGroup').addClass('hide');
+		var placeholder = fieldDisplay.attr('placeholder');
+		fieldDisplay.removeAttr('placeholder');
+		fieldDisplay.attr('placeholderDisabled', placeholder);
+	},
+	getMappingRelatedField: function (sourceField, sourceFieldModule, container) {
+		var mappingRelatedField = container.find('input[name="mappingRelatedField"]').val();
+		var mappingRelatedModule = JSON.parse(mappingRelatedField);
+		if (typeof mappingRelatedModule[sourceField] != 'undefined' && typeof mappingRelatedModule[sourceField][sourceFieldModule] != 'undefined')
+			return mappingRelatedModule[sourceField][sourceFieldModule];
+		return [];
+	},
+	registerValidationsFields: function (container) {
+		var thisInstance = this;
 		var params = app.validationEngineOptionsForRecord;
 		params.onValidationComplete = function (element, valid) {
 			if (valid) {
-				var ckEditorSource = editViewForm.find('.ckEditorSource');
+				var ckEditorSource = container.find('.ckEditorSource');
 				if (ckEditorSource.length > 0) {
 					var ckEditorSourceId = ckEditorSource.attr('id');
 					var fieldInfo = ckEditorSource.data('fieldinfo');
@@ -1390,18 +1375,110 @@ jQuery.Class("Vtiger_Edit_Js", {
 			}
 			return valid
 		}
-		editViewForm.validationEngine(params);
+		container.validationEngine(params);
+	},
+	checkReferencesField: function (container) {
+		var thisInstance = this;
+		var activeProcess = true, activeSubProcess = true;
+		container.find('input[data-fieldtype="referenceLink"]').each(function (index, element) {
+			element = $(element);
+			var referenceLink = element.val();
+			if (referenceLink == '' || referenceLink == '0') {
+				activeProcess = false;
+			}
+		});
+		container.find('input[data-fieldtype="referenceProcess"]').each(function (index, element) {
+			element = $(element);
+			if (activeProcess) {
+				thisInstance.setEnabledFields(element);
+			} else {
+				thisInstance.clearFieldValue(element);
+				thisInstance.setDisabledFields(element);
+			}
+			var referenceLink = element.val();
+			if (referenceLink == '' || referenceLink == '0') {
+				activeSubProcess = false;
+			}
+		});
+		container.find('input[data-fieldtype="referenceSubProcess"]').each(function (index, element) {
+			element = $(element);
+			var processfieldElement = element.closest('.fieldValue');
+			var length = processfieldElement.find('.referenceModulesList option[disabled!="disabled"]').length;
+			if (activeSubProcess && length > 0) {
+				thisInstance.setEnabledFields(element);
+			} else {
+				thisInstance.clearFieldValue(element);
+				thisInstance.setDisabledFields(element);
+			}
+		});
+	},
+	checkReferenceModulesList: function (container) {
+		var thisInstance = this;
+		var processfieldElement = container.find('input[data-fieldtype="referenceProcess"]').closest('.fieldValue');
+		var referenceProcess = processfieldElement.find('input[name="popupReferenceModule"]').val();
+		var subProcessfieldElement = container.find('input[data-fieldtype="referenceSubProcess"]').closest('.fieldValue');
+		Vtiger_Helper_Js.hideOptions(subProcessfieldElement.find('.referenceModulesList'), 'parent', referenceProcess);
+		var subProcessValue = subProcessfieldElement.find('.referenceModulesList').val();
+		subProcessfieldElement.find('[name="popupReferenceModule"]').val(subProcessValue);
+	},
+	registerReferenceFields: function (container) {
+		var thisInstance = this;
+		thisInstance.checkReferencesField(container);
+		thisInstance.checkReferenceModulesList(container);
+		container.find('.sourceField').on(Vtiger_Edit_Js.referenceSelectionEvent, function (e, data) {
+			thisInstance.checkReferencesField(container);
+		});
+		container.find('.sourceField').on(Vtiger_Edit_Js.referenceDeSelectionEvent, function (e) {
+			thisInstance.checkReferencesField(container);
+		});
+		container.find('input[data-fieldtype="referenceProcess"]').closest('.fieldValue').find('.referenceModulesList').on('change', function () {
+			thisInstance.checkReferenceModulesList(container);
+		});
+	},
+	/**
+	 * Function which will register basic events which will be used in quick create as well
+	 *
+	 */
+	registerBasicEvents: function (container) {
+		this.treePopupRegisterEvent(container);
+		this.registerClearTreeSelectionEvent(container);
+		this.registerTreeAutoCompleteFields(container);
+		this.referenceModulePopupRegisterEvent(container);
+		this.registerAutoCompleteFields(container);
+		this.registerClearReferenceSelectionEvent(container);
+		this.registerPreventingEnterSubmitEvent(container);
+		this.registerTimeFields(container);
+		this.registerRecordAccessCheckEvent(container);
+		this.registerEventForPicklistDependencySetup(container);
+		this.registerRecordPreSaveEventEvent(container);
+		this.registerReferenceSelectionEvent(container);
+		this.registerMaskFields(container);
+		this.registerMaskFields(container);
+		this.registerReferenceFields(container);
+	},
+	registerEvents: function () {
+		var editViewForm = this.getForm();
+		var statusToProceed = this.proceedRegisterEvents();
+		if (!statusToProceed) {
+			return;
+		}
+		this.registerHelpInfo();
+		this.registerBlockAnimationEvent();
+		this.registerBlockStatusCheckOnLoad();
+		this.registerEventForCkEditor();
+		this.stretchCKEditor();
+		this.registerBasicEvents(editViewForm);
+		this.registerEventForCopyAddress();
+		this.registerEventForImageDelete();
+		this.registerSubmitEvent();
+		this.registerLeavePageWithoutSubmit(editViewForm);
+		this.registerValidationsFields(editViewForm);
+
+		app.registerEventForDatePickerFields('#EditView');
 
 		this.registerReferenceCreate(editViewForm);
 		this.registerApiAddress();
 		//this.triggerDisplayTypeEvent();
-	},
-	getMappingRelatedField: function (sourceField, sourceFieldModule, container) {
-		var mappingRelatedField = container.find('input[name="mappingRelatedField"]').val();
-		var mappingRelatedModule = JSON.parse(mappingRelatedField);
-		if (typeof mappingRelatedModule[sourceField] != 'undefined' && typeof mappingRelatedModule[sourceField][sourceFieldModule] != 'undefined')
-			return mappingRelatedModule[sourceField][sourceFieldModule];
-		return [];
 	}
 });
 

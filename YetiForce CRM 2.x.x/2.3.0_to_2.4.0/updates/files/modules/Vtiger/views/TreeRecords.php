@@ -1,34 +1,39 @@
 <?php
-/* +**********************************************************************************
- * The contents of this file are subject to the vtiger CRM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License
- * The Original Code is:  vtiger CRM Open Source
- * The Initial Developer of the Original Code is vtiger.
- * Portions created by vtiger are Copyright (C) vtiger.
- * All Rights Reserved.
- * Contributor(s): YetiForce.com
- * ********************************************************************************** */
 
+/**
+ * Basic TreeView View Class
+ * @package YetiForce.TreeView
+ * @license licenses/License.html
+ * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
 class Vtiger_TreeRecords_View extends Vtiger_Index_View
 {
 
-	function preProcess(Vtiger_Request $request, $display = true)
+	public function getBreadcrumbTitle(Vtiger_Request $request)
 	{
 		$moduleName = $request->getModule();
 		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
 		$treeViewModel = Vtiger_TreeView_Model::getInstance($moduleModel);
-		$this->pageTitle = vtranslate($treeViewModel->getName(), $moduleName);
+		$pageTitle = vtranslate($treeViewModel->getName(), $moduleName);
+		return $pageTitle;
+	}
 
+	public function preProcess(Vtiger_Request $request, $display = true)
+	{
 		parent::preProcess($request);
-		$viewer = $this->getViewer($request);
+		$moduleName = $request->getModule();
+		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
+		$treeViewModel = Vtiger_TreeView_Model::getInstance($moduleModel);
 
 		$treeList = $treeViewModel->getTreeList();
+		$viewer = $this->getViewer($request);
 		$viewer->assign('TREE_LIST', Zend_Json::encode($treeList));
 
 		$linkParams = array('MODULE' => $moduleName, 'ACTION' => $request->get('view'));
 		$listViewModel = Vtiger_ListView_Model::getInstance($moduleName);
 		$quickLinkModels = $listViewModel->getSideBarLinks($linkParams);
 		$viewer->assign('QUICK_LINKS', $quickLinkModels);
+		$viewer->assign('SELECTABLE_CATEGORY', 0);
 		$viewer->view('TreeRecordsPreProcess.tpl', $moduleName);
 	}
 
@@ -77,12 +82,13 @@ class Vtiger_TreeRecords_View extends Vtiger_Index_View
 	{
 		$parentScriptInstances = parent::getFooterScripts($request);
 		$scripts = [
-			'~libraries/jquery/jstree/jstree.min.js',
+			'~libraries/jquery/jstree/jstree.js',
+			'~libraries/jquery/jstree/jstree.category.js',
 			'~libraries/jquery/datatables/media/js/jquery.dataTables.min.js',
 			'~libraries/jquery/datatables/plugins/integration/bootstrap/3/dataTables.bootstrap.min.js',
 		];
 		$viewInstances = $this->checkAndConvertJsScripts($scripts);
-		$scriptInstances = array_merge($viewInstances, $parentScriptInstances);
+		$scriptInstances = array_merge($parentScriptInstances, $viewInstances);
 		return $scriptInstances;
 	}
 
@@ -95,7 +101,7 @@ class Vtiger_TreeRecords_View extends Vtiger_Index_View
 			'~libraries/jquery/datatables/plugins/integration/bootstrap/3/dataTables.bootstrap.css',
 		];
 		$modalInstances = $this->checkAndConvertCssStyles($cssFileNames);
-		$cssInstances = array_merge($modalInstances, $parentCssInstances);
+		$cssInstances = array_merge($parentCssInstances, $modalInstances);
 		return $cssInstances;
 	}
 }

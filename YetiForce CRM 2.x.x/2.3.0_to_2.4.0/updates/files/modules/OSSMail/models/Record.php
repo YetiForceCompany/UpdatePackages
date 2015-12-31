@@ -507,17 +507,6 @@ class OSSMail_Record_Model extends Vtiger_Record_Model
 	{
 		$OSSMailViewModel = Vtiger_Record_Model::getCleanInstance('OSSMailView');
 		$Array = $OSSMailViewModel->findCrmRecordsByMessage_id($params, $metod);
-		if (count($Array['Potentials'])) {
-			$crmid = $Array['Potentials']['record']['crmid'];
-			$module = $Array['Potentials']['record']['module'];
-			$PotentialsRecord_Model = Vtiger_Record_Model::getInstanceById($crmid, $module);
-			$related_to = $PotentialsRecord_Model->get('related_to');
-			$contact_id = $PotentialsRecord_Model->get('contact_id');
-			if ($related_to != 0 && $related_to != '')
-				$Array['Potentials']['Accounts'] = array('crmid' => $related_to, 'label' => Vtiger_Functions::getCRMRecordLabel($related_to));
-			if ($contact_id != 0 && $contact_id != '')
-				$Array['Potentials']['Contacts'] = array('crmid' => $contact_id, 'label' => Vtiger_Functions::getCRMRecordLabel($contact_id));
-		}
 		if (count($Array['Project'])) {
 			$crmid = $Array['Project']['record']['crmid'];
 			$module = $Array['Project']['record']['module'];
@@ -560,18 +549,31 @@ class OSSMail_Record_Model extends Vtiger_Record_Model
 	public static function addRelated($params)
 	{
 		$adb = PearDatabase::getInstance();
+		$currentUser = Users_Record_Model::getCurrentUserModel();
+		
 		$crmid = $params['crmid'];
 		$newModule = $params['newModule'];
 		$newCrmId = $params['newCrmId'];
 		$mailId = $params['mailId'];
 
 		if ($newModule == 'Products') {
-			$adb->pquery("INSERT INTO vtiger_seproductsrel SET crmid=?, productid=?, setype=?", [$crmid, $newCrmId, $params['mod']]);
+			$adb->insert('vtiger_seproductsrel', [
+				'crmid' => $crmid,
+				'productid' => $newCrmId,
+				'setype' => $params['mod'],
+				'rel_created_user' => $currentUser->getId(),
+				'rel_created_time' => date('Y-m-d H:i:s')
+			]);
 		} elseif ($newModule == 'Services') {
-			$adb->pquery("INSERT INTO vtiger_crmentityrel SET crmid=?, module=?, relcrmid=?, relmodule=?", [$crmid, $params['mod'], $newCrmId, $newModule]);
+			$adb->insert('vtiger_crmentityrel', [
+				'crmid' => $crmid,
+				'module' => $params['mod'],
+				'relcrmid' => $newCrmId,
+				'relmodule' => $newModule
+			]);
 		} else {
-			$adb->pquery("INSERT INTO vtiger_ossmailview_relation SET ossmailviewid=?, crmid=?;", [$mailId, $newCrmId]);
-			$adb->pquery("DELETE FROM vtiger_ossmailview_relation WHERE ossmailviewid = ? AND crmid = ?", [$mailId, $crmid]);
+			$adb->pquery('INSERT INTO vtiger_ossmailview_relation SET ossmailviewid=?, crmid=?;', [$mailId, $newCrmId]);
+			$adb->pquery('DELETE FROM vtiger_ossmailview_relation WHERE ossmailviewid = ? AND crmid = ?', [$mailId, $crmid]);
 		}
 		return vtranslate('Add relationship', 'OSSMail');
 	}
@@ -665,7 +667,7 @@ class OSSMail_Record_Model extends Vtiger_Record_Model
 
 	function GetSite_URL()
 	{
-		$site_URL = vglobal('site_URL');
+		$site_URL = AppConfig::main('site_URL');
 		if (substr($site_URL, -1) != '/') {
 			$site_URL = $site_URL . '/';
 		}

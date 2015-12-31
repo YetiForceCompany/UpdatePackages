@@ -3,25 +3,20 @@
 		<div class="widget_header">
 			<input type="hidden" name="relatedModule" value="{$WIDGET['data']['relatedmodule']}" />
 			<div class="row">
-				<div class="col-md-9">
+				<div class="col-xs-9">
 					<div class="widgetTitle textOverflowEllipsis"><h4 class="moduleColor_{$WIDGET['label']}">{vtranslate($WIDGET['label'],$MODULE_NAME)}</h4></div>
 				</div>
-				<div class="col-md-3">
+				<div class="col-xs-3">
 					<div class="pull-right">
 						{if $WIDGET['data']['action'] eq 1}
 							{assign var=VRM value=Vtiger_Record_Model::getInstanceById($RECORD->getId(), $MODULE_NAME)}
-							{assign var=ACCESSIBLE_GROUP_LIST value=$USER_MODEL->getAccessibleGroupForModule($MODULE_NAME)}
-							{assign var=POTENTIALS value=Settings_SalesProcesses_Module_Model::getConfig('potential')}
-							{if $MODULE_NAME eq 'Accounts' && $WIDGET['label'] eq 'Potentials' && $POTENTIALS.add_potential eq 'true' && array_key_exists($VRM->get('assigned_user_id'),$ACCESSIBLE_GROUP_LIST)}
-								{assign var=ADD_BUTTON value=1}
-							{/if}
 							{assign var=VRMM value=Vtiger_RelationListView_Model::getInstance($VRM, $WIDGET['data']['relatedmodule'])}
 							{assign var=RELATIONMODEL value=$VRMM->getRelationModel()}
 							{assign var=RELATION_FIELD value=$RELATIONMODEL->getRelationField()}
 							{assign var=AUTOCOMPLETE_FIELD value=$RELATIONMODEL->getAutoCompleteField($VRM)}
-							<button style="margin-left: 4px;" class="btn btn-sm pull-right btn-default createRecordFromFilter {if $ADD_BUTTON } hide {/if}" type="button" data-url="{$WIDGET['actionURL']}"
-									{if $RELATION_FIELD} data-prf="{$RELATION_FIELD->getName()}" {/if} {if $AUTOCOMPLETE_FIELD} data-acf='{Zend_Json::encode($AUTOCOMPLETE_FIELD)}'{/if}>
-								<span class="glyphicon glyphicon-plus" border="0" title="{vtranslate('LBL_ADD',$MODULE_NAME)}" alt="{vtranslate('LBL_ADD',$MODULE_NAME)}"></span>
+							<button style="margin-left: 4px;" class="btn btn-sm pull-right btn-default createRecordFromFilter" type="button" data-url="{$WIDGET['actionURL']}"
+									{if $RELATION_FIELD} data-prf="{$RELATION_FIELD->getName()}" {/if} {if $AUTOCOMPLETE_FIELD} data-acf='{Zend_Json::encode($AUTOCOMPLETE_FIELD)}'{/if} title="{vtranslate('LBL_ADD',$MODULE_NAME)}" alt="{vtranslate('LBL_ADD',$MODULE_NAME)}">
+								<span class="glyphicon glyphicon-plus"></span>
 							</button>
 						{/if}
 						{if $WIDGET['data']['actionSelect'] eq 1}
@@ -31,8 +26,8 @@
 								{assign var=RELATIONMODEL value=$VRMM->getRelationModel()}
 								{assign var=RESTRICTIONS_FIELD value=$RELATIONMODEL->getRestrictionsPopupField($VRM)}
 							{/if}
-							<button class="btn btn-sm btn-default pull-right selectRelation" type="button" data-modulename="{$RELATIONMODEL->getRelationModuleName()}" {if $RESTRICTIONS_FIELD}data-rf='{Zend_Json::encode($RESTRICTIONS_FIELD)}'{/if}>
-								<span class="glyphicon glyphicon-resize-small" border="0" title="{vtranslate('LBL_SELECT_OPTION',$MODULE_NAME)}" alt="{vtranslate('LBL_SELECT_OPTION',$MODULE_NAME)}"></span>
+							<button class="btn btn-sm btn-default pull-right selectRelation" type="button" data-modulename="{$RELATIONMODEL->getRelationModuleName()}" {if $RESTRICTIONS_FIELD}data-rf='{Zend_Json::encode($RESTRICTIONS_FIELD)}'{/if} title="{vtranslate('LBL_SELECT_OPTION',$MODULE_NAME)}" alt="{vtranslate('LBL_SELECT_OPTION',$MODULE_NAME)}">
+								<span class="glyphicon glyphicon-resize-small"></span>
 							</button>
 						{/if}
 					</div>

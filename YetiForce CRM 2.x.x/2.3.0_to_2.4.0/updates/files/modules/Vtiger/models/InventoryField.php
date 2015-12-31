@@ -283,7 +283,7 @@ class Vtiger_InventoryField_Model extends Vtiger_Base_Model
 			$modelFields = $moduleModel->getFields();
 			$relationField = false;
 			foreach ($modelFields as $fieldName => $fieldModel) {
-				if ($fieldModel->getFieldDataType() == Vtiger_Field_Model::REFERENCE_TYPE) {
+				if ($fieldModel->isReferenceField()) {
 					$referenceList = $fieldModel->getReferenceList();
 					if (in_array($mainModule, $referenceList)) {
 						$relationField = $fieldName;
@@ -431,12 +431,12 @@ class Vtiger_InventoryField_Model extends Vtiger_Base_Model
 	public function saveField($param)
 	{
 		$db = PearDatabase::getInstance();
-		$columns = ['label', 'invtype', 'defaultValue', 'sequence', 'block', 'displayType', 'params', 'colSSpan'];
+		$columns = ['label', 'invtype', 'defaultValue', 'sequence', 'block', 'displayType', 'params', 'colSpan'];
 		$set = [];
 		$params = [];
 		foreach ($columns AS $columnName) {
 			if (isset($param[$columnName])) {
-				$set[$param[$columnName]] = strtolower($columnName);
+				$set[strtolower($columnName)] = $param[$columnName];
 			}
 		}
 		$id = $param['id'];

@@ -179,7 +179,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 		$focus->id = $recordModel->getId();
 		$focus->save($moduleName);
 		$recordModel->setData($focus->column_fields)->setId($focus->id)->setEntity($focus);
-		if($recordModel->has('shownerid')){
+		if ($recordModel->has('shownerid')) {
 			Users_Privileges_Model::setSharedOwner($recordModel);
 		}
 		return $recordModel;
@@ -872,7 +872,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 					INNER JOIN vtiger_tab ON vtiger_tab.tabid = vtiger_field.tabid
 					WHERE (quickcreate=0 OR quickcreate=2) AND vtiger_tab.presence != 1';
 		if ($restrictList) {
-			$sql .= " AND vtiger_tab.name NOT IN ('ModComments','PriceBooks','Events','OSSPdf')";
+			$sql .= " AND vtiger_tab.name NOT IN ('ModComments','PriceBooks','Events')";
 		}
 		$params = array();
 		$result = $db->pquery($sql, $params);
@@ -1009,7 +1009,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 				'linkicon' => '',
 			];
 		}
-		
+
 		foreach ($quickLinks as $quickLink) {
 			$links['SIDEBARLINK'][] = Vtiger_Link_Model::getInstanceFromValues($quickLink);
 		}
@@ -1159,20 +1159,35 @@ class Vtiger_Module_Model extends Vtiger_Module
 		if (!$user) {
 			$user = $currentUser->getId();
 		}
+		$moduleName = 'Calendar';
 		$currentActivityLabels = Calendar_Module_Model::getComponentActivityStateLabel('current');
 		$nowInUserFormat = Vtiger_Datetime_UIType::getDisplayDateValue(date('Y-m-d H:i:s'));
 		$nowInDBFormat = Vtiger_Datetime_UIType::getDBDateTimeValue($nowInUserFormat);
 		list($currentDate, $currentTime) = explode(' ', $nowInDBFormat);
-		if (in_array($this->getName(), ['Accounts', 'Leads', 'Contacts', 'Vendors', 'OSSEmployees'])) {
-			$relationField = 'link';
+
+		$referenceLinkClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceLink', $moduleName);
+		$referenceLinkInstance = new $referenceLinkClass();
+		if (in_array($this->getName(), $referenceLinkInstance->getReferenceList())) {
+			$relationField = '`link`';
+		} else {
+			$referenceProcessClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceProcess', $moduleName);
+			$referenceProcessInstance = new $referenceProcessClass();
+			if (in_array($this->getName(), $referenceProcessInstance->getReferenceList())) {
+				$relationField = '`process`';
+			} else {
+				$referenceSubProcessClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceSubProcess', $moduleName);
+				$referenceSubProcessInstance = new $referenceSubProcessClass();
+				if (in_array($this->getName(), $referenceSubProcessInstance->getReferenceList())) {
+					$relationField = '`subprocess`';
+				} else {
+					throw new AppException('LBL_HANDLER_NOT_FOUND');
+				}
+			}
 		}
-		if (in_array($this->getName(), ['Campaigns', 'HelpDesk', 'Potentials', 'Project', 'ServiceContracts'])) {
-			$relationField = 'process';
-		}
-		$query = "SELECT vtiger_crmentity.crmid, crmentity2.crmid AS parent_id, vtiger_crmentity.description as description, vtiger_crmentity.smownerid, vtiger_crmentity.smcreatorid, vtiger_crmentity.setype, vtiger_activity.* FROM vtiger_activity
+		$query = 'SELECT vtiger_crmentity.crmid, crmentity2.crmid AS parent_id, vtiger_crmentity.description as description, vtiger_crmentity.smownerid, vtiger_crmentity.smcreatorid, vtiger_crmentity.setype, vtiger_activity.* FROM vtiger_activity
 					INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = vtiger_activity.activityid
-					INNER JOIN vtiger_crmentity AS crmentity2 ON vtiger_activity." . $relationField . " = crmentity2.crmid AND crmentity2.deleted = 0 AND crmentity2.setype = ?
-					LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid WHERE vtiger_crmentity.deleted=0";
+					INNER JOIN vtiger_crmentity AS crmentity2 ON vtiger_activity.' . $relationField . ' = crmentity2.crmid AND crmentity2.deleted = 0 AND crmentity2.setype = ?
+					LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid WHERE vtiger_crmentity.deleted=0';
 		$params = [$this->getName()];
 		if ($recordId) {
 			$query .= ' AND vtiger_activity.' . $relationField . ' = ?';
@@ -1201,7 +1216,6 @@ class Vtiger_Module_Model extends Vtiger_Module
 				array_push($params, $user);
 			}
 		}
-		$moduleName = 'Calendar';
 		$instance = CRMEntity::getInstance($moduleName);
 		$securityParameter = $instance->getUserAccessConditionsQuerySR($moduleName, $currentUser, $recordId);
 		if ($securityParameter != '')
@@ -1538,12 +1552,19 @@ class Vtiger_Module_Model extends Vtiger_Module
 		$focus = CRMEntity::getInstance($this->getName());
 		$focus->id = $recordId;
 
-		if ($functionName == 'get_many_to_many') {
-			$query = $this->getRelationQueryM2M($recordId, $relatedModule, $relationModel);
-		} else {
-			$result = $focus->$functionName($recordId, $this->getId(), $relatedModule->getId());
-			$query = $result['query'] . ' ' . $this->getSpecificRelationQuery($relatedModuleName);
+		switch ($functionName) {
+			case 'get_many_to_many':
+				$query = $this->getRelationQueryM2M($recordId, $relatedModule, $relationModel);
+				break;
+			case 'get_activities':
+				$query = $this->getRelationQueryForActivities($recordId, $relatedModule, $relationModel);
+				break;
+			default:
+				$result = $focus->$functionName($recordId, $this->getId(), $relatedModule->getId());
+				$query = $result['query'] . ' ' . $this->getSpecificRelationQuery($relatedModuleName);
+				break;
 		}
+
 
 		//modify query if any module has summary fields, those fields we are displayed in related list of that module
 		$relatedListFields = [];
@@ -1560,6 +1581,13 @@ class Vtiger_Module_Model extends Vtiger_Module
 			$currentUser = Users_Record_Model::getCurrentUserModel();
 			$queryGenerator = new QueryGenerator($relatedModuleName, $currentUser);
 			$queryGenerator->setFields($relatedListFields);
+			if ($relationModel->showCreatorDetail()) {
+				$queryGenerator->setCustomColumn('rel_created_user');
+				$queryGenerator->setCustomColumn('rel_created_time');
+			}
+			if ($relationModel->showComment()) {
+				$queryGenerator->setCustomColumn('rel_comment');
+			}
 			$selectColumnSql = $queryGenerator->getSelectClauseColumnSQL();
 			$query = str_replace('FROM', 'from', $query);
 			$newQuery = explode('from', $query);
@@ -1703,73 +1731,66 @@ class Vtiger_Module_Model extends Vtiger_Module
 		return true;
 	}
 
-	public function getMappingRelatedField($moduleName, $field = false)
-	{
-		$data = array();
-		// Selected field = ( target field => source field )
-		$data['RequirementCards']['potentialid'] = ['Potentials' => ['accountid' => ['related_to']]];
-		$data['SRequirementsCards']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['QuotesEnquires']['potentialid'] = ['Potentials' => ['accountid' => ['related_to']]];
-		$data['SCalculations']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['SQuotes']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['SQuotes']['accountid'] = ['Accounts' => ['company' => ['accountname']]];
-		$data['SSingleOrders']['accountid'] = ['Accounts' => ['company' => ['accountname']]];
-		$data['SRecurringOrders']['accountid'] = ['Accounts' => ['company' => ['accountname']]];
-		$data['SSingleOrders']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['SRecurringOrders']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['SQuoteEnquiries']['salesprocessid'] = ['SSalesProcesses' => ['accountid' => ['related_to']]];
-		$data['Calculations']['potentialid'] = ['Potentials' => ['relatedid' => ['related_to']]];
-		$data['Calculations']['requirementcardsid'] = ['RequirementCards' => ['potentialid' => ['potentialid'], 'quotesenquiresid' => ['quotesenquiresid'], 'relatedid' => ['accountid']]];
-		$data['Potentials']['contact_id'] = ['Contacts' => ['related_to' => ['parent_id']]];
-		$data['ProjectTask']['projectmilestoneid'] = ['ProjectMilestone' => ['projectid' => ['projectid']]];
-		$data['ProjectTask']['parentid'] = ['ProjectTask' => ['projectid' => ['projectid'], 'projectmilestoneid' => ['projectmilestoneid']]];
-		$data['Quotes']['potential_id'] = ['Potentials' => ['account_id' => ['related_to']]];
-		$data['Quotes']['contact_id'] = ['Contacts' => ['account_id' => ['parent_id']]];
-		$data['Quotes']['requirementcards_id'] = ['RequirementCards' => ['potential_id' => ['potentialid'], 'account_id' => ['accountid']]];
-		$data['SalesOrder']['potential_id'] = ['Potentials' => ['account_id' => ['related_to']]];
-		$data['SalesOrder']['quote_id'] = ['Quotes' => ['account_id' => ['account_id']]];
-		$data['SalesOrder']['contact_id'] = ['Contacts' => ['account_id' => ['parent_id']]];
-		$data['Invoice']['potentialid'] = ['Potentials' => ['account_id' => ['related_to']]];
-		$data['Invoice']['salesorder_id'] = ['SalesOrder' => ['account_id' => ['account_id']]];
-		$data['Invoice']['contact_id'] = ['Contacts' => ['account_id' => ['parent_id']]];
-		$data['Invoice']['salesorder_id'] = ['SalesOrder' => ['potentialid' => ['potential_id']]];
-		$data['HelpDesk']['projectid'] = ['Project' => ['parent_id' => ['linktoaccountscontacts']]];
-		$data['HelpDesk']['contact_id'] = ['Contacts' => ['parent_id' => ['parent_id']]];
-		$data['HelpDesk']['pssold_id'] = ['Assets' => ['product_id' => ['product', 'Products']], 'OSSSoldServices' => ['product_id' => ['serviceid', 'Services']]];
-		$data['OSSTimeControl']['projectid'] = ['Project' => ['accountid' => ['linktoaccountscontacts']]];
+	protected static $modulesHierarchy = [];
+	protected static $modulesByLevels = [];
+	protected static $modulesMapRelatedFields = [];
 
-		if (array_key_exists($moduleName, $data) && $field != false && array_key_exists($field, $data[$moduleName]))
-			return $data[$moduleName][$field];
-		if (array_key_exists($moduleName, $data))
-			return $data[$moduleName];
-		return array();
+	public static function initModulesHierarchy()
+	{
+		if (!empty(self::$modulesByLevels)) {
+			return true;
+		}
+		include('user_privileges/moduleHierarchy.php');
+		self::$modulesHierarchy = $modulesHierarchy;
+		self::$modulesMapRelatedFields = $modulesMapRelatedFields;
+		foreach (self::$modulesHierarchy as $module => &$details) {
+			self::$modulesByLevels[$details['level']][$module] = $details;
+		}
 	}
 
-	public function getSourceRelatedFieldToQuickCreate($moduleName, $sourceModule = false, $sourceRecord = false)
+	public static function getModulesByLevel($level = 0)
+	{
+		self::initModulesHierarchy();
+		return self::$modulesByLevels[$level];
+	}
+
+	public function getMappingRelatedField($moduleName, $field = false)
+	{
+		self::initModulesHierarchy();
+		if ($field != false && isset(self::$modulesMapRelatedFields[$moduleName][$field])) {
+			return self::$modulesMapRelatedFields[$moduleName][$field];
+		}
+		if (isset(self::$modulesMapRelatedFields[$moduleName])) {
+			return self::$modulesMapRelatedFields[$moduleName];
+		}
+		return [];
+	}
+
+	public function getValuesFromSource($moduleName, $sourceModule = false, $sourceRecord = false)
 	{
 		$data = [];
 		if ($sourceModule && $sourceRecord) {
-
 			$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
-			$sourceModuleModel = Vtiger_Module_Model::getInstance($sourceModule);
 			$recordModel = Vtiger_Record_Model::getInstanceById($sourceRecord, $sourceModule);
+			$sourceModuleModel = $recordModel->getModule();
 			$relationField = false;
 			$fieldMap = [];
+			
 			$modelFields = $moduleModel->getFields();
 			foreach ($modelFields as $fieldName => $fieldModel) {
-				if ($fieldModel->getFieldDataType() == Vtiger_Field_Model::REFERENCE_TYPE) {
+				if ($fieldModel->isReferenceField()) {
 					$referenceList = $fieldModel->getReferenceList();
 					foreach ($referenceList as $referenceModule) {
 						$fieldMap[$referenceModule] = $fieldName;
 					}
-					if (in_array($sourceModule, $referenceList) && !($sourceModule == 'Accounts' && in_array('Accounts', $referenceList))) {
+					if (in_array($sourceModule, $referenceList)) {
 						$relationField = $fieldName;
 					}
 				}
 			}
 			$sourceModelFields = $sourceModuleModel->getFields();
 			foreach ($sourceModelFields as $fieldName => $fieldModel) {
-				if ($fieldModel->getFieldDataType() == Vtiger_Field_Model::REFERENCE_TYPE) {
+				if ($fieldModel->isReferenceField()) {
 					$referenceList = $fieldModel->getReferenceList();
 					foreach ($referenceList as $referenceModule) {
 						if (isset($fieldMap[$referenceModule]) && $sourceModule != $referenceModule) {
@@ -1780,7 +1801,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 					}
 				}
 			}
-			if ($relationField) {
+			if ($relationField && $moduleName != $sourceModule) {
 				$data[$relationField] = $sourceRecord;
 			}
 		}
@@ -1798,6 +1819,44 @@ class Vtiger_Module_Model extends Vtiger_Module
 		$query .= ' LEFT JOIN vtiger_users ON vtiger_users.id = vtiger_crmentity.smownerid';
 		$query .= ' LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid';
 		$query .= ' WHERE vtiger_crmentity.deleted = 0 AND ' . $referenceInfo['table'] . '.' . $referenceInfo['rel'] . ' = ' . $recordId;
+		return $query;
+	}
+
+	public function getRelationQueryForActivities($recordId, $relatedModule, $relationModel)
+	{
+		$query = 'SELECT vtiger_crmentity.*,vtiger_activity.* FROM vtiger_activity '
+			. ' INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = vtiger_activity.activityid'
+			. ' WHERE vtiger_activity.deleted = 0';
+		$referenceLinkClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceLink', $relatedModule->getName());
+		$referenceLinkInstance = new $referenceLinkClass();
+		if (in_array($this->getName(), $referenceLinkInstance->getReferenceList())) {
+			$query .= ' AND vtiger_activity.`link` = ';
+		} else {
+			$referenceProcessClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceProcess', $relatedModule->getName());
+			$referenceProcessInstance = new $referenceProcessClass();
+			if (in_array($this->getName(), $referenceProcessInstance->getReferenceList())) {
+				$query .= ' AND vtiger_activity.`process` = ';
+			} else {
+				$referenceSubProcessClass = Vtiger_Loader::getComponentClassName('UIType', 'ReferenceSubProcess', $relatedModule->getName());
+				$referenceSubProcessInstance = new $referenceSubProcessClass();
+				if (in_array($this->getName(), $referenceSubProcessInstance->getReferenceList())) {
+					$query .= ' AND vtiger_activity.`subprocess` = ';
+				} else {
+					throw new AppException('LBL_HANDLER_NOT_FOUND');
+				}
+			}
+		}
+		$query .= $recordId;
+
+		$time = vtlib_purify($_REQUEST['time']);
+		if ($time == 'current') {
+			$stateActivityLabels = Calendar_Module_Model::getComponentActivityStateLabel('current');
+			$query .= " AND (vtiger_activity.activitytype NOT IN ('Emails') AND vtiger_activity.status IN ('" . implode("','", $stateActivityLabels) . "'))";
+		}
+		if ($time == 'history') {
+			$stateActivityLabels = Calendar_Module_Model::getComponentActivityStateLabel('history');
+			$query .= " AND (vtiger_activity.activitytype NOT IN ('Emails') AND vtiger_activity.status IN ('" . implode("','", $stateActivityLabels) . "'))";
+		}
 		return $query;
 	}
 }

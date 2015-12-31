@@ -30,6 +30,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$this->exposeMethod('getActivities');
 		$this->exposeMethod('showRelatedProductsServices');
 		$this->exposeMethod('showRelatedRecords');
+		$this->exposeMethod('showRelatedTree');
 	}
 
 	function checkPermission(Vtiger_Request $request)
@@ -44,12 +45,18 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		return true;
 	}
 
+	public function getBreadcrumbTitle(Vtiger_Request $request)
+	{
+		$moduleName = $request->getModule();
+		return vtranslate('LBL_VIEW_DETAIL', $moduleName);
+	}
+
 	function preProcess(Vtiger_Request $request, $display = true)
 	{
 		parent::preProcess($request, false);
 
-		$recordId = $request->get('record');
 		$moduleName = $request->getModule();
+		$recordId = $request->get('record');
 		if (!$this->record) {
 			$this->record = Vtiger_DetailView_Model::getInstance($moduleName, $recordId);
 		}
@@ -201,6 +208,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$headerScriptInstances = array_merge($headerScriptInstances, $jsScriptInstances);
 		return $headerScriptInstances;
 	}
+
 	public function getHeaderCss(Vtiger_Request $request)
 	{
 		$headerCssInstances = parent::getHeaderCss($request);
@@ -208,9 +216,10 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 			'~/libraries/timelineJS3/css/timeline.css'
 		];
 		$cssFileNames = $this->checkAndConvertCssStyles($cssFileNames);
-		$headerCssInstances = array_merge($cssFileNames,$headerCssInstances);
+		$headerCssInstances = array_merge($cssFileNames, $headerCssInstances);
 		return $headerCssInstances;
 	}
+
 	function showDetailViewByMode($request)
 	{
 		$requestMode = $request->get('requestMode');
@@ -446,6 +455,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$viewer->assign('TYPE_VIEW', "List");
 		return $viewer->view('CommentsList.tpl', $moduleName, 'true');
 	}
+
 	/**
 	 * Function send all the comments in thead
 	 * @param Vtiger_Request $request
@@ -459,13 +469,14 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$currentUserModel = Users_Record_Model::getCurrentUserModel();
 		$parentCommentModels = ModComments_Record_Model::getAllParentComments($parentRecordId);
 		$currentCommentModel = ModComments_Record_Model::getInstanceById($commentRecordId);
-		
+
 		$viewer = $this->getViewer($request);
 		$viewer->assign('CURRENTUSER', $currentUserModel);
 		$viewer->assign('PARENT_COMMENTS', $parentCommentModels);
 		$viewer->assign('CURRENT_COMMENT', $currentCommentModel);
 		return $viewer->view('ShowThreadComments.tpl', $moduleName, 'true');
 	}
+
 	/**
 	 * Function sends all the comments for a parent(Accounts, Contacts etc)
 	 * @param Vtiger_Request $request
@@ -618,7 +629,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$relatedModuleModel = $relationModel->getRelationModuleModel();
 		$relationField = $relationModel->getRelationField();
 		$noOfEntries = count($models);
-	
+
 		if ($relationModel->isFavorites() && Users_Privileges_Model::isPermitted($moduleName, 'FavoriteRecords')) {
 			$favorites = $relationListView->getFavoriteRecords();
 			$favorites = array_intersect_key($models, $favorites);
@@ -662,7 +673,34 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$viewer->assign('COLUMN_NAME', $orderBy);
 		$viewer->assign('IS_EDITABLE', $relationModel->isEditable());
 		$viewer->assign('IS_DELETABLE', $relationModel->isDeletable());
+		$viewer->assign('SHOW_CREATOR_DETAIL', $relationModel->showCreatorDetail());
+		$viewer->assign('SHOW_COMMENT', $relationModel->showComment());
 		return $viewer->view('SummaryWidgets.tpl', $moduleName, 'true');
+	}
+
+	function showRelatedTree(Vtiger_Request $request)
+	{
+		$moduleName = $request->getModule();
+		$parentId = $request->get('record');
+		$relatedModuleName = $request->get('relatedModule');
+
+		$parentRecordModel = Vtiger_Record_Model::getInstanceById($parentId, $moduleName);
+		$relationListView = Vtiger_RelationListView_Model::getInstance($parentRecordModel, $relatedModuleName);
+		$relationModel = $relationListView->getRelationModel();
+		
+		$header = $relationListView->getTreeHeaders();
+		$entries = $relationListView->getTreeEntries();
+
+		$viewer = $this->getViewer($request);
+		$viewer->assign('MODULE', $moduleName);
+		$viewer->assign('RECORDID', $parentId);
+		$viewer->assign('RELATED_MODULE_NAME', $relatedModuleName);
+		$viewer->assign('RELATED_RECORDS', $entries);
+		$viewer->assign('RELATED_HEADERS', $header);
+		$viewer->assign('SHOW_CREATOR_DETAIL', $relationModel->showCreatorDetail());
+		$viewer->assign('SHOW_COMMENT', $relationModel->showComment());
+		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
+		return $viewer->view('RelatedTreeContent.tpl', $moduleName, 'true');
 	}
 
 	function showRelatedProductsServices(Vtiger_Request $request)

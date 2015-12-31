@@ -10,7 +10,6 @@
 ********************************************************************************/
 -->*}
 {strip}
-	<input type="hidden" id="view" value="{$VIEW}" />
 	<input type="hidden" id="pageStartRange" value="{$PAGING_MODEL->getRecordStartRange()}" />
 	<input type="hidden" id="pageEndRange" value="{$PAGING_MODEL->getRecordEndRange()}" />
 	<input type="hidden" id="previousPageExist" value="{$PAGING_MODEL->isPrevPageExists()}" />
@@ -25,23 +24,7 @@
 	<input type='hidden' value="{$PAGING_MODEL->getPageLimit()}" id='pageLimit'>
 	<input type="hidden" value="{$LISTVIEW_ENTRIES_COUNT}" id="noOfEntries">
 
-	{assign var = ALPHABETS_LABEL value = vtranslate('LBL_ALPHABETS', 'Vtiger')}
-	{assign var = ALPHABETS value = ','|explode:$ALPHABETS_LABEL}
-
-	<div class="alphabetSorting noprint pull-left col-xs-12 paddingLRZero">
-		<div class="alphabetContents">
-			{foreach item=ALPHABET from=$ALPHABETS}
-				<div class="alphabetSearch cursorPointer">
-					<a class="btn {if $ALPHABET_VALUE eq $ALPHABET}btn-primary{else}btn-default{/if}" id="{$ALPHABET}" href="#">{$ALPHABET}</a>
-				</div>
-			{/foreach}
-			<div class="alphabetSearch cursorPointer">
-				<a class="btn btn-default " href="index.php?view=List&module={$MODULE}" >
-					<span class="glyphicon glyphicon-remove"></span>
-				</a>
-			</div>
-		</div>
-	</div>
+	{include file=vtemplate_path('ListViewAlphabet.tpl',$MODULE_NAME)}
 	<div class="clearfix"></div>
 	<div id="selectAllMsgDiv" class="alert-block msgDiv noprint">
 		<strong><a id="selectAllMsg">{vtranslate('LBL_SELECT_ALL',$MODULE)}&nbsp;{vtranslate($MODULE ,$MODULE)}&nbsp;(<span id="totalRecordsCount"></span>)</a></strong>
@@ -70,7 +53,7 @@
 							<input type="checkbox" id="listViewEntriesMainCheckBox" title="{vtranslate('LBL_SELECT_ALL')}" />
 						</th>
 						{foreach item=LISTVIEW_HEADER from=$LISTVIEW_HEADERS}
-							<th nowrap {if $LISTVIEW_HEADER@last} colspan="2" {/if}>
+							<th {if $LISTVIEW_HEADER@last} colspan="2" {/if} class="noWrap">
 								<a href="javascript:void(0);" class="listViewHeaderValues pull-left" data-nextsortorderval="{if $COLUMN_NAME eq $LISTVIEW_HEADER->get('column')}{$NEXT_SORT_ORDER}{else}ASC{/if}" data-columnname="{$LISTVIEW_HEADER->get('column')}">{vtranslate($LISTVIEW_HEADER->get('label'), $MODULE)}
 									&nbsp;&nbsp;{if $COLUMN_NAME eq $LISTVIEW_HEADER->get('column')}<span class="{$SORT_IMAGE}"></span>{/if}</a>
 									{if $LISTVIEW_HEADER->getFieldDataType() eq 'tree'}
@@ -123,7 +106,7 @@
 					</td>
 					{foreach item=LISTVIEW_HEADER from=$LISTVIEW_HEADERS}
 						{assign var=LISTVIEW_HEADERNAME value=$LISTVIEW_HEADER->get('name')}
-						<td class="listViewEntryValue {$WIDTHTYPE}" data-field-type="{$LISTVIEW_HEADER->getFieldDataType()}" nowrap>
+						<td class="listViewEntryValue noWrap {$WIDTHTYPE}" data-field-type="{$LISTVIEW_HEADER->getFieldDataType()}">
 							{if ($LISTVIEW_HEADER->isNameField() eq true or $LISTVIEW_HEADER->get('uitype') eq '4') and $MODULE_MODEL->isListViewNameFieldNavigationEnabled() eq true }
 								<a {if $LISTVIEW_HEADER->isNameField() eq true}class="moduleColor_{$MODULE}"{/if} href="{$LISTVIEW_ENTRY->getDetailViewUrl()}">
 									{if $LISTVIEW_HEADER->getFieldDataType() eq 'sharedOwner' || $LISTVIEW_HEADER->getFieldDataType() eq 'boolean' || $LISTVIEW_HEADER->getFieldDataType() eq 'tree'}
@@ -142,7 +125,7 @@
 								{/if}
 						</td>
 						{if $LISTVIEW_HEADER@last}
-							<td nowrap class="{$WIDTHTYPE}">
+							<td class="{$WIDTHTYPE} noWrap">
 								{include file=vtemplate_path('ListViewRecordActions.tpl',$MODULE_NAME)}
 							</td>
 						{/if}

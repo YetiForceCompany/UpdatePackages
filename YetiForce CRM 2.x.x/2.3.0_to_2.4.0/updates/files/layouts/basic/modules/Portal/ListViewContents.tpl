@@ -23,25 +23,6 @@
         <input type="hidden" id="nextPageExist" value="{$PAGING_INFO['nextPageExists']}" />
         <input type="hidden" id="pageLimit" value="{$PAGING_INFO['pageLimit']}" />
         <input type="hidden" id="noOfEntries" value="{$PAGING_INFO['recordCount']}" />
-        {assign var = ALPHABETS_LABEL value = vtranslate('LBL_ALPHABETS', 'Vtiger')}
-        {assign var = ALPHABETS value = ','|explode:$ALPHABETS_LABEL}
-
-        <div class="alphabetSorting noprint">
-            <table width="100%" class="table-bordered" style="border: 1px solid #ddd;table-layout: fixed">
-                <tbody>
-                    <tr>
-                    {foreach item=ALPHABET from=$ALPHABETS}
-                        <td class="portalAlphabetSearch textAlignCenter cursorPointer {if $ALPHABET_VALUE eq $ALPHABET} highlightBackgroundColor {/if}" style="padding : 0px !important"><a id="{$ALPHABET}" href="#">{$ALPHABET}</a></td>
-                    {/foreach}
-					<td class="alphabetSearch textAlignCenter cursorPointer">
-						<a href="index.php?view=List&module={$MODULE}" >
-							<span class="glyphicon glyphicon-remove"></span>
-						</a>
-					</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
         <div id="selectAllMsgDiv" class="alert-block msgDiv noprint">
             <strong><a id="selectAllMsg">{vtranslate('LBL_SELECT_ALL',$MODULE)}&nbsp;{vtranslate($MODULE ,$MODULE)}&nbsp;(<span id="totalRecordsCount"></span>)</a></strong>
         </div>
