@@ -14,6 +14,7 @@ require_once 'modules/com_vtiger_workflow/VTEntityMethodManager.inc';
 require_once('include/events/include.inc');
 include_once('vtlib/Vtiger/Module.php');
 include_once('cache/updates/RemoveModule.php');
+include_once('cache/updates/Migration.php');
 
 class YetiForceUpdate
 {
@@ -212,15 +213,19 @@ class YetiForceUpdate
 
 		$this->updateMenu();
 		$this->roundcubeConfig();
+		$this->databaseNextChange();
+		$this->dataAccess($this->accessData(0), true);
+		$this->dataAccess($this->accessData(1), true);
+		$this->linkProccess();
+
+		$migration = new Migration();
+		$migration->init();
+		
 		if ((int) $this->modulenode->remove_modules == 1) {
 			$this->removeModules();
 		} else {
 			$this->reconfiguration();
 		}
-		$this->databaseNextChange();
-		$this->dataAccess($this->accessData(0), true);
-		$this->dataAccess($this->accessData(1), true);
-		$this->linkProccess();
 		$this->remove('OSSTimeControl', $this->removeFiedsData('OSSTimeControl'), 'deleteOtherFields');
 	}
 
@@ -428,7 +433,7 @@ class YetiForceUpdate
 	{
 		$modules = [
 			'OSSTimeControl' => [
-				'removeFields' => ['vtiger_osstimecontrol' => ['accountid', 'ticketid', 'projectid', 'projecttaskid', 'servicecontractsid', 'assetsid', 'leadid']]
+				'removeFields' => ['vtiger_osstimecontrol' => ['accountid', 'ticketid', 'projectid', 'projecttaskid', 'servicecontractsid', 'assetsid', 'leadid', 'quoteid', 'salesorderid', 'potentialid', 'calculationsid', 'quotesenquiresid', 'requirementcardsid']]
 			]
 		];
 		return $modules[$index];
