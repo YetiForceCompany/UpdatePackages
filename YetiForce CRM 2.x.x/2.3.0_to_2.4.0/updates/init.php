@@ -169,6 +169,20 @@ class YetiForceUpdate
 		'layouts/basic/modules/Reservations/UsersList.tpl',
 		'modules/OSSTimeControl/views/UsersList.php',
 		'modules/Reservations/views/UsersList.php',
+		'layouts/basic/modules/Reservations/uitypes/DateTime.tpl',
+		'layouts/basic/modules/OSSTimeControl/uitypes/DateTime.tpl',
+		'modules/OSSMail/roundcube/plugins/yetiforce/yetiforce.min.js',
+		'modules/OSSMail/RoundCube.js',
+		'modules/OSSMail/actions/GetPermissions.php',
+		'modules/OSSMail/actions/getCrmId.php',
+		'modules/OSSMail/actions/getConfig.php',
+		'modules/OSSMail/actions/findCrmDetail.php',
+		'layouts/basic/modules/OSSMail/resources/Global.min.js',
+		'layouts/basic/modules/OSSMail/resources/Global.js',
+		'layouts/basic/modules/OSSMail/inframe.css',
+		'modules/Emails/actions/TrackAccess.php',
+		'modules/Services/models/DetailView.php',
+		'modules/OSSMail/roundcube/plugins/yetiforce/yetiforce.js',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -220,7 +234,7 @@ class YetiForceUpdate
 
 		$migration = new Migration();
 		$migration->init();
-		
+
 		if ((int) $this->modulenode->remove_modules == 1) {
 			$this->removeModules();
 		} else {
@@ -474,9 +488,9 @@ class YetiForceUpdate
 			$result = $adb->pquery('SELECT presence FROM vtiger_tab WHERE `name` = ?', [$moduleName]);
 			if ($adb->getRowCount($result) && !($presence = $adb->getSingleValue($result))) {
 				vtlib_toggleModuleAccess($moduleName, false);
-				$this->deleteIcons($moduleName);
-				$this->deleteLanguagesForModule($moduleName);
-				$this->deleteDir($moduleName);
+				//$this->deleteIcons($moduleName);
+				//$this->deleteLanguagesForModule($moduleName);
+				//$this->deleteDir($moduleName);
 			}
 		}
 	}
@@ -672,11 +686,6 @@ class YetiForceUpdate
 			getTabid('Leads'), getTabid('Products'),
 			getTabid('SSalesProcesses'), getTabid('Products')]);
 
-		$result = $adb->query("SHOW COLUMNS FROM `vtiger_convertleadmapping` LIKE 'potentialfid';");
-		if ($result->rowCount() == 1) {
-			$adb->query("ALTER TABLE `vtiger_convertleadmapping` DROP COLUMN `potentialfid` ; ");
-		}
-
 		$result = $adb->query("SHOW COLUMNS FROM `vtiger_modentity_num` LIKE 'postfix';");
 		if ($result->rowCount() == 0) {
 			$adb->query("ALTER TABLE `vtiger_modentity_num` ADD COLUMN `postfix` varchar(50) NOT NULL after `prefix` ;");
@@ -702,6 +711,74 @@ class YetiForceUpdate
 		if ($result->rowCount()) {
 			$adb->query("ALTER TABLE `vtiger_osstimecontrol` DROP KEY `osstimecontrol_status_5`,DROP KEY `osstimecontrol_status_4`,DROP KEY `osstimecontrol_status_3`,DROP KEY `osstimecontrol_status_2`,DROP KEY `osstimecontrol_status`;");
 		}
+
+		$adb->pquery("UPDATE vtiger_field SET `fieldlabel` = ? WHERE columnname = ? AND tablename IN (?,?,?,?) AND `fieldlabel` = ?;", ['FL_TOTAL_TIME_H', 'sum_time', 'vtiger_account', 'vtiger_assets', 'vtiger_projecttask', 'vtiger_troubletickets', 'Total time [h]']);
+
+		$moduleInstance = Vtiger_Module::getInstance('OSSTimeControl');
+		$targetModule = Vtiger_Module::getInstance('Vendors');
+		$targetModule->setRelatedList($moduleInstance, 'OSSTimeControl', ['ADD'], 'get_dependents_list');
+		$moduleInstance = Vtiger_Module::getInstance('OSSTimeControl');
+		$targetModule = Vtiger_Module::getInstance('Partners');
+		$targetModule->setRelatedList($moduleInstance, 'OSSTimeControl', ['ADD'], 'get_dependents_list');
+		$moduleInstance = Vtiger_Module::getInstance('OSSTimeControl');
+		$targetModule = Vtiger_Module::getInstance('Competition');
+		$targetModule->setRelatedList($moduleInstance, 'OSSTimeControl', ['ADD'], 'get_dependents_list');
+
+		$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
+		if ($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
+			include_once 'modules/ModComments/ModComments.php';
+			if (class_exists('ModComments'))
+				ModComments::addWidgetTo(array('Vendors'));
+		}
+
+		ModTracker::enableTrackingForModule(Vtiger_Functions::getModuleId('Vendors'));
+		$result = $adb->pquery("SELECT 1 FROM vtiger_widgets WHERE tabid = ?;", [getTabid('Vendors')]);
+		if (!$adb->getRowCount($result)) {
+			$this->addWidget('Vendors');
+		}
+
+		$moduleInstance = Vtiger_Module::getInstance('Contacts');
+		$targetModule = Vtiger_Module::getInstance('Partners');
+		$targetModule->setRelatedList($moduleInstance, 'Contacts', ['ADD'], 'get_dependents_list');
+		$targetModule = Vtiger_Module::getInstance('Competition');
+		$targetModule->setRelatedList($moduleInstance, 'Contacts', ['ADD'], 'get_dependents_list');
+		$targetModule = Vtiger_Module::getInstance('SSalesProcesses');
+		$targetModule->setRelatedList($moduleInstance, 'Contacts', ['ADD,SELECT'], 'get_related_list');
+
+		$result1 = $adb->pquery("SELECT fieldid FROM `vtiger_field` WHERE columnname = ? AND tablename = ?", ['parentid', 'vtiger_contactdetails']);
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Partners']);
+		if ($adb->getRowCount($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'Contacts','Partners');");
+		}
+		$result2 = $adb->pquery("SELECT * FROM `vtiger_fieldmodulerel` WHERE fieldid = ? AND relmodule = ?", [$adb->query_result($result1, 0, 'fieldid'), 'Competition']);
+		if ($adb->getRowCount($result2) == 0) {
+			$adb->query("insert  into `vtiger_fieldmodulerel`(`fieldid`,`module`,`relmodule`) values (" . $adb->query_result($result1, 0, 'fieldid') . ",'Contacts','Competition');");
+		}
+		$widgets = [];
+		$widgets['SSalesProcesses'] = [['100', 'SSalesProcesses', 'RelatedModule', 'Contacts', '1', '5', NULL, '{"limit":"5","relatedmodule":"' . getTabid('Contacts') . '","columns":"1","action":"1","actionSelect":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']];
+		$widgets['Partners'] = [['101', 'Partners', 'RelatedModule', 'Contacts', '1', '5', NULL, '{"limit":"5","relatedmodule":"' . getTabid('Contacts') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']];
+		$widgets['Competition'] = [['101', 'Competition', 'RelatedModule', 'Contacts', '1', '5', NULL, '{"limit":"5","relatedmodule":"' . getTabid('Contacts') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']];
+		foreach ($widgets as $widgetMod) {
+			foreach ($widgetMod as $widget) {
+				$result = $adb->pquery("SELECT 1 FROM vtiger_widgets WHERE tabid = ? AND `type` = ? AND `label` = ?;", [getTabid($widget[1]), $widget[2], $widget[3]]);
+				if (!$adb->getRowCount($result)) {
+					$sql = "INSERT INTO vtiger_widgets (tabid, type, label, wcol, sequence, nomargin, data) VALUES (?, ?, ?, ?, ?, ?, ?);";
+					$adb->pquery($sql, [ getTabid($widget[1]), $widget[2], $widget[3], $widget[4], $widget[5], $widget[6], $widget[7]]);
+				}
+			}
+		}
+		$fields = ['osstimecontrol_no', 'osssoldservices_no', 'ossemployees_no', 'ideas_no', 'holidaysentitlement_no', 'neworders_no', 'squoteenquiries_no', 'ssalesprocesses_no', 'srequirementscards_no', 'scalculations_no', 'squotes_no', 'ssingleorders_no', 'srecurringorders_no', 'partners_no', 'competition_no'];
+		$adb->pquery('UPDATE vtiger_field SET `displaytype` = 2 WHERE fieldname IN (' . $adb->generateQuestionMarks($fields) . ') AND `displaytype` = 3', $fields);
+		$adb->pquery('UPDATE vtiger_field SET `displaytype` = 1 WHERE fieldname = ? AND `displaytype` = 3', ['reservations_no']);
+		$adb->delete('vtiger_cvcolumnlist', '`columnname` IN (?,?) ', ['vtiger_osstimecontrol:osstimecontrol_no:osstimecontrol_no:OSSTimeControl_No.:V', 'vtiger_ideas:ideas_no:ideas_no:Ideas_LBL_NO:V']);
+		$adb->query('DROP TABLE IF EXISTS vtiger_email_access');
+		$adb->query('DROP TABLE IF EXISTS vtiger_email_track');
+		$columns = ['vtiger_outsourcedproducts:potential:potential:OutsourcedProducts_Potentials:V',
+			'vtiger_assets:potential:potential:Assets_Potential:V',
+'vtiger_assets:potential renewal:Potential renewal:Assets_Potential_renewal:V',
+'vtiger_ossoutsourcedservices:potential:potential:OSSOutsourcedServices_Potentials:V',
+'vtiger_osssoldservices:potential:potential:OSSSoldServices_Potential:V'];
+		$adb->delete('vtiger_cvcolumnlist', '`columnname` IN (' . $adb->generateQuestionMarks($columns) . ') ', $columns);
 	}
 
 	function addTree()
@@ -862,8 +939,21 @@ class YetiForceUpdate
 				$log->fatal("ERROR YetiForceUpdate::addModules(" . $e->getMessage() . ") method ...");
 			}
 		}
+		$this->addTimeFieldsToScheme();
 		$adb->update('vtiger_tab', ['customized' => 0], '`name` IN (' . $adb->generateQuestionMarks($modules) . ')', $modules);
 		$log->debug("Exiting YetiForceUpdate::addModules() method ...");
+	}
+
+	public function addTimeFieldsToScheme()
+	{
+		$adb = PearDatabase::getInstance();
+		$tables = ['u_yf_competition', 'u_yf_partners', 'u_yf_scalculations', 'u_yf_squoteenquiries', 'u_yf_squotes', 'u_yf_srecurringorders', 'u_yf_srequirementscards', 'u_yf_ssalesprocesses', 'u_yf_ssingleorders', 'vtiger_campaign', 'vtiger_contactdetails', 'vtiger_leaddetails', 'vtiger_ossemployees', 'vtiger_projectmilestone', 'vtiger_vendor'];
+		foreach ($tables as $table) {
+			$result = $adb->query("SHOW COLUMNS FROM `$table` LIKE 'sum_time';");
+			if (!$result->rowCount()) {
+				$adb->query("ALTER TABLE `$table` ADD COLUMN `sum_time` decimal(10,2) NULL DEFAULT 0.00;");
+			}
+		}
 	}
 
 	public function addInventoryData($module)
@@ -950,6 +1040,10 @@ class YetiForceUpdate
 			['76', 'Competition', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
 			['77', 'Competition', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
 			['78', 'Competition', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'Competition', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
+		$widgets['Vendors'] = [['75', 'Vendors', 'Summary', NULL, '1', '0', NULL, '[]'],
+			['76', 'Vendors', 'Updates', 'LBL_UPDATES', '1', '1', NULL, '[]'],
+			['77', 'Vendors', 'Comments', 'ModComments', '2', '2', NULL, '{"relatedmodule":"ModComments","limit":"5"}'],
+			['78', 'Vendors', 'RelatedModule', 'Documents', '2', '3', NULL, '{"limit":"","relatedmodule":"' . getTabid('Documents') . '","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}'], ['79', 'Vendors', 'EmailList', 'Emails', '2', '4', NULL, '{"relatedmodule":"Emails","limit":"5"}']];
 
 		if ($widgets[$module]) {
 			foreach ($widgets[$module] as $widget) {
@@ -1382,15 +1476,7 @@ class YetiForceUpdate
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 
 		$adb = PearDatabase::getInstance();
-		$result = $adb->pquery('SELECT 1 FROM yetiforce_proc_sales WHERE `type` = ?', ['squoteenquiries']);
-		if ($result->rowCount() == 0) {
-			$adb->update('yetiforce_proc_sales', ['type' => 'scalculations', 'param' => 'statuses_close'], 'type = ?', ['calculation']);
-			$adb->insert('yetiforce_proc_sales', ['type' => 'squoteenquiries', 'param' => 'statuses_close', 'value' => '']);
-			$adb->insert('yetiforce_proc_sales', ['type' => 'ssalesorder', 'param' => 'statuses_close', 'value' => '']);
-			$adb->insert('yetiforce_proc_sales', ['type' => 'squotes', 'param' => 'statuses_close', 'value' => '']);
-			$adb->insert('yetiforce_proc_sales', ['type' => 'srequirementscard', 'param' => 'statuses_close', 'value' => '']);
-		}
-		$adb->delete('yetiforce_proc_sales', 'type = ?', ['potential']);
+		$adb->delete('yetiforce_proc_sales', '`param` NOT IN (?)', ['limit_product_service']);
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -2330,7 +2416,7 @@ YetiForce CRM Support Team.', 'PLL_RECORD'];
 		];
 
 		$Calendar = [
-			[9, 1992, 'subprocess', 'vtiger_activity', 1, '68', 'subprocess', 'Sub Process', 1, 0, '', 100, 1, 19, 1, 'I~O', 1, NULL, 'BAS', 1, '', 1, '', "int(19)", "LBL_TASK_INFORMATION", [], []]
+			[9, 1992, 'subprocess', 'vtiger_activity', 1, '68', 'subprocess', 'FL_SUB_PROCESS', 1, 0, '', 100, 1, 19, 1, 'I~O', 1, NULL, 'BAS', 1, '', 1, '', "int(19)", "LBL_TASK_INFORMATION", [], []]
 		];
 		$Events = [
 			['16', '1993', 'subprocess', 'vtiger_activity', '1', '68', 'subprocess', 'FL_SUB_PROCESS', '1', '0', '', '100', '3', '119', '1', 'I~O', '1', NULL, 'BAS', '1', '', '1', '', "int(19)", "LBL_RELATED_TO", [], []]
@@ -2340,8 +2426,69 @@ YetiForce CRM Support Team.', 'PLL_RECORD'];
 			['51', '1995', 'link', 'vtiger_osstimecontrol', '1', '67', 'link', 'FL_RELATION', '1', '2', '', '100', '12', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []],
 			['51', '1996', 'subprocess', 'vtiger_osstimecontrol', '1', '68', 'subprocess', 'FL_SUB_PROCESS', '1', '2', '', '100', '13', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []]
 		];
+		$Competition = [
+			['93', '2001', 'sum_time', 'u_yf_competition', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '304', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$Contacts = [
+			['4', '1997', 'sum_time', 'vtiger_contactdetails', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '10', '5', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$Leads = [
+			['7', '1998', 'sum_time', 'vtiger_leaddetails', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '10', '14', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$Vendors = [
+			['18', '1999', 'sum_time', 'vtiger_vendor', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '19', '42', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_VENDOR_INFORMATION", [], []]
+		];
+		$Partners = [
+			['92', '2000', 'sum_time', 'u_yf_partners', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '300', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$OSSEmployees = [
+			['61', '2002', 'sum_time', 'vtiger_ossemployees', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '15', '151', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_INFORMATION", [], []]
+		];
+		$SSalesProcesses = [
+			['86', '2003', 'sum_time', 'u_yf_ssalesprocesses', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '270', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$Campaigns = [
+			['26', '2004', 'sum_time', 'vtiger_campaign', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '1', '74', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CAMPAIGN_INFORMATION", [], []]
+		];
+		$ProjectMilestone = [
+			['41', '2005', 'sum_time', 'vtiger_projectmilestone', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '102', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+		];
+		$SQuoteEnquiries = [
+			['85', '2006', 'sum_time', 'u_yf_squoteenquiries', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '267', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
+		$SRequirementsCards = [
+			['87', '2007', 'sum_time', 'u_yf_srequirementscards', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '274', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
+		$SCalculations = [
+			['88', '2008', 'sum_time', 'u_yf_scalculations', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '278', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
+		$SQuotes = [
+			['89', '2009', 'sum_time', 'u_yf_squotes', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '282', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
+		$SSingleOrders = [
+			['90', '2010', 'sum_time', 'u_yf_ssingleorders', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '286', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
+		$SRecurringOrders = [
+			['91', '2011', 'sum_time', 'u_yf_srecurringorders', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '2', '290', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_STATISTICS", [], []]
+		];
 
-		$setToCRM = ['Accounts' => $Accounts, 'Assets' => $Assets, 'OutsourcedProducts' => $OutsourcedProducts, 'OSSOutsourcedServices' => $OSSOutsourcedServices, 'OSSSoldServices' => $OSSSoldServices, 'Calendar' => $Calendar, 'Events' => $Events, 'OSSTimeControl' => $OSSTimeControl];
+		$setToCRM = ['Accounts' => $Accounts, 'Assets' => $Assets, 'OutsourcedProducts' => $OutsourcedProducts, 'OSSOutsourcedServices' => $OSSOutsourcedServices, 'OSSSoldServices' => $OSSSoldServices, 'Calendar' => $Calendar, 'Events' => $Events, 'OSSTimeControl' => $OSSTimeControl,
+			'Contacts' => $Contacts,
+			'Leads' => $Leads,
+			'Vendors' => $Vendors,
+			'Campaigns' => $Campaigns,
+			'ProjectMilestone' => $ProjectMilestone,
+			'OSSEmployees' => $OSSEmployees,
+			'SQuoteEnquiries' => $SQuoteEnquiries,
+			'SSalesProcesses' => $SSalesProcesses,
+			'SRequirementsCards' => $SRequirementsCards,
+			'SCalculations' => $SCalculations,
+			'SQuotes' => $SQuotes,
+			'SSingleOrders' => $SSingleOrders,
+			'SRecurringOrders' => $SRecurringOrders,
+			'Partners' => $Partners,
+			'Competition' => $Competition
+		];
 
 		$setToCRMAfter = [];
 		foreach ($setToCRM as $nameModule => $module) {

@@ -332,9 +332,13 @@ class RemoveModule
 		while ($fieldId = $db->getSingleValue($result)) {
 			$query = 'SELECT COUNT(1) FROM `vtiger_fieldmodulerel` WHERE fieldid = ?';
 			$resultQuery = $db->pquery($query, [$fieldId]);
-			if ((int) $db->getSingleValue($resultQuery) == 1) {
-				$field = Vtiger_Field::getInstance($fieldId);
-				$field->delete();
+			if ($db->getSingleValue($resultQuery) == 1) {
+				$field = Settings_LayoutEditor_Field_Model::getInstance($fieldId);
+				try {
+					$field->delete();
+				} catch (Exception $e) {
+					$log->debug("ERROR " . __CLASS__ . "::" . __METHOD__ . ": code " . $e->getCode() . " message " . $e->getMessage());
+				}
 				$result2 = $db->query("SHOW COLUMNS FROM `" . $field->table . "` LIKE '" . $field->column . "';");
 				if ($result2->rowCount() == 1) {
 					$db->query("ALTER TABLE `" . $field->table . "` DROP COLUMN `" . $field->column . "` ;");
