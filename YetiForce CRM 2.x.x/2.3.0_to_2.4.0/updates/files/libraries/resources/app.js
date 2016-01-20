@@ -54,6 +54,18 @@ var app = {
 		return jQuery('body').data('language');
 	},
 	/**
+	 * Function to get height of window
+	 */
+	getHeightWindow: function () {
+		return jQuery(window).height();
+	},
+	/**
+	 * Function to get path to layout
+	 */
+	getLayoutPath: function () {
+		return jQuery('body').data('layoutpath');
+	},
+	/**
 	 * Function to get the contents container
 	 * @returns jQuery object
 	 */
@@ -118,10 +130,11 @@ var app = {
 				select.on('chosen:updated', function () {
 					if (select.attr('readonly')) {
 						var wasDisabled = select.is(':disabled');
-
+						var selectData = select.data('chosen');
 						select.attr('disabled', 'disabled');
-						select.data('chosen').search_field_disabled();
-
+						if (typeof selectData == 'object') {
+							selectData.search_field_disabled();
+						}
 						if (wasDisabled) {
 							select.attr('disabled', 'disabled');
 						} else {
@@ -170,7 +183,7 @@ var app = {
 		if (parent.is('select.selectized')) {
 			selectElements = parent;
 		}
-		selectElements.each(function(){
+		selectElements.each(function () {
 			$(this)[0].selectize.destroy();
 		});
 	},
@@ -709,6 +722,18 @@ var app = {
 			currentElement.val(date);
 		});
 	},
+	registerEventForClockPicker: function () {
+		var formatTime = app.getMainParams('userTimeFormat');
+		formatTime = formatTime == 12 ? true : false;
+		var params = {
+			placement: 'bottom',
+			autoclose: true,
+			twelvehour: formatTime,
+			minutestep: 5,
+			ampmSubmit: false,
+		};
+		$('.clockPicker').clockpicker(params);
+	},
 	/**
 	 * Function which will register time fields
 	 *
@@ -1116,12 +1141,15 @@ var app = {
 		rand = Math.floor(Math.random() * chars.length);
 		return newchar = chars.substring(rand, rand + 1);
 	},
-	getMainParams: function (params) {
-		if (app.cacheParams[params] != undefined) {
-			return app.cacheParams[params];
+	getMainParams: function (param, json) {
+		if (app.cacheParams[param] == undefined) {
+			var value = $('#' + param).val();
+			app.cacheParams[param] = value;
 		}
-		var value = $('#' + params).val();
-		app.cacheParams[params] = value;
+		var value = app.cacheParams[param];
+		if (json) {
+			value = $.parseJSON(value);
+		}
 		return value;
 	},
 	parseNumberToShow: function (val) {
@@ -1177,9 +1205,55 @@ var app = {
 			}
 			e.stopPropagation();
 		});
+	},
+	playSound: function (action) {
+		var soundsConfig = app.getMainParams('sounds');
+		soundsConfig = JSON.parse(soundsConfig);
+		var audio = new Audio(app.getLayoutPath() + '/sounds/' + soundsConfig[action]);
+		audio.play();
+	},
+	registerSticky: function () {
+		var elements = jQuery('.stick');
+		elements.each(function () {
+			var currentElement = jQuery(this);
+			var position = currentElement.data('position');
+			if (position == 'top') {
+				var offsetTop = currentElement.offset().top - 50;
+				jQuery('.mainBody').scroll(function () {
+					if ($(this).scrollTop() > offsetTop)
+						currentElement.css({
+							'position': 'fixed',
+							'top': '50px',
+							'width': currentElement.width()
+						});
+					else if ($(this).scrollTop() <= offsetTop)
+						currentElement.css({
+							'position': '',
+							'top': '',
+							'width': ''
+						});
+				});
+			}
+			if (position == 'bottom') {
+				var offsetTop = currentElement.offset().top - app.getHeightWindow();
+				jQuery('.mainBody').scroll(function () {
+					if ($(this).scrollTop() < offsetTop)
+						currentElement.css({
+							'position': 'fixed',
+							'bottom': '33px',
+							'width': currentElement.width()
+						});
+					else if ($(this).scrollTop() >= offsetTop)
+						currentElement.css({
+							'position': '',
+							'bottom': '',
+							'width': ''
+						});
+				});
+			}
+		});
 	}
 }
-
 jQuery(document).ready(function () {
 	app.changeSelectElementView();
 	//register all select2 Elements
@@ -1187,6 +1261,7 @@ jQuery(document).ready(function () {
 	app.showSelectizeElementView(jQuery('body').find('select.selectize'));
 	app.showPopoverElementView(jQuery('body').find('.popoverTooltip'));
 	app.showBtnSwitch(jQuery('body').find('.switchBtn'));
+	app.registerSticky();
 	app.registerModal();
 	//Updating row height
 	app.updateRowHeight();

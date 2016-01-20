@@ -1,5 +1,10 @@
 <?php
-/* {[The file is published on the basis of YetiForce Public License that can be found in the following directory: licenses/License.html]} */
+/**
+ *
+ * @package YetiForce.views
+ * @license licenses/License.html
+ * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
 
 Class OSSMailView_MailsPreview_View extends Vtiger_IndexAjax_View
 {
@@ -34,8 +39,7 @@ Class OSSMailView_MailsPreview_View extends Vtiger_IndexAjax_View
 		$record = $request->get('record');
 		$mailFilter = $request->get('mailFilter');
 		$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
-		$recordModel_OSSMailScanner = Vtiger_Record_Model::getCleanInstance('OSSMailScanner');
-		$config = $recordModel_OSSMailScanner->getConfig('email_list');
+		$config = OSSMail_Module_Model::getComposeParameters();
 		$config['widget_limit'] = '';
 
 		$viewer = $this->getViewer($request);

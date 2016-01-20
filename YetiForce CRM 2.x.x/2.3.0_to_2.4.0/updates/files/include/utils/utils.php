@@ -193,7 +193,7 @@ function get_group_array($add_blank = true, $status = "Active", $assigned_user =
 		$query = 'SELECT groupid, groupname FROM vtiger_groups';
 		$params = [];
 
-		if ($module) {
+		if ($module && $module != 'CustomView') {
 			$query .= ' WHERE groupid IN (SELECT groupid FROM vtiger_group2modules WHERE tabid = ?)';
 			$params[] = $tabid;
 		}
@@ -1596,7 +1596,7 @@ function isRecordExists($recordId, $cache = true)
 {
 	if (!isset($recordExistsCache[$recordId])) {
 		$db = PearDatabase::getInstance();
-		$query = "SELECT crmid FROM vtiger_crmentity where crmid=? AND deleted=0";
+		$query = 'SELECT crmid FROM vtiger_crmentity where crmid=? AND deleted=0';
 		$result = $db->pquery($query, [$recordId]);
 		if ($db->num_rows($result)) {
 			$return = true;

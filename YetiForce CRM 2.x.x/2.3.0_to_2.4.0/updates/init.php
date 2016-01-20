@@ -183,6 +183,44 @@ class YetiForceUpdate
 		'modules/Emails/actions/TrackAccess.php',
 		'modules/Services/models/DetailView.php',
 		'modules/OSSMail/roundcube/plugins/yetiforce/yetiforce.js',
+		'modules/OSSMailScanner/email_actions',
+		'modules/OSSMailScanner/template_actions',
+		'modules/OSSMailScanner/actions/saveFolderList.php',
+		'layouts/basic/modules/OSSMail/selectEmail.tpl',
+		'modules/OSSMail/actions/GetEmail.php',
+		'modules/OSSMail/actions/GetTranslate.php',
+		'modules/OSSMail/views/selectEmail.php',
+		'layouts/basic/modules/Settings/Vtiger/Github.tpl',
+		'layouts/basic/modules/OSSMailView/DetailViewHeader.tpl',
+		'modules/ServiceContracts/models/Module.php',
+		'modules/Vendors/models/Module.php',
+		'modules/Accounts/models/Relation.php',
+		'modules/Competition/models/Relation.php',
+		'modules/Contacts/models/Relation.php',
+		'modules/HelpDesk/models/Relation.php',
+		'modules/Leads/models/Relation.php',
+		'modules/Partners/models/Relation.php',
+		'modules/Project/models/Relation.php',
+		'modules/SCalculations/models/Relation.php',
+		'modules/ServiceContracts/models/Relation.php',
+		'modules/SQuoteEnquiries/models/Relation.php',
+		'modules/SQuotes/models/Relation.php',
+		'modules/SRecurringOrders/models/Relation.php',
+		'modules/SRequirementsCards/models/Relation.php',
+		'modules/SSalesProcesses/models/Relation.php',
+		'modules/SSingleOrders/models/Relation.php',
+		'modules/Vendors/models/Relation.php',
+		'modules/OSSMail/roundcube/Dockerfile',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class/Patchwork/PHP/Shim/Xml.php',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class/Patchwork/TurkishUtf8.php',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class/Patchwork/Utf8.php',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class/Patchwork/Utf8/BestFit.php',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class/Patchwork/Utf8/WindowsStreamWrapper.php',
+		'modules/OSSMail/roundcube/vendor/pear',
+		'modules/OSSMail/roundcube/vendor/patchwork/utf8/class',
+		'layouts/basic/modules/Project/charts/ShowTimeProject.tpl',
+		'layouts/basic/modules/Project/charts/ShowTimeProjectEmployees.tpl',
+		'config/modules/calendar.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -219,6 +257,7 @@ class YetiForceUpdate
 		$this->sharedOwner();
 		$this->relations();
 		$this->deleteLang();
+		$this->addFieldsToScheme();
 		$this->addFields();
 		$this->addTree();
 		$this->dataAccess($this->accessData(2));
@@ -241,6 +280,70 @@ class YetiForceUpdate
 			$this->reconfiguration();
 		}
 		$this->remove('OSSTimeControl', $this->removeFiedsData('OSSTimeControl'), 'deleteOtherFields');
+		$this->databaseStepTwo();
+	}
+
+	function databaseStepTwo()
+	{
+		$adb = PearDatabase::getInstance();
+		$result = $adb->query("SHOW KEYS FROM `vtiger_ossmailview_relation` WHERE Key_name='ossmailviewid_2';");
+		if ($result->rowCount() == 0) {
+			$adb->query('ALTER TABLE `vtiger_ossmailview_relation` ADD UNIQUE KEY `ossmailviewid_2`(`ossmailviewid`,`crmid`) ; ');
+		}
+		$adb->update('vtiger_relatedlists', ['actions' => 'SEND'], '`name` = ?', ['get_emails']);
+		$relName = ['get_accounts_mail', 'get_contacts_mail', 'get_leads_mail', 'get_helpdesk_mail', 'get_project_mail', 'get_servicecontracts_mail', 'get_campaigns_mail', 'get_vendor_mail'];
+		$adb->update('vtiger_relatedlists', ['name' => 'get_record2mails', 'actions' => 'ADD,SELECT'], '`name` IN (' . $adb->generateQuestionMarks($relName) . ')', $relName);
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_modtracker_basic` LIKE 'whodidsu';");
+		if ($result->rowCount()) {
+			$adb->query('ALTER TABLE `vtiger_modtracker_basic` DROP COLUMN `whodidsu` ;');
+		}
+		$adb->delete('vtiger_links', 'linklabel IN (?,?,?,?,?,?)', ['View History', 'LBL_CHECK_STATUS', 'Send SMS', 'LBL_ADD_NOTE', 'LBL_SHOW_ACCOUNT_HIERARCHY', 'OSSMailJS']);
+		$adb->delete('vtiger_fieldmodulerel', 'module = ? AND relmodule <> ?', ['Calendar', 'Calendar']);
+		$result = $adb->query('SELECT fieldtypeid FROM `vtiger_ws_fieldtype` WHERE `uitype` IN (66,67,68);');
+		while ($typeId = $adb->getSingleValue($result)) {
+			$adb->delete('vtiger_ws_referencetype', 'fieldtypeid = ?', [$typeId]);
+		}
+		$result = $adb->pquery('SELECT 1 FROM `com_vtiger_workflow_tasktypes` WHERE `classname` = ?;', ['VTUpdateWorkTime']);
+		if (!$result->rowCount()) {
+			$taskType = ['modules' => ["include" => ["OSSTimeControl"], "exclude" => []], 'name' => 'VTUpdateWorkTime', 'label' => 'LBL_UPDATE_WORK_TIME_AUTOMATICALLY', 'classname' => 'VTUpdateWorkTime', 'classpath' => 'modules/com_vtiger_workflow/tasks/VTUpdateWorkTime.inc', 'templatepath' => 'com_vtiger_workflow/taskforms/VTUpdateWorkTime.tpl', 'sourcemodule' => NULL];
+			VTTaskType::registerTaskType($taskType);
+		}
+		$this->addHandler([['vtiger.entity.afterrestore', 'modules/OSSTimeControl/handlers/TimeControl.php', 'TimeControlHandler', '', 1, '[]']]);
+
+		$result = $adb->pquery("SELECT templateid FROM vtiger_trees_templates WHERE module = ?;", [getTabid('Documents')]);
+		if ($tempateId = $adb->getSingleValue($result)) {
+			$result = $adb->pquery("SELECT 1 FROM vtiger_trees_templates_data WHERE templateid = ? AND `name` = ?;", [$tempateId, 'Mails']);
+			if (!$result->rowCount()) {
+				$sql = 'INSERT INTO vtiger_trees_templates_data(templateid, name, tree, parenttrre, depth, label, state) VALUES (?,?,?,?,?,?,?)';
+				$params = [$tempateId, 'Mails', 'T2', 'T2', '0', 'Mails', ''];
+				$adb->pquery($sql, $params);
+			}
+		}
+		$adb->update('roundcube_system', ['value' => '2016011900'], '`name` = ?', ['roundcube-version']);
+		$result = $adb->query("SHOW COLUMNS FROM `vtiger_field` LIKE 'header_field';");
+		if (!$result->rowCount()) {
+			$adb->query('ALTER TABLE `vtiger_field` ADD COLUMN `header_field` varchar(15) NULL after `fieldparams` ;');
+		}
+		$dirName = 'modules/com_vtiger_workflow/tasks';
+		if (file_exists('cache/updates/files/' . $dirName . '/VTUpdateWorkTime.inc')) {
+			Vtiger_Functions::recurseCopy('cache/updates/files/' . $dirName, $dirName, true);
+		}
+		$this->addWorkflows(false);
+		$adb->update('vtiger_relatedlists', ['presence' => '1'], '`tabid` = ? AND `label` IN (?,?,?,?,?,?)', [getTabid('SSalesProcesses'), 'Assets', 'OSSOutsourcedServices', 'OSSSoldServices', 'OutsourcedProducts', 'Products', 'Services']);
+		$adb->update('vtiger_relatedlists', ['actions' => 'ADD,SELECT'], '`name` = ? ', ['get_record2mails']);
+	}
+
+	function addFieldsToScheme()
+	{
+		$adb = PearDatabase::getInstance();
+		$result = $adb->query("SHOW COLUMNS FROM `u_yf_competition` LIKE 'email';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `u_yf_competition` ADD COLUMN `email` varchar(50) NULL DEFAULT '';");
+		}
+		$result = $adb->query("SHOW COLUMNS FROM `u_yf_partners` LIKE 'email';");
+		if ($result->rowCount() == 0) {
+			$adb->query("ALTER TABLE `u_yf_partners` ADD COLUMN `email` varchar(50) NULL DEFAULT '';");
+		}
 	}
 
 	function linkProccess()
@@ -321,12 +424,34 @@ class YetiForceUpdate
 			['SSingleOrders', 'get_activities', 'Activities', '0', 'ADD', '1'],
 			['SRecurringOrders', 'get_activities', 'Activities', '0', 'ADD', '1']
 		];
+		$dataInversely = [
+			['Partners', 'OSSMailView', 'get_record2mails', 'Partners', '0', 'ADD,SELECT', '11'],
+			['Competition', 'OSSMailView', 'get_record2mails', 'Competition', '0', 'ADD,SELECT', '12'],
+			['OSSEmployees', 'OSSMailView', 'get_record2mails', 'OSSEmployees', '0', 'ADD,SELECT', '13'],
+			['OSSMailView', 'OSSEmployees', 'get_emails', 'OSSMailView', '0', 'SEND', '8'],
+			['SSalesProcesses', 'OSSMailView', 'get_record2mails', 'SSalesProcesses', '0', 'ADD,SELECT', '14'],
+			['ProjectTask', 'OSSMailView', 'get_record2mails', 'ProjectTask', '0', 'ADD,SELECT', '15'],
+			['OSSMailView', 'ProjectTask', 'get_emails', 'OSSMailView', '0', 'SEND', '3'],
+			['ProjectMilestone', 'OSSMailView', 'get_record2mails', 'ProjectMilestone', '0', 'ADD,SELECT', '16'],
+			['OSSMailView', 'ProjectMilestone', 'get_emails', 'OSSMailView', '0', 'SEND', '2'],
+			['SQuoteEnquiries', 'OSSMailView', 'get_record2mails', 'SQuoteEnquiries', '0', 'ADD,SELECT', '17'],
+			['SRequirementsCards', 'OSSMailView', 'get_record2mails', 'SRequirementsCards', '0', 'ADD,SELECT', '18'],
+			['SCalculations', 'OSSMailView', 'get_record2mails', 'SCalculations', '0', 'ADD,SELECT', '19'],
+			['SQuotes', 'OSSMailView', 'get_record2mails', 'SQuotes', '0', 'ADD,SELECT', '20'],
+			['SSingleOrders', 'OSSMailView', 'get_record2mails', 'SSingleOrders', '0', 'ADD,SELECT', '21'],
+			['SRecurringOrders', 'OSSMailView', 'get_record2mails', 'SRecurringOrders', '0', 'ADD,SELECT', '22']
+		];
 		foreach ($data as $relModule => $modulesRel) {
 			$relInstance = Vtiger_Module::getInstance($relModule);
 			foreach ($modulesRel as $values) {
 				$targetModule = Vtiger_Module::getInstance($values[0]);
 				$targetModule->setRelatedList($relInstance, $values[2], [$values[4]], $values[1]);
 			}
+		}
+		foreach ($dataInversely as $values) {
+			$relInstance = Vtiger_Module::getInstance($values[0]);
+			$targetModule = Vtiger_Module::getInstance($values[1]);
+			$targetModule->setRelatedList($relInstance, $values[3], [$values[4]], $values[2]);
 		}
 	}
 
@@ -770,14 +895,14 @@ class YetiForceUpdate
 		$fields = ['osstimecontrol_no', 'osssoldservices_no', 'ossemployees_no', 'ideas_no', 'holidaysentitlement_no', 'neworders_no', 'squoteenquiries_no', 'ssalesprocesses_no', 'srequirementscards_no', 'scalculations_no', 'squotes_no', 'ssingleorders_no', 'srecurringorders_no', 'partners_no', 'competition_no'];
 		$adb->pquery('UPDATE vtiger_field SET `displaytype` = 2 WHERE fieldname IN (' . $adb->generateQuestionMarks($fields) . ') AND `displaytype` = 3', $fields);
 		$adb->pquery('UPDATE vtiger_field SET `displaytype` = 1 WHERE fieldname = ? AND `displaytype` = 3', ['reservations_no']);
-		$adb->delete('vtiger_cvcolumnlist', '`columnname` IN (?,?) ', ['vtiger_osstimecontrol:osstimecontrol_no:osstimecontrol_no:OSSTimeControl_No.:V', 'vtiger_ideas:ideas_no:ideas_no:Ideas_LBL_NO:V']);
+		$adb->delete('vtiger_cvcolumnlist', '`columnname` IN (?,?,?) ', ['vtiger_osstimecontrol:osstimecontrol_no:osstimecontrol_no:OSSTimeControl_No.:V', 'vtiger_ideas:ideas_no:ideas_no:Ideas_LBL_NO:V', 'u_yf_squoteenquiries:salesprocessid:salesprocessid:SQuoteEnquiries_SINGLE_SSalesProcesses:V']);
 		$adb->query('DROP TABLE IF EXISTS vtiger_email_access');
 		$adb->query('DROP TABLE IF EXISTS vtiger_email_track');
 		$columns = ['vtiger_outsourcedproducts:potential:potential:OutsourcedProducts_Potentials:V',
 			'vtiger_assets:potential:potential:Assets_Potential:V',
-'vtiger_assets:potential renewal:Potential renewal:Assets_Potential_renewal:V',
-'vtiger_ossoutsourcedservices:potential:potential:OSSOutsourcedServices_Potentials:V',
-'vtiger_osssoldservices:potential:potential:OSSSoldServices_Potential:V'];
+			'vtiger_assets:potential renewal:Potential renewal:Assets_Potential_renewal:V',
+			'vtiger_ossoutsourcedservices:potential:potential:OSSOutsourcedServices_Potentials:V',
+			'vtiger_osssoldservices:potential:potential:OSSSoldServices_Potential:V'];
 		$adb->delete('vtiger_cvcolumnlist', '`columnname` IN (' . $adb->generateQuestionMarks($columns) . ') ', $columns);
 	}
 
@@ -1164,9 +1289,8 @@ class YetiForceUpdate
 		$adb->pquery("UPDATE vtiger_links SET `linkurl` = CASE "
 			. " WHEN linklabel = 'Chat' THEN 'layouts/_layoutName_/modules/AJAXChat/Chat.js' "
 			. " WHEN linklabel = 'PDFUtils' THEN 'layouts/_layoutName_/modules/OSSPdf/resources/PDFUtils.js' "
-			. " WHEN linklabel = 'OSSMailJS' THEN 'layouts/_layoutName_/modules/OSSMail/resources/Global.js' "
 			. " WHEN linklabel = 'OSSMailJScheckmails' THEN 'layouts/_layoutName_/modules/OSSMail/resources/checkmails.js' "
-			. " ELSE linkurl END WHERE linklabel IN (?,?,?,?) ", ['Chat', 'PDFUtils', 'OSSMailJS', 'OSSMailJScheckmails']);
+			. " ELSE linkurl END WHERE linklabel IN (?,?,?) ", ['Chat', 'PDFUtils', 'OSSMailJScheckmails']);
 
 		$result = $adb->pquery('SELECT * FROM `vtiger_ws_fieldtype` WHERE fieldtype = ?;', ['streetAddress']);
 		if (!$adb->getRowCount($result)) {
@@ -1180,18 +1304,19 @@ class YetiForceUpdate
 				$adb->update('vtiger_organizationdetails', ['panellogoname' => 'white_logo_yetiforce.png'], '`organization_id` = ?', [$row['organization_id']]);
 			}
 		}
-		$multiModule = [['source_module' => 'Accounts', 'dest_module' => 'Products'], ['source_module' => 'Accounts', 'dest_module' => 'Services']];
-		foreach ($multiModule as $row) {
-			$result = $adb->pquery('SELECT * FROM `s_yf_multireference` WHERE source_module = ? AND dest_module = ?;', [$row['source_module'], $row['dest_module']]);
-			if (!$adb->getRowCount($result)) {
-				$adb->insert('s_yf_multireference', ['source_module' => $row['source_module'], 'dest_module' => $row['dest_module'], 'lastid' => 0, 'type' => 0]);
-			}
-		}
 
 		$adb->update('vtiger_field', ['fieldlabel' => 'LBL_MENU_EXPANDED_BY_DEFAULT'], '`columnname` = ?', ['leftpanelhide']);
 
-		$adb->update('com_vtiger_workflow_tasktypes', ['modules' => '{"include":["Accounts","Contacts","Leads","OSSEmployees","Vendors","Campaigns","HelpDesk","Project","ServiceContracts"],"exclude":["Calendar","FAQ","Events"]}'], '`tasktypename` IN (?,?,?)', ['VTUpdateCalendarDates', 'VTCreateEventTask', 'VTCreateTodoTask']);
+		$adb->update('com_vtiger_workflow_tasktypes', ['modules' => '{"include":["Accounts","Leads","Contacts","HelpDesk","Campaigns","Project","ServiceContracts","Vendors","Partners","Competition","OSSEmployees","SSalesProcesses","SQuoteEnquiries","SRequirementsCards","SCalculations","SQuotes","SSingleOrders","SRecurringOrders"],"exclude":["Calendar","FAQ","Events"]}'], '`tasktypename` IN (?,?)', ['VTCreateEventTask', 'VTCreateTodoTask']);
+		$adb->update('com_vtiger_workflow_tasktypes', ['modules' => '{"include":["Accounts","Contacts","Leads","OSSEmployees","Vendors","Campaigns","HelpDesk","Project","ServiceContracts"],"exclude":["Calendar","FAQ","Events"]}'], '`tasktypename` IN (?)', ['VTUpdateCalendarDates']);
 		$adb->delete('vtiger_mobile_alerts', '`handler_class` = ? ', ['Mobile_WS_AlertModel_PotentialsDueIn5Days']);
+		$adb->delete('vtiger_ossmailscanner_config', '`conf_type` = ? ', ['folders']);
+
+		$adb->update('vtiger_field', ['displaytype' => '1'], '`columnname` IN (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) AND uitype = ? ', ['osstimecontrol_no', 'osssoldservices_no', 'ideas_no', 'ossemployees_no', 'holidaysentitlement_no', 'neworders_no', 'squoteenquiries_no', 'ssalesprocesses_no', 'srequirementscards_no', 'scalculations_no', 'squotes_no', 'ssingleorders_no', 'srecurringorders_no', 'partners_no', 'competition_no', '4']);
+		$result = $adb->query('SELECT COUNT(1) AS `count` FROM `u_yf_github`;');
+		if (!$adb->getRowCount($result)) {
+			$adb->insert('u_yf_github', ['client_id' => '', 'token' => '', 'username' => '']);
+		}
 
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -1911,6 +2036,14 @@ class YetiForceUpdate
 				ADD COLUMN `rel_comment` varchar(255) NULL after `rel_created_time` ; ");
 		}
 
+		$adb->query("CREATE TABLE IF NOT EXISTS `u_yf_github`(
+			`github_id` int(11) NOT NULL  auto_increment , 
+			`client_id` varchar(20) COLLATE utf8_general_ci NULL  , 
+			`token` varchar(100) COLLATE utf8_general_ci NULL  , 
+			`username` varchar(32) COLLATE utf8_general_ci NULL  , 
+			KEY `github_id`(`github_id`) 
+		) ENGINE=InnoDB DEFAULT CHARSET='utf8';");
+
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -2226,21 +2359,25 @@ if (!$no_include_config) {
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
-	public function addWorkflows()
+	public function addWorkflows($step = true)
 	{
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 
 		$workflow = [];
-		$workflow[] = ['57', 'ModComments', 'New comment added to ticket - Owner', '[{"fieldname":"customer","operation":"is not empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
-		$workflow[] = ['58', 'ModComments', 'New comment added to ticket - account', '[{"fieldname":"customer","operation":"is empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
-		$workflow[] = ['59', 'ModComments', 'New comment added to ticket - contact', '[{"fieldname":"customer","operation":"is empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
-
 		$workflowTask = [];
-		$workflowTask[] = ['135', '59', 'Notify Contact On New comment added to ticket', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:59;s:7:"summary";s:45:"Notify Contact On New comment added to ticket";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:26:"HeldDeskNewCommentContacts";s:2:"id";i:135;}'];
-		$workflowTask[] = ['136', '58', 'Notify Account On New comment added to ticket', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:58;s:7:"summary";s:45:"Notify Account On New comment added to ticket";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:25:"HeldDeskNewCommentAccount";s:2:"id";i:136;}'];
-		$workflowTask[] = ['137', '57', 'Notify Owner On new comment added to ticket from portal', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:57;s:7:"summary";s:55:"Notify Owner On new comment added to ticket from portal";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:23:"HeldDeskNewCommentOwner";s:2:"id";i:137;}'];
+		if ($step) {
+			$workflow[] = ['57', 'ModComments', 'New comment added to ticket - Owner', '[{"fieldname":"customer","operation":"is not empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
+			$workflow[] = ['58', 'ModComments', 'New comment added to ticket - account', '[{"fieldname":"customer","operation":"is empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
+			$workflow[] = ['59', 'ModComments', 'New comment added to ticket - contact', '[{"fieldname":"customer","operation":"is empty","value":null,"valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":"0"}]', '1', NULL, 'basic', '6', NULL, NULL, NULL, NULL, NULL, NULL];
 
+			$workflowTask[] = ['135', '59', 'Notify Contact On New comment added to ticket', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:59;s:7:"summary";s:45:"Notify Contact On New comment added to ticket";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:26:"HeldDeskNewCommentContacts";s:2:"id";i:135;}'];
+			$workflowTask[] = ['136', '58', 'Notify Account On New comment added to ticket', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:58;s:7:"summary";s:45:"Notify Account On New comment added to ticket";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:25:"HeldDeskNewCommentAccount";s:2:"id";i:136;}'];
+			$workflowTask[] = ['137', '57', 'Notify Owner On new comment added to ticket from portal', 'O:18:"VTEntityMethodTask":7:{s:18:"executeImmediately";b:1;s:10:"workflowId";i:57;s:7:"summary";s:55:"Notify Owner On new comment added to ticket from portal";s:6:"active";b:0;s:7:"trigger";N;s:10:"methodName";s:23:"HeldDeskNewCommentOwner";s:2:"id";i:137;}'];
+		} else {
+			$workflow[] = ['69', 'OSSTimeControl', 'LBL_UPDATE_WORK_TIME', '[]', '7', NULL, 'basic', '6', '0', '', '', '', '', '0000-00-00 00:00:00'];
+			$workflowTask[] = ['138', '69', 'Update working time', 'O:16:"VTUpdateWorkTime":6:{s:18:"executeImmediately";b:0;s:10:"workflowId";i:69;s:7:"summary";s:19:"Update working time";s:6:"active";b:1;s:7:"trigger";N;s:2:"id";i:138;}'];
+		}
 		$this->saveWorflows($workflow, $workflowTask);
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
@@ -2256,6 +2393,10 @@ if (!$no_include_config) {
 		$workflowManager = new VTWorkflowManager($adb);
 		$taskManager = new VTTaskManager($adb);
 		foreach ($workflow as $record) {
+			$result = $adb->pquery('SELECT 1 FROM `com_vtiger_workflows` WHERE `module_name` = ? AND summary = ?;', [$record[1], $record[2]]);
+			if ($adb->getRowCount($result)) {
+				continue;
+			}
 			$newWorkflow = $workflowManager->newWorkFlow($record[1]);
 			$newWorkflow->description = $record[2];
 			$newWorkflow->test = $record[3];
@@ -2427,7 +2568,8 @@ YetiForce CRM Support Team.', 'PLL_RECORD'];
 			['51', '1996', 'subprocess', 'vtiger_osstimecontrol', '1', '68', 'subprocess', 'FL_SUB_PROCESS', '1', '2', '', '100', '13', '129', '1', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', "int(19)", "LBL_BLOCK", [], []]
 		];
 		$Competition = [
-			['93', '2001', 'sum_time', 'u_yf_competition', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '304', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+			['93', '2001', 'sum_time', 'u_yf_competition', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '304', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []],
+			['93', '2013', 'email', 'u_yf_competition', '2', '13', 'email', 'Email', '1', '2', '', '100', '5', '303', '1', 'E~O', '1', NULL, 'BAS', '1', '', '0', '', "varchar(50)", "LBL_COMPETITION_INFORMATION", [], []]
 		];
 		$Contacts = [
 			['4', '1997', 'sum_time', 'vtiger_contactdetails', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '10', '5', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
@@ -2439,7 +2581,8 @@ YetiForce CRM Support Team.', 'PLL_RECORD'];
 			['18', '1999', 'sum_time', 'vtiger_vendor', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '19', '42', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_VENDOR_INFORMATION", [], []]
 		];
 		$Partners = [
-			['92', '2000', 'sum_time', 'u_yf_partners', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '300', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []]
+			['92', '2000', 'sum_time', 'u_yf_partners', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '5', '300', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_CUSTOM_INFORMATION", [], []],
+			['92', '2012', 'email', 'u_yf_partners', '2', '13', 'email', 'Email', '1', '2', '', '100', '5', '299', '1', 'E~O', '1', NULL, 'BAS', '1', '', '0', '', "varchar(50)", "LBL_PARTNERS_INFORMATION", [], []]
 		];
 		$OSSEmployees = [
 			['61', '2002', 'sum_time', 'vtiger_ossemployees', '1', '7', 'sum_time', 'FL_TOTAL_TIME_H', '1', '2', '', '100', '15', '151', '10', 'NN~O', '1', NULL, 'BAS', '1', '', '0', '', "decimal(10,2)", "LBL_INFORMATION", [], []]

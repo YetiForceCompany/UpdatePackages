@@ -38,8 +38,7 @@ window.rcmail && rcmail.addEventListener('init', function (evt) {
 			var prePopupOpenEvent = jQuery.Event(crm.Vtiger_Edit_Js.preReferencePopUpOpenEvent);
 			sourceFieldElement.trigger(prePopupOpenEvent);
 			var data = {};
-			var popupInstance = crm.Vtiger_Popup_Js.getInstance();
-			crm.show(params, function (data) {
+			show(params, function (data) {
 				var responseData = JSON.parse(data);
 				var ids = [];
 				for (var id in responseData) {
@@ -60,8 +59,7 @@ window.rcmail && rcmail.addEventListener('init', function (evt) {
 			multi_select: true,
 			url: crmPath
 		};
-		var popupInstance = crm.Vtiger_Popup_Js.getInstance();
-		crm.show(params, function (data) {
+		show(params, function (data) {
 			var responseData = JSON.parse(data);
 			var length = Object.keys(responseData).length;
 			for (var id in responseData) {
@@ -85,14 +83,14 @@ window.rcmail && rcmail.addEventListener('init', function (evt) {
 					tmp.push({name: value.module, label: value.moduleName});
 					jQuery('#tplmenu #texttplsmenu').append('<li class="' + value.module + '"><a href="#" data-module="' + value.module + '" data-tplid="' + value.id + '" class="active">' + value.name + '</a></li>');
 				});
-				
+
 				$.each(tmp, function (index, value) {
 					if (jQuery.inArray(value.name, modules) == -1) {
 						jQuery('#vtmodulemenu .toolbarmenu').append('<li class="' + value.name + '"><a href="#" data-module="' + value.name + '" class="active">' + value.label + '</a></li>');
 						modules.push(value.name);
 					}
 				});
-				
+
 			}
 		});
 
@@ -132,7 +130,7 @@ window.rcmail && rcmail.addEventListener('init', function (evt) {
 				success: function (data) {
 					var oldSubject = jQuery('[name="_subject"]').val();
 					var html = jQuery("<div/>").html(data.result['content']).html();
-					jQuery('[name="_subject"]').val(oldSubject + data.result['subject']);
+					jQuery('[name="_subject"]').val(oldSubject + ' ' + data.result['subject']);
 					if (window.tinyMCE && (ed = tinyMCE.get(rcmail.env.composebody))) {
 						var oldBody = tinyMCE.activeEditor.getContent();
 						tinymce.activeEditor.setContent(html + oldBody);
@@ -159,55 +157,60 @@ function getCrmWindow() {
 }
 
 function getMailFromCRM(mailField, module, record, length) {
-	var params = {
-		module: 'OSSMail',
-		action: 'getContactMail',
-		mod: module,
-		ids: record
-	};
-	window.crm.AppConnector.request(params).then(
-			function (response) {
-				var resp = response['result'];
-				var loadFirstMail = false;
-				var exits_emails = $('#' + mailField).val();
-				if (exits_emails != '' && exits_emails.charAt(exits_emails.length - 1) != ',') {
-					exits_emails = exits_emails + ',';
-				}
-
-				if (resp.length == 0) {
-					var notify_params = {
-						text: window.crm.app.vtranslate('NoFindEmailInRecord'),
-						animation: 'show'
-					};
-					window.crm.Vtiger_Helper_Js.showPnotify(notify_params);
-				}
-				if (resp.length > 1 && length == 1) {
-					var params = {
-						module: 'OSSMail',
-						view: 'selectEmail',
-						resp: resp
-					};
-					window.crm.AppConnector.request(params).then(
-							function (response) {
-								var data = {}
-								data.cb = function (mondal) {
-									mondal.find('button.btn-success').click(function (e) {
-										var mail = resp[0].name + ' <' + mondal.find('[name=selectedFields]:checked').val() + '>';
-										$('#' + mailField).val(exits_emails + mail);
-										window.crm.app.hideModalWindow();
-									});
-								};
-								data.data = response;
-								window.crm.app.showModalWindow(data);
-							}
-					);
-				} else if (resp.length > 1 && length > 1) {
-					loadFirstMail = true;
-				}
-				if (resp.length == 1 || loadFirstMail) {
-					var mail = resp[0].name + ' <' + resp[0].email + '>';
-					$('#' + mailField).val(exits_emails + mail);
-				}
+	if (length > 1) {
+		length = 1;
+	} else {
+		length = 0;
+	}
+	window.crm.Vtiger_Index_Js.getEmailFromRecord(record, module, length).then(function (data) {
+		if (data == '') {
+			var notifyParams = {
+				text: window.crm.app.vtranslate('NoFindEmailInRecord'),
+				animation: 'show'
+			};
+			window.crm.Vtiger_Helper_Js.showPnotify(notifyParams);
+		} else {
+			var emails = $('#' + mailField).val();
+			if (emails != '' && emails.charAt(emails.length - 1) != ',') {
+				emails = emails + ',';
 			}
-	);
+			$('#' + mailField).val(emails + data);
+		}
+	});
+}
+function show(urlOrParams, cb, windowName, eventName, onLoadCb) {
+	var thisInstance = window.crm.Vtiger_Popup_Js.getInstance();
+	if (typeof urlOrParams == 'undefined') {
+		urlOrParams = {};
+	}
+	if (typeof urlOrParams == 'object' && (typeof urlOrParams['view'] == "undefined")) {
+		urlOrParams['view'] = 'Popup';
+	}
+	if (typeof eventName == 'undefined') {
+		eventName = 'postSelection' + Math.floor(Math.random() * 10000);
+	}
+	if (typeof windowName == 'undefined') {
+		windowName = 'test';
+	}
+	if (typeof urlOrParams == 'object') {
+		urlOrParams['triggerEventName'] = eventName;
+	} else {
+		urlOrParams += '&triggerEventName=' + eventName;
+	}
+	var urlString = (typeof urlOrParams == 'string') ? urlOrParams : window.crm.jQuery.param(urlOrParams);
+	var url = urlOrParams['url'] + urlString;
+	var popupWinRef = window.crm.window.open(url, windowName, 'width=800,height=650,resizable=0,scrollbars=1');
+	if (typeof thisInstance.destroy == 'function') {
+		thisInstance.destroy();
+	}
+	window.crm.jQuery.initWindowMsg();
+	if (typeof cb != 'undefined') {
+		thisInstance.retrieveSelectedRecords(cb, eventName);
+	}
+	if (typeof onLoadCb == 'function') {
+		window.crm.jQuery.windowMsg('Vtiger.OnPopupWindowLoad.Event', function (data) {
+			onLoadCb(data);
+		})
+	}
+	return popupWinRef;
 }

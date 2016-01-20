@@ -491,7 +491,8 @@ jQuery.Class("Vtiger_Edit_Js", {
 		return aDeferred.promise();
 	},
 	registerTimeFields: function (container) {
-		app.registerEventForTimeFields(container);
+		app.registerEventForClockPicker();
+		app.registerEventForDatePickerFields(container);
 	},
 	referenceCreateHandler: function (container) {
 		var thisInstance = this;
@@ -1329,6 +1330,7 @@ jQuery.Class("Vtiger_Edit_Js", {
 		var placeholder = fieldDisplay.attr('placeholderDisabled');
 		fieldDisplay.removeAttr('placeholderDisabled');
 		fieldDisplay.attr('placeholder', placeholder);
+		fieldValue.find('.referenceModulesList').attr('required','required');
 	},
 	setDisabledFields: function (element) {
 		var fieldValue = element.closest('.fieldValue');
@@ -1340,6 +1342,7 @@ jQuery.Class("Vtiger_Edit_Js", {
 		var placeholder = fieldDisplay.attr('placeholder');
 		fieldDisplay.removeAttr('placeholder');
 		fieldDisplay.attr('placeholderDisabled', placeholder);
+		fieldValue.find('.referenceModulesList').removeAttr('required');
 	},
 	getMappingRelatedField: function (sourceField, sourceFieldModule, container) {
 		var mappingRelatedField = container.find('input[name="mappingRelatedField"]').val();
@@ -1470,7 +1473,6 @@ jQuery.Class("Vtiger_Edit_Js", {
 		this.registerReferenceSelectionEvent(container);
 		this.registerMaskFields(container);
 		this.registerHelpInfo();
-		app.registerEventForDatePickerFields(container);
 		this.registerReferenceFields(container);
 	},
 	registerEvents: function () {
