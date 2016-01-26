@@ -285,6 +285,7 @@ $languageStrings = [
 	'Mail Logs' => 'Mail – Download history',
 	'LBL_LOGS' => 'Logs',
 	'LBL_AUTOMATION' => 'Automation',
+	'LBL_MENU_SUMMARRY' => 'Summary',
 	/* Role */
 	'Board of Management' => 'Conselho de Administração',
 	'Sales Department' => 'Departamento de Vendas',
@@ -343,8 +344,8 @@ $languageStrings = [
 	'LBL_CV_YEAR' => 'Year (ex. 15)',
 	'LBL_CV_MONTH' => 'Month (exp. 1, 5, 12)',
 	'LBL_CV_DAY' => 'Day (ex. 1, 5, 25)',
-	'LBL_DONATE_US' => '__UNSTRANLATED__',
-	'LBL_START' => '__UNSTRANLATED__',
+	'LBL_DONATE_US' => 'Donate to YetiForce',
+	'LBL_START' => 'Start',
 	'LBL_GITHUB' => 'Github',
 	// end of custom record numbering variables
 	'LBL_SHOW_LANG_IN_LOGIN_PAGE' => 'Show language selection on the login page',
@@ -352,6 +353,9 @@ $languageStrings = [
 ];
 
 $jsLanguageStrings = [
+	'JS_AUTHORIZATION_COMPLETE' => 'Authorization successful',
+	'JS_ADDED_ISSUE_COMPLETE' => 'New issue added successfully',
+	'JS_ERROR_KEY' => 'Authorization error. Check if all keys are valid.',
 	'JS_ANNOUNCEMENT_SAVED' => 'Anúncio Salvo',
 	'JS_CONFIGURATION_DETAILS_SAVED' => 'Os detalhes da Configuração foram salvos',
 	'JS_CONFIRM_DEFAULT_SETTINGS' => 'Você tem certeza que deseja alterar os detalhes do Servidor para os valores padrões',
