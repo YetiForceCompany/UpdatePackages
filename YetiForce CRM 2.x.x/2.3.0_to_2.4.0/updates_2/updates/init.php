@@ -140,6 +140,7 @@ class YetiForceUpdate
 		'modules/Campaigns/dashboards',
 		'modules/PaymentsIn/workflow',
 		'modules/ServiceContracts/models',
+		'modules/Home/js',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -189,6 +190,7 @@ class YetiForceUpdate
 		$this->updateSettingFieldsMenu();
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+		Vtiger_Deprecated::createModuleMetaFile();
 	}
 
 	public function changeTicketCategory()
@@ -288,6 +290,11 @@ class YetiForceUpdate
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$db = PearDatabase::getInstance();
 		$actions = [7 => 'CreateView'];
+		$result = $db->pquery('SELECT 1 FROM vtiger_actionmapping WHERE actionname = ?;',['CreateView']);
+		if ($result->rowCount()){
+			$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+			return;
+		}
 		$result = $db->query('SELECT actionid,actionname FROM vtiger_actionmapping;');
 		$rows = $result->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
 		foreach ($actions as $key => $action) {
@@ -933,7 +940,8 @@ class YetiForceUpdate
 				$result = $db->pquery('SELECT sequence,block FROM vtiger_field WHERE columnname = ? AND tabid = ?;', [$info['moveFor'], getTabid($info['moduleName'])]);
 			} elseif (!empty($info['toBlock'])) {
 				$result = $db->pquery('SELECT MAX(vtiger_field.sequence) AS sequence,vtiger_blocks.`blockid` as block FROM vtiger_field LEFT JOIN vtiger_blocks ON vtiger_blocks.`blockid` = vtiger_field.`block` WHERE vtiger_blocks.`blocklabel` = ? AND vtiger_field.tabid = ?', [$info['toBlock'], $tabId]);
-				if(!$result->rowCount()){
+				$checkBlock = $db->query_result($result, 0, 'block');
+				if (!$checkBlock) {
 					$result = $db->pquery('SELECT vtiger_blocks.sequence = 0 AS sequence,  vtiger_blocks.`blockid` AS block FROM vtiger_blocks WHERE vtiger_blocks.`blocklabel` = ? AND vtiger_blocks.tabid = ?', [$info['toBlock'], $tabId]);
 				}
 			}

@@ -1,1 +1,2 @@
 Required PHP version needs to be equal or greater than 5.4.
+All values in Category field in Tickets module will be removed.
