@@ -2035,6 +2035,7 @@ class YetiForceUpdate
 			$inventoryField = Vtiger_InventoryField_Model::getInstance($field['moduleName']);
 			if ($inventoryField) {
 				$table = $inventoryField->getTableName('fields');
+				$tableData = $inventoryField->getTableName('data');
 				$fieldData = $field['data'];
 				$result = $db->pquery('SELECT `id` FROM `' . $table . '` WHERE `columnname` = ?;', [$fieldData[1]]);
 				$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method check if columnname exist: ' . print_r($fieldData[1], true));
@@ -2052,6 +2053,13 @@ class YetiForceUpdate
 							'params' => $fieldData[9],
 							'colspan' => $fieldData[10],
 						]);
+						if (in_array($fieldData[1], ['unit', 'ean', 'subunit'])) {
+							$alterData = [
+								['type' => ['add'], 'name' => $fieldData[1], 'table' => $tableData, 'sql' => 'ALTER TABLE `' . $tableData . '`  
+									ADD COLUMN `' . $fieldData[1] . '` varchar(255);']
+							];
+							$this->setAlterTables($alterData);
+						}
 					} else {
 						$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method add columnname: ' . print_r(array_combine($colums, $fieldData), true));
 						$inventoryField->addField($fieldData[3], array_combine($colums, $fieldData));
