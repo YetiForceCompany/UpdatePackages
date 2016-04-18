@@ -19,11 +19,12 @@ $languageStrings = [
 	'LBL_ACTIVITY_TYPES' => 'Filtrowanie',
 	'LBL_ADD_CALENDAR_VIEW' => 'Dodaj kalendarz',
 	'LBL_ADDED_CALENDARS' => 'Dodaj kalendarze',
-	'LBL_ADD_EVENT' => 'Dodaj zdarzenie',
+	'LBL_ADD_EVENT' => 'Dodaj termin',
 	'LBL_ADD_TASK' => 'Dodaj zadanie',
 	'LBL_CALENDAR_SETTINGS' => 'Ustawienia',
 	'LBL_CALENDAR_SHARING' => 'Udostępnione kalendarze',
-	'LBL_CALENDAR_VIEW' => 'Mój kalendarz',
+	'LBL_CALENDAR_VIEW' => 'Kalendarz',
+	'LBL_CALENDAR_LIST' => 'Lista rekordów (z kalendarza)',
 	'LBL_CALL' => 'Telefon',
 	'LBL_CHANGE_OWNER' => 'Zmień właściciela',
 	'LBL_CONTACTS_BIRTH_DAY' => 'Daty urodzin',
@@ -137,8 +138,9 @@ $languageStrings = [
 	'LBL_INVITE_USER_BLOCK' => 'Zaproszeni użytkownicy',
 	'LBL_CALENDAR_FILTERS' => 'Filtry',
 	'LBL_AUTO_FILL_DESCRIPTION' => 'Wypełnienie daty rozpoczęcia na podstawie pierwszego wolnego terminu',
+	'LBL_CACHE_SELECTED_FILTERS' => 'Zmieniłeś standardowy widok w kalendarzu, aby go wyczyścić wciśnij przycisk "Wyczyść widok".',
+	'LBL_CACHE_CLEAR' => 'Wyczyść widok',
 ];
-
 $jsLanguageStrings = [
 	'JS_CALENDAR_VIEW_ADDED_SUCCESSFULLY' => 'Dodano kalendarz',
 	'JS_CALENDAR_VIEW_COLOR_UPDATED_SUCCESSFULLY' => 'Zmieniono kolor kalendarza',

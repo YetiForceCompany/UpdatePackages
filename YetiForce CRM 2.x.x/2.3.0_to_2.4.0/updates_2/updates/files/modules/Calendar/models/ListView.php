@@ -24,13 +24,17 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => 'LBL_ADD_EVENT',
 				'linkurl' => $this->getModule()->getCreateEventRecordUrl(),
-				'linkicon' => ''
+				'linkclass' => 'moduleColor_' . $moduleModel->getName(),
+				'linkicon' => '',
+				'showLabel' => 1,
 			];
 			$basicLinks[] = [
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => 'LBL_ADD_TASK',
 				'linkurl' => $this->getModule()->getCreateTaskRecordUrl(),
-				'linkicon' => ''
+				'linkclass' => 'moduleColor_' . $moduleModel->getName(),
+				'linkicon' => '',
+				'showLabel' => 1,
 			];
 		}
 		if (Users_Privileges_Model::isPermitted($moduleModel->getName(), 'WatchingModule')) {
@@ -105,10 +109,8 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 	{
 		$currentUserModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 		$moduleModel = $this->getModule();
-
-		$linkTypes = array('LISTVIEWMASSACTION');
-		$links = Vtiger_Link_Model::getAllByType($moduleModel->getId(), $linkTypes, $linkParams);
-
+		
+		$links = Vtiger_Link_Model::getAllByType($moduleModel->getId(), ['LISTVIEWMASSACTION'], $linkParams);
 
 		$massActionLinks = [];
 		if ($currentUserModel->hasModuleActionPermission($moduleModel->getId(), 'MassTransferOwnership')) {
@@ -181,6 +183,7 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 		$queryGenerator->setFields(array_unique(array_merge($queryGenerator->getFields(), $listViewFields)));
 
 		$this->loadListViewCondition($moduleName);
+		$listOrder = $this->getListViewOrderBy();
 
 		$listQuery = $this->getQuery();
 		if ($searchResult && $searchResult != '' && is_array($searchResult)) {
@@ -197,43 +200,8 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 				}
 			}
 		}
-
-		if (!empty($orderBy)) {
-			//To combine date and time fields for sorting
-			if ($orderBy == 'date_start') {
-				$orderBy = "str_to_date(concat(date_start,time_start),'%Y-%m-%d %H:%i:%s')";
-			} else if ($orderBy == 'due_date') {
-				$orderBy = "str_to_date(concat(due_date,time_end),'%Y-%m-%d %H:%i:%s')";
-			}
-			if ($orderByFieldModel && $orderByFieldModel->isReferenceField()) {
-				$referenceModules = $orderByFieldModel->getReferenceList();
-				$referenceNameFieldOrderBy = [];
-				foreach ($referenceModules as $referenceModuleName) {
-					$referenceModuleModel = Vtiger_Module_Model::getInstance($referenceModuleName);
-					$referenceNameFields = $referenceModuleModel->getNameFields();
-
-					$columnList = [];
-					foreach ($referenceNameFields as $nameField) {
-						$fieldModel = $referenceModuleModel->getField($nameField);
-						$columnList[] = $fieldModel->get('table') . $orderByFieldModel->getName() . '.' . $fieldModel->get('column');
-					}
-					if (count($columnList) > 1) {
-						$referenceNameFieldOrderBy[] = getSqlForNameInDisplayFormat(array('first_name' => $columnList[0], 'last_name' => $columnList[1]), 'Users', '') . ' ' . $sortOrder;
-					} else {
-						$referenceNameFieldOrderBy[] = implode('', $columnList) . ' ' . $sortOrder;
-					}
-				}
-				$listQuery .= ' ORDER BY ' . implode(',', $referenceNameFieldOrderBy);
-			} else if ($orderBy === 'smownerid') {
-				$fieldModel = Vtiger_Field_Model::getInstance('assigned_user_id', $moduleModel);
-				if ($fieldModel->getFieldDataType() == 'owner') {
-					$orderBy = 'COALESCE(' . getSqlForNameInDisplayFormat(['first_name' => 'vtiger_users.first_name', 'last_name' => 'vtiger_users.last_name'], 'Users') . ',vtiger_groups.groupname)';
-				}
-				$listQuery .= ' ORDER BY ' . $orderBy . ' ' . $sortOrder;
-			} else {
-				$listQuery .= ' ORDER BY ' . $orderBy . ' ' . $sortOrder;
-			}
-		}
+		
+		$listQuery .= $listOrder;
 		$startIndex = $pagingModel->getStartIndex();
 		$pageLimit = $pagingModel->getPageLimit();
 
@@ -335,6 +303,7 @@ class Calendar_ListView_Model extends Vtiger_ListView_Model
 				}
 				$query = ' ORDER BY ' . implode(',', $referenceNameFieldOrderBy);
 			} else if ($orderBy === 'smownerid') {
+				$this->get('query_generator')->setConditionField($orderByFieldName);
 				$fieldModel = Vtiger_Field_Model::getInstance('assigned_user_id', $moduleModel);
 				if ($fieldModel->getFieldDataType() == 'owner') {
 					$orderBy = 'COALESCE(' . getSqlForNameInDisplayFormat(['first_name' => 'vtiger_users.first_name', 'last_name' => 'vtiger_users.last_name'], 'Users') . ',vtiger_groups.groupname)';

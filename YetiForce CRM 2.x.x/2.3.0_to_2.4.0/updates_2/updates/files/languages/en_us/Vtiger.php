@@ -1113,10 +1113,8 @@ $languageStrings = [
 	'SINGLE_SSalesProcesses' => 'Opportunity',
 	'LBL_RELATION' => 'Relation',
 	'LBL_PREVIEW' => 'Preview',
-	'Admin Profile' => 'Admin Profile',
-	'Support Profile' => 'Support Profile',
-	'Sales Profile' => 'Sales Profile',
-	'Guest Profile' => 'Guest',
+	'LBL_DISPLAYED' => 'Displayed',
+	'LBL_SEND_NOTIFICATION' => 'Send notification',
 	// Action types - AT
 	'LBL_AT_UPDATED' => 'Modify',
 	'LBL_AT_DELETED' => 'Delete',
@@ -1125,6 +1123,15 @@ $languageStrings = [
 	'LBL_AT_LINK' => 'Linked',
 	'LBL_AT_UNLINK' => 'Unlinked',
 	'LBL_AT_CONVERTTOACCOUNT' => 'Lead converted',
+	'LBL_AT_DISPLAYED' => 'Displayed',
+	'LBL_FILTER' => 'Filter',
+	'LBL_EXPORT_TYPE' => 'Type of exported file',
+	'LBL_XML_EXPORT_TPL' => 'Template',
+	'LBL_CSV' => 'CSV',
+	'LBL_XML' => 'XML',
+	'LBL_HEADLINE' => 'Headline',
+	'LBL_BASIC_VERSE' => 'Basic line',
+	'LBL_ADDITIONAL_VERSE' => 'Additional line',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Summary',
@@ -1431,5 +1438,6 @@ $jsLanguageStrings = [
 	'JS_WATCHING_TITLE' => 'Track changes',
 	'JS_WATCHING_MESSAGE0' => 'Are you sure you want to disable tracking changes?',
 	'JS_WATCHING_MESSAGE1' => 'Are you sure you want to enable tracking changes?',
-	
+	'JS_FILTER' => 'Filter',
+	'JS_NOTIFICATION_LINK' => 'Link',
 ];

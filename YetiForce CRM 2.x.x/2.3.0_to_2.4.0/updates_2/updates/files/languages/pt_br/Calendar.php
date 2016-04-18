@@ -23,7 +23,8 @@ $languageStrings = [
 	'LBL_ADD_TASK' => 'Adicionar Tarefa',
 	'LBL_CALENDAR_SETTINGS' => 'Configurações Agenda',
 	'LBL_CALENDAR_SHARING' => 'Compartilhar Agenda',
-	'LBL_CALENDAR_VIEW'=> 'Minha Agenda' ,
+	'LBL_CALENDAR_VIEW'=> 'Agenda',
+	'LBL_CALENDAR_LIST' => 'Records list (from calendar)',
 	'LBL_CALL' => 'Chamada',
 	'LBL_CHANGE_OWNER' => 'Mudar Proprietário' ,
 	'LBL_CONTACTS_BIRTH_DAY' => 'Data Nascimento' ,
@@ -150,6 +151,8 @@ $languageStrings = [
 	'LBL_INVITE_USER_BLOCK' => 'Convite',
 	'LBL_CALENDAR_FILTERS' => 'Filters',
 	'LBL_AUTO_FILL_DESCRIPTION' => 'Fill the start date based on the first available date',
+	'LBL_CACHE_SELECTED_FILTERS' => 'Standard view in calendar changed. Click "Clear view" to clear it.',
+	'LBL_CACHE_CLEAR' => 'Clear view',
 ];
 
 $jsLanguageStrings = [

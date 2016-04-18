@@ -416,7 +416,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 	{
 		$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Record', $this->get('name'));
 		$recordInstance = new $modelClassName();
-		if($rawData !== false) {
+		if ($rawData !== false) {
 			foreach ($this->getFields() as $field) {
 				$column = $field->get('column');
 				if (key_exists($column, $rawData)) {
@@ -1626,7 +1626,8 @@ class Vtiger_Module_Model extends Vtiger_Module
 
 		$instance = CRMEntity::getInstance($relatedModuleName);
 		$securityParameter = $instance->getUserAccessConditionsQuerySR($relatedModuleName, false, $recordId);
-		if ($securityParameter != '' && !($relationListViewModel && $relationListViewModel->noPermissions === true))
+		//if ($securityParameter != '' && !($relationListViewModel && $relationListViewModel->noPermissions === true))
+		if ($securityParameter != '')
 			$query .= $securityParameter;
 
 		return $query;
@@ -1854,7 +1855,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 		return $return;
 	}
 
-	public function getRelationFieldByHierarchy($moduleName)
+	public function getRelationFieldByHierarchy($moduleName, $field = false)
 	{
 		self::initModulesHierarchy();
 		if ($field != false && isset(self::$modulesMapRelatedFields[$moduleName][$field])) {
@@ -1920,7 +1921,7 @@ class Vtiger_Module_Model extends Vtiger_Module
 					}
 				}
 			}
-			if ($relationField && $moduleName != $sourceModule) {
+			if ($relationField && ($moduleName != $sourceModule || ($_REQUEST && $_REQUEST['addRelation']))) {
 				$data[$relationField] = $sourceRecord;
 			}
 		}

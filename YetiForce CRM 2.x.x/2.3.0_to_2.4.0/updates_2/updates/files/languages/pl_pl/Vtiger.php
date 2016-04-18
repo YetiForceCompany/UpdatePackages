@@ -1118,11 +1118,8 @@ $languageStrings = [
 	'SINGLE_SSalesProcesses' => 'Szansa sprzedaży',
 	'LBL_RELATION' => 'Realacja',
 	'LBL_PREVIEW' => 'Podgląd',
-	'Admin Profile' => 'Profil administratora',
-	'Support Profile' => 'Profil wsparcia',
-	'Sales Profile' => 'Profil sprzedaży',
-	'Guest Profile' => 'Gość',
 	'LBL_DISPLAYED' => 'przeglądał rekord',
+	'LBL_SEND_NOTIFICATION' => 'Wyślij powiadomienie',
 	// Action types - AT
 	'LBL_AT_UPDATED' => 'Modyfikacja',
 	'LBL_AT_DELETED' => 'Usuwanie',
@@ -1131,6 +1128,15 @@ $languageStrings = [
 	'LBL_AT_LINK' => 'Utworzono powiązanie',
 	'LBL_AT_UNLINK' => 'Usunięto powiązanie',
 	'LBL_AT_CONVERTTOACCOUNT' => 'Skonwertowano leada',
+	'LBL_AT_DISPLAYED' => 'Wyświetlono',
+	'LBL_FILTER' => 'Filtr',
+	'LBL_EXPORT_TYPE' => 'Rodzaj eksportowanego pliku',
+	'LBL_XML_EXPORT_TPL' => 'Szablon',
+	'LBL_CSV' => 'CSV',
+	'LBL_XML' => 'XML',
+	'LBL_HEADLINE' => 'Nagłówek',
+	'LBL_BASIC_VERSE' => 'Wiersz podstawowy',
+	'LBL_ADDITIONAL_VERSE' => 'Wiersz dodatkowy',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Podsumowanie',
@@ -1393,4 +1399,6 @@ $jsLanguageStrings = [
 	'JS_WATCHING_TITLE' => 'Śledzenie zmian',
 	'JS_WATCHING_MESSAGE0' => 'Czy jesteś pewien że chcesz wyłączyć śledzenie zmian?',
 	'JS_WATCHING_MESSAGE1' => 'Czy jesteś pewien że chcesz włączyć śledzenie zmian?',
+	'JS_FILTER' => 'Filtr',
+	'JS_NOTIFICATION_LINK' => 'Link',
 ];

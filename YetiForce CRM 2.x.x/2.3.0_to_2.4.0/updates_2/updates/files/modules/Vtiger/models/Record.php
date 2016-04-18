@@ -340,6 +340,17 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		return $instance;
 	}
 
+	public static function getInstanceByEntity($focus, $recordId)
+	{
+		$moduleName = $focus->moduleName;
+		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
+
+		$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Record', $moduleName);
+		$recordModel = new $modelClassName();
+		$recordModel->setData($focus->column_fields)->set('id', $recordId)->setModuleFromInstance($moduleModel)->setEntity($focus);
+		return $recordModel;
+	}
+
 	/**
 	 * Static Function to get the list of records matching the search key
 	 * @param <String> $searchKey
@@ -427,13 +438,16 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 		}
 		return $this->privileges['isViewable'];
 	}
-	public function isCreateable(){
+
+	public function isCreateable()
+	{
 		if (!isset($this->privileges['isCreateable'])) {
 			$moduleName = $this->getModuleName();
 			$this->privileges['isCreateable'] = Users_Privileges_Model::isPermitted($moduleName, 'CreateView');
 		}
 		return $this->privileges['isCreateable'];
 	}
+
 	public function isEditable()
 	{
 		if (!isset($this->privileges['isEditable'])) {
@@ -631,6 +645,8 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 				}
 			}
 			if ($parentRecordModel->getModule()->isInventory() && $this->getModule()->isInventory()) {
+				$inventoryFieldModel = Vtiger_InventoryField_Model::getInstance($parentRecordModel->getModuleName());
+				$inventoryFields = $inventoryFieldModel->getFields();
 				$sourceInv = $parentRecordModel->getInventoryData();
 				$newInvData = [];
 			}
@@ -644,9 +660,18 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 				} elseif ($mapp['type'] == 'INVENTORY' && is_array($sourceInv)) {
 					foreach ($sourceInv as $key => $base) {
 						$newInvData[$key][$mapp['target']->getName()] = $base[$mapp['source']->getName()];
+						$fieldInventoryModel = $inventoryFields ? $inventoryFields[$mapp['source']->getName()] : [];
+						if ($fieldInventoryModel && $fieldInventoryModel->getCustomColumn()) {
+							foreach (array_keys($fieldInventoryModel->getCustomColumn()) as $customColumn) {
+								if (array_key_exists($customColumn, $base)) {
+									$newInvData[$key][$customColumn] = $base[$customColumn];
+								}
+							}
+						}
 					}
 				} elseif ((is_object($mapp['target']) && is_object($mapp['source'])) && getFieldVisibilityPermission($parentRecordModel->getModuleName(), $currentUser->getId(), $mapp['source']->getName()) == 0 && in_array($mapp['source']->getName(), $parentFieldsList)) {
-					if ($mapp['source']->getName() == 'shownerid' && empty($parentRecordModel->get($mapp['source']->getName()))) {
+					$parentMapName = $parentRecordModel->get($mapp['source']->getName());
+					if ($mapp['source']->getName() == 'shownerid' && empty($parentMapName)) {
 						$fieldInstance = Vtiger_Field_Model::getInstance($mapp['source']->getName(), $parentRecordModel->getModule());
 						$parentRecordModel->set($mapp['source']->getName(), $fieldInstance->getUITypeModel()->getEditViewDisplayValue('', $parentRecordModel->getId()));
 					}
@@ -736,7 +761,8 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 			$inventoryFields = $inventory->getFields();
 			foreach ($summaryFields as $fieldName) {
 				if ($this->has($prefix . $fieldName)) {
-					$this->set($prefix . $fieldName, $inventoryFields[$fieldName]->getSummaryValuesFromData($inventoryData));
+					$value = $inventoryFields[$fieldName]->getSummaryValuesFromData($inventoryData);
+					$this->set($prefix . $fieldName, CurrencyField::convertToUserFormat($value, null, true));
 				}
 			}
 		}
@@ -808,5 +834,10 @@ class Vtiger_Record_Model extends Vtiger_Base_Model
 			return Users_Privileges_Model::isPermitted($this->getModuleName(), 'OpenRecord', $this->getId());
 		}
 		return (bool) $this->privileges['editFieldByModal'];
+	}
+
+	public function setInventoryData($data)
+	{
+		$this->inventoryData = $data;
 	}
 }

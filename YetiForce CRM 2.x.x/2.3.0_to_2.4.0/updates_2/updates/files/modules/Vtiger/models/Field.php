@@ -304,7 +304,8 @@ class Vtiger_Field_Model extends Vtiger_Field
 			}
 
 			// Protection against deleting a value that does not exist on the list
-			if (!empty($this->get('fieldvalue')) && !in_array($this->get('fieldvalue'), $picklistValues)) {
+			$fieldValue = $this->get('fieldvalue');
+			if (!empty($fieldValue) && !in_array($this->get('fieldvalue'), $picklistValues)) {
 				$picklistValues[] = $this->get('fieldvalue');
 				$this->set('isEditableReadOnly', true);
 			}
@@ -631,7 +632,7 @@ class Vtiger_Field_Model extends Vtiger_Field
 		$this->fieldInfo['name'] = $this->get('name');
 		$this->fieldInfo['label'] = vtranslate($this->get('label'), $this->getModuleName());
 
-		if (in_array($fieldDataType, ['picklist', 'multipicklist', 'multiowner', 'multiReferenceValue'])) {
+		if (in_array($fieldDataType, ['picklist', 'multipicklist', 'multiowner', 'multiReferenceValue', 'posList'])) {
 			$pickListValues = $this->getPicklistValues();
 			if (!empty($pickListValues)) {
 				$this->fieldInfo['picklistvalues'] = $pickListValues;

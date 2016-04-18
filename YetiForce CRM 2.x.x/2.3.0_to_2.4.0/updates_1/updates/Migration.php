@@ -11,7 +11,11 @@ class Migration
 
 	public function init()
 	{
-		$this->migrationTimeControl();
+		$db = PearDatabase::getInstance();
+		$result = $db->query("SHOW COLUMNS FROM `vtiger_osstimecontrol` LIKE 'ticketid';");
+		if ($result->rowCount()) {
+			$this->migrationTimeControl();
+		}
 	}
 
 	public function migrationTimeControl()

@@ -8,12 +8,10 @@
  * All Rights Reserved.
  * *********************************************************************************** */
 $languageStrings = [
-	'LBL_VIEW_PRVILIGE' => 'View',
 	'LBL_ADD_RECORD' => 'Add record',
 	'LBL_CHOOSE_PROFILES' => 'Choose profiles',
 	'LBL_CREATE_PROFILE' => 'Create profile',
 	'LBL_DELETE_PROFILE' => 'Delete profile',
-	'LBL_DELETE_PRIVILIGE' => 'Delete',
 	'LBL_DELETE_RECORD' => 'Delete',
 	'LBL_DESCRIPTION' => 'Description',
 	'LBL_DUPLICATE_RECORD' => 'Duplicate',
@@ -21,8 +19,6 @@ $languageStrings = [
 	'LBL_EDIT_ALL_DESC' => 'Can edit all the module\'s information',
 	'LBL_EDIT_ALL' => 'Edit all',
 	'LBL_EDIT_PRIVILIGES_FOR_THIS_PROFILE' => 'Edit privileges for this profile',
-	'LBL_EDIT_PRIVILIGE' => 'Edit',
-	'LBL_CREATE_PRIVILIGE' => 'Create',
 	'LBL_EDIT_RECORD' => 'Edit',
 	'LBL_FIELD_AND_TOOL_PRVILIGES' => 'Field and tool privileges',
 	'LBL_FIELDS' => 'Fields',
@@ -42,6 +38,10 @@ $languageStrings = [
 	'SINGLE_Profiles' => 'Profile',
 	'Name' => 'Profile name',
 	//Actions
+	'LBL_VIEW_PRVILIGE' => 'View',
+	'LBL_CREATE_PRIVILIGE' => 'Create',
+	'LBL_EDIT_PRIVILIGE' => 'Edit',
+	'LBL_DELETE_PRIVILIGE' => 'Delete',
 	'Import' => 'Import',
 	'Export' => 'Export',
 	'Merge' => 'Merge',
@@ -75,6 +75,10 @@ $languageStrings = [
 	'Profile Related to Sales' => 'Profile related to sales',
 	'Profile Related to Support' => 'Profile related to support',
 	'Guest Profile for Test Users' => 'Guest profile for test users',
+	'Admin Profile' => 'Admin Profile',
+	'Support Profile' => 'Support Profile',
+	'Sales Profile' => 'Sales Profile',
+	'Guest Profile' => 'Guest',
 ];
 $jsLanguageStrings = [
 	'JS_RECORD_DELETED_SUCCESSFULLY' => 'Profile deleted successfully',

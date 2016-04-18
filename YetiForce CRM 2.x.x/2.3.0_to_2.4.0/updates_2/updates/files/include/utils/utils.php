@@ -473,9 +473,7 @@ function getUserEmail($userid)
 
 	$adb = PearDatabase::getInstance();
 	if ($userid != '') {
-		$sql = "select email1 from vtiger_users where id=?";
-		$result = $adb->pquery($sql, array($userid));
-		$email = $adb->query_result($result, 0, "email1");
+		$email = Vtiger_Util_Helper::getUserDetail($userid, 'email1');
 	}
 	$log->debug("Exiting getUserEmail method ...");
 	return $email;
@@ -1902,7 +1900,6 @@ function isLeadConverted($leadId)
 function getSelectedRecords($input, $module, $idstring, $excludedRecords)
 {
 	global $current_user, $adb;
-	var_dump($idstring);
 	if ($idstring == 'relatedListSelectAll') {
 		$recordid = vtlib_purify($input['recordid']);
 		$adb = PearDatabase::getInstance();

@@ -89,11 +89,24 @@ jQuery.Class("Vtiger_Edit_Js", {
 			isMultiple = true;
 		}
 
+		var filterFields = {};
+		var formElement = container.closest('form');
+		var mappingRelatedField = formElement.find('input[name="mappingRelatedField"]').val();
+		var mappingRelatedModule = JSON.parse(mappingRelatedField);
+		if (mappingRelatedModule[sourceField] != undefined && mappingRelatedModule[sourceField][popupReferenceModule] != undefined) {
+			$.each(mappingRelatedModule[sourceField][popupReferenceModule], function (index, value) {
+				var mapFieldElement = formElement.find('[name="' + index + '"]');
+				if (mapFieldElement.length && mapFieldElement.val() != '') {
+					filterFields[index] = mapFieldElement.val();
+				}
+			});
+		}
 		var params = {
 			module: popupReferenceModule,
 			src_module: sourceModule,
 			src_field: sourceField,
-			src_record: sourceRecordId
+			src_record: sourceRecordId,
+			filterFields: filterFields,
 		}
 
 		if (isMultiple) {
@@ -1363,7 +1376,7 @@ jQuery.Class("Vtiger_Edit_Js", {
 		}
 		container.validationEngine(params);
 	},
-	checkReferencesField: function (container) {
+	checkReferencesField: function (container, clear) {
 		var thisInstance = this;
 		var activeProcess = false, activeSubProcess = false;
 		container.find('input[data-fieldtype="referenceLink"]').each(function (index, element) {
@@ -1385,7 +1398,9 @@ jQuery.Class("Vtiger_Edit_Js", {
 			if (activeProcess) {
 				thisInstance.setEnabledFields(element);
 			} else {
-				thisInstance.clearFieldValue(element);
+				if (clear) {
+					thisInstance.clearFieldValue(element);
+				}
 				thisInstance.setDisabledFields(element);
 			}
 
@@ -1409,7 +1424,9 @@ jQuery.Class("Vtiger_Edit_Js", {
 			if (activeSubProcess && length > 0) {
 				thisInstance.setEnabledFields(element);
 			} else {
-				thisInstance.clearFieldValue(element);
+				if (clear) {
+					thisInstance.clearFieldValue(element);
+				}
 				thisInstance.setDisabledFields(element);
 			}
 		});
@@ -1426,12 +1443,12 @@ jQuery.Class("Vtiger_Edit_Js", {
 	registerReferenceFields: function (container) {
 		var thisInstance = this;
 		thisInstance.checkReferenceModulesList(container);
-		thisInstance.checkReferencesField(container);
+		thisInstance.checkReferencesField(container, false);
 		container.find('.sourceField').on(Vtiger_Edit_Js.referenceSelectionEvent, function (e, data) {
-			thisInstance.checkReferencesField(container);
+			thisInstance.checkReferencesField(container, true);
 		});
 		container.find('.sourceField').on(Vtiger_Edit_Js.referenceDeSelectionEvent, function (e) {
-			thisInstance.checkReferencesField(container);
+			thisInstance.checkReferencesField(container, true);
 		});
 		container.find('input[data-fieldtype="referenceProcess"]').closest('.fieldValue').find('.referenceModulesList').on('change', function () {
 			thisInstance.checkReferenceModulesList(container);

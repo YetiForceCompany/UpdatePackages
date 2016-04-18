@@ -221,6 +221,7 @@ jQuery.Class("Vtiger_Header_Js", {
 			}
 			thisInstance.registerQuickCreatePostLoadEvents(quickCreateForm, params);
 			thisInstance.toggleTimesInputs(quickCreateForm);
+			thisInstance.registerHelpInfo(quickCreateForm);
 			var quickCreateContent = quickCreateForm.find('.quickCreateContent');
 			var quickCreateContentHeight = quickCreateContent.height();
 			var contentHeight = parseInt(quickCreateContentHeight);
@@ -248,7 +249,7 @@ jQuery.Class("Vtiger_Header_Js", {
 	},
 	getNearCalendarEvent: function (data, module) {
 		var showCompanies = $('[name="showCompanies').val();
-		var daysWork = JSON.parse($('[name="hiddenDays').val());
+		var daysWork = app.getMainParams('hiddenDays', true);
 		var thisInstance = this;
 		var typeActive = data.find('ul li.active a').data('tab-name');
 		var user = data.find('[name="assigned_user_id"]');
@@ -669,11 +670,10 @@ jQuery.Class("Vtiger_Header_Js", {
 		var BtnLink = 'javascript:void();';
 		var history = localStorage.history;
 		if (history != "" && history != null) {
-			var sp = history.toString().split(",");
+			var sp = history.toString().split("_|_");
 			var item = sp[sp.length - 1].toString().split("|");
 			BtnText = item[0];
 			BtnLink = item[1];
-
 		}
 		var htmlContent = '<ul class="dropdown-menu pull-right historyList" role="menu">';
 		var date = new Date().getTime();
@@ -714,13 +714,13 @@ jQuery.Class("Vtiger_Header_Js", {
 			if (sp.length >= maxValues) {
 				sp.splice(0, 1);
 			}
-			localStorage.history = sp.toString();
+			localStorage.history = sp.join('_|_');
 		} else {
 			var stack = new Array();
 			var Label = this.getHistoryLabel();
 			if (Label.length > 1) {
 				stack.push(this.getHistoryLabel() + '|' + document.URL + '|' + date);
-				localStorage.history = stack.toString();
+				localStorage.history = stack.join('_|_');
 			}
 		}
 		htmlContent += '<li class="divider"></li><li><a class="clearHistory" href="#">' + app.vtranslate('JS_CLEAR_HISTORY') + '</a></li>';
@@ -854,7 +854,7 @@ jQuery.Class("Vtiger_Header_Js", {
 		if (app.cacheGet(key) == 'show') {
 			thisInstance.showSiteBar(container, container.find('.toggleSiteBarRightButton'));
 		}
-		
+
 		if (app.cacheGet(key) == null) {
 			if (container.find('.siteBarRight').data('showpanel') == 1) {
 				thisInstance.showSiteBar(container, container.find('.toggleSiteBarRightButton'));
@@ -894,20 +894,23 @@ jQuery.Class("Vtiger_Header_Js", {
 		toogleButton.removeClass('hideToggleSiteBarRightButton');
 	},
 	registerScrollForMenu: function () {
-		app.showScrollBar($(".slimScrollMenu"),
-				{
-					height: '100%',
-					width: '100%',
-					position: 'left',
-					railVisible: true,
-					railOpacity: 0.5,
-				});
-		app.showScrollBar($(".slimScrollSubMenu"),
-				{
-					height: '100%',
-				});
+		app.showScrollBar($(".slimScrollMenu"), {
+			height: '100%',
+			width: '100%',
+			position: 'left',
+			railVisible: true,
+			railOpacity: 0.5,
+		});
+		app.showScrollBar($(".slimScrollSubMenu"), {
+			height: '100%',
+		});
 		$(".slimScrollSubMenu .slimScrollDiv").each(function () {
 			$(this).closest(' .slimScrollSubMenu').css('overflow', 'initial');
+		});
+	},
+	registerToggleButton: function () {
+		$(".buttonTextHolder .dropdown-menu li a").click(function () {
+			$(this).parents('.btn-group').find('.dropdown-toggle .textHolder').html($(this).text());
 		});
 	},
 	registerEvents: function () {
@@ -932,9 +935,10 @@ jQuery.Class("Vtiger_Header_Js", {
 			currentTarget.trigger(pressEvent);
 		});
 		thisInstance.registerAnnouncement();
-		this.setAnnouncement();
+		thisInstance.setAnnouncement();
 
 		thisInstance.registerHotKeys();
+		thisInstance.registerToggleButton();
 		//this.registerCalendarButtonClickEvent();
 		//After selecting the global search module, focus the input element to type
 		jQuery('.basicSearchModulesList').change(function () {
@@ -955,16 +959,12 @@ jQuery.Class("Vtiger_Header_Js", {
 		if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 			jQuery('#basicSearchModulesList_chosen').find('.chzn-results').css({'max-height': '350px', 'overflow-y': 'scroll'});
 		} else {
-			app.showScrollBar(jQuery('#basicSearchModulesList_chosen').find('.chzn-results'),
-					{
-						height: '450px',
-						railVisible: true,
-						alwaysVisible: true,
-						size: '6px'
-					});
-
-
-
+			app.showScrollBar(jQuery('#basicSearchModulesList_chosen').find('.chzn-results'), {
+				height: '450px',
+				railVisible: true,
+				alwaysVisible: true,
+				size: '6px'
+			});
 			//Added to support standard resolution 1024x768
 			if (window.outerWidth <= 1024) {
 				//$('.headerLinksContainer').css('margin-right', '8px');

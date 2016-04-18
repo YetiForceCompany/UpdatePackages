@@ -103,14 +103,21 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 	{
 		$log = LoggerManager::getLogger('System');
 		vglobal('log', $log);
-		Vtiger_Session::init();
+
 		if (AppConfig::main('forceSSL') && !Vtiger_Functions::getBrowserInfo()->https) {
 			header("Location: https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
 		}
 
+		if ($this->isInstalled() === false) {
+			header('Location:install/Install.php');
+			exit;
+		}
+
+		Vtiger_Session::init();
+
 		// Better place this here as session get initiated
 		//skipping the csrf checking for the forgot(reset) password
-		if (AppConfig::main('csrfProtection') && $request->get('mode') != 'reset' && $request->get('action') != 'Login') {
+		if (AppConfig::main('csrfProtection') && $request->get('mode') != 'reset' && $request->get('action') != 'Login' && AppConfig::main('systemMode') != 'demo') {
 			require_once('libraries/csrf-magic/csrf-magic.php');
 			require_once('config/csrf_config.php');
 		}
@@ -139,11 +146,6 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 		$response = false;
 
 		try {
-			if ($this->isInstalled() === false && $module != 'Install') {
-				header('Location:install/Install.php');
-				exit;
-			}
-
 			if (empty($module)) {
 				if ($this->hasLogin()) {
 					$defaultModule = AppConfig::main('default_module');
@@ -180,18 +182,16 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				}
 				$componentName = $view;
 			}
-			define('_PROCESS_TYPE',$componentType);
-			define('_PROCESS_NAME',$componentName);
+			define('_PROCESS_TYPE', $componentType);
+			define('_PROCESS_NAME', $componentName);
 			$handlerClass = Vtiger_Loader::getComponentClassName($componentType, $componentName, $qualifiedModuleName);
 			$handler = new $handlerClass();
 			if ($handler) {
 				vglobal('currentModule', $module);
-				$csrfProtection = vglobal('csrfProtection');
-				if ($csrfProtection) {
+				if (AppConfig::main('csrfProtection') && AppConfig::main('systemMode') != 'demo') {
 					// Ensure handler validates the request
 					$handler->validateRequest($request);
 				}
-
 				if ($handler->loginRequired()) {
 					$this->checkLogin($request);
 				}

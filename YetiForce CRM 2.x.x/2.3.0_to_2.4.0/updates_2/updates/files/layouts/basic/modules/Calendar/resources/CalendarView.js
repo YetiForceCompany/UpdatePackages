@@ -84,6 +84,10 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		} else {
 			userDefaultActivityView = 'month';
 		}
+		var defaultView = app.moduleCacheGet('defaultView');
+		if (defaultView != null) {
+			userDefaultActivityView = defaultView;
+		}
 
 		//Default time format
 		var userDefaultTimeFormat = app.getMainParams('time_format');
@@ -107,8 +111,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		} else {
 			var hiddenDays = [];
 		}
-		thisInstance.getCalendarView().fullCalendar('destroy');
-		thisInstance.getCalendarView().fullCalendar({
+		var options = {
 			header: {
 				left: 'month,' + weekView + ',' + dayView,
 				center: 'title today',
@@ -165,18 +168,11 @@ jQuery.Class("Calendar_CalendarView_Js", {
 							(event.smownerid ? '<div><span class="glyphicon glyphicon-user" aria-hidden="true"></span> <label>' + app.vtranslate('JS_ASSIGNED_TO') + '</label>: ' + event.smownerid + '</div>' : '')
 				});
 				element.find('.fc-content, .fc-info').click(function () {
-					var progressIndicatorElement = jQuery.progressIndicator({
-						position: 'html',
-						blockInfo: {
-							'enabled': true
-						}
-					});
+					var progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
 					var event = $(this).closest('.fc-event');
 					var url = 'index.php?module=Calendar&view=ActivityStateModal&record=' + event.data('id');
 					var callbackFunction = function (data) {
-						progressIndicatorElement.progressIndicator({
-							'mode': 'hide'
-						})
+						progressInstance.progressIndicator({mode: 'hide'});
 					}
 					var modalWindowParams = {
 						url: url,
@@ -207,9 +203,26 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			},
 			allDayText: app.vtranslate('JS_ALL_DAY'),
 			eventLimitText: app.vtranslate('JS_MORE')
-		});
+		};
+
+		if (app.moduleCacheGet('start') != null) {
+			var s = moment(app.moduleCacheGet('start')).valueOf();
+			var e = moment(app.moduleCacheGet('end')).valueOf();
+			options.defaultDate = moment(moment(s + ((e - s) / 2)).format('YYYY-MM-DD'));
+		}
+
+		thisInstance.getCalendarView().fullCalendar('destroy');
+		thisInstance.getCalendarView().fullCalendar(options);
 		thisInstance.createAddSwitch();
-		thisInstance.registerListViewButton();
+		thisInstance.registerSlimScroll();
+	},
+	registerSlimScroll: function () {
+		var calendarContainer = $('.bodyContents');
+		app.showScrollBar(calendarContainer, {
+			railVisible: true,
+			alwaysVisible: true,
+			position: 'left'
+		});
 	},
 	getValuesFromSelect2: function (element, data, text) {
 		if (element.hasClass('select2-hidden-accessible')) {
@@ -244,7 +257,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		});
 	},
 	loadCalendarData: function (allEvents) {
-		var progressInstance = jQuery.progressIndicator();
+		var progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
 		var thisInstance = this;
 		thisInstance.getCalendarView().fullCalendar('removeEvents');
 		var view = thisInstance.getCalendarView().fullCalendar('getView');
@@ -288,15 +301,15 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			}
 			AppConnector.request(params).then(function (events) {
 				thisInstance.getCalendarView().fullCalendar('addEventSource', events.result);
-				progressInstance.hide();
+				progressInstance.progressIndicator({mode: 'hide'});
 			});
 		} else {
 			thisInstance.getCalendarView().fullCalendar('removeEvents');
-			progressInstance.hide();
+			progressInstance.progressIndicator({mode: 'hide'});
 		}
 	},
 	updateEvent: function (event, delta, revertFunc) {
-		var progressInstance = jQuery.progressIndicator();
+		var progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
 		var start = event.start.format();
 		var params = {
 			module: 'Calendar',
@@ -308,14 +321,14 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			allDay: event.allDay
 		}
 		AppConnector.request(params).then(function (response) {
-			progressInstance.hide();
+			progressInstance.progressIndicator({mode: 'hide'});
 			if (!response['result']) {
 				Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_NO_EDIT_PERMISSION'));
 				revertFunc();
 			}
 		},
 				function (error) {
-					progressInstance.hide();
+					progressInstance.progressIndicator({mode: 'hide'});
 					Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_NO_EDIT_PERMISSION'));
 					revertFunc();
 				});
@@ -410,15 +423,15 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			aDeferred.resolve(this.calendarCreateView.clone(true, true));
 			return aDeferred.promise();
 		}
-		var progressInstance = jQuery.progressIndicator();
+		var progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
 		this.loadCalendarCreateView().then(
 				function (data) {
-					progressInstance.hide();
+					progressInstance.progressIndicator({mode: 'hide'});
 					thisInstance.calendarCreateView = data;
 					aDeferred.resolve(data.clone(true, true));
 				},
 				function () {
-					progressInstance.hide();
+					progressInstance.progressIndicator({mode: 'hide'});
 				}
 		);
 		return aDeferred.promise();
@@ -446,11 +459,11 @@ jQuery.Class("Calendar_CalendarView_Js", {
 	},
 	registerChangeView: function () {
 		var thisInstance = this;
-		thisInstance.getCalendarView().find("button.fc-button:not(.listViewButton)").click(function () {
+		thisInstance.getCalendarView().find("button.fc-button").click(function () {
 			thisInstance.loadCalendarData();
 		});
 	},
-	getSearchParams: function () {
+	goToRecordsList: function (link) {
 		var thisInstance = this;
 		var types = thisInstance.getValuesFromSelect2($("#calendarActivityTypeList"), []);
 		var user = thisInstance.getValuesFromSelect2($("#calendarUserList"), [], true);
@@ -474,8 +487,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			}
 
 		});
-		var url = 'index.php?module=Calendar&view=List&search_params=[[' + searchParams + ']]';
-		return url;
+		window.location.href = link + '&search_params=[[' + searchParams + ']]';
 	},
 	registerAddButton: function () {
 		var thisInstance = this;
@@ -488,50 +500,39 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			});
 		})
 	},
-	registerListViewButton: function () {
-		var thisInstance = this;
-		if (app.getMainParams('showListButtonInCalendar')) {
-			var calendarview = this.getCalendarView();
-			jQuery('<button class="btn btn-default fc-button fc-state-default listViewButton" type="button"><span class="glyphicon glyphicon-list"></span></button>')
-					.prependTo(calendarview.find('.fc-toolbar .fc-right')).on('click', function (e) {
-				var url = thisInstance.getSearchParams();
-				window.location.href = url;
-			})
-		}
-	},
 	createAddSwitch: function () {
 		var thisInstance = this;
 		var calendarview = this.getCalendarView();
 		var checked = '';
-		if (app.getMainParams('showType') == 'current' && app.cacheGet('Calendar_showType') != 'history') {
+		if (app.getMainParams('showType') == 'current' && app.moduleCacheGet('defaultShowType') != 'history') {
 			checked = ' checked ';
 		}
-		var switchBtn = jQuery('<span class=""><input class="switchBtn showType" type="checkbox" title="' + app.vtranslate('JS_CHANGE_ACTIVITY_TIME') + '" ' + checked + ' data-size="small" data-handle-width="90" data-label-width="5" data-on-text="' + app.vtranslate('JS_TO_REALIZE') + '" data-off-text="' + app.vtranslate('JS_HISTORY') + '"></span>')
+		var switchBtn = jQuery('<span class=""><input class="switchBtn showType" id="defaultShowType" type="checkbox" title="' + app.vtranslate('JS_CHANGE_ACTIVITY_TIME') + '" ' + checked + ' data-size="small" data-handle-width="90" data-label-width="5" data-on-text="' + app.vtranslate('JS_TO_REALIZE') + '" data-off-text="' + app.vtranslate('JS_HISTORY') + '"></span>')
 				.prependTo(calendarview.find('.fc-toolbar .fc-right'))
 				.on('switchChange.bootstrapSwitch', function (e, state) {
 					if (state) {
 						app.setMainParams('showType', 'current');
-						app.cacheSet('Calendar_showType', 'current');
+						app.moduleCacheSet('defaultShowType', 'current');
 					} else {
 						app.setMainParams('showType', 'history');
-						app.cacheSet('Calendar_showType', 'history');
+						app.moduleCacheSet('defaultShowType', 'history');
 					}
 					thisInstance.loadCalendarData();
 				})
 		app.showBtnSwitch(switchBtn.find('.switchBtn'));
 		var checked = '';
-		if (app.getMainParams('switchingDays') == 'workDays' && app.cacheGet('Calendar_switchingDays') != 'all') {
+		if (app.getMainParams('switchingDays') == 'workDays' && app.moduleCacheGet('defaultSwitchingDays') != 'all') {
 			checked = ' checked ';
 		}
-		var switchBtn = jQuery('<span class=""><input class="switchBtn switchingDays" type="checkbox" title="' + app.vtranslate('JS_SWITCHING_DAYS') + '" ' + checked + ' data-size="small" data-handle-width="90" data-label-width="5" data-on-text="' + app.vtranslate('JS_WORK_DAYS') + '" data-off-text="' + app.vtranslate('JS_ALL') + '"></span>')
+		var switchBtn = jQuery('<span class=""><input class="switchBtn switchingDays" type="checkbox" id="defaultSwitchingDays" title="' + app.vtranslate('JS_SWITCHING_DAYS') + '" ' + checked + ' data-size="small" data-handle-width="90" data-label-width="5" data-on-text="' + app.vtranslate('JS_WORK_DAYS') + '" data-off-text="' + app.vtranslate('JS_ALL') + '"></span>')
 				.prependTo(calendarview.find('.fc-toolbar .fc-right'))
 				.on('switchChange.bootstrapSwitch', function (e, state) {
 					if (state) {
 						app.setMainParams('switchingDays', 'workDays');
-						app.cacheSet('Calendar_switchingDays', 'workDays');
+						app.moduleCacheSet('defaultSwitchingDays', 'workDays');
 					} else {
 						app.setMainParams('switchingDays', 'all');
-						app.cacheSet('Calendar_switchingDays', 'all');
+						app.moduleCacheSet('defaultSwitchingDays', 'all');
 					}
 					thisInstance.renderCalendar();
 					thisInstance.loadCalendarData();
@@ -542,7 +543,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		var thisInstance = this;
 		$('.siteBarRight .select2').each(function (index) {
 			var name = $(this).attr('id');
-			var value = app.cacheGet('Calendar_' + name);
+			var value = app.moduleCacheGet(name);
 			var element = $('#' + name);
 			if (element.length > 0 && value != null) {
 				if (element.prop('tagName') == 'SELECT') {
@@ -557,17 +558,22 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		$('.siteBarRight .select2, .siteBarRight .filterField').on('change', function () {
 			var element = $(this);
 			var value = element.val();
+			if (value == null) {
+				value = '';
+			}
 			thisInstance.loadCalendarData();
 			if (element.attr('type') == 'checkbox') {
 				value = element.is(':checked');
 			}
-			app.cacheSet('Calendar_' + element.attr('id'), value);
+			app.moduleCacheSet(element.attr('id'), value);
 		});
 	},
 	registerCacheSettings: function () {
+		var thisInstance = this;
+		var calendar = thisInstance.getCalendarView();
 		$('.siteBarRight .filterField').each(function (index) {
 			var name = $(this).attr('id');
-			var value = app.cacheGet('Calendar_' + name);
+			var value = app.moduleCacheGet(name);
 			var element = $('#' + name);
 			if (element.length > 0 && value != null) {
 				if (element.attr('type') == 'checkbox') {
@@ -575,12 +581,46 @@ jQuery.Class("Calendar_CalendarView_Js", {
 				}
 			}
 		});
+		calendar.find('.fc-toolbar .fc-button').click(function (e) {
+			var defaultView, view, options;
+			var element = $(e.currentTarget);
+			view = calendar.fullCalendar('getView');
+			options = view.options;
+			if (element.hasClass('fc-' + view.name + '-button')) {
+				app.moduleCacheSet('defaultView', view.name);
+			} else if (element.hasClass('fc-prev-button') || element.hasClass('fc-next-button') || element.hasClass('fc-today-button')) {
+				app.moduleCacheSet('start', view.start.format());
+				app.moduleCacheSet('end', view.end.format());
+			}
+		});
+		var keys = app.moduleCacheKeys();
+		if (keys.length > 0) {
+			var alert = $('#moduleCacheAlert');
+			$('.bodyContents').on('Vtiger.Widget.Load.undefined', function (e, data) {
+				alert.removeClass('hide');
+			});
+			alert.find('.cacheClear').click(function (e) {
+				app.moduleCacheClear();
+				alert.addClass('hide');
+				location.reload();
+			});
+		}
+	},
+	registerLoadCalendarData: function () {
+		var thisInstance = this;
+		var widgets = $('.siteBarRight .widgetContainer').length;
+		$('.bodyContents').on('Vtiger.Widget.Load.undefined', function (e, data) {
+			widgets -= 1;
+			if (widgets == 0) {
+				thisInstance.loadCalendarData(true);
+			}
+		});
 	},
 	registerEvents: function () {
 		this.renderCalendar();
 		this.registerCacheSettings();
 		this.registerAddButton();
-		this.loadCalendarData(true);
+		this.registerLoadCalendarData();
 		this.registerButtonSelectAll();
 		this.registerChangeView();
 	}

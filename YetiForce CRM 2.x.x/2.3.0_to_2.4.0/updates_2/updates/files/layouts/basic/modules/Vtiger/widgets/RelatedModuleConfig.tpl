@@ -12,7 +12,7 @@
 <div class="modal fade" tabindex="-1">
 	<div class="modal-dialog">
         <div class="modal-content">
-			<form class="form-modalAddWidget form-horizontal">
+			<form class="form-modalAddWidget form-horizontal validateForm">
 				<input type="hidden" name="wid" value="{$WID}">
 				<input type="hidden" name="type" value="{$TYPE}">
 				<div class="modal-header">
@@ -34,7 +34,7 @@
 						<div class="form-group form-group-sm">
 							<label class="col-md-4 control-label">{vtranslate('Related module', $QUALIFIED_MODULE)}<a href="#" class="HelpInfoPopover" title="" data-placement="top" data-content="{vtranslate('Related module info', $QUALIFIED_MODULE)}" data-original-title="{vtranslate('Related module', $QUALIFIED_MODULE)}"><i class="glyphicon glyphicon-info-sign"></i></a>:</label>
 							<div class="col-md-7 controls">
-								<select name="relatedmodule" class="select2 form-control marginLeftZero">
+								<select name="relatedmodule" class="select2 form-control marginLeftZero" data-validation-engine="validate[required]">
 									{foreach from=$RELATEDMODULES item=item key=key}
 										<option value="{$item['related_tabid']}" {if $WIDGETINFO['data']['relatedmodule'] == $item['related_tabid']}selected{/if} >{vtranslate($item['label'], $item['name'])}</option>
 									{/foreach}
@@ -81,12 +81,12 @@
 								<input name="no_result_text" class="switchBtn switchBtnReload" type="checkbox" {if $WIDGETINFO['data']['no_result_text'] == 1}checked{/if} data-size="mini" data-label-width="5" data-on-text="{vtranslate('LBL_YES', $QUALIFIED_MODULE)}" data-off-text="{vtranslate('LBL_NO', $QUALIFIED_MODULE)}" value="1">
 							</div>
 						</div>
-						<div class="form-group form-group-sm form-switch-mini">
+						{*<div class="form-group form-group-sm form-switch-mini">
 							<label class="col-md-4 control-label">{vtranslate('LBL_SHOW_ALL_RECORDS', $QUALIFIED_MODULE)}<a href="#" class="HelpInfoPopover" title="" data-placement="top" data-content="{vtranslate('LBL_SHOW_ALL_RECORDS_INFO', $QUALIFIED_MODULE)}" data-original-title="{vtranslate('LBL_SHOW_ALL_RECORDS', $QUALIFIED_MODULE)}"><i class="glyphicon glyphicon-info-sign"></i></a>:</label>
 							<div class="col-md-7 controls">
 								<input name="showAll" class="switchBtn switchBtnReload" type="checkbox" {if $WIDGETINFO['data']['showAll'] == 1}checked{/if} data-size="mini" data-label-width="5" data-on-text="{vtranslate('LBL_YES', $QUALIFIED_MODULE)}" data-off-text="{vtranslate('LBL_NO', $QUALIFIED_MODULE)}" value="1">
 							</div>
-						</div>
+						</div>*}
 						<div class="form-group form-group-sm hide">
 							<label class="col-md-4 control-label">{vtranslate('LBL_SHITCH_HEADER', $QUALIFIED_MODULE)}<a href="#" class="HelpInfoPopover" title="" data-placement="top" data-content="{vtranslate('LBL_SHITCH_HEADER_INFO', $QUALIFIED_MODULE)}" data-original-title="{vtranslate('LBL_SHITCH_HEADER', $QUALIFIED_MODULE)}"><i class="glyphicon glyphicon-info-sign"></i></a>:</label>
 							<div class="col-md-7">

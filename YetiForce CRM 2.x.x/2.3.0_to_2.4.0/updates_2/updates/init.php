@@ -141,6 +141,18 @@ class YetiForceUpdate
 		'modules/PaymentsIn/workflow',
 		'modules/ServiceContracts/models',
 		'modules/Home/js',
+		'install',
+		'modules/Project/summary_blocks/SumTime.php',
+		'modules/Project/summary_blocks/SumTimeProjectTask.php',
+		'modules/Project/summary_blocks/SumTimeTickets.php',
+		'layouts/basic/modules/Rss/SideBarLinks.tpl',
+		'layouts/basic/modules/Vtiger/DetailViewSidebar.tpl',
+		'layouts/basic/modules/Vtiger/IndexMenuStart.tpl',
+		'layouts/basic/modules/Vtiger/ListViewSidebar.tpl',
+		'layouts/basic/modules/Vtiger/SideBar.tpl',
+		'layouts/basic/modules/Vtiger/SideBarLinks.tpl',
+		'layouts/basic/modules/Vtiger/SideBarWidgets.tpl',
+		'modules/Calendar/actions/ExportData.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -156,6 +168,7 @@ class YetiForceUpdate
 
 	function update()
 	{
+		$rootDir = vglobal('root_directory');
 		$this->setTablesScheme($this->getTablesAction(1));
 		$this->addModules();
 		$this->setAlterTables($this->getAlterTables(1));
@@ -182,15 +195,57 @@ class YetiForceUpdate
 		$this->move($this->getFieldsToMove(2));
 		$this->addHandler([['vtiger.view.detail.before', 'modules/ModTracker/handlers/ModTrackerHandler.php', 'ModTrackerHandler', '', '1', '[]']]);
 		$this->changeTicketCategory();
-//		$this->removeFields($this->getFieldsToRemove(2));
-//		$this->setFields($this->getFields(2));
+		$this->updatePack3();
 		//...
 		$this->updateMenu();
 		$this->updateSettingsMenu();
 		$this->updateSettingFieldsMenu();
+		$this->roundcubeConfig();
+		@chmod($root_dir . 'cron/vtigercron.sh', 0775);
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		Vtiger_Deprecated::createModuleMetaFile();
+	}
+
+	function roundcubeConfig()
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+		$root_directory = vglobal('root_directory');
+		if (!$root_directory)
+			$root_directory = getcwd();
+		$fileName = $root_directory . '/modules/OSSMail/roundcube/config/config.inc.php';
+		if (file_exists($fileName)) {
+			$configContent = file($fileName);
+			foreach ($configContent as $key => $line) {
+				if (strpos($line, "config['plugins']") !== false && strpos($line, "zipdownload") === false) {
+					$configContent[$key] = str_replace("'thunderbird_labels'", "'thunderbird_labels','zipdownload'", $configContent[$key]);
+				}
+			}
+			$content = implode("", $configContent);
+			$file = fopen($fileName, "w+");
+			fwrite($file, $content);
+			fclose($file);
+		}
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	public function addCron($addCrons = [])
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+		$db = PearDatabase::getInstance();
+		if ($addCrons) {
+			foreach ($addCrons as $cron) {
+				$result = $db->pquery("SELECT * FROM `vtiger_cron_task` WHERE name = ? AND handler_file = ?;", [$cron[0], $cron[1]]);
+				if ($db->getRowCount($result) == 0) {
+					Vtiger_Cron::register($cron[0], $cron[1], $cron[2], $cron[6], $cron[5], 0, $cron[8]);
+//					$key = $this->getMax('vtiger_cron_task', 'sequence');
+//					$db->pquery('UPDATE `vtiger_cron_task` SET `sequence` = ? WHERE name = ? AND handler_file = ?;', [$key, $cron[0], $cron[1]]);
+				}
+			}
+		}
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
 	public function changeTicketCategory()
@@ -290,8 +345,8 @@ class YetiForceUpdate
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$db = PearDatabase::getInstance();
 		$actions = [7 => 'CreateView'];
-		$result = $db->pquery('SELECT 1 FROM vtiger_actionmapping WHERE actionname = ?;',['CreateView']);
-		if ($result->rowCount()){
+		$result = $db->pquery('SELECT 1 FROM vtiger_actionmapping WHERE actionname = ?;', ['CreateView']);
+		if ($result->rowCount()) {
 			$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 			return;
 		}
@@ -384,7 +439,7 @@ class YetiForceUpdate
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$db = PearDatabase::getInstance();
-		$actions = ['FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'OpenRecord'];
+		$actions = ['FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'OpenRecord', 'NotificationCreateMessage', 'NotificationCreateMail', 'NotificationPreview'];
 		foreach ($actions as $action) {
 			$result = $db->pquery('SELECT actionid FROM vtiger_actionmapping WHERE actionname=? LIMIT 1;', [$action]);
 			if (!$db->getRowCount($result)) {
@@ -399,6 +454,8 @@ class YetiForceUpdate
 				$sql = "SELECT tabid, `name`  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND `name` IN ('SSingleOrders','SRequirementsCards','SRecurringOrders','SQuotes','SQuoteEnquiries','SCalculations');";
 			} elseif ($action == 'OpenRecord') {
 				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name IN ('Assets','OSSSoldServices');";
+			} elseif (in_array($action, ['NotificationCreateMessage', 'NotificationCreateMail', 'NotificationPreview'])) {
+				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE name IN ('Dashboard');";
 			} else {
 				$sql = "SELECT tabid, name  FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name NOT IN ('SMSNotifier','ModComments','PBXManager','Events','Emails','');";
 			}
@@ -487,6 +544,75 @@ class YetiForceUpdate
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
+	public function getDataToInventoryFieldsUpdate($index)
+	{
+		$data = [];
+		switch ($index) {
+			case 1:
+				$data = [
+					'u_yf_fcorectinginvoice_invfield' => [
+						'colspan' => ['name' => '20', 'qty' => '7', 'discount' => '7', 'comment1' => '0', 'currency' => '7', 'discountmode' => '7', 'taxmode' => '7', 'price' => '7', 'gross' => '7', 'net' => '7', 'tax' => '7', 'total' => '7', 'unit' => '7', 'subunit' => '7'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '6', 'comment1' => '11', 'currency' => '12', 'discountmode' => '13', 'taxmode' => '14', 'price' => '4', 'gross' => '9', 'net' => '7', 'tax' => '8', 'total' => '5', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_finvoice_invfield' => [
+						'colspan' => ['name' => '20', 'qty' => '7', 'discount' => '7', 'comment1' => '0', 'currency' => '7', 'discountmode' => '7', 'taxmode' => '7', 'price' => '7', 'gross' => '7', 'net' => '7', 'tax' => '7', 'total' => '7', 'unit' => '7', 'subunit' => '7'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '6', 'comment1' => '11', 'currency' => '12', 'discountmode' => '13', 'taxmode' => '14', 'price' => '4', 'gross' => '9', 'net' => '7', 'tax' => '8', 'total' => '5', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_finvoiceproforma_invfield' => [
+						'colspan' => ['currency' => '1', 'discountmode' => '1', 'taxmode' => '1', 'name' => '30', 'qty' => '10', 'price' => '10', 'total' => '10', 'discount' => '10', 'net' => '10', 'tax' => '10', 'gross' => '10', 'comment1' => '0', 'unit' => '10', 'subunit' => '10'],
+						'sequence' => ['currency' => '1', 'discountmode' => '2', 'taxmode' => '3', 'name' => '0', 'qty' => '3', 'price' => '4', 'total' => '5', 'discount' => '6', 'net' => '7', 'tax' => '8', 'gross' => '9', 'comment1' => '12', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_scalculations_invfield' => [
+						'colspan' => ['name' => '40', 'qty' => '10', 'comment1' => '0', 'price' => '10', 'total' => '10', 'purchase' => '10', 'marginp' => '10', 'margin' => '10', 'unit' => '10', 'subunit' => '10'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'comment1' => '3', 'price' => '4', 'total' => '5', 'purchase' => '6', 'marginp' => '7', 'margin' => '8', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_squoteenquiries_invfield' => [
+						'colspan' => ['name' => '40', 'qty' => '10', 'comment1' => '0', 'price' => '10', 'total' => '10', 'purchase' => '10', 'marginp' => '10', 'margin' => '10', 'unit' => '10', 'subunit' => '10'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'comment1' => '3', 'price' => '4', 'total' => '5', 'purchase' => '6', 'marginp' => '7', 'margin' => '8', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_squotes_invfield' => [
+						'colspan' => ['name' => '10', 'qty' => '7', 'discount' => '7', 'marginp' => '10', 'margin' => '7', 'comment1' => '0', 'price' => '7', 'total' => '7', 'purchase' => '7', 'tax' => '7', 'gross' => '7', 'discountmode' => '1', 'taxmode' => '1', 'currency' => '1', 'net' => '7', 'subunit' => '7', 'unit' => '7'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '6', 'marginp' => '9', 'margin' => '10', 'comment1' => '6', 'price' => '4', 'total' => '5', 'purchase' => '8', 'tax' => '11', 'gross' => '12', 'discountmode' => '10', 'taxmode' => '11', 'currency' => '12', 'net' => '7', 'subunit' => '2', 'unit' => '1']
+					],
+					'u_yf_srecurringorders_invfield' => [
+						'colspan' => ['name' => '30', 'qty' => '10', 'discount' => '10', 'marginp' => '10', 'margin' => '10', 'tax' => '10', 'comment1' => '0', 'unit' => '10', 'subunit' => '10'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '4', 'marginp' => '5', 'margin' => '6', 'tax' => '7', 'comment1' => '7', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_srequirementscards_invfield' => [
+						'colspan' => ['name' => '50', 'qty' => '30', 'comment1' => '0', 'unit' => '10', 'subunit' => '10'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'comment1' => '3', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_ssingleorders_invfield' => [
+						'colspan' => ['name' => '15', 'qty' => '7', 'discount' => '7', 'marginp' => '10', 'margin' => '7', 'tax' => '7', 'comment1' => '0', 'price' => '7', 'total' => '7', 'net' => '7', 'purchase' => '7', 'gross' => '7', 'discountmode' => '1', 'taxmode' => '1', 'currency' => '1', 'unit' => '7', 'subunit' => '7'],
+						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '6', 'marginp' => '9', 'margin' => '10', 'tax' => '11', 'comment1' => '7', 'price' => '4', 'total' => '5', 'net' => '7', 'purchase' => '8', 'gross' => '12', 'discountmode' => '11', 'taxmode' => '12', 'currency' => '13', 'unit' => '1', 'subunit' => '2']
+					]
+				];
+				break;
+			default:
+				break;
+		}
+		return $data;
+	}
+
+	public function updateInventoryFieldsData($data)
+	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+		$db = PearDatabase::getInstance();
+		foreach ($data as $tabel => $cols) {
+			$sql = '';
+			foreach ($cols as $set => $colNames) {
+				$sql .= empty($sql) ? "UPDATE $tabel SET $set = CASE " : ", $set = CASE ";
+				foreach ($colNames as $name => $value) {
+					$sql .= " WHEN columnname = '$name' THEN $value";
+				}
+				$sql .= ' ELSE ' . $set . ' END';
+			}
+			$db->query($sql);
+		}
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
 	public function updateSettingFieldsMenu()
 	{
 		$log = vglobal('log');
@@ -495,90 +621,93 @@ class YetiForceUpdate
 
 		$menu = [
 			['LBL_USER_MANAGEMENT', 'LBL_USERS', 'adminIcon-user', 'LBL_USER_DESCRIPTION', 'index.php?module=Users&parent=Settings&view=List', '1', '0', '1'],
-			['LBL_USER_MANAGEMENT', 'LBL_ROLES', 'adminIcon-roles', 'LBL_ROLE_DESCRIPTION', 'index.php?module=Roles&parent=Settings&view=Index', '2', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'LBL_PROFILES', 'adminIcon-profiles', 'LBL_PROFILE_DESCRIPTION', 'index.php?module=Profiles&parent=Settings&view=List', '3', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'USERGROUPLIST', 'adminIcon-groups', 'LBL_GROUP_DESCRIPTION', 'index.php?module=Groups&parent=Settings&view=List', '4', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'LBL_SHARING_ACCESS', 'adminIcon-module-access', 'LBL_SHARING_ACCESS_DESCRIPTION', 'index.php?module=SharingAccess&parent=Settings&view=Index', '5', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'LBL_FIELDS_ACCESS', 'adminIcon-special-access', 'LBL_SHARING_FIELDS_DESCRIPTION', 'index.php?module=FieldAccess&parent=Settings&view=Index', '6', '0', '0'],
-			['LBL_LOGS', 'LBL_LOGIN_HISTORY_DETAILS', 'adminIcon-users-login', 'LBL_LOGIN_HISTORY_DESCRIPTION', 'index.php?module=LoginHistory&parent=Settings&view=List', '3', '0', '0'],
-			['LBL_STUDIO', 'VTLIB_LBL_MODULE_MANAGER', 'adminIcon-modules-installation', 'VTLIB_LBL_MODULE_MANAGER_DESCRIPTION', 'index.php?module=ModuleManager&parent=Settings&view=List', '1', '0', '1'],
-			['LBL_STUDIO', 'LBL_PICKLIST_EDITOR', 'adminIcon-fields-picklists', 'LBL_PICKLIST_DESCRIPTION', 'index.php?parent=Settings&module=Picklist&view=Index', '9', '0', '1'],
-			['LBL_STUDIO', 'LBL_PICKLIST_DEPENDENCY_SETUP', 'adminIcon-fields-picklists-relations', 'LBL_PICKLIST_DEPENDENCY_DESCRIPTION', 'index.php?parent=Settings&module=PickListDependency&view=List', '10', '0', '0'],
-			['LBL_COMPANY', 'NOTIFICATIONSCHEDULERS', '', 'LBL_NOTIF_SCHED_DESCRIPTION', 'index.php?module=Settings&view=listnotificationschedulers&parenttab=Settings', '4', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'INVENTORYNOTIFICATION', '', 'LBL_INV_NOTIF_DESCRIPTION', 'index.php?module=Settings&view=listinventorynotifications&parenttab=Settings', '1', '0', '0'],
-			['LBL_COMPANY', 'LBL_COMPANY_DETAILS', 'adminIcon-company-detlis', 'LBL_COMPANY_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=CompanyDetails', '2', '0', '0'],
-			['LBL_MAIL_TOOLS', 'LBL_MAIL_SERVER_SETTINGS', 'adminIcon-mail-configuration', 'LBL_MAIL_SERVER_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=OutgoingServerDetail', '5', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_CURRENCY_SETTINGS', 'adminIcon-currencies', 'LBL_CURRENCY_DESCRIPTION', 'index.php?parent=Settings&module=Currency&view=List', '4', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_SWITCH_USERS', 'adminIcon-users', 'LBL_SWITCH_USERS_DESCRIPTION', 'index.php?module=Users&view=SwitchUsers&parent=Settings', '11', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_SYSTEM_INFO', 'adminIcon-server-configuration', 'LBL_SYSTEM_DESCRIPTION', 'index.php?module=Settings&submodule=Server&view=ProxyConfig', '6', '1', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_ANNOUNCEMENT', 'adminIcon-company-information', 'LBL_ANNOUNCEMENT_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=AnnouncementEdit', '2', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_DEFAULT_MODULE_VIEW', 'adminIcon-standard-modules', 'LBL_DEFAULT_MODULE_VIEW_DESC', 'index.php?module=Settings&action=DefModuleView&parenttab=Settings', '2', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_TERMS_AND_CONDITIONS', 'adminIcon-terms-and-conditions', 'LBL_INV_TANDC_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=TermsAndConditionsEdit', '3', '0', '0'],
-			['LBL_STUDIO', 'LBL_CUSTOMIZE_RECORD_NUMBERING', 'adminIcon-recording-control', 'LBL_CUSTOMIZE_MODENT_NUMBER_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=CustomRecordNumbering', '6', '0', '0'],
-			['LBL_AUTOMATION', 'LBL_LIST_WORKFLOWS', 'adminIcon-triggers', 'LBL_LIST_WORKFLOWS_DESCRIPTION', 'index.php?module=Workflows&parent=Settings&view=List', '1', '0', '1'],
-			['LBL_SYSTEM_TOOLS', 'LBL_CONFIG_EDITOR', 'adminIcon-system-tools', 'LBL_CONFIG_EDITOR_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=ConfigEditorDetail', '7', '0', '0'],
-			['LBL_AUTOMATION', 'Scheduler', 'adminIcon-cron', 'LBL_SCHEDULER_DESCRIPTION', 'index.php?module=CronTasks&parent=Settings&view=List', '3', '0', '0'],
-			['LBL_AUTOMATION', 'LBL_WORKFLOW_LIST', 'adminIcon-workflow', 'LBL_AVAILABLE_WORKLIST_LIST', 'index.php?module=com_vtiger_workflow&action=workflowlist', '1', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'ModTracker', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_DESCRIPTION', 'index.php?module=ModTracker&action=BasicSettings&parenttab=Settings&formodule=ModTracker', '9', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_PBXMANAGER', 'adminIcon-pbx-manager', 'LBL_PBXMANAGER_DESCRIPTION', 'index.php?module=PBXManager&parent=Settings&view=Index', '22', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_CUSTOMER_PORTAL', 'adminIcon-customer-portal', 'PORTAL_EXTENSION_DESCRIPTION', 'index.php?module=CustomerPortal&action=index&parenttab=Settings', '3', '0', '0'],
-			['LBL_INTEGRATION', 'Webforms', 'adminIcon-online-forms', 'LBL_WEBFORMS_DESCRIPTION', 'index.php?module=Webforms&action=index&parenttab=Settings', '4', '0', '0'],
-			['LBL_STUDIO', 'LBL_EDIT_FIELDS', 'adminIcon-modules-fields', 'LBL_LAYOUT_EDITOR_DESCRIPTION', 'index.php?module=LayoutEditor&parent=Settings&view=Index', '2', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_PDF', 'adminIcon-modules-pdf-templates', 'LBL_PDF_DESCRIPTION', 'index.php?module=PDF&parent=Settings&view=List', '10', '0', '0'],
-			['LBL_SECURITY_MANAGEMENT', 'LBL_PASSWORD_CONF', 'adminIcon-passwords-configuration', 'LBL_PASSWORD_DESCRIPTION', 'index.php?module=Password&parent=Settings&view=Index', '1', '0', '0'],
-			['LBL_STUDIO', 'LBL_MENU_BUILDER', 'adminIcon-menu-configuration', 'LBL_MENU_BUILDER_DESCRIPTION', 'index.php?module=Menu&view=Index&parent=Settings', '14', '0', '1'],
-			['LBL_STUDIO', 'LBL_ARRANGE_RELATED_TABS', 'adminIcon-modules-relations', 'LBL_ARRANGE_RELATED_TABS', 'index.php?module=LayoutEditor&parent=Settings&view=Index&mode=showRelatedListLayout', '4', '0', '1'],
-			['LBL_MAIL_TOOLS', 'Mail Scanner', 'adminIcon-mail-scanner', 'LBL_MAIL_SCANNER_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=Index', '3', '0', '0'],
-			['LBL_LOGS', 'Mail Logs', 'adminIcon-mail-download-history', 'LBL_MAIL_LOGS_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=logs', '4', '0', '0'],
-			['LBL_MAIL_TOOLS', 'Mail View', 'adminIcon-oss_mailview', 'LBL_MAIL_VIEW_DESCRIPTION', 'index.php?module=OSSMailView&parent=Settings&view=index', '21', '0', '0'],
-			['LBL_AUTOMATION', 'Document Control', 'adminIcon-workflow', 'LBL_DOCUMENT_CONTROL_DESCRIPTION', 'index.php?module=OSSDocumentControl&parent=Settings&view=Index', '4', '0', '0'],
-			['LBL_AUTOMATION', 'Project Templates', 'adminIcon-document-templates', 'LBL_PROJECT_TEMPLATES_DESCRIPTION', 'index.php?module=OSSProjectTemplates&parent=Settings&view=Index', '5', '0', '0'],
-			['LBL_About_YetiForce', 'License', 'adminIcon-license', 'LBL_LICENSE_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=License', '4', '0', '0'],
-			['LBL_SECURITY_MANAGEMENT', 'OSSPassword Configuration', 'adminIcon-passwords-encryption', 'LBL_OSSPASSWORD_CONFIGURATION_DESCRIPTION', 'index.php?module=OSSPasswords&view=ConfigurePass&parent=Settings', '3', '0', '0'],
-			['LBL_AUTOMATION', 'LBL_DATAACCESS', 'adminIcon-recording-control', 'LBL_DATAACCESS_DESCRIPTION', 'index.php?module=DataAccess&parent=Settings&view=Index', '2', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LangManagement', 'adminIcon-languages-and-translations', 'LBL_LANGMANAGEMENT_DESCRIPTION', 'index.php?module=LangManagement&parent=Settings&view=Index', '1', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'GlobalPermission', 'adminIcon-special-access', 'LBL_GLOBALPERMISSION_DESCRIPTION', 'index.php?module=GlobalPermission&parent=Settings&view=Index', '7', '0', '0'],
-			['LBL_SEARCH_AND_FILTERS', 'Search Setup', 'adminIcon-search-configuration', 'LBL_SEARCH_SETUP_DESCRIPTION', 'index.php?module=Search&parent=Settings&view=Index', '1', '0', '0'],
-			['LBL_SEARCH_AND_FILTERS', 'CustomView', 'adminIcon-filters-configuration', 'LBL_CUSTOMVIEW_DESCRIPTION', 'index.php?module=CustomView&parent=Settings&view=Index', '2', '0', '0'],
-			['LBL_STUDIO', 'Widgets', 'adminIcon-modules-widgets', 'LBL_WIDGETS_DESCRIPTION', 'index.php?module=Widgets&parent=Settings&view=Index', '3', '0', '1'],
-			['LBL_About_YetiForce', 'Credits', 'adminIcon-contributors', 'LBL_CREDITS_DESCRIPTION', 'index.php?module=Vtiger&view=Credits&parent=Settings', '3', '0', '0'],
-			['LBL_STUDIO', 'LBL_QUICK_CREATE_EDITOR', 'adminIcon-fields-quick-create', 'LBL_QUICK_CREATE_EDITOR_DESCRIPTION', 'index.php?module=QuickCreateEditor&parent=Settings&view=Index', '8', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_API_ADDRESS', 'adminIcon-address', 'LBL_API_ADDRESS_DESCRIPTION', 'index.php?module=ApiAddress&parent=Settings&view=Configuration', '5', '0', '0'],
-			['LBL_SECURITY_MANAGEMENT', 'LBL_BRUTEFORCE', 'adminIcon-brute-force', 'LBL_BRUTEFORCE_DESCRIPTION', 'index.php?module=BruteForce&parent=Settings&view=Show', '2', '0', '0'],
-			['LBL_LOGS', 'LBL_UPDATES_HISTORY', 'adminIcon-server-updates', 'LBL_UPDATES_HISTORY_DESCRIPTION', 'index.php?parent=Settings&module=Updates&view=Index', '2', '0', '0'],
-			['LBL_SECURITY_MANAGEMENT', 'Backup', 'adminIcon-backup', 'LBL_BACKUP_DESCRIPTION', 'index.php?parent=Settings&module=BackUp&view=Index', '4', '0', '0'],
-			['LBL_LOGS', 'LBL_CONFREPORT', 'adminIcon-server-configuration', 'LBL_CONFREPORT_DESCRIPTION', 'index.php?parent=Settings&module=ConfReport&view=Index', '1', '0', '0'],
-			['LBL_CALENDAR_LABELS_COLORS', 'LBL_ACTIVITY_TYPES', 'adminIcon-calendar-types', 'LBL_ACTIVITY_TYPES_DESCRIPTION', 'index.php?parent=Settings&module=Calendar&view=ActivityTypes', '1', '0', '0'],
-			['LBL_STUDIO', 'LBL_WIDGETS_MANAGEMENT', 'adminIcon-widgets-configuration', 'LBL_WIDGETS_MANAGEMENT_DESCRIPTION', 'index.php?module=WidgetsManagement&parent=Settings&view=Configuration', '15', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_MOBILE_KEYS', 'adminIcon-mobile-applications', 'LBL_MOBILE_KEYS_DESCRIPTION', 'index.php?parent=Settings&module=MobileApps&view=MobileKeys', '6', '0', '0'],
-			['LBL_STUDIO', 'LBL_TREES_MANAGER', 'adminIcon-field-folders', 'LBL_TREES_MANAGER_DESCRIPTION', 'index.php?module=TreesManager&parent=Settings&view=List', '11', '0', '0'],
-			['LBL_STUDIO', 'LBL_MODTRACKER_SETTINGS', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_SETTINGS_DESCRIPTION', 'index.php?module=ModTracker&parent=Settings&view=List', '5', '0', '0'],
-			['LBL_STUDIO', 'LBL_HIDEBLOCKS', 'adminIcon-filed-hide-bloks', 'LBL_HIDEBLOCKS_DESCRIPTION', 'index.php?module=HideBlocks&parent=Settings&view=List', '12', '0', '0'],
-			['LBL_CALENDAR_LABELS_COLORS', 'LBL_PUBLIC_HOLIDAY', 'adminIcon-calendar-holidys', 'LBL_PUBLIC_HOLIDAY_DESCRIPTION', 'index.php?module=PublicHoliday&view=Configuration&parent=Settings', '3', '0', '0'],
-			['LBL_CALENDAR_LABELS_COLORS', 'LBL_CALENDAR_CONFIG', 'adminIcon-calendar-configuration', 'LBL_CALENDAR_CONFIG_DESCRIPTION', 'index.php?parent=Settings&module=Calendar&view=UserColors', '2', '0', '0'],
-			['LBL_PROCESSES', 'LBL_SALES_PROCESSES', 'adminIcon-sales', 'LBL_SALES_PROCESSES_DESCRIPTION', 'index.php?module=SalesProcesses&view=Index&parent=Settings', '2', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_DAV_KEYS', 'adminIcon-dav-applications', 'LBL_DAV_KEYS_DESCRIPTION', 'index.php?parent=Settings&module=Dav&view=Keys', '7', '0', '0'],
-			['LBL_MAIL_TOOLS', 'LBL_AUTOLOGIN', 'adminIcon-mail-auto-login', 'LBL_AUTOLOGIN_DESCRIPTION', 'index.php?parent=Settings&module=Mail&view=Autologin', '4', '0', '0'],
-			['LBL_MAIL_TOOLS', 'LBL_MAIL_GENERAL_CONFIGURATION', 'adminIcon-mail-smtp-server', 'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION', 'index.php?parent=Settings&module=Mail&view=Config', '1', '0', '0'],
-			['LBL_PROCESSES', 'LBL_SUPPORT_PROCESSES', 'adminIcon-support ', 'LBL_SUPPORT_PROCESSES_DESCRIPTION', 'index.php?module=SupportProcesses&view=Index&parent=Settings', '6', '0', '0'],
-			['LBL_CALENDAR_LABELS_COLORS', 'LBL_COLORS', 'adminIcon-colors', 'LBL_COLORS_DESCRIPTION', 'index.php?module=Users&parent=Settings&view=Colors', '4', '0', '0'],
-			['LBL_PROCESSES', 'LBL_REALIZATION_PROCESSES', 'adminIcon-realization', 'LBL_REALIZATION_PROCESSES_DESCRIPTION', 'index.php?module=RealizationProcesses&view=Index&parent=Settings', '3', '0', '0'],
-			['LBL_PROCESSES', 'LBL_MARKETING_PROCESSES', 'adminIcon-marketing', 'LBL_MARKETING_PROCESSES_DESCRIPTION', 'index.php?module=MarketingProcesses&view=Index&parent=Settings', '1', '0', '0'],
-			['LBL_PROCESSES', 'LBL_FINANCIAL_PROCESSES', 'adminIcon-finances', 'LBL_FINANCIAL_PROCESSES_DESCRIPTION', 'index.php?module=FinancialProcesses&view=Index&parent=Settings', '5', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_AUTHORIZATION', 'adminIcon-automation', 'LBL_AUTHORIZATION_DESCRIPTION', 'index.php?module=Users&view=Auth&parent=Settings', '1', '0', '0'],
-			['LBL_PROCESSES', 'LBL_TIMECONTROL_PROCESSES', 'adminIcon-logistics', 'LBL_TIMECONTROL_PROCESSES_DESCRIPTION', 'index.php?module=TimeControlProcesses&parent=Settings&view=Index', '7', '0', '0'],
-			['LBL_STUDIO', 'LBL_CUSTOM_FIELD_MAPPING', 'adminIcon-filed-mapping', 'LBL_CUSTOM_FIELD_MAPPING_DESCRIPTION', 'index.php?parent=Settings&module=Leads&view=MappingDetail', '13', '0', '0'],
-			['LBL_INTEGRATION', 'LBL_CURRENCY_UPDATE', 'adminIcon-currencies', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings', '2', '0', '0'],
-			['LBL_ADVANCED_MODULES', 'LBL_CREDITLIMITS', 'adminIcon-credit-limit-base_2', 'LBL_CREDITLIMITS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=CreditLimits', '5', '0', '0'],
-			['LBL_ADVANCED_MODULES', 'LBL_TAXES', 'adminIcon-taxes-rates', 'LBL_TAXES_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Taxes', '1', '0', '0'],
-			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTS', 'adminIcon-discount-base', 'LBL_DISCOUNTS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Discounts', '3', '0', '0'],
-			['LBL_ADVANCED_MODULES', 'LBL_TAXCONFIGURATION', 'adminIcon-taxes-caonfiguration', 'LBL_TAXCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=TaxConfiguration', '4', '0', '0'],
-			['LBL_ADVANCED_MODULES', 'LBL_DISCOUNTCONFIGURATION', 'adminIcon-discount-configuration', 'LBL_DISCOUNTCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=DiscountConfiguration', '2', '0', '0'],
-			['LBL_MAIL_TOOLS', 'Mail', 'adminIcon-mail-download-history', 'LBL_OSSMAIL_DESCRIPTION', 'index.php?module=OSSMail&parent=Settings&view=index', '2', '0', '0'],
-			['LBL_STUDIO', 'LBL_MAPPEDFIELDS', 'adminIcon-mapped-fields', 'LBL_MAPPEDFIELDS_DESCRIPTION', 'index.php?module=MappedFields&parent=Settings&view=List', '16', '0', '0'],
-			['LBL_USER_MANAGEMENT', 'LBL_LOCKS', 'adminIcon-locks', 'LBL_LOCKS_DESCRIPTION', 'index.php?module=Users&view=Locks&parent=Settings', '8', '0', '0'],
-			['LBL_SYSTEM_TOOLS', 'LBL_TYPE_NOTIFICATIONS', 'adminIcon-TypeNotification', 'LBL_TYPE_NOTIFICATIONS_DESCRIPTION', 'index.php?module=Notifications&view=List&parent=Settings', 12, 0, 0],
-			['LBL_SYSTEM_TOOLS', 'LBL_NOTIFICATIONS_CONFIGURATION', 'adminIcon-NotificationConfiguration', 'LBL_TYPE_NOTIFICATIONS_DESCRIPTION', 'index.php?module=Notifications&view=Configuration&parent=Settings', 13, 0, 0]
+			[ 'LBL_USER_MANAGEMENT', 'LBL_ROLES', 'adminIcon-roles', 'LBL_ROLE_DESCRIPTION', 'index.php?module=Roles&parent=Settings&view=Index', '2', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'LBL_PROFILES', 'adminIcon-profiles', 'LBL_PROFILE_DESCRIPTION', 'index.php?module=Profiles&parent=Settings&view=List', '3', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'USERGROUPLIST', 'adminIcon-groups', 'LBL_GROUP_DESCRIPTION', 'index.php?module=Groups&parent=Settings&view=List', '4', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'LBL_SHARING_ACCESS', 'adminIcon-module-access', 'LBL_SHARING_ACCESS_DESCRIPTION', 'index.php?module=SharingAccess&parent=Settings&view=Index', '5', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'LBL_FIELDS_ACCESS', 'adminIcon-special-access', 'LBL_SHARING_FIELDS_DESCRIPTION', 'index.php?module=FieldAccess&parent=Settings&view=Index', '6', '0', '0'],
+			[ 'LBL_LOGS', 'LBL_LOGIN_HISTORY_DETAILS', 'adminIcon-users-login', 'LBL_LOGIN_HISTORY_DESCRIPTION', 'index.php?module=LoginHistory&parent=Settings&view=List', '3', '0', '0'],
+			[ 'LBL_STUDIO', 'VTLIB_LBL_MODULE_MANAGER', 'adminIcon-modules-installation', 'VTLIB_LBL_MODULE_MANAGER_DESCRIPTION', 'index.php?module=ModuleManager&parent=Settings&view=List', '1', '0', '1'],
+			[ 'LBL_STUDIO', 'LBL_PICKLIST_EDITOR', 'adminIcon-fields-picklists', 'LBL_PICKLIST_DESCRIPTION', 'index.php?parent=Settings&module=Picklist&view=Index', '9', '0', '1'],
+			[ 'LBL_STUDIO', 'LBL_PICKLIST_DEPENDENCY_SETUP', 'adminIcon-fields-picklists-relations', 'LBL_PICKLIST_DEPENDENCY_DESCRIPTION', 'index.php?parent=Settings&module=PickListDependency&view=List', '10', '0', '0'],
+			[ 'LBL_COMPANY', 'NOTIFICATIONSCHEDULERS', '', 'LBL_NOTIF_SCHED_DESCRIPTION', 'index.php?module=Settings&view=listnotificationschedulers&parenttab=Settings', '4', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'INVENTORYNOTIFICATION', '', 'LBL_INV_NOTIF_DESCRIPTION', 'index.php?module=Settings&view=listinventorynotifications&parenttab=Settings', '1', '0', '0'],
+			[ 'LBL_COMPANY', 'LBL_COMPANY_DETAILS', 'adminIcon-company-detlis', 'LBL_COMPANY_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=CompanyDetails', '2', '0', '0'],
+			[ 'LBL_MAIL_TOOLS', 'LBL_MAIL_SERVER_SETTINGS', 'adminIcon-mail-configuration', 'LBL_MAIL_SERVER_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=OutgoingServerDetail', '5', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_CURRENCY_SETTINGS', 'adminIcon-currencies', 'LBL_CURRENCY_DESCRIPTION', 'index.php?parent=Settings&module=Currency&view=List', '4', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_SWITCH_USERS', 'adminIcon-users', 'LBL_SWITCH_USERS_DESCRIPTION', 'index.php?module=Users&view=SwitchUsers&parent=Settings', '11', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_SYSTEM_INFO', 'adminIcon-server-configuration', 'LBL_SYSTEM_DESCRIPTION', 'index.php?module=Settings&submodule=Server&view=ProxyConfig', '6', '1', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_ANNOUNCEMENT', 'adminIcon-company-information', 'LBL_ANNOUNCEMENT_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=AnnouncementEdit', '2', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_DEFAULT_MODULE_VIEW', 'adminIcon-standard-modules', 'LBL_DEFAULT_MODULE_VIEW_DESC', 'index.php?module=Settings&action=DefModuleView&parenttab=Settings', '2', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_TERMS_AND_CONDITIONS', 'adminIcon-terms-and-conditions', 'LBL_INV_TANDC_DESCRIPTION', 'index.php?parent=Settings&module=Vtiger&view=TermsAndConditionsEdit', '3', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_CUSTOMIZE_RECORD_NUMBERING', 'adminIcon-recording-control', 'LBL_CUSTOMIZE_MODENT_NUMBER_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=CustomRecordNumbering', '6', '0', '0'],
+			[ 'LBL_AUTOMATION', 'LBL_LIST_WORKFLOWS', 'adminIcon-triggers', 'LBL_LIST_WORKFLOWS_DESCRIPTION', 'index.php?module=Workflows&parent=Settings&view=List', '1', '0', '1'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_CONFIG_EDITOR', 'adminIcon-system-tools', 'LBL_CONFIG_EDITOR_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=ConfigEditorDetail', '7', '0', '0'],
+			[ 'LBL_AUTOMATION', 'Scheduler', 'adminIcon-cron', 'LBL_SCHEDULER_DESCRIPTION', 'index.php?module=CronTasks&parent=Settings&view=List', '3', '0', '0'],
+			[ 'LBL_AUTOMATION', 'LBL_WORKFLOW_LIST', 'adminIcon-workflow', 'LBL_AVAILABLE_WORKLIST_LIST', 'index.php?module=com_vtiger_workflow&action=workflowlist', '1', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'ModTracker', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_DESCRIPTION', 'index.php?module=ModTracker&action=BasicSettings&parenttab=Settings&formodule=ModTracker', '9', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_PBXMANAGER', 'adminIcon-pbx-manager', 'LBL_PBXMANAGER_DESCRIPTION', 'index.php?module=PBXManager&parent=Settings&view=Index', '22', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_CUSTOMER_PORTAL', 'adminIcon-customer-portal', 'PORTAL_EXTENSION_DESCRIPTION', 'index.php?module=CustomerPortal&action=index&parenttab=Settings', '3', '0', '0'],
+			[ 'LBL_INTEGRATION', 'Webforms', 'adminIcon-online-forms', 'LBL_WEBFORMS_DESCRIPTION', 'index.php?module=Webforms&action=index&parenttab=Settings', '4', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_EDIT_FIELDS', 'adminIcon-modules-fields', 'LBL_LAYOUT_EDITOR_DESCRIPTION', 'index.php?module=LayoutEditor&parent=Settings&view=Index', '2', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_PDF', 'adminIcon-modules-pdf-templates', 'LBL_PDF_DESCRIPTION', 'index.php?module=PDF&parent=Settings&view=List', '10', '0', '0'],
+			[ 'LBL_SECURITY_MANAGEMENT', 'LBL_PASSWORD_CONF', 'adminIcon-passwords-configuration', 'LBL_PASSWORD_DESCRIPTION', 'index.php?module=Password&parent=Settings&view=Index', '1', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_MENU_BUILDER', 'adminIcon-menu-configuration', 'LBL_MENU_BUILDER_DESCRIPTION', 'index.php?module=Menu&view=Index&parent=Settings', '14', '0', '1'],
+			[ 'LBL_STUDIO', 'LBL_ARRANGE_RELATED_TABS', 'adminIcon-modules-relations', 'LBL_ARRANGE_RELATED_TABS', 'index.php?module=LayoutEditor&parent=Settings&view=Index&mode=showRelatedListLayout', '4', '0', '1'],
+			[ 'LBL_MAIL_TOOLS', 'Mail Scanner', 'adminIcon-mail-scanner', 'LBL_MAIL_SCANNER_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=Index', '3', '0', '0'],
+			[ 'LBL_LOGS', 'Mail Logs', 'adminIcon-mail-download-history', 'LBL_MAIL_LOGS_DESCRIPTION', 'index.php?module=OSSMailScanner&parent=Settings&view=logs', '4', '0', '0'],
+			[ 'LBL_MAIL_TOOLS', 'Mail View', 'adminIcon-oss_mailview', 'LBL_MAIL_VIEW_DESCRIPTION', 'index.php?module=OSSMailView&parent=Settings&view=index', '21', '0', '0'],
+			[ 'LBL_AUTOMATION', 'Document Control', 'adminIcon-workflow', 'LBL_DOCUMENT_CONTROL_DESCRIPTION', 'index.php?module=OSSDocumentControl&parent=Settings&view=Index', '4', '0', '0'],
+			[ 'LBL_AUTOMATION', 'Project Templates', 'adminIcon-document-templates', 'LBL_PROJECT_TEMPLATES_DESCRIPTION', 'index.php?module=OSSProjectTemplates&parent=Settings&view=Index', '5', '0', '0'],
+			[ 'LBL_About_YetiForce', 'License', 'adminIcon-license', 'LBL_LICENSE_DESCRIPTION', 'index.php?module=Vtiger&parent=Settings&view=License', '4', '0', '0'],
+			[ 'LBL_SECURITY_MANAGEMENT', 'OSSPassword Configuration', 'adminIcon-passwords-encryption', 'LBL_OSSPASSWORD_CONFIGURATION_DESCRIPTION', 'index.php?module=OSSPasswords&view=ConfigurePass&parent=Settings', '3', '0', '0'],
+			[ 'LBL_AUTOMATION', 'LBL_DATAACCESS', 'adminIcon-recording-control', 'LBL_DATAACCESS_DESCRIPTION', 'index.php?module=DataAccess&parent=Settings&view=Index', '2', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LangManagement', 'adminIcon-languages-and-translations', 'LBL_LANGMANAGEMENT_DESCRIPTION', 'index.php?module=LangManagement&parent=Settings&view=Index', '1', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'GlobalPermission', 'adminIcon-special-access', 'LBL_GLOBALPERMISSION_DESCRIPTION', 'index.php?module=GlobalPermission&parent=Settings&view=Index', '7', '0', '0'],
+			[ 'LBL_SEARCH_AND_FILTERS', 'Search Setup', 'adminIcon-search-configuration', 'LBL_SEARCH_SETUP_DESCRIPTION', 'index.php?module=Search&parent=Settings&view=Index', '1', '0', '0'],
+			[ 'LBL_SEARCH_AND_FILTERS', 'CustomView', 'adminIcon-filters-configuration', 'LBL_CUSTOMVIEW_DESCRIPTION', 'index.php?module=CustomView&parent=Settings&view=Index', '2', '0', '0'],
+			[ 'LBL_STUDIO', 'Widgets', 'adminIcon-modules-widgets', 'LBL_WIDGETS_DESCRIPTION', 'index.php?module=Widgets&parent=Settings&view=Index', '3', '0', '1'],
+			[ 'LBL_About_YetiForce', 'Credits', 'adminIcon-contributors', 'LBL_CREDITS_DESCRIPTION', 'index.php?module=Vtiger&view=Credits&parent=Settings', '3', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_QUICK_CREATE_EDITOR', 'adminIcon-fields-quick-create', 'LBL_QUICK_CREATE_EDITOR_DESCRIPTION', 'index.php?module=QuickCreateEditor&parent=Settings&view=Index', '8', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_API_ADDRESS', 'adminIcon-address', 'LBL_API_ADDRESS_DESCRIPTION', 'index.php?module=ApiAddress&parent=Settings&view=Configuration', '5', '0', '0'],
+			[ 'LBL_SECURITY_MANAGEMENT', 'LBL_BRUTEFORCE', 'adminIcon-brute-force', 'LBL_BRUTEFORCE_DESCRIPTION', 'index.php?module=BruteForce&parent=Settings&view=Show', '2', '0', '0'],
+			[ 'LBL_LOGS', 'LBL_UPDATES_HISTORY', 'adminIcon-server-updates', 'LBL_UPDATES_HISTORY_DESCRIPTION', 'index.php?parent=Settings&module=Updates&view=Index', '2', '0', '0'],
+			[ 'LBL_SECURITY_MANAGEMENT', 'Backup', 'adminIcon-backup', 'LBL_BACKUP_DESCRIPTION', 'index.php?parent=Settings&module=BackUp&view=Index', '4', '0', '0'],
+			[ 'LBL_LOGS', 'LBL_CONFREPORT', 'adminIcon-server-configuration', 'LBL_CONFREPORT_DESCRIPTION', 'index.php?parent=Settings&module=ConfReport&view=Index', '1', '0', '0'],
+			[ 'LBL_CALENDAR_LABELS_COLORS', 'LBL_ACTIVITY_TYPES', 'adminIcon-calendar-types', 'LBL_ACTIVITY_TYPES_DESCRIPTION', 'index.php?parent=Settings&module=Calendar&view=ActivityTypes', '1', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_WIDGETS_MANAGEMENT', 'adminIcon-widgets-configuration', 'LBL_WIDGETS_MANAGEMENT_DESCRIPTION', 'index.php?module=WidgetsManagement&parent=Settings&view=Configuration', '15', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_MOBILE_KEYS', 'adminIcon-mobile-applications', 'LBL_MOBILE_KEYS_DESCRIPTION', 'index.php?parent=Settings&module=MobileApps&view=MobileKeys', '6', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_TREES_MANAGER', 'adminIcon-field-folders', 'LBL_TREES_MANAGER_DESCRIPTION', 'index.php?module=TreesManager&parent=Settings&view=List', '11', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_MODTRACKER_SETTINGS', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_SETTINGS_DESCRIPTION', 'index.php?module=ModTracker&parent=Settings&view=List', '5', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_HIDEBLOCKS', 'adminIcon-filed-hide-bloks', 'LBL_HIDEBLOCKS_DESCRIPTION', 'index.php?module=HideBlocks&parent=Settings&view=List', '12', '0', '0'],
+			[ 'LBL_CALENDAR_LABELS_COLORS', 'LBL_PUBLIC_HOLIDAY', 'adminIcon-calendar-holidys', 'LBL_PUBLIC_HOLIDAY_DESCRIPTION', 'index.php?module=PublicHoliday&view=Configuration&parent=Settings', '3', '0', '0'],
+			[ 'LBL_CALENDAR_LABELS_COLORS', 'LBL_CALENDAR_CONFIG', 'adminIcon-calendar-configuration', 'LBL_CALENDAR_CONFIG_DESCRIPTION', 'index.php?parent=Settings&module=Calendar&view=UserColors', '2', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_SALES_PROCESSES', 'adminIcon-sales', 'LBL_SALES_PROCESSES_DESCRIPTION', 'index.php?module=SalesProcesses&view=Index&parent=Settings', '2', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_DAV_KEYS', 'adminIcon-dav-applications', 'LBL_DAV_KEYS_DESCRIPTION', 'index.php?parent=Settings&module=Dav&view=Keys', '7', '0', '0'],
+			[ 'LBL_MAIL_TOOLS', 'LBL_AUTOLOGIN', 'adminIcon-mail-auto-login', 'LBL_AUTOLOGIN_DESCRIPTION', 'index.php?parent=Settings&module=Mail&view=Autologin', '4', '0', '0'],
+			[ 'LBL_MAIL_TOOLS', 'LBL_MAIL_GENERAL_CONFIGURATION', 'adminIcon-mail-smtp-server', 'LBL_MAIL_GENERAL_CONFIGURATION_DESCRIPTION', 'index.php?parent=Settings&module=Mail&view=Config', '1', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_SUPPORT_PROCESSES', 'adminIcon-support ', 'LBL_SUPPORT_PROCESSES_DESCRIPTION', 'index.php?module=SupportProcesses&view=Index&parent=Settings', '6', '0', '0'],
+			[ 'LBL_CALENDAR_LABELS_COLORS', 'LBL_COLORS', 'adminIcon-colors', 'LBL_COLORS_DESCRIPTION', 'index.php?module=Users&parent=Settings&view=Colors', '4', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_REALIZATION_PROCESSES', 'adminIcon-realization', 'LBL_REALIZATION_PROCESSES_DESCRIPTION', 'index.php?module=RealizationProcesses&view=Index&parent=Settings', '3', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_MARKETING_PROCESSES', 'adminIcon-marketing', 'LBL_MARKETING_PROCESSES_DESCRIPTION', 'index.php?module=MarketingProcesses&view=Index&parent=Settings', '1', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_FINANCIAL_PROCESSES', 'adminIcon-finances', 'LBL_FINANCIAL_PROCESSES_DESCRIPTION', 'index.php?module=FinancialProcesses&view=Index&parent=Settings', '5', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_AUTHORIZATION', 'adminIcon-automation', 'LBL_AUTHORIZATION_DESCRIPTION', 'index.php?module=Users&view=Auth&parent=Settings', '1', '0', '0'],
+			[ 'LBL_PROCESSES', 'LBL_TIMECONTROL_PROCESSES', 'adminIcon-logistics', 'LBL_TIMECONTROL_PROCESSES_DESCRIPTION', 'index.php?module=TimeControlProcesses&parent=Settings&view=Index', '7', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_CUSTOM_FIELD_MAPPING', 'adminIcon-filed-mapping', 'LBL_CUSTOM_FIELD_MAPPING_DESCRIPTION', 'index.php?parent=Settings&module=Leads&view=MappingDetail', '13', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_CURRENCY_UPDATE', 'adminIcon-currencies', 'LBL_CURRENCY_UPDATE_DESCRIPTION', 'index.php?module=CurrencyUpdate&view=Index&parent=Settings', '2', '0', '0'],
+			[ 'LBL_ADVANCED_MODULES', 'LBL_CREDITLIMITS', 'adminIcon-credit-limit-base_2', 'LBL_CREDITLIMITS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=CreditLimits', '5', '0', '0'],
+			[ 'LBL_ADVANCED_MODULES', 'LBL_TAXES', 'adminIcon-taxes-rates', 'LBL_TAXES_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Taxes', '1', '0', '0'],
+			[ 'LBL_ADVANCED_MODULES', 'LBL_DISCOUNTS', 'adminIcon-discount-base', 'LBL_DISCOUNTS_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=Discounts', '3', '0', '0'],
+			[ 'LBL_ADVANCED_MODULES', 'LBL_TAXCONFIGURATION', 'adminIcon-taxes-caonfiguration', 'LBL_TAXCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=TaxConfiguration', '4', '0', '0'],
+			[ 'LBL_ADVANCED_MODULES', 'LBL_DISCOUNTCONFIGURATION', 'adminIcon-discount-configuration', 'LBL_DISCOUNTCONFIGURATION_DESCRIPTION', 'index.php?module=Inventory&parent=Settings&view=DiscountConfiguration', '2', '0', '0'],
+			[ 'LBL_MAIL_TOOLS', 'Mail', 'adminIcon-mail-download-history', 'LBL_OSSMAIL_DESCRIPTION', 'index.php?module=OSSMail&parent=Settings&view=index', '2', '0', '0'],
+			[ 'LBL_STUDIO', 'LBL_MAPPEDFIELDS', 'adminIcon-mapped-fields', 'LBL_MAPPEDFIELDS_DESCRIPTION', 'index.php?module=MappedFields&parent=Settings&view=List', '16', '0', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'LBL_LOCKS', 'adminIcon-locks', 'LBL_LOCKS_DESCRIPTION', 'index.php?module=Users&view=Locks&parent=Settings', '8', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_TYPE_NOTIFICATIONS', 'adminIcon-TypeNotification', 'LBL_TYPE_NOTIFICATIONS_DESCRIPTION', 'index.php?module=Notifications&view=List&parent=Settings', '12', '0', '0'],
+			[ 'LBL_SYSTEM_TOOLS', 'LBL_NOTIFICATIONS_CONFIGURATION', 'adminIcon-NotificationConfiguration', 'LBL_TYPE_NOTIFICATIONS_DESCRIPTION', 'index.php?module=Notifications&view=Configuration&parent=Settings', '13', '0', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_POS', NULL, NULL, 'index.php?module=POS&view=Index&parent=Settings', '10', '1', '0'],
+			[ 'LBL_INTEGRATION', 'LBL_WEBSERVICE_APPS', NULL, NULL, 'index.php?module=WebserviceApps&view=Index&parent=Settings', '11', '1', '0'],
+			[ 'LBL_USER_MANAGEMENT', 'LBL_RECORDALLOCATION', NULL, 'LBL_RECORDALLOCATION_DESCRIPTION', 'index.php?module=RecordAllocation&view=Index&parent=Settings', '9', '0', '0']
 		];
 		$blocks = [];
 		foreach ($menu as $row) {
@@ -602,21 +731,24 @@ class YetiForceUpdate
 		$log = vglobal('log');
 		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 		$db = PearDatabase::getInstance();
-		$settingMenu = [['1', 'LBL_USER_MANAGEMENT', '1', 'adminIcon-permissions', '0', NULL],
-			['2', 'LBL_STUDIO', '2', 'adminIcon-standard-modules', '0', NULL],
-			['3', 'LBL_COMPANY', '12', 'adminIcon-company-information', '0', NULL],
-			['4', 'LBL_SYSTEM_TOOLS', '11', 'adminIcon-system-tools', '0', NULL],
-			['5', 'LBL_INTEGRATION', '8', 'adminIcon-integration', '0', NULL],
-			['6', 'LBL_PROCESSES', '13', 'adminIcon-processes', '0', NULL],
-			['7', 'LBL_SECURITY_MANAGEMENT', '6', 'adminIcon-security', '0', NULL],
-			['8', 'LBL_MAIL_TOOLS', '10', 'adminIcon-mail-tools', '0', NULL],
-			['9', 'LBL_About_YetiForce', '26', 'adminIcon-about-yetiforce', '0', NULL],
-			['11', 'LBL_ADVANCED_MODULES', '3', 'adminIcon-advenced-modules', '0', NULL],
-			['12', 'LBL_CALENDAR_LABELS_COLORS', '4', 'adminIcon-calendar-labels-colors', '0', NULL],
-			['13', 'LBL_SEARCH_AND_FILTERS', '5', 'adminIcon-search-and-filtres', '0', NULL],
-			['14', 'LBL_LOGS', '7', 'adminIcon-logs', '0', NULL],
-			['15', 'LBL_AUTOMATION', '9', 'adminIcon-automation', '0', NULL],
-			['16', 'LBL_MENU_SUMMARRY', '0', 'userIcon-Home', '1', 'index.php?module=Vtiger&parent=Settings&view=Index']];
+		$settingMenu = [
+			[ '1', 'LBL_USER_MANAGEMENT', '1', 'adminIcon-permissions', '0', NULL],
+			[ '2', 'LBL_STUDIO', '2', 'adminIcon-standard-modules', '0', NULL],
+			[ '3', 'LBL_COMPANY', '12', 'adminIcon-company-information', '0', NULL],
+			[ '4', 'LBL_SYSTEM_TOOLS', '11', 'adminIcon-system-tools', '0', NULL],
+			[ '5', 'LBL_INTEGRATION', '8', 'adminIcon-integration', '0', NULL],
+			[ '6', 'LBL_PROCESSES', '13', 'adminIcon-processes', '0', NULL],
+			[ '7', 'LBL_SECURITY_MANAGEMENT', '6', 'adminIcon-security', '0', NULL],
+			[ '8', 'LBL_MAIL_TOOLS', '10', 'adminIcon-mail-tools', '0', NULL],
+			[ '9', 'LBL_About_YetiForce', '26', 'adminIcon-about-yetiforce', '0', NULL],
+			[ '11', 'LBL_ADVANCED_MODULES', '3', 'adminIcon-advenced-modules', '0', NULL],
+			[ '12', 'LBL_CALENDAR_LABELS_COLORS', '4', 'adminIcon-calendar-labels-colors', '0', NULL],
+			[ '13', 'LBL_SEARCH_AND_FILTERS', '5', 'adminIcon-search-and-filtres', '0', NULL],
+			[ '14', 'LBL_LOGS', '7', 'adminIcon-logs', '0', NULL],
+			[ '15', 'LBL_AUTOMATION', '9', 'adminIcon-automation', '0', NULL],
+			[ '16', 'LBL_MENU_SUMMARRY', '0', 'userIcon-Home', '1', 'index.php?module=Vtiger&parent=Settings&view=Index'],
+			[ '17', 'LBL_YETIFORCE_SHOP', '27', 'adminIcon-yetiforce-shop', '1', 'https://shop.yetiforce.com/']
+		];
 
 		$removeSettingsMenu = ['LBL_OTHER_SETTINGS', 'LBL_MAIL', 'LBL_CUSTOMIZE_TRANSLATIONS', 'LBL_EXTENDED_MODULES'];
 		$db->delete('vtiger_settings_blocks', '`label` IN (?,?,?,?) ', $removeSettingsMenu);
@@ -861,6 +993,147 @@ class YetiForceUpdate
 		$db->update('vtiger_field', ['fieldlabel' => 'FL_SERVICE_CONTRACTS'], '`columnname` = ? AND tabid = ?;', ['servicecontractsid', getTabid('HelpDesk')]);
 	}
 
+	public function updatePack3()
+	{
+		$db = PearDatabase::getInstance();
+		$this->setTablesScheme($this->getTablesAction(3));
+		$this->setInventoryFields($this->getInventoryFields(2));
+		$result = $db->pquery('SELECT 1 FROM `vtiger_ws_fieldtype` WHERE fieldtype = ?', ['posList']);
+		if (!$db->getRowCount($result)) {
+			$db->insert('vtiger_ws_fieldtype', ['uitype' => 122, 'fieldtype' => 'posList']);
+		}
+		$db->update('vtiger_field', ['uitype' => 10], '`tabid` IN (?) AND columnname = ? AND uitype = ?', [getTabid('Faq'), 'product_id', 59]);
+		$this->setAlterTables($this->getAlterTables(3));
+		$this->setBlocks($this->getBlocks(2));
+		$this->setFields($this->getFields(2));
+		$this->setRelatedModulesByName('Faq', 'product_id', ['Products']);
+		$this->setRelations($this->getRelations(2));
+		$db->update('vtiger_field', ['summaryfield' => 1], '`tabid` IN (?) AND columnname IN (?,?)', [getTabid('HelpDesk'), 'createdtime', 'closedtime']);
+		$this->updateInventoryFieldsData($this->getDataToInventoryFieldsUpdate(1));
+		$this->updateGeneratedtype();
+		$this->addCron([['Assets Renewal', 'modules/Assets/cron/Renewal.php', '86400', NULL, NULL, '1', 'Assets', '17', ''], ['SoldServices Renewal', 'modules/OSSSoldServices/cron/Renewal.php', '86400', NULL, NULL, '1', 'OSSSoldServices', '18', '']]);
+		$this->addHandler([['vtiger.entity.beforesave.final', 'modules/Assets/handlers/Renewal.php', 'Assets_Renewal_Handler', '', '1', '[]'], ['vtiger.entity.beforesave.final', 'modules/OSSSoldServices/handlers/Renewal.php', 'OSSSoldServices_Renewal_Handler', '', '1', '[]']]);
+		$db->update('vtiger_field', ['displaytype' => 2, 'typeofdata' => 'NN~O'], 'columnname = ? AND tablename IN (?,?,?);', ['sum_total', 'u_yf_scalculations', 'u_yf_squotes', 'u_yf_ssingleorders']);
+		$db->update('vtiger_field', ['columnname' => 'sum_total', 'fieldname' => 'sum_total'], 'columnname = ? AND tablename IN (?,?,?);', ['total', 'u_yf_igrn', 'u_yf_istdn', 'u_yf_istrn', 'u_yf_igrnc']);
+		$this->removeFields($this->getFieldsToRemove(3));
+		$this->move($this->getFieldsToMove(3));
+		$db->update('vtiger_field', ['fieldlabel' => 'FL_TOTAL_TIME_H'], 'columnname = ? AND tablename = ? AND fieldlabel = ?;', ['sum_time', 'vtiger_servicecontracts', 'Total time [Service Contract]']);
+		$fields = ['poboxc'];
+		$db->update('vtiger_field', ['displaytype' => 1], ' columnname IN (' . generateQuestionMarks($fields) . ');', $fields);
+		$this->setLink($this->getLink(2));
+		$db->update('u_yf_igdn_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_igdnc_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_igin_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_igrn_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_igrnc_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_iidn_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_ipreorder_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_istdn_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$db->update('u_yf_istrn_invfield', ['columnname' => 'seq'], 'columnname = ?', ['-']);
+		$result = $db->query('SELECT 1 FROM `w_yf_pos_actions`');
+		if (!$db->getRowCount($result)) {
+			$db->insert('w_yf_pos_actions', ['label' => 'LBL_SYNCHRONIZE_PRODUCTS']);
+			$db->insert('w_yf_pos_actions', ['label' => 'LBL_SYNCHRONIZE_ORDERS']);
+		}
+		$db->update('vtiger_field', ['typeofdata' => 'V~O', 'quickcreate' => '1'], 'columnname = ? AND tablename = ?;', ['salesprocessid', 'u_yf_ssingleorders']);
+		$db->update('vtiger_field', ['typeofdata' => 'V~O', 'quickcreate' => '1'], 'columnname = ? AND tablename = ?;', ['squotesid', 'u_yf_ssingleorders']);
+		$this->addQtyParam();
+		$this->replaceScannerActionName();
+	}
+
+	public function replaceScannerActionName()
+	{
+		$db = PearDatabase::getInstance();
+		$result = $db->query('SELECT user_id, actions FROM `roundcube_users`');
+		while ($row = $db->getRow($result)) {
+			if (empty($row['actions'])) {
+				continue;
+			}
+			$oldNames = ['0_created_Email', '1_created_HelpDesk', '2_bind_Accounts', '3_bind_Contacts', '4_bind_Leads', '5_bind_HelpDesk', '6_bind_Potentials', '7_bind_Project', '8_bind_ServiceContracts', '9_bind_Campaigns'];
+			$newNames = ['CreatedEmail', 'CreatedHelpDesk', 'BindAccounts', 'BindContacts', 'BindLeads', 'BindHelpDesk', 'BindSSalesProcesses', 'BindProject', 'BindServiceContracts', 'BindCampaigns'];
+			$newPhrase = str_replace($oldNames, $newNames, $phrase);
+			$db->update('roundcube_users', ['actions' => $newPhrase], 'user_id = ?', [$row['user_id']]);
+		}
+	}
+
+	public function addQtyParam()
+	{
+		$db = PearDatabase::getInstance();
+		$result = $db->pquery('SELECT name FROM `vtiger_tab` WHERE type = ?', [1]);
+		while ($moduleName = $db->getSingleValue($result)) {
+			$inventoryField = Vtiger_InventoryField_Model::getInstance($moduleName);
+			$columns = $inventoryField ? $inventoryField->getColumns() : [];
+			if (in_array('qty', $columns) && !in_array('qtyparam', $columns)) {
+				$table = $inventoryField->getTableName('fields');
+				$data = [['type' => ['add'], 'name' => 'qtyparam', 'table' => $table, 'sql' => 'ALTER TABLE `' . $table . '` 
+						ADD COLUMN `qtyparam` tinyint(1) NOT NULL DEFAULT "0";']];
+				$this->setAlterTables($data);
+			}
+		}
+	}
+
+	public function updateGeneratedtype()
+	{
+		$db = PearDatabase::getInstance();
+		$parToUpdate = [
+			'vtiger_contactdetails' => ['parentid', 'verification', 'secondary_email', 'notifilanguage', 'contactstatus'],
+			'vtiger_troubletickets' => ['parent_id', 'servicecontractsid', 'pssold_id', 'ordertime'],
+			'vtiger_projectmilestone' => ['projectmilestone_no'],
+			'vtiger_projecttask' => ['projecttask_no', 'parentid', 'projectmilestoneid', 'targetenddate'],
+			'vtiger_project' => ['project_no', 'servicecontractsid'],
+			'vtiger_users' => ['othereventduration'],
+			'vtiger_ossmailtemplates' => ['oss_module_list', 'subject', 'content'],
+			'vtiger_osstimecontrol' => ['osstimecontrol_status'],
+			'vtiger_ossmailview' => ['from_email', 'to_email', 'subject', 'cc_email', 'bcc_email', 'uid', 'reply_to_email', 'attachments_exist', 'rc_user', 'type', 'from_id', 'to_id', 'id', 'mbox', 'content', 'orginal_mail'],
+			'vtiger_ossoutsourcedservices' => ['productname', 'pscategory', 'datesold', 'dateinservice', 'wherebought', 'parent_id'],
+			'vtiger_outsourcedproducts' => ['oproductstatus', 'dateinservice', 'pscategory', 'wherebought', 'prodcount', 'parent_id'],
+			'vtiger_ossemployees' => ['birth_date'],
+			'vtiger_leaddetails' => ['verification', 'subindustry'],
+			'vtiger_account' => ['verification', 'buildingnumbera', 'localnumbera', 'buildingnumberb', 'localnumberb', 'buildingnumberc', 'localnumberc', 'no_approval', 'balance'],
+			'vtiger_vendor' => ['verification'],
+			'vtiger_crmentity' => ['description', 'attention'],
+			'vtiger_assets' => ['ordertime', 'products', 'services', 'pscategory'],
+			'vtiger_ideas' => ['ideasstatus', 'extent_description'],
+			'vtiger_holidaysentitlement' => ['holidaysentitlement_year', 'ossemployeesid'],
+			'vtiger_lettersin' => ['date_adoption', 'lin_type_ship', 'lin_type_doc', 'lin_status', 'deadline_reply', 'cocument_no', 'no_internal', 'lin_dimensions'],
+			'vtiger_lettersout' => ['date_adoption', 'lout_type_ship', 'lout_type_doc', 'lout_status', 'deadline_reply', 'cocument_no', 'no_internal', 'lout_dimensions'],
+			'vtiger_reservations' => ['reservations_status'],
+			'vtiger_activity' => ['followup'],
+			'u_yf_squoteenquiries' => ['category'],
+			'u_yf_ssalesprocesses' => ['category'],
+			'u_yf_igrn' => ['total'],
+			'u_yf_istdn' => ['total'],
+			'u_yf_istn' => ['istn_type'],
+			'u_yf_istrn' => ['total'],
+			'u_yf_knowledgebase' => ['knowledgebase_status'],
+			'vtiger_products' => ['subunit'],
+			'u_yf_igrnc' => ['total']
+		];
+		$where = [];
+		$params = [];
+		foreach ($parToUpdate as $table => $columns) {
+			$where[] = ' (tablename = ? AND columnname IN (' . generateQuestionMarks($columns) . '))';
+			array_push($params, $table, $columns);
+		}
+		$db->update('vtiger_field', ['generatedtype' => 1], implode(' OR ', $where), $params);
+	}
+
+	public function setRelatedModulesByName($moduleName, $fieldName, $relModules)
+	{
+		$db = PearDatabase::getInstance();
+		$moduleId = getTabid($moduleName);
+		$result = $db->pquery('SELECT fieldid FROM vtiger_field WHERE tabid = ? AND fieldname = ?', [$moduleId, $fieldName]);
+		$fieldId = $db->getSingleValue($result);
+		if (!empty($fieldId)) {
+			foreach ($relModules as $relmodule) {
+				$checkres = $db->pquery('SELECT * FROM vtiger_fieldmodulerel WHERE fieldid=? AND module=? AND relmodule=?', [$fieldId, $moduleName, $relmodule]);
+				if (!$db->getRowCount($checkres)) {
+					$db->pquery('INSERT INTO vtiger_fieldmodulerel(fieldid, module, relmodule) VALUES(?,?,?)', [$fieldId, $moduleName, $relmodule]);
+				}
+			}
+		}
+	}
+
 	public function getDataByCase($index)
 	{
 		$data = [];
@@ -1007,6 +1280,17 @@ class YetiForceUpdate
 					'sum_time' => ['moduleName' => 'HelpDesk', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_TICKET_INFORMATION'],
 				];
 				break;
+			case 3:
+				$fields = [
+					'sum_time' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SUMMARY', 'removeBlock' => true],
+					'crmactivity' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+					'smcreatorid' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+					'was_read' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+					'createdtime' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+					'closedtime' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+					'modifiedtime' => ['moduleName' => 'ServiceContracts', 'toBlock' => 'LBL_CUSTOM_INFORMATION', 'fromBlock' => 'LBL_SERVICE_CONTRACT_INFORMATION'],
+				];
+				break;
 			default:
 				break;
 		}
@@ -1028,6 +1312,11 @@ class YetiForceUpdate
 			case 2:
 				$fields = [
 					'vtiger_troubletickets' => ['category']
+				];
+				break;
+			case 3:
+				$fields = [
+					'vtiger_servicecontracts' => ['sum_time_p', 'sum_time_h', 'sum_time_all']
 				];
 				break;
 			default:
@@ -1189,6 +1478,48 @@ class YetiForceUpdate
 	CHANGE `defaulteventstatus` `defaulteventstatus` varchar(50) NULL after `rowheight`;'],
 				];
 				break;
+			case 3: $field = [
+					['type' => ['add'], 'name' => 'renewable', 'table' => 'vtiger_service', 'sql' => 'ALTER TABLE `vtiger_service` 
+						CHANGE `discontinued` `discontinued` tinyint(1)   NOT NULL DEFAULT 0 after `expiry_date` , 
+						ADD COLUMN `renewable` tinyint(1)   NULL DEFAULT 0 after `commissionrate` ;'],
+					['type' => ['add'], 'name' => 'renewable', 'table' => 'vtiger_products', 'sql' => "ALTER TABLE `vtiger_products` 
+						CHANGE `discontinued` `discontinued` tinyint(1)   NOT NULL DEFAULT 0 after `commissionmethod` , 
+						ADD COLUMN `renewable` tinyint(1)   NULL DEFAULT 0 after `subunit` , 
+						ADD COLUMN `pos` varchar(255) NULL DEFAULT '' after `renewable` ;"],
+					['type' => ['add'], 'name' => 'renewalinvoice', 'table' => 'vtiger_assets', 'sql' => "ALTER TABLE `vtiger_assets` 
+						ADD COLUMN `renewalinvoice` int(19)   NULL after `assets_renew` , 
+						ADD KEY `renewalinvoice`(`renewalinvoice`) ;"],
+					['type' => ['add'], 'name' => 'renewalinvoice', 'table' => 'vtiger_osssoldservices', 'sql' => "ALTER TABLE `vtiger_osssoldservices` 
+						ADD COLUMN `renewalinvoice` int(19)   NULL after `osssoldservices_renew` , 
+						ADD KEY `renewalinvoice`(`renewalinvoice`) ;"],
+					['type' => ['add'], 'name' => 'sum_total', 'table' => 'u_yf_istrn', 'sql' => "ALTER TABLE `u_yf_istrn`   
+						CHANGE `total` `sum_total` DECIMAL(27,8) DEFAULT 0.00000000  NOT NULL;"],
+					['type' => ['add'], 'name' => 'sum_total', 'table' => 'u_yf_istdn', 'sql' => "ALTER TABLE `u_yf_istdn`   
+						CHANGE `total` `sum_total` DECIMAL(27,8) DEFAULT 0.00000000  NOT NULL;"],
+					['type' => ['add'], 'name' => 'sum_total', 'table' => 'u_yf_igrnc', 'sql' => "ALTER TABLE `u_yf_igrnc`   
+						CHANGE `total` `sum_total` DECIMAL(27,8) DEFAULT 0.00000000  NOT NULL;"],
+					['type' => ['add'], 'name' => 'sum_total', 'table' => 'u_yf_igrn', 'sql' => "ALTER TABLE `u_yf_igrn`   
+						CHANGE `total` `sum_total` DECIMAL(27,8) DEFAULT 0.00000000  NOT NULL;"],
+					['type' => ['add'], 'name' => 'params', 'table' => 'vtiger_links', 'sql' => "ALTER TABLE `vtiger_links` 
+						ADD COLUMN `params` varchar(255) NULL after `handler` ;"],
+					['type' => ['add'], 'name' => 'type', 'table' => 'vtiger_import_queue', 'sql' => "ALTER TABLE `vtiger_import_queue` 
+						ADD COLUMN `type` tinyint(1)   NULL after `merge_fields` , 
+						CHANGE `temp_status` `temp_status` int(11)   NULL DEFAULT 0 after `type` ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'crmid', 'table' => 'vtiger_crmentityrel', 'sql' => "ALTER TABLE `vtiger_crmentityrel` 
+						CHANGE `module` `module` varchar(25) NOT NULL after `crmid` , 
+						CHANGE `relmodule` `relmodule` varchar(25) NOT NULL after `relcrmid` , 
+						ADD KEY `crmid`(`crmid`) , 
+						ADD KEY `relcrmid`(`relcrmid`) ;"],
+					['type' => ['add'], 'name' => 'istoragesid', 'table' => 'u_yf_ssingleorders', 'sql' => "ALTER TABLE `u_yf_ssingleorders` 
+						ADD COLUMN `pos` varchar(100) NULL DEFAULT '' after `sum_discount` , 
+						ADD COLUMN `istoragesid` int(19)   NULL after `pos` , 
+						ADD COLUMN `table` varchar(20) NULL after `istoragesid` , 
+						ADD COLUMN `seat` varchar(20) NULL after `table` , 
+						ADD KEY `istoragesid`(`istoragesid`) ;"],
+					['type' => ['add'], 'name' => 'pos', 'table' => 'u_yf_istorages', 'sql' => "ALTER TABLE `u_yf_istorages` 
+						ADD COLUMN `pos` varchar(255) NULL DEFAULT '' after `parentid` ;"],
+				];
+				break;
 			default:
 				break;
 		}
@@ -1340,6 +1671,70 @@ class YetiForceUpdate
 			case 2: $tables = [
 					['type' => 'remove', 'sql' => 'vtiger_servicecategory_seq'],
 					['type' => 'remove', 'sql' => 'vtiger_servicecategory'],
+				];
+				break;
+			case 3: $tables = [
+					['type' => 'remove', 'sql' => 'p_yf_servers'],
+					['type' => 'remove', 'sql' => 'p_yf_sessions'],
+					['type' => 'remove', 'sql' => 'p_yf_users'],
+					['type' => 'add', 'sql' => '`w_yf_portal_sessions` (
+						`id` varchar(32) NOT NULL,
+						`user_id` int(19) DEFAULT NULL,
+						`language` varchar(10) DEFAULT NULL,
+						`created` datetime DEFAULT NULL,
+						`changed` datetime DEFAULT NULL,
+						`ip` varchar(100) DEFAULT NULL,
+						PRIMARY KEY (`id`)
+					  ) ENGINE=InnoDB DEFAULT CHARSET=utf8'],
+					['type' => 'add', 'sql' => "`w_yf_portal_users` (
+						`id` int(19) NOT NULL AUTO_INCREMENT,
+						`server_id` int(10) DEFAULT NULL,
+						`status` tinyint(1) DEFAULT '0',
+						`user_name` varchar(50) NOT NULL,
+						`password_h` varchar(200) DEFAULT NULL,
+						`password_t` varchar(200) DEFAULT NULL,
+						`type` varchar(30) DEFAULT NULL,
+						`parent_id` int(19) DEFAULT NULL,
+						`login_time` datetime DEFAULT NULL,
+						`logout_time` datetime DEFAULT NULL,
+						`first_name` varchar(200) DEFAULT NULL,
+						`last_name` varchar(200) DEFAULT NULL,
+						`language` varchar(10) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `user_name` (`user_name`),
+						KEY `user_name_2` (`user_name`,`status`)
+					  ) ENGINE=InnoDB DEFAULT CHARSET=utf8"],
+					['type' => 'add', 'sql' => "`w_yf_pos_actions` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`label` varchar(255) DEFAULT NULL,
+						PRIMARY KEY (`id`)
+					  ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8"],
+					['type' => 'add', 'sql' => "`w_yf_pos_users` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`user_name` varchar(50) NOT NULL,
+						`user_id` int(11) NOT NULL,
+						`pass` varchar(255) NOT NULL,
+						`action` varchar(255) DEFAULT NULL,
+						`server_id` int(11) NOT NULL,
+						`status` tinyint(1) DEFAULT '0',
+						`last_name` varchar(255) DEFAULT NULL,
+						`first_name` varchar(255) DEFAULT NULL,
+						`email` varchar(255) DEFAULT NULL,
+						`login_time` datetime DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						KEY `user_name` (`user_name`,`status`)
+					  ) ENGINE=InnoDB DEFAULT CHARSET=utf8"],
+					['type' => 'add', 'sql' => "`w_yf_servers` (
+						`id` int(10) NOT NULL AUTO_INCREMENT,
+						`name` varchar(100) NOT NULL,
+						`pass` varchar(100) DEFAULT NULL,
+						`acceptable_url` varchar(255) DEFAULT NULL,
+						`status` tinyint(1) NOT NULL DEFAULT '0',
+						`api_key` varchar(100) NOT NULL,
+						`type` varchar(40) NOT NULL,
+						PRIMARY KEY (`id`),
+						KEY `name` (`name`,`status`)
+					  ) ENGINE=InnoDB DEFAULT CHARSET=utf8"],
 				];
 				break;
 			default:
@@ -1598,6 +1993,28 @@ class YetiForceUpdate
 					['type' => 'add', 'moduleName' => 'IGDNC', 'data' => ['9', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '4', '1', '10', '', '10']],
 				];
 				break;
+			case 2:
+				$fields = [
+					['type' => 'add', 'moduleName' => 'SSingleOrders', 'data' => ['16', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '7'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SSingleOrders', 'data' => ['17', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '7'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'SRequirementsCards', 'data' => ['4', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '10'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SRequirementsCards', 'data' => ['5', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '10'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'SRecurringOrders', 'data' => ['8', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '10'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SRecurringOrders', 'data' => ['9', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '10'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'SQuotes', 'data' => ['16', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '7'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'SQuotes', 'data' => ['17', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '7'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SQuoteEnquiries', 'data' => ['4', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '10'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SQuoteEnquiries', 'data' => ['5', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '10'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'SCalculations', 'data' => ['10', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '10'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'SCalculations', 'data' => ['11', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '10'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'FInvoiceProforma', 'data' => ['13', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '10'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'FInvoiceProforma', 'data' => ['14', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '10'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'FInvoice', 'data' => ['14', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '7'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'FInvoice', 'data' => ['15', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '7'], 'map' => ['Products', 'subunit', 'subunit']],
+					['type' => 'add', 'moduleName' => 'FCorectingInvoice', 'data' => ['13', 'unit', 'LBL_UNIT', 'Value', '0', '', '1', '1', '10', NULL, '7'], 'map' => ['Products', 'usageunit', 'unit']],
+					['type' => 'add', 'moduleName' => 'FCorectingInvoice', 'data' => ['14', 'subunit', 'FL_SUBUNIT', 'Value', '0', '', '2', '1', '10', NULL, '7'], 'map' => ['Products', 'subunit', 'subunit']],
+				];
+				break;
 			default:
 				break;
 		}
@@ -1622,7 +2039,7 @@ class YetiForceUpdate
 				$result = $db->pquery('SELECT `id` FROM `' . $table . '` WHERE `columnname` = ?;', [$fieldData[1]]);
 				$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method check if columnname exist: ' . print_r($fieldData[1], true));
 				if ($result->rowCount() == 0 && $field['type'] == 'add') {
-					if (in_array($fieldData[1], ['unit', 'ean', 'subunit', '-'])) {
+					if (in_array($fieldData[1], ['unit', 'ean', 'subunit', '-', 'seq'])) {
 						$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method add columnname: ' . print_r($fieldData, true));
 						$db->insert($table, [
 							'columnname' => $fieldData[1],
@@ -1639,6 +2056,17 @@ class YetiForceUpdate
 						$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' method add columnname: ' . print_r(array_combine($colums, $fieldData), true));
 						$inventoryField->addField($fieldData[3], array_combine($colums, $fieldData));
 					}
+					if ($field['map']) {
+						$table = $inventoryField->getTableName('autofield');
+						$result = $db->pquery('SELECT 1 FROM `' . $table . '` WHERE `module` = ? AND `field` = ? AND `tofield` = ?;', $field['map']);
+						if (!$result->rowCount()) {
+							$db->insert($table, [
+								'module' => $field['map'][0],
+								'field' => $field['map'][1],
+								'tofield' => $field['map'][2]
+							]);
+						}
+					}
 				} elseif ($result->rowCount() > 0 && $field['type'] == 'remove') {
 					$id = $db->getSingleValue($result);
 					$params['id'] = $id;
@@ -1646,6 +2074,10 @@ class YetiForceUpdate
 					$params['module'] = $field['moduleName'];
 					$params['name'] = $fieldData[3];
 					$inventoryField->delete($params);
+					if ($field['map']) {
+						$table = $inventoryField->getTableName('autofield');
+						$db->delete($table, '`module` = ? AND `field` = ? AND `tofield` = ?;', $field['map']);
+					}
 				}
 			}
 		}
@@ -1753,6 +2185,11 @@ class YetiForceUpdate
 					['type' => 'add', 'moduleName' => 'SSalesProcesses', 'data' => ['320', '86', 'LBL_FINANCES', '3', '0', '0', '0', '0', '0', '1', '0']]
 				];
 				break;
+			case 2:
+				$blocks = [
+					['type' => 'add', 'moduleName' => 'SSingleOrders', 'data' => ['373', '90', 'LBL_POS', '2', '0', '0', '0', '0', '0', '1', '1']]
+				];
+				break;
 			default:
 				break;
 		}
@@ -1822,6 +2259,21 @@ class YetiForceUpdate
 //					['107', '2274', 'fcorectinginvoice_formpayment', 'u_yf_fcorectinginvoice', '1', '15', 'fcorectinginvoice_formpayment', 'FL_FORM_PAYMENT', '1', '2', '', '100', '10', '361', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(255)', 'LBL_BASIC_DETAILS', ['PLL_TRANSFER', 'PLL_CASH'], [], 'FCorectingInvoice'],
 					['13', '2332', 'contract_type', 'vtiger_troubletickets', '1', '16', 'contract_type', 'FL_SERVICE_CONTRACTS_TYPE', '1', '2', '', '100', '22', '25', '9', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(255)', 'LBL_TICKET_INFORMATION', [], [], 'HelpDesk'],
 					['13', '2333', 'contracts_end_date', 'vtiger_troubletickets', '1', '5', 'contracts_end_date', 'FL_SERVICE_CONTRACTS_DATE', '1', '2', '', '100', '23', '25', '9', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'date', 'LBL_TICKET_INFORMATION', [], [], 'HelpDesk'],
+				];
+				break;
+			case 2:
+				$fields = [
+					['14', '2334', 'renewable', 'vtiger_products', '1', '56', 'renewable', 'FL_RENEWABLE', '1', '2', '', '100', '29', '31', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "tinyint(1)", "LBL_PRODUCT_INFORMATION", [], [], 'Products'],
+					['35', '2335', 'renewable', 'vtiger_service', '1', '56', 'renewable', 'FL_RENEWABLE', '1', '2', '', '100', '23', '91', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "tinyint(1)", "LBL_SERVICE_INFORMATION", [], [], 'Services'],
+					['37', '2336', 'renewalinvoice', 'vtiger_assets', '1', '10', 'renewalinvoice', 'FL_RENEWAL_INVOICE', '1', '2', '', '100', '20', '95', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "int(19)", "LBL_ASSET_INFORMATION", [], ['FInvoice'], 'Assets'],
+					[ '58', '2337', 'renewalinvoice', 'vtiger_osssoldservices', '1', '10', 'renewalinvoice', 'FL_RENEWAL_INVOICE', '1', '2', '', '100', '12', '141', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "int(19)", "LBL_INFORMATION", [], ['FInvoice'], 'OSSSoldServices'],
+					[ '58', '2337', 'renewalinvoice', 'vtiger_osssoldservices', '1', '10', 'renewalinvoice', 'FL_RENEWAL_INVOICE', '1', '2', '', '100', '12', '141', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "int(19)", "LBL_INFORMATION", [], ['FInvoice'], 'OSSSoldServices'],
+					['14', '2338', 'pos', 'vtiger_products', '1', '122', 'pos', 'FL_POS', '1', '2', '', '100', '30', '31', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(255)', 'LBL_PRODUCT_INFORMATION', [], [], 'Products'],
+					['90', '2339', 'pos', 'u_yf_ssingleorders', '2', '122', 'pos', 'FL_POS', '1', '2', '', '100', '1', '373', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(100)', 'LBL_POS', [], [], 'SSingleOrders'],
+					['97', '2343', 'pos', 'u_yf_istorages', '2', '122', 'pos', 'FL_POS', '1', '2', '', '100', '7', '316', '1', 'V~O~LE~255', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(255)', 'LBL_BASIC_DETAILS', [], [], 'IStorages'],
+					['90', '2340', 'istoragesid', 'u_yf_ssingleorders', '1', '10', 'istoragesid', 'FL_STORAGE', '1', '2', '', '100', '2', '373', '1', 'M~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'int(19)', 'LBL_POS', [], ['IStorages'], 'SSingleOrders'],
+					['90', '2341', 'table', 'u_yf_ssingleorders', '2', '7', 'table', 'FL_NUMBER_TABLE', '1', '2', '', '100', '3', '373', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(20)', 'LBL_POS', [], [], 'SSingleOrders'],
+					['90', '2342', 'seat', 'u_yf_ssingleorders', '2', '7', 'seat', 'FL_NUMBER_SEAT', '1', '2', '', '100', '4', '373', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'varchar(20)', 'LBL_POS', [], [], 'SSingleOrders'],
 				];
 				break;
 			default:
@@ -2014,6 +2466,12 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['477', 'IPreOrder', 'Calendar', 'get_related_list', '2', 'Activities', '0', 'ADD', '0', '0', '0']],
 				];
 				break;
+			case 2:
+				$ralations = [
+					['type' => 'add', 'data' => ['502', 'Products', 'Faq', 'get_dependents_list', '18', 'Faq', '0', 'ADD', '0', '0', '0']],
+					['type' => 'add', 'data' => ['503', 'IStorages', 'SSingleOrders', 'get_dependents_list', '12', 'SSingleOrders', '0', 'ADD', '0', '0', '0']],
+				];
+				break;
 			default:
 				break;
 		}
@@ -2074,6 +2532,21 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['267', getTabid('Home'), 'DASHBOARDWIDGET', 'LBL_PRODUCTS_SOLD_TO_RENEW', 'index.php?module=Home&view=ShowWidget&name=ProductsSoldToRenew', '', '0', NULL, NULL, NULL]],
 					['type' => 'add', 'data' => ['268', getTabid('Home'), 'DASHBOARDWIDGET', 'LBL_SOLD_SERVICES_TO_RENEW', 'index.php?module=Home&view=ShowWidget&name=ServicesSoldToRenew', '', '0', NULL, NULL, NULL]],
 					['type' => 'add', 'data' => ['3', getTabid('Home'), 'DASHBOARDWIDGET', 'Notifications', 'index.php?module=Home&view=ShowWidget&name=Notifications', NULL, '3', NULL, NULL, NULL]],
+				];
+				break;
+			case 2:
+				$links = [
+					['type' => 'remove', 'data' => ['110', getTabid('ProjectTask'), 'DETAILVIEWBASIC', 'Add Note', 'index.php?module=Documents&action=EditView&return_module=ProjectTask&return_action=DetailView&return_id=$RECORD$&parent_id=$RECORD$', 'glyphicon glyphicon-file', '0', NULL, NULL, NULL]],
+					['type' => 'remove', 'data' => [ '112', getTabid('Project'), 'DETAILVIEWBASIC', 'Add Project Task', 'index.php?module=ProjectTask&action=EditView&projectid=$RECORD$&return_module=Project&return_action=DetailView&return_id=$RECORD$', 'glyphicon glyphicon-tasks', '0', NULL, NULL, NULL]],
+					['type' => 'remove', 'data' => [ '113', getTabid('Project'), 'DETAILVIEWBASIC', 'Add Note', 'index.php?module=Documents&action=EditView&return_module=Project&return_action=DetailView&return_id=$RECORD$&parent_id=$RECORD$', 'glyphicon glyphicon-file', '1', NULL, NULL, NULL]],
+					['type' => 'remove', 'data' => [ '194', getTabid('OSSEmployees'), 'DETAILVIEWBASIC', 'LBL_SHOW_EMPLOYEES_HIERARCHY', 'index.php?module=OSSEmployees&action=EmployeeHierarchy&ossemployeesid=$RECORD$', 'glyphicon glyphicon-user', '0', NULL, NULL, NULL]],
+					['type' => 'remove', 'data' => [ '194', getTabid('OSSEmployees'), 'DETAILVIEWBASIC', 'LBL_SHOW_EMPLOYEES_HIERARCHY', 'index.php?module=OSSEmployees&action=EmployeeHierarchy&ossemployeesid=$RECORD$', 'glyphicon glyphicon-user', '0', NULL, NULL, NULL]],
+					['type' => 'add', 'data' => [ '272', getTabid('Contacts'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'add', 'data' => [ '273', getTabid('Accounts'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'add', 'data' => ['274', getTabid('Leads'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'add', 'data' => ['275', getTabid('HelpDesk'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'add', 'data' => ['276', getTabid('OSSMailView'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'add', 'data' => ['277', getTabid('OSSEmployees'), 'DASHBOARDWIDGET', 'Mini List', 'index.php?module=Home&view=ShowWidget&name=MiniList', '', '0', NULL, NULL, NULL, NULL]],
 				];
 				break;
 			default:

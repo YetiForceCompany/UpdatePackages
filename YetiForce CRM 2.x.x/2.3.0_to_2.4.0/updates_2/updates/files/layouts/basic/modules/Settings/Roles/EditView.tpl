@@ -48,6 +48,7 @@
 							<option value="2" {if $RECORD_MODEL->get('allowassignedrecordsto') == '2'}selected="true"{/if}>{vtranslate('LBL_USERS_WITH_SAME_OR_LOWER_LEVEL', $QUALIFIED_MODULE)}</option>
 							<option value="3" {if $RECORD_MODEL->get('allowassignedrecordsto') == '3'}selected="true"{/if}>{vtranslate('LBL_USERS_WITH_LOWER_LEVEL', $QUALIFIED_MODULE)}</option>
 							<option value="4" {if $RECORD_MODEL->get('allowassignedrecordsto') == '4'}selected="true"{/if}>{vtranslate('LBL_JUST_ME', $QUALIFIED_MODULE)}</option>
+							<option value="5" {if $RECORD_MODEL->get('allowassignedrecordsto') == '5'}selected="true"{/if}>{vtranslate('LBL_FROM_PANEL', $QUALIFIED_MODULE)}</option>
 						</select>
 					</div>
                 </div>
@@ -59,7 +60,7 @@
 						<select class="select2" multiple="true" id="profilesList" name="profiles[]" data-placeholder="{vtranslate('LBL_CHOOSE_PROFILES',$QUALIFIED_MODULE)}" data-validation-engine="validate[required]" style="width: 800px">
 							{foreach from=$ALL_PROFILES item=PROFILE}
 								{if $PROFILE->isDirectlyRelated() eq false}
-									<option value="{$PROFILE->getId()}" {if isset($ROLE_PROFILES[$PROFILE->getId()])}selected="true"{/if}>{vtranslate($PROFILE->getName(),'Profiles')}</option>
+									<option value="{$PROFILE->getId()}" {if isset($ROLE_PROFILES[$PROFILE->getId()])}selected="true"{/if}>{vtranslate($PROFILE->getName(),'Settings::Profiles')}</option>
 								{/if}
 							{/foreach}
 						</select>

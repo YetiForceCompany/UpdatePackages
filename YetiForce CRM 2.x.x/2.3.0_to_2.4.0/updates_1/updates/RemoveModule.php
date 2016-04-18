@@ -333,15 +333,18 @@ class RemoveModule
 			$query = 'SELECT COUNT(1) FROM `vtiger_fieldmodulerel` WHERE fieldid = ?';
 			$resultQuery = $db->pquery($query, [$fieldId]);
 			if ($db->getSingleValue($resultQuery) == 1) {
-				$field = Settings_LayoutEditor_Field_Model::getInstance($fieldId);
-				try {
-					$field->delete();
-				} catch (Exception $e) {
-					$log->debug("ERROR " . __CLASS__ . "::" . __METHOD__ . ": code " . $e->getCode() . " message " . $e->getMessage());
-				}
-				$result2 = $db->query("SHOW COLUMNS FROM `" . $field->table . "` LIKE '" . $field->column . "';");
-				if ($result2->rowCount() == 1) {
-					$db->query("ALTER TABLE `" . $field->table . "` DROP COLUMN `" . $field->column . "` ;");
+				$result2 = $db->pquery("SELECT 1 FROM vtiger_field WHERE fieldid = ?;", [$fieldId]);
+				if ($db->getSingleValue($result2) == 1) {
+					$field = Settings_LayoutEditor_Field_Model::getInstance($fieldId);
+					try {
+						$field->delete();
+					} catch (Exception $e) {
+						$log->debug("ERROR " . __CLASS__ . "::" . __METHOD__ . ": code " . $e->getCode() . " message " . $e->getMessage());
+					}
+					$result2 = $db->query("SHOW COLUMNS FROM `" . $field->table . "` LIKE '" . $field->column . "';");
+					if ($result2->rowCount() == 1) {
+						$db->query("ALTER TABLE `" . $field->table . "` DROP COLUMN `" . $field->column . "` ;");
+					}
 				}
 			}
 		}

@@ -3,12 +3,12 @@
 	<name>Update package</name>
 	<label>Update package</label>
 	<type>update</type>
-	<version>RC 5</version>
+	<version>RC 6</version>
 	<from_version>2.3.1072</from_version>
-	<to_version>2.3.1561</to_version>
+	<to_version>2.3.1788</to_version>
 	<dependencies>
 		<vtiger_version>2.3.1072</vtiger_version>
-		<vtiger_max_version>2.3.1561</vtiger_max_version>
+		<vtiger_max_version>2.3.1788</vtiger_max_version>
 	</dependencies>
 	<license>
 		<file>license.txt</file>

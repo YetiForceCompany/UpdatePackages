@@ -60,6 +60,18 @@ var app = {
 		return jQuery('body').data('layoutpath');
 	},
 	/**
+	 * Function to get page title
+	 */
+	getPageTitle: function () {
+		return document.title;
+	},
+	/**
+	 * Function to set page title
+	 */
+	setPageTitle: function (title) {
+		document.title = title;
+	},
+	/**
 	 * Function to get the contents container
 	 * @returns jQuery object
 	 */
@@ -420,7 +432,10 @@ var app = {
 			app.showSelectizeElementView(container.find('select.selectize'));
 			//register date fields event to show mini calendar on click of element
 			app.registerEventForDatePickerFields(container);
+
 			thisInstance.registerModalEvents(container);
+			thisInstance.showPopoverElementView(container.find('.popoverTooltip'));
+			thisInstance.registerDataTables(container.find('.dataTable'));
 			cb(container);
 		}
 		if (data) {
@@ -480,9 +495,13 @@ var app = {
 					save = false;
 				}
 				if (save) {
+					var progressIndicatorElement = jQuery.progressIndicator({
+						blockInfo: {'enabled': true}
+					});
 					var formData = form.serializeFormData();
 					AppConnector.request(formData).then(function (data) {
 						app.hideModalWindow();
+						progressIndicatorElement.progressIndicator({'mode': 'hide'});
 					})
 				}
 			});
@@ -792,6 +811,38 @@ var app = {
 		});
 		elementClockBtn.clockpicker(params);
 	},
+	registerDataTables: function (table) {
+		if ($.fn.dataTable == undefined) {
+			return false;
+		}
+		if (table.length == 0) {
+			return false;
+		}
+		$.extend($.fn.dataTable.defaults, {
+			language: {
+				sLengthMenu: app.vtranslate('JS_S_LENGTH_MENU'),
+				sZeroRecords: app.vtranslate('JS_NO_RESULTS_FOUND'),
+				sInfo: app.vtranslate('JS_S_INFO'),
+				sInfoEmpty: app.vtranslate('JS_S_INFO_EMPTY'),
+				sSearch: app.vtranslate('JS_SEARCH'),
+				sEmptyTable: app.vtranslate('JS_NO_RESULTS_FOUND'),
+				sInfoFiltered: app.vtranslate('JS_S_INFO_FILTERED'),
+				sLoadingRecords: app.vtranslate('JS_LOADING_OF_RECORDS'),
+				sProcessing: app.vtranslate('JS_LOADING_OF_RECORDS'),
+				oPaginate: {
+					sFirst: app.vtranslate('JS_S_FIRST'),
+					sPrevious: app.vtranslate('JS_S_PREVIOUS'),
+					sNext: app.vtranslate('JS_S_NEXT'),
+					sLast: app.vtranslate('JS_S_LAST')
+				},
+				oAria: {
+					sSortAscending: app.vtranslate('JS_S_SORT_ASCENDING'),
+					sSortDescending: app.vtranslate('JS_S_SORT_DESCENDING')
+				}
+			}
+		});
+		table.dataTable();
+	},
 	/**
 	 * Function which will register time fields
 	 *
@@ -968,13 +1019,60 @@ var app = {
 		key = this.cacheNSKey(key);
 		return jQuery.jStorage.get(key, defvalue);
 	},
-	cacheSet: function (key, value) {
+	cacheSet: function (key, value, ttl) {
 		key = this.cacheNSKey(key);
 		jQuery.jStorage.set(key, value);
+		if (ttl) {
+			jQuery.jStorage.setTTL(key, ttl);
+		}
 	},
 	cacheClear: function (key) {
 		key = this.cacheNSKey(key);
 		return jQuery.jStorage.deleteKey(key);
+	},
+	moduleCacheSet: function (key, value, ttl) {
+		if (ttl == undefined) {
+			ttl = 12 * 60 * 60 * 1000;
+		}
+		var orgKey = key;
+		key = this.getModuleName() + '_' + key;
+		this.cacheSet(key, value, ttl);
+
+		var cacheKey = 'mCache' + this.getModuleName();
+		var moduleCache = this.cacheGet(cacheKey);
+		if (moduleCache == null) {
+			moduleCache = [];
+		} else {
+			moduleCache = moduleCache.split(',');
+		}
+		moduleCache.push(orgKey);
+		this.cacheSet(cacheKey, Vtiger_Helper_Js.unique(moduleCache).join(','));
+	},
+	moduleCacheGet: function (key) {
+		return this.cacheGet(this.getModuleName() + '_' + key);
+	},
+	moduleCacheKeys: function () {
+		var cacheKey = 'mCache' + this.getModuleName();
+		var modules = this.cacheGet(cacheKey)
+		if (modules) {
+			return modules.split(',');
+		}
+		return [];
+	},
+	moduleCacheClear: function (key) {
+		var thisInstance = this;
+		var moduleName = this.getModuleName();
+		var cacheKey = 'mCache' + moduleName;
+		var moduleCache = this.cacheGet(cacheKey);
+		if (moduleCache == null) {
+			moduleCache = [];
+		} else {
+			moduleCache = moduleCache.split(',');
+		}
+		$.each(moduleCache, function (index, value) {
+			thisInstance.cacheClear(moduleName + '_' + value);
+		});
+		thisInstance.cacheClear(cacheKey);
 	},
 	htmlEncode: function (value) {
 		if (value) {
@@ -1276,15 +1374,21 @@ var app = {
 			var url = currentElement.data('url');
 
 			if (typeof url != 'undefined') {
-				if (typeof currentElement.data('cb') != 'undefined') {
-					var modalWindowParams = {
-						url: url,
-						cb: currentElement.data('cb'),
-					}
-					app.showModalWindow(modalWindowParams);
-				} else {
-					app.showModalWindow(null, url);
+				if(currentElement.hasClass('popoverTooltip')){
+					currentElement.popover('hide');
 				}
+				currentElement.attr("disabled", true);
+				var modalWindowParams = {
+					url: url,
+					cb: function (container) {
+						var call = currentElement.data('cb');
+						if (typeof window[call] === 'function') {
+							window[call](container);
+						}
+						currentElement.removeAttr("disabled");
+					}
+				}
+				app.showModalWindow(modalWindowParams);
 			}
 			e.stopPropagation();
 		});

@@ -10,8 +10,7 @@
  ********************************************************************************/
 -->*}
 {strip}
-	
-	<div class="col-xs-10 col-sm-9 col-md-4 margin0px">
+	<div class="col-xs-12 col-sm-12 col-md-8">
 		<div>
 			<div class="pull-left spanModuleIcon moduleIcon{$MODULE_NAME}">
 				<span class="moduleIcon">
@@ -28,7 +27,7 @@
 					{/if}
 				</span>
 			</div>
-			<h4 class="recordLabel pushDown marginbottomZero" title="{$RECORD->getDisplayValue('salutationtype')}&nbsp;{$RECORD->getName()}">
+			<h4 class="recordLabel pushDown marginbottomZero textOverflowEllipsis" title="{$RECORD->getDisplayValue('salutationtype')}&nbsp;{$RECORD->getName()}">
 				{if $RECORD->getDisplayValue('salutationtype')}
                     <span class="salutation">{$RECORD->getDisplayValue('salutationtype')}</span>&nbsp;
                 {/if}

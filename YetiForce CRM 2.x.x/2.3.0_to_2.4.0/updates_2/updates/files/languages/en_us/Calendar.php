@@ -23,7 +23,8 @@ $languageStrings = [
 	'LBL_ADD_TASK' => 'Add To Do',
 	'LBL_CALENDAR_SETTINGS' => 'Calendar settings',
 	'LBL_CALENDAR_SHARING' => 'Calendar sharing',
-	'LBL_CALENDAR_VIEW' => 'My Calendar',
+	'LBL_CALENDAR_VIEW' => 'Calendar',
+	'LBL_CALENDAR_LIST' => 'Records list (from calendar)',
 	'LBL_CALL' => 'Call',
 	'LBL_CHANGE_OWNER' => 'Change owner',
 	'LBL_CONTACTS_BIRTH_DAY' => 'Date of birth',
@@ -138,6 +139,8 @@ $languageStrings = [
 	'LBL_INVITE_USER_BLOCK' => 'Invite',
 	'LBL_CALENDAR_FILTERS' => 'Filters',
 	'LBL_AUTO_FILL_DESCRIPTION' => 'Fill the start date based on the first available date',
+	'LBL_CACHE_SELECTED_FILTERS' => 'Standard view in calendar changed. Click "Clear view" to clear it.',
+	'LBL_CACHE_CLEAR' => 'Clear view',
 ];
 
 $jsLanguageStrings = [

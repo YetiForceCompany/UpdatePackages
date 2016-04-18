@@ -286,9 +286,15 @@ class YetiForceUpdate
 	function databaseStepTwo()
 	{
 		$adb = PearDatabase::getInstance();
-		$result = $adb->query("SHOW KEYS FROM `vtiger_ossmailview_relation` WHERE Key_name='ossmailviewid_2';");
-		if ($result->rowCount() == 0) {
-			$adb->query('ALTER TABLE `vtiger_ossmailview_relation` ADD UNIQUE KEY `ossmailviewid_2`(`ossmailviewid`,`crmid`) ; ');
+		$result = $adb->query("SELECT ossmailviewid FROM `vtiger_ossmailview_relation`;");
+		$num = $result->rowCount();
+		$result = $adb->query("SELECT DISTINCT `ossmailviewid`,`crmid` FROM `vtiger_ossmailview_relation`;");
+		$num2 = $result->rowCount();
+		if ($num == $num2) {
+			$result = $adb->query("SHOW KEYS FROM `vtiger_ossmailview_relation` WHERE Key_name='ossmailviewid_2';");
+			if ($result->rowCount() == 0) {
+				$adb->query('ALTER TABLE `vtiger_ossmailview_relation` ADD UNIQUE KEY `ossmailviewid_2`(`ossmailviewid`,`crmid`) ; ');
+			}
 		}
 		$adb->update('vtiger_relatedlists', ['actions' => 'SEND'], '`name` = ?', ['get_emails']);
 		$relName = ['get_accounts_mail', 'get_contacts_mail', 'get_leads_mail', 'get_helpdesk_mail', 'get_project_mail', 'get_servicecontracts_mail', 'get_campaigns_mail', 'get_vendor_mail'];

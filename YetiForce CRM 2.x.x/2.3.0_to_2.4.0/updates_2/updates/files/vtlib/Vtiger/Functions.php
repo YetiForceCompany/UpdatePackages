@@ -1067,6 +1067,9 @@ class Vtiger_Functions
 
 	public static function throwNewException($message, $die = true, $tpl = 'OperationNotPermitted.tpl')
 	{
+		if(REQUEST_MODE == 'API'){
+			throw new APIException($message, 401);
+		}
 		$request = new Vtiger_Request($_REQUEST);
 		if ($request->isAjax()) {
 			$response = new Vtiger_Response();
@@ -1235,6 +1238,7 @@ class Vtiger_Functions
 			$host = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null);
 			$host = isset($host) ? $host : $_SERVER['SERVER_NAME'] . $port;
 			$browser->url = $protocol . '://' . $host . $_SERVER['REQUEST_URI'];
+			$browser->requestUri = ltrim($_SERVER['REQUEST_URI'], '/');
 			self::$browerCache = $browser;
 		}
 		return self::$browerCache;
@@ -1372,16 +1376,16 @@ class Vtiger_Functions
 		if (!$length) {
 			$length = vglobal('listview_max_textlength');
 		}
-		$newText = preg_replace("/(<\/?)(\w+)([^>]*>)/i", "", $text);
+		$newText = preg_replace("/(<\/?)(\w+)([^>]*>)/i", '', $text);
 		if (function_exists('mb_strlen')) {
 			if (mb_strlen(html_entity_decode($newText)) > $length) {
-				$newText = mb_substr(preg_replace("/(<\/?)(\w+)([^>]*>)/i", "", $text), 0, $length, vglobal('default_charset'));
+				$newText = mb_substr(preg_replace('/(<\/?)(\w+)([^>]*>)/i', '', html_entity_decode($newText)), 0, $length, vglobal('default_charset'));
 				if ($addDots) {
 					$newText .= '...';
 				}
 			}
 		} elseif (strlen(html_entity_decode($text)) > $length) {
-			$newText = substr(preg_replace("/(<\/?)(\w+)([^>]*>)/i", "", $text), 0, $length);
+			$newText = substr(preg_replace('/(<\/?)(\w+)([^>]*>)/i', '', html_entity_decode($newText)), 0, $length);
 			if ($addDots) {
 				$newText .= '...';
 			}
@@ -1572,5 +1576,12 @@ class Vtiger_Functions
 	public static function getDateTimeHoursDiff($startDateTime, $endDateTime)
 	{
 		return self::getDateTimeMinutesDiff($startDateTime, $endDateTime) / 60;
+	}
+
+	public static function getQueryParams($url)
+	{
+		$queryStr = parse_url(htmlspecialchars_decode($url), PHP_URL_QUERY);
+		parse_str($queryStr, $queryParams);
+		return $queryParams;
 	}
 }
