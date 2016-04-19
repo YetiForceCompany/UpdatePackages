@@ -1,5 +1,0 @@
-This update package should not be executed in the production version of the CRM!
-Required PHP version needs to be equal or greater than 5.4.
-During the update process some of the configuration files, such as .htaccess, performance.php, developer.php, will be overwritten.
-The following modules together with data will be removed: Invoices, Sales Order, Opportunities, Calculations, Requirement Cards, Quotes enquires, Purchase Order, Quotes, Costs
-Attention: You will be redirected to Home page when update is completed.
