@@ -515,19 +515,7 @@ class YetiForceUpdate
 				],
 				'u_yf_finvoiceproforma_invfield' => [
 					'sequence' => ['currency' => '1', 'discountmode' => '2', 'taxmode' => '3', 'name' => '4', 'qty' => '5', 'price' => '6', 'total' => '7', 'discount' => '8', 'net' => '9', 'tax' => '10', 'gross' => '11', 'comment1' => '12']
-				],
-				'u_yf_igdn_invfield' => [
-					'sequence' => ['name' => '1', 'qty' => '4', 'price' => '5', 'total' => '6', 'comment1' => '5', '-' => '0', 'unit' => '3', 'ean' => '2']
-				],
-				'u_yf_igin_invfield' => [
-					'sequence' => ['name' => '1', 'qty' => '4', 'price' => '5', 'total' => '6', 'comment1' => '5', '-' => '0', 'unit' => '3', 'ean' => '2']
-				],
-				'u_yf_igrn_invfield' => [
-					'sequence' => ['name' => '1', 'qty' => '4', 'price' => '5', 'total' => '6', 'comment1' => '5', '-' => '0', 'unit' => '3', 'ean' => '2']
-				],
-				'u_yf_iidn_invfield' => [
-					'sequence' => ['name' => '1', 'qty' => '4', 'comment1' => '5', '-' => '0', 'unit' => '3', 'price' => '5', 'total' => '6', 'ean' => '2']
-				],
+				]
 			];
 			foreach ($data as $tabel => $cols) {
 				$sql = '';
@@ -585,6 +573,38 @@ class YetiForceUpdate
 					'u_yf_ssingleorders_invfield' => [
 						'colspan' => ['name' => '15', 'qty' => '7', 'discount' => '7', 'marginp' => '10', 'margin' => '7', 'tax' => '7', 'comment1' => '0', 'price' => '7', 'total' => '7', 'net' => '7', 'purchase' => '7', 'gross' => '7', 'discountmode' => '1', 'taxmode' => '1', 'currency' => '1', 'unit' => '7', 'subunit' => '7'],
 						'sequence' => ['name' => '0', 'qty' => '3', 'discount' => '6', 'marginp' => '9', 'margin' => '10', 'tax' => '11', 'comment1' => '7', 'price' => '4', 'total' => '5', 'net' => '7', 'purchase' => '8', 'gross' => '12', 'discountmode' => '11', 'taxmode' => '12', 'currency' => '13', 'unit' => '1', 'subunit' => '2']
+					],
+					'u_yf_igrnc_invfield' => [
+						'colspan' => ['name' => '29', 'qty' => '15', 'price' => '12', 'total' => '12', 'comment1' => '0', 'seq' => '5', 'unit' => '12', 'ean' => '15', 'subunit' => '10'],
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_igin_invfield' => [
+						'colspan' => ['name' => '29', 'qty' => '15', 'price' => '12', 'total' => '12', 'comment1' => '0', 'seq' => '5', 'unit' => '12', 'ean' => '15', 'subunit' => '10'],
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_igrn_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_igrnc_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_iidn_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'price' => '6', 'total' => '7', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_ipreorder_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'comment1' => '5', 'seq' => '0', 'price' => '6', 'total' => '7', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_istdn_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_istrn_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_igdn_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
+					],
+					'u_yf_igdnc_invfield' => [
+						'sequence' => ['name' => '1', 'qty' => '5', 'price' => '6', 'total' => '7', 'comment1' => '5', 'seq' => '0', 'unit' => '3', 'ean' => '2', 'subunit' => '4']
 					]
 				];
 				break;
@@ -1014,7 +1034,7 @@ class YetiForceUpdate
 		$this->addCron([['Assets Renewal', 'modules/Assets/cron/Renewal.php', '86400', NULL, NULL, '1', 'Assets', '17', ''], ['SoldServices Renewal', 'modules/OSSSoldServices/cron/Renewal.php', '86400', NULL, NULL, '1', 'OSSSoldServices', '18', '']]);
 		$this->addHandler([['vtiger.entity.beforesave.final', 'modules/Assets/handlers/Renewal.php', 'Assets_Renewal_Handler', '', '1', '[]'], ['vtiger.entity.beforesave.final', 'modules/OSSSoldServices/handlers/Renewal.php', 'OSSSoldServices_Renewal_Handler', '', '1', '[]']]);
 		$db->update('vtiger_field', ['displaytype' => 2, 'typeofdata' => 'NN~O'], 'columnname = ? AND tablename IN (?,?,?);', ['sum_total', 'u_yf_scalculations', 'u_yf_squotes', 'u_yf_ssingleorders']);
-		$db->update('vtiger_field', ['columnname' => 'sum_total', 'fieldname' => 'sum_total'], 'columnname = ? AND tablename IN (?,?,?);', ['total', 'u_yf_igrn', 'u_yf_istdn', 'u_yf_istrn', 'u_yf_igrnc']);
+		$db->update('vtiger_field', ['columnname' => 'sum_total', 'fieldname' => 'sum_total'], 'columnname = ? AND tablename IN (?,?,?,?);', ['total', 'u_yf_igrn', 'u_yf_istdn', 'u_yf_istrn', 'u_yf_igrnc']);
 		$this->removeFields($this->getFieldsToRemove(3));
 		$this->move($this->getFieldsToMove(3));
 		$db->update('vtiger_field', ['fieldlabel' => 'FL_TOTAL_TIME_H'], 'columnname = ? AND tablename = ? AND fieldlabel = ?;', ['sum_time', 'vtiger_servicecontracts', 'Total time [Service Contract]']);
@@ -1089,7 +1109,8 @@ class YetiForceUpdate
 			'vtiger_outsourcedproducts' => ['oproductstatus', 'dateinservice', 'pscategory', 'wherebought', 'prodcount', 'parent_id'],
 			'vtiger_ossemployees' => ['birth_date'],
 			'vtiger_leaddetails' => ['verification', 'subindustry'],
-			'vtiger_account' => ['verification', 'buildingnumbera', 'localnumbera', 'buildingnumberb', 'localnumberb', 'buildingnumberc', 'localnumberc', 'no_approval', 'balance'],
+			'vtiger_account' => ['verification', 'products', 'services', 'no_approval', 'balance'],
+			'vtiger_accountaddress' => ['buildingnumbera', 'buildingnumberb', 'buildingnumberc', 'localnumbera', 'localnumberb', 'localnumberc'],
 			'vtiger_vendor' => ['verification'],
 			'vtiger_crmentity' => ['description', 'attention'],
 			'vtiger_assets' => ['ordertime', 'products', 'services', 'pscategory'],
