@@ -1071,7 +1071,7 @@ class YetiForceUpdate
 			}
 			$oldNames = ['0_created_Email', '1_created_HelpDesk', '2_bind_Accounts', '3_bind_Contacts', '4_bind_Leads', '5_bind_HelpDesk', '6_bind_Potentials', '7_bind_Project', '8_bind_ServiceContracts', '9_bind_Campaigns'];
 			$newNames = ['CreatedEmail', 'CreatedHelpDesk', 'BindAccounts', 'BindContacts', 'BindLeads', 'BindHelpDesk', 'BindSSalesProcesses', 'BindProject', 'BindServiceContracts', 'BindCampaigns'];
-			$newPhrase = str_replace($oldNames, $newNames, $phrase);
+			$newPhrase = str_replace($oldNames, $newNames, $row['actions']);
 			$db->update('roundcube_users', ['actions' => $newPhrase], 'user_id = ?', [$row['user_id']]);
 		}
 	}
