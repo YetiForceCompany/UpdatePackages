@@ -151,7 +151,8 @@ class YetiForceUpdate
 				'id' => $db->getUniqueID('vtiger_language'),
 				'name' => $langData[1],
 				'prefix' => $langData[2],
-				'label' => $langData[3]
+				'label' => $langData[3],
+				'lastupdated' => $langData[4]
 			]);
 		}
 		$notifDataAll = [['0', 'LBL_MESSAGES_FROM_USERS', '0', '3', '3', 'glyphicon glyphicon-', '0'], ['1', 'LBL_WATCHDOG', '0', '3', '3', 'glyphicon glyphicon-', '0']];
@@ -204,6 +205,7 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 			case 1:
 				$ralations = [
 					['type' => 'add', 'data' => ['462', 'IStorages', 'Products', 'get_many_to_many', '1', 'Products', '0', '', '0', '0', '0']],
+					['type' => 'add', 'data' => ['504', 'SSingleOrders', 'IGDN', 'get_dependents_list', '4', 'IGDN', '0', 'ADD', '0', '0', '0']],
 				];
 				break;
 			default:
