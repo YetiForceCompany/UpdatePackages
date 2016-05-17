@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mf_template>
+  <tabid>Accounts</tabid>
+  <reltabid>Vendors</reltabid>
+  <conditions><![CDATA[[]]]></conditions>
+  <status>active</status>
+  <params><![CDATA[{"autofill":"on"}]]></params>
+  <permissions/>
+  <fields>
+    <field>
+      <type>V</type>
+      <default/>
+      <source>accountname</source>
+      <target>vendorname</target>
+    </field>
+    <field>
+      <type>E</type>
+      <default/>
+      <source>email1</source>
+      <target>email</target>
+    </field>
+  </fields>
+</mf_template>
