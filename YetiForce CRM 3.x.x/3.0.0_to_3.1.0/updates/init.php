@@ -83,6 +83,10 @@ class YetiForceUpdate
 		'libraries/SabreDAV/VObject/Property/Float.php',
 		'libraries/SabreDAV/VObject/Property/Integer.php',
 		'modules/Vtiger/data_access/check_day_tasks.php',
+		'layouts/basic/modules/Vtiger/widgets/History.tpl',
+		'layouts/basic/modules/Vtiger/widgets/HistoryConfig.tpl',
+		'layouts/basic/modules/Vtiger/HistoryRelated.tpl',
+		'modules/Vtiger/widgets/History.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -102,6 +106,7 @@ class YetiForceUpdate
 		$this->setFields($this->getFields(1));
 		$this->setPicklists($this->getPicklists(1));
 		$this->actionMapp($this->getActionMapp(1));
+		$this->setRelations($this->getRelations(1));
 		$this->updatePack();
 //		....
 		$this->mappedFields();
@@ -184,10 +189,61 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 <br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" />
 <span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Thanks and Regards,</span><br style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;" />
 <span style="color:rgb(0,0,0);font-family:arial, sans-serif;line-height:normal;">Team YetiForce</span>');
+			$record->set('mode', 'edit');
 			$record->save();
 		}
 		$db->update('vtiger_field', ['summaryfield' => 1], '`tabid` = ? AND columnname IN (?,?,?,?);', [getTabid('ServiceContracts'), 'end_date', 'due_date', 'contract_status', 'contract_type']);
 		$db->update('vtiger_field', ['summaryfield' => 0], '`tabid` = ? AND columnname = ?;', [getTabid('ServiceContracts'), 'contract_no']);
+		$db->update('vtiger_field', ['generatedtype' => 1], '`tabid` = ? AND columnname IN (?,?);', [getTabid('HelpDesk'), 'response_time', 'report_time']);
+	}
+
+	function getRelations($index)
+	{
+		$ralations = [];
+		switch ($index) {
+			case 1:
+				$ralations = [
+					['type' => 'add', 'data' => ['462', 'IStorages', 'Products', 'get_many_to_many', '1', 'Products', '0', '', '0', '0', '0']],
+				];
+				break;
+			default:
+				break;
+		}
+		return $ralations;
+	}
+
+	function setRelations($data)
+	{
+		$db = PearDatabase::getInstance();
+		if (!empty($data)) {
+			foreach ($data as $relation) {
+				if (empty($relation)) {
+					continue;
+				}
+				list($id, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment) = $relation['data'];
+				$tabid = getTabid($moduleName);
+				$relTabid = getTabid($relModuleName);
+				$result = $db->pquery("SELECT 1 FROM `vtiger_relatedlists` WHERE tabid=? AND related_tabid = ? AND name = ? AND label = ?;", [$tabid, $relTabid, $name, $label]);
+				if ($result->rowCount() == 0 && $relation['type'] == 'add') {
+					$sequence = $this->getMax('vtiger_relatedlists', 'sequence', "WHERE tabid = $tabid");
+					$db->insert('vtiger_relatedlists', [
+						'relation_id' => $db->getUniqueID('vtiger_relatedlists'),
+						'tabid' => $tabid,
+						'related_tabid' => $relTabid,
+						'name' => $name,
+						'sequence' => $sequence,
+						'label' => $label,
+						'presence' => $presence,
+						'actions' => $actions,
+						'favorites' => $favorites,
+						'creator_detail' => $creatorDetail,
+						'relation_comment' => $relationComment
+					]);
+				} elseif ($result->rowCount() > 0 && $relation['type'] == 'remove') {
+					$db->delete('vtiger_relatedlists', '`tabid` = ? AND `related_tabid` = ? AND `name` = ?;', [$tabid, $relTabid, $name]);
+				}
+			}
+		}
 	}
 
 	public function mappedFields()
@@ -537,7 +593,7 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 					['type' => 'add', 'name' => 'a_yf_relatedlists_inv_fields', 'sql' => '`a_yf_relatedlists_inv_fields` (
 						`relation_id` int(19) DEFAULT NULL,
 						`fieldname` varchar(30) DEFAULT NULL,
-						`sequence` int(10) DEFAULT NULL,
+						`sequence` tinyint(1) DEFAULT NULL,
 						KEY `relation_id` (`relation_id`)
 					  )'],
 				];
