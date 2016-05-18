@@ -30,10 +30,13 @@ class YetiForceUpdate
 		'libraries/SabreDAV/CalDAV/Property/SupportedCalendarComponentSet.php',
 		'libraries/SabreDAV/CalDAV/Property/SupportedCalendarData.php',
 		'libraries/SabreDAV/CalDAV/Property/SupportedCollationSet.php',
+		'libraries/SabreDAV/CalDAV/Property/',
+		'libraries/SabreDAV/CalDAV/Notifications/Notification/',
 		'libraries/SabreDAV/CalDAV/UserCalendars.php',
 		'libraries/SabreDAV/CardDAV/AddressBookQueryParser.php',
 		'libraries/SabreDAV/CardDAV/Property/SupportedAddressData.php',
 		'libraries/SabreDAV/CardDAV/Property/SupportedCollationSet.php',
+		'libraries/SabreDAV/CardDAV/Property/',
 		'libraries/SabreDAV/DAV/Exception/FileNotFound.php',
 		'libraries/SabreDAV/DAV/FSExt/Node.php',
 		'libraries/SabreDAV/DAV/Locks/Backend/FS.php',
@@ -51,6 +54,7 @@ class YetiForceUpdate
 		'libraries/SabreDAV/DAV/Property/SupportedMethodSet.php',
 		'libraries/SabreDAV/DAV/Property/SupportedReportSet.php',
 		'libraries/SabreDAV/DAV/PropertyInterface.php',
+		'libraries/SabreDAV/DAV/Property/',
 		'libraries/SabreDAV/DAV/URLUtil.php',
 		'libraries/SabreDAV/DAV/XMLUtil.php',
 		'libraries/SabreDAV/DAVACL/Property/Acl.php',
@@ -58,8 +62,10 @@ class YetiForceUpdate
 		'libraries/SabreDAV/DAVACL/Property/CurrentUserPrivilegeSet.php',
 		'libraries/SabreDAV/DAVACL/Property/Principal.php',
 		'libraries/SabreDAV/DAVACL/Property/SupportedPrivilegeSet.php',
+		'libraries/SabreDAV/DAVACL/Property/',
 		'libraries/SabreDAV/VObject/RecurrenceIterator.php',
 		'layouts/basic/modules/Vendors/resources/Detail.js',
+		'layouts/basic/modules/Vendors/',
 		'layouts/basic/modules/Vtiger/data_access/check_day_tasks.tpl',
 		'modules/Settings/CronTasks/EditCron.php',
 		'modules/Settings/CronTasks/ListCronJobs.php',
@@ -196,6 +202,8 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 		$db->update('vtiger_field', ['summaryfield' => 1], '`tabid` = ? AND columnname IN (?,?,?,?);', [getTabid('ServiceContracts'), 'end_date', 'due_date', 'contract_status', 'contract_type']);
 		$db->update('vtiger_field', ['summaryfield' => 0], '`tabid` = ? AND columnname = ?;', [getTabid('ServiceContracts'), 'contract_no']);
 		$db->update('vtiger_field', ['generatedtype' => 1], '`tabid` = ? AND columnname IN (?,?);', [getTabid('HelpDesk'), 'response_time', 'report_time']);
+		$db->update('vtiger_field', ['generatedtype' => 1], '`tabid` = ? AND columnname IN (?,?,?,?);', [getTabid('SSingleOrders'), 'pos', 'table', 'seat','ssingleorders_source']);
+		$db->update('vtiger_field', ['generatedtype' => 1], '`tabid` = ? AND columnname = ?;', [getTabid('IStorages'), 'pos']);
 	}
 
 	function getRelations($index)
@@ -204,7 +212,6 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 		switch ($index) {
 			case 1:
 				$ralations = [
-					['type' => 'add', 'data' => ['462', 'IStorages', 'Products', 'get_many_to_many', '1', 'Products', '0', '', '0', '0', '0']],
 					['type' => 'add', 'data' => ['504', 'SSingleOrders', 'IGDN', 'get_dependents_list', '4', 'IGDN', '0', 'ADD', '0', '0', '0']],
 				];
 				break;
@@ -394,17 +401,17 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 		switch ($index) {
 			case 1:
 				$fields = [
-					['90', '2344', 'ssingleorders_source', 'u_yf_ssingleorders', '2', '16', 'ssingleorders_source', 'FL_SOURCE', '1', '2', '', '100', '13', '284', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "varchar(255) DEFAULT '' ", 'LBL_SSINGLEORDERS_INFORMATION', ['PLL_MANUAL', 'PLL_POS', 'PLL_SHOP'], [], 'SSingleOrders'],
+					['90', '2344', 'ssingleorders_source', 'u_yf_ssingleorders', '1', '16', 'ssingleorders_source', 'FL_SOURCE', '1', '2', '', '100', '13', '284', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "varchar(255) DEFAULT '' ", 'LBL_SSINGLEORDERS_INFORMATION', ['PLL_MANUAL', 'PLL_POS', 'PLL_SHOP'], [], 'SSingleOrders'],
 					['100', '2345', 'ssingleordersid', 'u_yf_igdn', '1', '10', 'ssingleordersid', 'FL_SSIGNLEORDERS', '1', '2', '', '100', '8', '327', '1', 'M~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "int(19)", 'LBL_BASIC_DETAILS', [], ['SSingleOrders'], 'IGDN'],
 					['6', '2346', 'last_invoice_date', 'vtiger_account', '1', '5', 'last_invoice_date', 'FL_LAST_INVOICE_DATE', '1', '2', '', '100', '10', '198', '10', 'D~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, "date", 'LBL_FINANSIAL_SUMMARY', [], [], 'Accounts'],
-					['13', '2347', 'report_time', 'vtiger_troubletickets', '2', '308', 'report_time', 'FL_REPORT_TIME', '1', '2', '', '100', '11', '27', '2', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'int(10)', 'LBL_CUSTOM_INFORMATION', [], [], 'HelpDesk'],
-					['13', '2348', 'response_time', 'vtiger_troubletickets', '2', '308', 'response_time', 'FL_RESPONSE_TIME', '1', '2', '', '100', '12', '27', '3', 'DT~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'datetime', 'LBL_CUSTOM_INFORMATION', [], [], 'HelpDesk'],
-					['4', '2349', 'inactivity', 'vtiger_contactdetails', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '29', '4', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_CONTACT_INFORMATION', [], [], 'Contacts'],
-					['6', '2350', 'inactivity', 'vtiger_account', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '24', '9', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_ACCOUNT_INFORMATION', [], [], 'Accounts'],
-					['7', '2351', 'inactivity', 'vtiger_leaddetails', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '24', '13', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_LEAD_INFORMATION', [], [], 'Leads'],
-					['92', '2352', 'inactivity', 'u_yf_partners', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '6', '299', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_PARTNERS_INFORMATION', [], [], 'Partners'],
-					['18', '2353', 'inactivity', 'vtiger_vendor', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '21', '42', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_VENDOR_INFORMATION', [], [], 'Vendors'],
-					['93', '2354', 'inactivity', 'u_yf_competition', '2', '56', 'inactivity', 'FL_INACTIVITY', '1', '2', '', '100', '6', '303', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_COMPETITION_INFORMATION', [], [], 'Competition'],
+					['13', '2347', 'report_time', 'vtiger_troubletickets', '1', '308', 'report_time', 'FL_REPORT_TIME', '1', '2', '', '100', '11', '27', '2', 'I~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'int(10)', 'LBL_CUSTOM_INFORMATION', [], [], 'HelpDesk'],
+					['13', '2348', 'response_time', 'vtiger_troubletickets', '1', '308', 'response_time', 'FL_RESPONSE_TIME', '1', '2', '', '100', '12', '27', '3', 'DT~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'datetime', 'LBL_CUSTOM_INFORMATION', [], [], 'HelpDesk'],
+					['4', '2349', 'active', 'vtiger_contactdetails', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '29', '4', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_CONTACT_INFORMATION', [], [], 'Contacts'],
+					['6', '2350', 'active', 'vtiger_account', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '24', '9', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_ACCOUNT_INFORMATION', [], [], 'Accounts'],
+					['7', '2351', 'active', 'vtiger_leaddetails', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '24', '13', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_LEAD_INFORMATION', [], [], 'Leads'],
+					['92', '2352', 'active', 'u_yf_partners', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '6', '299', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_PARTNERS_INFORMATION', [], [], 'Partners'],
+					['18', '2353', 'active', 'vtiger_vendor', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '21', '42', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_VENDOR_INFORMATION', [], [], 'Vendors'],
+					['93', '2354', 'active', 'u_yf_competition', '1', '56', 'active', 'FL_ACTIVE', '1', '2', '', '100', '6', '303', '1', 'C~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'tinyint(1) NULL DEFAULT 0', 'LBL_COMPETITION_INFORMATION', [], [], 'Competition'],
 				];
 				break;
 			default:
