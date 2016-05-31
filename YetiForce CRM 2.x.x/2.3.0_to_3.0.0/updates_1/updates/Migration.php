@@ -32,8 +32,12 @@ class Migration
 				$result2 = $db->pquery('SELECT * FROM vtiger_projecttask WHERE projecttaskid=?', [$subprocessId]);
 				while ($record2 = $db->fetch_array($result2)) {
 					$processId = $record2['projectid'];
-					$recordModel = Vtiger_Record_Model::getInstanceById($processId);
-					$link = $recordModel->get($this->columnLink[$columnIdName]);
+					$metaData = Vtiger_Functions::getCRMRecordMetadata($processId);
+					$focus = CRMEntity::getInstance($metaData['setype']);
+					$table = $focus->table_name;
+					$index = $focus->table_index;
+					$result4 = $db->pquery('SELECT '.$this->columnLink[$columnIdName].' FROM '.$table.' WHERE '.$index.'=?', [$processId]);
+					$link = $db->getSingleValue($result4);
 				}
 			} else {
 				if (!empty($record['projectid']) || !empty($record['servicecontractsid']) || !empty($record['ticketid'])) {
@@ -48,8 +52,12 @@ class Migration
 						$columnIdName = 'ticketid';
 						$processId = $record['ticketid'];
 					}
-					$recordModel = Vtiger_Record_Model::getInstanceById($processId);
-					$link = $recordModel->get($this->columnLink[$columnIdName]);
+					$metaData = Vtiger_Functions::getCRMRecordMetadata($processId);
+					$focus = CRMEntity::getInstance($metaData['setype']);
+					$table = $focus->table_name;
+					$index = $focus->table_index;
+					$result4 = $db->pquery('SELECT '.$this->columnLink[$columnIdName].' FROM '.$table.' WHERE '.$index.'=?', [$processId]);
+					$link = $db->getSingleValue($result4);
 				} else {
 					$link = empty($record['accountid']) ? $record['leadid'] : $record['accountid'];
 				}
