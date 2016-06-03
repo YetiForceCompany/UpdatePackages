@@ -70,6 +70,7 @@ class YetiForceUpdate
 		'modules/Settings/Vtiger/views/AnnouncementEdit.php',
 		'libraries/Smarty/libs/sysplugins/smarty_internal_filter_handler.php',
 		'libraries/Smarty/libs/sysplugins/smarty_internal_write_file.php',
+		'layouts/basic/modules/OSSMail/resources/OSSMailBoxInfo.css',
 	];
 
 	function YetiForceUpdate($modulenode)
