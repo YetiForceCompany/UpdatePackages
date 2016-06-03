@@ -494,10 +494,10 @@ CRM&nbsp;</span>address:&nbsp;#s#LinkToCRMRecord#sEnd#<br style="color:rgb(0,0,0
 					['type' => ['change', 'Type'], 'name' => 'uid', 'validType' => 'varbinary', 'table' => 'dav_calendarobjects', 'sql' => "ALTER TABLE `dav_calendarobjects` 
 	CHANGE `uid` `uid` varbinary(200)   NULL after `lastoccurence` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_general_ci' ;"],
 					['type' => ['change', 'Type'], 'name' => 'components', 'validType' => 'varbinary(21)', 'table' => 'dav_calendars', 'sql' => "ALTER TABLE `dav_calendars` 
+						CHANGE `timezone` `timezone` text  COLLATE utf8mb4_general_ci NULL after `calendarcolor` , 
 						CHANGE `components` `components` varbinary(21)   NULL after `timezone` ,
 						CHANGE `displayname` `displayname` varchar(100)  COLLATE utf8mb4_general_ci NULL after `principaluri` , 
 						CHANGE `description` `description` text  COLLATE utf8mb4_general_ci NULL after `synctoken` , 
-						CHANGE `timezone` `timezone` text  COLLATE utf8mb4_general_ci NULL after `calendarcolor` , 
 						DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_general_ci' ;"],
 					['type' => ['change', 'Type'], 'name' => 'uri', 'validType' => 'varbinary', 'table' => 'dav_calendarsubscriptions', 'sql' => "ALTER TABLE `dav_calendarsubscriptions` 
 						CHANGE `uri` `uri` varbinary(200)   NOT NULL after `id` , 
