@@ -98,6 +98,10 @@ class YetiForceUpdate
 	function postupdate()
 	{
 		$db = PearDatabase::getInstance();
+		if ($this->updateLabelsByModule) {
+			Vtiger_Cache::set('module', $this->updateLabelsByModule, NULL);
+			Settings_Search_Module_Model::UpdateLabels(['tabid' => $this->updateLabelsByModule]);
+		}
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		Vtiger_Deprecated::createModuleMetaFile();
@@ -236,6 +240,8 @@ class YetiForceUpdate
 					$recordModel->set($name, $value);
 				}
 				$recordModel->save();
+				if ('OSSMailTemplates' == $record['moduleName'] && isset($record['data']['sysname']))
+					$db->update('vtiger_ossmailtemplates', ['sysname' => 'SendNotificationsViaMail'], '`ossmailtemplatesid` = ?;', [$recordModel->getId()]);
 			}
 		}
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
@@ -321,13 +327,14 @@ class YetiForceUpdate
 	{
 		$db = PearDatabase::getInstance();
 
-		$db->update('vtiger_field', ['fieldlabel' => 'PLL_TO_APPROVAL'], '`tabid` = ? AND columnname = ?;', [getTabid('Reservations'), 'reservations_status']);
+		$db->update('vtiger_field', ['defaultvalue' => 'PLL_TO_APPROVAL'], '`tabid` = ? AND columnname = ?;', [getTabid('Reservations'), 'reservations_status']);
 		$modules = ['ModTracker', 'Users', 'Mobile', 'Integration', 'WSAPP', 'ConfigEditor', 'FieldFormulas', 'VtigerBackup', 'CronTasks', 'Import', 'Tooltip', 'CustomerPortal', 'Home'];
 		$db->pquery('DELETE p FROM vtiger_profile2tab p INNER JOIN vtiger_tab t ON t.`tabid` = p.`tabid` WHERE t.`name` IN (' . $db->generateQuestionMarks($modules) . ');', $modules);
 		$result = $db->query('SHOW TABLE STATUS WHERE NAME LIKE "vtiger_neworders";');
 		if ($result->rowCount()) {
 			$this->renameModule();
 		}
+		$db->update('vtiger_account', ['active' => 1], 'parentid = ?', [0]);
 	}
 
 	public function renameModule()
@@ -369,6 +376,7 @@ class YetiForceUpdate
 		$db->update('vtiger_entityname', ['modulename' => 'Announcements', 'tablename' => 'u_yf_announcement', 'entityidfield' => 'announcementid', 'entityidcolumn' => 'announcementid', 'searchcolumn' => 'subject'], 'modulename = ?', ['NewOrders']);
 		$db->update('vtiger_field', ['tablename' => 'u_yf_announcement'], 'tablename = ?', ['vtiger_neworders']);
 		$db->update('vtiger_field', ['columnname' => 'announcement_no', 'fieldname' => 'announcement_no'], 'columnname = ? AND tabid = ?', ['neworders_no', $tabId]);
+		$db->update('vtiger_field', ['quickcreate' => 2], 'columnname = ? AND tabid = ?', ['description', $tabId]);
 		$db->update('vtiger_modentity_num', ['semodule' => 'Announcements'], 'semodule = ?', ['NewOrders']);
 		$db->update('vtiger_ws_entity', ['name' => 'Announcements'], 'name = ?', ['NewOrders']);
 		$db->update('vtiger_crmentity', ['setype' => 'Announcements'], 'setype = ?', ['NewOrders']);
@@ -381,6 +389,9 @@ class YetiForceUpdate
 		}
 		$db->delete('vtiger_settings_field', '`name` = ? AND linkto = ?', ['LBL_ANNOUNCEMENT', 'index.php?parent=Settings&module=Vtiger&view=AnnouncementEdit']);
 		$db->update('vtiger_tab', ['name' => 'Announcements', 'tablabel' => 'Announcements'], '`name` = ?', ['NewOrders']);
+		$db->update('vtiger_announcementstatus', ['presence' => 0], '`announcementstatus` = ?', ['PLL_PUBLISHED']);
+		ModTracker::enableTrackingForModule($tabId);
+		$this->updateLabelsByModule = $tabId;
 	}
 
 	function getRelations($index)
