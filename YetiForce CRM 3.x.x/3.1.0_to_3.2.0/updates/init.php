@@ -29,27 +29,27 @@ class YetiForceUpdate
 		'libraries/Smarty/libs/sysplugins/smarty_internal_utility.php',
 		'layouts/basic/modules/Vtiger/RecentActivitiesTimeLine_1.tpl',
 		'layouts/basic/modules/IGDN',
-		'modules/IGDN/actions/SaveAjax.php',
+		'modules/IGDN/actions/',
 		'modules/IGDN/models/DetailView.php',
 		'modules/IGDN/views/EditStatus.php',
 		'layouts/basic/modules/IGDNC',
-		'modules/IGDNC/actions/SaveAjax.php',
+		'modules/IGDNC/actions/',
 		'modules/IGDNC/models/DetailView.php',
 		'modules/IGDNC/views/EditStatus.php',
 		'layouts/basic/modules/IIDN',
-		'modules/IIDN/actions/SaveAjax.php',
+		'modules/IIDN/actions/',
 		'modules/IIDN/models/DetailView.php',
 		'modules/IIDN/views/EditStatus.php',
 		'layouts/basic/modules/IPreOrder',
-		'modules/IPreOrder/actions/SaveAjax.php',
+		'modules/IPreOrder/actions/',
 		'modules/IPreOrder/models/DetailView.php',
 		'modules/IPreOrder/views/EditStatus.php',
 		'layouts/basic/modules/ISTDN',
-		'modules/ISTDN/actions/SaveAjax.php',
+		'modules/ISTDN/actions/',
 		'modules/ISTDN/models/DetailView.php',
 		'modules/ISTDN/views/EditStatus.php',
 		'layouts/basic/modules/ISTRN',
-		'modules/ISTRN/actions/SaveAjax.php',
+		'modules/ISTRN/actions/',
 		'modules/ISTRN/models/DetailView.php',
 		'modules/ISTRN/views/EditStatus.php',
 		'layouts/basic/modules/Vtiger/CommentModal.tpl',
@@ -348,8 +348,8 @@ class YetiForceUpdate
 			$recordModel = Settings_Workflows_Record_Model::getInstance($recordId);
 			$recordModel->delete();
 		}
-		$db->query('ALTER TABLE `vtiger_neworders` DROP KEY `vtiger_neworderscf` , DROP FOREIGN KEY `vtiger_neworderscf`;');
 		$db->query('ALTER TABLE `vtiger_neworderscf` DROP FOREIGN KEY `fk_1_vtiger_neworderscf`;');
+		$db->query('ALTER TABLE `vtiger_neworders` DROP KEY `vtiger_neworderscf` , DROP FOREIGN KEY `vtiger_neworderscf`;');
 		$db->query('DROP TABLE IF EXISTS vtiger_announcement;');
 		$db->query('RENAME TABLE vtiger_neworders TO `u_yf_announcement`;');
 		$db->query('ALTER TABLE `u_yf_announcement` CHANGE `newordersid` `announcementid` INT(11) NOT NULL,
