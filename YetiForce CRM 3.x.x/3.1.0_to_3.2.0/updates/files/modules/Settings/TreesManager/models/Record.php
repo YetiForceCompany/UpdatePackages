@@ -136,7 +136,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 		}
 	}
 
-	public function getTree()
+	public function getTree($category = false)
 	{
 		$tree = array();
 		$templateId = $this->getId();
@@ -148,7 +148,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 		$result = $adb->pquery('SELECT * FROM vtiger_trees_templates_data WHERE templateid = ?', [$templateId]);
 		$module = $this->get('module');
 		if (is_numeric($module)) {
-			$module = Vtiger_Functions::getModuleName($module);
+			$module = vtlib\Functions::getModuleName($module);
 		}
 		for ($i = 0; $i < $adb->num_rows($result); $i++) {
 			$row = $adb->raw_query_result_rowdata($result, $i);
@@ -157,13 +157,17 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 			$parenttrre = substr($row['parenttrre'], 0, - $cut);
 			$pieces = explode('::', $parenttrre);
 			$parent = (int) str_replace('T', '', end($pieces));
-			$tree[] = [
+			$parameters = [
 				'id' => $treeID,
 				'parent' => $parent == 0 ? '#' : $parent,
 				'text' => vtranslate($row['name'], $module),
 				'state' => ($row['state']) ? $row['state'] : '',
-				'icon' => $row['icon']
+				'icon' => $row['icon'],
 			];
+			if ($category) {
+				$parameters['type'] = $category;
+			}
+			$tree[] = $parameters;
 			if ($treeID > $lastId)
 				$lastId = $treeID;
 		}
@@ -219,12 +223,11 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 			$tableName = $row['tablename'];
 			$columnName = $row['columnname'];
 			foreach ($tree as $row) {
-				$query = 'UPDATE ' . $tableName . ' SET ' . $columnName . ' = ? WHERE ' . $columnName . ' IN (' . generateQuestionMarks($row['old']) . ');';
-				$params = ['T' . current($row['new'])];
+				$params = [];
 				foreach ($row['old'] as $new) {
 					$params[] = 'T' . $new;
 				}
-				$adb->pquery($query, $params);
+				$adb->update($tableName, [$columnName => 'T' . current($row['new'])], $columnName . ' IN ( ' . generateQuestionMarks($row['old']) .')', $params);
 			}
 		}
 	}

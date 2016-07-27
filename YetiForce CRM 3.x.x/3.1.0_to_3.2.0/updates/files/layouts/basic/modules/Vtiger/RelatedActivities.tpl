@@ -19,7 +19,10 @@
 			{assign var=END_TIME value=$RECORD->get('time_end')}
 			{assign var=STATUS value=$RECORD->get('status')}
 			{assign var=SHAREDOWNER value=Vtiger_SharedOwner_UIType::getSharedOwners($RECORD->get('crmid'), $RECORD->getModuleName())}
-			<div class="activityEntries">
+			<div class="activityEntries padding5"
+				{if !empty($COLOR_LIST[$RECORD->getId()])}
+					style="background: {$COLOR_LIST[$RECORD->getId()]['background']}; color: {$COLOR_LIST[$RECORD->getId()]['text']}" 
+				{/if}>
 				<input type="hidden" class="activityId" value="{$RECORD->get('activityid')}"/>
 				<div class="row">
 					<span class="col-md-6">
@@ -95,21 +98,21 @@
 						</span>&nbsp&nbsp;
 						<span class="editDescription cursorPointer"><span class="glyphicon glyphicon-pencil" title="{vtranslate('LBL_EDIT',$MODULE_NAME)}"></span></span>
 						<span class="pull-right popoverTooltip delay0" data-placement="top" data-original-title="{vtranslate($RECORD->get('activitytype'),$MODULE_NAME)}: {$RECORD->get('subject')}" 
-							  data-content="{vtranslate('Status',$MODULE_NAME)}: {vtranslate($STATUS,$MODULE_NAME)}<br />{vtranslate('Start Time','Calendar')}: {$START_DATE} {$START_TIME}<br />{vtranslate('End Time','Calendar')}: {$END_DATE} {$END_TIME}<hr />{vtranslate('Created By',$MODULE_NAME)}: {Vtiger_Functions::getOwnerRecordLabel( $RECORD->get('smcreatorid') )}<br />{vtranslate('Assigned To',$MODULE_NAME)}: {Vtiger_Functions::getOwnerRecordLabel( $RECORD->get('smownerid') )}
+							  data-content="{vtranslate('Status',$MODULE_NAME)}: {vtranslate($STATUS,$MODULE_NAME)}<br />{vtranslate('Start Time','Calendar')}: {$START_DATE} {$START_TIME}<br />{vtranslate('End Time','Calendar')}: {$END_DATE} {$END_TIME}<hr />{vtranslate('Created By',$MODULE_NAME)}: {vtlib\Functions::getOwnerRecordLabel( $RECORD->get('smcreatorid') )}<br />{vtranslate('Assigned To',$MODULE_NAME)}: {vtlib\Functions::getOwnerRecordLabel( $RECORD->get('smownerid') )}
 							  {if $SHAREDOWNER}<div> 
 								  {vtranslate('Share with users',$MODULE_NAME)}:&nbsp;
 								  {foreach $SHAREDOWNER item=SOWNERID name=sowner}
 									  {if $smarty.foreach.sowner.last}
 										  ,&nbsp;
 									  {/if}
-									  {Vtiger_Functions::getUserRecordLabel($SOWNERID)}
+									  {vtlib\Functions::getUserRecordLabel($SOWNERID)}
 								  {/foreach}
 								  </div>
 							  {/if}
 							  {if count($RECORD->get('selectedusers')) > 0}
-								  <br />{vtranslate('LBL_INVITE_USER_BLOCK',$MODULE_NAME)}: 
+								  <br />{vtranslate('LBL_INVITE_RECORDS',$MODULE_NAME)}: 
 								  {foreach item=USER key=KEY from=$RECORD->get('selectedusers')}
-								  {if $USER}{Vtiger_Functions::getOwnerRecordLabel( $USER )}{/if}
+								  {if $USER}{vtlib\Functions::getOwnerRecordLabel( $USER )}{/if}
 							  {/foreach}
 						{/if}" >
 						<span class="glyphicon glyphicon-info-sign"></span>
