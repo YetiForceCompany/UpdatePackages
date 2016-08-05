@@ -27,39 +27,51 @@ class Leads_Record_Model extends Vtiger_Record_Model
 	public static function getSearchResult($searchKey, $moduleName = false, $limit = false)
 	{
 		if (!$limit) {
-			$limit = AppConfig::main('max_number_search_result');
+			$limit = AppConfig::search('GLOBAL_SEARCH_MODAL_MAX_NUMBER_RESULT');
 		}
 		$currentUser = \Users_Record_Model::getCurrentUserModel();
 		$adb = \PearDatabase::getInstance();
 
 		$params = ['%' . $currentUser->getId() . '%', "%$label%"];
-		$query = 'SELECT u_yf_crmentity_search_label.`crmid`,u_yf_crmentity_search_label.`setype`,u_yf_crmentity_search_label.`searchlabel` FROM `u_yf_crmentity_search_label` INNER JOIN vtiger_leaddetails ON vtiger_leaddetails.leadid = u_yf_crmentity_search_label.crmid WHERE u_yf_crmentity_search_label.`userid` LIKE ? AND u_yf_crmentity_search_label.`searchlabel` LIKE ? AND vtiger_leaddetails.converted = 0';
+		$queryFrom = 'SELECT u_yf_crmentity_search_label.`crmid`,u_yf_crmentity_search_label.`setype`,u_yf_crmentity_search_label.`searchlabel` FROM `u_yf_crmentity_search_label` INNER JOIN vtiger_leaddetails ON vtiger_leaddetails.leadid = u_yf_crmentity_search_label.crmid';
+		$queryWhere = ' WHERE u_yf_crmentity_search_label.`userid` LIKE ? AND u_yf_crmentity_search_label.`searchlabel` LIKE ? AND vtiger_leaddetails.converted = 0';
+		$orderWhere = '';
 		if ($moduleName !== false) {
 			$multiMode = is_array($moduleName);
 			if ($multiMode) {
-				$query .= sprintf(' AND `setype` IN (%s)', $adb->generateQuestionMarks($moduleName));
+				$queryWhere .= sprintf(' AND `setype` IN (%s)', $adb->generateQuestionMarks($moduleName));
 				$params = array_merge($params, $moduleName);
 			} else {
-				$query .= ' AND `setype` = ?';
+				$queryWhere .= ' AND `setype` = ?';
 				$params[] = $moduleName;
 			}
+		} elseif (\AppConfig::search('GLOBAL_SEARCH_SORTING_RESULTS') == 2) {
+			$queryFrom .= ' LEFT JOIN vtiger_entityname ON vtiger_entityname.modulename = u_yf_crmentity_search_label.setype';
+			$queryWhere .= ' AND vtiger_entityname.`turn_off` = 1 ';
+			$orderWhere = ' vtiger_entityname.sequence';
+		}
+		$query = $queryFrom . $queryWhere;
+		if (!empty($orderWhere)) {
+			$query .= sprintf(' ORDER BY %s', $orderWhere);
 		}
 		if ($limit) {
-			$query .= ' LIMIT ' . $limit;
+			$query .= ' LIMIT ';
+			$query .= $limit;
 		}
 		$rows = [];
 		$result = $adb->pquery($query, $params);
 		while ($row = $adb->getRow($result)) {
 			$rows[] = $row;
 		}
-		$matchingRecords = $leadIdsList = [];
+		$ids = $matchingRecords = $leadIdsList = [];
 		foreach ($rows as &$row) {
+			$ids[] = $row['crmid'];
 			if ($row['setype'] === 'Leads') {
 				$leadIdsList[] = $row['crmid'];
 			}
 		}
 		$convertedInfo = Leads_Module_Model::getConvertedInfo($leadIdsList);
-		$recordsCount = 0;
+		$labels = \includes\Record::getLabel($ids);
 
 		foreach ($rows as &$row) {
 			if ($row['setype'] === 'Leads' && $convertedInfo[$row['crmid']]) {
@@ -67,6 +79,7 @@ class Leads_Record_Model extends Vtiger_Record_Model
 			}
 			$recordMeta = \vtlib\Functions::getCRMRecordMetadata($row['crmid']);
 			$row['id'] = $row['crmid'];
+			$row['label'] = $labels[$row['crmid']];
 			$row['smownerid'] = $recordMeta['smownerid'];
 			$row['createdtime'] = $recordMeta['createdtime'];
 			$row['permitted'] = \includes\Privileges::isPermitted($row['setype'], 'DetailView', $row['crmid']);
@@ -75,10 +88,6 @@ class Leads_Record_Model extends Vtiger_Record_Model
 			$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Record', $moduleName);
 			$recordInstance = new $modelClassName();
 			$matchingRecords[$moduleName][$row['id']] = $recordInstance->setData($row)->setModuleFromInstance($moduleModel);
-			$recordsCount++;
-			if ($limit && $limit == $recordsCount) {
-				return $matchingRecords;
-			}
 		}
 		return $matchingRecords;
 	}

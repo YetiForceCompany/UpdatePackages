@@ -53,20 +53,31 @@ class Record
 			$currentUser = \Users_Record_Model::getCurrentUserModel();
 			$adb = \PearDatabase::getInstance();
 			$crmIds = [];
-			$params = ['%' . $currentUser->getId() . '%', "%$label%"];
-			$query = 'SELECT `crmid`,`setype`,`searchlabel` FROM `u_yf_crmentity_search_label` WHERE `userid` LIKE ? AND `searchlabel` LIKE ?';
+			$params = ['%,' . $currentUser->getId() . ',%', "%$label%"];
+			$queryFrom = 'SELECT `crmid`,`setype`,`searchlabel` FROM `u_yf_crmentity_search_label`';
+			$queryWhere = ' WHERE `userid` LIKE ? AND `searchlabel` LIKE ?';
+			$orderWhere = '';
 			if ($moduleName !== false) {
 				$multiMode = is_array($moduleName);
 				if ($multiMode) {
-					$query .= sprintf(' AND `setype` IN (%s)', $adb->generateQuestionMarks($moduleName));
+					$queryWhere .= sprintf(' AND `setype` IN (%s)', $adb->generateQuestionMarks($moduleName));
 					$params = array_merge($params, $moduleName);
 				} else {
-					$query .= ' AND `setype` = ?';
+					$queryWhere .= ' AND `setype` = ?';
 					$params[] = $moduleName;
 				}
+			} elseif (\AppConfig::search('GLOBAL_SEARCH_SORTING_RESULTS') == 2) {
+				$queryFrom .= ' LEFT JOIN vtiger_entityname ON vtiger_entityname.modulename = u_yf_crmentity_search_label.setype';
+				$queryWhere .= ' AND vtiger_entityname.`turn_off` = 1 ';
+				$orderWhere = ' vtiger_entityname.sequence';
+			}
+			$query = $queryFrom . $queryWhere;
+			if (!empty($orderWhere)) {
+				$query .= sprintf(' ORDER BY %s', $orderWhere);
 			}
 			if ($limit) {
-				$query .= ' LIMIT ' . $limit;
+				$query .= ' LIMIT ';
+				$query .= $limit;
 			}
 			$result = $adb->pquery($query, $params);
 			while ($row = $adb->getRow($result)) {
@@ -82,7 +93,7 @@ class Record
 	protected static $computeLabelsInfoExtendCache = [];
 	protected static $computeLabelsColumnsSearchCache = [];
 
-	static function computeLabels($moduleName, $ids, $search = false)
+	public static function computeLabels($moduleName, $ids, $search = false)
 	{
 		$adb = \PearDatabase::getInstance();
 		if (!is_array($ids))
@@ -97,12 +108,12 @@ class Record
 					if ($moduleName == 'Groups') {
 						$metainfo = ['tablename' => 'vtiger_groups', 'entityidfield' => 'groupid', 'fieldname' => 'groupname'];
 					} else {
-						$metainfo = Functions::getEntityModuleInfo($moduleName);
+						$metainfo = Modules::getEntityInfo($moduleName);
 					}
 					$table = $metainfo['tablename'];
 					$idcolumn = $metainfo['entityidfield'];
-					$columnsName = explode(',', $metainfo['fieldname']);
-					$columnsSearch = explode(',', $metainfo['searchcolumn']);
+					$columnsName = $metainfo['fieldnameArr'];
+					$columnsSearch = $metainfo['searchcolumnArr'];
 					$columns = array_unique(array_merge($columnsName, $columnsSearch));
 
 					$moduleInfo = Functions::getModuleFieldInfos($moduleName);
@@ -171,33 +182,56 @@ class Record
 		}
 	}
 
-	static function updateLabel($moduleName, $id, $mode = 'edit', $updater = false)
+	public static function updateLabel($moduleName, $id, $mode = 'edit', $updater = false)
 	{
 		$labelInfo = self::computeLabels($moduleName, $id, true);
 		if (!empty($labelInfo)) {
 			$adb = \PearDatabase::getInstance();
 			$label = decode_html($labelInfo[$id]['name']);
 			$search = decode_html($labelInfo[$id]['search']);
-			if ($mode == 'edit') {
-				if (!empty($label)) {
-					$adb->update('u_yf_crmentity_label', ['label' => $label], 'crmid = ?', [$id]);
-				} else {
-					$adb->delete('u_yf_crmentity_label', 'crmid = ?', [$id]);
-				}
-				if (!empty($search)) {
-					$adb->update('u_yf_crmentity_search_label', ['searchlabel' => $search], 'crmid = ?', [$id]);
-				} else {
-					$adb->delete('u_yf_crmentity_search_label', 'crmid = ?', [$id]);
-				}
+			$insertMode = $mode != 'edit';
+			$rowCount = 0;
+			if (empty($label)) {
+				$adb->delete('u_yf_crmentity_label', 'crmid = ?', [$id]);
 			} else {
-				if (!empty($label) && $updater != 'searchlabel') {
+				if (!$insertMode) {
+					$rowCount = $adb->update('u_yf_crmentity_label', ['label' => $label], 'crmid = ?', [$id]);
+					if ($rowCount == 0) {
+						$result = $adb->pquery('SELECT 1 FROM `u_yf_crmentity_label` WHERE `crmid` = ?', [$id]);
+						$rowCount = $adb->getRowCount($result);
+					}
+				}
+				if (($insertMode || $rowCount == 0) && $updater != 'searchlabel') {
 					$adb->insert('u_yf_crmentity_label', ['crmid' => $id, 'label' => $label]);
 				}
-				if (!empty($search) && $updater != 'label') {
+			}
+			if (empty($search)) {
+				$adb->delete('u_yf_crmentity_search_label', 'crmid = ?', [$id]);
+			} else {
+				if (!$insertMode) {
+					$rowCount = $adb->update('u_yf_crmentity_search_label', ['searchlabel' => $search], 'crmid = ?', [$id]);
+					if ($rowCount == 0) {
+						$result = $adb->pquery('SELECT 1 FROM `u_yf_crmentity_search_label` WHERE `crmid` = ?', [$id]);
+						$rowCount = $adb->getRowCount($result);
+					}
+				}
+				if (($insertMode || $rowCount == 0) && $updater != 'label') {
 					$adb->insert('u_yf_crmentity_search_label', ['crmid' => $id, 'searchlabel' => $search, 'setype' => $moduleName]);
 				}
 			}
 			self::$recordLabelCache[$id] = $labelInfo[$id]['name'];
 		}
+	}
+
+	public static function isExists($recordId)
+	{
+		$recordMetaData = Functions::getCRMRecordMetadata($recordId);
+		return (isset($recordMetaData) && $recordMetaData['deleted'] == 0 ) ? true : false;
+	}
+
+	public static function getType($recordId)
+	{
+		$metadata = Functions::getCRMRecordMetadata($recordId);
+		return $metadata ? $metadata['setype'] : NULL;
 	}
 }

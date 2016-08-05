@@ -40,9 +40,9 @@ var app = {
 	getRecordId: function () {
 		var view = this.getViewName();
 		var recordId;
-		if (view == "Edit") {
+		if (view == 'Edit' || 'PreferenceEdit') {
 			recordId = this.getMainParams('recordId');
-		} else if (view == "Detail") {
+		} else if (view == 'Detail' || 'PreferenceDetail') {
 			recordId = this.getMainParams('recordId');
 		}
 		return recordId;
@@ -300,7 +300,7 @@ var app = {
 				cache: false
 			};
 			params.escapeMarkup = function (markup) {
-				if(markup !== 'undefined')
+				if (markup !== 'undefined')
 					return markup;
 			};
 			var minimumInputLength = 3;
@@ -319,13 +319,13 @@ var app = {
 				}
 			};
 			params.templateSelection = function (data, container) {
-				if(data.text === ''){
+				if (data.text === '') {
 					return data.name;
 				}
 				return data.text;
 			};
 		} else {
-			
+
 		}
 		var selectElementNew = selectElement;
 		selectElementNew.select2(params)
@@ -461,7 +461,8 @@ var app = {
 			}
 		}
 		if (typeof sendByAjaxCb != 'function') {
-			var sendByAjaxCb = function () {}
+			var sendByAjaxCb = function () {
+			}
 		}
 
 		var container = jQuery('#' + id);
@@ -510,7 +511,7 @@ var app = {
 			thisInstance.registerModalEvents(modalContainer, sendByAjaxCb);
 			thisInstance.showPopoverElementView(modalContainer.find('.popoverTooltip'));
 			thisInstance.registerDataTables(modalContainer.find('.dataTable'));
-			modalContainer.on('shown.bs.modal', function () {
+			modalContainer.one('shown.bs.modal', function () {
 				cb(modalContainer);
 			})
 		}

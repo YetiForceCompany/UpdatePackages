@@ -94,6 +94,7 @@ class YetiForceUpdate
 		'libraries/chartjs',
 		'libraries/iavupload',
 		'libraries/jquery/d3js',
+		'modules/Settings/WidgetsManagement/actions/AddRss.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -153,7 +154,6 @@ class YetiForceUpdate
 		Vtiger_Functions::recurseDelete('cache/templates_c');
 		if (headers_sent()) {
 			die('<div class="well pushDown">System update completed: <a class="btn btn-success" href="' . $siteUrl . '">Return to the homepage</a></div>');
-			die("System update completed: <a href=$siteUrl>Return to the homepage</a>");
 		} else {
 			exit(header('Location: ' . $siteUrl, true, 301));
 		}
@@ -163,12 +163,21 @@ class YetiForceUpdate
 	{
 		return [
 			['name' => 'config/config.inc.php', 'conditions' => [
+					['type' => 'remove', 'search' => 'gsAmountResponse'],
+					['type' => 'remove', 'search' => 'gsMinLength'],
+					['type' => 'remove', 'search' => 'autocomplete global search'],
+					['type' => 'remove', 'search' => 'gsAutocomplete'],
+					['type' => 'remove', 'search' => 'Maximum number of displayed search results'],
+					['type' => 'remove', 'search' => 'max_number_search_result'],
 					['type' => 'remove', 'search' => 'root directory path'],
 					['type' => 'remove', 'search' => '$root_directory'],
 					['type' => 'remove', 'search' => 'full path to include directory including the trailing slash'],
 					['type' => 'remove', 'search' => 'Change of logs directory with PHP errors'],
 					['type' => 'remove', 'search' => 'HELPDESK_SUPPORT_EMAIL_REPLY_ID'],
 					['type' => 'update', 'search' => '$HELPDESK_SUPPORT_EMAIL_ID', 'replace' => ['HELPDESK_SUPPORT_EMAIL_ID', 'HELPDESK_SUPPORT_EMAIL_REPLY']],
+					['type' => 'add', 'search' => 'isVisibleLogoInFooter', 'checkInContents' => 'isVisibleUserInfoFooter', 'value' => "
+// Show information about logged user in footer
+\$isVisibleUserInfoFooter = true;"],
 				]
 			],
 			['name' => 'config/modules/Assets.php', 'conditions' => [
@@ -268,6 +277,14 @@ class YetiForceUpdate
 			['name' => '.htaccess', 'conditions' => [
 					['type' => 'add', 'search' => "RewriteEngine", 'value' => "	RewriteRule ^favicon.ico layouts/basic/skins/images/favicon.ico [L,NC]
 ", 'checkInContents' => 'favicon.ico'],
+					['type' => 'update', 'search' => "session.gc_maxlifetime", 'value' => "	# 86400 = 3600*24
+	php_value	session.gc_maxlifetime		86400 
+	# 1440 = 60*24
+	php_value	session.cache_expire		1440
+"],
+					['type' => 'add', 'search' => "session.gc_probability", 'value' => "
+	php_value	session.save_path			cache/session
+", 'checkInContents' => 'session.save_path'],
 					['type' => 'add', 'search' => '<IfModule mod_autoindex.c>', 'checkInContents' => 'RedirectMatch', 'value' => "RedirectMatch 403 (?i).*\.log$
 
 ", 'addingType' => 'before'],
@@ -622,6 +639,10 @@ class YetiForceUpdate
 		$db->update('vtiger_field', ['uitype' => 11], '`tabid` = ? AND columnname = ?;', [getTabid('Vendors'), 'phone']);
 		$this->addCron([['RecordLabelUpdater', 'cron/LabelUpdater.php', '900', NULL, NULL, '1', 'Vtiger', '20', ''],
 			['PrivilegesUpdater', 'cron/PrivilegesUpdater.php', '900', NULL, NULL, '1', 'Vtiger', '21', '']]);
+		$db->update('vtiger_organizationdetails', ['logoname' => 'blue_yetiforce_logo.png'], '`logoname` = ? ;', ['white_logo_yetiforce.png']);
+		$db->update('vtiger_field', ['fieldlabel' => 'LBL_ORGINAL_MAIL_CONTENT'], '`tabid` = ? AND columnname = ?;', [getTabid('OSSMailView'), 'orginal_mail']);
+		$this->setAlterTables($this->getAlterTables(5));
+		$this->setFields($this->getFields(2));
 	}
 
 	function moveColumnFromCrmentity()
@@ -749,6 +770,10 @@ class YetiForceUpdate
 		$db->delete('vtiger_settings_field', '`name` = ? AND linkto = ?', ['LBL_ANNOUNCEMENT', 'index.php?parent=Settings&module=Vtiger&view=AnnouncementEdit']);
 		$db->update('vtiger_tab', ['name' => 'Announcements', 'tablabel' => 'Announcements'], '`name` = ?', ['NewOrders']);
 		$db->update('vtiger_announcementstatus', ['presence' => 0], '`announcementstatus` = ?', ['PLL_PUBLISHED']);
+		$db->update('vtiger_field', ['quickcreatesequence' => '1'], '`tabid` = ? AND columnname = ?;', [$tabId, 'subject']);
+		$db->update('vtiger_field', ['quickcreatesequence' => '2'], '`tabid` = ? AND columnname = ?;', [$tabId, 'smownerid']);
+		$db->update('vtiger_field', ['quickcreatesequence' => '3'], '`tabid` = ? AND columnname = ?;', [$tabId, 'description']);
+		$db->update('vtiger_field', ['quickcreatesequence' => '4'], '`tabid` = ? AND columnname = ?;', [$tabId, 'announcementstatus']);
 		ModTracker::enableTrackingForModule($tabId);
 //		$this->updateLabelsByModule = $tabId;
 	}
@@ -782,6 +807,7 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['510', 'HelpDesk', 'Products', 'get_related_list', '20', 'Products', '1', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['511', 'HelpDesk', 'OSSSoldServices', 'get_related_list', '21', 'OSSSoldServices', '1', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['512', 'OSSSoldServices', 'HelpDesk', 'get_related_list', '2', 'HelpDesk', '0', 'ADD,SELECT', '0', '0', '0']],
+					['type' => 'add', 'data' => [8, 'SSalesProcesses', 'OSSTimeControl', 'get_dependents_list', 18, 'OSSTimeControl', 0, 'ADD', 0, 0, 0]],
 				];
 				break;
 			default:
@@ -912,6 +938,10 @@ class YetiForceUpdate
 				$fields = [
 					['83', '2355', 'announcementstatus', 'vtiger_neworders', '1', '15', 'announcementstatus', 'FL_STATUS', '1', '2', 'PLL_DRAFT', '100', '2', '258', '1', 'V~M', '2', NULL, 'BAS', '1', '', '1', '', '0', "varchar(255) DEFAULT '' ", 'LBL_NEWORDERS_INFORMATION', ['PLL_DRAFT', 'PLL_FOR_ACCEPTANCE', 'PLL_PUBLISHED'], [], 'NewOrders'],
 					['83', '2356', 'interval', 'vtiger_neworders', '1', '7', 'interval', 'FL_INTERVAL', '1', '2', '', '100', '3', '258', '1', 'I~O', '1', NULL, 'BAS', '1', 'Edit,Detail,QuickCreateAjax', '0', '', NULL, "smallint(5) DEFAULT NULL", 'LBL_NEWORDERS_INFORMATION', [], [], 'NewOrders'],
+				];
+				break;
+			case 2:
+				$fields = [
 					['14', '2357', 'category_multipicklist', 'vtiger_products', '1', '309', 'category_multipicklist', 'LBL_CATEGORY_MULTIPICKLIST', '1', '2', NULL, '100', '31', '31', '1', 'V~O', '1', NULL, 'BAS', '1', '', '0', '13', NULL, 'text', 'LBL_PRODUCT_INFORMATION', [], [], 'Products'],
 					['89', '2358', 'valid_until', 'u_yf_squotes', '1', '5', 'valid_until', 'FL_VALID_UNTIL', '1', '2', '', '100', '10', '280', '1', 'D~O', '1', NULL, 'BAS', '1', '', '0', '', NULL, 'date', 'LBL_SQUOTES_INFORMATION', [], [], 'SQuotes'],
 				];
@@ -1024,12 +1054,17 @@ class YetiForceUpdate
 				break;
 			case 3:
 				$fields = [
-					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`,DROP KEY `setype`, ADD KEY `setype`(`setype`,`deleted`);"],
+					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`,DROP KEY `setype`, ADD KEY `setype`(`setype`,`deleted`), ADD KEY `setype_2`(`setype`);"],
 				];
 				break;
 			case 4:
 				$fields = [
 					['type' => ['remove'], 'name' => 'label', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity`	DROP COLUMN `label` , DROP KEY `vtiger_crmentity_labelidx` ;"],
+				];
+				break;
+			case 5:
+				$fields = [
+					['type' => ['remove'], 'name' => 'width', 'table' => 'a_yf_notification_type', 'sql' => "ALTER TABLE `a_yf_notification_type` DROP COLUMN `width`, DROP COLUMN `height`;"],
 				];
 				break;
 			default:
@@ -1400,6 +1435,7 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['294', getTabid('HelpDesk'), 'DASHBOARDWIDGET', 'Rss', 'index.php?module=Home&view=ShowWidget&name=Rss', '', '0', NULL, NULL, NULL, NULL]],
 					['type' => 'add', 'data' => ['295', getTabid('OSSMailView'), 'DASHBOARDWIDGET', 'Rss', 'index.php?module=Home&view=ShowWidget&name=Rss', '', '0', NULL, NULL, NULL, NULL]],
 					['type' => 'add', 'data' => ['296', getTabid('OSSEmployees'), 'DASHBOARDWIDGET', 'Rss', 'index.php?module=Home&view=ShowWidget&name=Rss', '', '0', NULL, NULL, NULL, NULL]],
+					['type' => 'remove', 'data' => ['116', getTabid('SMSNotifier'), 'HEADERSCRIPT', 'SMSNotifierCommonJS', 'modules/SMSNotifier/SMSNotifierCommon.js', '', '0', NULL, NULL, NULL]],
 				];
 				break;
 			default:

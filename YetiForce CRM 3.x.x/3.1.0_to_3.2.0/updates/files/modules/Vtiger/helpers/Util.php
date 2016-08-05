@@ -210,25 +210,6 @@ class Vtiger_Util_Helper
 		return str_replace(' ', '_', $string);
 	}
 
-	public static function getRecordName($recordId, $checkDelete = false)
-	{
-		$adb = PearDatabase::getInstance();
-
-		$query = 'SELECT u_yf_crmentity_label.label FROM vtiger_crmentity 
-			INNER JOIN u_yf_crmentity_label ON u_yf_crmentity_label.crmid = vtiger_crmentity.crmid 
-			WHERE vtiger_crmentity.crmid = ?';
-		if ($checkDelete) {
-			$query.= ' AND vtiger_crmentity.deleted = 0';
-		}
-		$result = $adb->pquery($query, [$recordId]);
-
-		$num_rows = $adb->num_rows($result);
-		if ($num_rows) {
-			return $adb->query_result($result, 0, 'label');
-		}
-		return false;
-	}
-
 	/**
 	 * Function to parse dateTime into Days
 	 * @param <DateTime> $dateTime
@@ -348,36 +329,6 @@ class Vtiger_Util_Helper
 			}
 		}
 		return $picklistValues;
-	}
-
-	/**
-	 * Function to sanitize the uploaded file name
-	 * @param <String> $fileName
-	 * @param <Array> $badFileExtensions
-	 * @return <String> sanitized file name
-	 */
-	public static function sanitizeUploadFileName($fileName, $badFileExtensions)
-	{
-		$fileName = preg_replace('/\s+/', '_', $fileName); //replace space with _ in filename
-		$fileName = rtrim($fileName, '\\/<>?*:"<>|');
-
-		$fileNameParts = explode('.', $fileName);
-		$countOfFileNameParts = count($fileNameParts);
-		$badExtensionFound = false;
-
-		for ($i = 0; $i < $countOfFileNameParts; $i++) {
-			$partOfFileName = $fileNameParts[$i];
-			if (in_array(strtolower($partOfFileName), $badFileExtensions)) {
-				$badExtensionFound = true;
-				$fileNameParts[$i] = $partOfFileName . 'file';
-			}
-		}
-
-		$newFileName = implode('.', $fileNameParts);
-		if ($badExtensionFound) {
-			$newFileName .= ".txt";
-		}
-		return $newFileName;
 	}
 
 	/**
@@ -697,19 +648,19 @@ class Vtiger_Util_Helper
 		return $value;
 	}
 
+	protected static $userPrivilegesCache = false;
+
 	public static function getUserPrivilegesFile($userId)
 	{
 		if (empty($userId))
 			return null;
 
-		$instance = Vtiger_Cache::get('UserPrivilegesFile', $userId);
-		if ($instance) {
-			return $instance;
+		if (isset(self::$userPrivilegesCache[$userId])) {
+			return self::$userPrivilegesCache[$userId];
 		}
 		if (!file_exists("user_privileges/user_privileges_$userId.php")) {
 			return null;
 		}
-
 		require("user_privileges/user_privileges_$userId.php");
 		require("user_privileges/sharing_privileges_$userId.php");
 
@@ -731,7 +682,7 @@ class Vtiger_Util_Helper
 			$valueMap['defaultOrgSharingPermission'] = $defaultOrgSharingPermission;
 			$valueMap['related_module_share'] = $related_module_share;
 		}
-		Vtiger_Cache::set('UserPrivilegesFile', $userId, $valueMap);
+		self::$userPrivilegesCache[$userId] = $valueMap;
 		return $valueMap;
 	}
 
