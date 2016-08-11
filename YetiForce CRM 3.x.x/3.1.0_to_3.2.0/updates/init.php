@@ -95,6 +95,8 @@ class YetiForceUpdate
 		'libraries/iavupload',
 		'libraries/jquery/d3js',
 		'modules/Settings/WidgetsManagement/actions/AddRss.php',
+		'layouts/basic/modules/Vtiger/RelatedListPagination.tpl',
+		'modules/Emails/views/InRelation.php',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -121,6 +123,7 @@ class YetiForceUpdate
 		$this->updatePack();
 		$this->updateSettingMenu();
 		$this->updateConfigurationFiles();
+		$this->improveProfileActions();
 	}
 
 	function postupdate()
@@ -132,6 +135,8 @@ class YetiForceUpdate
 //			Vtiger_Cache::set('module', $this->updateLabelsByModule, NULL);
 //			Settings_Search_Module_Model::UpdateLabels(['tabid' => $this->updateLabelsByModule]);
 //		}
+		$announcements = Vtiger_Module_Model::getInstance('Announcements');
+		Vtiger_Cache::set('module', $announcements->getId(), $announcements); // update cache
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		Vtiger_Deprecated::createModuleMetaFile();
@@ -157,6 +162,34 @@ class YetiForceUpdate
 		} else {
 			exit(header('Location: ' . $siteUrl, true, 301));
 		}
+	}
+
+	public function improveProfileActions()
+	{
+		$db = PearDatabase::getInstance();
+		$db->update('vtiger_profile2standardpermissions', ['permissions' => 0], 'operation = ? AND tabid <> ?', [0, getTabid('Reports')]);
+		$result = $db->query('SELECT profileid FROM vtiger_profile;');
+		$profile = $db->getArrayColumn($result);
+		$result = $db->pquery('SELECT profileid, tabid FROM vtiger_profile2standardpermissions WHERE operation = ?;', [3]);
+		$indexPermisions = $result->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
+		$modules = Vtiger_Functions::getAllModules(true);
+		foreach ($profile as $profileid) {
+			if (!array_key_exists($profileid, $indexPermisions)) {
+				$indexPermisions[$profileid] = [];
+			}
+		}
+		foreach ($indexPermisions as $profileId => $tabids) {
+			$diff = array_diff_key($modules, array_flip($tabids));
+			foreach ($diff as $tabId => $data) {
+				$db->insert('vtiger_profile2standardpermissions', [
+					'profileid' => $profileId,
+					'tabid' => $tabId,
+					'operation' => 3,
+					'permissions' => 0
+				]);
+			}
+		}
+		$db->update('vtiger_profile2standardpermissions', ['permissions' => 0], 'operation = ?', [3]);
 	}
 
 	public function getConfigurations()
@@ -243,6 +276,8 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/performance.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'LOAD_CUSTOM_FILES', 'addingType' => 'before', 'value' => "	'LOAD_CUSTOM_FILES' => false,
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER', 'addingType' => 'before', 'value' => "	// In how many records should the global search permissions be updated in cron
 	'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER' => 1000,
 "],
@@ -251,6 +286,9 @@ class YetiForceUpdate
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_NUMBER_EXPORT_RECORDS', 'addingType' => 'before', 'value' => "	// Max number of exported records
 	'MAX_NUMBER_EXPORT_RECORDS' => 500,
+"],
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'SEARCH_REFERENCE_BY_AJAX', 'addingType' => 'before', 'value' => "	// Search reference by AJAX. We recommend selecting the \"true\" value if there are numerous users in the system.
+	'SEARCH_REFERENCE_BY_AJAX' => false,
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'SEARCH_OWNERS_BY_AJAX', 'addingType' => 'before', 'value' => "	// Search owners by AJAX. We recommend selecting the \"true\" value if there are numerous users in the system.
 	'SEARCH_OWNERS_BY_AJAX' => false,
@@ -808,6 +846,7 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['511', 'HelpDesk', 'OSSSoldServices', 'get_related_list', '21', 'OSSSoldServices', '1', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['512', 'OSSSoldServices', 'HelpDesk', 'get_related_list', '2', 'HelpDesk', '0', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => [8, 'SSalesProcesses', 'OSSTimeControl', 'get_dependents_list', 18, 'OSSTimeControl', 0, 'ADD', 0, 0, 0]],
+					['type' => 'update', 'data' => ['193', 'OSSMailView', 'Documents', 'get_attachments', '1', 'Documents', '0', '', '0', '0', '0']],
 				];
 				break;
 			default:
@@ -1065,6 +1104,16 @@ class YetiForceUpdate
 			case 5:
 				$fields = [
 					['type' => ['remove'], 'name' => 'width', 'table' => 'a_yf_notification_type', 'sql' => "ALTER TABLE `a_yf_notification_type` DROP COLUMN `width`, DROP COLUMN `height`;"],
+					['type' => ['add', 'Key_name'], 'name' => 'crm_user_id', 'table' => 'roundcube_users', 'sql' => "ALTER TABLE `roundcube_users` ADD KEY `crm_user_id`(`crm_user_id`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'announcementstatus', 'table' => 'u_yf_announcement', 'sql' => "ALTER TABLE `u_yf_announcement` ADD KEY `announcementstatus`(`announcementstatus`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'tinyint', 'name' => 'setdefault', 'table' => 'vtiger_customview', 'sql' => "ALTER TABLE `vtiger_customview` 
+	CHANGE `setdefault` `setdefault` tinyint(1)   NOT NULL DEFAULT 0 after `viewname` , 
+	CHANGE `setmetrics` `setmetrics` tinyint(1)   NOT NULL DEFAULT 0 after `setdefault` , 
+	CHANGE `status` `status` tinyint(1)   NOT NULL DEFAULT 1 after `entitytype` , 
+	ADD KEY `setdefault`(`setdefault`,`entitytype`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'linktype', 'table' => 'vtiger_links', 'sql' => "ALTER TABLE `vtiger_links` ADD KEY `linktype`(`linktype`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'name_2', 'table' => 'vtiger_tab', 'sql' => "ALTER TABLE `vtiger_tab` ADD KEY `name_2`(`name`,`presence`,`type`);"],
+					['type' => ['add'], 'name' => 'id', 'table' => 'yetiforce_auth', 'sql' => "ALTER TABLE `yetiforce_auth` ADD COLUMN `id` tinyint(3) unsigned   NOT NULL auto_increment first , ADD PRIMARY KEY(`id`) ;"],
 				];
 				break;
 			default:

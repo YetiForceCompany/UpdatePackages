@@ -275,6 +275,7 @@ var app = {
 			params.language.errorLoading = function () {
 				return app.vtranslate('JS_NO_RESULTS_FOUND');
 			}
+			params.placeholder = '';
 			params.ajax = {
 				url: selectElement.data('ajaxUrl'),
 				dataType: 'json',
@@ -286,9 +287,16 @@ var app = {
 					};
 				},
 				processResults: function (data, params) {
-					var items = [];
+					var items = new Array;
 					if (data.success == true) {
-						items = data.result.items;
+						selectElement.find('option').each(function () {
+							var currentTarget = $(this);
+							items.push({
+								label: currentTarget.html(),
+								value: currentTarget.val(),
+							});
+						});
+						items = items.concat(data.result.items);
 					}
 					return {
 						results: items,
@@ -620,7 +628,7 @@ var app = {
 		validateNonVisibleFields: true,
 		onBeforePromptType: function (field) {
 			var block = field.closest('.blockContainer');
-			if (block.find('tbody').is(":hidden")) {
+			if (block.find('.blockContent').is(":hidden")) {
 				block.find('.blockHeader').click();
 			}
 		},

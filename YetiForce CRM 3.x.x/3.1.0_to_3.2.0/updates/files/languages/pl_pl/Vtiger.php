@@ -1250,6 +1250,7 @@ $languageStrings = [
 	'LBL_NOVEMDECILLIONSS' => 'decylionów',
 	'LBL_SOURCE' => 'Źródło',
 	'LBL_DATE' => 'Data',
+	'LBL_WIDGET_FILTER_TOTAL_COUNT_INFO' => 'Pobierz całkowitą ilość rekordów',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Podsumowanie',
@@ -1521,4 +1522,5 @@ $jsLanguageStrings = [
 	'JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE_FILTER' => 'Czy jesteś pewien, że chcesz usunąć filtr? Usunięte zostaną również wszystkie widgety na podsumowaniach modułu i stronie głównej powiązane z tym filtrem.',
 	'JS_SEARCHING' => 'Trwa szukanie...',
 	'JS_INPUT_TOO_SHORT' => 'Wprowadzić _LENGTH_ lub więcej znaków',
+	'JS_MASS_EDIT_NOT_SUCCESSFUL' => 'Masowa edycja nie powiodła się',
 ];

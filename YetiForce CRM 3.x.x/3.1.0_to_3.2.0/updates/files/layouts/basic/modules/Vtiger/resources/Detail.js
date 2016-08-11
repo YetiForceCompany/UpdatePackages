@@ -829,7 +829,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 	registerEventForRelatedListPagination: function () {
 		var thisInstance = this;
 		var detailContentsHolder = this.getContentHolder();
-		detailContentsHolder.on('click', '#relatedListNextPageButton', function (e) {
+		detailContentsHolder.on('click', '#relatedViewNextPageButton', function (e) {
 			var element = jQuery(e.currentTarget);
 			if (element.attr('disabled') == "disabled") {
 				return;
@@ -839,7 +839,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var relatedController = new Vtiger_RelatedList_Js(thisInstance.getRecordId(), app.getModuleName(), selectedTabElement, relatedModuleName);
 			relatedController.nextPageHandler();
 		});
-		detailContentsHolder.on('click', '#relatedListPreviousPageButton', function () {
+		detailContentsHolder.on('click', '#relatedViewPreviousPageButton', function () {
 			var selectedTabElement = thisInstance.getSelectedTab();
 			var relatedModuleName = thisInstance.getRelatedModuleName();
 			var relatedController = new Vtiger_RelatedList_Js(thisInstance.getRecordId(), app.getModuleName(), selectedTabElement, relatedModuleName);
@@ -869,7 +869,20 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var relatedController = new Vtiger_RelatedList_Js(thisInstance.getRecordId(), app.getModuleName(), selectedTabElement, relatedModuleName);
 			relatedController.selectPageHandler(pageNumber);
 		});
-
+		detailContentsHolder.on('click', '#totalCountBtn', function(){
+			var params = {
+				module: app.getModuleName(),
+				view: 'Pagination',
+				mode: 'getRelationPagination',
+				relatedModule: detailContentsHolder.find('.relatedModuleName').val(),
+				noOfEntries: $('#noOfEntries').val(),
+				page: detailContentsHolder.find('[name="currentPageNum"]').val(),
+				record: app.getRecordId(),
+			}
+			AppConnector.request(params).then(function(response){
+				detailContentsHolder.find('.paginationDiv').html(response);
+			});
+		});
 	},
 	/**
 	 * Function to register Event for Sorting

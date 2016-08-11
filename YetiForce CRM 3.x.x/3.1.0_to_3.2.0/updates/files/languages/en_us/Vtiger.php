@@ -1238,6 +1238,7 @@ $languageStrings = [
 	'LBL_NOVEMDECILLIONSS' => 'novemdecillion',
 	'LBL_SOURCE' => 'Source',
 	'LBL_DATE' => 'Date',
+	'LBL_WIDGET_FILTER_TOTAL_COUNT_INFO' => 'Get total amount of records',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Summary',
@@ -1552,4 +1553,5 @@ $jsLanguageStrings = [
 	'JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE_FILTER' => 'Are you sure you want to remove the filter? All widgets related to this filter in module summary and the homepage will also be removed.',
 	'JS_SEARCHING' => 'Searching...',
 	'JS_INPUT_TOO_SHORT' => 'Enter _LENGTH_ or more characters',
+	'JS_MASS_EDIT_NOT_SUCCESSFUL' => 'Mass edition unsuccessful',
 ];

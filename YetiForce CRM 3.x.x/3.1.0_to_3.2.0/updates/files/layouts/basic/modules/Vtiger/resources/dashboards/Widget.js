@@ -66,6 +66,18 @@ jQuery.Class('Vtiger_Widget_Js', {
 		}
 		return this.plotContainer;
 	},
+	registerRecordsCount: function(){
+		var thisInstance = this;
+		var recordsCountBtn = thisInstance.getContainer().find('.recordCount');
+		recordsCountBtn.on('click', function(){
+			var url = recordsCountBtn.data('url');
+			AppConnector.request(url).then(function(response){
+				recordsCountBtn.find('.count').html(response.result.totalCount);
+				recordsCountBtn.find('span:not(.count)').addClass('hide');
+				recordsCountBtn.find('a').removeClass('hide');
+			});
+		});
+	},
 	restrictContentDrag: function () {
 		this.getContainer().on('mousedown.draggable', function (e) {
 			var element = jQuery(e.target);
@@ -810,6 +822,10 @@ Vtiger_Widget_Js('Vtiger_Minilist_Widget_Js', {}, {
 		app.hideModalWindow();
 		this.restrictContentDrag();
 		this.registerFilterChangeEvent();
+		this.registerRecordsCount();
+	},
+	postRefreshWidget: function (){
+		this.registerRecordsCount();
 	}
 });
 Vtiger_Widget_Js('YetiForce_Charts_Widget_Js', {}, {
@@ -824,6 +840,7 @@ Vtiger_Widget_Js('YetiForce_Charts_Widget_Js', {}, {
 			instance.setContainer(container);
 			instance.loadChart();
 		}
+
 	}
 });
 Vtiger_Widget_Js('Vtiger_Tagcloud_Widget_Js', {}, {
@@ -907,8 +924,14 @@ Vtiger_Widget_Js('Vtiger_Notebook_Widget_Js', {
 	editNotebookContent: function () {
 		jQuery('.dashboard_notebookWidget_text', this.container).show();
 		jQuery('.dashboard_notebookWidget_view', this.container).hide();
+		$('body').on('click', function (e) {
+			if ($(e.target).closest('.dashboard_notebookWidget_view').length === 0 && $(e.target).closest('.dashboard_notebookWidget_text').length === 0) {
+				$('.dashboard_notebookWidget_save').trigger('click');
+			}
+		});
 	},
 	saveNotebookContent: function () {
+		$('body').off('click');
 		var self = this;
 		var textarea = jQuery('.dashboard_notebookWidget_textarea', this.container);
 
@@ -1401,5 +1424,6 @@ Vtiger_Widget_Js('YetiForce_Chartfilter_Widget_Js', {}, {
 			instance = new chartClass(container);
 			instance.loadChart();
 		}
+		this.registerRecordsCount();
 	}
 });

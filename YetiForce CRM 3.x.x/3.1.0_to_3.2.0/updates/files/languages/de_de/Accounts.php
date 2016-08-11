@@ -27,9 +27,9 @@ $languageStrings = [
 	'LBL_END_DATE' => 'Enddatum',
 	'LBL_RECORDS_LIST' => 'Liste Organisationen',
 	'LBL_SHOW_ACCOUNT_HIERARCHY' => 'Organisation Hierarchie',
-	'LBL_START_DATE' => 'Startdatum',
+	'LBL_START_DATE' => 'Beginndatum',
 	'Member Of' => 'Gehört zu',
-	'Other Email' => 'Weitere E-Mail',
+	'Other Email' => 'Weitere E-Mail Adresse',
 	'Other Phone' => 'Weiteres Telefon',
 	'Ownership' => 'Besitzer',
 	'Payment balance' => 'Zahlungsbilanz',
@@ -89,6 +89,7 @@ $languageStrings = [
 	'PLL_UFCIITS' => 'Organismen für gemeinsame Anlagen in Wertpapieren <OGAW>',
 	// OTHERS
 	'LBL_DEACTIVATED_BY' => 'Organisation deaktiviert von ',
+	'SINGLE_Vendors' => 'Lieferant',
 ];
 $jsLanguageStrings = [
 	'JS_DUPLICTAE_CREATION_CONFIRMATION' => 'Organisationsname ist bereits vorhanden. Möchten Sie einen doppelten Datensatz erstellen?',
