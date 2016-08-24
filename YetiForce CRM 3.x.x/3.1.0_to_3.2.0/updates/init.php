@@ -97,6 +97,8 @@ class YetiForceUpdate
 		'modules/Settings/WidgetsManagement/actions/AddRss.php',
 		'layouts/basic/modules/Vtiger/RelatedListPagination.tpl',
 		'modules/Emails/views/InRelation.php',
+		'modules/OSSMail/RoundcubeLogin.class.php',
+		'layouts/basic/modules/OSSMail/ComposePopup.tpl',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -196,6 +198,10 @@ class YetiForceUpdate
 	{
 		return [
 			['name' => 'config/config.inc.php', 'conditions' => [
+					['type' => 'remove', 'search' => 'Enable sharing of records?'],
+					['type' => 'remove', 'search' => '$shared_owners'],
+					['type' => 'remove', 'search' => 'Show information about logged user in footer'],
+					['type' => 'remove', 'search' => 'isVisibleUserInfoFooter'],
 					['type' => 'remove', 'search' => 'gsAmountResponse'],
 					['type' => 'remove', 'search' => 'gsMinLength'],
 					['type' => 'remove', 'search' => 'autocomplete global search'],
@@ -208,9 +214,6 @@ class YetiForceUpdate
 					['type' => 'remove', 'search' => 'Change of logs directory with PHP errors'],
 					['type' => 'remove', 'search' => 'HELPDESK_SUPPORT_EMAIL_REPLY_ID'],
 					['type' => 'update', 'search' => '$HELPDESK_SUPPORT_EMAIL_ID', 'replace' => ['HELPDESK_SUPPORT_EMAIL_ID', 'HELPDESK_SUPPORT_EMAIL_REPLY']],
-					['type' => 'add', 'search' => 'isVisibleLogoInFooter', 'checkInContents' => 'isVisibleUserInfoFooter', 'value' => "
-// Show information about logged user in footer
-\$isVisibleUserInfoFooter = true;"],
 				]
 			],
 			['name' => 'config/modules/Assets.php', 'conditions' => [
@@ -221,6 +224,9 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/modules/Calendar.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'AUTO_REFRESH_REMINDERS', 'addingType' => 'before', 'value' => "	// Auto refresh reminders
+	'AUTO_REFRESH_REMINDERS' => true, // Boolean
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'SEND_REMINDER_INVITATION', 'addingType' => 'before', 'value' => "	// Send mail notification to participants
 	'SEND_REMINDER_INVITATION' => true, // Boolean
 "],
@@ -276,7 +282,9 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/performance.php', 'conditions' => [
-					['type' => 'add', 'search' => '];', 'checkInContents' => 'LOAD_CUSTOM_FILES', 'addingType' => 'before', 'value' => "	'LOAD_CUSTOM_FILES' => false,
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'LOAD_CUSTOM_FILES', 'addingType' => 'before', 'value' => "	// Parameter that allows to disable file overwriting. After enabling it the system will additionally check whether the file exists in the custom directory.
+	// Ex. custom/modules/Assets/Assets.php 
+	'LOAD_CUSTOM_FILES' => false,
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER', 'addingType' => 'before', 'value' => "	// In how many records should the global search permissions be updated in cron
 	'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER' => 1000,
@@ -309,6 +317,7 @@ class YetiForceUpdate
 			],
 			['name' => 'modules/OSSMail/roundcube/config/config.inc.php', 'conditions' => [
 					['type' => 'update', 'search' => "config['default_host']", 'replace' => ["'ssl://smtp.gmail.com' => 'ssl://smtp.gmail.com',", "'ssl://imap.gmail.com' => 'ssl://imap.gmail.com',"]],
+					['type' => 'update', 'search' => "config['plugins']", 'replace' => ["'autologon',", ""]],
 					['type' => 'update', 'search' => 'root_directory', 'replace' => ['$root_directory', "ROOT_DIRECTORY . DIRECTORY_SEPARATOR"]],
 				]
 			],
@@ -334,6 +343,28 @@ class YetiForceUpdate
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'UNREVIEWED_COUNT', 'addingType' => 'before', 'value' => "	// Displays the number of unreviewed changes in record.
 	'UNREVIEWED_COUNT' => true,
+"],
+				]
+			],
+			['name' => 'config/modules/Accounts.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'COUNT_IN_HIERARCHY', 'addingType' => 'before', 'value' => "	// Count Accounts in hierarchy
+	'COUNT_IN_HIERARCHY' => true,
+"],
+				],
+			],
+			['name' => 'config/modules/Home.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'AUTO_REFRESH_REMINDERS', 'addingType' => 'before', 'value' => "	// Auto refresh reminders in header
+	'AUTO_REFRESH_REMINDERS' => true, // Boolean
+"],
+				]
+			],
+			['name' => 'config/security.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'PERMITTED_BY_ROLES', 'addingType' => 'before', 'value' => "	/* Permissions mechanism
+	  The list of system permission levels can be found below */
+	'PERMITTED_BY_ROLES' => true,
+	'PERMITTED_BY_SHARING' => true,
+	'PERMITTED_BY_SHARED_OWNERS' => true,
+	'PERMITTED_BY_RECORD_HIERARCHY' => true,
 "],
 				]
 			],
@@ -407,6 +438,12 @@ class YetiForceUpdate
 				$file = fopen($fileName, "w+");
 				fwrite($file, $content);
 				fclose($file);
+			} else {
+				$dirName = 'cache/updates/' . $config['name'];
+				$sourceFile = $rootDirectory . DIRECTORY_SEPARATOR . $dirName;
+				if (file_exists($sourceFile)) {
+					copy($sourceFile, $fileName);
+				}
 			}
 		}
 		$log->debug(__CLASS__ . '::' . __METHOD__ . ' | END');
@@ -681,6 +718,23 @@ class YetiForceUpdate
 		$db->update('vtiger_field', ['fieldlabel' => 'LBL_ORGINAL_MAIL_CONTENT'], '`tabid` = ? AND columnname = ?;', [getTabid('OSSMailView'), 'orginal_mail']);
 		$this->setAlterTables($this->getAlterTables(5));
 		$this->setFields($this->getFields(2));
+		$this->setAlterTables($this->getAlterTables(6));
+		$db->update('vtiger_users', ['reports_to_id' => 0], '`reports_to_id` = "" OR reports_to_id IS NULL ;');
+		$columns = ['name', 'last_name', 'pesel', 'id_card', 'employee_education', 'business_phone', 'private_phone', 'business_mail', 'private_mail', 'street', 'code', 'city', 'state', 'country', 'ship_street', 'ship_code', 'ship_city', 'ship_state', 'ship_country'];
+		$db->update('vtiger_field', ['quickcreate' => 1], '`tablename` = ? AND columnname IN (' . $db->generateQuestionMarks($columns) . ')', ['vtiger_ossemployees', $columns]);
+		$db->update('vtiger_field', ['quickcreate' => 2, 'summaryfield' => 1], '`tabid` = ? AND columnname IN (?,?,?)', [getTabid('OSSMailTemplates'), 'name', 'smownerid', 'ossmailtemplates_type']);
+		$this->setTablesScheme($this->getTablesAction(5));
+		$this->actionMapp($this->getActionMapp(2));
+		$result = $db->query("SELECT vtiger_trees_templates_data.`templateid` FROM `vtiger_trees_templates_data` 
+  INNER JOIN `vtiger_trees_templates` 
+    ON `vtiger_trees_templates`.`templateid` = `vtiger_trees_templates_data`.`templateid` 
+  INNER JOIN `vtiger_tab` ON vtiger_tab.`tabid` = vtiger_trees_templates.`module`
+  WHERE vtiger_tab.name IN ('SQuoteEnquiries','SSalesProcesses','SRequirementsCards','SCalculations','SQuotes','SSingleOrders','SRecurringOrders','Assets','KnowledgeBase','HelpDesk')
+  AND vtiger_trees_templates_data.`name` = 'none';");
+		if ($result->rowCount()) {
+			$templateids = $db->getArrayColumn($result);
+			$db->update('vtiger_trees_templates_data', ['name' => 'LBL_NONE', 'label' => 'LBL_NONE'], 'templateid IN (' . $db->generateQuestionMarks($templateids) . ')', $templateids);
+		}
 	}
 
 	function moveColumnFromCrmentity()
@@ -840,13 +894,14 @@ class YetiForceUpdate
 					['type' => 'add', 'data' => ['507', 'Project', 'OSSPasswords', 'get_related_list', '10', 'OSSPasswords', '0', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['508', 'OSSEmployees', 'OSSPasswords', 'get_dependents_list', '9', 'OSSPasswords', '0', 'ADD', '0', '0', '0']],
 					['type' => 'add', 'data' => ['509', 'Campaigns', 'Documents', 'get_attachments', '3', 'Documents', '0', 'ADD,SELECT', '0', '0', '0']],
-					['type' => 'update', 'data' => ['109', 'HelpDesk', 'Services', 'get_related_list', '6', 'Services', '1', 'SELECT', '0', '0', '0']],
-					['type' => 'update', 'data' => ['213', 'HelpDesk', 'Assets', 'get_related_list', '11', 'Assets', '1', 'ADD,SELECT', '0', '0', '0']],
+					['type' => 'update', 'data' => ['109', 'HelpDesk', 'Services', 'get_related_list', '6', 'Services', '0', 'SELECT', '0', '0', '0'], 'updateField' => [6 => 1]],
+					['type' => 'update', 'data' => ['213', 'HelpDesk', 'Assets', 'get_related_list', '11', 'Assets', '0', 'ADD,SELECT', '0', '0', '0'], 'updateField' => [6 => 1]],
 					['type' => 'add', 'data' => ['510', 'HelpDesk', 'Products', 'get_related_list', '20', 'Products', '1', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['511', 'HelpDesk', 'OSSSoldServices', 'get_related_list', '21', 'OSSSoldServices', '1', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => ['512', 'OSSSoldServices', 'HelpDesk', 'get_related_list', '2', 'HelpDesk', '0', 'ADD,SELECT', '0', '0', '0']],
 					['type' => 'add', 'data' => [8, 'SSalesProcesses', 'OSSTimeControl', 'get_dependents_list', 18, 'OSSTimeControl', 0, 'ADD', 0, 0, 0]],
-					['type' => 'update', 'data' => ['193', 'OSSMailView', 'Documents', 'get_attachments', '1', 'Documents', '0', '', '0', '0', '0']],
+					['type' => 'update', 'data' => ['193', 'OSSMailView', 'Documents', 'get_attachments', '1', 'Documents', '0', 'ADD,SELECT', '0', '0', '0'], 'updateField' => [7 => '']],
+					['type' => 'update', 'data' => ['485', 'KnowledgeBase', 'Documents', 'get_related_list', '1', 'Documents', '0', 'ADD', '0', '0', '0'], 'updateField' => [3 => 'get_attachments']],
 				];
 				break;
 			default:
@@ -857,6 +912,8 @@ class YetiForceUpdate
 
 	function setRelations($data)
 	{
+		$log = vglobal('log');
+		$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' (' . $module . ') method ...');
 		$db = PearDatabase::getInstance();
 		if (!empty($data)) {
 			foreach ($data as $relation) {
@@ -885,14 +942,18 @@ class YetiForceUpdate
 				} elseif ($result->rowCount() > 0 && $relation['type'] == 'remove') {
 					$db->delete('vtiger_relatedlists', '`tabid` = ? AND `related_tabid` = ? AND `name` = ?;', [$tabid, $relTabid, $name]);
 				} elseif ($relation['type'] == 'update') {
+					$keyByName = ['relation_id', 'tabid', 'related_tabid', 'name', 'sequence', 'label', 'presence', 'actions', 'favorites', 'creator_detail', 'relation_comment'];
+					$updateField = [];
+					foreach ($relation['updateField'] as $key => $value) {
+						$relation['data'][$key] = $value;
+						$updateField[$keyByName[$key]] = $value;
+					}
 					if ($result->rowCount() > 0) {
-						$db->update('vtiger_relatedlists', [
-							'sequence' => $sequence,
-							'presence' => $presence,
-							'actions' => $actions,
-							'favorites' => $favorites,
-							'creator_detail' => $creatorDetail,
-							'relation_comment' => $relationComment], '`tabid` = ? AND `related_tabid` = ? AND `name` = ?;', [$tabid, $relTabid, $name]);
+						if (empty($updateField)) {
+							$log->debug('ERROR ' . __CLASS__ . '::' . __METHOD__ . ' A row in vtiger_relatedlists was not updated due to lack of data. ' . print_r($relation, true));
+						} else {
+							$db->update('vtiger_relatedlists', $updateField, '`tabid` = ? AND `related_tabid` = ? AND `name` = ?;', [$tabid, $relTabid, $name]);
+						}
 					} else {
 						$relation['type'] = 'add';
 						$this->setRelations([$relation]);
@@ -900,6 +961,7 @@ class YetiForceUpdate
 				}
 			}
 		}
+		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
 	function getActionMapp($index)
@@ -920,6 +982,15 @@ class YetiForceUpdate
 					['type' => 'add', 'name' => 'WatchingModule', 'tabsData' => [getTabid('ModComments')]],
 					['type' => 'add', 'name' => 'ReviewingUpdates'],
 					['type' => 'add', 'name' => 'ExportPdf', 'tabsData' => array_keys($supportedModuleModels)],
+				];
+				break;
+			case 2:
+				$db = PearDatabase::getInstance();
+				$result = $db->query("SELECT tabid FROM `vtiger_tab` WHERE `isentitytype` = '1' AND name NOT IN ('SMSNotifier','ModComments','PBXManager','Events','Emails','OSSMailTemplates','OSSMailView','Calendar','CallHistory','')");
+				$tabsData = $db->getArrayColumn($result, 'tabid');
+				$actions = [
+					['type' => 'add', 'name' => 'RecordMapping', 'tabsData' => $tabsData],
+					['type' => 'add', 'name' => 'RecordMappingList', 'tabsData' => $tabsData],
 				];
 				break;
 			default:
@@ -1116,6 +1187,55 @@ class YetiForceUpdate
 					['type' => ['add'], 'name' => 'id', 'table' => 'yetiforce_auth', 'sql' => "ALTER TABLE `yetiforce_auth` ADD COLUMN `id` tinyint(3) unsigned   NOT NULL auto_increment first , ADD PRIMARY KEY(`id`) ;"],
 				];
 				break;
+			case 6:
+				$fields = [
+					['type' => ['add', 'Key_name'], 'name' => 'activitytype_3', 'table' => 'vtiger_activity', 'sql' => "ALTER TABLE `vtiger_activity` ADD KEY `activitytype_3`(`activitytype`,`status`);"],
+					['type' => ['add', 'Key_name'], 'name' => 'presence', 'table' => 'vtiger_field', 'sql' => "ALTER TABLE `vtiger_field` ADD KEY `presence`(`presence`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'mediumint', 'name' => 'reports_to_id', 'table' => 'vtiger_users', 'sql' => "ALTER TABLE `vtiger_users` 
+	CHANGE `reports_to_id` `reports_to_id` mediumint(11) unsigned   NULL after `last_name` , 
+	CHANGE `currency_id` `currency_id` mediumint(19)   NOT NULL DEFAULT 1 after `is_admin` , 
+	CHANGE `deleted` `deleted` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `imagename` , 
+	CHANGE `internal_mailer` `internal_mailer` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `confirm_password` , 
+	CHANGE `no_of_currency_decimals` `no_of_currency_decimals` tinyint(1) unsigned   NULL after `phone_crm_extension` , 
+	CHANGE `truncate_trailing_zeros` `truncate_trailing_zeros` tinyint(1) unsigned   NULL after `no_of_currency_decimals` , 
+	CHANGE `callduration` `callduration` smallint(3) unsigned   NULL after `dayoftheweek` , 
+	CHANGE `othereventduration` `othereventduration` smallint(3) unsigned   NULL after `callduration` , 
+	CHANGE `leftpanelhide` `leftpanelhide` tinyint(3) unsigned   NULL after `default_record_view` , 
+	CHANGE `emailoptout` `emailoptout` tinyint(3) unsigned   NOT NULL DEFAULT 1 after `is_owner` ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'fieldid', 'table' => 'vtiger_fieldmodulerel', 'sql' => "ALTER TABLE `vtiger_fieldmodulerel` 
+	CHANGE `fieldid` `fieldid` smallint(11) unsigned   NOT NULL first , 
+	CHANGE `module` `module` varchar(25)  COLLATE utf8_general_ci NOT NULL after `fieldid` , 
+	CHANGE `relmodule` `relmodule` varchar(25)  COLLATE utf8_general_ci NOT NULL after `module` , 
+	CHANGE `sequence` `sequence` tinyint(1) unsigned   NULL DEFAULT 0 after `status` , 
+	ADD KEY `fieldid`(`fieldid`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'user_ip', 'table' => 'vtiger_loginhistory', 'sql' => "ALTER TABLE `vtiger_loginhistory` ADD KEY `user_ip`(`user_ip`,`login_time`,`status`,`unblock`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'profileid', 'table' => 'vtiger_profile2standardpermissions', 'sql' => "ALTER TABLE `vtiger_profile2standardpermissions` 
+	CHANGE `profileid` `profileid` smallint(11) unsigned   NOT NULL first , 
+	CHANGE `tabid` `tabid` smallint(10) unsigned   NOT NULL after `profileid` , 
+	CHANGE `operation` `operation` smallint(10) unsigned   NOT NULL after `tabid` , 
+	CHANGE `permissions` `permissions` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `operation` , 
+	ADD KEY `profileid`(`profileid`,`tabid`) ;"],
+					['type' => ['remove'], 'name' => 'contactfid', 'table' => 'vtiger_convertleadmapping', 'sql' => "ALTER TABLE `vtiger_convertleadmapping` DROP COLUMN `contactfid` ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'userid', 'table' => 'vtiger_asteriskextensions', 'sql' => "ALTER TABLE `vtiger_asteriskextensions` 
+	CHANGE `userid` `userid` smallint(11) unsigned   NOT NULL first , 
+	ADD PRIMARY KEY(`userid`) , 
+	ADD KEY `userid`(`userid`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'smownerid', 'table' => 'vtiger_activity', 'sql' => "ALTER TABLE `vtiger_activity` 
+	CHANGE `smownerid` `smownerid` smallint(19) unsigned   NULL after `deleted` , 
+	DROP KEY `activitytype` ,
+	ADD KEY `smownerid`(`smownerid`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'active', 'table' => 'vtiger_modentity_num', 'sql' => "ALTER TABLE `vtiger_modentity_num` 
+	CHANGE `num_id` `num_id` int(19) unsigned   NOT NULL first , 
+	CHANGE `semodule` `semodule` varchar(25)  COLLATE utf8_general_ci NOT NULL after `num_id` , 
+	CHANGE `postfix` `postfix` varchar(50)  COLLATE utf8_general_ci NOT NULL DEFAULT '' after `prefix` , 
+	CHANGE `start_id` `start_id` int(19) unsigned   NOT NULL after `postfix` , 
+	CHANGE `cur_id` `cur_id` int(19) unsigned   NOT NULL after `start_id` , 
+	CHANGE `active` `active` smallint(1) unsigned   NOT NULL after `cur_id` , 
+	ADD KEY `semodule`(`semodule`,`cur_id`,`active`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'type_2', 'table' => 'yetiforce_mail_config', 'sql' => "ALTER TABLE `yetiforce_mail_config` 
+	ADD KEY `type_2`(`type`) ;"],
+				];
+				break;
 			default:
 				break;
 		}
@@ -1261,6 +1381,21 @@ class YetiForceUpdate
 						`label` varchar(255) DEFAULT NULL,
 						PRIMARY KEY (`crmid`)
 					  ) ENGINE=MyISAM DEFAULT CHARSET=utf8"],
+				];
+				break;
+			case 5:
+				$tables = [
+					['type' => 'add', 'name' => 'u_yf_mail_autologin', 'sql' => "`u_yf_mail_autologin` (
+						`userid` smallint(11) unsigned NOT NULL,
+						`key` varchar(50) NOT NULL,
+						KEY `userid` (`userid`)
+					  )"],
+					['type' => 'add', 'name' => 'u_yf_mail_compose_data', 'sql' => "`u_yf_mail_compose_data` (
+						`userid` smallint(11) unsigned NOT NULL,
+						`key` varchar(32) NOT NULL,
+						`data` text NOT NULL,
+						UNIQUE KEY `userid` (`userid`,`key`)
+					  )"],
 				];
 				break;
 			default:

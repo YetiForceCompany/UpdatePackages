@@ -1140,12 +1140,6 @@ $languageStrings = [
 	'FL_ACTIVE' => 'Active',
 	'SwitchUsers' => 'Switch Users',
 	'Api Address' => 'Pesquisar endereço',
-	'WebForm Name' => 'Nome Webform',
-	'Return Url' => 'URL de retorno',
-	'Module' => 'Módulo',
-	'Captcha Enabled' => 'Habilitar Captcha',
-	'LBL_ASSIGN_ROUND_ROBIN' => 'Designar Usuários no Round Robin',
-	'LBL_ROUNDROBIN_USERS_LIST' => 'Lista de Usuários Round Robin',
 	'Notifications' => 'Notifications',
 	'Mails' => 'Mails',
 	'LBL_CATEGORY_MULTIPICKLIST' => '_UNTRANSLATED_',
@@ -1248,6 +1242,8 @@ $languageStrings = [
 	'LBL_SOURCE' => 'Source',
 	'LBL_DATE' => 'Date',
 	'LBL_WIDGET_FILTER_TOTAL_COUNT_INFO' => 'Get total amount of records',
+	'Potentials' => 'Oportunidades',
+	'LBL_PICKLIST_FIELD' => 'Select from field',
 ];
 $jsLanguageStrings = [
 	'JS_SUMMARY' => 'Resumo',
@@ -1506,4 +1502,5 @@ $jsLanguageStrings = [
 	'JS_INPUT_TOO_SHORT' => 'Enter _LENGTH_ or more characters',
 	'JS_SEARCHING' => 'Searching...',
 	'JS_MASS_EDIT_NOT_SUCCESSFUL' => 'Mass edition unsuccessful',
+	'JS_GET_PAGINATION_INFO' => 'Loading the amount of records in progress. Completion time depends on the total number of records.',
 ];

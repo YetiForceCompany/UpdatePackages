@@ -1112,6 +1112,13 @@ jQuery.Class("Vtiger_List_Js", {
 			);
 		});
 		$('#totalCountBtn').on('click', function () {
+			var paramsNotifier = {
+				title: app.vtranslate('JS_LBL_PERMISSION'),
+				text: app.vtranslate('JS_GET_PAGINATION_INFO'),
+				type: 'info',
+				animation: 'show'
+			};
+			Vtiger_Helper_Js.showMessage(paramsNotifier);
 			var params = thisInstance.getDefaultParams();
 			params.totalCount = -1;
 			params.view = 'Pagination';
@@ -1901,7 +1908,7 @@ jQuery.Class("Vtiger_List_Js", {
 		var thisInstance = this;
 		var ids = [];
 		var listViewContentDiv = this.getListViewContentContainer();
-		var isUnreviewedActive = listViewContentDiv.find('.unreviewed').lenght;
+		var isUnreviewedActive = listViewContentDiv.find('.unreviewed').length;
 		listViewContentDiv.find('tr.listViewEntries').each(function () {
 			var id = jQuery(this).data('id');
 			if (id) {

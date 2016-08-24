@@ -720,12 +720,13 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$viewer->assign('RELATED_LIST_LINKS', $links);
 		$viewer->assign('RELATED_ENTIRES_COUNT', $noOfEntries);
 		$viewer->assign('RELATION_FIELD', $relationField);
-
-		if (AppConfig::performance('LISTVIEW_COMPUTE_PAGE_COUNT') || empty($totalCount)) {
+		if (AppConfig::performance('LISTVIEW_COMPUTE_PAGE_COUNT')) {
 			$totalCount = $relationListView->getRelatedEntriesCount();
-			$pagingModel->set('totalCount', (int) $totalCount);
 		}
-		$viewer->assign('TOTAL_ENTRIES', $totalCount);
+		if (!empty($totalCount)) {
+			$pagingModel->set('totalCount', (int) $totalCount);
+			$viewer->assign('TOTAL_ENTRIES', (int) $totalCount);
+		}
 		$pageCount = $pagingModel->getPageCount();
 		$startPaginFrom = $pagingModel->getStartPagingFrom();
 
@@ -829,7 +830,6 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$viewer->assign('HISTORIES', $histories);
 		$viewer->assign('PAGING_MODEL', $pagingModel);
 		$viewer->assign('POPUP', $config['popup']);
-		$viewer->assign('USER_PRIVILEGES_MODEL', Users_Privileges_Model::getCurrentUserPrivilegesModel());
 		return $viewer->view('HistoryRelation.tpl', $moduleName, true);
 	}
 }

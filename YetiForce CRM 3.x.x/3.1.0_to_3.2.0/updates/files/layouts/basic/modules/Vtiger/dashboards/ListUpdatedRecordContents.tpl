@@ -9,7 +9,7 @@
 * Contributor(s): YetiForce.com
 ********************************************************************************/
 -->*}
-
+{strip}
 <div style='padding:5px;'>
 	{if $LIST neq false}
 		<table class="table table-bordered">
@@ -21,7 +21,7 @@
 			{foreach key=$index item=record from=$LIST}
 				<tr>
 					{foreach from=$record item=item key=key}
-						<td>{vtranslate($item, $item)}</td>
+						<td>{$item}</td>
 					{/foreach}
 				</tr>
 			{/foreach}
@@ -32,3 +32,4 @@
 		</span>
 	{/if}
 </div>
+{/strip}

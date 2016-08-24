@@ -185,7 +185,7 @@ class Functions
 		return $id ? self::$moduleIdNameCache[$id] : self::$moduleNameIdCache[$name];
 	}
 
-	public static function getAllModules($isEntityType = true, $showRestricted = false, $presence = false, $colorActive = false)
+	public static function getAllModules($isEntityType = true, $showRestricted = false, $presence = false, $colorActive = false, $ownedby = false)
 	{
 		$moduleList = self::$moduleIdNameCache;
 		if (empty($moduleList)) {
@@ -212,13 +212,16 @@ class Functions
 			if ($colorActive !== false && $module['coloractive'] != 1) {
 				unset($moduleList[$id]);
 			}
+			if ($ownedby !== false && $module['ownedby'] != $ownedby) {
+				unset($moduleList[$id]);
+			}
 		}
 		return $moduleList;
 	}
 
 	public static function getModuleData($mixed)
 	{
-		if ($mixed === false || empty($mixed)) {
+		if (empty($mixed)) {
 			$log = \LoggerManager::getInstance();
 			$log->error(__CLASS__ . ':' . __FUNCTION__ . ' - Required parameter missing');
 			return false;
@@ -1442,26 +1445,6 @@ class Functions
 		return $queryParams;
 	}
 
-	static public function encrypt($data)
-	{
-		require_once('include/utils/encryption.php');
-		$encryption = new \Encryption();
-		if (isset($data)) {
-			$encrypted = $encryption->encrypt($data);
-		}
-		return $encrypted;
-	}
-
-	static public function decrypt($data)
-	{
-		require_once('include/utils/encryption.php');
-		$encryption = new \Encryption();
-		if (isset($data)) {
-			$decrypted = $encryption->decrypt($data);
-		}
-		return $decrypted;
-	}
-
 	public static function arrayDiffAssocRecursive($array1, $array2)
 	{
 		$difference = [];
@@ -1479,5 +1462,19 @@ class Functions
 			}
 		}
 		return $difference;
+	}
+
+	public static function varExportMin($var)
+	{
+		if (is_array($var)) {
+			$toImplode = [];
+			foreach ($var as $key => $value) {
+				$toImplode[] = var_export($key, true) . '=>' . self::varExportMin($value);
+			}
+			$code = '[' . implode(',', $toImplode) . ']';
+			return $code;
+		} else {
+			return var_export($var, true);
+		}
 	}
 }

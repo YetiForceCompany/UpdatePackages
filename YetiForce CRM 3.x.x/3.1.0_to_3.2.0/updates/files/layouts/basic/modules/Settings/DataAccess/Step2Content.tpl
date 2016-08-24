@@ -20,7 +20,7 @@
 	{if $TPL_ID}
 		<input type="hidden" name="tpl_id" value="{$TPL_ID}" />
 	{/if}
-	<div class="row padding1per contentsBackground" style="border:1px solid #ccc;box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);">
+	<div class="row padding1per contentsBackground no-margin" style="border:1px solid #ccc;box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);">
 		<div id="advanceFilterContainer" class="">
 			<h5 class="padding-bottom1per"><strong>{vtranslate('LBL_CHOOSE_FILTER_CONDITIONS',$MODULE)}</strong></h5>
 			<div class="allConditionContainer conditionGroup contentsBackground well">
@@ -54,7 +54,7 @@
 									</select>
 								</div>
 								<div class="col-md-4 fieldUiHolder">
-									{if $cnd_item['field_type'] eq 'picklist'}
+									{if $cnd_item['field_type'] eq 'picklist' || $cnd_item['field_type'] eq 'tree' }
 										<select name="val" data-value=value" class="form-control select2">
 											{foreach from=$cnd_item['info']['picklistvalues'] key=pick_key item=pick_item}
 												<option value="{$pick_key}" {if $cnd_item['val'] eq $pick_key}selected{/if}>{$pick_item}</option>

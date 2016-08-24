@@ -35,7 +35,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View {
 		}
 	}
 
-	public function preProcess(Vtiger_Request $request) {
+	public function preProcess(Vtiger_Request $request, $display = true) {
 		parent::preProcess($request);
 		$viewer = $this->getViewer($request);
 		$record = $request->get('record');
@@ -239,14 +239,14 @@ Class Reports_Edit_View extends Vtiger_Edit_View {
 		$primaryModule = $request->get('primary_module');
 		$secondaryModules = $request->get('secondary_modules');
 		$reportModel->setPrimaryModule($primaryModule);
-		if(!empty($secondaryModules)){
+		if (is_array($secondaryModules)) {
 			$secondaryModules = implode(':', $secondaryModules);
 			$reportModel->setSecondaryModule($secondaryModules);
 
-			$secondaryModules = explode(':',$secondaryModules);
-		}else{
-            $secondaryModules = array();
-        }
+			$secondaryModules = explode(':', $secondaryModules);
+		} else {
+			$secondaryModules = array();
+		}
 
 		$viewer->assign('RECORD_ID', $record);
 		$viewer->assign('REPORT_MODEL', $reportModel);

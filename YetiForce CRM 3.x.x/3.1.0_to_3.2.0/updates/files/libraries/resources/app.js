@@ -332,8 +332,6 @@ var app = {
 				}
 				return data.text;
 			};
-		} else {
-
 		}
 		var selectElementNew = selectElement;
 		selectElementNew.select2(params)
@@ -520,6 +518,10 @@ var app = {
 			thisInstance.showPopoverElementView(modalContainer.find('.popoverTooltip'));
 			thisInstance.registerDataTables(modalContainer.find('.dataTable'));
 			modalContainer.one('shown.bs.modal', function () {
+				var backdrop = jQuery('.modal-backdrop');
+				if(backdrop.length > 1){
+					jQuery('.modal-backdrop:not(:first)').remove();
+				}
 				cb(modalContainer);
 			})
 		}
@@ -533,8 +535,9 @@ var app = {
 		}
 		container.one('hidden.bs.modal', function () {
 			container.remove();
-			var backdrop = jQuery('.modal-backdrop:first');
-			if (backdrop.length) {
+			var backdrop = jQuery('.modal-backdrop');
+			var modalContainers = jQuery('.modalContainer');
+			if (modalContainers.length == 0 && backdrop.length) {
 				backdrop.remove();
 			}
 		});
@@ -559,7 +562,8 @@ var app = {
 		var modalContainer = container.find('.modal');
 		modalContainer.modal('hide');
 		var backdrop = jQuery('.modal-backdrop:last');
-		if (backdrop.length) {
+		var modalContainers = jQuery('.modalContainer');
+		if (modalContainers.length == 0 && backdrop.length) {
 			backdrop.remove();
 		}
 		modalContainer.one('hidden.bs.modal', callback);
