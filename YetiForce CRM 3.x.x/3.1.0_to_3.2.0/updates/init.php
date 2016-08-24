@@ -126,6 +126,8 @@ class YetiForceUpdate
 		$this->updateSettingMenu();
 		$this->updateConfigurationFiles();
 		$this->improveProfileActions();
+		Vtiger_Deprecated::createModuleMetaFile();
+		Vtiger_Access::syncSharingAccess();
 	}
 
 	function postupdate()
@@ -141,8 +143,6 @@ class YetiForceUpdate
 		Vtiger_Cache::set('module', $announcements->getId(), $announcements); // update cache
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
-		Vtiger_Deprecated::createModuleMetaFile();
-		Vtiger_Access::syncSharingAccess();
 		$dirName = 'cache/updates';
 		$result = true;
 		$modulenode = $this->modulenode;
