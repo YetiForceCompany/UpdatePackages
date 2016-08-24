@@ -1164,7 +1164,7 @@ class YetiForceUpdate
 				break;
 			case 3:
 				$fields = [
-					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`,DROP KEY `setype`, ADD KEY `setype`(`setype`,`deleted`), ADD KEY `setype_2`(`setype`);"],
+					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`,DROP KEY `setype`, ADD KEY `setypedeleted`(`setype`,`deleted`), ADD KEY `setype`(`setype`);"],
 				];
 				break;
 			case 4:
