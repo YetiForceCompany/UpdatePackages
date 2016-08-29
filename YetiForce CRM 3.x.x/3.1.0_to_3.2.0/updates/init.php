@@ -99,6 +99,7 @@ class YetiForceUpdate
 		'modules/Emails/views/InRelation.php',
 		'modules/OSSMail/RoundcubeLogin.class.php',
 		'layouts/basic/modules/OSSMail/ComposePopup.tpl',
+		'layouts/basic/modules/Assets/ListViewContents.tpl',
 	];
 
 	function YetiForceUpdate($modulenode)
@@ -126,8 +127,14 @@ class YetiForceUpdate
 		$this->updateSettingMenu();
 		$this->updateConfigurationFiles();
 		$this->improveProfileActions();
-		Vtiger_Deprecated::createModuleMetaFile();
-		Vtiger_Access::syncSharingAccess();
+		$deprecatedClass = $this->getClassName('Deprecated');
+		if ($deprecatedClass) {
+			$deprecatedClass::createModuleMetaFile();
+		}
+		$accessClass = $this->getClassName('Access');
+		if ($deprecatedClass) {
+			$accessClass::syncSharingAccess();
+		}
 	}
 
 	function postupdate()
@@ -143,6 +150,7 @@ class YetiForceUpdate
 		Vtiger_Cache::set('module', $announcements->getId(), $announcements); // update cache
 		$menuRecordModel = new Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+		$this->moduleRecordAllocation();
 		$dirName = 'cache/updates';
 		$result = true;
 		$modulenode = $this->modulenode;
@@ -157,12 +165,48 @@ class YetiForceUpdate
 		if ($result) {
 			$db->update('vtiger_version', ['current_version' => $modulenode->to_version]);
 		}
-		Vtiger_Functions::recurseDelete($dirName);
-		Vtiger_Functions::recurseDelete('cache/templates_c');
+		$className = $this->getClassName('Functions');
+		if ($className) {
+			$className::recurseDelete($dirName);
+			$className::recurseDelete('cache/templates_c');
+		}
 		if (headers_sent()) {
 			die('<div class="well pushDown">System update completed: <a class="btn btn-success" href="' . $siteUrl . '">Return to the homepage</a></div>');
 		} else {
 			exit(header('Location: ' . $siteUrl, true, 301));
+		}
+	}
+
+	public function moduleRecordAllocation()
+	{
+		$className = $this->getClassName('Functions');
+		$rootDirectory = getcwd();
+		$fileName = $rootDirectory . DIRECTORY_SEPARATOR . 'user_privileges/module_record_allocation.php';
+		if (!$className) {
+			return false;
+		}
+		if (file_exists($fileName)) {
+			require ($fileName);
+			$map = [];
+			$modules = $className::getAllModules(true);
+			foreach ($modules as $module) {
+				$toLowerModule = strtolower($module['name']);
+				if (isset($$toLowerModule)) {
+					$map[$module['name']] = $$toLowerModule;
+				}
+			}
+			if (!empty($map)) {
+				$content = '<?php' . PHP_EOL . '$map=array();';
+				file_put_contents($fileName, $content);
+				$moduleInstance = Settings_Vtiger_Module_Model::getInstance('Settings:RecordAllocation');
+				$moduleInstance->set('type', 'owner');
+				foreach ($map as $moduleName => $data) {
+					foreach ($data as $userId => $userData) {
+						$moduleInstance->putToFile($moduleName, $userId, $userData);
+						Settings_RecordAllocation_Module_Model::resetDataVariable();
+					}
+				}
+			}
 		}
 	}
 
@@ -174,7 +218,11 @@ class YetiForceUpdate
 		$profile = $db->getArrayColumn($result);
 		$result = $db->pquery('SELECT profileid, tabid FROM vtiger_profile2standardpermissions WHERE operation = ?;', [3]);
 		$indexPermisions = $result->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
-		$modules = Vtiger_Functions::getAllModules(true);
+		$className = $this->getClassName('Functions');
+		if (!$className) {
+			return false;
+		}
+		$modules = $className::getAllModules(true);
 		foreach ($profile as $profileid) {
 			if (!array_key_exists($profileid, $indexPermisions)) {
 				$indexPermisions[$profileid] = [];
@@ -224,6 +272,9 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/modules/Calendar.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'SHOW_DAYS_QUICKCREATE', 'addingType' => 'before', 'value' => "	// Display days below the form in quick create
+	'SHOW_DAYS_QUICKCREATE' => true, // Boolean
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'AUTO_REFRESH_REMINDERS', 'addingType' => 'before', 'value' => "	// Auto refresh reminders
 	'AUTO_REFRESH_REMINDERS' => true, // Boolean
 "],
@@ -287,7 +338,7 @@ class YetiForceUpdate
 	'LOAD_CUSTOM_FILES' => false,
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER', 'addingType' => 'before', 'value' => "	// In how many records should the global search permissions be updated in cron
-	'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER' => 1000,
+	'CRON_MAX_NUMERS_RECORD_PRIVILEGES_UPDATER' => 1000000,
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'OWNER_MINIMUM_INPUT_LENGTH', 'addingType' => 'before', 'value' => "	// Minimum number of characters to search for record owner
 	'OWNER_MINIMUM_INPUT_LENGTH' => 2,
@@ -324,9 +375,9 @@ class YetiForceUpdate
 			['name' => '.htaccess', 'conditions' => [
 					['type' => 'add', 'search' => "RewriteEngine", 'value' => "	RewriteRule ^favicon.ico layouts/basic/skins/images/favicon.ico [L,NC]
 ", 'checkInContents' => 'favicon.ico'],
-					['type' => 'update', 'search' => "session.gc_maxlifetime", 'value' => "	# 86400 = 3600*24
-	php_value	session.gc_maxlifetime		86400 
-	# 1440 = 60*24
+					['type' => 'update', 'search' => "session.gc_maxlifetime", 'value' => "	php_value	session.gc_maxlifetime		86400 
+"],
+					['type' => 'add', 'search' => "session.gc_maxlifetime", 'checkInContents' => 'cache_expire', 'value' => "	# 1440 = 60*24
 	php_value	session.cache_expire		1440
 "],
 					['type' => 'add', 'search' => "session.gc_probability", 'value' => "
@@ -469,11 +520,17 @@ class YetiForceUpdate
 
 	public function addModComments($moduleName)
 	{
-		$tabid = Vtiger_Functions::getModuleId($moduleName);
+		$className = $this->getClassName('Functions');
+		if ($className)
+			$tabid = $className::getModuleId($moduleName);
 		if (!$moduleName || !$tabid) {
 			return false;
 		}
-		$modcommentsModuleInstance = Vtiger_Module::getInstance('ModComments');
+		$className = $this->getClassName('Module');
+		if (!$className) {
+			return false;
+		}
+		$modcommentsModuleInstance = $className::getInstance('ModComments');
 		if ($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
 			include_once 'modules/ModComments/ModComments.php';
 			if (class_exists('ModComments'))
@@ -571,7 +628,10 @@ class YetiForceUpdate
 			foreach ($addCrons as $cron) {
 				$result = $db->pquery('SELECT * FROM `vtiger_cron_task` WHERE name = ? AND handler_file = ?;', [$cron[0], $cron[1]]);
 				if ($db->getRowCount($result) == 0) {
-					Vtiger_Cron::register($cron[0], $cron[1], $cron[2], $cron[6], $cron[5], 0, $cron[8]);
+					$className = $this->getClassName('Cron');
+					if ($className) {
+						$className::register($cron[0], $cron[1], $cron[2], $cron[6], $cron[5], 0, $cron[8]);
+					}
 				}
 			}
 		}
@@ -735,6 +795,36 @@ class YetiForceUpdate
 			$templateids = $db->getArrayColumn($result);
 			$db->update('vtiger_trees_templates_data', ['name' => 'LBL_NONE', 'label' => 'LBL_NONE'], 'templateid IN (' . $db->generateQuestionMarks($templateids) . ')', $templateids);
 		}
+		$this->setAlterTables($this->getAlterTables(7));
+		$this->reconstructedModentityNum();
+	}
+
+	public function reconstructedModentityNum()
+	{
+		$db = PearDatabase::getInstance();
+		$result = $db->query('SHOW COLUMNS FROM `vtiger_modentity_num` LIKE "tabid"');
+		if (!$result->rowCount()) {
+			$db->delete('vtiger_modentity_num', 'active = ?', [0]);
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` ADD COLUMN `tabid` INT(19) UNSIGNED NOT NULL AFTER `num_id`');
+
+			$result = $db->pquery('SELECT semodule, num_id FROM `vtiger_modentity_num`');
+			$className = $this->getClassName('Functions');
+			if (!$className) {
+				return false;
+			}
+			while ($row = $db->getRow($result)) {
+				$tabId = $className::getModuleId($row['semodule']);
+				$db->update('vtiger_modentity_num', ['tabid' => $tabId], 'num_id = ?', [$row['num_id']]);
+			}
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` DROP COLUMN `num_id`');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` ADD COLUMN `id` INT(19) UNSIGNED NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`id`)');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` DROP COLUMN `semodule`');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` DROP COLUMN `active`');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` CHANGE `id` `id` SMALLINT(19) UNSIGNED NOT NULL AUTO_INCREMENT; ');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` CHANGE `id` `id` SMALLINT(11) UNSIGNED NOT NULL AUTO_INCREMENT, CHANGE `tabid` `tabid` smallint(11) UNSIGNED NOT NULL; ');
+			$db->pquery('ALTER TABLE `vtiger_modentity_num` ADD INDEX (`prefix`, `postfix`, `cur_id`), ADD INDEX (`tabid`), ADD KEY `tabid_2`(`tabid`,`cur_id`) ;; ');
+			$this->setTablesScheme($this->getTablesAction(6));
+		}
 	}
 
 	function moveColumnFromCrmentity()
@@ -788,9 +878,12 @@ class YetiForceUpdate
 			list($ID, $moduleName, $type, $label, $wcol, $sequence, $nomargin, $data) = $widget;
 			$tabid = getTabid($moduleName);
 			if ($type == 'RelatedModule') {
-				$arrayData = Zend_Json::decode($data);
-				$ralModule = $arrayData['relatedmodule'];
-				$result = $db->pquery('SELECT 1 FROM vtiger_widgets WHERE tabid = ? AND type = ? AND `data` LIKE ?;', [$tabid, $type, '%"relatedmodule":"' . $ralModule . '"%']);
+				$className = $this->getClassName(['\includes\utils\Json', 'Zend_Json']);
+				if ($className) {
+					$arrayData = $className::decode($data);
+					$ralModule = $arrayData['relatedmodule'];
+					$result = $db->pquery('SELECT 1 FROM vtiger_widgets WHERE tabid = ? AND type = ? AND `data` LIKE ?;', [$tabid, $type, '%"relatedmodule":"' . $ralModule . '"%']);
+				}
 			} else {
 				$result = $db->pquery('SELECT 1 FROM vtiger_widgets WHERE tabid = ? AND type = ?;', [$tabid, $type]);
 			}
@@ -1074,9 +1167,15 @@ class YetiForceUpdate
 				continue;
 			}
 			$log->debug('Entering ' . __CLASS__ . '::' . __METHOD__ . ' addField - ' . print_r($field[2], true));
-			$moduleInstance = Vtiger_Module::getInstance($field[28]);
-			$blockInstance = Vtiger_Block::getInstance($field[25], $moduleInstance);
-			$fieldInstance = new Vtiger_Field();
+			$moduleClassName = $this->getClassName('Module');
+			$blockClassName = $this->getClassName('Block');
+			$fieldClassName = $this->getClassName('Field');
+			if (!$moduleClassName || !$blockClassName || !$fieldClassName) {
+				return false;
+			}
+			$moduleInstance = $moduleClassName::getInstance($field[28]);
+			$blockInstance = $blockClassName::getInstance($field[25], $moduleInstance);
+			$fieldInstance = new $fieldClassName();
 			$fieldInstance->column = $field[2];
 			$fieldInstance->name = $field[6];
 			$fieldInstance->label = $field[7];
@@ -1164,7 +1263,7 @@ class YetiForceUpdate
 				break;
 			case 3:
 				$fields = [
-					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`,DROP KEY `setype`, ADD KEY `setypedeleted`(`setype`,`deleted`), ADD KEY `setype`(`setype`);"],
+					['type' => ['remove'], 'name' => 'searchlabel', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP COLUMN `searchlabel` , DROP KEY `searchlabel`;"],
 				];
 				break;
 			case 4:
@@ -1234,6 +1333,78 @@ class YetiForceUpdate
 	ADD KEY `semodule`(`semodule`,`cur_id`,`active`) ;"],
 					['type' => ['add', 'Key_name'], 'name' => 'type_2', 'table' => 'yetiforce_mail_config', 'sql' => "ALTER TABLE `yetiforce_mail_config` 
 	ADD KEY `type_2`(`type`) ;"],
+				];
+				break;
+			case 7:
+				$fields = [
+					['type' => ['change', 'Type'], 'validType' => 'varchar(100', 'name' => 'filetype', 'table' => 'vtiger_notes', 'sql' => "ALTER TABLE `vtiger_notes` 
+	CHANGE `filetype` `filetype` varchar(100)  COLLATE utf8_general_ci NULL after `folderid` ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'userid', 'table' => 'vtiger_module_dashboard_widgets', 'sql' => "ALTER TABLE `vtiger_module_dashboard_widgets` ADD KEY `userid`(`userid`,`active`,`module`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'user', 'table' => 'a_yf_featured_filter', 'sql' => "ALTER TABLE `a_yf_featured_filter` ADD KEY `user`(`user`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'status', 'table' => 'a_yf_inventory_limits', 'sql' => "ALTER TABLE `a_yf_inventory_limits` ADD KEY `status`(`status`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'tabid_2', 'table' => 'a_yf_mapped_config', 'sql' => "ALTER TABLE `a_yf_mapped_config` 
+	CHANGE `tabid` `tabid` smallint(11) unsigned   NOT NULL after `id` , 
+	CHANGE `reltabid` `reltabid` smallint(11) unsigned   NOT NULL after `tabid` , 
+	ADD KEY `tabid_2`(`tabid`,`status`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'module_name_2', 'table' => 'a_yf_pdf', 'sql' => "ALTER TABLE `a_yf_pdf` ADD KEY `module_name_2`(`module_name`) ;"],
+					['type' => ['change', 'Null'], 'validType' => 'NO', 'name' => 'announcementstatus', 'table' => 'u_yf_announcement', 'sql' => "ALTER TABLE `u_yf_announcement` CHANGE `announcementstatus` `announcementstatus` varchar(255) NOT NULL DEFAULT '' after `subject` ;"],
+					['type' => ['remove', 'Key_name'], 'name' => 'userid', 'table' => 'vtiger_asteriskextensions', 'sql' => "ALTER TABLE `vtiger_asteriskextensions` DROP KEY `userid` ;"],
+					['type' => ['remove', 'Key_name'], 'name' => 'attachments_attachmentsid_idx', 'table' => 'vtiger_attachments', 'sql' => "ALTER TABLE `vtiger_attachments` DROP KEY `attachments_attachmentsid_idx` ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'blockid', 'table' => 'vtiger_blocks_hide', 'sql' => "ALTER TABLE `vtiger_blocks_hide` 
+	CHANGE `id` `id` int(19) unsigned   NOT NULL auto_increment first , 
+	CHANGE `blockid` `blockid` int(19) unsigned   NULL after `id` , 
+	CHANGE `enabled` `enabled` tinyint(1) unsigned   NULL after `conditions` , 
+	ADD KEY `blockid`(`blockid`,`enabled`) , 
+	ADD KEY `blockid_2`(`blockid`,`enabled`,`view`) , 
+	ADD KEY `view`(`view`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'unsigned', 'name' => 'setdefault', 'table' => 'vtiger_customview', 'sql' => "ALTER TABLE `vtiger_customview` 
+	CHANGE `setdefault` `setdefault` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `viewname` ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'cvid', 'table' => 'vtiger_cvadvfilter_grouping', 'sql' => "ALTER TABLE `vtiger_cvadvfilter_grouping` 
+	CHANGE `groupid` `groupid` int(11) unsigned   NOT NULL first , 
+	CHANGE `cvid` `cvid` int(19) unsigned   NOT NULL after `groupid` , 
+	ADD KEY `cvid`(`cvid`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'module_name', 'table' => 'vtiger_dataaccess', 'sql' => "ALTER TABLE `vtiger_dataaccess` 
+	CHANGE `dataaccessid` `dataaccessid` smallint(11)   NOT NULL auto_increment first , 
+	CHANGE `module_name` `module_name` varchar(25)  COLLATE utf8_general_ci NULL after `dataaccessid` , 
+	DROP KEY `dataaccesid` , 
+	ADD KEY `module_name`(`module_name`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'tabid_2', 'table' => 'vtiger_field', 'sql' => "ALTER TABLE `vtiger_field` ADD KEY `tabid_2`(`tabid`,`fieldname`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'containsgroupid', 'table' => 'vtiger_group2grouprel', 'sql' => "ALTER TABLE `vtiger_group2grouprel` 
+	CHANGE `containsgroupid` `containsgroupid` int(19) unsigned   NOT NULL after `groupid` , 
+	ADD KEY `containsgroupid`(`containsgroupid`) , 
+	ADD KEY `groupid`(`groupid`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'unsigned', 'name' => 'groupid', 'table' => 'vtiger_group2rs', 'sql' => "ALTER TABLE `vtiger_group2rs` 
+	CHANGE `groupid` `groupid` int(19) unsigned   NOT NULL first ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'tabid', 'table' => 'vtiger_modtracker_tabs', 'sql' => "ALTER TABLE `vtiger_modtracker_tabs` 
+	CHANGE `tabid` `tabid` smallint(11) unsigned   NOT NULL first , 
+	CHANGE `visible` `visible` tinyint(1) unsigned   NOT NULL DEFAULT 0 after `tabid` , 
+	ADD KEY `tabid`(`tabid`,`visible`) ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'authorized', 'table' => 'vtiger_module_dashboard_blocks', 'sql' => "ALTER TABLE `vtiger_module_dashboard_blocks` 
+	CHANGE `id` `id` int(100) unsigned   NOT NULL auto_increment first , 
+	CHANGE `tabid` `tabid` smallint(11) unsigned   NOT NULL after `authorized` , 
+	ADD KEY `authorized`(`authorized`,`tabid`) , 
+	ADD KEY `tabid`(`tabid`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'organization_id', 'table' => 'vtiger_organizationdetails', 'sql' => "ALTER TABLE `vtiger_organizationdetails` CHANGE `organization_id` `organization_id` smallint(11)   NOT NULL first ;"],
+					['type' => ['remove', 'Key_name'], 'name' => 'relatedlists_relation_id_idx', 'table' => 'vtiger_relatedlists', 'sql' => "ALTER TABLE `vtiger_relatedlists` DROP KEY `relatedlists_relation_id_idx` ;"],
+					['type' => ['remove', 'Key_name'], 'name' => 'roleid', 'table' => 'vtiger_role', 'sql' => "ALTER TABLE `vtiger_role` 
+	CHANGE `depth` `depth` smallint(11) unsigned   NOT NULL DEFAULT 0 after `parentrole` , 
+	CHANGE `allowassignedrecordsto` `allowassignedrecordsto` tinyint(1) unsigned   NOT NULL DEFAULT 1 after `depth` , 
+	DROP KEY `roleid` ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'templateid', 'table' => 'vtiger_trees_templates_data', 'sql' => "ALTER TABLE `vtiger_trees_templates_data` 
+	CHANGE `templateid` `templateid` smallint(5) unsigned   NOT NULL first , 
+	CHANGE `name` `name` varchar(255) NOT NULL after `templateid` , 
+	CHANGE `tree` `tree` varchar(255) NOT NULL after `name` , 
+	CHANGE `parenttrre` `parenttrre` varchar(255) NOT NULL after `tree` , 
+	CHANGE `depth` `depth` tinyint(3) unsigned   NOT NULL after `parenttrre` , 
+	CHANGE `label` `label` varchar(255) NOT NULL after `depth` , 
+	CHANGE `state` `state` varchar(10) NOT NULL DEFAULT '' after `label` , 
+	CHANGE `icon` `icon` varchar(255) NOT NULL DEFAULT '' after `state` ;"],
+					['type' => ['add', 'Key_name'], 'name' => 'fieldtypeid', 'table' => 'vtiger_ws_referencetype', 'sql' => "ALTER TABLE `vtiger_ws_referencetype` ADD KEY `fieldtypeid`(`fieldtypeid`) ;"],
+					['type' => ['change', 'Type'], 'validType' => 'smallint', 'name' => 'id', 'table' => 'yetiforce_mobile_keys', 'sql' => "ALTER TABLE `yetiforce_mobile_keys` CHANGE `id` `id` smallint(11) unsigned   NOT NULL auto_increment first , CHANGE `user` `user` smallint(19) unsigned   NOT NULL after `id` ; "],
+					['type' => ['remove', 'Key_name'], 'name' => 'setype', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP KEY `setype`;"],
+					['type' => ['add', 'Key_name'], 'name' => 'setype', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` ADD KEY `setype`(`setype`);"],
+					['type' => ['remove', 'Key_name'], 'name' => 'setype_2', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` DROP KEY `setype_2`;"],
+					['type' => ['add', 'Key_name'], 'name' => 'setypedeleted', 'table' => 'vtiger_crmentity', 'sql' => "ALTER TABLE `vtiger_crmentity` ADD KEY `setypedeleted`(`setype`,`deleted`) ;"],
 				];
 				break;
 			default:
@@ -1396,6 +1567,11 @@ class YetiForceUpdate
 						`data` text NOT NULL,
 						UNIQUE KEY `userid` (`userid`,`key`)
 					  )"],
+				];
+				break;
+			case 6:
+				$tables = [
+					['type' => 'remove', 'name' => 'vtiger_modentity_num_seq'],
 				];
 				break;
 			default:
@@ -1628,19 +1804,43 @@ class YetiForceUpdate
 		return $links;
 	}
 
+	public function getClassName($name)
+	{
+		$log = vglobal('log');
+		if (is_array($name)) {
+			foreach ($name as $className) {
+				if (class_exists($className)) {
+					return $className;
+				}
+			}
+		} else {
+			if (class_exists('Vtiger_' . $name)) {
+				return 'Vtiger_' . $name;
+			} elseif (class_exists("vtlib\\$name")) {
+				return "vtlib\\$name";
+			}
+		}
+		$log->error('ERROR' . __CLASS__ . '::' . __METHOD__ . ' | Class not found for ' . print_r($name, true));
+		return false;
+	}
+
 	public function setLink($links)
 	{
 		$db = PearDatabase::getInstance();
 		if (!empty($links)) {
+			$className = $this->getClassName('Link');
+			if (!$className) {
+				return;
+			}
 			foreach ($links as $link) {
 				list($id, $tabid, $type, $label, $url, $iconpath, $sequence, $path, $class, $method, $params) = $link['data'];
 				$handlerInfo = ['path' => $path, 'class' => $class, 'method' => $method];
 				if ($link['type'] == 'add') {
 					$result = $db->pquery('SELECT 1 FROM vtiger_links WHERE tabid=? AND linktype=? AND linklabel=? AND linkurl=?;', [$tabid, $type, $label, $url]);
 					if (!$db->getRowCount($result))
-						Vtiger_Link::addLink($tabid, $type, $label, $url, $iconpath, $sequence, $handlerInfo);
+						$className::addLink($tabid, $type, $label, $url, $iconpath, $sequence, $handlerInfo);
 				} elseif ($link['type'] == 'remove') {
-					Vtiger_Link::deleteLink($tabid, $type, $label, $url);
+					$className::deleteLink($tabid, $type, $label, $url);
 				} elseif ($link['type'] == 'update') {
 					$db->update('vtiger_links', [
 						'linktype' => $type,
@@ -1680,7 +1880,8 @@ class YetiForceUpdate
 		$log->debug(__CLASS__ . '::' . __METHOD__ . ' ()| Start');
 		$db = PearDatabase::getInstance();
 		foreach ($fields as $tableName => $columnsName) {
-			if (empty($columnsName) || !Vtiger_Utils::CheckTable($tableName)) {
+			$className = $this->getClassName(['Vtiger_Utils', 'vtlib\Utils']);
+			if (empty($columnsName) || ($className && !$className::CheckTable($tableName))) {
 				continue;
 			}
 			foreach ($columnsName as $columnName) {
