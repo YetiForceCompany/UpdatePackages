@@ -333,6 +333,9 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/performance.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CRON_MAX_NUMERS_RECORD_LABELS_UPDATER', 'addingType' => 'before', 'value' => "	// In how many records should the label be updated in cron
+	'CRON_MAX_NUMERS_RECORD_LABELS_UPDATER' => 1000,
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'LOAD_CUSTOM_FILES', 'addingType' => 'before', 'value' => "	// Parameter that allows to disable file overwriting. After enabling it the system will additionally check whether the file exists in the custom directory.
 	// Ex. custom/modules/Assets/Assets.php 
 	'LOAD_CUSTOM_FILES' => false,
@@ -797,6 +800,7 @@ class YetiForceUpdate
 		}
 		$this->setAlterTables($this->getAlterTables(7));
 		$this->reconstructedModentityNum();
+		$db->delete('vtiger_datashare_relatedmodules', 'relatedto_tabid NOT IN (SELECT tabid FROM vtiger_tab)');
 	}
 
 	public function reconstructedModentityNum()
