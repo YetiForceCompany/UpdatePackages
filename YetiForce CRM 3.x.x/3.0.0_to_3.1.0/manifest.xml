@@ -3,7 +3,7 @@
 	<name>Update package</name>
 	<label>Update package</label>
 	<type>update</type>
-	<version>1</version>
+	<version>2</version>
 	<from_version>3.0.0</from_version>
 	<to_version>3.1.0</to_version>
 	<dependencies>
