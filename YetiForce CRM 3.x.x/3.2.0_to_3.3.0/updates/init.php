@@ -170,6 +170,8 @@ class YetiForceUpdate
 			['name' => 'config/config.inc.php', 'conditions' => [
 					['type' => 'remove', 'search' => 'disable send files using KCFinder'],
 					['type' => 'remove', 'search' => '$upload_disabled'],
+					['type' => 'remove', 'search' => 'TODO: set db_hostname dependending on db_type'],
+					['type' => 'remove', 'search' => 'TODO: test if port is empty'],
 				]
 			],
 			['name' => 'config/debug.php', 'conditions' => [
@@ -271,6 +273,7 @@ class YetiForceUpdate
 						$emptyLine = false;
 						continue;
 					}
+					$emptyLine = false;
 					foreach ($conditions as $index => $condition) {
 						if (empty($condition)) {
 							continue;
@@ -391,6 +394,12 @@ class YetiForceUpdate
 		$db->delete('vtiger_ws_operation', 'handler_path = ?', ['modules/Mobile/api/wsapi.php']);
 		$db->delete('vtiger_tab', 'name = ?', ['Mobile']);
 		$db->update('vtiger_ossmailscanner_config', ['parameter' => 'changeTicketStatus', 'value' => 'noAction'], 'parameter = ?', [ 'change_ticket_status']);
+		$pickValues = ['PLL_PLANNED', 'PLL_WAITING_FOR_RENEWAL', 'PLL_RENEWED_VERIFICATION', 'PLL_NOT_RENEWED_VERIFICATION', '', 'PLL_RENEWED', 'PLL_NOT_RENEWED', 'PLL_NOT_APPLICABLE', 'PLL_NOT_APPLICABLE_VERIFICATION'];
+		$db->update('vtiger_assets_renew', ['presence' => 0], 'assets_renew IN (' . $db->generateQuestionMarks($pickValues) . ')', $pickValues);
+		$db->update('vtiger_osssoldservices_renew', ['presence' => 0], 'osssoldservices_renew IN (' . $db->generateQuestionMarks($pickValues) . ')', $pickValues);
+		$modules = [\vtlib\Functions::getModuleId('HelpDesk'), \vtlib\Functions::getModuleId('Assets'), \vtlib\Functions::getModuleId('KnowledgeBase')];
+		$db->update('vtiger_trees_templates', ['access' => 0], '`name` = ? AND  module IN (' . $db->generateQuestionMarks($modules) . ')', ['Category', $modules]);
+		$db->delete('vtiger_tab_info', 'tabid NOT IN (SELECT tabid FROM vtiger_tab)');
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
@@ -659,6 +668,12 @@ class YetiForceUpdate
 					['type' => 'remove', 'name' => 'vtiger_ossemployeesbookmails'],
 					['type' => 'remove', 'name' => 'vtiger_vendorbookmails'],
 					['type' => 'remove', 'name' => 'vtiger_mobile_alerts'],
+					['type' => 'add', 'name' => 'u_yf_openstreetmap_cache', 'sql' => '`u_yf_openstreetmap_cache` (
+						`user_id` int(19) unsigned NOT NULL,
+						`module_name` varchar(50) NOT NULL,
+						`crmids` int(19) unsigned NOT NULL,
+						KEY `u_yf_openstreetmap_cache_user_id_module_name_idx` (`user_id`,`module_name`)
+					  )'],
 				];
 				break;
 			default:
@@ -823,10 +838,10 @@ class YetiForceUpdate
 			case 1:
 				$fields = [
 					'OSSMailView' => [
-						['name' => 'assets_renew', 'uitype' => '15', 'add_values' => ['Internal'], 'remove_values' => ['Spam', 'Trash']]
+						['name' => 'ossmailview_sendtype', 'uitype' => '15', 'add_values' => ['Internal'], 'remove_values' => ['Spam', 'Trash']]
 					],
 					'Assets' => [
-						['name' => 'ossmailview_sendtype', 'uitype' => '15', 'add_values' => ['PLL_NOT_APPLICABLE_VERIFICATION', 'PLL_RENEWED_VERIFICATION', 'PLL_NOT_RENEWED_VERIFICATION'], 'remove_values' => ['PLL_WAITING_FOR_VERIFICATION', 'PLL_WAITING_FOR_ACCEPTANCE']]
+						['name' => 'assets_renew', 'uitype' => '15', 'add_values' => ['PLL_NOT_APPLICABLE_VERIFICATION', 'PLL_RENEWED_VERIFICATION', 'PLL_NOT_RENEWED_VERIFICATION'], 'remove_values' => ['PLL_WAITING_FOR_VERIFICATION', 'PLL_WAITING_FOR_ACCEPTANCE']]
 					],
 					'OSSSoldServices' => [
 						['name' => 'osssoldservices_renew', 'uitype' => '15', 'add_values' => ['PLL_NOT_APPLICABLE_VERIFICATION', 'PLL_RENEWED_VERIFICATION', 'PLL_NOT_RENEWED_VERIFICATION'], 'remove_values' => ['PLL_WAITING_FOR_VERIFICATION', 'PLL_WAITING_FOR_ACCEPTANCE']]

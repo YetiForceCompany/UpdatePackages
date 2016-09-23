@@ -462,9 +462,6 @@ class CRMEntity
 			$params = array($tabid, $table_name);
 		}
 
-		// Attempt to re-use the quer-result to avoid reading for every save operation
-		// TODO Need careful analysis on impact ... MEMORY requirement might be more
-
 		$cachekey = "{$insertion_mode}-" . implode(',', $params);
 		$insertField = Vtiger_Cache::get('getInsertField', $cachekey);
 		if ($insertField === false) {
@@ -1398,9 +1395,6 @@ class CRMEntity
 		$returninfo = [];
 
 		if ($fieldinfo && $adb->num_rows($fieldinfo)) {
-			// TODO: We assume the following for module sequencing field
-			// 1. There will be only field per module
-			// 2. This field is linked to module base table column
 			$fld_table = $adb->query_result($fieldinfo, 0, 'tablename');
 			$fld_column = $adb->query_result($fieldinfo, 0, 'columnname');
 
@@ -1931,24 +1925,33 @@ class CRMEntity
 		$moduleindex = $primary->table_index;
 		$modulecftable = $primary->customFieldTable[0];
 		$modulecfindex = $primary->customFieldTable[1];
+		$joinTables = [$moduletable, 'vtiger_crmentity'];
 
 		if (isset($modulecftable) && $queryPlanner->requireTable($modulecftable)) {
+			$joinTables[] = $modulecftable;
 			$cfquery = "inner join $modulecftable as $modulecftable on $modulecftable.$modulecfindex=$moduletable.$moduleindex";
 		} else {
 			$cfquery = '';
+		}
+		foreach ($primary->tab_name_index as $table => $index) {
+			if (in_array($table, $joinTables) || !$queryPlanner->requireTable($table)) {
+				continue;
+			}
+			$joinTables[] = $table;
+			$cfquery .= ' INNER JOIN ' . $table . ' ON ' . $table . '.' . $index . ' = ' . $primary->table_name . '.' . $primary->table_index;
 		}
 
 		$relquery = '';
 		$matrix = $queryPlanner->newDependencyMatrix();
 
-		$fields_query = $adb->pquery("SELECT vtiger_field.fieldname,vtiger_field.tablename,vtiger_field.fieldid from vtiger_field INNER JOIN vtiger_tab on vtiger_tab.name = ? WHERE vtiger_tab.tabid=vtiger_field.tabid && vtiger_field.uitype IN (10) and vtiger_field.presence in (0,2)", array($module));
+		$fields_query = $adb->pquery("SELECT vtiger_field.fieldname,vtiger_field.tablename,vtiger_field.fieldid from vtiger_field INNER JOIN vtiger_tab on vtiger_tab.name = ? WHERE vtiger_tab.tabid=vtiger_field.tabid && vtiger_field.uitype IN (10) and vtiger_field.presence in (0,2)", [$module]);
 
 		if ($adb->num_rows($fields_query) > 0) {
 			for ($i = 0; $i < $adb->num_rows($fields_query); $i++) {
 				$field_name = $adb->query_result($fields_query, $i, 'fieldname');
 				$field_id = $adb->query_result($fields_query, $i, 'fieldid');
 				$tab_name = $adb->query_result($fields_query, $i, 'tablename');
-				$ui10_modules_query = $adb->pquery("SELECT relmodule FROM vtiger_fieldmodulerel WHERE fieldid=?", array($field_id));
+				$ui10_modules_query = $adb->pquery("SELECT relmodule FROM vtiger_fieldmodulerel WHERE fieldid=?", [$field_id]);
 
 				if ($adb->num_rows($ui10_modules_query) > 0) {
 
@@ -2010,7 +2013,6 @@ class CRMEntity
 			$query .= " left join vtiger_users as vtiger_createdby" . $module . " on vtiger_createdby" . $module . ".id = vtiger_crmentity.smcreatorid";
 		}
 
-		// TODO Optimize the tables below based on requirement
 		$query .= "	left join vtiger_groups on vtiger_groups.groupid = vtiger_crmentity.smownerid";
 		$query .= " left join vtiger_users on vtiger_users.id = vtiger_crmentity.smownerid";
 
