@@ -48,7 +48,7 @@ class YetiForceUpdate
 
 	public function postupdate()
 	{
-		
+		return true;
 	}
 
 	private function getConfigurations()
