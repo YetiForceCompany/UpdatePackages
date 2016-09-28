@@ -400,6 +400,7 @@ class YetiForceUpdate
 		$modules = [\vtlib\Functions::getModuleId('HelpDesk'), \vtlib\Functions::getModuleId('Assets'), \vtlib\Functions::getModuleId('KnowledgeBase')];
 		$db->update('vtiger_trees_templates', ['access' => 0], '`name` = ? AND  module IN (' . $db->generateQuestionMarks($modules) . ')', ['Category', $modules]);
 		$db->delete('vtiger_tab_info', 'tabid NOT IN (SELECT tabid FROM vtiger_tab)');
+		$db->update('vtiger_users', ['rowheight' => 'medium']);
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
 	}
 
