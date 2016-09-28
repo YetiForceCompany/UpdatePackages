@@ -19,7 +19,15 @@ class YetiForceUpdate
 	public $modulenode;
 	public $return = true;
 	public $filesToDelete = [
-		'include\database\Postgres8.php',
+		'include/database/Postgres8.php',
+		'include/Debuger.php',
+		'languages/api/yetiportal.php',
+		'include/Debuger.php',
+		'languages/api/yetiportal.php',
+		'libraries/Psr',
+		'libraries/symfony',
+		'vendor/php-debugbar/src/DebugBar/StandardDebugBar.php',
+		'.travis.yml',
 	];
 
 	public function YetiForceUpdate($modulenode)
@@ -46,9 +54,8 @@ class YetiForceUpdate
 	private function getConfigurations()
 	{
 		return [
-			['name' => 'config/config.inc.php', 'conditions' => [
-					['type' => 'remove', 'search' => 'disable send files using KCFinder'],
-					['type' => 'remove', 'search' => '$upload_disabled'],
+			['name' => 'config/csrf_config.php', 'conditions' => [
+					['type' => 'update', 'search' => '$_SERVER[\'HTTP_X_PJAX\'] == true', 'replace' => ['$_SERVER[\'HTTP_X_PJAX\'] == true', '$_SERVER[\'HTTP_X_PJAX\'] === true']],
 				]
 			]
 		];
