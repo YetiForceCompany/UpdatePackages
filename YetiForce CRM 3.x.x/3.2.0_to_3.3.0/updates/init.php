@@ -401,7 +401,68 @@ class YetiForceUpdate
 		$db->update('vtiger_trees_templates', ['access' => 0], '`name` = ? AND  module IN (' . $db->generateQuestionMarks($modules) . ')', ['Category', $modules]);
 		$db->delete('vtiger_tab_info', 'tabid NOT IN (SELECT tabid FROM vtiger_tab)');
 		$db->update('vtiger_users', ['rowheight' => 'medium']);
+		$this->updateFilter();
 		$log->debug('Exiting ' . __CLASS__ . '::' . __METHOD__ . ' method ...');
+	}
+
+	private function updateFilter()
+	{
+		$db = PearDatabase::getInstance();
+		$result = $db->query('SELECT cvid, columnindex, value FROM vtiger_cvadvfilter WHERE columnname LIKE "%vtiger_crmentity:smownerid:assigned_user_id%" AND comparator = "e" ');
+		if ($result->rowCount()) {
+			$check = true;
+			while ($row = $db->getRow($result)) {
+				$usersFilter[$row['cvid'] . '-' . $row['columnindex']] = $row['value'];
+				$users[] = $row['value'];
+				if ($check && $row['value']) {
+					$checkVal = explode(',', $row['value']);
+					if (is_numeric($checkVal[0])) {
+						return false;
+					}
+					$check = false;
+				}
+			}
+			$usersArr = explode(',', implode(',', $users));
+			$valueSql = ' IN (' . $db->generateQuestionMarks($usersArr) . ') ';
+			$entityFields = \includes\Modules::getEntityInfo('Users');
+			if (count($entityFields['fieldnameArr']) > 1) {
+				$columns = [];
+				foreach ($entityFields['fieldnameArr'] as &$fieldname) {
+					$columns[$fieldname] = $entityFields['tablename'] . '.' . $fieldname;
+				}
+				$concatSql = \vtlib\Deprecated::getSqlForNameInDisplayFormat($columns, 'Users');
+				$fieldSql = "SELECT id,(trim($concatSql)) as display_value  FROM vtiger_users WHERE  (trim($concatSql) $valueSql )";
+				$fieldSqlG = "SELECT groupid, groupname as display_value FROM vtiger_groups WHERE  vtiger_groups.groupname $valueSql";
+			} else {
+				$columnSql = $entityFields['tablename'] . '.' . $entityFields['fieldname'];
+				$fieldSql = "SELECT id,$columnSql as display_value  FROM vtiger_users WHERE  $columnSql $valueSql )";
+				$fieldSqlG = "SELECT groupid, groupname as display_value FROM vtiger_groups WHERE vtiger_groups.groupname $valueSql";
+			}
+			$result = $db->pquery($fieldSql, $usersArr);
+			$resultG = $db->pquery($fieldSqlG, $usersArr);
+			$data = [];
+			while ($row = $db->getRow($result)) {
+				$data[$row['id']] = $row['display_value'];
+			}
+			while ($row = $db->getRow($resultG)) {
+				$data[$row['groupid']] = $row['display_value'];
+			}
+			foreach ($usersFilter as $filterId => $userName) {
+				$userNameArr = explode(',', $userName);
+				$replace = [];
+				foreach ($userNameArr as $name) {
+					if (in_array($name, $data)) {
+						$replace[] = array_search($name, $data);
+					}
+				}
+				$filterIdArr = explode('-', $filterId);
+				$cvid = $filterIdArr[0];
+				$columnIndex = $filterIdArr[1];
+				if ($replace) {
+					$db->update('vtiger_cvadvfilter', ['value' => implode(',', $replace)], ' cvid = ? AND columnname LIKE "%vtiger_crmentity:smownerid:assigned_user_id%"  AND comparator = "e" AND columnindex = ?', [$cvid, $columnIndex]);
+				}
+			}
+		}
 	}
 
 	private function getTrees($index)
