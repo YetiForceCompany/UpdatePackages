@@ -1087,15 +1087,12 @@ class YetiForceUpdate
 				if ($id = $db->getSingleValue($result)) {
 					$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($id);
 					try {
-						$fieldInstance->delete();
+						\vtlib\Profile::deleteForField($fieldInstance);
+						$db->delete('vtiger_field', 'fieldid = ?', [$id]);
 						$db->delete('vtiger_fieldmodulerel', 'fieldid = ?', [$id]);
 					} catch (Exception $e) {
 						$log->debug("ERROR " . __CLASS__ . "::" . __METHOD__ . ": code " . $e->getCode() . " message " . $e->getMessage());
 					}
-				}
-				$result = $db->query("SHOW COLUMNS FROM `$tableName` LIKE '$columnName';");
-				if ($result->rowCount() == 1) {
-					$db->query("ALTER TABLE `$tableName` DROP COLUMN `$columnName` ;");
 				}
 			}
 		}
