@@ -195,6 +195,7 @@ class YetiForceUpdate
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'SHOW_HIERARCHY_IN_MODAL', 'addingType' => 'before', 'value' => "	// false, [] - inherit fields, [ label => column name, .. ]
 	'SHOW_HIERARCHY_IN_MODAL' => [],
 "],
+					['type' => 'update', 'search' => 'SHOW_RELATION_IN_MODAL', 'replace' => ["'relatedModule' => 'FInvoice'", "'relatedModule' => ['FInvoice', 'ModComments', 'Calendar', 'Documents']"]],
 				]
 			],
 			['name' => 'config/modules/OSSSoldServices.php', 'conditions' => [
@@ -247,6 +248,7 @@ class YetiForceUpdate
 "],
 				]
 			],
+			['name' => 'config/modules/API.php', 'conditions' => []],
 		];
 	}
 
