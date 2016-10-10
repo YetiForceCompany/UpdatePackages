@@ -1,0 +1,11 @@
+<?xml version='1.0'?>
+<module>
+	<name>OpenStreetMap</name>
+	<label>OpenStreetMap</label>
+	<type>extension</type>
+	<dependencies>
+		<vtiger_version>3.2.999</vtiger_version>
+	</dependencies>
+	<tables>
+	</tables>
+</module>

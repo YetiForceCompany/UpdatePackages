@@ -1,0 +1,7 @@
+Required PHP version needs to be equal or greater than 5.6.
+Before launching the update package we recommend disabling all cron actions and disabling the 'Preview notifications' action in all profiles in the 'My home page' module.
+During the CRM update process all notifications will be removed, due to structural changes of the mechanism.
+
+After updating the CRM, we highly recommend updating some of the libraries (Software configuration > System warnings).
+In case you update the Roundcube library you will have to configure it once again.
+
