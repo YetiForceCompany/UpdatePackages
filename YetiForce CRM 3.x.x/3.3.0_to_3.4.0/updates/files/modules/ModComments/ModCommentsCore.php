@@ -14,7 +14,6 @@ require_once('include/Tracker.php');
 class ModCommentsCore extends CRMEntity
 {
 
-	public $db, $log; // Used in class functions of CRMEntity
 	public $table_name = 'vtiger_modcomments';
 	public $table_index = 'modcommentsid';
 
@@ -84,11 +83,8 @@ class ModCommentsCore extends CRMEntity
 
 	public function __construct()
 	{
-		global $currentModule;
-		$log = LoggerManager::getInstance();
 		$this->column_fields = getColumnFields('ModComments');
 		$this->db = PearDatabase::getInstance();
-		$this->log = $log;
 	}
 
 	public function getSortOrder()
@@ -186,13 +182,11 @@ class ModCommentsCore extends CRMEntity
 				$joinedTables[] = $other->table_name;
 			}
 		}
-		$current_user = vglobal('current_user');
 		$query .= "	WHERE vtiger_crmentity.deleted = 0 ";
 		if ($usewhere) {
 			$query .= $usewhere;
 		}
-		$instance = CRMEntity::getInstance($module);
-		$query .= $instance->getUserAccessConditionsQuerySR($module, $current_user);
+		$query .= \App\PrivilegeQuery::getAccessConditions($module);
 		$query .= $this->getListViewSecurityParameter($module);
 		return $query;
 	}
@@ -402,17 +396,17 @@ class ModCommentsCore extends CRMEntity
 	public function vtlib_handler($modulename, $event_type)
 	{
 		if ($event_type == 'module.postinstall') {
-
+			
 		} else if ($event_type == 'module.disabled') {
-
+			
 		} else if ($event_type == 'module.enabled') {
-
+			
 		} else if ($event_type == 'module.preuninstall') {
-
+			
 		} else if ($event_type == 'module.preupdate') {
-
+			
 		} else if ($event_type == 'module.postupdate') {
-
+			
 		}
 	}
 	/**

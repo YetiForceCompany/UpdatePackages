@@ -32,8 +32,8 @@ require_once('include/utils/UserInfoUtil.php');
  */
 function getListQuery($module, $where = '')
 {
-	$log = vglobal('log');
-	$log->debug("Entering getListQuery(" . $module . "," . $where . ") method ...");
+	
+	\App\Log::trace("Entering getListQuery(" . $module . "," . $where . ") method ...");
 
 	$current_user = vglobal('current_user');
 	require('user_privileges/user_privileges_' . $current_user->id . '.php');
@@ -197,11 +197,7 @@ function getListQuery($module, $where = '')
 				$query.=' LEFT OUTER JOIN vtiger_recurringevents ON vtiger_recurringevents.activityid=vtiger_activity.activityid';
 			}
 			//end
-			$instance = CRMEntity::getInstance($module);
-			$query.=" WHERE vtiger_crmentity.deleted = 0 && activitytype != 'Emails' ";
-			$securityParameter = $instance->getUserAccessConditionsQuerySR($module, $current_user);
-			if ($securityParameter != '')
-				$query.= $securityParameter;
+			$query .= \App\PrivilegeQuery::getAccessConditions($module, $current_user->id);
 			$query.= ' ' . $where;
 			break;
 		Case "Emails":
@@ -319,7 +315,7 @@ function getListQuery($module, $where = '')
 	if ($module != 'Users') {
 		$query = listQueryNonAdminChange($query, $module);
 	}
-	$log->debug("Exiting getListQuery method ...");
+	\App\Log::trace("Exiting getListQuery method ...");
 	return $query;
 }
 /* * This function stores the variables in session sent in list view url string.
@@ -380,9 +376,9 @@ function setSessionVar($lv_array, $noofrows, $max_ent, $module = '', $related = 
 
 function getRelatedTableHeaderNavigation($navigation_array, $url_qry, $module, $related_module, $recordid)
 {
-	$log = LoggerManager::getInstance();
+	
 	$adb = PearDatabase::getInstance();
-	$log->debug("Entering getTableHeaderNavigation(" . $navigation_array . "," . $url_qry . "," . $module . "," . $action_val . "," . $viewid . ") method ...");
+	\App\Log::trace("Entering getTableHeaderNavigation(" . $navigation_array . "," . $url_qry . "," . $module . "," . $action_val . "," . $viewid . ") method ...");
 	global $theme;
 	$relatedTabId = \includes\Modules::getModuleId($related_module);
 	$tabid = \includes\Modules::getModuleId($module);
@@ -438,7 +434,7 @@ function getRelatedTableHeaderNavigation($navigation_array, $url_qry, $module, $
 		$output .= '<img src="' . vtiger_imageurl('end_disabled.gif', $theme) . '" border="0" align="absmiddle">&nbsp;';
 	}
 	$output .= '</td>';
-	$log->debug("Exiting getTableHeaderNavigation method ...");
+	\App\Log::trace("Exiting getTableHeaderNavigation method ...");
 	if ($navigation_array['first'] == '')
 		return;
 	else
@@ -449,8 +445,8 @@ function getRelatedTableHeaderNavigation($navigation_array, $url_qry, $module, $
 function getEntityId($module, $entityName)
 {
 	$adb = PearDatabase::getInstance();
-	$log = vglobal('log');
-	$log->info("in getEntityId " . $entityName);
+	
+	\App\Log::trace("in getEntityId " . $entityName);
 
 	$query = "select fieldname,tablename,entityidfield from vtiger_entityname where modulename = ?";
 	$result = $adb->pquery($query, array($module));
@@ -497,26 +493,6 @@ function popup_decode_html($str)
 	$slashes_str = \vtlib\Functions::fromHTML_Popup($str);
 	$slashes_str = htmlspecialchars($slashes_str, ENT_QUOTES, $defaultCharset);
 	return decode_html(\vtlib\Functions::br2nl($slashes_str));
-}
-
-//function added to check the text length in the listview.
-function textlength_check($field_val)
-{
-	$defaultCharset = AppConfig::main('default_charset');
-	$listview_max_textlength = AppConfig::main('listview_max_textlength');
-	if ($listview_max_textlength && $listview_max_textlength > 0) {
-		$temp_val = preg_replace("/(<\/?)(\w+)([^>]*>)/i", '', $field_val);
-		if (function_exists('mb_strlen')) {
-			if (mb_strlen(html_entity_decode($temp_val)) > $listview_max_textlength) {
-				$temp_val = mb_substr(preg_replace("/(<\/?)(\w+)([^>]*>)/i", '', html_entity_decode($temp_val)), 0, $listview_max_textlength, $defaultCharset) . '...';
-			}
-		} elseif (strlen(html_entity_decode($field_val)) > $listview_max_textlength) {
-			$temp_val = substr(preg_replace("/(<\/?)(\w+)([^>]*>)/i", '', html_entity_decode($temp_val)), 0, $listview_max_textlength) . '...';
-		}
-	} else {
-		$temp_val = $field_val;
-	}
-	return $temp_val;
 }
 
 /**
@@ -652,7 +628,8 @@ function getUsersPasswordInfo()
 	$sql = "SELECT user_name, user_hash FROM vtiger_users WHERE deleted=?";
 	$result = $adb->pquery($sql, array(0));
 	$usersList = [];
-	for ($i = 0; $i < $adb->num_rows($result); $i++) {
+	$countResult = $adb->num_rows($result);
+	for ($i = 0; $i < $countResult; $i++) {
 		$userList['name'] = $adb->query_result($result, $i, "user_name");
 		$userList['hash'] = $adb->query_result($result, $i, "user_hash");
 		$usersList[] = $userList;

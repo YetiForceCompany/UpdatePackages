@@ -20,7 +20,6 @@ AppConfig::iniSet('error_log', ROOT_DIRECTORY . '/cache/logs/yetiportal.log');
 $current_language = vglobal('current_language');
 if (!isset($current_language))
 	$current_language = vglobal('default_language');
-$log = LoggerManager::getInstance('Portal');
 
 $userid = getPortalUserid();
 $user = new Users();
@@ -259,7 +258,7 @@ class Vtiger_Soap_YetiPortal
 function get_ticket_comments($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$adb = PearDatabase::getInstance();
 	$adb->println("Entering customer portal function get_ticket_comments");
 	$adb->println($input_array);
@@ -323,7 +322,7 @@ function _getTicketModComments($ticketId)
 function get_combo_values($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$adb->println("Entering customer portal function get_combo_values");
 	$adb->println($input_array);
 
@@ -416,7 +415,7 @@ function get_combo_values($input_array)
 function get_KBase_details($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$adb->println("Entering customer portal function get_KBase_details");
 	$adb->println($input_array);
 
@@ -554,8 +553,8 @@ function get_tickets_list($input_array)
 	require_once('include/utils/UserInfoUtil.php');
 
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_ticket_list");
+
+	\App\Log::trace("Entering customer portal function get_ticket_list");
 
 	$user = new Users();
 	$userid = getPortalUserid();
@@ -662,7 +661,7 @@ function get_tickets_list($input_array)
 			$i++;
 		}
 	}
-	$log->debug("Exiting customer portal function get_ticket_list");
+	\App\Log::trace("Exiting customer portal function get_ticket_list");
 	return $output;
 }
 
@@ -684,7 +683,7 @@ function get_tickets_list($input_array)
 function create_ticket($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$adb->println("Inside customer portal function create_ticket");
 	$adb->println($input_array);
 
@@ -758,7 +757,6 @@ function create_ticket($input_array)
  */
 function update_ticket_comment($input_array)
 {
-	global $mod_strings;
 	$adb = PearDatabase::getInstance();
 	$adb->println("Inside customer portal function update_ticket_comment");
 	$adb->println($input_array);
@@ -796,9 +794,8 @@ function update_ticket_comment($input_array)
  */
 function close_current_ticket($input_array)
 {
-	global $mod_strings;
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 
 	$current_user = vglobal('current_user');
 	require_once('modules/HelpDesk/HelpDesk.php');
@@ -839,12 +836,9 @@ function close_current_ticket($input_array)
 function authenticate_user($username, $password, $version, $portalLang, $login = 'true')
 {
 	$adb = vglobal('adb');
-	$log = LoggerManager::getInstance();
 	$currentLanguage = vglobal('current_language');
-
 	$adb->println("Inside customer portal function authenticate_user($username, $password, $login).");
-	include('config/version.php');
-	if (version_compare($version, $YetiForce_current_version, '>=') == 0) {
+	if (version_compare($version, \App\Version::get(), '>=') == 0) {
 		$list[0] = "NOT COMPATIBLE";
 		return $list;
 	}
@@ -900,8 +894,8 @@ function authenticate_user($username, $password, $version, $portalLang, $login =
 function change_password($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function change_password");
+
+	\App\Log::trace("Entering customer portal function change_password");
 	$adb->println($input_array);
 
 	$id = (int) $input_array['id'];
@@ -922,7 +916,7 @@ function change_password($input_array)
 		$result = $adb->pquery($sql, array($newPassword, $id, $userName));
 		$list = array('LBL_PASSWORD_CHANGED');
 	}
-	$log->debug("Exiting customer portal function change_password");
+	\App\Log::trace("Exiting customer portal function change_password");
 	return $list;
 }
 
@@ -936,8 +930,8 @@ function change_password($input_array)
 function update_login_details($id, $sessionid, $flag)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function update_login_details");
+
+	\App\Log::trace("Entering customer portal function update_login_details");
 	$adb->println("INPUT ARRAY for the function update_login_details");
 
 	$current_time = $adb->formatDate(date('Y-m-d H:i:s'), true);
@@ -949,7 +943,7 @@ function update_login_details($id, $sessionid, $flag)
 		$sql = "update vtiger_portalinfo set logout_time=?, last_login_time=login_time where id=?";
 		$result = $adb->pquery($sql, array($current_time, $id));
 	}
-	$log->debug("Exiting customer portal function update_login_details");
+	\App\Log::trace("Exiting customer portal function update_login_details");
 }
 
 /** function used to send mail to the customer when he forgot the password and want to retrieve the password
@@ -959,9 +953,9 @@ function update_login_details($id, $sessionid, $flag)
 function send_mail_for_password($mailid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	vimport('modules.Settings.CustomerPortal.helpers.CustomerPortalPassword');
-	$log->debug('Entering customer portal function send_mail_for_password');
+	\App\Log::trace('Entering customer portal function send_mail_for_password');
 	$adb->println("Inside the function send_mail_for_password($mailid).");
 
 	$sql = 'select * from vtiger_portalinfo where user_name = ?;';
@@ -1007,7 +1001,7 @@ function send_mail_for_password($mailid)
 	}
 	$ret_msg = array('succes' => $succes, 'masage' => $masage);
 	$adb->println("Exit from send_mail_for_password. $ret_msg");
-	$log->debug('Exiting customer portal function send_mail_for_password');
+	\App\Log::trace('Exiting customer portal function send_mail_for_password');
 	return $ret_msg;
 }
 
@@ -1021,8 +1015,8 @@ function send_mail_for_password($mailid)
 function get_ticket_creator($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_ticket_creator");
+
+	\App\Log::trace("Entering customer portal function get_ticket_creator");
 	$adb->println("INPUT ARRAY for the function get_ticket_creator");
 	$adb->println($input_array);
 
@@ -1035,7 +1029,7 @@ function get_ticket_creator($input_array)
 
 	$res = $adb->pquery("select smcreatorid from vtiger_crmentity where crmid=?", array($ticketid));
 	$creator = $adb->query_result($res, 0, 'smcreatorid');
-	$log->debug("Exiting customer portal function get_ticket_creator");
+	\App\Log::trace("Exiting customer portal function get_ticket_creator");
 	return $creator;
 }
 
@@ -1049,8 +1043,8 @@ function get_ticket_creator($input_array)
 function get_picklists($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_picklists");
+
+	\App\Log::trace("Entering customer portal function get_picklists");
 	$adb->println("INPUT ARRAY for the function get_picklists");
 	$adb->println($input_array);
 
@@ -1085,7 +1079,7 @@ function get_picklists($input_array)
 	}
 
 	$adb->println($picklist_array);
-	$log->debug("Exiting customer portal function get_picklists($picklist_name)");
+	\App\Log::trace("Exiting customer portal function get_picklists($picklist_name)");
 	return $picklist_array;
 }
 
@@ -1099,8 +1093,8 @@ function get_picklists($input_array)
 function get_ticket_attachments($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_ticket_attachments");
+
+	\App\Log::trace("Entering customer portal function get_ticket_attachments");
 	$adb->println("INPUT ARRAY for the function get_ticket_attachments");
 	$adb->println($input_array);
 
@@ -1144,7 +1138,7 @@ function get_ticket_attachments($input_array)
 		$output[$i]['filesize'] = $filesize;
 		$output[$i]['filelocationtype'] = $filelocationtype;
 	}
-	$log->debug("Exiting customer portal function get_ticket_attachments");
+	\App\Log::trace("Exiting customer portal function get_ticket_attachments");
 	return array($output);
 }
 
@@ -1159,8 +1153,8 @@ function get_ticket_attachments($input_array)
 function get_filecontent($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_filecontent");
+
+	\App\Log::trace("Entering customer portal function get_filecontent");
 	$adb->println("INPUT ARRAY for the function get_filecontent");
 	$adb->println($input_array);
 	$id = $input_array['id'];
@@ -1182,7 +1176,7 @@ function get_filecontent($input_array)
 		$filenamewithpath = $adb->query_result($res, 0, 'path') . $fileid . "_" . $filename;
 		$filecontents[$fileid] = base64_encode(file_get_contents($filenamewithpath));
 	}
-	$log->debug("Exiting customer portal function get_filecontent ");
+	\App\Log::trace("Exiting customer portal function get_filecontent ");
 	return $filecontents;
 }
 
@@ -1200,8 +1194,8 @@ function get_filecontent($input_array)
 function add_ticket_attachment($input_array)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function add_ticket_attachment");
+
+	\App\Log::trace("Entering customer portal function add_ticket_attachment");
 	$adb->println("INPUT ARRAY for the function add_ticket_attachment");
 	$adb->println($input_array);
 	$id = $input_array['id'];
@@ -1265,7 +1259,7 @@ function add_ticket_attachment($input_array)
 
 	$tic_doc = 'insert into vtiger_senotesrel values(?,?)';
 	$res = $adb->pquery($tic_doc, array($ticketid, $focus->id));
-	$log->debug("Exiting customer portal function add_ticket_attachment");
+	\App\Log::trace("Exiting customer portal function add_ticket_attachment");
 }
 
 /** 	Function used to validate the session
@@ -1326,15 +1320,15 @@ function getServerSessionId($id)
 function unsetServerSessionId($id)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function unsetServerSessionId");
+
+	\App\Log::trace("Entering customer portal function unsetServerSessionId");
 	$adb->println("Inside the function unsetServerSessionId");
 
 	$id = (int) $id;
 	Vtiger_Soap_YetiPortal::updateSessionId($id, false);
 
 	$adb->pquery("delete from vtiger_soapservice where type='customer' and id=?", array($id));
-	$log->debug("Exiting customer portal function unsetServerSessionId");
+	\App\Log::trace("Exiting customer portal function unsetServerSessionId");
 	return;
 }
 
@@ -1363,11 +1357,11 @@ function getServerSession($id)
 function get_account_name($accountid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_account_name");
+
+	\App\Log::trace("Entering customer portal function get_account_name");
 	$res = $adb->pquery("select accountname from vtiger_account where accountid=?", array($accountid));
 	$accountname = $adb->query_result($res, 0, 'accountname');
-	$log->debug("Exiting customer portal function get_account_name");
+	\App\Log::trace("Exiting customer portal function get_account_name");
 	return $accountname;
 }
 
@@ -1378,8 +1372,8 @@ function get_account_name($accountid)
 function get_contact_name($contactid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_contact_name");
+
+	\App\Log::trace("Entering customer portal function get_contact_name");
 	$contact_name = '';
 	if ($contactid != '') {
 		$sql = "select firstname,lastname from vtiger_contactdetails where contactid=?";
@@ -1389,7 +1383,7 @@ function get_contact_name($contactid)
 		$contact_name = $firstname . " " . $lastname;
 		return $contact_name;
 	}
-	$log->debug("Exiting customer portal function get_contact_name");
+	\App\Log::trace("Exiting customer portal function get_contact_name");
 	return false;
 }
 
@@ -1400,11 +1394,11 @@ function get_contact_name($contactid)
 function get_check_account_id($id)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_check_account_id");
+
+	\App\Log::trace("Entering customer portal function get_check_account_id");
 	$res = $adb->pquery("select parentid from vtiger_contactdetails where contactid=?", array($id));
 	$accountid = $adb->query_result($res, 0, 'parentid');
-	$log->debug("Entering customer portal function get_check_account_id");
+	\App\Log::trace("Entering customer portal function get_check_account_id");
 	return $accountid;
 }
 
@@ -1415,11 +1409,11 @@ function get_check_account_id($id)
 function get_vendor_name($vendorid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_vendor_name");
+
+	\App\Log::trace("Entering customer portal function get_vendor_name");
 	$res = $adb->pquery("select vendorname from vtiger_vendor where vendorid=?", array($vendorid));
 	$name = $adb->query_result($res, 0, 'vendorname');
-	$log->debug("Exiting customer portal function get_vendor_name");
+	\App\Log::trace("Exiting customer portal function get_vendor_name");
 	return $name;
 }
 
@@ -1433,8 +1427,8 @@ function get_list_values($id, $module, $sessionid, $only_mine = 'true')
 	require_once('modules/' . $module . '/' . $module . '.php');
 	require_once('include/utils/UserInfoUtil.php');
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_list_values");
+
+	\App\Log::trace("Entering customer portal function get_list_values");
 	$check = checkModuleActive($module);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -1652,7 +1646,7 @@ function get_list_values($id, $module, $sessionid, $only_mine = 'true')
 			$i++;
 		}
 	}
-	$log->debug("Exiting customer portal function get_list_values");
+	\App\Log::trace("Exiting customer portal function get_list_values");
 	return $output;
 }
 
@@ -1663,9 +1657,9 @@ function get_list_values($id, $module, $sessionid, $only_mine = 'true')
 function get_filecontent_detail($id, $folderid, $module, $customerid, $sessionid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$site_URL = AppConfig::main('site_URL');
-	$log->debug("Entering customer portal function get_filecontent_detail ");
+	\App\Log::trace("Entering customer portal function get_filecontent_detail ");
 	$isPermitted = check_permission($customerid, $module, $id);
 	if ($isPermitted === false) {
 		return array("#NOT AUTHORIZED#");
@@ -1711,7 +1705,7 @@ function get_filecontent_detail($id, $folderid, $module, $customerid, $sessionid
 	$output[0]['filetype'] = $filetype;
 	$output[0]['filesize'] = $filesize;
 	$output[0]['filecontents'] = base64_encode(file_get_contents($filenamewithpath));
-	$log->debug("Exiting customer portal function get_filecontent_detail ");
+	\App\Log::trace("Exiting customer portal function get_filecontent_detail ");
 	return $output;
 }
 
@@ -1721,10 +1715,10 @@ function get_filecontent_detail($id, $folderid, $module, $customerid, $sessionid
 function updateCount($id)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function updateCount");
+
+	\App\Log::trace("Entering customer portal function updateCount");
 	$result = updateDownloadCount($id);
-	$log->debug("Entering customer portal function updateCount");
+	\App\Log::trace("Entering customer portal function updateCount");
 	return $result;
 }
 
@@ -1734,11 +1728,11 @@ function updateCount($id)
 function updateDownloadCount($id)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function updateDownloadCount");
+
+	\App\Log::trace("Entering customer portal function updateDownloadCount");
 	$updateDownloadCount = "UPDATE vtiger_notes SET filedownloadcount = filedownloadcount+1 WHERE notesid = ?";
 	$countres = $adb->pquery($updateDownloadCount, array($id));
-	$log->debug("Entering customer portal function updateDownloadCount");
+	\App\Log::trace("Entering customer portal function updateDownloadCount");
 	return true;
 }
 
@@ -1747,7 +1741,7 @@ function get_inventory_products($id, $module, $customerid, $sessionid)
 	require_once('include/utils/UserInfoUtil.php');
 	require_once('include/utils/utils.php');
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	$site_URL = AppConfig::main('site_URL');
 
 	$user = new Users();
@@ -1769,8 +1763,8 @@ function get_product_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 	require_once('modules/Products/Products.php');
 	require_once('include/utils/UserInfoUtil.php');
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_product_list_values ..");
+
+	\App\Log::trace("Entering customer portal function get_product_list_values ..");
 	$check = checkModuleActive($modulename);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -1866,7 +1860,7 @@ function get_product_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 			}
 		}
 	}
-	$log->debug("Exiting function get_product_list_values.....");
+	\App\Log::trace("Exiting function get_product_list_values.....");
 	return $output;
 }
 /* function used to get details of tickets,documents,Products,Contacts,Accounts
@@ -1877,10 +1871,10 @@ function get_product_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 function get_details($id, $module, $customerid, $sessionid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 	require_once('include/utils/utils.php');
 	require_once('include/utils/UserInfoUtil.php');
-	$log->debug("Entering customer portal function get_details ..");
+	\App\Log::trace("Entering customer portal function get_details ..");
 
 	$user = new Users();
 	$userid = getPortalUserid();
@@ -2156,7 +2150,7 @@ function get_details($id, $module, $customerid, $sessionid)
 			}
 		}
 	}
-	$log->debug("Existing customer portal function get_details ..");
+	\App\Log::trace("Existing customer portal function get_details ..");
 	return $output;
 }
 /* Function to check the permission if the customer can see the recorde details
@@ -2168,8 +2162,8 @@ function get_details($id, $module, $customerid, $sessionid)
 function check_permission($customerid, $module, $entityid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function check_permission ..");
+
+	\App\Log::trace("Entering customer portal function check_permission ..");
 	$show_all = show_all($module);
 	$allowed_contacts_and_accounts = [];
 	$check = checkModuleActive($module);
@@ -2346,7 +2340,7 @@ function check_permission($customerid, $module, $entityid)
 			}
 			break;
 	}
-	$log->debug("Exiting customerportal function check_permission ..");
+	\App\Log::trace("Exiting customerportal function check_permission ..");
 	return false;
 }
 /* Function to get related Documents for faq
@@ -2358,8 +2352,8 @@ function check_permission($customerid, $module, $entityid)
 function get_documents($id, $module, $customerid, $sessionid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_documents ..");
+
+	\App\Log::trace("Entering customer portal function get_documents ..");
 	$check = checkModuleActive($module);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -2410,7 +2404,7 @@ function get_documents($id, $module, $customerid, $sessionid)
 			$i++;
 		}
 	}
-	$log->debug("Exiting customerportal function  get_faq_document ..");
+	\App\Log::trace("Exiting customerportal function  get_faq_document ..");
 	return $output;
 }
 /* Function to get related projecttasks/projectmilestones for a Project
@@ -2426,8 +2420,8 @@ function get_project_components($id, $module, $customerid, $sessionid)
 	require_once('include/utils/UserInfoUtil.php');
 
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_project_components ..");
+
+	\App\Log::trace("Entering customer portal function get_project_components ..");
 	$check = checkModuleActive($module);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -2491,7 +2485,7 @@ function get_project_components($id, $module, $customerid, $sessionid)
 			$i++;
 		}
 	}
-	$log->debug("Exiting customerportal function  get_project_components ..");
+	\App\Log::trace("Exiting customerportal function  get_project_components ..");
 	return $output;
 }
 /* Function to get related tickets for a Project
@@ -2506,8 +2500,8 @@ function get_project_tickets($id, $module, $customerid, $sessionid)
 	require_once('include/utils/UserInfoUtil.php');
 
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_project_tickets ..");
+
+	\App\Log::trace("Entering customer portal function get_project_tickets ..");
 	$check = checkModuleActive($module);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -2576,7 +2570,7 @@ function get_project_tickets($id, $module, $customerid, $sessionid)
 			$i++;
 		}
 	}
-	$log->debug("Exiting customerportal function  get_project_tickets ..");
+	\App\Log::trace("Exiting customerportal function  get_project_tickets ..");
 	return $output;
 }
 /* Function to get contactid's and account's product details'
@@ -2588,8 +2582,8 @@ function get_service_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 	require_once('modules/Services/Services.php');
 	require_once('include/utils/UserInfoUtil.php');
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal Function get_service_list_values");
+
+	\App\Log::trace("Entering customer portal Function get_service_list_values");
 	$check = checkModuleActive($modulename);
 	if ($check === false) {
 		return array("#MODULE INACTIVE#");
@@ -2703,7 +2697,7 @@ function get_service_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 			}
 		}
 	}
-	$log->debug("Exiting customerportal function get_product_list_values.....");
+	\App\Log::trace("Exiting customerportal function get_product_list_values.....");
 	return $output;
 }
 /* Function to get the list of modules allowed for customer portal
@@ -2712,8 +2706,8 @@ function get_service_list_values($id, $modulename, $sessionid, $only_mine = 'tru
 function get_modules($id)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal Function get_modules");
+
+	\App\Log::trace("Entering customer portal Function get_modules");
 	getServerSessionId($id);
 	// Check if information is available in cache?
 	$modules = Vtiger_Soap_YetiPortal::lookupAllowedModules();
@@ -2726,14 +2720,14 @@ function get_modules($id)
 		$norows = $adb->num_rows($query);
 		if ($norows) {
 			while ($resultrow = $adb->fetch_array($query)) {
-				$name = getTabModuleName($resultrow['tabid']);
+				$name = \includes\Modules::getModuleName($resultrow['tabid']);
 				$modules[(int) $resultrow['sequence']] = array('name' => $name, 'translated_name' => Vtiger_Language_Handler::getTranslatedString($name, $name, vglobal('default_language')));
 			}
 			ksort($modules); // Order via SQL might cost us, so handling it ourselves in this case
 		}
 		Vtiger_Soap_YetiPortal::updateAllowedModules($modules);
 	}
-	$log->debug("Exiting customerportal function get_modules");
+	\App\Log::trace("Exiting customerportal function get_modules");
 	return $modules;
 }
 /* Function to check if the module has the permission to show the related contact's and Account's information
@@ -2743,8 +2737,8 @@ function show_all($module)
 {
 
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal Function show_all");
+
+	\App\Log::trace("Entering customer portal Function show_all");
 	$tabid = \includes\Modules::getModuleId($module);
 	if ($module == 'Tickets') {
 		$tabid = \includes\Modules::getModuleId('HelpDesk');
@@ -2760,7 +2754,7 @@ function show_all($module)
 	} else {
 		return 'false';
 	}
-	$log->debug("Exiting customerportal function show_all");
+	\App\Log::trace("Exiting customerportal function show_all");
 }
 /* Function to get ServiceContracts information in the tickets module if the ticket is related to ServiceContracts
  */
@@ -2768,8 +2762,8 @@ function show_all($module)
 function getRelatedServiceContracts($crmid)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function getRelatedServiceContracts");
+
+	\App\Log::trace("Entering customer portal function getRelatedServiceContracts");
 	$module = 'ServiceContracts';
 	$sc_info = [];
 	if (\includes\Modules::isModuleActive($module) !== true) {
@@ -2788,7 +2782,7 @@ function getRelatedServiceContracts($crmid)
 		$sc_info[$i]['Total Units'] = $adb->query_result($res, $i, 'total_units');
 		$sc_info[$i]['Available Units'] = $adb->query_result($res, $i, 'total_units') - $adb->query_result($res, $i, 'used_units');
 	}
-	$log->debug("Exiting customerportal function getRelatedServiceContracts");
+	\App\Log::trace("Exiting customerportal function getRelatedServiceContracts");
 	return $sc_info;
 }
 
@@ -2799,8 +2793,8 @@ function getRelatedServiceContracts($crmid)
 function get_summary_widgets($id, $type)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function get_summary_widgets");
+
+	\App\Log::trace("Entering customer portal function get_summary_widgets");
 	$session = getServerSession($id);
 	$output = $allowed_contacts_and_accounts = [];
 	$contactquery = "SELECT contactid, parentid FROM vtiger_contactdetails " .
@@ -2880,7 +2874,7 @@ function get_summary_widgets($id, $type)
 		}
 		$sql .= ' GROUP BY smownerid;';
 		$result = $adb->query($sql);
-		
+
 		$rows = $adb->num_rows($result);
 		for ($i = 0; $i < $rows; $i++) {
 			$row = $adb->query_result_rowdata($result, $i);
@@ -2899,15 +2893,15 @@ function get_summary_widgets($id, $type)
 			$output['ProjectSumTime'][$i] = $row;
 		}
 	}
-	$log->debug("Entering customer portal function get_summary_widgets");
+	\App\Log::trace("Entering customer portal function get_summary_widgets");
 	return array($output);
 }
 
 function getPortalUserid()
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
-	$log->debug("Entering customer portal function getPortalUserid");
+
+	\App\Log::trace("Entering customer portal function getPortalUserid");
 
 	// Look the value from cache first
 	$userid = Vtiger_Soap_YetiPortal::lookupPrefValue('userid');
@@ -2920,14 +2914,14 @@ function getPortalUserid()
 			Vtiger_Soap_YetiPortal::updatePrefValue('userid', $userid);
 		}
 	}
-	$log->debug("Exiting customerportal function getPortalUserid");
+	\App\Log::trace("Exiting customerportal function getPortalUserid");
 	return $userid;
 }
 
 function checkModuleActive($module)
 {
 	$adb = PearDatabase::getInstance();
-	$log = LoggerManager::getInstance();
+
 
 	$isactive = false;
 	$modules = get_modules(true);

@@ -9,9 +9,8 @@
  * Contributor(s): YetiForce.com.
  * ****************************************************************************** */
 global $calpath;
-global $mod_strings;
 global $theme;
-$log = vglobal('log');
+
 
 $theme_path = "themes/" . $theme . "/";
 $image_path = $theme_path . "images/";
@@ -300,7 +299,7 @@ class ReportRun extends CRMEntity
 
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 		$current_user = vglobal('current_user');
 		$ssql = "select vtiger_selectcolumn.* from vtiger_report inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid";
 		$ssql .= " left join vtiger_selectcolumn on vtiger_selectcolumn.queryid = vtiger_selectquery.queryid";
@@ -333,10 +332,6 @@ class ReportRun extends CRMEntity
 				continue;
 			}
 			$querycolumns = $this->getEscapedColumns($selectedfields);
-			if (isset($module) && $module != "") {
-				$current_language = vglobal('current_language');
-				$mod_strings = return_module_language($current_language, $module);
-			}
 
 			$targetTableName = $tablename;
 
@@ -388,7 +383,7 @@ class ReportRun extends CRMEntity
 		// Save the information
 		$this->_columnslist = $columnslist;
 
-		$log->info('ReportRun :: Successfully returned getQueryColumnsList' . $reportid);
+		\App\Log::trace('ReportRun :: Successfully returned getQueryColumnsList' . $reportid);
 		return $columnslist;
 	}
 
@@ -631,7 +626,7 @@ class ReportRun extends CRMEntity
 				foreach ($fieldSqlColumns as $columnSql) {
 					$queryColumn .= " WHEN $columnSql NOT LIKE '' THEN $columnSql";
 				}
-				$moduleFieldLabel = vtlib_purify(decode_html($moduleFieldLabel));
+				$moduleFieldLabel = App\Purifier::purify(decode_html($moduleFieldLabel));
 				$queryColumn .= " ELSE '' END) ELSE '' END) AS '$moduleFieldLabel'";
 				$this->queryPlanner->addTable($tableName);
 			}
@@ -648,7 +643,7 @@ class ReportRun extends CRMEntity
 
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 
 		$ssql = "select vtiger_selectcolumn.* from vtiger_report inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid";
 		$ssql .= " left join vtiger_selectcolumn on vtiger_selectcolumn.queryid = vtiger_selectquery.queryid where vtiger_report.reportid = ? ";
@@ -665,7 +660,8 @@ class ReportRun extends CRMEntity
 			$fieldcolname = $adb->query_result($result, $i, "columnname");
 			$ordercolumnsequal = true;
 			if ($fieldcolname != "") {
-				for ($j = 0; $j < count($this->orderbylistcolumns); $j++) {
+				$countOrderByListColumns = count($this->orderbylistcolumns);
+				for ($j = 0; $j < $countOrderByListColumns; $j++) {
 					if ($this->orderbylistcolumns[$j] == $fieldcolname) {
 						$ordercolumnsequal = false;
 						break;
@@ -683,7 +679,7 @@ class ReportRun extends CRMEntity
 		}
 		$sSQL .= implode(",", $sSQLList);
 
-		$log->info("ReportRun :: Successfully returned getSelectedColumnsList" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getSelectedColumnsList" . $reportid);
 		return $sSQL;
 	}
 
@@ -697,7 +693,7 @@ class ReportRun extends CRMEntity
 
 		global $ogReport;
 		$adb = PearDatabase::getInstance();
-		$log = LoggerManager::getInstance();
+
 		$default_charset = AppConfig::main('default_charset');
 		$value = html_entity_decode(trim($value), ENT_QUOTES, $default_charset);
 		$value_len = strlen($value);
@@ -713,70 +709,70 @@ class ReportRun extends CRMEntity
 		if ($is_field === true) {
 			$value = $this->getFilterComparedField($temp);
 		}
-		if ($comparator == "e") {
-			if (trim($value) == "NULL") {
-				$rtvalue = " is NULL";
-			} elseif (trim($value) != "") {
+		if ($comparator == 'e') {
+			if (trim($value) == 'NULL') {
+				$rtvalue = ' is NULL';
+			} elseif (trim($value) != '') {
 				$rtvalue = " = " . $adb->quote($value);
-			} elseif (trim($value) == "" && $datatype == "V") {
-				$rtvalue = " = " . $adb->quote($value);
+			} elseif (trim($value) == '' && $datatype == 'V') {
+				$rtvalue = ' = ' . $adb->quote($value);
 			} else {
-				$rtvalue = " is NULL";
+				$rtvalue = ' is NULL';
 			}
 		}
-		if ($comparator == "n") {
-			if (trim($value) == "NULL") {
-				$rtvalue = " is NOT NULL";
-			} elseif (trim($value) != "") {
+		if ($comparator == 'n') {
+			if (trim($value) == 'NULL') {
+				$rtvalue = ' is NOT NULL';
+			} elseif (trim($value) != '') {
 				if ($columnName)
-					$rtvalue = " <> " . $adb->quote($value) . " || " . $columnName . " IS NULL ";
+					$rtvalue = ' <> ' . $adb->quote($value) . ' || ' . $columnName . " IS NULL ";
 				else
-					$rtvalue = " <> " . $adb->quote($value);
-			}elseif (trim($value) == "" && $datatype == "V") {
-				$rtvalue = " <> " . $adb->quote($value);
+					$rtvalue = ' <> ' . $adb->quote($value);
+			}elseif (trim($value) == '' && $datatype == 'V') {
+				$rtvalue = ' <> ' . $adb->quote($value);
 			} else {
-				$rtvalue = " is NOT NULL";
+				$rtvalue = ' is NOT NULL';
 			}
 		}
-		if ($comparator == "s") {
+		if ($comparator == 's') {
 			$rtvalue = " like " . formatForSqlLike($value, 2, $is_field);
 		}
-		if ($comparator == "ew") {
-			$rtvalue = " like " . formatForSqlLike($value, 1, $is_field);
+		if ($comparator == 'ew') {
+			$rtvalue = ' like ' . formatForSqlLike($value, 1, $is_field);
 		}
-		if ($comparator == "c") {
-			$rtvalue = " like " . formatForSqlLike($value, 0, $is_field);
+		if ($comparator == 'c') {
+			$rtvalue = ' like ' . formatForSqlLike($value, 0, $is_field);
 		}
-		if ($comparator == "k") {
-			$rtvalue = " not like " . formatForSqlLike($value, 0, $is_field);
+		if ($comparator == 'k') {
+			$rtvalue = ' not like ' . formatForSqlLike($value, 0, $is_field);
 		}
-		if ($comparator == "l") {
-			$rtvalue = " < " . $adb->quote($value);
+		if ($comparator == 'l') {
+			$rtvalue = ' < ' . $adb->quote($value);
 		}
-		if ($comparator == "g") {
-			$rtvalue = " > " . $adb->quote($value);
+		if ($comparator == 'g') {
+			$rtvalue = ' > ' . $adb->quote($value);
 		}
-		if ($comparator == "m") {
-			$rtvalue = " <= " . $adb->quote($value);
+		if ($comparator == 'm') {
+			$rtvalue = ' <= ' . $adb->quote($value);
 		}
-		if ($comparator == "h") {
-			$rtvalue = " >= " . $adb->quote($value);
+		if ($comparator == 'h') {
+			$rtvalue = ' >= ' . $adb->quote($value);
 		}
-		if ($comparator == "b") {
-			$rtvalue = " < " . $adb->quote($value);
+		if ($comparator == 'b') {
+			$rtvalue = ' < ' . $adb->quote($value);
 		}
-		if ($comparator == "a") {
-			$rtvalue = " > " . $adb->quote($value);
+		if ($comparator == 'a') {
+			$rtvalue = ' > ' . $adb->quote($value);
 		}
-		if ($comparator == "om") {
+		if ($comparator == 'om') {
 			$currentUser = Users_Privileges_Model::getCurrentUserModel();
-			$rtvalue = " = " . $adb->quote($currentUser->getId());
+			$rtvalue = ' = ' . $adb->quote($currentUser->getId());
 		}
 		if ($is_field === true) {
 			$rtvalue = str_replace("'", "", $rtvalue);
 			$rtvalue = str_replace("\\", "", $rtvalue);
 		}
-		$log->info("ReportRun :: Successfully returned getAdvComparator");
+		\App\Log::trace("ReportRun :: Successfully returned getAdvComparator");
 		return $rtvalue;
 	}
 
@@ -847,7 +843,7 @@ class ReportRun extends CRMEntity
 	public function getAdvFilterList($reportid)
 	{
 		$adb = PearDatabase::getInstance();
-		$log = vglobal('log');
+
 
 		$advft_criteria = array();
 
@@ -1091,12 +1087,13 @@ class ReportRun extends CRMEntity
 						if (isset($valuearray) && count($valuearray) > 1 && $comparator != 'bw') {
 
 							$advcolumnsql = "";
-							for ($n = 0; $n < count($valuearray); $n++) {
+							$countValueArray = count($valuearray);
+							for ($n = 0; $n < $countValueArray; $n++) {
 
 								if (($selectedfields[0] == "vtiger_users" . $this->primarymodule || $selectedfields[0] == "vtiger_users" . $this->secondarymodule) && $selectedfields[1] == 'user_name') {
 									$module_from_tablename = str_replace("vtiger_users", "", $selectedfields[0]);
-									if(is_numeric($valuearray[$n])){
-										$advcolsql[] = $selectedfields[0].'.id ' . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype) . " OR vtiger_groups$module_from_tablename.groupid " . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype);
+									if (is_numeric($valuearray[$n])) {
+										$advcolsql[] = '(' .$selectedfields[0] . '.id ' . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype) . " OR vtiger_groups$module_from_tablename.groupid " . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype) . ')';
 									} else {
 										$advcolsql[] = " (trim($concatSql)" . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype) . " or vtiger_groups$module_from_tablename.groupname " . $this->getAdvComparator($comparator, trim($valuearray[$n]), $datatype) . ")";
 									}
@@ -1139,8 +1136,8 @@ class ReportRun extends CRMEntity
 						} elseif ($selectedfields[1] == 'user_name') {
 							if ($selectedfields[0] == "vtiger_users" . $this->primarymodule) {
 								$module_from_tablename = str_replace("vtiger_users", "", $selectedfields[0]);
-								if(is_numeric($value) || empty($value)) {
-									$fieldvalue = $selectedfields[0].'.id' . $this->getAdvComparator($comparator, trim($value), $datatype) . " OR vtiger_groups$module_from_tablename.groupname" . $this->getAdvComparator($comparator, trim($value), $datatype);
+								if (is_numeric($value) || empty($value)) {
+									$fieldvalue = '(' .$selectedfields[0] . '.id' . $this->getAdvComparator($comparator, trim($value), $datatype) . " OR vtiger_groups$module_from_tablename.groupid" . $this->getAdvComparator($comparator, trim($value), $datatype) . ')';
 								} else {
 									$fieldvalue = " trim(case when (" . $selectedfields[0] . ".last_name NOT LIKE '') then " . $concatSql . " else vtiger_groups" . $module_from_tablename . ".groupname end) " . $this->getAdvComparator($comparator, trim($value), $datatype);
 								}
@@ -1152,8 +1149,8 @@ class ReportRun extends CRMEntity
 								if (($firstSecondaryModule && $firstSecondaryModule == $selectedfields[0]) || ($secondSecondaryModule && $secondSecondaryModule == $selectedfields[0])) {
 									$module_from_tablename = str_replace("vtiger_users", "", $selectedfields[0]);
 									$moduleInstance = CRMEntity::getInstance($module_from_tablename);
-									if(is_numeric($value)){
-										$fieldvalue = $selectedfields[0].'.id' . $this->getAdvComparator($comparator, trim($value), $datatype) . " OR vtiger_groups$module_from_tablename.groupname" . $this->getAdvComparator($comparator, trim($value), $datatype);
+									if (is_numeric($value)) {
+										$fieldvalue = '(' . $selectedfields[0] . '.id' . $this->getAdvComparator($comparator, trim($value), $datatype) . " OR vtiger_groups$module_from_tablename.groupid" . $this->getAdvComparator($comparator, trim($value), $datatype) .')';
 									} else {
 										$fieldvalue = " trim(case when (" . $selectedfields[0] . ".last_name NOT LIKE '') then " . $concatSql . " else vtiger_groups" . $module_from_tablename . ".groupname end) " . $this->getAdvComparator($comparator, trim($value), $datatype);
 									}
@@ -1271,7 +1268,7 @@ class ReportRun extends CRMEntity
 		if ($this->_advfiltersql !== false) {
 			return $this->_advfiltersql;
 		}
-		$log = vglobal('log');
+
 
 		$advfilterlist = $this->getAdvFilterList($reportid);
 		$advfiltersql = $this->generateAdvFilterSql($advfilterlist);
@@ -1279,7 +1276,7 @@ class ReportRun extends CRMEntity
 		// Save the information
 		$this->_advfiltersql = $advfiltersql;
 
-		$log->info("ReportRun :: Successfully returned getAdvFilterSql" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getAdvFilterSql" . $reportid);
 		return $advfiltersql;
 	}
 
@@ -1298,7 +1295,7 @@ class ReportRun extends CRMEntity
 		}
 
 		$adb = PearDatabase::getInstance();
-		$log = vglobal('log');
+
 		$stdfilterlist = array();
 
 		$stdfiltersql = "select vtiger_reportdatefilter.* from vtiger_report";
@@ -1369,7 +1366,7 @@ class ReportRun extends CRMEntity
 		// Save the information
 		$this->_stdfilterlist = $stdfilterlist;
 
-		$log->info("ReportRun :: Successfully returned getStdFilterList" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getStdFilterList" . $reportid);
 		return $stdfilterlist;
 	}
 
@@ -1452,7 +1449,8 @@ class ReportRun extends CRMEntity
 				$temp_val = explode(",", $adv_filter_value);
 				if (($column_info[4] == 'D' || ($column_info[4] == 'T' && $column_info[1] != 'time_start' && $column_info[1] != 'time_end') || ($column_info[4] == 'DT')) && ($column_info[4] != '' && $adv_filter_value != '' )) {
 					$val = Array();
-					for ($x = 0; $x < count($temp_val); $x++) {
+					$countTempVal = count($temp_val);
+					for ($x = 0; $x < $countTempVal; $x++) {
 						if ($column_info[4] == 'D') {
 							$date = new DateTimeField(trim($temp_val[$x]));
 							$val[$x] = $date->getDBInsertDateValue();
@@ -1504,7 +1502,7 @@ class ReportRun extends CRMEntity
 	{
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 
 		$sreportstdfiltersql = "select vtiger_reportdatefilter.* from vtiger_report";
 		$sreportstdfiltersql .= " inner join vtiger_reportdatefilter on vtiger_report.reportid = vtiger_reportdatefilter.datefilterid";
@@ -1549,7 +1547,7 @@ class ReportRun extends CRMEntity
 				}
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getStandardCriterialSql" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getStandardCriterialSql" . $reportid);
 		return $sSQL;
 	}
 
@@ -1582,7 +1580,7 @@ class ReportRun extends CRMEntity
 	{
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 
 		// Have we initialized information already?
 		if ($this->_groupinglist !== false) {
@@ -1650,7 +1648,7 @@ class ReportRun extends CRMEntity
 		// Save the information
 		$this->_groupinglist = $grouplist;
 
-		$log->info("ReportRun :: Successfully returned getGroupingList" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getGroupingList" . $reportid);
 		return $grouplist;
 	}
 
@@ -1678,7 +1676,7 @@ class ReportRun extends CRMEntity
 
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 
 		$sreportsortsql = "select vtiger_reportsortcol.* from vtiger_report";
 		$sreportsortsql .= " inner join vtiger_reportsortcol on vtiger_report.reportid = vtiger_reportsortcol.reportid";
@@ -1711,7 +1709,7 @@ class ReportRun extends CRMEntity
 				$this->orderbylistsql .= $selectedfields[0] . "." . $selectedfields[1] . " " . $selectedfields[2];
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getSelectedOrderbyList" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getSelectedOrderbyList" . $reportid);
 		return $sSQL;
 	}
 
@@ -1722,7 +1720,7 @@ class ReportRun extends CRMEntity
 	 */
 	public function getRelatedModulesQuery($module, $secmodule)
 	{
-		$log = vglobal('log');
+
 		$current_user = vglobal('current_user');
 		$query = '';
 		if ($secmodule != '') {
@@ -1745,7 +1743,7 @@ class ReportRun extends CRMEntity
 				}
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getRelatedModulesQuery" . $secmodule);
+		\App\Log::trace("ReportRun :: Successfully returned getRelatedModulesQuery" . $secmodule);
 
 		return $query;
 	}
@@ -1780,7 +1778,7 @@ class ReportRun extends CRMEntity
 			}
 
 			if (!empty($sharedTabId)) {
-				$module = getTabModuleName($sharedTabId);
+				$module = \includes\Modules::getModuleName($sharedTabId);
 				if ($module == "Calendar") {
 					// For calendar we have some special case to check like, calendar shared type
 					$moduleInstance = CRMEntity::getInstance($module);
@@ -1809,7 +1807,7 @@ class ReportRun extends CRMEntity
 	 */
 	public function getReportsQuery($module, $type = '')
 	{
-		$log = vglobal('log');
+
 		$current_user = vglobal('current_user');
 		$secondary_module = "'";
 		$secondary_module .= str_replace(":", "','", $this->secondarymodule);
@@ -2165,7 +2163,7 @@ class ReportRun extends CRMEntity
 					" WHERE vtiger_crmentity.deleted=0";
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getReportsQuery" . $module);
+		\App\Log::trace("ReportRun :: Successfully returned getReportsQuery" . $module);
 
 		return $query;
 	}
@@ -2178,7 +2176,7 @@ class ReportRun extends CRMEntity
 	 */
 	public function sGetSQLforReport($reportid, $filtersql, $type = '', $chartReport = false, $startLimit = false, $endLimit = false)
 	{
-		$log = vglobal('log');
+
 
 		$columnlist = $this->getQueryColumnsList($reportid, $type);
 		$groupslist = $this->getGroupingList($reportid);
@@ -2267,7 +2265,7 @@ class ReportRun extends CRMEntity
 			$report = str_replace('&amp;', '&', $reportquery);
 			$reportquery = $this->replaceSpecialChar($report);
 		}
-		$log->info("ReportRun :: Successfully returned sGetSQLforReport" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned sGetSQLforReport" . $reportid);
 
 		$this->queryPlanner->initializeTempTables();
 
@@ -2328,7 +2326,8 @@ class ReportRun extends CRMEntity
 		$modules_selected[] = $this->primarymodule;
 		if (!empty($this->secondarymodule)) {
 			$sec_modules = explode(':', $this->secondarymodule);
-			for ($i = 0; $i < count($sec_modules); $i++) {
+			$countSecModules = count($sec_modules);
+			for ($i = 0; $i < $countSecModules; $i++) {
 				$modules_selected[] = $sec_modules[$i];
 			}
 		}
@@ -2338,7 +2337,7 @@ class ReportRun extends CRMEntity
 		if ($referencefieldres) {
 			foreach ($referencefieldres as $referencefieldrow) {
 				$uiType = $referencefieldrow['uitype'];
-				$modprefixedlabel = getTabModuleName($referencefieldrow['tabid']) . ' ' . $referencefieldrow['fieldlabel'];
+				$modprefixedlabel = \includes\Modules::getModuleName($referencefieldrow['tabid']) . ' ' . $referencefieldrow['fieldlabel'];
 				$modprefixedlabel = str_replace(' ', '__', $modprefixedlabel);
 
 				if ($uiType == 10 && !in_array($modprefixedlabel, $this->ui10_fields)) {
@@ -2626,7 +2625,7 @@ class ReportRun extends CRMEntity
 						$fieldlist = explode(":", $key);
 						$mod_query = $adb->pquery("SELECT distinct(tabid) as tabid, uitype as uitype from vtiger_field where tablename = ? and columnname=?", array($fieldlist[1], $fieldlist[2]));
 						if ($adb->num_rows($mod_query) > 0) {
-							$module_name = getTabModuleName($adb->query_result($mod_query, 0, 'tabid'));
+							$module_name = \includes\Modules::getModuleName($adb->query_result($mod_query, 0, 'tabid'));
 							$fieldlabel = trim(str_replace($escapedchars, " ", $fieldlist[3]));
 							$fieldlabel = str_replace("__", " ", $fieldlabel);
 							if ($module_name) {
@@ -2736,7 +2735,7 @@ class ReportRun extends CRMEntity
 						if (!isset($modulename_cache[$cachekey])) {
 							$mod_query = $adb->pquery("SELECT distinct(tabid) as tabid, uitype as uitype from vtiger_field where tablename = ? and columnname=?", array($fieldlist[1], $fieldlist[2]));
 							if ($adb->num_rows($mod_query) > 0) {
-								$module_name = getTabModuleName($adb->query_result($mod_query, 0, 'tabid'));
+								$module_name = \includes\Modules::getModuleName($adb->query_result($mod_query, 0, 'tabid'));
 								$modulename_cache[$cachekey] = $module_name;
 							}
 						} else {
@@ -2946,7 +2945,7 @@ class ReportRun extends CRMEntity
 						$fieldlist = explode(":", $key);
 						$mod_query = $adb->pquery("SELECT distinct(tabid) as tabid, uitype as uitype from vtiger_field where tablename = ? and columnname=?", array($fieldlist[1], $fieldlist[2]));
 						if ($adb->num_rows($mod_query) > 0) {
-							$module_name = getTabModuleName($adb->query_result($mod_query, 0, 'tabid'));
+							$module_name = \includes\Modules::getModuleName($adb->query_result($mod_query, 0, 'tabid'));
 							$fieldlabel = trim(str_replace($escapedchars, " ", $fieldlist[3]));
 							$fieldlabel = str_replace("__", " ", $fieldlabel);
 							if ($module_name) {
@@ -3054,7 +3053,7 @@ class ReportRun extends CRMEntity
 
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = LoggerManager::getInstance();
+
 		$current_user = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 		static $modulename_cache = array();
 
@@ -3080,7 +3079,7 @@ class ReportRun extends CRMEntity
 				if (!isset($modulename_cache[$cachekey])) {
 					$mod_query = $adb->pquery("SELECT distinct(tabid) as tabid from vtiger_field where tablename = ? and columnname=?", array($fieldlist[1], $fieldlist[2]));
 					if ($adb->num_rows($mod_query) > 0) {
-						$module_name = getTabModuleName($adb->query_result($mod_query, 0, 'tabid'));
+						$module_name = \includes\Modules::getModuleName($adb->query_result($mod_query, 0, 'tabid'));
 						$modulename_cache[$cachekey] = $module_name;
 					}
 				} else {
@@ -3140,7 +3139,7 @@ class ReportRun extends CRMEntity
 		// Save the information
 		$this->_columnstotallist = $stdfilterlist;
 
-		$log->info("ReportRun :: Successfully returned getColumnsTotal" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getColumnsTotal" . $reportid);
 		return $stdfilterlist;
 	}
 
@@ -3195,7 +3194,7 @@ class ReportRun extends CRMEntity
 	{
 		$adb = PearDatabase::getInstance();
 		global $modules;
-		$log = vglobal('log');
+
 
 		$sreportstdfiltersql = "select vtiger_reportsummary.* from vtiger_report";
 		$sreportstdfiltersql .= " inner join vtiger_reportsummary on vtiger_report.reportid = vtiger_reportsummary.reportsummaryid";
@@ -3226,7 +3225,7 @@ class ReportRun extends CRMEntity
 		if (isset($sSQLList)) {
 			$sSQL = implode(",", $sSQLList);
 		}
-		$log->info("ReportRun :: Successfully returned getColumnsToTotalColumns" . $reportid);
+		\App\Log::trace("ReportRun :: Successfully returned getColumnsToTotalColumns" . $reportid);
 		return $sSQL;
 	}
 
@@ -3287,14 +3286,15 @@ class ReportRun extends CRMEntity
 		}
 
 		$temp_status = Array();
-		for ($i = 0; $i < $adb->num_rows($result); $i++) {
+		$countResult = $adb->num_rows($result);
+		for ($i = 0; $i < $countResult; $i++) {
 			$fieldname = $adb->query_result($result, $i, "fieldname");
 			$fieldlabel = $adb->query_result($result, $i, "fieldlabel");
 			$tabid = $adb->query_result($result, $i, "tabid");
 			$uitype = $adb->query_result($result, $i, "uitype");
 
 			$fieldlabel1 = str_replace(" ", "__", $fieldlabel);
-			$keyvalue = getTabModuleName($tabid) . "__" . $fieldlabel1;
+			$keyvalue = \includes\Modules::getModuleName($tabid) . "__" . $fieldlabel1;
 			$fieldvalues = Array();
 			if (count($roleids) > 1) {
 				$mulsel = "select distinct $fieldname from vtiger_$fieldname inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid = vtiger_$fieldname.picklist_valueid where roleid in (\"" . implode($roleids, "\",\"") . "\") and picklistid in (select picklistid from vtiger_$fieldname)"; // order by sortid asc - not requried
@@ -3303,7 +3303,8 @@ class ReportRun extends CRMEntity
 			}
 			if ($fieldname != 'firstname')
 				$mulselresult = $adb->query($mulsel);
-			for ($j = 0; $j < $adb->num_rows($mulselresult); $j++) {
+			$countMulSelResult = $adb->num_rows($mulselresult);
+			for ($j = 0; $j < $countMulSelResult; $j++) {
 				$fldvalue = $adb->query_result($mulselresult, $j, $fieldname);
 				if (in_array($fldvalue, $fieldvalues))
 					continue;
@@ -3355,7 +3356,7 @@ class ReportRun extends CRMEntity
 
 		$currentModule = vglobal('currentModule');
 		$current_language = vglobal('current_language');
-		$mod_strings = return_module_language($current_language, $currentModule);
+		$mod_strings = \vtlib\Deprecated::getModuleTranslationStrings($current_language, $currentModule);
 
 		require_once("libraries/PHPExcel/PHPExcel.php");
 

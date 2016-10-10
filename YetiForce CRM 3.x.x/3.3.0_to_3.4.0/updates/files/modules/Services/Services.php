@@ -12,7 +12,6 @@
 class Services extends CRMEntity
 {
 
-	public $db, $log; // Used in class functions of CRMEntity
 	public $table_name = 'vtiger_service';
 	public $table_index = 'serviceid';
 	public $column_fields = Array();
@@ -111,39 +110,41 @@ class Services extends CRMEntity
 	public function insertTaxInformation($tablename, $module)
 	{
 		$adb = PearDatabase::getInstance();
-		$log = vglobal('log');
-		$log->debug("Entering into insertTaxInformation($tablename, $module) method ...");
+
+		\App\Log::trace("Entering into insertTaxInformation($tablename, $module) method ...");
 		$tax_details = getAllTaxes();
 
 		$tax_per = '';
 		//Save the Product - tax relationship if corresponding tax check box is enabled
 		//Delete the existing tax if any
 		if ($this->mode == 'edit') {
-			for ($i = 0; $i < count($tax_details); $i++) {
+			$countTaxDetails = count($tax_details);
+			for ($i = 0; $i < $countTaxDetails; $i++) {
 				$taxid = getTaxId($tax_details[$i]['taxname']);
 				$sql = "delete from vtiger_producttaxrel where productid=? and taxid=?";
 				$adb->pquery($sql, array($this->id, $taxid));
 			}
 		}
-		for ($i = 0; $i < count($tax_details); $i++) {
+		$countTaxDetails = count($tax_details);
+		for ($i = 0; $i < $countTaxDetails; $i++) {
 			$tax_name = $tax_details[$i]['taxname'];
 			$tax_checkname = $tax_details[$i]['taxname'] . "_check";
 			if (AppRequest::get($tax_checkname) == 'on' || AppRequest::get($tax_checkname) == 1) {
 				$taxid = getTaxId($tax_name);
 				$tax_per = AppRequest::get($tax_name);
 				if ($tax_per == '') {
-					$log->debug("Tax selected but value not given so default value will be saved.");
+					\App\Log::trace("Tax selected but value not given so default value will be saved.");
 					$tax_per = getTaxPercentage($tax_name);
 				}
 
-				$log->debug("Going to save the Product - $tax_name tax relationship");
+				\App\Log::trace("Going to save the Product - $tax_name tax relationship");
 
 				$query = "insert into vtiger_producttaxrel values(?,?,?)";
 				$adb->pquery($query, array($this->id, $taxid, $tax_per));
 			}
 		}
 
-		$log->debug("Exiting from insertTaxInformation($tablename, $module) method ...");
+		\App\Log::trace("Exiting from insertTaxInformation($tablename, $module) method ...");
 	}
 
 	/** 	function to save the service price information in vtiger_servicecurrencyrel table
@@ -155,8 +156,8 @@ class Services extends CRMEntity
 	{
 		$adb = PearDatabase::getInstance();
 		$current_user = vglobal('current_user');
-		$log = vglobal('log');
-		$log->debug("Entering into insertPriceInformation($tablename, $module) method ...");
+
+		\App\Log::trace("Entering into insertPriceInformation($tablename, $module) method ...");
 		//removed the update of currency_id based on the logged in user's preference : fix 6490
 
 
@@ -164,7 +165,8 @@ class Services extends CRMEntity
 
 		//Delete the existing currency relationship if any
 		if ($this->mode == 'edit' && AppRequest::get('action') != 'MassEditSave' && AppRequest::get('action') != 'ProcessDuplicates') {
-			for ($i = 0; $i < count($currency_details); $i++) {
+			$countCurrencyDetails = count($currency_details);
+			for ($i = 0; $i < $countCurrencyDetails; $i++) {
 				$curid = $currency_details[$i]['curid'];
 				$sql = "delete from vtiger_productcurrencyrel where productid=? and currencyid=?";
 				$adb->pquery($sql, array($this->id, $curid));
@@ -174,7 +176,8 @@ class Services extends CRMEntity
 		$service_base_conv_rate = getBaseConversionRateForProduct($this->id, $this->mode, $module);
 
 		//Save the Product - Currency relationship if corresponding currency check box is enabled
-		for ($i = 0; $i < count($currency_details); $i++) {
+		$countCurrencyDetails = count($currency_details);
+		for ($i = 0; $i < $countCurrencyDetails; $i++) {
 			$curid = $currency_details[$i]['curid'];
 			$curname = $currency_details[$i]['currencylabel'];
 			$cur_checkname = 'cur_' . $curid . '_check';
@@ -187,7 +190,7 @@ class Services extends CRMEntity
 				$actual_conversion_rate = $service_base_conv_rate * $conversion_rate;
 				$converted_price = $actual_conversion_rate * $requestPrice;
 
-				$log->debug("Going to save the Product - $curname currency relationship");
+				\App\Log::trace("Going to save the Product - $curname currency relationship");
 
 				$query = "insert into vtiger_productcurrencyrel values(?,?,?,?)";
 				$adb->pquery($query, array($this->id, $curid, $converted_price, $actualPrice));
@@ -202,7 +205,7 @@ class Services extends CRMEntity
 			}
 		}
 
-		$log->debug("Exiting from insertPriceInformation($tablename, $module) method ...");
+		\App\Log::trace("Exiting from insertPriceInformation($tablename, $module) method ...");
 	}
 
 	public function updateUnitPrice()
@@ -416,9 +419,9 @@ class Services extends CRMEntity
 	 */
 	public function get_service_pricebooks($id, $cur_tab_id, $rel_tab_id, $actions = false)
 	{
-		global $currentModule, $singlepane_view, $mod_strings;
-		$log = LoggerManager::getInstance();
-		$log->debug("Entering get_service_pricebooks(" . $id . ") method ...");
+		global $currentModule, $singlepane_view;
+
+		\App\Log::trace("Entering get_service_pricebooks(" . $id . ") method ...");
 
 		$related_module = vtlib\Functions::getModuleName($rel_tab_id);
 		\vtlib\Deprecated::checkFileAccessForInclusion("modules/$related_module/$related_module.php");
@@ -454,7 +457,7 @@ class Services extends CRMEntity
 				ON vtiger_pricebookcf.pricebookid = vtiger_pricebook.pricebookid
 			WHERE vtiger_crmentity.deleted = 0
 			AND vtiger_pricebookproductrel.productid = %s', $id);
-		$log->debug("Exiting get_product_pricebooks method ...");
+		\App\Log::trace("Exiting get_product_pricebooks method ...");
 
 		$return_value = GetRelatedList($currentModule, $related_module, $focus, $query, $button, $returnset);
 
@@ -462,7 +465,7 @@ class Services extends CRMEntity
 			$return_value = Array();
 		$return_value['CUSTOM_BUTTON'] = $button;
 
-		$log->debug("Exiting get_service_pricebooks method ...");
+		\App\Log::trace("Exiting get_service_pricebooks method ...");
 		return $return_value;
 	}
 
@@ -474,13 +477,13 @@ class Services extends CRMEntity
 	 */
 	public function getPriceBookRelatedServices($query, $focus, $returnset = '')
 	{
-		$log = vglobal('log');
-		$log->debug("Entering getPriceBookRelatedServices(" . $query . "," . get_class($focus) . "," . $returnset . ") method ...");
+
+		\App\Log::trace("Entering getPriceBookRelatedServices(" . $query . "," . get_class($focus) . "," . $returnset . ") method ...");
 
 		$adb = PearDatabase::getInstance();
 		$current_user = vglobal('current_user');
 		$current_language = vglobal('current_language');
-		$current_module_strings = return_module_language($current_language, 'Services');
+		$current_module_strings = \vtlib\Deprecated::getModuleTranslationStrings($current_language, 'Services');
 		$no_of_decimal_places = getCurrencyDecimalPlaces();
 		$listMaxEntriesPerPage = AppConfig::main('list_max_entries_per_page');
 		global $urlPrefix;
@@ -544,8 +547,8 @@ class Services extends CRMEntity
 			$listprice = $adb->query_result($list_result, $i, "listprice");
 			$field_name = $entity_id . "_listprice";
 
-			$entries = Array();
-			$entries[] = textlength_check($adb->query_result($list_result, $i, "servicename"));
+			$entries = [];
+			$entries[] = \vtlib\Functions::textLength($adb->query_result($list_result, $i, "servicename"));
 			if (getFieldVisibilityPermission('Services', $current_user->id, 'unit_price') == '0')
 				$entries[] = CurrencyField::convertToUserFormat($unit_price, null, true);
 
@@ -569,7 +572,7 @@ class Services extends CRMEntity
 		$navigationOutput[] = getRelatedTableHeaderNavigation($navigation_array, '', $module, $relatedmodule, $focus->id);
 		$return_data = array('header' => $header, 'entries' => $entries_list, 'navigation' => $navigationOutput);
 
-		$log->debug("Exiting getPriceBookRelatedServices method ...");
+		\App\Log::trace("Exiting getPriceBookRelatedServices method ...");
 		return $return_data;
 	}
 
@@ -582,8 +585,8 @@ class Services extends CRMEntity
 	public function transferRelatedRecords($module, $transferEntityIds, $entityId)
 	{
 		$adb = PearDatabase::getInstance();
-		$log = vglobal('log');
-		$log->debug("Entering function transferRelatedRecords ($module, $transferEntityIds, $entityId)");
+
+		\App\Log::trace("Entering function transferRelatedRecords ($module, $transferEntityIds, $entityId)");
 
 		$rel_table_arr = Array("PriceBooks" => "vtiger_pricebookproductrel", "Documents" => "vtiger_senotesrel");
 
@@ -609,7 +612,7 @@ class Services extends CRMEntity
 		}
 
 		parent::transferRelatedRecords($module, $transferEntityIds, $entityId);
-		$log->debug("Exiting transferRelatedRecords...");
+		\App\Log::trace("Exiting transferRelatedRecords...");
 	}
 	/*
 	 * Function to get the primary query part of a report
@@ -733,7 +736,7 @@ class Services extends CRMEntity
 	// Function to unlink all the dependent entities of the given Entity by Id
 	public function unlinkDependencies($module, $id)
 	{
-		$log = vglobal('log');
+
 		$this->db->pquery('DELETE from vtiger_seproductsrel WHERE productid=? or crmid=?', array($id, $id));
 
 		parent::unlinkDependencies($module, $id);
@@ -774,13 +777,13 @@ class Services extends CRMEntity
 			// Mark the module as Standard module
 			$adb->pquery('UPDATE vtiger_tab SET customized=0 WHERE name=?', array($moduleName));
 		} else if ($eventType == 'module.disabled') {
-
+			
 		} else if ($eventType == 'module.enabled') {
-
+			
 		} else if ($eventType == 'module.preuninstall') {
-
+			
 		} else if ($eventType == 'module.preupdate') {
-
+			
 		} else if ($eventType == 'module.postupdate') {
 			$ServicesModule = vtlib\Module::getInstance('Services');
 			vtlib\Access::setDefaultSharing($ServicesModule);
@@ -791,24 +794,23 @@ class Services extends CRMEntity
 	public function unlinkRelationship($id, $return_module, $return_id, $relatedName = false)
 	{
 		global $currentModule;
-		$log = LoggerManager::getInstance();
-		$log->fatal('id:--' . $id);
-		$log->fatal('return_module:--' . $return_module);
-		$log->fatal('return_id:---' . $return_id);
+
+		\App\Log::error('id:--' . $id);
+		\App\Log::error('return_module:--' . $return_module);
+		\App\Log::error('return_id:---' . $return_id);
 		if ($return_module == 'Accounts') {
 			$focus = CRMEntity::getInstance($return_module);
 			$entityIds = $focus->getRelatedContactsIds($return_id);
 			array_push($entityIds, $return_id);
-			$entityIds = implode(',', $entityIds);
-			$return_modules = "'Accounts','Contacts'";
+			$return_modules = ['Accounts', 'Contacts'];
 		} else {
 			$entityIds = $return_id;
-			$return_modules = "'" . $return_module . "'";
+			$return_modules = [$return_module];
 		}
 		if ($relatedName && $relatedName != 'get_related_list') {
 			parent::unlinkRelationship($id, $return_module, $return_id, $relatedName);
 		} else {
-			$where = '(relcrmid= ? && module IN (?) && crmid IN (?)) || (crmid= ? && relmodule IN (?) && relcrmid IN (?))';
+			$where = '(relcrmid= ? AND module IN (' . generateQuestionMarks($return_modules) . ') AND crmid IN (' . generateQuestionMarks($entityIds) . ')) OR (crmid= ? AND relmodule IN (' . generateQuestionMarks($return_modules) . ') AND relcrmid IN (' . generateQuestionMarks($entityIds) . '))';
 			$params = [$id, $return_modules, $entityIds, $id, $return_modules, $entityIds];
 			$this->db->delete('vtiger_crmentityrel', $where, $params);
 		}
@@ -821,11 +823,11 @@ class Services extends CRMEntity
 	 */
 	public function get_services($id, $cur_tab_id, $rel_tab_id, $actions = false)
 	{
-		$log = vglobal('log');
+
 		$current_user = vglobal('current_user');
 		$singlepane_view = vglobal('singlepane_view');
 		$currentModule = vglobal('currentModule');
-		$log->debug("Entering get_products(" . $id . ") method ...");
+		\App\Log::trace("Entering get_products(" . $id . ") method ...");
 		$this_module = $currentModule;
 
 		$related_module = vtlib\Functions::getModuleName($rel_tab_id);
@@ -876,7 +878,7 @@ class Services extends CRMEntity
 			$return_value = Array();
 		$return_value['CUSTOM_BUTTON'] = $button;
 
-		$log->debug("Exiting get_products method ...");
+		\App\Log::trace("Exiting get_products method ...");
 		return $return_value;
 	}
 }

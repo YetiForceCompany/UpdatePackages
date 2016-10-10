@@ -134,7 +134,7 @@ class Functions
 	{
 		$currencyInfo = self::getCurrencyInfo($currencyid);
 		if ($show_symbol) {
-			return sprintf("%s : %s", Deprecated::getTranslatedCurrencyString($currencyInfo['currency_name']), $currencyInfo['currency_symbol']);
+			return sprintf("%s : %s", \includes\Language::translate($currencyInfo['currency_name'], 'Currency'), $currencyInfo['currency_symbol']);
 		}
 		return $currencyInfo['currency_name'];
 	}
@@ -219,8 +219,7 @@ class Functions
 	public static function getModuleData($mixed)
 	{
 		if (empty($mixed)) {
-			$log = \LoggerManager::getInstance();
-			$log->error(__CLASS__ . ':' . __FUNCTION__ . ' - Required parameter missing');
+			\App\Log::error(__CLASS__ . ':' . __FUNCTION__ . ' - Required parameter missing');
 			return false;
 		}
 		$id = $name = NULL;
@@ -244,9 +243,9 @@ class Functions
 		}
 
 		if ($reload) {
-			$query = (new \App\db\Query())->from('vtiger_tab');
-			$dataReader = $query->createCommand()->query();
-			while ($row = $dataReader->read()) {
+			$adb = \PearDatabase::getInstance();
+			$result = $adb->query('SELECT * FROM vtiger_tab');
+			while ($row = $adb->fetch_array($result)) {
 				self::$moduleIdNameCache[$row['tabid']] = $row;
 				self::$moduleNameIdCache[$row['name']] = $row;
 				self::$moduleIdDataCache[$row['tabid']] = $row;
@@ -448,16 +447,6 @@ class Functions
 		if (is_string($string)) {
 			if (preg_match('/(script).*(\/script)/i', $string)) {
 				$string = preg_replace(array('/</', '/>/', '/"/'), array('&lt;', '&gt;', '&quot;'), $string);
-			}
-		}
-		return $string;
-	}
-
-	public static function fromHTML_FCK($string)
-	{
-		if (is_string($string)) {
-			if (preg_match('/(script).*(\/script)/i', $string)) {
-				$string = str_replace('script', '', $string);
 			}
 		}
 		return $string;
@@ -670,7 +659,8 @@ class Functions
 		$commentlist = '';
 		$sql = "SELECT commentcontent FROM vtiger_modcomments WHERE related_to = ?";
 		$result = $adb->pquery($sql, array($ticketid));
-		for ($i = 0; $i < $adb->num_rows($result); $i++) {
+		$countResult = $adb->num_rows($result);
+		for ($i = 0; $i < $countResult; $i++) {
 			$comment = $adb->query_result($result, $i, 'commentcontent');
 			if ($comment != '') {
 				$commentlist .= '<br><br>' . $comment;
@@ -990,12 +980,13 @@ class Functions
 			}
 		}
 		$savedHTML = $doc->saveHTML();
+		$savedHTML = preg_replace('/<!DOCTYPE[^>]+\>/', '', $savedHTML);
 		$savedHTML = preg_replace('/<html[^>]+\>/', '', $savedHTML);
 		$savedHTML = preg_replace('/<body[^>]+\>/', '', $savedHTML);
 		$savedHTML = preg_replace('#<head(.*?)>(.*?)</head>#is', '', $savedHTML);
 		$savedHTML = preg_replace('/<!--(.*)-->/Uis', '', $savedHTML);
 		$savedHTML = str_replace(['</html>', '</body>', '<?xml encoding="utf-8" ?>'], ['', '', ''], $savedHTML);
-		return $savedHTML;
+		return trim($savedHTML);
 	}
 
 	public static function getHtmlOrPlainText($content)
@@ -1217,43 +1208,6 @@ class Functions
 		foreach (explode(' ', $name) as $word)
 			$initial .= strtoupper($word[0]);
 		return $initial;
-	}
-
-	public static function getBacktrace($ignore = 1)
-	{
-		$trace = '';
-		foreach (debug_backtrace() as $k => $v) {
-			if ($k < $ignore) {
-				continue;
-			}
-			$args = '';
-			if (isset($v['args'])) {
-				foreach ($v['args'] as &$arg) {
-					if (!is_array($arg) && !is_object($arg) && !is_resource($arg)) {
-						$args .= "'$arg'";
-					} elseif (is_array($arg)) {
-						$args .= '[';
-						foreach ($arg as &$a) {
-							$val = $a;
-							if (is_array($a) || is_object($a) || is_resource($a)) {
-								$val = gettype($a);
-								if (is_object($a)) {
-									$val .= '(' . get_class($a) . ')';
-								}
-							}
-							$args .= $val . ',';
-						}
-						$args = rtrim($args, ',') . ']';
-					}
-					$args .= ',';
-				}
-				$args = rtrim($args, ',');
-			}
-			$file = str_replace(ROOT_DIRECTORY . DIRECTORY_SEPARATOR, '', $v['file']);
-			$trace .= '#' . ($k - $ignore) . ' ' . (isset($v['class']) ? $v['class'] . '->' : '') . $v['function'] . '(' . $args . ') in ' . $file . '(' . $v['line'] . '): ' . PHP_EOL;
-		}
-
-		return $trace;
 	}
 
 	public function getDiskSpace($dir = '')

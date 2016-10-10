@@ -991,10 +991,6 @@ class PHPMailer
 		} else {
 			$params = sprintf("-f%s", $this->Sender);
 		}
-		if ($this->Sender != '' && !ini_get('safe_mode')) {
-			$old_from = ini_get('sendmail_from');
-			ini_set('sendmail_from', $this->Sender);
-		}
 		$rt = false;
 		if ($this->SingleTo === true && count($toArr) > 1) {
 			foreach ($toArr as $val) {
@@ -1009,9 +1005,7 @@ class PHPMailer
 			$isSent = ($rt == 1) ? 1 : 0;
 			$this->doCallback($isSent, $to, $this->cc, $this->bcc, $this->Subject, $body);
 		}
-		if (isset($old_from)) {
-			ini_set('sendmail_from', $old_from);
-		}
+
 		if (!$rt) {
 			throw new phpmailerException($this->Lang('instantiate'), self::STOP_CRITICAL);
 		}
@@ -1300,10 +1294,12 @@ class PHPMailer
 
 		$line = explode($this->LE, $message);   // Magic. We know FixEOL uses $LE
 		$message = '';
-		for ($i = 0; $i < count($line); $i++) {
+		$countLine = count($line);
+		for ($i = 0; $i < $countLine; $i++) {
 			$line_part = explode(' ', $line[$i]);
 			$buf = '';
-			for ($e = 0; $e < count($line_part); $e++) {
+			$countLinePart = count($line_part);
+			for ($e = 0; $e < $countLinePart; $e++) {
 				$word = $line_part[$e];
 				if ($qp_mode && (strlen($word) > $length)) {
 					$space_left = $length - strlen($buf) - $crlflen;
@@ -1517,7 +1513,8 @@ class PHPMailer
 		}
 
 		// Add custom headers
-		for ($index = 0; $index < count($this->CustomHeader); $index++) {
+		$countCustomHeader = count($this->CustomHeader);
+		for ($index = 0; $index < $countCustomHeader; $index++) {
 			$result .= $this->HeaderLine(trim($this->CustomHeader[$index][0]), $this->EncodeHeader(trim($this->CustomHeader[$index][1])));
 		}
 		if (!$this->sign_key_file) {
@@ -1973,23 +1970,8 @@ class PHPMailer
 			if (!is_readable($path)) {
 				throw new phpmailerException($this->Lang('file_open') . $path, self::STOP_CONTINUE);
 			}
-			$magic_quotes = get_magic_quotes_runtime();
-			if ($magic_quotes) {
-				if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-					set_magic_quotes_runtime(0);
-				} else {
-					ini_set('magic_quotes_runtime', 0);
-				}
-			}
 			$file_buffer = file_get_contents($path);
 			$file_buffer = $this->EncodeString($file_buffer, $encoding);
-			if ($magic_quotes) {
-				if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-					set_magic_quotes_runtime($magic_quotes);
-				} else {
-					ini_set('magic_quotes_runtime', $magic_quotes);
-				}
-			}
 			return $file_buffer;
 		} catch (Exception $e) {
 			$this->SetError($e->getMessage());
