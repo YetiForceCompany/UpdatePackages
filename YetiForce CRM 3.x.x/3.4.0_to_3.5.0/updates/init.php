@@ -285,7 +285,6 @@ class YetiForceUpdate
 
 	public function postupdate()
 	{
-		$dirName = 'cache/updates';
 		$result = true;
 		$modulenode = $this->modulenode;
 
@@ -304,8 +303,6 @@ class YetiForceUpdate
 		while ($userId = $db->getSingleValue($result)) {
 			$this->createUserPrivilegesFileTest($userId);
 		}
-		\vtlib\Functions::recurseDelete($dirName);
-		\vtlib\Functions::recurseDelete('cache/templates_c');
 //		\App\Cache::init();
 		foreach ($this->cron as $cronName) {
 			$cron = \vtlib\Cron::getInstance($cronName);
@@ -313,15 +310,7 @@ class YetiForceUpdate
 				$cron->updateStatus(\vtlib\Cron::$STATUS_ENABLED);
 			}
 		}
-		$menuRecordModel = new Settings_Menu_Record_Model();
-		$menuRecordModel->refreshMenuFiles();
-		\vtlib\Deprecated::createModuleMetaFile();
-//		\vtlib\Access::syncSharingAccess();
-		if (headers_sent()) {
-			die('<div class="well pushDown">System update completed: <a class="btn btn-success" href="' . AppConfig::main('site_URL') . '">Return to the homepage</a></div>');
-		} else {
-			exit(header('Location: ' . AppConfig::main('site_URL')));
-		}
+		exit(header('Location: ' . AppConfig::main('site_URL') . 'cache/updates/initFinal.php'));
 	}
 
 	private function getCronData($index)
