@@ -299,9 +299,11 @@ class YetiForceUpdate
 		if ($result) {
 			$db->update('vtiger_version', ['current_version' => $modulenode->to_version]);
 		}
-		$result = $db->query('SELECT id FROM vtiger_users WHERE deleted = 0');
-		while ($userId = $db->getSingleValue($result)) {
-			$this->createUserPrivilegesFileTest($userId);
+		if (class_exists('getUserProfile')) {
+			$result = $db->query('SELECT id FROM vtiger_users WHERE deleted = 0');
+			while ($userId = $db->getSingleValue($result)) {
+				$this->createUserPrivilegesFileTest($userId);
+			}
 		}
 //		\App\Cache::init();
 		foreach ($this->cron as $cronName) {
