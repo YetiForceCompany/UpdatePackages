@@ -208,8 +208,8 @@ $languageStrings = [
 	'LBL_WATCHDOG' => 'Отслеживать изменения',
 	'LBL_UPDATE_WORK_TIME' => 'Обновление рабочего времени',
 	'LBL_SKIP_CURRENT_USER' => 'Пропустить текущего пользователя',
-	'LBL_LIST_OF_ALL_CHANGES_IN_RECORD' => 'Список всех изменений в записи',
-	'LBL_LIST_OF_ALL_VALUES_IN_RECORD' => 'Список всех значений в записи',
+	'LBL_LIST_OF_CHANGES_IN_RECORD' => 'List of changes in record',
+	'LBL_LIST_OF_NEW_VALUES_IN_RECORD' => 'List of new values in record',
 	//VTWatchdog
 	'LBL_SELECT_ACTION_TYPE' => 'Выберите тип уведомления',
 	'LBL_SELECT_RECIPIENTS' => 'Получатели',
@@ -245,6 +245,9 @@ $languageStrings = [
 	'Security risk has been detected - Brute Force' => 'Уведомление о попытке подбора пароля',
 	'Backup has been made' => 'Уведомление - Резервное копирование выполнено',
 	'Notify Account On New comment added to ticket' => 'Уведомлять пользователя портала о новом комментарии в Заявке',
+	'LBL_OWNER_REKORD' => 'Record Owner',
+	'LBL_SMTP' => 'SMTP',
+	'LBL_CHECK_EMAIL_OPTOUT' => 'Verify if recipient agreed to receive e-mails',
 ];
 
 $jsLanguageStrings = [

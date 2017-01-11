@@ -104,6 +104,15 @@ class QueryGenerator
 	}
 
 	/**
+	 * Get module model
+	 * @return string
+	 */
+	public function getModuleModel()
+	{
+		return $this->moduleModel;
+	}
+
+	/**
 	 * Get query fields
 	 * @return array
 	 */
@@ -888,9 +897,6 @@ class QueryGenerator
 				//Request will be having in terms of AM and PM but the database will be having in 24 hr format so converting
 				if ($field->getFieldDataType() === 'time') {
 					$fieldValue = \Vtiger_Time_UIType::getTimeValueWithSeconds($fieldValue);
-				}
-				if ($field->getFieldDataType() === 'currency') {
-					$fieldValue = \CurrencyField::convertToDBFormat($fieldValue);
 				}
 				if ($fieldName === 'date_start' || $fieldName === 'due_date' || $field->getFieldDataType() === 'datetime') {
 					$dateValues = explode(',', $fieldValue);

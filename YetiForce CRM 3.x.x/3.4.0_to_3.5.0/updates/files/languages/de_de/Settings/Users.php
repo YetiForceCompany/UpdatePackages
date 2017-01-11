@@ -24,6 +24,7 @@ $languageStrings = [
 	'LBL_GROUPS_COLORS' => 'Farbgruppe',
 	'LBL_GROUP_NAME' => 'Gruppenname',
 	'LBL_PRIORITY' => 'Priorität',
+	'LBL_LDAP_RECOMMENDED_INFO' => 'We do not recommend selecting users with admin permissions for LDAP authorization. In case of authorization problems there must be a user who is able to log in without LDAP integration.',
 	//Auth
 	'LBL_AUTHORIZATION' => 'LDAP',
 	'LBL_AUTHORIZATION_DESCRIPTION' => ' ',
@@ -38,7 +39,7 @@ $languageStrings = [
 	'LBL_VIEW_COLORS' => 'Farben',
 	'LBL_SWITCH_USERS' => 'Benutzer wechseln',
 	'LBL_SWITCH_USERS_DESCRIPTION' => 'Funktion um den Benutzer zu wechseln.',
-	'LBL_SU_BASE_ACCESS' => 'Bneutzer',
+	'LBL_SU_BASE_ACCESS' => 'Benutzer',
 	'LBL_SU_AVAILABLE_ACCESS' => 'Es ist erlaubt, sich anzumelden.',
 	//Locks
 	'LBL_LOCKS' => 'Sperren',

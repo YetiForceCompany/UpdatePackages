@@ -222,8 +222,8 @@ $languageStrings = [
 	'LBL_WATCHDOG' => 'Track changes',
 	'LBL_UPDATE_WORK_TIME' => 'Update working time',
 	'LBL_SKIP_CURRENT_USER' => 'Skip current user',
-	'LBL_LIST_OF_ALL_CHANGES_IN_RECORD' => 'List of all changes in record',
-	'LBL_LIST_OF_ALL_VALUES_IN_RECORD' => 'List of all values in record',
+	'LBL_LIST_OF_CHANGES_IN_RECORD' => 'List of changes in record',
+	'LBL_LIST_OF_NEW_VALUES_IN_RECORD' => 'List of new values in record',
 	//VTWatchdog
 	'LBL_SELECT_ACTION_TYPE' => 'Sélectionner le type de notification',
 	'LBL_SELECT_RECIPIENTS' => 'Destinataires',
@@ -254,7 +254,10 @@ $languageStrings = [
 	'Notify Contact On New comment added to ticket' => 'Notify Contact On New comment added to ticket',
 	'Security risk has been detected - Brute Force' => 'Security risk has been detected - Brute Force',
 	'Backup has been made' => 'Backup has been made',
-	'Notify Account On New comment added to ticket' => 'Notify Account On New comment added to ticket'
+	'Notify Account On New comment added to ticket' => 'Notify Account On New comment added to ticket',
+	'LBL_OWNER_REKORD' => 'Record Owner',
+	'LBL_SMTP' => 'SMTP',
+	'LBL_CHECK_EMAIL_OPTOUT' => 'Verify if recipient agreed to receive e-mails',
 ];
 $jsLanguageStrings = [
 	'JS_SAME_FIELDS_SELECTED_MORE_THAN_ONCE' => 'Le même champ est sélectionné à multiples reprises',

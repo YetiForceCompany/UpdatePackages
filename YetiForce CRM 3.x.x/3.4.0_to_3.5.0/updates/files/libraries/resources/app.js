@@ -263,6 +263,30 @@ var app = {
 		} else if (!params.placeholder) {
 			params.placeholder = app.vtranslate('JS_SELECT_AN_OPTION');
 		}
+		params.templateResult = function (data, container) {
+			if (data.element && data.element.className) {
+				$(container).addClass(data.element.className);
+			}
+			if (typeof data.name == 'undefined') {
+				return data.text;
+			}
+			if (data.type == 'optgroup') {
+				return '<strong>' + data.name + '</strong>';
+			} else {
+				return '<span>' + data.name + '</span>';
+			}
+		};
+		if (typeof params.templateSelection === 'undefined') {
+			params.templateSelection = function (data, container) {
+				if (data.element && data.element.className) {
+					$(container).addClass(data.element.className);
+				}
+				if (data.text === '') {
+					return data.name;
+				}
+				return data.text;
+			};
+		}
 		if (selectElement.data('ajaxSearch') === 1) {
 			params.tags = false;
 			params.language.searching = function () {
@@ -552,6 +576,9 @@ var app = {
 			var modalContainers = jQuery('.modalContainer');
 			if (modalContainers.length == 0 && backdrop.length) {
 				backdrop.remove();
+			}
+			if (backdrop.length > 0) {
+				$('body').addClass('modal-open');
 			}
 		});
 		return container;
@@ -1474,9 +1501,15 @@ var app = {
 		if (typeof error == 'object' && error.statusText) {
 			error = error.statusText;
 		}
-		console.error(error);
-		console.warn(err);
-		console.warn(errorThrown);
+		if (error) {
+			console.error(error);
+		}
+		if (err) {
+			console.error(err);
+		}
+		if (errorThrown) {
+			console.error(errorThrown);
+		}
 		console.log('-----------------');
 	},
 	registerModal: function (container) {
@@ -1575,7 +1608,32 @@ var app = {
 			percantage = 100;
 		}
 		return jQuery(window).height() * percantage / 100;
-	}
+	},
+	registerCopyClipboard: function (key) {
+		if (key == undefined) {
+			key = '.clipboard';
+		}
+		new Clipboard(key, {
+			text: function (trigger) {
+				Vtiger_Helper_Js.showPnotify({
+					text: app.vtranslate('JS_NOTIFY_COPY_TEXT'),
+					type: 'success'
+				});
+				trigger = jQuery(trigger);
+				var element = jQuery(trigger.data('copyTarget'));
+				if (trigger.data('copyType') != undefined) {
+					if (element.is("select")) {
+						var val = element.find('option:selected').data(trigger.data('copyType'));
+					} else {
+						var val = element.data(trigger.data('copyType'));
+					}
+				} else {
+					var val = element.val();
+				}
+				return val;
+			}
+		});
+	},
 }
 jQuery(document).ready(function () {
 	app.changeSelectElementView();

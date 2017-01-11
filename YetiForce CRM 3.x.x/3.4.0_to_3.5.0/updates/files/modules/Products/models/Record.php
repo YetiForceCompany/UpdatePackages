@@ -52,7 +52,9 @@ class Products_Record_Model extends Vtiger_Record_Model
 			WHERE vtiger_crmentity.deleted = 0 AND vtiger_seproductsrel.productid = ? ", array($this->getId()));
 
 		$subProductList = array();
-		for ($i = 0; $i < $db->num_rows($result); $i++) {
+
+		$numRowsCount = $db->num_rows($result);
+		for ($i = 0; $i < $numRowsCount; $i++) {
 			$subProductId = $db->query_result($result, $i, 'productid');
 			$subProductList[] = Vtiger_Record_Model::getInstanceById($subProductId, 'Products');
 		}
@@ -199,7 +201,7 @@ class Products_Record_Model extends Vtiger_Record_Model
 
 		$rows = [];
 		if (!$query) {
-			$rows = \App\Record::findCrmidByLabel($searchKey, $moduleName, $limit);
+			$rows = \App\Record::getCrmIdBySearchLabel($searchKey, $moduleName, $limit);
 		} else {
 			$result = $adb->pquery($query, $params);
 			while ($row = $adb->getRow($result)) {

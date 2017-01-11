@@ -265,4 +265,28 @@ class Settings_Widgets_Module_Model extends Settings_Vtiger_Module_Model
 			return [];
 		}
 	}
+
+	/**
+	 * Function to get buttons which visible in header widget 
+	 * @param integer $moduleId Number id module
+	 * @return Vtiger_Link_Model[]
+	 */
+	public static function getHeaderButtons($moduleId)
+	{
+		$linkList = [];
+		$moduleName = \App\Module::getModuleName($moduleId);
+		if ($moduleName === 'Documents') {
+			$linkList[] = [
+				'linklabel' => App\Language::translate('LBL_MASS_ADD', $moduleName),
+				'linkurl' => 'javascript:Vtiger_Index_Js.massAddDocuments("index.php?module=Documents&view=MassAddDocuments")',
+				'linkicon' => 'glyphicon glyphicon-plus',
+				'linkclass' => 'btn-sm btn-primary'
+			];
+		}
+		$buttons = [];
+		foreach ($linkList as &$link) {
+			$buttons[] = Vtiger_Link_Model::getInstanceFromValues($link);
+		}
+		return $buttons;
+	}
 }

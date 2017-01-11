@@ -16,7 +16,8 @@ class Mailer
 		1 => 'LBL_WAITING_TO_BE_SENT',
 		2 => 'LBL_ERROR_DURING_SENDING',
 	];
-	public static $quoteJsonColumn = ['to', 'cc', 'bcc', 'attachments'];
+	public static $quoteJsonColumn = ['to', 'cc', 'bcc', 'attachments', 'params'];
+	public static $quoteColumn = ['smtp_id', 'date', 'owner', 'status', 'from', 'subject', 'content', 'to', 'cc', 'bcc', 'attachments', 'priority', 'params'];
 
 	/** @var \PHPMailer PHPMailer instance */
 	protected $mailer;
@@ -69,6 +70,46 @@ class Mailer
 		$this->smtp = $smtpInfo;
 		$this->setSmtp();
 		return $this;
+	}
+
+	/**
+	 * 
+	 * @param array $params
+	 * @return boolean
+	 */
+	public static function sendFromTemplate($params)
+	{
+		if (empty($params['template'])) {
+			return false;
+		}
+		$recordModel = false;
+		if (empty($params['recordModel'])) {
+			$moduleName = isset($params['moduleName']) ? $params['moduleName'] : null;
+			if (isset($params['recordId'])) {
+				$recordModel = \Vtiger_Record_Model::getInstanceById($params['recordId'], $moduleName);
+			}
+		} else {
+			$recordModel = $params['recordModel'];
+		}
+		$template = Mail::getTemplete($params['template']);
+		if (!$template) {
+			return false;
+		}
+		$textParser = $recordModel ? TextParser::getInstanceByModel($recordModel) : TextParser::getInstance(isset($params['moduleName']) ? $params['moduleName'] : '');
+		if (!empty($params['language'])) {
+			$textParser->setLanguage($params['language']);
+		}
+		$textParser->setParams(array_diff_key($params, array_flip(['subject', 'content', 'attachments', 'recordModel'])));
+		$params['subject'] = $textParser->setContent($template['subject'])->parse()->getContent();
+		$params['content'] = $textParser->setContent($template['content'])->parse()->getContent();
+		if (empty($params['smtp_id'])) {
+			$params['smtp_id'] = $template['smtp_id'];
+		}
+		if (isset($template['attachments'])) {
+			$params['attachments'] = array_merge(empty($params['attachments']) ? [] : $params['attachments'], $template['attachments']);
+		}
+		static::addMail(array_intersect_key($params, array_flip(static::$quoteColumn)));
+		return true;
 	}
 
 	/**
@@ -168,7 +209,12 @@ class Mailer
 	 */
 	public function content($message)
 	{
+		$this->mailer->isHTML(true);
 		$this->mailer->msgHTML($message);
+		//$this->mailer->Encoding = 'quoted-printable';
+		//$this->mailer->Body = $message;
+		//$this->mailer->AltBody = 'ppp';
+		//$this->mailer->CharSet = 'UTF-8';
 		return $this;
 	}
 
@@ -280,12 +326,110 @@ class Mailer
 				Log::trace(trim($str), 'Mailer');
 			}
 		};
-		$currentUser = Users_Record_Model::getCurrentUserModel();
+		$currentUser = \Users_Record_Model::getCurrentUserModel();
 		$this->to($currentUser->get('email1'));
 		$template = Mail::getTempleteDetail('TestMailAboutTheMailServerConfiguration');
+		if (!$template) {
+			return ['result' => false, 'error' => Language::translate('LBL_NO_EMAIL_TEMPLATE')];
+		}
 		$this->subject($template['subject']);
 		$this->content($template['content']);
 		$result = $this->send();
 		return ['result' => $result, 'error' => implode(PHP_EOL, $this->error)];
+	}
+
+	/**
+	 * Send mail by row queue
+	 * @param array $rowQueue
+	 * @return boolean
+	 */
+	public static function sendByRowQueue($rowQueue)
+	{
+		if (\AppConfig::main('systemMode') === 'demo') {
+			return true;
+		}
+		$mailer = (new self())->loadSmtpByID($rowQueue['smtp_id'])->subject($rowQueue['subject'])->content($rowQueue['content']);
+		if ($rowQueue['from']) {
+			$from = Json::decode($rowQueue['from']);
+			$mailer->from($from['email'], $from['name']);
+		}
+		foreach (['cc', 'bcc'] as $key) {
+			if ($rowQueue[$key]) {
+				foreach (Json::decode($rowQueue[$key]) as $email => $name) {
+					if (is_numeric($email)) {
+						$email = $name;
+						$name = '';
+					}
+					$mailer->$key($email, $name);
+				}
+			}
+		}
+		$attachmentsToRemove = [];
+		if ($rowQueue['attachments']) {
+			$attachments = Json::decode($rowQueue['attachments']);
+			if (isset($attachments['ids'])) {
+				$attachments = array_merge($attachments, Mail::getAttachmentsFromDocument($attachments['ids']));
+				unset($attachments['ids']);
+			}
+			foreach ($attachments as $path => $name) {
+				if (is_numeric($path)) {
+					$path = $name;
+					$name = '';
+				}
+				$mailer->attachment($path, $name);
+				if (strpos(realpath($path), 'cache' . DIRECTORY_SEPARATOR)) {
+					$attachmentsToRemove[] = $path;
+				}
+			}
+		}
+		if ($rowQueue['params']) {
+			foreach (Json::decode($rowQueue['params']) as $name => $param) {
+				$this->sendCustomParams($name, $param, $mailer);
+			}
+		}
+		if ($mailer->getSmtp('individual_delivery')) {
+			foreach (Json::decode($rowQueue['to']) as $email => $name) {
+				$separateMailer = clone $mailer;
+				if (is_numeric($email)) {
+					$email = $name;
+					$name = '';
+				}
+				$separateMailer->to($email, $name);
+				$status = $separateMailer->send();
+				if (!$status) {
+					return false;
+				}
+			}
+		} else {
+			foreach (Json::decode($rowQueue['to']) as $email => $name) {
+				if (is_numeric($email)) {
+					$email = $name;
+					$name = '';
+				}
+				$mailer->to($email, $name);
+			}
+			$status = $mailer->send();
+		}
+		if ($status) {
+			foreach ($attachmentsToRemove as $file) {
+				unlink($file);
+			}
+		}
+		return $status;
+	}
+
+	/**
+	 * Adding additional parameters
+	 * @param string $name
+	 * @param mixed $param
+	 * @param self $mailer
+	 */
+	public function sendCustomParams($name, $param, $mailer)
+	{
+		switch ($name) {
+			case 'ics':
+				$mailer->mailer->Ical = $param;
+				break;
+		}
 	}
 }
