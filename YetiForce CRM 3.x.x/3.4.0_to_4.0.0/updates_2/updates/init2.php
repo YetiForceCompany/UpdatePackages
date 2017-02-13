@@ -169,6 +169,23 @@ class YetiForceUpdate2
 		'vendor/',
 		'vtlib/thirdparty/network',
 		'vtlib/Vtiger/Net/Client.php',
+		'include/utils/RecurringType.php',
+		'languages/de_de/Settings/MobileApps.php',
+		'languages/en_us/Settings/MobileApps.php',
+		'languages/pl_pl/Settings/MobileApps.php',
+		'languages/pl_pl/Install.php',
+		'languages/ru_ru/Settings/MobileApps.php',
+		'layouts/basic/modules/Settings/MobileApps',
+		'layouts/basic/modules/Vtiger/resources/Mobile.js',
+		'layouts/basic/modules/Vtiger/uitypes/StreetAddress.tpl',
+		'layouts/basic/modules/Vtiger/uitypes/StreetAddressDetailView.tpl',
+		'modules/Calendar/Appointment.php',
+		'modules/Calendar/RepeatEvents.php',
+		'modules/Settings/MobileApps',
+		'modules/Vtiger/actions/Mobile.php',
+		'modules/Vtiger/models/Mobile.php',
+		'modules/Vtiger/uitypes/StreetAddress.php',
+		'vendor/yetiforce/QueryField/StreetAddressField.php'
 	];
 
 	public function __construct()
@@ -414,6 +431,11 @@ class YetiForceUpdate2
 					'vtiger_products' => ['pos']
 				];
 				break;
+			case 3:
+				$fields = [
+					'vtiger_activity' => ['recurringtype']
+				];
+				break;
 			default:
 				break;
 		}
@@ -424,17 +446,69 @@ class YetiForceUpdate2
 	{
 		\App\Log::trace('Entering ' . __METHOD__);
 		$db = \App\Db::getInstance();
-		foreach ($fields as $tableName => $columnsName) {
-			if (empty($columnsName) || !$db->isTableExists($tableName)) {
+		foreach ($fields as $tableNameVal => $columnsName) {
+			if (empty($columnsName) || !$db->isTableExists($tableNameVal)) {
 				continue;
 			}
-			foreach ($columnsName as $columnName) {
-				$query = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['columnname' => $columnName, 'tablename' => $tableName]);
-				$dataReader = $query->createCommand()->query();
-				while (($id = $dataReader->readColumn(0)) !== false) {
+			foreach ($columnsName as $columnSingleName) {
+				$ids = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['columnname' => $columnSingleName, 'tablename' => $tableNameVal])->column();
+				foreach ($ids as $id) {
 					$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($id);
 					try {
-						$fieldInstance->delete();
+						$fieldInstance->__delete();
+						$fldModule = $fieldInstance->getModuleName();
+						$uitype = $fieldInstance->get('uitype');
+						$typeofdata = $fieldInstance->get('typeofdata');
+						$fieldname = $fieldInstance->getName();
+						$oldfieldlabel = $fieldInstance->get('label');
+						$tablename = $fieldInstance->get('table');
+						$columnName = $fieldInstance->get('column');
+						$fieldtype = explode("~", $typeofdata);
+						$tabId = $fieldInstance->getModuleId();
+
+						$focus = CRMEntity::getInstance($fldModule);
+
+						$deleteColumnName = $tablename . ":" . $columnName . ":" . $fieldname . ":" . $fldModule . "_" . str_replace(" ", "_", $oldfieldlabel) . ":" . $fieldtype[0];
+						$columnCvstdfilter = $tablename . ":" . $columnName . ":" . $fieldname . ":" . $fldModule . "_" . str_replace(" ", "_", $oldfieldlabel);
+						$selectColumnname = $tablename . ":" . $columnName . ":" . $fldModule . "_" . str_replace(" ", "_", $oldfieldlabel) . ":" . $fieldname . ":" . $fieldtype[0];
+						$reportsummaryColumn = $tablename . ":" . $columnName . ":" . str_replace(" ", "_", $oldfieldlabel);
+						$tableSchema = $db->getSchema()->getTableSchema($tablename);
+						if ($tablename != 'vtiger_crmentity' && $tableSchema && $tableSchema->getColumn($columnName)) {
+							$db->createCommand()->dropColumn($tablename, $columnName)->execute();
+						}
+						//we have to remove the entries in customview and report related tables which have this field ($colName)
+						$db->createCommand()->delete('vtiger_cvcolumnlist', ['columnname' => $deleteColumnName])->execute();
+						$db->createCommand()->delete('vtiger_cvstdfilter', ['columnname' => $columnCvstdfilter])->execute();
+						$db->createCommand()->delete('vtiger_cvadvfilter', ['columnname' => $deleteColumnName])->execute();
+						$db->createCommand()->delete('vtiger_selectcolumn', ['columnname' => $selectColumnname])->execute();
+						$db->createCommand()->delete('vtiger_relcriteria', ['columnname' => $selectColumnname])->execute();
+						$db->createCommand()->delete('vtiger_reportsortcol', ['columnname' => $selectColumnname])->execute();
+						$db->createCommand()->delete('vtiger_reportdatefilter', ['datecolumnname' => $columnCvstdfilter])->execute();
+						$db->createCommand()->delete('vtiger_reportsummary', ['like', 'columnname', $reportsummaryColumn])->execute();
+						//Deleting from convert lead mapping vtiger_table- Jaguar
+						if ($fldModule == 'Leads') {
+							$db->createCommand()->delete('vtiger_convertleadmapping', ['leadfid' => $id])->execute();
+						} elseif ($fldModule == 'Accounts') {
+							$mapDelId = ['Accounts' => 'accountfid'];
+							$db->createCommand()->update('vtiger_convertleadmapping', [$mapDelId[$fldModule] => 0], [$mapDelId[$fldModule] => $id])->execute();
+						}
+
+						//HANDLE HERE - we have to remove the table for other picklist type values which are text area and multiselect combo box
+						if ($fieldInstance->getFieldDataType() == 'picklist' || $fieldInstance->getFieldDataType() == 'multipicklist') {
+							$query = (new \App\Db\Query())->from('vtiger_field')
+								->where(['columnname' => $columnName])
+								->andWhere(['in', 'uitype', [15, 16, 33]]);
+							$dataReader = $query->createCommand()->query();
+							if (!$dataReader->count()) {
+								$db->createCommand()->dropTable('vtiger_' . $columnName)->execute();
+								//To Delete Sequence Table 
+								if ($db->isTableExists('vtiger_' . $columnName . '_seq')) {
+									$db->createCommand()->dropTable('vtiger_' . $columnName . '_seq')->execute();
+								}
+								$db->createCommand()->delete('vtiger_picklist', ['name' => $columnName]);
+							}
+							$db->createCommand()->delete('vtiger_picklist_dependency', ['and', "tabid = $tabId", ['or', "sourcefield = '$columnname'", "targetfield = '$columnname'"]])->execute();
+						}
 					} catch (Exception $e) {
 						\App\Log::error('ERROR' . __METHOD__ . ': code ' . $e->getCode() . " message " . $e->getMessage());
 					}
@@ -460,28 +534,29 @@ class YetiForceUpdate2
 				];
 				break;
 			case 2:
-				$tabId = \vtlib\Functions::getModuleId('EmailTemplates');
+				$modulesAll = ['EmailTemplates', 'CFixedAssets', 'CInternalTickets', 'CMileageLogbook', 'FInvoiceCost', 'SVendorEnquiries'];
+				$tabsData = array_map('\vtlib\Functions::getModuleId', $modulesAll);
 				$actions = [
-						['type' => 'add', 'name' => 'Import', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'Export', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'CreateCustomFilter', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'DuplicateRecord', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'MassEdit', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'MassDelete', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'MassAddComment', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'MassComposeEmail', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'MassTransferOwnership', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'Dashboard', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'CreateDashboardFilter', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'ExportPdf', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'RecordMapping', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'RecordMappingList', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'FavoriteRecords', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'WatchingRecords', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'WatchingModule', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'RemoveRelation', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'ReviewingUpdates', 'tabsData' => [$tabId]],
-						['type' => 'add', 'name' => 'CreateDashboardChartFilter', 'tabsData' => [$tabId]]
+						['type' => 'add', 'name' => 'Import', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'Export', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'CreateCustomFilter', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'DuplicateRecord', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'MassEdit', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'MassDelete', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'MassAddComment', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'MassComposeEmail', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'MassTransferOwnership', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'Dashboard', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'CreateDashboardFilter', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'ExportPdf', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'RecordMapping', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'RecordMappingList', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'FavoriteRecords', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'WatchingRecords', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'WatchingModule', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'RemoveRelation', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'ReviewingUpdates', 'tabsData' => $tabsData],
+						['type' => 'add', 'name' => 'CreateDashboardChartFilter', 'tabsData' => $tabsData]
 				];
 				break;
 			default:
@@ -658,6 +733,7 @@ class YetiForceUpdate2
 							`name` varchar(100) NOT NULL,
 							`short_name` varchar(100) DEFAULT NULL,
 							`default` tinyint(1) unsigned NOT NULL DEFAULT '0',
+							`industry` varchar(50) DEFAULT NULL,
 							`street` varchar(150) DEFAULT NULL,
 							`city` varchar(100) DEFAULT NULL,
 							`code` varchar(30) DEFAULT NULL,
@@ -730,6 +806,13 @@ class YetiForceUpdate2
 						['type' => 'remove', 'name' => 'vtiger_oss_project_templates'],
 						['type' => 'remove', 'name' => 'vtiger_campaignrelstatus_seq'],
 						['type' => 'remove', 'name' => 'vtiger_campaignrelstatus'],
+						['type' => 'remove', 'name' => 'yetiforce_mobile_keys'],
+						['type' => 'remove', 'name' => 'yetiforce_mobile_pushcall'],
+						['type' => 'remove', 'name' => 'w_yf_pos_actions'],
+						['type' => 'remove', 'name' => 'w_yf_pos_users'],
+						['type' => 'remove', 'name' => 'vtiger_recurringtype_seq'],
+						['type' => 'remove', 'name' => 'vtiger_recurringtype'],
+						['type' => 'remove', 'name' => 'vtiger_recurringevents'],
 				];
 				break;
 			default:
@@ -872,6 +955,7 @@ class YetiForceUpdate2
 
 	private function addRec($recordData)
 	{
+		$db = App\Db::getInstance();
 		if (empty($recordData)) {
 			\App\Log::warning('Exiting ' . __METHOD__ . ' | No data');
 			return;
@@ -886,12 +970,15 @@ class YetiForceUpdate2
 		}
 		if (!$query->exists()) {
 			$recordModel = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
+			$recordData['assigned_user_id'] = \App\User::getCurrentUserRealId();
+			$recordData['created_user_id'] = \App\User::getCurrentUserRealId();
 			foreach ($recordData as $key => $value) {
 				$recordModel->set($key, $value);
 			}
 			$recordModel->save();
+			$db->createCommand()->update('vtiger_crmentity', ['smownerid' => $recordData['assigned_user_id'], 'smcreatorid' => $recordData['created_user_id'], 'users' => null], ['crmid' => $recordModel->getId()])->execute();
 			if ($isSys) {
-				App\Db::getInstance()->createCommand()->update('u_yf_emailtemplates', ['sys_name' => $recordData['sys_name']], ['emailtemplatesid' => $recordModel->getId()])->execute();
+				$db->createCommand()->update('u_yf_emailtemplates', ['sys_name' => $recordData['sys_name']], ['emailtemplatesid' => $recordModel->getId()])->execute();
 			}
 		}
 	}
@@ -907,7 +994,8 @@ class YetiForceUpdate2
 			$db->createCommand()->insert('s_yf_companies', $data)->execute();
 		}
 		$fieldModel = Vtiger_Field_Model::getInstance('reservations_status', Vtiger_Module_Model::getInstance('Reservations'));
-		if ($fieldModel) {
+		$picklist = \App\Fields\Picklist::getPickListValues('reservations_status');
+		if ($fieldModel && !in_array('PLL_DRAFT', $picklist)) {
 			$fieldModel->setPicklistValues(['PLL_DRAFT', 'PLL_CANCELLED']);
 		}
 		$this->addBlocks();
@@ -919,7 +1007,10 @@ class YetiForceUpdate2
 				$db->createCommand()->delete('vtiger_role2picklist', ['picklistvalueid' => $valueId])->execute();
 				$db->createCommand()->delete('vtiger_finvoice_status', [$fieldModel->getName() => 'None'])->execute();
 			}
-			$fieldModel->setPicklistValues(['PLL_UNASSIGNED', 'PLL_AWAITING_REALIZATION', 'PLL_FOR_PROCESSING', 'PLL_IN_PROGRESSING', 'PLL_SUBMITTED_COMMENTS', 'PLL_FOR_APPROVAL', 'PLL_CANCELLED', 'PLL_ACCEPTED']);
+			$picklist = \App\Fields\Picklist::getPickListValues('finvoice_status');
+			if (!in_array('PLL_UNASSIGNED', $picklist)) {
+				$fieldModel->setPicklistValues(['PLL_UNASSIGNED', 'PLL_AWAITING_REALIZATION', 'PLL_FOR_PROCESSING', 'PLL_IN_PROGRESSING', 'PLL_SUBMITTED_COMMENTS', 'PLL_FOR_APPROVAL', 'PLL_CANCELLED', 'PLL_ACCEPTED']);
+			}
 		}
 		$this->setTrees($this->getTrees(1));
 		$this->setFields($this->getFields(3));
@@ -986,6 +1077,40 @@ class YetiForceUpdate2
 			$db->createCommand()->delete('vtiger_blocks', ['blocklabel' => 'LBL_SYNCHRONIZE_POS', 'tabid' => \vtlib\Functions::getModuleId('SSingleOrders')])->execute();
 		}
 		$this->cron($this->getCronData(1));
+		$this->removeFields($this->getFieldsToRemove(3));
+		$tableSchema = $db->getSchema()->getTableSchema('vtiger_activity_reminder');
+		$columnSchema = $tableSchema->getColumn('recurringid');
+		if ($columnSchema) {
+			$db->createCommand()->dropColumn('vtiger_activity_reminder', 'recurringid')->execute();
+		}
+		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'District'], ['subindustry' => 'Poviat'])->execute();
+		if ($res) {
+			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'District'], ['subindustry' => 'Poviat'])->execute();
+		}
+		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'Developers'], ['subindustry' => 'Deweloperzy'])->execute();
+		if ($res) {
+			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'Developers'], ['subindustry' => 'Deweloperzy'])->execute();
+		}
+		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'District Job Center'], ['subindustry' => 'Poviat Job Centre'])->execute();
+		if ($res) {
+			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'District Job Center'], ['subindustry' => 'Poviat Job Centre'])->execute();
+		}
+		$dataReader = (new \App\Db\Query())->from('vtiger_picklist_dependency')->where(['or like', 'targetvalues', ['"Poviat"', '"Deweloperzy"', '"Poviat Job Centre"']])->createCommand()->query();
+		while ($raw = $dataReader->read()) {
+			$raw['targetvalues'] = str_replace("Poviat Job Centre", "District Job Center", $raw['targetvalues']);
+			$raw['targetvalues'] = str_replace("Poviat", "District", $raw['targetvalues']);
+			$raw['targetvalues'] = str_replace("Deweloperzy", "Developers", $raw['targetvalues']);
+			$db->createCommand()->update('vtiger_picklist_dependency', ['targetvalues' => $raw['targetvalues']], ['id' => $raw['id']])->execute();
+		}
+		$res = $db->createCommand()->delete('vtiger_ws_fieldtype', ['fieldtype' => 'streetAddress'])->execute();
+		if ($res) {
+			$db->createCommand()->update('vtiger_field', ['uitype' => 1, 'displaytype' => 1], ['uitype' => 306])->execute();
+		}
+		$tableSchema = $db->getSchema()->getTableSchema('s_yf_companies');
+		$columnSchema = $tableSchema->getColumn('industry');
+		if (!$columnSchema) {
+			\vtlib\Utils::AddColumn('s_yf_companies', 'industry', ['string', 50]);
+		}
 		$this->cleanDB();
 	}
 
@@ -1007,6 +1132,7 @@ class YetiForceUpdate2
 				['LBL_AUTOMATION', 'Document Control'],
 				['LBL_AUTOMATION', 'Project Templates'],
 				['LBL_INTEGRATION', 'LBL_POS'],
+				['LBL_INTEGRATION', 'LBL_MOBILE_KEYS'],
 		];
 		foreach ($fieldsToDelete as $row) {
 			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_settings_field')
@@ -1067,7 +1193,6 @@ class YetiForceUpdate2
 				['LBL_LOGS', 'LBL_CONFREPORT', 'adminIcon-server-configuration', 'LBL_CONFREPORT_DESCRIPTION', 'index.php?parent=Settings&module=ConfReport&view=Index', '1', '0', '0'],
 				['LBL_CALENDAR_LABELS_COLORS', 'LBL_ACTIVITY_TYPES', 'adminIcon-calendar-types', 'LBL_ACTIVITY_TYPES_DESCRIPTION', 'index.php?parent=Settings&module=Calendar&view=ActivityTypes', '1', '0', '0'],
 				['LBL_STUDIO', 'LBL_WIDGETS_MANAGEMENT', 'adminIcon-widgets-configuration', 'LBL_WIDGETS_MANAGEMENT_DESCRIPTION', 'index.php?module=WidgetsManagement&parent=Settings&view=Configuration', '15', '0', '0'],
-				['LBL_INTEGRATION', 'LBL_MOBILE_KEYS', 'adminIcon-mobile-applications', 'LBL_MOBILE_KEYS_DESCRIPTION', 'index.php?parent=Settings&module=MobileApps&view=MobileKeys', '6', '0', '0'],
 				['LBL_STUDIO', 'LBL_TREES_MANAGER', 'adminIcon-field-folders', 'LBL_TREES_MANAGER_DESCRIPTION', 'index.php?module=TreesManager&parent=Settings&view=List', '11', '0', '0'],
 				['LBL_STUDIO', 'LBL_MODTRACKER_SETTINGS', 'adminIcon-modules-track-chanegs', 'LBL_MODTRACKER_SETTINGS_DESCRIPTION', 'index.php?module=ModTracker&parent=Settings&view=List', '5', '0', '0'],
 				['LBL_STUDIO', 'LBL_HIDEBLOCKS', 'adminIcon-filed-hide-bloks', 'LBL_HIDEBLOCKS_DESCRIPTION', 'index.php?module=HideBlocks&parent=Settings&view=List', '12', '0', '0'],
@@ -1294,6 +1419,11 @@ class YetiForceUpdate2
 						['type' => 'add', 'search' => "];", 'checkInContents' => "GLOBAL_SEARCH_OPERATOR", 'addingType' => 'before', 'value' => "	// Global search - Show operator
 	'GLOBAL_SEARCH_OPERATOR' => true,
 "],
+				]
+			],
+				['name' => 'config/api.php', 'conditions' => [
+						['type' => 'remove', 'search' => 'yetiportal'],
+						['type' => 'remove', 'search' => 'mobile'],
 				]
 			],
 				['name' => '.htaccess', 'conditions' => [

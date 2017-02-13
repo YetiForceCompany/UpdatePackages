@@ -8,7 +8,6 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  * *********************************************************************************** */
-vimport('~~include/utils/RecurringType.php');
 
 class Calendar_Record_Model extends Vtiger_Record_Model
 {
@@ -157,7 +156,6 @@ class Calendar_Record_Model extends Vtiger_Record_Model
 					'reminder_time' => $reminderTime,
 					'reminder_sent' => 0,
 					'activity_id' => $this->getId(),
-					'recurringid' => 0
 				])->execute();
 			}
 		} else {
@@ -234,49 +232,6 @@ class Calendar_Record_Model extends Vtiger_Record_Model
 				])->execute();
 			}
 		}
-	}
-
-	/**
-	 * Function to get recurring information for the current record in detail view
-	 * @return array - which contains Recurring Information
-	 */
-	public function getRecurringDetails()
-	{
-		$info = Vtiger_Recurrence_UIType::getRecurringInfo($this->get('recurrence'));
-
-		switch ($info['FREQ']) {
-			case 'DAILY':
-				$labelFreq = 'LBL_DAYS_TYPE';
-				break;
-			case 'WEEKLY':
-				$labelFreq = 'LBL_WEEKS_TYPE';
-				break;
-			case 'MONTHLY':
-				$labelFreq = 'LBL_MONTHS_TYPE';
-				break;
-			case 'YEARLY':
-				$labelFreq = 'LBL_YEAR_TYPE';
-				break;
-		}
-		$info['freqLabel'] = $labelFreq;
-		return $info;
-	}
-
-	/**
-	 * Function to get the recurring object
-	 * @return Object - recurring object
-	 */
-	public function getRecurringObject()
-	{
-		$result = (new \App\Db\Query())->select(['vtiger_recurringevents.*', 'vtiger_activity.date_start', 'vtiger_activity.time_start', 'vtiger_activity.due_date', 'vtiger_activity.time_end'])
-				->from('vtiger_recurringevents')
-				->innerJoin('vtiger_activity', 'vtiger_recurringevents.activityid = vtiger_activity.activityid')
-				->where(['vtiger_recurringevents.activityid' => (int) $this->getId()])->one();
-
-		if ($result) {
-			return RecurringType::fromDBRequest($result);
-		}
-		return false;
 	}
 
 	/**

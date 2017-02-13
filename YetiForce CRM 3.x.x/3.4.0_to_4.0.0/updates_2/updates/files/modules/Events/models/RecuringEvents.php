@@ -58,8 +58,7 @@ class Events_RecuringEvents_Model extends Vtiger_Base_Model
 	{
 		$instance = new self();
 		$moduleName = $request->getModule();
-		$recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
-		$instance->recordModel = $recordModel;
+		$instance->recordModel = Vtiger_Record_Model::getCleanInstance($moduleName);
 		$instance->isNew = $request->isEmpty('record');
 		if (!$instance->isNew) {
 			$instance->templateRecordId = $request->get('record');
@@ -177,11 +176,11 @@ class Events_RecuringEvents_Model extends Vtiger_Base_Model
 					$dates = $this->getDates($dates['date_start'] . ' ' . $dates['time_start'], $dates['due_date'] . ' ' . $dates['time_end'], $dates['recurrence']);
 					foreach ($recordsIds as $recordId => $data) {
 						if ($skip && $data['date_start'] >= $this->recordModel->get('date_start')) {
-							$this->updateOmmitedRecords($omittedRecords, $data['date_start']);
 							$skip = false;
-							$this->changes['followup'] = $recordId;
-							$this->recordModel->set('followup', $recordId);
-							if ($this->recordModel->getPreviousValue('recurrence') !== $this->recordModel->get('recurrence')) {
+							if (!($this->recordModel->getPreviousValue('recurrence') === $this->recordModel->get('recurrence'))) {
+								$this->updateOmmitedRecords($omittedRecords, $data['date_start']);
+								$this->changes['followup'] = $recordId;
+								$this->recordModel->set('followup', $recordId);
 								$dates = $this->getDates($data['date_start'] . ' ' . $data['time_start'], $data['due_date'] . ' ' . $data['time_end']);
 								$itemNumber = 0;
 							}
