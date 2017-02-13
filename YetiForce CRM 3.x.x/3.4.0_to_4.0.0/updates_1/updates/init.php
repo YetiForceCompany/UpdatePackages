@@ -523,7 +523,7 @@ class YetiForceUpdate
 					['type' => 'add', 'name' => 'a_yf_bruteforce_users', 'sql' => "`a_yf_bruteforce_users` (
 							`id` int(11) NOT NULL,
 							PRIMARY KEY (`id`),
-							CONSTRAINT `fk_1_vtiger_bruteforce_users` FOREIGN KEY (`id`) REFERENCES `vtiger_users` (`id`) ON DELETE CASCADE
+							CONSTRAINT `fk_1_bruteforce_users` FOREIGN KEY (`id`) REFERENCES `vtiger_users` (`id`) ON DELETE CASCADE
 						  )"],
 					['type' => 'add', 'name' => 'a_yf_bruteforce', 'sql' => "`a_yf_bruteforce` (
 							`attempsnumber` tinyint(2) NOT NULL,
