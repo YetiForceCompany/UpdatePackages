@@ -1173,6 +1173,8 @@ class YetiForceUpdate2
 			\vtlib\Utils::AddColumn('s_yf_companies', 'industry', ['string', 50]);
 		}
 		$db->createCommand()->update('vtiger_field', ['typeofdata' => 'V~O'], ['typeofdata' => 'V~O~LE~100', 'columnname' => ['buildingnumbera', 'localnumbera', 'buildingnumberb', 'localnumberb', 'buildingnumberc', 'localnumberc']])->execute();
+		$db->createCommand()->update('vtiger_field', ['uitype' => 1], ['uitype' => 307])->execute();
+		$db->createCommand()->update('vtiger_field', ['typeofdata' => 'V~M'], ['typeofdata' => 'V~O', 'columnname' => 'finvoice_formpayment'])->execute();
 		$this->cleanDB();
 	}
 
