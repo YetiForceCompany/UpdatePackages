@@ -979,6 +979,7 @@ class YetiForceUpdate2
 
 	private function addRecords($moduleName)
 	{
+		$db = \App\Db::getInstance();
 		$location = "cache/updates/$moduleName";
 		$zipfile = "cache/updates/$moduleName.zip";
 		$filesName = [];
@@ -1011,6 +1012,12 @@ class YetiForceUpdate2
 				}
 				$this->addRec($recordData);
 			}
+		}
+		$number = (new \App\Db\Query())->select(['number'])->from('u_yf_emailtemplates')->orderBy(['number' => SORT_DESC])->limit(1)->scalar();
+		$number = (int) str_replace('N', '', $number);
+		if ($number && $number !== 1) {
+			$num = $number + 1;
+			$db->createCommand()->update('vtiger_modentity_num', ['cur_id' => $num], ['tabid' => \vtlib\Functions::getModuleId('EmailTemplates')])->execute();
 		}
 	}
 
