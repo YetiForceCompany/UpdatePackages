@@ -1,0 +1,11 @@
+Required PHP version needs to be equal or greater than 5.6.
+Before launching the update package we recommend disabling all cron actions.
+You will be redirected to Home page when update is completed.
+
+During the update:
+- The default menu configuration will be reset.
+- New mail templates will be uploaded.
+- POS synchronization will be removed, therefore related fields in such modules as Storages, Sales orders, etc will also be removed.
+- Changes were introduced in variable parser in PDF templates, which might require and update of these templates. The templates are available for download from the test versions of YetiForce CRM.
+- The following modules were removed: OSSProjectTemplates, OSSDocumentControl, CustomerPortal, OSSMailTemplates, Emails, Webforms, mobileApps.
+- The following modules will be installed: CFixedAssets, CInternalTickets, FInvoiceCost, CMileageLogbook, SVendorEnquiries.
