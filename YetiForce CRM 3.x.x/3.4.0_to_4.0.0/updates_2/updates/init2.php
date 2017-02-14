@@ -213,6 +213,7 @@ class YetiForceUpdate2
 		$this->addRecords('EmailTemplates');
 		$this->updateData();
 		$this->setTablesScheme($this->getTablesAction(5));
+		$this->setAlterTables($this->getAlterTables(1));
 		$this->updateConfigurationFiles();
 		$this->updateMenu();
 		$this->updateSettingMenu();
@@ -813,6 +814,7 @@ class YetiForceUpdate2
 						['type' => 'remove', 'name' => 'vtiger_recurringtype_seq'],
 						['type' => 'remove', 'name' => 'vtiger_recurringtype'],
 						['type' => 'remove', 'name' => 'vtiger_recurringevents'],
+						['type' => 'remove', 'name' => 'vtiger_blocks_seq'],
 				];
 				break;
 			default:
@@ -914,6 +916,65 @@ class YetiForceUpdate2
 			'SVendorEnquiries' => 'S-VE'
 		];
 		return $prefixes[$moduleName];
+	}
+
+	private function getAlterTables($index)
+	{
+		$fields = [];
+		switch ($index) {
+			case 1:
+				$fields = [
+						['type' => ['change', 'Null'], 'validType' => 'YES', 'name' => 'ip', 'table' => 'o_yf_access_for_user', 'sql' => "ALTER TABLE `o_yf_access_for_user` 
+							CHANGE `ip` `ip` varchar(100) NULL after `date` , 
+							CHANGE `agent` `agent` varchar(255) NULL after `url` ;"],
+				];
+				break;
+			default:
+				break;
+		}
+		return $fields;
+	}
+
+	private function setAlterTables($data)
+	{
+		$db = PearDatabase::getInstance();
+		$db->query('SET FOREIGN_KEY_CHECKS = 0;');
+		if (!empty($data)) {
+			foreach ($data as $alter) {
+				switch ($alter['type'][1]) {
+					case 'Key_name':
+						$checkSql = 'SHOW KEYS FROM `' . $alter['table'] . '` WHERE Key_name="' . $alter['name'] . '";';
+						break;
+					case 'Column_name':
+						$checkSql = 'SHOW KEYS FROM `' . $alter['table'] . '` WHERE Column_name="' . $alter['name'] . '";';
+						break;
+					case 'exception':
+						$db->query($alter['sql']);
+						continue;
+						break;
+					default:
+						if ($alter['type'][0] == 'changeTable') {
+							$checkSql = 'SHOW TABLE STATUS WHERE NAME LIKE "' . $alter['table'] . '";';
+						} else {
+							$checkSql = 'SHOW COLUMNS FROM `' . $alter['table'] . '` LIKE "' . $alter['name'] . '";';
+						}
+						break;
+				}
+				if (!$checkSql) {
+					continue;
+				}
+				$result = $db->query($checkSql);
+				$num = $result->rowCount();
+				if (( $num === 0 && $alter['type'][0] === 'add') || ($num > 0 && $alter['type'][0] === 'remove')) {
+					$db->query($alter['sql']);
+				} elseif ($num == 1 && in_array($alter['type'][0], ['change', 'changeTable'])) {
+					$row = $db->getRow($result);
+					if (strpos($row[$alter['type'][1]], $alter['validType']) === false) {
+						$db->query($alter['sql']);
+					}
+				}
+			}
+		}
 	}
 
 	private function addRecords($moduleName)
@@ -1111,6 +1172,7 @@ class YetiForceUpdate2
 		if (!$columnSchema) {
 			\vtlib\Utils::AddColumn('s_yf_companies', 'industry', ['string', 50]);
 		}
+		$db->createCommand()->update('vtiger_field', ['typeofdata' => 'V~O'], ['typeofdata' => 'V~O~LE~100', 'columnname' => ['buildingnumbera', 'localnumbera', 'buildingnumberb', 'localnumberb', 'buildingnumberc', 'localnumberc']])->execute();
 		$this->cleanDB();
 	}
 
