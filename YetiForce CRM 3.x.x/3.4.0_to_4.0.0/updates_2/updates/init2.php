@@ -342,13 +342,29 @@ class YetiForceUpdate2
 			}
 			\App\Cache::delete('ModuleEntityById', $tabId);
 			\App\Cache::delete('ModuleEntityByName', $moduleName);
+			Vtiger_Cache::set('CRMEntity', $moduleName, null);
 			$moduleBaseInstance = vtlib\Module::getInstance($moduleName);
 			if ($moduleBaseInstance) {
 				$moduleInstance = \Vtiger_Module_Model::getInstance($moduleBaseInstance->name);
 				$focus = CRMEntity::getInstance($moduleBaseInstance->name);
 				$moduleBaseInstance->tableName = $focus->table_name;
 				if ($moduleBaseInstance->name === 'Emails') {
+					$query = (new \App\Db\Query)->select(['emailid'])->from('vtiger_emaildetails');
+					$db->createCommand()->delete('vtiger_crmentity', ['and', ['setype' => 'Emails'], ['not', ['crmid' => $query]]])->execute();
+					$deletedRecords = (new \App\Db\Query)->select(['emailid'])->from('vtiger_emaildetails')->innerJoin('vtiger_crmentity', 'vtiger_emaildetails.emailid = vtiger_crmentity.crmid')->where(['vtiger_crmentity.deleted' => 1])->column();
+					if ($deletedRecords) {
+						$this->removeRecordsModule($deletedRecords);
+					}
 					$moduleBaseInstance->tableName = 'vtiger_emaildetails';
+					$tableIndex = $focus->tab_name_index;
+					unset($tableIndex['vtiger_seactivityrel']);
+					unset($tableIndex['vtiger_cntactivityrel']);
+					unset($tableIndex['vtiger_email_track']);
+					$focus->tab_name_index = $tableIndex;
+					$focus->table_name = 'vtiger_emaildetails';
+					$focus->table_index = 'emailid';
+					Vtiger_Cache::set('CRMEntity', $moduleName, $focus);
+					\App\Cache::staticSave('CRMEntity', $moduleName, clone $focus);
 				}
 				if ($moduleBaseInstance->isentitytype) {
 					$moduleBaseInstance->deleteFromCRMEntity();
@@ -383,6 +399,20 @@ class YetiForceUpdate2
 				$moduleBaseInstance->__delete();
 				\vtlib\Deprecated::createModuleMetaFile();
 			}
+		}
+	}
+
+	/**
+	 * Removed records
+	 * @param int[] $deletedRecords
+	 */
+	private function removeRecordsModule($deletedRecords)
+	{
+		$recordsId = array_splice($deletedRecords, 0, 700);
+		$recycleBinModule = new RecycleBin_Module_Model();
+		$recycleBinModule->deleteRecords($recordsId);
+		if ($deletedRecords) {
+			$this->removeRecordsModule($deletedRecords);
 		}
 	}
 
@@ -1013,7 +1043,7 @@ class YetiForceUpdate2
 				$this->addRec($recordData);
 			}
 		}
-		$number = (new \App\Db\Query())->select(['number'])->from('u_yf_emailtemplates')->orderBy(['number' => SORT_DESC])->limit(1)->scalar();
+		$number = (new \App\Db\Query())->select(['number'])->from('u_yf_emailtemplates')->orderBy(['emailtemplatesid' => SORT_DESC])->limit(1)->scalar();
 		$number = (int) str_replace('N', '', $number);
 		if ($number && $number !== 1) {
 			$num = $number + 1;
@@ -1038,8 +1068,8 @@ class YetiForceUpdate2
 		}
 		if (!$query->exists()) {
 			$recordModel = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
-			$recordData['assigned_user_id'] = \App\User::getCurrentUserRealId();
-			$recordData['created_user_id'] = \App\User::getCurrentUserRealId();
+			$recordData['assigned_user_id'] = \App\User::getActiveAdminId();
+			$recordData['created_user_id'] = \App\User::getActiveAdminId();
 			foreach ($recordData as $key => $value) {
 				$recordModel->set($key, $value);
 			}
@@ -1149,6 +1179,7 @@ class YetiForceUpdate2
 		$tableSchema = $db->getSchema()->getTableSchema('vtiger_activity_reminder');
 		$columnSchema = $tableSchema->getColumn('recurringid');
 		if ($columnSchema) {
+			$this->removeReminderDuplicates();
 			$db->createCommand()->dropColumn('vtiger_activity_reminder', 'recurringid')->execute();
 		}
 		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'District'], ['subindustry' => 'Poviat'])->execute();
@@ -1183,6 +1214,15 @@ class YetiForceUpdate2
 		$db->createCommand()->update('vtiger_field', ['uitype' => 1], ['uitype' => 307])->execute();
 		$db->createCommand()->update('vtiger_field', ['typeofdata' => 'V~M'], ['typeofdata' => 'V~O', 'columnname' => 'finvoice_formpayment'])->execute();
 		$this->cleanDB();
+	}
+
+	private function removeReminderDuplicates()
+	{
+		$db = \PearDatabase::getInstance();
+		$duplicates = (new \App\Db\Query())->select(['quantity' => new \yii\db\Expression('COUNT(activity_id)'), 'activity_id'])->from('vtiger_activity_reminder')->groupBy(['activity_id'])->having(['>', 'quantity', 1])->all();
+		foreach ($duplicates as $row) {
+			$db->query('DELETE FROM `vtiger_activity_reminder` WHERE `activity_id`=' . $row['activity_id'] . ' LIMIT ' . ($row['quantity'] - 1));
+		}
 	}
 
 	private function cleanDB()
