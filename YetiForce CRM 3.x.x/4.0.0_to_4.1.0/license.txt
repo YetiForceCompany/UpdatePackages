@@ -1,0 +1,1 @@
+Required PHP version needs to be equal or greater than 5.6.
