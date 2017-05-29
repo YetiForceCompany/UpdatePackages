@@ -61,6 +61,7 @@ class Install_Index_view extends Vtiger_View_Controller
 
 	public function preProcess(\App\Request $request, $display = true)
 	{
+		AppConfig::set('debug', 'LOG_TO_FILE', true);
 		date_default_timezone_set('UTC'); // to overcome the pre configuration settings
 		// Added to redirect to default module if already installed
 		$request->set('module', 'Install');
@@ -81,8 +82,11 @@ class Install_Index_view extends Vtiger_View_Controller
 		$this->viewer->assign('LANGUAGE_STRINGS', $this->getJSLanguageStrings($request));
 		$this->viewer->assign('LANG', $request->get('lang'));
 		$this->viewer->assign('HTMLLANG', substr($defaultLanguage, 0, 2));
-		define('INSTALLATION_MODE', true);
-		define('INSTALLATION_MODE_DEBUG', $this->debug);
+		$this->viewer->assign('LANGUAGE', $defaultLanguage);
+		$this->viewer->assign('STYLES', $this->getHeaderCss($request));
+		$this->viewer->assign('HEADER_SCRIPTS', $this->getHeaderScripts($request));
+		$this->viewer->assign('MODE', $request->getMode());
+
 		$this->viewer->error_reporting = E_ALL & ~E_NOTICE;
 		echo $this->viewer->fetch('InstallPreProcess.tpl');
 	}
@@ -102,6 +106,7 @@ class Install_Index_view extends Vtiger_View_Controller
 
 	public function postProcess(\App\Request $request)
 	{
+		$this->viewer->assign('FOOTER_SCRIPTS', $this->getFooterScripts($request));
 		echo $this->viewer->fetch('InstallPostProcess.tpl');
 		if ($request->getMode() === 'Step7') {
 			$this->cleanInstallationFiles();
@@ -202,6 +207,9 @@ class Install_Index_view extends Vtiger_View_Controller
 
 	public function Step7(\App\Request $request)
 	{
+		AppConfig::iniSet('display_errors', 'On');
+		AppConfig::iniSet('max_execution_time', 0);
+		AppConfig::iniSet('max_input_time', 0);
 		$webuiInstance = new Vtiger_WebUI();
 		$isInstalled = $webuiInstance->isInstalled();
 		if ($isInstalled) {
@@ -339,11 +347,46 @@ class Install_Index_view extends Vtiger_View_Controller
 			}
 		}
 		\vtlib\Functions::recurseDelete('install');
+		\vtlib\Functions::recurseDelete('public_html/install');
 		\vtlib\Functions::recurseDelete('tests');
 		\vtlib\Functions::recurseDelete('config/config.template.php');
 		\vtlib\Functions::recurseDelete('.github');
 		\vtlib\Functions::recurseDelete('.gitattributes');
 		\vtlib\Functions::recurseDelete('.gitignore');
 		\vtlib\Functions::recurseDelete('.travis.yml');
+	}
+
+	/**
+	 * Retrieves css styles that need to loaded in the page
+	 * @param \App\Request $request - request model
+	 * @return Vtiger_CssScript_Model[]
+	 */
+	public function getHeaderCss(\App\Request $request)
+	{
+		$headerCssInstances = parent::getHeaderCss($request);
+		$cssFileNames = array(
+			'~install/tpl/resources/css/style.css',
+			'~install/tpl/resources/css/mkCheckbox.css',
+		);
+		$cssInstances = $this->checkAndConvertCssStyles($cssFileNames);
+		return array_merge($headerCssInstances, $cssInstances);
+	}
+
+	/**
+	 * Function to get the list of Script models to be included
+	 * @param \App\Request $request
+	 * @return Vtiger_JsScript_Model[]
+	 */
+	public function getFooterScripts(\App\Request $request)
+	{
+		if ($request->getMode() === 'Step7') {
+			return [];
+		}
+		$headerScriptInstances = parent::getFooterScripts($request);
+		$jsFileNames = array(
+			'~install/tpl/resources/Index.js',
+		);
+		$jsScriptInstances = $this->checkAndConvertJsScripts($jsFileNames);
+		return array_merge($headerScriptInstances, $jsScriptInstances);
 	}
 }

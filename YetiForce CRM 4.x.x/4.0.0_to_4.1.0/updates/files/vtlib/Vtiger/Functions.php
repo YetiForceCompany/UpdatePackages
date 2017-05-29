@@ -610,14 +610,14 @@ class Functions
 	}
 
 	/**
-	 * myBcmod - get modulus (substitute for bcmod) 
-	 * string my_bcmod ( string left_operand, int modulus ) 
-	 * left_operand can be really big, but be carefull with modulus :( 
-	 * by Andrius Baranauskas and Laurynas Butkus :) Vilnius, Lithuania 
+	 * myBcmod - get modulus (substitute for bcmod)
+	 * string my_bcmod ( string left_operand, int modulus )
+	 * left_operand can be really big, but be carefull with modulus :(
+	 * by Andrius Baranauskas and Laurynas Butkus :) Vilnius, Lithuania
 	 * */
 	public static function myBcmod($x, $y)
 	{
-		// how many numbers to take at once? carefull not to exceed (int) 
+		// how many numbers to take at once? carefull not to exceed (int)
 		$take = 5;
 		$mod = '';
 
@@ -649,7 +649,7 @@ class Functions
 	public static function throwNewException($e, $die = true, $tpl = 'OperationNotPermitted.tpl')
 	{
 		$message = is_string($e) ? $e : $e->getMessage();
-		if (REQUEST_MODE === 'API') {
+		if (\App\Config::$requestMode === 'API') {
 			throw new \APIException($message, 401);
 		}
 		if (\App\Request::_isAjax()) {
@@ -678,44 +678,6 @@ class Functions
 				throw new \Exception($message);
 			}
 		}
-	}
-
-	public static function removeHtmlTags(array $tags, $html)
-	{
-		$crmUrl = \AppConfig::main('site_URL');
-
-		$doc = new \DOMDocument('1.0', 'UTF-8');
-		$previousValue = libxml_use_internal_errors(true);
-		$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html);
-		libxml_clear_errors();
-		libxml_use_internal_errors($previousValue);
-
-		foreach ($tags as $tag) {
-			$xPath = new \DOMXPath($doc);
-			$nodes = $xPath->query('//' . $tag);
-			for ($i = 0; $i < $nodes->length; $i++) {
-				if ('img' === $tag) {
-					$htmlNode = $nodes->item($i)->ownerDocument->saveHTML($nodes->item($i));
-					$imgDom = new \DOMDocument();
-					$imgDom->loadHTML($htmlNode);
-					$xpath = new \DOMXPath($imgDom);
-					$src = $xpath->evaluate("string(//img/@src)");
-					if ($src == '' || 0 !== strpos('index.php', $src) || false === strpos($crmUrl, $src)) {
-						$nodes->item($i)->parentNode->removeChild($nodes->item($i));
-					}
-				} else {
-					$nodes->item($i)->parentNode->removeChild($nodes->item($i));
-				}
-			}
-		}
-		$savedHTML = $doc->saveHTML();
-		$savedHTML = preg_replace('/<!DOCTYPE[^>]+\>/', '', $savedHTML);
-		$savedHTML = preg_replace('/<html[^>]+\>/', '', $savedHTML);
-		$savedHTML = preg_replace('/<body[^>]+\>/', '', $savedHTML);
-		$savedHTML = preg_replace('#<head(.*?)>(.*?)</head>#is', '', $savedHTML);
-		$savedHTML = preg_replace('/<!--(.*)-->/Uis', '', $savedHTML);
-		$savedHTML = str_replace(['</html>', '</body>', '<?xml encoding="utf-8" ?>'], ['', '', ''], $savedHTML);
-		return trim($savedHTML);
 	}
 
 	public static function getHtmlOrPlainText($content)

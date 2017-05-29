@@ -13,7 +13,7 @@ class Company extends Base
 
 	/**
 	 * Logo directory
-	 * @var string 
+	 * @var string
 	 */
 	public static $logoPath = 'public_html/layouts/resources/Logo/';
 

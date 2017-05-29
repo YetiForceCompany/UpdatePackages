@@ -8,15 +8,13 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  * ********************************************************************************** */
-
-$startTime = microtime(true);
-
-define('REQUEST_MODE', 'WebUI');
 define('ROOT_DIRECTORY', __DIR__ !== DIRECTORY_SEPARATOR ? __DIR__ : '');
 
 require 'include/RequirementsValidation.php';
 require 'include/main/WebUI.php';
 
+\App\Config::$startTime = microtime(true);
+\App\Config::$requestMode = 'WebUI';
+
 $webUI = new Vtiger_WebUI();
 $webUI->process(\App\Request::init());
-
