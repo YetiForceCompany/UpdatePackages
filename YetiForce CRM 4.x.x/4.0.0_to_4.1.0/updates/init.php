@@ -57,6 +57,7 @@ class YetiForceUpdate
 		$db->createCommand()->checkIntegrity(false)->execute();
 		$this->updateDbSchema();
 		$this->updatePicklistType();
+		$this->updateData();
 		$db->createCommand()->checkIntegrity(true)->execute();
 	}
 
@@ -502,5 +503,121 @@ class YetiForceUpdate
 			}
 		}
 		\App\Log::trace('Exiting ' . __METHOD__);
+	}
+
+	/**
+	 * update data
+	 */
+	public function updateData()
+	{
+		$this->updateRows();
+		$this->insertRows();
+	}
+
+	/**
+	 * update rows
+	 */
+	public function updateRows()
+	{
+		$data = [
+			['u_#__squotes_invfield', ['colspan' => 25], ['id' => 1]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 2]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 3]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 5]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 7]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 8]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 9]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 10]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 11]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 15]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 16]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 17]],
+			['vtiger_apiaddress', ['name' => 'min_length'], ['id' => 1]],
+			['vtiger_customview', ['viewname' => 'LBL_UNREAD'], ['cvid' => 104]],
+			['vtiger_cvcolumnlist', ['columnindex' => 2], ['cvid' => 43, 'columnindex' => 3]],
+			['vtiger_cvcolumnlist', ['columnindex' => 3, 'columnname' => 'vtiger_projectmilestone:projectid:projectid:ProjectMilestone_Related_to:V'], ['cvid' => 17, 'columnindex' => 4]],
+			['vtiger_cvcolumnlist', ['columnindex' => 4, 'columnname' => 'vtiger_projectmilestone:projectmilestone_priority:projectmilestone_priority:ProjectMilestone_LBL_PRIORITY:V'], ['cvid' => 17, 'columnindex' => 5]],
+		];
+		$this->updateRowsExecute($data);
+	}
+
+	/**
+	 * update rows execute
+	 * @param array $data
+	 */
+	public function updateRowsExecute($data)
+	{
+		$db = \App\Db::getInstance();
+		$dbCommand = $db->createCommand();
+		foreach ($data as $row) {
+			$dbCommand->update($row[0], $row[1], $row[2]);
+		}
+	}
+
+	/**
+	 * update rows
+	 */
+	public function insertRows()
+	{
+		$data = [
+			['vtiger_cron_task', ['name' => 'LBL_BROWSING_HISTORY', 'handler_file' => 'cron/BrowsingHistory.php', 'frequency' => 86400, 'status' => 1, 'sequence' => 29]],
+			['vtiger_cron_task', ['name' => 'LBL_BATCH_PROCESSES', 'handler_file' => 'cron/BatchProcesses.php', 'frequency' => 600, 'status' => 1, 'sequence' => 30]],
+			['vtiger_cron_task', ['name' => 'LBL_CLEAR_ATTACHMENTS_TABLE', 'handler_file' => 'cron/Attachments.php', 'frequency' => 86400, 'status' => 1, 'module' => 'Vtiger', 'sequence' => 29]],
+			['vtiger_cron_task', ['name' => 'LBL_SMSNOTIFIER', 'handler_file' => 'modules/SMSNotifier/cron/SMSNotifier.php', 'frequency' => 300, 'status' => 1, 'module' => 'SMSNotifier', 'sequence' => 28]],
+			['vtiger_cvcolumnlist', ['cvid' => 43, 'columnindex' => 5, 'columnname' => 'vtiger_projectmilestone:projectmilestonetype:projectmilestonetype:ProjectMilestone_Type:V']],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 476, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 477, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 483, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 484, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 485, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 487, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 492, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 498, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 500, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 506, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 507, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 508, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 509, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 510, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 511, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 512, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 514, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 515, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 516, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 29, 'fieldid' => 517, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 43, 'fieldid' => 2604, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 83, 'fieldid' => 2605, 'visible' => 0, 'readonly' => 0]],
+			['vtiger_def_org_field', ['tabid' => 45, 'fieldid' => 2606, 'visible' => 0, 'readonly' => 0]],
+			//next 4107+ linia
+		];
+
+		$cvid = $this->insertRowsExecute([['vtiger_cvadvfilter', ['cvid' => 104, 'columnindex' => 0, 'columnname' => 'u_yf_notification:notification_status:notification_status:Notification_FL_STATUS:V', 'comparator' => 'e', 'value' => 'PLL_UNREAD', 'groupid' => 1, 'column_condition' => '']]], true);
+		if ($cvid) {
+			$data[] = ['vtiger_cvadvfilter_grouping', ['cvid' => $cvid, 'group_condition' => 'and', 'condition_expression' => ' 0 ']];
+			$data[] = ['vtiger_cvadvfilter_grouping', ['cvid' => $cvid, 'group_condition' => '', 'condition_expression' => ' 0 ']];
+		}
+		$this->insertRowsExecute($data);
+	}
+
+	/**
+	 * update rows execute
+	 * @param array $data
+	 * @param bool $return
+	 */
+	public function insertRowsExecute($data, $return = false)
+	{
+		$db = \App\Db::getInstance();
+		$dbCommand = $db->createCommand();
+		foreach ($data as $row) {
+			if (empty((new \App\db\Query())->from($row[0])->where($row[1]))) {
+				$dbCommand->insert($row[0], $row[1]);
+				if ($return) {
+					return $db->lastInsertID;
+				}
+			}
+		}
+		if ($return) {
+			return false;
+		}
 	}
 }
