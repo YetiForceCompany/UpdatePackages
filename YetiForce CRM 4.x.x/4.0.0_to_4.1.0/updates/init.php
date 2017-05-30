@@ -73,8 +73,8 @@ class YetiForceUpdate
 	 */
 	public function updateDbSchema()
 	{
-		$thid->dropTables();
-		$thid->createTables($thid->getTables(1));
+		$this->dropTables();
+		$this->createTables($this->getTables(1));
 		$this->renameTables();
 		$this->dropColumns();
 		$this->addColumns();
