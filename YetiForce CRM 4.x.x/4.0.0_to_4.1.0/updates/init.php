@@ -248,9 +248,11 @@ class YetiForceUpdate
 	public function addColumns()
 	{
 		$columns = [
-//				['u_#__announcement', 'is_mandatory', 'smallint'],
-//				['vtiger_project', 'parentid', 'int(19) DEFAULT NULL'],
+//			['u_#__announcement', 'is_mandatory', 'smallint'],
+//			['vtiger_project', 'parentid', 'int(19) DEFAULT NULL'],
 			['vtiger_trees_templates', 'share', 'string DEFAULT NULL'],
+			['vtiger_ossmailview', 'cid', 'char(40) DEFAULT NULL'],
+			['vtiger_ossmailview', 'rc_user', 'varchar(3) DEFAULT NULL'],
 		];
 		$this->addColumnsExecute($columns);
 	}
@@ -348,6 +350,7 @@ class YetiForceUpdate
 		$columns = [
 			['vtiger_fixed_assets_fuel_type', 'picklist_valueid'],
 			['vtiger_users', 'user_hash'],
+			['vtiger_oss', 'rc_user']
 		];
 		$this->dropColumnsExecute($columns);
 	}
@@ -383,7 +386,8 @@ class YetiForceUpdate
 			['vtiger_project', 'project_parentid_idx', 'parentid', false],
 			['vtiger_project', 'project_no', 'project_no', false],
 			['vtiger_troubletickets', 'ticket_no', 'ticket_no', false],
-			['u_#__browsinghistory', 'userid', 'browsinghistory_user_idx', false]
+			['u_#__browsinghistory', 'userid', 'browsinghistory_user_idx', false],
+			['vtiger_ossmailview', 'cid', 'ossmailview_cid_idx', false]
 		];
 		$this->createIndexExecute($columns);
 	}
