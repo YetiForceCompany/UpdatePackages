@@ -9,7 +9,7 @@
 /**
  * Sharng Access Vtiger Module Model Class
  */
-class Settings_SharingAccess_Rule_Model extends Vtiger_Base_Model
+class Settings_SharingAccess_Rule_Model extends \App\Base
 {
 
 	const RULE_TYPE_GROUPS = 'GRP';
@@ -319,7 +319,7 @@ class Settings_SharingAccess_Rule_Model extends Vtiger_Base_Model
 	public function getRecordLinks()
 	{
 
-		$links = array();
+		$links = [];
 		$recordLinks = array(
 			array(
 				'linktype' => 'LISTVIEWRECORD',
@@ -436,7 +436,7 @@ class Settings_SharingAccess_Rule_Model extends Vtiger_Base_Model
 		$result = $db->pquery($sql, $params);
 		$noOfRules = $db->num_rows($result);
 
-		$ruleModels = array();
+		$ruleModels = [];
 		for ($i = 0; $i < $noOfRules; ++$i) {
 			$row = $db->query_result_rowdata($result, $i);
 			$ruleModel = new self();

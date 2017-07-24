@@ -1,6 +1,6 @@
 <?php
 /**
- * SRequirementsCards french translation
+ * SRequirements cards french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -9,7 +9,7 @@ $languageStrings = [
 	'SRequirementsCards' => 'Exigences de vente',
 	'SINGLE_SRequirementsCards' => 'Exigence de vente',
 	//BLOCKS
-	'LBL_SREQUIREMENTSCARDS_INFORMATION' => 'Information',
+	'LBL_SREQUIREMENTSCARDS_INFORMATION' => 'Détails exigence de vente',
 	'LBL_CUSTOM_INFORMATION' => 'Information systèmes',
 	'LBL_DESCRIPTION_INFORMATION' => 'Description',
 	'LBL_STATISTICS' => 'Statistiques',

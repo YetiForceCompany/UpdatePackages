@@ -31,22 +31,22 @@ abstract class Vtiger_Controller
 
 	public function validateRequest(\App\Request $request)
 	{
-
+		
 	}
 
 	public function preProcessAjax(\App\Request $request)
 	{
-
+		
 	}
 
 	public function preProcess(\App\Request $request)
 	{
-
+		
 	}
 
 	public function postProcess(\App\Request $request)
 	{
-
+		
 	}
 
 	// Control the exposure of methods to be invoked from client (kind-of RPC)
@@ -89,7 +89,7 @@ abstract class Vtiger_Controller
 		if (!empty($name) && $this->isMethodExposed($name)) {
 			return call_user_func_array(array($this, $name), $parameters);
 		}
-		throw new \Exception\AppException(vtranslate('LBL_NOT_ACCESSIBLE'));
+		throw new \Exception\AppException('LBL_NOT_ACCESSIBLE');
 	}
 
 	/**
@@ -111,7 +111,23 @@ abstract class Vtiger_Controller
 			header('Pragma: no-cache');
 		}
 		header('X-Frame-Options: SAMEORIGIN');
+		header('X-XSS-Protection: 1; mode=block');
+		header('X-Content-Type-Options: nosniff');
+		header('Referrer-Policy: no-referrer');
+		header('Strict-Transport-Security: max-age=15768000; includeSubDomains; preload');
+		header('Expect-CT: enforce; max-age=3600');
+		header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+		header('X-Robots-Tag: none');
+		header('X-Permitted-Cross-Domain-Policies: none');
+		if (AppConfig::security('CSP_ACTIVE')) {
+			// 'nonce-" . Vtiger_Session::get('CSP_TOKEN') . "'
+			header("Content-Security-Policy: default-src 'self'; img-src 'self' data: a.tile.openstreetmap.org b.tile.openstreetmap.org c.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' blob:; form-action 'self' ;");
+		}
+		if ($keys = AppConfig::security('HPKP_KEYS')) {
+			header('Public-Key-Pins: pin-sha256="' . implode('"; pin-sha256="', $keys) . '"; max-age=10000;');
+		}
 		header_remove('X-Powered-By');
+		header_remove('Server');
 	}
 }
 
@@ -145,7 +161,7 @@ abstract class Vtiger_Action_Controller extends Vtiger_Controller
 
 	protected function preProcessDisplay(\App\Request $request)
 	{
-
+		
 	}
 
 	protected function preProcessTplName(\App\Request $request)
@@ -259,8 +275,8 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 		$viewer->assign('SKIN_PATH', Vtiger_Theme::getCurrentUserThemePath());
 		$viewer->assign('LAYOUT_PATH', \App\Layout::getPublicUrl('layouts/' . \App\Layout::getActiveLayout()));
 		$viewer->assign('LANGUAGE_STRINGS', $this->getJSLanguageStrings($request));
-		$viewer->assign('HTMLLANG', Vtiger_Language_Handler::getShortLanguageName());
-		$viewer->assign('LANGUAGE', Vtiger_Language_Handler::getLanguage());
+		$viewer->assign('LANGUAGE', \App\Language::getLanguage());
+		$viewer->assign('HTMLLANG', \App\Language::getShortLanguageName());
 		$viewer->assign('SHOW_BODY_HEADER', $this->showBodyHeader());
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
 		$viewer->assign('MODULE', $moduleName);
@@ -326,7 +342,8 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 			'~libraries/jquery/select2/select2-bootstrap.css',
 			'~libraries/jquery/posabsolute-jQuery-Validation-Engine/css/validationEngine.jquery.css',
 			'~libraries/jquery/pnotify/pnotify.custom.css',
-			'~libraries/jquery/datepicker/css/datepicker.css',
+			'~libraries/jquery/datepicker/css/bootstrap-datepicker3.css',
+			'~libraries/jquery/daterangepicker/daterangepicker.css',
 			'~libraries/footable/css/footable.core.css',
 			'~libraries/jquery/timepicker/jquery.timepicker.css',
 			'~libraries/jquery/clockpicker/bootstrap-clockpicker.css',
@@ -358,9 +375,7 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 			'~libraries/jquery/select2/select2.full.js',
 			'~libraries/jquery/jquery-ui/jquery-ui.js',
 			'~libraries/jquery/jquery.class.js',
-			'~libraries/jquery/defunkt-jquery-pjax/jquery.pjax.js',
 			'~libraries/jquery/jstorage.js',
-			'~libraries/jquery/autosize/jquery.autosize-min.js',
 			'~libraries/jquery/perfect-scrollbar/js/perfect-scrollbar.jquery.js',
 			'~libraries/jquery/rochal-jQuery-slimScroll/jquery.slimscroll.js',
 			'~libraries/jquery/pnotify/pnotify.custom.js',
@@ -370,8 +385,10 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 			'~libraries/bootstrap3/js/bootbox.js',
 			'~libraries/jquery/selectize/js/selectize.js',
 			'~libraries/jquery/posabsolute-jQuery-Validation-Engine/js/jquery.validationEngine.js',
-			'~libraries/jquery/datepicker/js/datepicker.js',
-			'~libraries/jquery/dangrossman-bootstrap-daterangepicker/date.js',
+			'~libraries/jquery/moment.js',
+			'~libraries/jquery/datepicker/js/bootstrap-datepicker.js',
+			'~libraries/jquery/datepicker/locales/' . \App\Language::getLanguage() . '.min.js',
+			'~libraries/jquery/daterangepicker/daterangepicker.js',
 			'~libraries/jquery/jquery.ba-outside-events.js',
 			'~libraries/jquery/jquery.placeholder.js',
 			'~libraries/jquery/dompurify/purify.js',
@@ -382,13 +399,10 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 			'~layouts/resources/Connector.js',
 			'~layouts/resources/ProgressIndicator.js',
 		];
-
-		$languageHandlerShortName = Vtiger_Language_Handler::getShortLanguageName();
-		$fileName = "libraries/jquery/posabsolute-jQuery-Validation-Engine/js/languages/jquery.validationEngine-$languageHandlerShortName.js";
-		if (!file_exists($fileName)) {
+		$languageHandlerShortName = \App\Language::getShortLanguageName();
+		$fileName = "~libraries/jquery/posabsolute-jQuery-Validation-Engine/js/languages/jquery.validationEngine-$languageHandlerShortName.js";
+		if (!file_exists(Vtiger_Loader::resolveNameToPath($fileName, 'js'))) {
 			$fileName = "~libraries/jquery/posabsolute-jQuery-Validation-Engine/js/languages/jquery.validationEngine-en.js";
-		} else {
-			$fileName = "~libraries/jquery/posabsolute-jQuery-Validation-Engine/js/languages/jquery.validationEngine-$languageHandlerShortName.js";
 		}
 		$jsFileNames[] = $fileName;
 		$jsScriptInstances = $this->checkAndConvertJsScripts($jsFileNames);

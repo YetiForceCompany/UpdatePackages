@@ -109,10 +109,10 @@ Class Reports_ChartEdit_View extends Vtiger_Edit_View
 		$relatedModules = $reportModel->getReportRelatedModules();
 
 		foreach ($relatedModules as $primaryModule => $relatedModuleList) {
-			$translatedRelatedModules = array();
+			$translatedRelatedModules = [];
 
 			foreach ($relatedModuleList as $relatedModuleName) {
-				$translatedRelatedModules[$relatedModuleName] = vtranslate($relatedModuleName, $relatedModuleName);
+				$translatedRelatedModules[$relatedModuleName] = \App\Language::translate($relatedModuleName, $relatedModuleName);
 			}
 			$relatedModules[$primaryModule] = $translatedRelatedModules;
 		}
@@ -154,7 +154,7 @@ Class Reports_ChartEdit_View extends Vtiger_Edit_View
 
 			$secondaryModules = explode(':', $secondaryModules);
 		} else {
-			$secondaryModules = array();
+			$secondaryModules = [];
 		}
 		$viewer->assign('RECORD_ID', $record);
 		$viewer->assign('REPORT_MODEL', $reportModel);
@@ -168,7 +168,7 @@ Class Reports_ChartEdit_View extends Vtiger_Edit_View
 		$viewer->assign('PRIMARY_MODULE_RECORD_STRUCTURE', $primaryModuleRecordStructure);
 		$viewer->assign('SECONDARY_MODULE_RECORD_STRUCTURES', $secondaryModuleRecordStructures);
 		$viewer->assign('DATE_FILTERS', Vtiger_AdvancedFilter_Helper::getDateFilter($moduleName));
-		if (($primaryModule == 'Calendar') || (in_array('Calendar', $secondaryModules))) {
+		if (($primaryModule === 'Calendar') || (in_array('Calendar', $secondaryModules))) {
 			$advanceFilterOpsByFieldType = Calendar_Field_Model::getAdvancedFilterOpsByFieldType();
 		} else {
 			$advanceFilterOpsByFieldType = Vtiger_Field_Model::getAdvancedFilterOpsByFieldType();
@@ -211,7 +211,7 @@ Class Reports_ChartEdit_View extends Vtiger_Edit_View
 			$reportModel->setSecondaryModule($secondaryModules);
 			$secondaryModules = explode(':', $secondaryModules);
 		} else {
-			$secondaryModules = array();
+			$secondaryModules = [];
 		}
 
 		$chartModel = Reports_Chart_Model::getInstanceById($reportModel);
@@ -246,7 +246,6 @@ Class Reports_ChartEdit_View extends Vtiger_Edit_View
 		$moduleName = $request->getModule();
 
 		$jsFileNames = array(
-			'~libraries/jquery/jquery.datepick.package-4.1.0/jquery.datepick.js',
 			"modules.Reports.resources.Edit",
 			"modules.Reports.resources.Edit1",
 			"modules.Reports.resources.Edit2",

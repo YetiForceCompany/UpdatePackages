@@ -35,24 +35,24 @@ class Reports_MassDelete_Action extends Vtiger_Mass_Action
 		$parentModule = 'Reports';
 		$recordIds = Reports_Record_Model::getRecordsListFromRequest($request);
 
-		$reportsDeleteDenied = array();
+		$reportsDeleteDenied = [];
 		foreach ($recordIds as $recordId) {
 			$recordModel = Reports_Record_Model::getInstanceById($recordId);
 			if (!$recordModel->isDefault() && $recordModel->isEditable()) {
 				$success = $recordModel->delete();
 				if (!$success) {
-					$reportsDeleteDenied[] = vtranslate($recordModel->getName(), $parentModule);
+					$reportsDeleteDenied[] = \App\Language::translate($recordModel->getName(), $parentModule);
 				}
 			} else {
-				$reportsDeleteDenied[] = vtranslate($recordModel->getName(), $parentModule);
+				$reportsDeleteDenied[] = \App\Language::translate($recordModel->getName(), $parentModule);
 			}
 		}
 
 		$response = new Vtiger_Response();
 		if (empty($reportsDeleteDenied)) {
-			$response->setResult(array(vtranslate('LBL_REPORTS_DELETED_SUCCESSFULLY', $parentModule)));
+			$response->setResult(array(\App\Language::translate('LBL_REPORTS_DELETED_SUCCESSFULLY', $parentModule)));
 		} else {
-			$response->setError($reportsDeleteDenied, vtranslate('LBL_DENIED_REPORTS', $parentModule));
+			$response->setError($reportsDeleteDenied, \App\Language::translate('LBL_DENIED_REPORTS', $parentModule));
 		}
 
 		$response->emit();

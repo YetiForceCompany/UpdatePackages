@@ -8,6 +8,6 @@
 $languageStrings = [
 	'FBookkeeping' => 'Comptabilité',
 	'SINGLE_FBookkeeping' => 'Comptabilité',
-	'FBookkeeping ID' => 'Comptabilité ID',
+	'FBookkeeping ID' => 'N° ID de comptabilité',
 	'FL_SUBJECT' => 'Sujet',
 ];

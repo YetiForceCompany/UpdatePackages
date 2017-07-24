@@ -108,10 +108,10 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 		$relatedModules = $reportModel->getReportRelatedModules();
 
 		foreach ($relatedModules as $primaryModule => $relatedModuleList) {
-			$translatedRelatedModules = array();
+			$translatedRelatedModules = [];
 
 			foreach ($relatedModuleList as $relatedModuleName) {
-				$translatedRelatedModules[$relatedModuleName] = vtranslate($relatedModuleName, $relatedModuleName);
+				$translatedRelatedModules[$relatedModuleName] = \App\Language::translate($relatedModuleName, $relatedModuleName);
 			}
 			$relatedModules[$primaryModule] = $translatedRelatedModules;
 		}
@@ -151,7 +151,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 
 		$data = $request->getAll();
 		foreach ($data as $name => $value) {
-			if ($name == 'schdayoftheweek' || $name == 'schdayofthemonth' || $name == 'schannualdates' || $name == 'recipients') {
+			if ($name === 'schdayoftheweek' || $name === 'schdayofthemonth' || $name === 'schannualdates' || $name === 'recipients') {
 				if (is_string($value)) { // need to save these as json data
 					$value = array($value);
 				}
@@ -171,7 +171,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 
 		$primaryModuleFields = $reportModel->getPrimaryModuleFields();
 		$secondaryModuleFields = $reportModel->getSecondaryModuleFields();
-		if ($primaryModule == 'HelpDesk') {
+		if ($primaryModule === 'HelpDesk') {
 			foreach ($primaryModuleFields as $module => $blockFields) {
 				foreach ($blockFields as $key => $value) {
 					if (isset($value)) {
@@ -187,7 +187,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 
 		if (!empty($secondaryModuleFields)) {
 			foreach ($secondaryModuleFields as $module => $blockFields) {
-				if ($module == 'HelpDesk') {
+				if ($module === 'HelpDesk') {
 					foreach ($blockFields as $key => $value) {
 						if (isset($value)) {
 							foreach ($value as $key1 => $value1) {
@@ -232,7 +232,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 		}
 		$data = $request->getAll();
 		foreach ($data as $name => $value) {
-			if ($name == 'schdayoftheweek' || $name == 'schdayofthemonth' || $name == 'schannualdates' || $name == 'recipients') {
+			if ($name === 'schdayoftheweek' || $name === 'schdayofthemonth' || $name === 'schannualdates' || $name === 'recipients') {
 				if (!is_array($value)) { // need to save these as json data
 					$value = array($value);
 				}
@@ -248,7 +248,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 
 			$secondaryModules = explode(':', $secondaryModules);
 		} else {
-			$secondaryModules = array();
+			$secondaryModules = [];
 		}
 
 		$viewer->assign('RECORD_ID', $record);
@@ -259,10 +259,10 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 		$primaryModuleRecordStructure = $recordStructureInstance->getPrimaryModuleRecordStructure();
 		$secondaryModuleRecordStructures = $recordStructureInstance->getSecondaryModuleRecordStructure();
 
-		if ($primaryModule == 'HelpDesk') {
+		if ($primaryModule === 'HelpDesk') {
 			foreach ($primaryModuleRecordStructure as $blockLabel => $blockFields) {
 				foreach ($blockFields as $field => $object) {
-					if ($field == 'update_log') {
+					if ($field === 'update_log') {
 						unset($primaryModuleRecordStructure[$blockLabel][$field]);
 					}
 				}
@@ -271,10 +271,10 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 
 		if (!empty($secondaryModuleRecordStructures)) {
 			foreach ($secondaryModuleRecordStructures as $module => $structure) {
-				if ($module == 'HelpDesk') {
+				if ($module === 'HelpDesk') {
 					foreach ($structure as $blockLabel => $blockFields) {
 						foreach ($blockFields as $field => $object) {
-							if ($field == 'update_log') {
+							if ($field === 'update_log') {
 								unset($secondaryModuleRecordStructures[$module][$blockLabel][$field]);
 							}
 						}
@@ -287,7 +287,7 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 		$viewer->assign('PRIMARY_MODULE_RECORD_STRUCTURE', $primaryModuleRecordStructure);
 		$viewer->assign('SECONDARY_MODULE_RECORD_STRUCTURES', $secondaryModuleRecordStructures);
 		$viewer->assign('DATE_FILTERS', Vtiger_AdvancedFilter_Helper::getDateFilter($moduleName));
-		if (($primaryModule == 'Calendar') || (in_array('Calendar', $secondaryModules))) {
+		if (($primaryModule === 'Calendar') || (in_array('Calendar', $secondaryModules))) {
 			$advanceFilterOpsByFieldType = Calendar_Field_Model::getAdvancedFilterOpsByFieldType();
 		} else {
 			$advanceFilterOpsByFieldType = Vtiger_Field_Model::getAdvancedFilterOpsByFieldType();
@@ -315,28 +315,13 @@ Class Reports_Edit_View extends Vtiger_Edit_View
 	{
 		$headerScriptInstances = parent::getFooterScripts($request);
 		$moduleName = $request->getModule();
-
 		$jsFileNames = array(
 			"modules.$moduleName.resources.Edit1",
 			"modules.$moduleName.resources.Edit2",
 			"modules.$moduleName.resources.Edit3",
-			'~libraries/jquery/jquery.datepick.package-4.1.0/jquery.datepick.js',
 		);
-
 		$jsScriptInstances = $this->checkAndConvertJsScripts($jsFileNames);
 		$headerScriptInstances = array_merge($headerScriptInstances, $jsScriptInstances);
 		return $headerScriptInstances;
-	}
-
-	public function getHeaderCss(\App\Request $request)
-	{
-		$headerCssInstances = parent::getHeaderCss($request);
-		$moduleName = $request->getModule();
-		$cssFileNames = array(
-			'~libraries/jquery/jquery.datepick.package-4.1.0/jquery.datepick.css',
-		);
-		$cssInstances = $this->checkAndConvertCssStyles($cssFileNames);
-		$headerCssInstances = array_merge($cssInstances, $headerCssInstances);
-		return $headerCssInstances;
 	}
 }

@@ -404,9 +404,10 @@ var app = {
 	},
 	showPopoverElementView: function (selectElement, params) {
 		if (typeof params == 'undefined') {
-			params = {trigger: 'hover', placement: 'bottom', html: true};
+			params = {trigger: 'manual', placement: 'bottom', html: true};
 		}
 		params.container = 'body';
+		params.delay = 800;
 		var sparams;
 		selectElement.each(function (index, domElement) {
 			sparams = params;
@@ -422,6 +423,20 @@ var app = {
 				sparams = jQuery.extend(sparams, data);
 			}
 			element.popover(sparams);
+			element.on("mouseenter", function () {
+				var _this = this;
+				$(this).popover("show");
+				$(".popover").on("mouseleave", function () {
+					$(_this).popover('hide');
+				});
+			}).on("mouseleave", function () {
+				var _this = this;
+				setTimeout(function () {
+					if (!$(".popover:hover").length) {
+						$(_this).popover("hide");
+					}
+				}, 100);
+			});
 		});
 		return selectElement;
 	},
@@ -761,11 +776,6 @@ var app = {
 		var joinedDateFormat = splitDateFormat.join(dotMode);
 		return joinedDateFormat;
 	},
-	getDateInVtigerFormat: function (dateFormat, dateObject) {
-		var finalFormat = app.convertTojQueryDatePickerFormat(dateFormat);
-		var date = jQuery.datepicker.formatDate(finalFormat, dateObject);
-		return date;
-	},
 	/*
 	 * Converts user formated date to database format yyyy-mm-dd
 	 */
@@ -828,13 +838,12 @@ var app = {
 	registerEventForDatePickerFields: function (parentElement, registerForAddon, customParams) {
 		if (typeof parentElement == 'undefined') {
 			parentElement = jQuery('body');
+		} else {
+			parentElement = jQuery(parentElement);
 		}
 		if (typeof registerForAddon == 'undefined') {
 			registerForAddon = true;
 		}
-
-		parentElement = jQuery(parentElement);
-
 		if (parentElement.hasClass('dateField')) {
 			var element = parentElement;
 		} else {
@@ -852,11 +861,7 @@ var app = {
 				elem.closest('.date').find('input.dateField').get(0).focus();
 			});
 		}
-		var dateFormat = element.data('dateFormat');
-		var vtigerDateFormat = app.convertToDatePickerFormat(dateFormat);
 		var language = jQuery('body').data('language');
-		var lang = language.split('_');
-
 		//Default first day of the week
 		var defaultFirstDay = jQuery('#start_day').val();
 		if (defaultFirstDay == '' || typeof (defaultFirstDay) == 'undefined') {
@@ -865,51 +870,59 @@ var app = {
 			convertedFirstDay = this.weekDaysArray[defaultFirstDay];
 		}
 		var params = {
-			format: vtigerDateFormat,
-			calendars: 1,
-			locale: $.fn.datepicker.dates[lang[0]],
+			todayBtn: "linked",
+			clearBtn: true,
+			language: language,
 			starts: convertedFirstDay,
-			eventName: 'focus',
-			onChange: function (formated) {
-				var element = jQuery(this).data('datepicker').el;
-				element = jQuery(element);
-				var datePicker = jQuery('#' + jQuery(this).data('datepicker').id);
-				var viewDaysElement = datePicker.find('table.datepickerViewDays');
-				//If it is in day mode and the prev value is not eqaul to current value
-				//Second condition is manily useful in places where user navigates to other month
-				if (viewDaysElement.length > 0 && element.val() != formated) {
-					element.DatePickerHide();
-					element.blur();
-				}
-				element.data('prevVal', element.val());
-				element.val(formated).trigger('change').focusout();
-			},
-			onBeforeShow: function (formated) {
-				element.each(function (index, domElement) {
-					var jQelement = jQuery(domElement);
-					if (jQelement[0] != document.activeElement) {
-						jQelement.DatePickerHide();
-						jQelement.blur();
-					}
-				});
-
-			},
+			todayHighlight: true
 		}
 		if (typeof customParams != 'undefined') {
 			var params = jQuery.extend(params, customParams);
 		}
-		element.each(function (index, domElement) {
-			var jQelement = jQuery(domElement);
-			var dateObj = new Date();
-			var selectedDate = app.getDateInVtigerFormat(dateFormat, dateObj);
-			//Take the element value as current date or current date
-			if (jQelement.val() != '') {
-				selectedDate = jQelement.val();
-			}
-			params.date = selectedDate;
-			params.current = selectedDate;
-			jQelement.data('prevVal', jQelement.val());
-			jQelement.DatePicker(params)
+		element.datepicker(params);
+	},
+	registerDateRangePickerFields: function (parentElement, customParams) {
+		if (typeof parentElement == 'undefined') {
+			parentElement = jQuery('body');
+		} else {
+			parentElement = jQuery(parentElement);
+		}
+		if (parentElement.hasClass('dateRangeField')) {
+			var elements = parentElement;
+		} else {
+			var elements = jQuery('.dateRangeField', parentElement);
+		}
+		if (elements.length == 0) {
+			return;
+		}
+		var language = jQuery('body').data('language');
+		var format = elements.data('dateFormat').toUpperCase();
+		var ranges = {};
+		ranges[app.vtranslate('JS_TODAY')] = [moment(), moment()];
+		ranges[app.vtranslate('JS_YESTERDAY')] = [moment().subtract(1, 'days'), moment().subtract(1, 'days')];
+		ranges[app.vtranslate('JS_LAST_7_DAYS')] = [moment().subtract(6, 'days'), moment()];
+		ranges[app.vtranslate('JS_CURRENT_MONTH')] = [moment().startOf('month'), moment().endOf('month')];
+		ranges[app.vtranslate('JS_LAST_MONTH')] = [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')];
+		var params = {
+			autoUpdateInput: false,
+			autoApply: true,
+			ranges: ranges,
+			opens: "left",
+			locale: {
+				separator: ',',
+				format: format,
+				customRangeLabel: app.vtranslate('JS_CUSTOM'),
+				daysOfWeek: $.fn.datepicker.dates[language].daysMin,
+				monthNames: $.fn.datepicker.dates[language].months,
+				firstDay: $.fn.datepicker.dates[language].weekStart
+			},
+		};
+		elements.each(function (index, element) {
+			element = $(element);
+			element.daterangepicker(params);
+			element.on('apply.daterangepicker', function (ev, picker) {
+				$(this).val(picker.startDate.format(format) + ',' + picker.endDate.format(format));
+			});
 		});
 
 	},
@@ -927,9 +940,8 @@ var app = {
 		}
 		element.datepicker({'autoclose': true}).on('changeDate', function (ev) {
 			var currentElement = jQuery(ev.currentTarget);
-			var dateFormat = currentElement.data('dateFormat');
-			var finalFormat = app.getDateInVtigerFormat(dateFormat, ev.date);
-			var date = jQuery.datepicker.formatDate(finalFormat, ev.date);
+			var dateFormat = currentElement.data('dateFormat').toUpperCase();
+			var date = jQuery.datepicker.formatDate(moment(ev.date).format(dateFormat), ev.date);
 			currentElement.val(date);
 		});
 	},
@@ -1518,13 +1530,12 @@ var app = {
 		if (error) {
 			console.error(error);
 		}
-		if (err) {
+		if (err && err !== 'error') {
 			console.error(err);
 		}
 		if (errorThrown) {
 			console.error(errorThrown);
 		}
-		console.log('-----------------');
 	},
 	registerModal: function (container) {
 		if (typeof container == 'undefined') {
@@ -1678,9 +1689,9 @@ var app = {
 	},
 	clearBrowsingHistory: function () {
 		AppConnector.request({
-			module : app.getModuleName(),
+			module: app.getModuleName(),
 			action: 'browsingHistory',
-		}).then(function(response) {
+		}).then(function (response) {
 			$('ul.historyList').remove();
 		});
 	},

@@ -11,6 +11,6 @@ $languageStrings = [
 	'Branches' => 'Succursales',
 	'Branches' => 'Succursales',
 	'Branches ID' => 'Succursales ID',
-	'LBL_CUSTOM_INFORMATION' => 'Informations Complémentaires',
+	'LBL_CUSTOM_INFORMATION' => 'Informations complémentaires',
 	'society' => 'Société',
 ];

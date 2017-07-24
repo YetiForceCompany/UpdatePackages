@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 {strip}
 <input type="hidden" id="currentView" value="{$VIEW}" />
 <input type="hidden" id="activity_view" value="{$CURRENT_USER->get('activity_view')}" />
@@ -43,8 +43,8 @@
 		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 			<span aria-hidden="true">&times;</span>
 		</button>
-		{vtranslate('LBL_CACHE_SELECTED_FILTERS', $MODULE_NAME)}&nbsp;
-		<button type="button" class="pull-right btn btn-warning btn-xs marginRight10 cacheClear">{vtranslate('LBL_CACHE_CLEAR', $MODULE_NAME)}</button>
+		{\App\Language::translate('LBL_CACHE_SELECTED_FILTERS', $MODULE_NAME)}&nbsp;
+		<button type="button" class="pull-right btn btn-warning btn-xs marginRight10 cacheClear">{\App\Language::translate('LBL_CACHE_CLEAR', $MODULE_NAME)}</button>
 	</div>
 	<div class="bottom_margin">
 		<p><!-- Divider --></p>

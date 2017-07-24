@@ -6,6 +6,7 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'LBL_NAME_PACKAGES' => 'Nom',
 	'Updates' => 'Mises à jour',
 	'LBL_YES' => 'Oui',
 	'LBL_NO' => 'Non',

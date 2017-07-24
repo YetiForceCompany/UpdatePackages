@@ -1,6 +1,6 @@
 <?php
 /**
- * OSSOutsourcedServices french translation
+ * OSSOutsourced services french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -8,7 +8,7 @@
 $languageStrings = [
 	'OSSOutsourcedServices' => 'Services externalisés',
 	'SINGLE_OSSOutsourcedServices' => 'Service externalisé',
-	'LBL_INFORMATION' => 'Information',
+	'LBL_INFORMATION' => 'Détails du service externalisé',
 	//fields
 	'Assigned To' => 'Assigné à',
 	'LBL_osservicesstatus' => 'Statut',

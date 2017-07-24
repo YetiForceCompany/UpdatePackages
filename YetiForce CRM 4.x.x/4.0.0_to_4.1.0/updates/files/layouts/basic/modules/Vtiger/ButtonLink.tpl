@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 {strip}
 	<div class="btn-group {if $BUTTON_VIEW|strrpos:'listView' !== false && $USER_MODEL->get('rowheight') eq 'narrow'}btn-group-sm{/if}">
 		{assign var="LABEL" value=$LINK->getLabel()}
@@ -22,7 +22,7 @@
 			{/strip} {strip}
 				{if $LABEL neq '' && $LINK->get('showLabel') != 1}
 					data-placement="bottom"{/strip} {strip}
-					data-content="{vtranslate($LABEL, $BTN_MODULE)}"
+					data-content="{\App\Language::translate($LABEL, $BTN_MODULE)}"
 				{/if}
 			{/strip} {strip}
 				{if $LINK->get('linkhref')}
@@ -50,13 +50,13 @@
 				{/if}
 				>
 				{if $LINK->get('linkimg') neq ''}
-					<img class="image-in-button" src="{$LINK->get('linkimg')}" title="{vtranslate($LABEL, $BTN_MODULE)}">
+					<img class="image-in-button" src="{$LINK->get('linkimg')}" title="{\App\Language::translate($LABEL, $BTN_MODULE)}">
 				{elseif $LINK->get('linkicon') neq ''}
 					<span class="{$LINK->get('linkicon')}"></span>
 				{/if}
 				{if $LABEL neq '' && $LINK->get('showLabel') == 1}
 					{if $LINK->get('linkimg') neq '' || $LINK->get('linkicon') neq ''}&nbsp;&nbsp;{/if}
-					<strong>{vtranslate($LABEL, $BTN_MODULE)}</strong>
+					<strong>{\App\Language::translate($LABEL, $BTN_MODULE)}</strong>
 				{/if}
 				{if $LINK->get('linkhref')}</a>{else}</button>{/if}
 </div>

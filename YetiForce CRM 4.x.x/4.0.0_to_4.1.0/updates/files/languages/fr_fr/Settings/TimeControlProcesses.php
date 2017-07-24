@@ -1,12 +1,12 @@
 <?php
 /**
- * TimeControlProcesses french translation
+ * Time control processes french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
-	'LBL_TIMECONTROL_PROCESSES' => 'Flux de Travail (Workflow)',
+	'LBL_TIMECONTROL_PROCESSES' => 'Workflow',
 	'LBL_TIMECONTROL_PROCESSES_DESCRIPTION' => ' ',
 	'LBL_ONEDAY_VALID' => 'Temps de travail limité à 24 heures',
 	'LBL_TIMEOVERLAP_VALID' => 'Autoriser le chevauchement des temps',

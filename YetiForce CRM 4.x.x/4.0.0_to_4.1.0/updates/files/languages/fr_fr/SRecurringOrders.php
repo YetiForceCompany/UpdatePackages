@@ -1,6 +1,6 @@
 <?php
 /**
- * SRecurringOrders french translation
+ * SRecurring orders french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -9,7 +9,7 @@ $languageStrings = [
 	'SRecurringOrders' => 'Commandes récurrentes (ventes)',
 	'SINGLE_SRecurringOrders' => 'Commande récurrente (ventes)',
 	//BLOCKS
-	'LBL_SRECURRINGORDERS_INFORMATION' => 'Information',
+	'LBL_SRECURRINGORDERS_INFORMATION' => 'Détails commande récurrente (ventes)',
 	'LBL_CUSTOM_INFORMATION' => 'Information système',
 	'LBL_DESCRIPTION_INFORMATION' => 'Description',
 	'LBL_STATISTICS' => 'Statistiques',
@@ -27,7 +27,7 @@ $languageStrings = [
 	'SINGLE_SSalesProcesses' => 'Opportunité',
 	'LBL_END_PERIOD' => 'Fin de période',
 	'LBL_FREQUENCY' => 'Fréquence',
-	'LBL_START_PERIOD' => 'Début de périod',
+	'LBL_START_PERIOD' => 'Période de début',
 	'LBL_TARGET_MODULE' => 'Module destination',
 	//PICKLIST VALUES
 	'PLL_DRAFT' => 'Brouillon',

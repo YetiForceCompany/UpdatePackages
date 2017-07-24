@@ -1,11 +1,11 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 {strip}
 	<table class="table table-striped">
 		<thead>
 			<tr>
 				{foreach item=HEADER from=$HEADERS}
 					<th>
-						{vtranslate($HEADER->get('label'), $MODULE)}
+						{\App\Language::translate($HEADER->get('label'), $MODULE)}
 					</th>
 				{/foreach}
 			</tr>

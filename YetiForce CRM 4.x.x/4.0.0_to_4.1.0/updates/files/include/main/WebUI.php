@@ -62,13 +62,13 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 		return $user;
 	}
 
-	protected function triggerCheckPermission($handler, $request)
+	protected function triggerCheckPermission($handler, \App\Request $request)
 	{
 		$moduleName = $request->getModule();
 		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
 
 		if (empty($moduleModel)) {
-			throw new \Exception\AppException(vtranslate($moduleName) . ' ' . vtranslate('LBL_HANDLER_NOT_FOUND'));
+			throw new \Exception\AppException(\App\Language::translate($moduleName) . ' ' . \App\Language::translate('LBL_HANDLER_NOT_FOUND'));
 		}
 
 		$userPrivilegesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
@@ -78,10 +78,10 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 			$handler->checkPermission($request);
 			return;
 		}
-		throw new \Exception\NoPermitted(vtranslate('LBL_NOT_ACCESSIBLE'));
+		throw new \Exception\NoPermitted('LBL_NOT_ACCESSIBLE');
 	}
 
-	protected function triggerPreProcess($handler, $request)
+	protected function triggerPreProcess($handler, \App\Request $request)
 	{
 		if ($request->isAjax()) {
 			$handler->preProcessAjax($request);
@@ -90,7 +90,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 		$handler->preProcess($request);
 	}
 
-	protected function triggerPostProcess($handler, $request)
+	protected function triggerPostProcess($handler, \App\Request $request)
 	{
 		if ($request->isAjax()) {
 			return true;
@@ -121,19 +121,23 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				header('Location: ' . AppConfig::main('site_URL'), true, 301);
 			}
 		}
+		if (\App\RequestUtil::getBrowserInfo()->https) {
+			$params = session_get_cookie_params();
+			session_set_cookie_params($params['lifetime'], $params['path'], $params['domain'], true, true);
+		}
 		Vtiger_Session::init();
-
 		// Better place this here as session get initiated
 		//skipping the csrf checking for the forgot(reset) password
 		if (AppConfig::main('csrfProtection') && $request->get('mode') !== 'reset' && $request->get('action') !== 'Login' && AppConfig::main('systemMode') !== 'demo') {
 			require_once('config/csrf_config.php');
 			require_once('libraries/csrf-magic/csrf-magic.php');
 		}
+		//$this->cspInitToken();
 		// common utils api called, depend on this variable right now
 		$currentUser = $this->getLogin();
 		vglobal('current_user', $currentUser);
 
-		$currentLanguage = Vtiger_Language_Handler::getLanguage();
+		$currentLanguage = \App\Language::getLanguage();
 		vglobal('current_language', $currentLanguage);
 		$module = $request->getModule();
 		$qualifiedModuleName = $request->getModule(false);
@@ -202,7 +206,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				if ($handler->loginRequired()) {
 					$this->checkLogin($request);
 				}
-				$skipList = ['Users', 'Home', 'CustomView', 'Import', 'Export', 'Inventory', 'Vtiger', 'Migration', 'Install', 'ModTracker', 'WSAPP'];
+				$skipList = ['Users', 'Home', 'CustomView', 'Import', 'Export', 'Inventory', 'Vtiger', 'Migration', 'Install', 'ModTracker'];
 				if (!in_array($module, $skipList) && stripos($qualifiedModuleName, 'Settings') === false) {
 					$this->triggerCheckPermission($handler, $request);
 				}
@@ -218,7 +222,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				$response = $handler->process($request);
 				$this->triggerPostProcess($handler, $request);
 			} else {
-				throw new \Exception\AppException(vtranslate('LBL_HANDLER_NOT_FOUND'));
+				throw new \Exception\AppException('LBL_HANDLER_NOT_FOUND');
 			}
 		} catch (Exception $e) {
 			\App\Log::error($e->getMessage() . ' => ' . $e->getFile() . ':' . $e->getLine());
@@ -238,6 +242,17 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 		}
 		if ($response) {
 			$response->emit();
+		}
+	}
+
+	/**
+	 * Content Security Policy token
+	 */
+	public function cspInitToken()
+	{
+		if (!Vtiger_Session::has('CSP_TOKEN') || Vtiger_Session::get('CSP_TOKEN_TIME') < time()) {
+			Vtiger_Session::set('CSP_TOKEN', sha1(AppConfig::main('application_unique_key') . time()));
+			Vtiger_Session::set('CSP_TOKEN_TIME', strtotime('+5 minutes'));
 		}
 	}
 }

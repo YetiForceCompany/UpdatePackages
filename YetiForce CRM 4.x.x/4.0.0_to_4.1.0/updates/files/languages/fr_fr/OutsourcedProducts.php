@@ -1,6 +1,6 @@
 <?php
 /**
- * OutsourcedProducts french translation
+ * Outsourced products french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -12,7 +12,7 @@ $languageStrings = [
 	'SINGLE_OutsourcedProducts' => 'Produit externalisé',
 	'LBL_ADD_RECORD' => 'Ajouter un enregistrement',
 	// Blocks
-	'LBL_INFORMATION' => 'Produits externalisés',
+	'LBL_INFORMATION' => 'Détails produit externalisé',
 	//Field Labels
 	'Assigned To' => 'Assigné à',
 	'LBL_RODZAJUMOWY' => 'Type de contrat',

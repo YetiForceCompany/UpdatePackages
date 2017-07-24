@@ -1,6 +1,6 @@
 <?php
 /**
- * ApiAddress french translation
+ * Api address french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -13,7 +13,7 @@ $languageStrings = [
 	'LBL_USE_OPENCAGE_GEOCODER' => 'Utiliser le Géocodeur OpenCage',
 	'LBL_REMOVE_CONNECTION' => 'Retirer la  connexion',
 	'LBL_ENTER_KEY_APPLICATION' => 'Saisir la clé de l\'application',
-	'LBL_MIN_LOOKUP_LENGTH' => 'Le nombre minimun de caractère à saisir par l\'utilisateur avant de déclencher la recherche',
+	'LBL_MIN_LOOKUP_LENGHT' => 'Le nombre minimun de caractère à saisir par l\'utilisateur avant de déclencher la recherche',
 	'LBL_SAVE_NOTIFY_OK' => 'Paramètres modifiés avec succès.',
 	'LBL_CHOOSE_API' => 'Choisir une  API',
 	'LBL_USE_GOOGLE_GEOCODER' => 'Utiliser le GéoCoding de Google',

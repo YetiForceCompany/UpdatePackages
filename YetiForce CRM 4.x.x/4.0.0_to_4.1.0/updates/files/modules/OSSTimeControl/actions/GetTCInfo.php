@@ -1,6 +1,11 @@
 <?php
-/* {[The file is published on the basis of YetiForce Public License that can be found in the following directory: licenses/License.html]} */
 
+/**
+ * OSSTimeControl GetTCInfo action class
+ * @package YetiForce.Action
+ * @copyright YetiForce Sp. z o.o.
+ * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
+ */
 class OSSTimeControl_GetTCInfo_Action extends Vtiger_Action_Controller
 {
 
@@ -29,7 +34,7 @@ class OSSTimeControl_GetTCInfo_Action extends Vtiger_Action_Controller
 		$id = $request->get('id');
 		$sourceModule = $request->get('sourceModule');
 
-		$sourceData = array();
+		$sourceData = [];
 
 		if (isRecordExists($id)) {
 			$record = Vtiger_Record_Model::getInstanceById($id, $sourceModule);
@@ -52,7 +57,7 @@ class OSSTimeControl_GetTCInfo_Action extends Vtiger_Action_Controller
 		}
 
 		if ($sourceData === false) {
-			$result = array('success' => false, 'message' => vtranslate('LBL_FAILED_TO_IMPORT_INFO', $moduleName));
+			$result = array('success' => false, 'message' => \App\Language::translate('LBL_FAILED_TO_IMPORT_INFO', $moduleName));
 		} else {
 			$result = array('success' => true, 'sourceData' => $sourceData);
 		}

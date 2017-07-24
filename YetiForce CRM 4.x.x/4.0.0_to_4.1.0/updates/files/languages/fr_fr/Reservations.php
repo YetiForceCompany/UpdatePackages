@@ -6,6 +6,8 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'PLL_CANCELLED' => 'Annulé',
+	'PLL_DRAFT' => 'Ebauche',
 	'SINGLE_Reservations' => 'Réservation',
 	'Reservations' => 'Réservations',
 	'LBL_MAIN_INFORMATION' => 'Détails de la réservation',
@@ -32,9 +34,9 @@ $languageStrings = [
 	'LBL_CARS' => 'Voiture',
 ];
 $jsLanguageStrings = [
-	'MSG_ERROR_NUMBER' => 'Allowed characters: [0-9]',
-	'JS_DATE_SHOULD_BE_GREATER_THAN' => 'End date should be greater than start date',
-	'JS_HOURS_SHOULD_BE_SMALLER_THAN' => 'Number of hours should be smaller than 24h',
-	'JS_START_DATE' => 'Start date',
-	'JS_END_DATE' => 'End date',
+	'MSG_ERROR_NUMBER' => 'Caractères autorisés : [0-9]',
+	'JS_DATE_SHOULD_BE_GREATER_THAN' => 'La date de fin doit être supérieure à la date de début',
+	'JS_HOURS_SHOULD_BE_SMALLER_THAN' => 'Le nombre d\'heures doit être inférieur à 24h',
+	'JS_START_DATE' => 'Date de début',
+	'JS_END_DATE' => 'Date de fin',
 ];

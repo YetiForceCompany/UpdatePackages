@@ -6,6 +6,7 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'sharedOwner' => ' ',
 	'Leads' => 'Prospects',
 	'LBL_OPPURTUNITIES' => 'Opportunités',
 	'checkBox' => 'Case à cocher',
@@ -39,6 +40,7 @@ $languageStrings = [
 ];
 
 $jsLanguageStrings = [
+	'JS_sharedOwner' => ' ',
 	'JS_CANT_MAP' => 'Mapping impossible',
 	'JS_checkBox' => 'Case à cocher',
 	'JS_currency' => 'Devise',

@@ -27,7 +27,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 	public function getPageTitle(\App\Request $request)
 	{
 		$moduleName = $request->getModule();
-		$moduleName = $moduleName == 'Vtiger' ? 'YetiForce' : $moduleName;
+		$moduleName = $moduleName === 'Vtiger' ? 'YetiForce' : $moduleName;
 		$title = App\Language::translate($moduleName, $moduleName);
 		$title = $title . ' ' . App\Language::translate('LBL_VIEW_LIST', $moduleName);
 
@@ -43,17 +43,22 @@ class Vtiger_List_View extends Vtiger_Index_View
 	public function getBreadcrumbTitle(\App\Request $request)
 	{
 		$moduleName = $request->getModule();
-		$title = vtranslate('LBL_VIEW_LIST', $moduleName);
+		$title = \App\Language::translate('LBL_VIEW_LIST', $moduleName);
 		if ($request->has('viewname')) {
 			$customView = CustomView_Record_Model::getAll($moduleName)[$request->get('viewname')];
 			if (!empty($customView)) {
-				$title .= '<div class="breadCrumbsFilter dispaly-inline font-small"> [' . vtranslate('LBL_FILTER', $moduleName)
-					. ': ' . vtranslate($customView->get('viewname'), $moduleName) . ']</div>';
+				$title .= '<div class="breadCrumbsFilter dispaly-inline font-small"> [' . \App\Language::translate('LBL_FILTER', $moduleName)
+					. ': ' . \App\Language::translate($customView->get('viewname'), $moduleName) . ']</div>';
 			}
 		}
 		return $title;
 	}
 
+	/**
+	 * Pre process
+	 * @param \App\Request $request
+	 * @param bool $display
+	 */
 	public function preProcess(\App\Request $request, $display = true)
 	{
 		parent::preProcess($request, false);
@@ -69,6 +74,13 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$linkParams = array('MODULE' => $moduleName, 'ACTION' => $request->get('view'));
 		$viewer->assign('CUSTOM_VIEWS', CustomView_Record_Model::getAllByGroup($moduleName, $mid));
 		$this->viewName = App\CustomView::getInstance($moduleName)->getViewId();
+		if ($request->isEmpty('viewname') && App\CustomView::hasViewChanged($moduleName, $this->viewName)) {
+			$customViewModel = CustomView_Record_Model::getInstanceById($this->viewName);
+			if ($customViewModel) {
+				App\CustomView::setDefaultSortOrderBy($moduleName, ['orderBy' => $customViewModel->getSortOrderBy('orderBy'), 'sortOrder' => $customViewModel->getSortOrderBy('sortOrder')]);
+			}
+			App\CustomView::setCurrentView($moduleName, $this->viewName);
+		}
 		$this->listViewModel = Vtiger_ListView_Model::getInstance($moduleName, $this->viewName);
 		$viewer->assign('HEADER_LINKS', $this->listViewModel->getHederLinks($linkParams));
 		$this->initializeListViewContents($request, $viewer);

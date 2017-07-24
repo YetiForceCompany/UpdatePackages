@@ -1,11 +1,13 @@
 <?php
 /**
- * OSSMailScanner french translation
+ * OSSMail scanner french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'ERR_INCORRECT_ACCESS_DATA' => 'Accès aux données non valide',
+	'LBL_INFO_ABOUT_FOLDERS_TO_REMOVE' => 'Les dossiers ci-dessous seront supprimés après l\'enregistrement',
 	'LBL_PAGE_NUMBER' => 'Aller à la page no.',
 	'OSSMailScanner_manual' => 'Scanner mail',
 	'OSSMailScanner' => 'Scanner Mail',
@@ -15,9 +17,9 @@ $languageStrings = [
 	'CRM Archive' => 'Archive CRM',
 	'CRM Archive Sent' => 'Archive CRM envoyé',
 	'Drafts' => 'Brouillons',
-	'INBOX' => 'INBOX',
-	'Junk' => 'JUNK',
-	'Sent' => 'ENVOYE',
+	'INBOX' => 'Boîte de réception',
+	'Junk' => 'Corbeille',
+	'Sent' => 'Envoyé',
 ];
 $jsLanguageStrings = [
 	'start_cron' => 'Cron démarré',
@@ -30,9 +32,9 @@ $jsLanguageStrings = [
 	'Manually stopped' => 'Stoppé manuellement',
 	'OK' => 'ok',
 	'In progress' => 'En cours',
-	'whether_remove_an_identity' => 'Retirer une identité?',
+	'whether_remove_an_identity' => 'Retirer une identité ?',
 	'removed_identity' => 'Identité supprimé',
-	'LBL_LOADING_LIST_OF_FOLDERS' => 'Loading folders list in progress.</br>It make take up to several minutes...',
+	'LBL_LOADING_LIST_OF_FOLDERS' => 'Chargement de la liste des dossiers en cours.  Cela peut prendre plusieurs minutes...',
 ];
 
 

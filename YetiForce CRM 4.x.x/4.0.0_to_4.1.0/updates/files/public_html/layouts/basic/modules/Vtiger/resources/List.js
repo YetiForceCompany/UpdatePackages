@@ -989,7 +989,7 @@ jQuery.Class("Vtiger_List_Js", {
 		var selectedIdsDataAttr = cvId + 'Selectedids';
 		var selectedIdsElementDataAttributes = selectedIdsElement.data();
 		if (!(selectedIdsDataAttr in selectedIdsElementDataAttributes)) {
-			var selectedIds = new Array();
+			var selectedIds = [];
 			this.writeSelectedIds(selectedIds);
 		} else {
 			selectedIds = selectedIdsElementDataAttributes[selectedIdsDataAttr];
@@ -1007,7 +1007,7 @@ jQuery.Class("Vtiger_List_Js", {
 		var excludedIdsDataAttr = cvId + 'Excludedids';
 		var excludedIdsElementDataAttributes = exlcudedIdsElement.data();
 		if (!(excludedIdsDataAttr in excludedIdsElementDataAttributes)) {
-			var excludedIds = new Array();
+			var excludedIds = [];
 			this.writeExcludedIds(excludedIds);
 		} else {
 			excludedIds = excludedIdsElementDataAttributes[excludedIdsDataAttr];
@@ -1527,8 +1527,8 @@ jQuery.Class("Vtiger_List_Js", {
 			jQuery('.listViewEntriesCheckBox').each(function (index, element) {
 				jQuery(this).attr('checked', false).closest('tr').removeClass('highlightBackgroundColor');
 			});
-			var excludedIds = new Array();
-			var selectedIds = new Array();
+			var excludedIds = [];
+			var selectedIds = [];
 			thisInstance.writeSelectedIds(selectedIds);
 			thisInstance.writeExcludedIds(excludedIds);
 		});
@@ -1669,10 +1669,15 @@ jQuery.Class("Vtiger_List_Js", {
 			listViewFilterBlock.on('mouseup', 'li span.denyFilter', function (event) {
 				//to close the dropdown
 				thisInstance.getFilterSelectElement().data('select2').close();
-				var liElement = jQuery(event.currentTarget);
+				var liElement = jQuery(event.currentTarget).closest('.select2-results__option');
 				var currentOptionElement = thisInstance.getSelectOptionFromChosenOption(liElement);
 				var denyUrl = currentOptionElement.data('denyurl');
-				window.location.href = denyUrl;
+				var form = '<form action=' + denyUrl + ' method="POST">';
+				if (typeof csrfMagicName !== 'undefined') {
+					form += '<input type = "hidden" name ="' + csrfMagicName + '"  value=\'' + csrfMagicToken + '\'>';
+				}
+				form += '</form>';
+				jQuery(form).appendTo('body').submit();
 				event.stopPropagation();
 			});
 		}

@@ -16,9 +16,9 @@ jQuery.Class("OpenStreetMap_Map_Js", {}, {
 	},
 	registerMap: function (startCoordinate, startZoom) {
 		var myMap = L.map('mapid').setView(startCoordinate, startZoom);
-		L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 19,
-			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
 		}).addTo(myMap);
 		this.mapInstance = myMap;
@@ -60,7 +60,7 @@ jQuery.Class("OpenStreetMap_Map_Js", {}, {
 			if (typeof response.result.coordinatesCeneter.error == 'undefined') {
 				var radius = container.find('.radius').val();
 				markerArray.push([response.result.coordinatesCeneter.lat, response.result.coordinatesCeneter.lon]);
-				var popup = '<span class="description">' + container.find('.searchValue').val() + '</span><br><input type=hidden class="coordinates" data-lon="' + response.result.coordinatesCeneter.lon + '" data-lat="' + response.result.coordinatesCeneter.lat + '">';
+				var popup = '<span class="description">' + container.find('.searchValue').val() + '</span><br /><input type=hidden class="coordinates" data-lon="' + response.result.coordinatesCeneter.lon + '" data-lat="' + response.result.coordinatesCeneter.lat + '">';
 				popup += '<button class="btn btn-success btn-xs startTrack marginRight10"><span class="fa fa-truck"></span></button>';
 				popup += '<button class="btn btn-danger btn-xs endTrack"><span class="fa fa-flag-checkered"></span></button>';
 				var marker = L.marker([response.result.coordinatesCeneter.lat, response.result.coordinatesCeneter.lon], {

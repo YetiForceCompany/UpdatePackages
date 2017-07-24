@@ -1,11 +1,12 @@
 <?php
 /**
- * DataAccess french translation
+ * Data access french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'has changed to' => 'a changé en',
 	'LBL_DATAACCES' => 'Validation des accès',
 	'LBL_DATAACCESS' => 'Contrôle des enregistrements',
 	'DataAccess' => 'Validation des accès',
@@ -79,6 +80,7 @@ $languageStrings = [
 ];
 
 $jsLanguageStrings = [
+	'has changed to' => 'a changé en',
 	'DES_REQUIRED' => 'Description est requise',
 	//comparators
 	'starts with' => 'commence par',

@@ -31,7 +31,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 	 */
 	triggerDetailViewAction: function (detailActionUrl, callBackFunction) {
 		var detailInstance = Vtiger_Detail_Js.getInstance();
-		var selectedIds = new Array();
+		var selectedIds = [];
 		selectedIds.push(detailInstance.getRecordId());
 		var postData = {
 			"selected_ids": JSON.stringify(selectedIds)
@@ -1316,6 +1316,10 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var customParams = {};
 			customParams['sourceModule'] = module;
 			customParams['sourceRecord'] = recordId;
+			if (module != '' && referenceModuleName != '' && typeof thisInstance.referenceFieldNames[referenceModuleName] != 'undefined' && typeof thisInstance.referenceFieldNames[referenceModuleName][module] != 'undefined') {
+				var relField = thisInstance.referenceFieldNames[referenceModuleName][module];
+				customParams[relField] = recordId;
+			}
 			var fullFormUrl = element.data('url');
 			var preQuickCreateSave = function (data) {
 				thisInstance.addElementsToQuickCreateForCreatingRelation(data, customParams);
@@ -1769,7 +1773,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		var referenceModuleName = widgetHeaderContainer.find('[name="relatedModule"]').val();
 		var recordId = this.getRecordId();
 		var module = app.getModuleName();
-		var idList = new Array();
+		var idList = [];
 		idList.push(data.result._recordId);
 		widgetDataContainer.progressIndicator({});
 		this.addRelationBetweenRecords(referenceModuleName, idList).then(

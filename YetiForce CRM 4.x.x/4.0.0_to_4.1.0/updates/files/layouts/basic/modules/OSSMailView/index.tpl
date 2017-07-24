@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 <div class="">
 	<div class="clearfix treeView">
 		<div class="widget_header row">
@@ -9,15 +9,15 @@
 		<form>
 			<table>
 				<tr>
-					<td><label class="control-label">{vtranslate('Widget list limit', 'OSSMailView')}</label></td>
+					<td><label class="control-label">{\App\Language::translate('Widget list limit', 'OSSMailView')}</label></td>
 					<td><input id="tab_email_view_widget_limit" class="form-control validate[custom[integer]]" value="{$WIDGET_CFG['email_list']['widget_limit']}"/></td>
 				</tr>
 				<tr>
-					<td><label class="control-label">{vtranslate('List open email', 'OSSMailView')}</label>&nbsp;</td>
+					<td><label class="control-label">{\App\Language::translate('List open email', 'OSSMailView')}</label>&nbsp;</td>
 					<td>
 						<select id="tab_email_view_open_window" class="form-control">
-							<option value="_self" {if $WIDGET_CFG['email_list']['target'] eq '_self'}selected{/if}>{vtranslate('_self', 'OSSMailView')}</option>
-							<option value="_blank" {if $WIDGET_CFG['email_list']['target'] eq '_blank'}selected{/if}>{vtranslate('_blank', 'OSSMailView')}</option>
+							<option value="_self" {if $WIDGET_CFG['email_list']['target'] eq '_self'}selected{/if}>{\App\Language::translate('_self', 'OSSMailView')}</option>
+							<option value="_blank" {if $WIDGET_CFG['email_list']['target'] eq '_blank'}selected{/if}>{\App\Language::translate('_blank', 'OSSMailView')}</option>
 						</select>
 					</td>
 				</tr>

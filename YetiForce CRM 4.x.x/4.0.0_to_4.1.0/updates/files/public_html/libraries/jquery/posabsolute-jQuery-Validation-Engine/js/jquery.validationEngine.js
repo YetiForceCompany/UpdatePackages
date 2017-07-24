@@ -702,7 +702,7 @@
 				
 				// If we have a string, that means that we have an error, so add it to the error message.
 				if (typeof errorMsg == 'string') {
-					promptText += errorMsg + "<br/>";
+					promptText += errorMsg + "<br />";
 					options.isError = true;
 					field_errors++;
 				}	
@@ -716,7 +716,7 @@
 			var fieldType = field.prop("type");
 			var positionType=field.data("promptPosition") || options.promptPosition;
 
-			if ((fieldType == "radio" || fieldType == "checkbox") && form.find("input[name='" + fieldName + "']").size() > 1) {
+			if ((fieldType == "radio" || fieldType == "checkbox") && form.find("input[name='" + fieldName + "']").length > 1) {
 				if(positionType === 'inline') {
 					field = $(form.find("input[name='" + fieldName + "'][type!=hidden]:last"));
 				} else {

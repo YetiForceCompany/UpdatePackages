@@ -55,17 +55,35 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 		return ['start' => $timeStart, 'end' => date('Y-m-d')];
 	}
 
+	/**
+	 * Function to get all dashboard
+	 * @return array
+	 */
 	public static function getDashboardTypes()
 	{
-		return (new App\Db\Query())->from('u_#__dashboard_type')->all();
+		if (App\Cache::has('WidgetsDashboard', 'AllTypes')){
+			return App\Cache::get('WidgetsDashboard', 'AllTypes');
+		}
+		$types = (new App\Db\Query())->from('u_#__dashboard_type')->all();
+		App\Cache::save('WidgetsDashboard', 'AllTypes', $types);
+		return $types;
 	}
 
+	/**
+	 * Function to get id of default dashboard
+	 * @return int
+	 */
 	public static function getDefaultDashboard()
 	{
-		return (new App\Db\Query())->select('dashboard_id')
-				->from('u_#__dashboard_type')
-				->where(['system' => 1])
-				->scalar();
+		$allTypes = self::getDashboardTypes();
+		$dashboardId = 0;
+		foreach ($allTypes as $dashboard) {
+			if ((int) $dashboard['system'] === 1) {
+				$dashboardId = $dashboard['dashboard_id'];
+				break;
+			}
+		}
+		return $dashboardId;
 	}
 
 	public static function saveDashboard($dashboardId, $dashboardName)
@@ -79,6 +97,7 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 				->update('u_#__dashboard_type', ['name' => $dashboardName], ['dashboard_id' => $dashboardId])
 				->execute();
 		}
+		App\Cache::delete('WidgetsDashboard', 'AllTypes');
 	}
 
 	public static function deleteDashboard($dashboardId)
@@ -90,6 +109,7 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 		$db->createCommand()->delete('vtiger_module_dashboard_blocks', ['dashboard_id' => $dashboardId])->execute();
 		$db->createCommand()->delete('vtiger_module_dashboard', ['blockid' => $blocks])->execute();
 		$db->createCommand()->delete('vtiger_module_dashboard_widgets', ['dashboardid' => $dashboardId])->execute();
+		App\Cache::delete('WidgetsDashboard', 'AllTypes');
 	}
 
 	public static function getDashboardInfo($dashboardId)
@@ -357,7 +377,7 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 			$widgetId = $db->getLastInsertID('vtiger_module_dashboard_widgets_id_seq');
 		}
 		\App\Log::trace("Exiting Settings_WidgetsManagement_Module_Model::addWidget() method ...");
-		return array('success' => true, 'id' => $templateId, 'wid' => $widgetId, 'status' => $status, 'text' => vtranslate('LBL_WIDGET_ADDED', 'Settings::WidgetsManagement'));
+		return array('success' => true, 'id' => $templateId, 'wid' => $widgetId, 'status' => $status, 'text' => \App\Language::translate('LBL_WIDGET_ADDED', 'Settings::WidgetsManagement'));
 	}
 
 	public function getBlocksId($dashboard)

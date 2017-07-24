@@ -17,7 +17,7 @@
 			<link REL="SHORTCUT ICON" HREF="{vimage_path('favicon.ico')}">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-			<meta name="robots" content="noindex" />
+			<meta name="robots" content="noindex,nofollow" />
 			{foreach key=index item=cssModel from=$STYLES}
 				<link rel="{$cssModel->getRel()}" href="{$cssModel->getHref()}" />
 			{/foreach}
@@ -35,7 +35,7 @@
 				<script type="text/javascript">{$HEAD_LOCKS}</script>
 			{/if}
 			{if \App\Debuger::isDebugBar()}
-				{\App\Debuger::getDebugBar()->getJavascriptRenderer()->renderHead()}
+				{\App\Debuger::getDebugBar()->getJavascriptRenderer(\App\Debuger::getJavascriptPath())->renderHead()}
 			{/if}
 		</head>
 		<body data-language="{$LANGUAGE}" data-skinpath="{$SKIN_PATH}" data-layoutpath="{$LAYOUT_PATH}" {$USER_MODEL->getBodyLocks()}>
@@ -63,8 +63,6 @@
 				<input type="hidden" id="fieldsReferencesDependent" value="{AppConfig::security('FIELDS_REFERENCES_DEPENDENT')}" />
 			</div>
 			<div id="page">
-				<!-- container which holds data temporarly for pjax calls -->
-				<div id="pjaxContainer" class="hide noprint"></div>
 				{assign var="ANNOUNCEMENTS" value=Vtiger_Module_Model::getInstance('Announcements')}
 				{if $ANNOUNCEMENTS->checkActive()}
 					{include file='Announcement.tpl'|@vtemplate_path:$MODULE}

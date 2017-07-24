@@ -35,7 +35,7 @@ Vtiger_List_Js('Vtiger_FindDuplicates_Js',{
 				jQuery('#listViewContents').html(data);
 				jQuery('#recordsCount').val('');
 				jQuery('#totalPageCount').text('');
-                var selectedIds = new Array();
+                var selectedIds = [];
                 thisInstance.writeSelectedIds(selectedIds);
 				thisInstance.calculatePages().then(function(){
 					thisInstance.updatePagination();
@@ -108,7 +108,7 @@ Vtiger_List_Js('Vtiger_FindDuplicates_Js',{
 						thisInstance.calculatePages().then(function(){
 							thisInstance.updatePagination(pageNumber);
 						});
-				
+						thisInstance.registerMergeRecordEvent(thisInstance.mergeRecordPopupCallback);
 					},
 					function (textStatus, errorThrown) {
 					}

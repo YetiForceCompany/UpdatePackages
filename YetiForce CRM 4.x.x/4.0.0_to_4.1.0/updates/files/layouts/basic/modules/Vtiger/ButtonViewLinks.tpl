@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 {strip}
 	{if count($LINKS) gt 0}
 		{assign var=TEXT_HOLDER value=''}
@@ -13,14 +13,14 @@
 			<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 				<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
 				&nbsp;
-				<span class="textHolder">{vtranslate($TEXT_HOLDER, $MODULE_NAME)}</span>
+				<span class="textHolder">{\App\Language::translate($TEXT_HOLDER, $MODULE_NAME)}</span>
 				&nbsp;<span class="caret"></span>
 			</button>
 			<ul class="dropdown-menu">
 				{foreach item=LINK from=$LINKS}
 					<li>
 						<a class="quickLinks" href="{$LINK->getUrl()}">
-							{vtranslate($LINK->getLabel(), $MODULE_NAME)}
+							{\App\Language::translate($LINK->getLabel(), $MODULE_NAME)}
 						</a>
 					</li>
 				{/foreach}

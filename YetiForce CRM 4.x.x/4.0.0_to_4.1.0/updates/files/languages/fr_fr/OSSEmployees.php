@@ -6,6 +6,9 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'FL_RBH' => 'DRH',
+	'FL_SECONDARY_PHONE' => 'Téléphone supplémentaire',
+	'FL_POSITION' => 'Position',
 	'OSSEmployees' => 'Employés',
 	'SINGLE_OSSEmployees' => 'Employé',
 	'LBL_INFORMATION' => 'Détails de l\'employé',
@@ -13,7 +16,7 @@ $languageStrings = [
 	'LBL_PERMANENT_ADDRESS' => 'Adresse permanente',
 	'LBL_CORRESPONDANCE_ADDRESS' => 'Adresse de renvoi',
 //fields
-	'No.' => 'Numéro',
+	'No.' => 'N°',
 	'Assigned To' => 'Assigné à',
 	'LBL_EMPLOYEESTATUS' => 'Statut',
 	'LBL_NAME' => 'Prénom',
@@ -26,12 +29,12 @@ $languageStrings = [
 	'LBL_PRIVATEPHONE' => 'Téléphone privé',
 	'LBL_BUSINESSMAIL' => 'Email professionnel',
 	'LBL_PRIVATEMAIL' => 'Email privé',
-	'LBL_STREET' => 'Rue et No.',
+	'LBL_STREET' => 'Rue et N°',
 	'LBL_CODE' => 'Code postal',
 	'LBL_CITY' => 'Ville',
 	'LBL_STATE' => 'Département',
 	'LBL_COUNTRY' => 'Pays',
-	'LBL_SHIPSTREET' => 'Rue et No.',
+	'LBL_SHIPSTREET' => 'Rue et N°',
 	'LBL_SHIPCODE' => 'Code postal',
 	'LBL_SHIPCITY' => 'Ville',
 	'LBL_SHIPSTATE' => 'Département',
@@ -46,7 +49,4 @@ $languageStrings = [
 	'Inactive' => 'Inactif',
 	'Average daily working time' => 'Temps de travail quotidien moyen',
 	'LBL_USER_EXISTS' => 'Employé existe déjà',
-	'FL_POSITION' => 'Position',
-	'FL_SECONDARY_PHONE' => 'Téléphone secondaire',
-	'FL_RBH' => 'RBH'
 ];

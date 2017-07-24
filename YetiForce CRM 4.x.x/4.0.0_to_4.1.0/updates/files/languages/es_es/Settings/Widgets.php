@@ -6,8 +6,8 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
-	'Widgets' => 'Módulos – Widgets',
-	'LBL_MODULE_DESC' => 'Módulo de administración de widgets en resumen',
+	'Widgets' => 'Módulos – Widgets en Resumen',
+	'LBL_MODULE_DESC' => 'Módulo de administración de Widgets en Resumen',
 	'Add widget' => 'Añadir Widget',
 	'Type widget' => 'Tipo',
 	'LBL_WIDGET_TYPE' => 'Seleccionar tipo de widget',
@@ -53,7 +53,7 @@ $languageStrings = [
 	'LBL_CONDITION' => 'Condición',
 	'LBL_CONDITION_INFO' => 'Seleccione la condición para mostrar los registros',
 	'LBL_SHOW_ALL_RECORDS' => 'Mostrar todos los registros',
-	'LBL_SHOW_ALL_RECORDS_INFO' => 'No - Se tienen en cuenta los permisos <br> Sí - Búsqueda de registros excluyendo los permisos',
+	'LBL_SHOW_ALL_RECORDS_INFO' => 'No - Se tienen en cuenta los permisos <br /> Sí - Búsqueda de registros excluyendo los permisos',
 	'LBL_SHITCH_HEADER' => 'Cambiar en la cabecera',
 	'LBL_SHITCH_HEADER_INFO' => 'El interruptor se puede encontrar en la cabecera del widget.',
 	'HistoryRelation' => 'Cronograma',

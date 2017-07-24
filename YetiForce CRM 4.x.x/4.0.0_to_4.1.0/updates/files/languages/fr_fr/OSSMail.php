@@ -6,11 +6,16 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'LBL_MINIMIZE_BAR' => 'Réduire la barre',
+	'LBL_NUMBER_OF_SELECTED_RECORDS' => 'Nombre d\'enregistrements sélectionnés',
+	'LBL_NUMBER_OF_FOUND_MAIL_ADDRESSES' => 'Nombre d\'adresses e-mail trouvées',
+	'LBL_SEND_MASS_EMAIL' => 'Envoyer un email de masse',
+	'Uninstall' => 'Désinstaller',
 	'OSSMail' => 'Ma boite email',
 	'OSSMail_manual' => 'Module email',
 	'Roundcube config' => 'Configuration RoundCube',
-	'Cancel' => 'Annulez',
-	'Removed relationship' => 'La relationa été supprimée',
+	'Cancel' => 'Annuler',
+	'Removed relationship' => 'La relation a été supprimée',
 	'Add relationship' => 'La relation a été ajoutée',
 	'Unread messages' => 'Messages non lus',
 	'LBL_CHECK_CONFIG' => 'Vérifier la configuration',
@@ -60,7 +65,7 @@ $languageStrings = [
 	'LBL_SAVE' => 'Sauvegarder la configuration',
 	'Mails List' => 'Emails les plus récents',
 	'LBL_NOMAILSLIST' => 'Aucun email',
-	'To' => 'To',
+	'To' => 'À',
 	'LBL_MAIL_NOT_FOUND_IN_DB' => 'Email non trouvé.',
 	'LBL_IMPORT_MAIL_MANUALLY' => 'Importez l\'email manuellement',
 	'LBL_RELATIONS' => 'Sociétés/Contacts',
@@ -74,8 +79,6 @@ $languageStrings = [
 	'LBL_ADD_HELPDESK' => 'Ajouter un ticket',
 	'LBL_ADD_PRODUCTS' => 'Ajouter un produit',
 	'LBL_ADD_SERVICES' => 'Ajouter un service',
-	//BTN
-	'LBL_CREATEMAIL' => 'Envoyer un email',
 ];
 $jsLanguageStrings = [
 	'NoFindEmailInRecord' => 'L\'enregistrement n\'a pas d\'adresse email',

@@ -250,9 +250,9 @@ class ModuleBasic
 	 * @param String Base table name (default modulename in lowercase)
 	 * @param String Base table column (default modulenameid in lowercase)
 	 *
-	 * Creates basetable, customtable, grouptable <br>
-	 * customtable name is basetable + 'cf'<br>
-	 * grouptable name is basetable + 'grouprel'<br>
+	 * Creates basetable, customtable, grouptable <br />
+	 * customtable name is basetable + 'cf'<br />
+	 * grouptable name is basetable + 'grouprel'<br />
 	 */
 	public function initTables($basetable = false, $basetableid = false)
 	{
@@ -509,14 +509,32 @@ class ModuleBasic
 	public function deleteFromCRMEntity()
 	{
 		self::log(__METHOD__ . ' | Start');
-		$query = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['setype' => $this->name]);
+
+		$query = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['setype' => $this->name, 'deleted' => 0]);
 		$dataReader = $query->createCommand()->query();
 		while ($id = $dataReader->readColumn(0)) {
 			$recordModel = \Vtiger_Record_Model::getInstanceById($id, $this->name);
 			$recordModel->delete();
 		}
-		\App\Db::getInstance()->createCommand()->delete('vtiger_crmentity', ['setype' => $this->name])->execute();
+		$deleteRecords = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['setype' => $this->name, 'deleted' => 1])->column();
+		if ($deleteRecords) {
+			$this->removeRecordsFromTrash($deleteRecords);
+		}
 		self::log(__METHOD__ . ' | END');
+	}
+
+	/**
+	 * Function to remove records from trash
+	 * @param int[] $deletedRecords
+	 */
+	public function removeRecordsFromTrash($deletedRecords)
+	{
+		$recordsId = array_splice($deletedRecords, 0, 700);
+		$recycleBinModule = new \RecycleBin_Module_Model();
+		$recycleBinModule->deleteRecords($recordsId);
+		if ($deletedRecords) {
+			$this->removeRecordsFromTrash($deletedRecords);
+		}
 	}
 
 	/**
@@ -571,6 +589,8 @@ class ModuleBasic
 		foreach (\App\Layout::getAllLayouts() as $name => $label) {
 			Functions::recurseDelete("layouts/$name/modules/{$moduleInstance->name}");
 			Functions::recurseDelete("layouts/$name/modules/Settings/{$moduleInstance->name}");
+			Functions::recurseDelete("public_html/layouts/$name/modules/{$moduleInstance->name}");
+			Functions::recurseDelete("public_html/layouts/$name/modules/Settings/{$moduleInstance->name}");
 		}
 		self::log(__METHOD__ . ' | END');
 	}

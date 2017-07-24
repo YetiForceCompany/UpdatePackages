@@ -180,9 +180,9 @@ class OSSMail_Mail_Model extends \App\Base
 			foreach ($emailSearchList as $field) {
 				$enableFind = true;
 				$row = explode('=', $field);
-				$moduleName = $row[2];
+				$moduleName = $row[1];
 				if ($searchModule) {
-					if ($searchModule != $moduleName) {
+					if ($searchModule !== $moduleName) {
 						$enableFind = false;
 					}
 				}
@@ -194,7 +194,7 @@ class OSSMail_Mail_Model extends \App\Base
 						if (empty($email)) {
 							continue;
 						}
-						$name = 'MSFindEmail_' . $moduleName . '_' . $row[1];
+						$name = 'MSFindEmail_' . $moduleName . '_' . $row[0];
 						$cache = Vtiger_Cache::get($name, $email);
 						if ($cache !== false) {
 							if ($cache != 0) {
@@ -202,11 +202,17 @@ class OSSMail_Mail_Model extends \App\Base
 							}
 						} else {
 							$ids = [];
-							$result = $db->pquery("SELECT $table_index FROM " . $row[0] . ' INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = ' . $row[0] . ".$table_index WHERE vtiger_crmentity.deleted = 0 && " . $row[1] . ' = ? ', [$email]);
-							while (($crmid = $db->getSingleValue($result)) !== false) {
-								$ids[] = $crmid;
+							$queryGenerator = new \App\QueryGenerator($moduleName);
+							if ($queryGenerator->getModuleField($row[0])) {
+								$queryGenerator->setFields(['id']);
+								$queryGenerator->addCondition($row[0], $email, 'e');
+								$query = $queryGenerator->createQuery();
+								$dataReader = $queryGenerator->createQuery()->createCommand()->query();
+								while (($crmid = $dataReader->readColumn(0)) !== false) {
+									$ids[] = $crmid;
+								}
+								$return = array_merge($return, $ids);
 							}
-							$return = array_merge($return, $ids);
 							if (empty($ids)) {
 								$ids = 0;
 							}

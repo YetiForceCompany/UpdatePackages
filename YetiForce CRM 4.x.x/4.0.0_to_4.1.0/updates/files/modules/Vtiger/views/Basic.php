@@ -38,7 +38,7 @@ abstract class Vtiger_Basic_View extends Vtiger_Footer_View
 		$viewer->assign('CURRENTDATE', Vtiger_Date_UIType::getDisplayDateValue(date('Y-n-j')));
 		$viewer->assign('QUALIFIED_MODULE', $request->getModule(false));
 		$viewer->assign('MENUS', $this->getMenu());
-
+		$viewer->assign('BROWSING_HISTORY', Vtiger_BrowsingHistory_Helper::getHistory());
 		$homeModuleModel = Vtiger_Module_Model::getInstance('Home');
 		$viewer->assign('HOME_MODULE_MODEL', $homeModuleModel);
 		$viewer->assign('MENU_HEADER_LINKS', $this->getMenuHeaderLinks($request));
@@ -48,7 +48,9 @@ abstract class Vtiger_Basic_View extends Vtiger_Footer_View
 		if (AppConfig::search('GLOBAL_SEARCH_SELECT_MODULE')) {
 			$viewer->assign('SEARCHED_MODULE', $selectedModule);
 		}
-		$viewer->assign('CHAT_ACTIVE', \App\Module::isModuleActive('AJAXChat'));
+		if (\App\Module::isModuleActive('Chat')) {
+			$viewer->assign('CHAT_ENTRIES', (new Chat_Module_Model())->getEntries());
+		}
 		$viewer->assign('REMINDER_ACTIVE', $activeReminder);
 		if ($display) {
 			$this->preProcessDisplay($request);
@@ -88,8 +90,6 @@ abstract class Vtiger_Basic_View extends Vtiger_Footer_View
 		$moduleName = $request->getModule();
 
 		$jsFileNames = array(
-			'libraries.bootstrap.js.eternicode-bootstrap-datepicker.js.bootstrap-datepicker',
-			'~libraries/bootstrap/js/eternicode-bootstrap-datepicker/js/locales/bootstrap-datepicker.' . Vtiger_Language_Handler::getShortLanguageName() . '.js',
 			'~libraries/jquery/timepicker/jquery.timepicker.min.js',
 			'~libraries/jquery/clockpicker/jquery-clockpicker.js',
 			'~libraries/jquery/inputmask/jquery.inputmask.js',

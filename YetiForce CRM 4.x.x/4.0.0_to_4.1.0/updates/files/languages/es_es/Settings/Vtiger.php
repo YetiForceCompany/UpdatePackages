@@ -66,7 +66,7 @@ $languageStrings = [
 	'LBL_INVALID_MODULE' => 'Módulo inválido',
 	'LBL_INVALID_NUMBER' => 'Número inválido',
 	'LBL_INVALID_SUPPORT_NAME' => 'Nombre inválido',
-	'LBL_INV_TANDC_DESCRIPTION' => 'Especifique términos y condiciones para las Cotizaciones, Facturas y Órdenes de venta',
+	'LBL_INV_TANDC_DESCRIPTION' => 'Especifique términos y condiciones para las Cotizaciones, Facturas y Órdenes de Venta',
 	'LBL_LAST_SCAN_AT' => 'Último análisis en ',
 	'LBL_LAST_SCAN_TIMED_OUT' => 'El último análisis ha caducado',
 	'LBL_LAYOUT_EDITOR_DESCRIPTION' => 'Diseñar y modificar el diseño en cada uno de los módulos',
@@ -101,7 +101,7 @@ $languageStrings = [
 	'LBL_PASSWORD' => 'Contraseña',
 	'LBL_PBXMANAGER' => 'Lista de llamadas',
 	'LBL_PICKLIST_DEPENDENCY_DESCRIPTION' => 'Dependencia de configuración entre los valores del desplegable en cada módulo',
-	'LBL_PICKLIST_DEPENDENCY_SETUP' => 'Campos – Desplegables / Relaciones',
+	'LBL_PICKLIST_DEPENDENCY_SETUP' => 'Campos – Desplegables Relacionados',
 	'LBL_PICKLIST_DESCRIPTION' => 'Personalizar los valores del desplegable en cada módulo',
 	'LBL_PICKLIST_EDITOR' => 'Campos – Desplegables',
 	'LBL_PIN' => 'Activar',
@@ -158,7 +158,7 @@ $languageStrings = [
 	'Settings' => 'Ajustes',
 	'USERGROUPLIST' => 'Grupos',
 	'VTLIB_LBL_MODULE_MANAGER_DESCRIPTION' => 'Administrar el comportamiento del módulo dentro de YetiForce CRM',
-	'VTLIB_LBL_MODULE_MANAGER' => 'Módulos – Instalación',
+	'VTLIB_LBL_MODULE_MANAGER' => 'Módulos – Gestión / Instalación',
 	//YetiForce
 	'LBL_SECURITY_MANAGEMENT' => 'Seguridad',
 	'LBL_MAIL_TOOLS' => 'Herramientas de correo',
@@ -183,6 +183,8 @@ $languageStrings = [
 	'LBL_EXTENDED_MODULES' => 'Módulos extendidos',
 	'LBL_COMPANY_LOGO_IN_SYSTEM' => 'Logotipo de la empresa visible en el sistema',
 	'LBL_COMPANY_LOGO_IN_LOGIN' => 'Logotipo de la empresa visible en el panel de inicio de sesión',
+	'LBL_PBX' => 'PBX',
+	'LBL_PBX_DESCRIPTION' => 'Integration with PBX allows to make calls directly from the CRM system',
 	/* settings menu */
 	'LBL_QUICK_CREATE_EDITOR' => 'Editor de creación rápida',
 	'LBL_QUICK_CREATE_EDITOR_DESCRIPTION' => 'Módulo que permite cambiar el diseño de los campos dentro de la ventana de creación rápida',
@@ -251,7 +253,7 @@ $languageStrings = [
 	'LBL_AUTOMATION' => 'Automatización',
 	'LBL_MENU_SUMMARRY' => 'Resumen',
 	/* Role */
-	'Board of Management' => 'Consejo de Administración',
+	'Board of Management' => 'Administradores',
 	'Sales Department' => 'Departamento de Ventas',
 	'Logistics Department' => 'Departamento de Logística',
 	'Project Management Department' => 'Departamento de Gestión de Proyectos',
@@ -329,6 +331,11 @@ $languageStrings = [
 	'LBL_WARNINGS_CORRECT' => 'Ok',
 	'LBL_WARNINGS_OMITTED' => 'Omitido',
 	'LBL_WARNINGS_SWITCH' => 'Filtrar advertencias',
+	'LBL_SECURITY' => 'Información de seguridad',
+	'LBL_LOG_ACCESS_TO_RECORD' => 'Log acceso por Registro',
+	'LBL_LOG_ACCESS_FOR_ADMIN' => 'Log acceso por administrador',
+	'LBL_LOG_ACCESS_FOR_API' => 'Log acceso por API',
+	'LBL_LOG_ACCESS_FOR_USER' => 'Log acceso por Usuario',
 	//Advanced Filter Expressions
 	'LBL_LABEL' => 'Etiqueta',
 	'LBL_FIELD' => 'Valor',
@@ -351,6 +358,17 @@ $languageStrings = [
 	'LBL_COMPANY_LOGO_IN_SYSTEM' => 'Logotipo de la empresa visible en el sistema',
 	'LBL_COMPANY_LOGO_IN_LOGIN' => 'Logotipo de la empresa visible en el panel de inicio de sesión',
 	'LBL_HEIGHT_LOGO' => 'Altura del logotipo',
+	//Pluralized
+	'PLU_USERS_0' => 'Usuario',
+	'PLU_USERS_1' => 'Usuarios',
+	'PLU_SYSTEM_WARNINGS_0' => 'Advertencia del sistema',
+	'PLU_SYSTEM_WARNINGS_1' => 'Advertencias del sistema',
+	'PLU_WORKFLOWS_ACTIVE_0' => 'WF activo',
+	'PLU_WORKFLOWS_ACTIVE_1' => 'WF activos',
+	'PLU_MODULES_0' => 'Módulo',
+	'PLU_MODULES_1' => 'Módulos',
+	'PLU_SECURITY_0' => 'Problema de seguridad',
+	'PLU_SECURITY_1' => 'Problemas de seguridad',
 ];
 
 $jsLanguageStrings = [

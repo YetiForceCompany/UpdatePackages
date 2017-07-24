@@ -17,6 +17,7 @@ class Vtiger_Record_Model extends \App\Base
 
 	protected $module = false;
 	protected $inventoryData;
+	protected $inventoryDataExist = false;
 	protected $inventoryRawData;
 	protected $privileges = [];
 	protected $fullForm = true;
@@ -60,7 +61,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function set($key, $value)
 	{
-		if (!$this->isNew && !in_array($key, ['mode', 'id', 'newRecord', 'modifiedtime', 'modifiedby', 'createdtime']) && $this->value[$key] !== $value) {
+		if (!$this->isNew && !in_array($key, ['mode', 'id', 'newRecord', 'modifiedtime', 'modifiedby', 'createdtime']) && $this->value[$key] != $value) {
 			$this->changes[$key] = $this->get($key);
 		}
 		$this->value[$key] = $value;
@@ -389,7 +390,7 @@ class Vtiger_Record_Model extends \App\Base
 			if ($this->isNew()) {
 				if ($tableName === 'vtiger_crmentity') {
 					$db->createCommand()->insert($tableName, $tableData)->execute();
-					$this->setId($db->getLastInsertID('vtiger_crmentity_crmid_seq'));
+					$this->setId((int) $db->getLastInsertID('vtiger_crmentity_crmid_seq'));
 				} else {
 					$db->createCommand()->insert($tableName, $keyTable + $tableData)->execute();
 				}
@@ -850,6 +851,50 @@ class Vtiger_Record_Model extends \App\Base
 	}
 
 	/**
+	 * Set inventory data
+	 * @param array $data
+	 */
+	public function setInventoryData($data)
+	{
+		$this->inventoryData = $data;
+	}
+
+	/**
+	 * Set inventory raw data
+	 * @param array $data
+	 */
+	public function setInventoryRawData($data)
+	{
+		$this->inventoryRawData = $data;
+	}
+
+	/**
+	 * Save the inventory data
+	 * @param string $moduleName
+	 * @return boolean
+	 */
+	public function saveInventoryData($moduleName)
+	{
+		if (!$this->inventoryDataExist) {
+			return false;
+		}
+		\App\Log::trace('Start ' . __METHOD__);
+		$db = App\Db::getInstance();
+		$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
+		$table = $inventory->getTableName('data');
+
+		$inventoryData = $this->getInventoryData();
+		$db->createCommand()->delete($table, ['id' => $this->getId()])->execute();
+		if (is_array($inventoryData)) {
+			foreach ($inventoryData as $insertData) {
+				$insertData['id'] = $this->getId();
+				$db->createCommand()->insert($table, $insertData)->execute();
+			}
+		}
+		\App\Log::trace('End ' . __METHOD__);
+	}
+
+	/**
 	 * Function to gets inventory default data fields
 	 * @return string|int|null
 	 */
@@ -874,7 +919,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function getInventoryData()
 	{
 		\App\Log::trace('Entering ' . __METHOD__);
-		if (!$this->inventoryData) {
+		if (!isset($this->inventoryData)) {
 			$module = $this->getModuleName();
 			$record = $this->getId();
 			if (empty($record)) {
@@ -907,7 +952,6 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function initInventoryData()
 	{
-
 		\App\Log::trace('Entering ' . __METHOD__);
 
 		$moduleName = $this->getModuleName();
@@ -927,21 +971,22 @@ class Vtiger_Record_Model extends \App\Base
 					continue;
 				}
 				$insertData = ['seq' => $request->get('seq' . $i)];
-				foreach ($fields as &$field) {
+				foreach ($fields as $field) {
 					$insertData[$field] = $inventory->getValueForSave($request, $field, $i);
 				}
 				$inventoryData[] = $insertData;
 			}
 			$prefix = 'sum_';
 			$inventoryFields = $inventory->getFields();
-			foreach ($summaryFields as &$fieldName) {
+			foreach ($summaryFields as $fieldName) {
 				if ($this->has($prefix . $fieldName)) {
 					$value = $inventoryFields[$fieldName]->getSummaryValuesFromData($inventoryData);
 					$this->set($prefix . $fieldName, $value);
 				}
 			}
+			$this->inventoryData = $inventoryData;
+			$this->inventoryDataExist = true;
 		}
-		$this->inventoryData = $inventoryData;
 		\App\Log::trace('Exiting ' . __METHOD__);
 	}
 
@@ -971,45 +1016,6 @@ class Vtiger_Record_Model extends \App\Base
 			return Users_Privileges_Model::isPermitted($this->getModuleName(), 'OpenRecord', $this->getId());
 		}
 		return isset($this->privileges['editFieldByModal']) ? (bool) $this->privileges['editFieldByModal'] : false;
-	}
-
-	/**
-	 * Set inventory data
-	 * @param array $data
-	 */
-	public function setInventoryData($data)
-	{
-		$this->inventoryData = $data;
-	}
-
-	/**
-	 * Set inventory raw data
-	 * @param array $data
-	 */
-	public function setInventoryRawData($data)
-	{
-		$this->inventoryRawData = $data;
-	}
-
-	/**
-	 * Save the inventory data
-	 */
-	public function saveInventoryData($moduleName)
-	{
-		\App\Log::trace('Start ' . __METHOD__);
-		$db = App\Db::getInstance();
-		$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
-		$table = $inventory->getTableName('data');
-
-		$inventoryData = $this->getInventoryData();
-		$db->createCommand()->delete($table, ['id' => $this->getId()])->execute();
-		if (is_array($inventoryData)) {
-			foreach ($inventoryData as &$insertData) {
-				$insertData['id'] = $this->getId();
-				$db->createCommand()->insert($table, $insertData)->execute();
-			}
-		}
-		\App\Log::trace('End ' . __METHOD__);
 	}
 
 	public function clearPrivilegesCache($name = false)
@@ -1044,7 +1050,7 @@ class Vtiger_Record_Model extends \App\Base
 		$uploadFilePath = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . \App\Fields\File::initStorageFileDirectory($moduleName);
 		$params = [
 			'smcreatorid' => $this->isEmpty('created_user_id') ? \App\User::getCurrentUserId() : $this->get('created_user_id'),
-			'smownerid' => $this->isEmpty('assigned_user_id') ? \App\User::getCurrentUserId() : $this->get('created_user_id'),
+			'smownerid' => $this->isEmpty('assigned_user_id') ? \App\User::getCurrentUserId() : $this->get('assigned_user_id'),
 			'setype' => $moduleName . ' Image',
 			'createdtime' => $this->isEmpty('createdtime') ? $date : $this->get('createdtime'),
 			'modifiedtime' => $this->isEmpty('modifiedtime') ? $date : $this->get('modifiedtime'),

@@ -1,14 +1,11 @@
 <?php
-/* +***********************************************************************************************************************************
- * The contents of this file are subject to the YetiForce Public License Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * See the License for the specific language governing rights and limitations under the License.
- * The Original Code is YetiForce.
- * The Initial Developer of the Original Code is YetiForce. Portions created by YetiForce are Copyright (C) www.yetiforce.com. 
- * All Rights Reserved.
- * *********************************************************************************************************************************** */
 
+/**
+ * OSSMailView record model class
+ * @package YetiForce.Model
+ * @copyright YetiForce Sp. z o.o.
+ * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
+ */
 class OSSMailView_Record_Model extends Vtiger_Record_Model
 {
 
@@ -125,10 +122,15 @@ class OSSMailView_Record_Model extends Vtiger_Record_Model
 		return $return;
 	}
 
+	/**
+	 * Find records
+	 * @param int[] $ids
+	 * @return string
+	 */
 	public function findRecordsById($ids)
 	{
 		$return = false;
-		if (!empty($ids) && $ids != '0') {
+		if (!empty($ids)) {
 			$recordModelMailScanner = Vtiger_Record_Model::getCleanInstance('OSSMailScanner');
 			$config = $recordModelMailScanner->getConfig('email_list');
 			if (strpos($ids, ',')) {
@@ -137,9 +139,21 @@ class OSSMailView_Record_Model extends Vtiger_Record_Model
 				$idsArray[0] = $ids;
 			}
 			foreach ($idsArray as $id) {
-				$module = vtlib\Functions::getCRMRecordType($id);
-				$label = vtlib\Functions::getCRMRecordLabel($id);
-				$return .= '<a href="index.php?module=' . $module . '&view=Detail&record=' . $id . '" target="' . $config['target'] . '"> ' . $label . '</a>,';
+				$recordMetaData = \vtlib\Functions::getCRMRecordMetadata($id);
+				if (!$recordMetaData || $recordMetaData['deleted'] === 1) {
+					continue;
+				}
+				$module = $recordMetaData['setype'];
+				if ($module === 'Leads') {
+					$isExists = (new \App\Db\Query())->from('vtiger_leaddetails')->where(['leadid' => $id, 'converted' => 0])->exists();
+					if (!$isExists) {
+						continue;
+					}
+				}
+				if (\App\Privilege::isPermitted($module, 'DetailView', $id)) {
+					$label = \App\Record::getLabel($id);
+					$return .= '<a href="index.php?module=' . $module . '&view=Detail&record=' . $id . '" target="' . $config['target'] . '"> ' . $label . '</a>,';
+				}
 			}
 		}
 		return trim($return, ',');
@@ -311,14 +325,14 @@ class OSSMailView_Record_Model extends Vtiger_Record_Model
 		} else {
 			(new OSSMailView_Relation_Model())->addRelation($mailId, $newCrmId);
 		}
-		return vtranslate('Add relationship', 'OSSMail');
+		return \App\Language::translate('Add relationship', 'OSSMail');
 	}
 
 	public static function removeRelated($params)
 	{
 		$db = PearDatabase::getInstance();
 		$db->delete('vtiger_ossmailview_relation', 'ossmailviewid = ? && crmid = ?', [$params['mailId'], $params['crmid']]);
-		return vtranslate('Removed relationship', 'OSSMail');
+		return \App\Language::translate('Removed relationship', 'OSSMail');
 	}
 
 	public function isEditable()

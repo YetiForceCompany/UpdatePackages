@@ -25,6 +25,6 @@ $languageStrings = [
 	'LBL_SHOW_HIERARCHY' => 'Hierarchie',
 	'LBL_PARENT_IS_CHILD' => 'Le stockage parent séléctionné ne peut être secondaire du stockage actuel ',
 	'LBL_SECONDARY_STORAGES' => 'Stockages secondaires',
-	'LBL_ROW_NUM' => 'No.',
+	'LBL_ROW_NUM' => 'N°',
 	'LBL_STORAGE_OWNER' => 'Propriétaire',
 ];

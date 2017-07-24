@@ -6,6 +6,7 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
+	'MEN_COMPANY' => 'Compagnie',
 	'LBL_QUICK_CREATE_MODULE' => 'Création rapide',
 	'LBL_SEPARATOR' => 'Séparateur',
 	'LBL_OTHER' => 'Autre',

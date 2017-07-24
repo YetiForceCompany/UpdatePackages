@@ -6,7 +6,7 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
-	'LBL_INTERNES_INFORMATION' => 'Détails de l\'Utilisateur',
+	'LBL_INTERNES_INFORMATION' => 'Détails de l\'utilisateur',
 	'Internes' => 'Utilisateurs',
 	'SINGLE_Internes' => 'Utilisateur',
 	'Internes ID' => 'Utilisateur ID',

@@ -1,6 +1,6 @@
 <?php
 /**
- * LettersIn french translation
+ * Letters out french translation
  * @package YetiForce.Language
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
@@ -12,7 +12,7 @@ $languageStrings = [
 	'LBL_ADD_RECORD' => 'Ajouter une lettre entrante',
 	'LBL_RECORDS_LIST' => 'Lettres entrantes',
 	// Blocks
-	'LBL_MAIN_INFORMATION' => 'Information sur les lettres',
+	'LBL_MAIN_INFORMATION' => 'Détails lettre entrante',
 	//Field Labels
 	'Number' => 'Numéro',
 	'Title' => 'Sujet',
@@ -21,8 +21,8 @@ $languageStrings = [
 	'Type of document' => 'Type de document',
 	'Person receiving' => 'Personne de réception',
 	'Deadline for reply' => 'Date limite de réponse',
-	'Document no' => 'Document No.',
-	'No internal' => 'No. interne',
+	'Document no' => 'Document N°',
+	'No internal' => 'N° interne',
 	'Parent letters' => 'Lettre relative à',
 	'Overall dimensions' => 'Dimension',
 	'Notes' => 'Notes',
@@ -33,7 +33,7 @@ $languageStrings = [
 	'PLL_POST_OFFICE_PL' => 'Bureau de poste polonais',
 	'PLL_POST_OFFICE' => 'Bureau de poste',
 	'PLL_COURIER' => 'Courrier',
-	'PLL_COURIER_POCZTEX' => 'Courrier Pocztex',
+	'PLL_COURIER_POCZTEX' => 'Courrier Postal',
 	'PLL_COURIER_7' => 'Courrier Siódemka',
 	'PLL_COURIER_DPD' => 'Courrier DPD',
 	'PLL_COURIER_DHL' => 'Courrier DHL',
@@ -41,7 +41,7 @@ $languageStrings = [
 	'PLL_COURIER_GLS' => 'Courrier GLS',
 	'PLL_TELEX' => 'Telex',
 	'PLL_EMAIL' => 'Email',
-	'PLL_POCZTEX' => 'Pocztex',
+	'PLL_POCZTEX' => 'Postal',
 	'PLL_TNT' => 'TNT',
 	'PLL_DEMAND_PAYMENT' => 'Demande de paiement',
 	'PLL_BANK_STATEMENTS' => 'Relevés bancaires',

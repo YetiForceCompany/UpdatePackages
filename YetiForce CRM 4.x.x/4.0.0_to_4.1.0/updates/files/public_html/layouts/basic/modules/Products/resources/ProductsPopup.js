@@ -41,7 +41,7 @@ Vtiger_Popup_Js("Products_PriceBookProductPopup_Js",{
 			}
 			var invalidFields = popupPageContentsContainer.data('jqv').InvalidFields;
 			if((invalidFields.length) == 0){
-				var selectedRecordDetails = new Array();
+				var selectedRecordDetails = [];
 				selectedRecords.each(function(index, checkBoxElement){
 					var checkBoxJqueryObject = jQuery(checkBoxElement);
 					var row = checkBoxJqueryObject.closest('tr');
@@ -136,6 +136,14 @@ Vtiger_Popup_Js("Products_PriceBookProductPopup_Js",{
 		app.showScrollBar(element, {"height" : '400px'});
 	},
 
+	/**
+	 * Function which will register event when user clicks on the row
+	 */
+	registerEventForListViewEntries : function() {
+		//To Make sure we will not close the window once he clicks on the row,
+		//which is default behaviour in normal popup
+		return true;
+	},
 	/**
 	 * Function to register events
 	 */

@@ -6,7 +6,10 @@
  * @license YetiForce Public License 2.0 (licenses/License.html or yetiforce.com)
  */
 $languageStrings = [
-	'LBL_ID_CLIENT' => 'ID Client',
+	'open' => 'Ouvert',
+	'closed' => 'Fermer',
+	'LBL_ADD_ISSUES' => 'Ajouter',
+	'LBL_ID_CLIENT' => 'Identification client',
 	'LBL_TOKEN' => 'Jeton',
 	'LBL_NOT_AUTHORIZED' => 'Autorisation requise pour accéder à l\'ensemble des fonctionnalités.',
 	'LBL_TITLE' => 'Titre',

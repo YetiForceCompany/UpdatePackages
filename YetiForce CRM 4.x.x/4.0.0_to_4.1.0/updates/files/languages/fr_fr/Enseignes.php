@@ -9,7 +9,7 @@ $languageStrings = [
 	'LBL_ENSEIGNES_INFORMATION' => 'Détails de l\'Enseigne',
 	'Enseignes' => 'Enseignes',
 	'SINGLE_Enseignes' => 'Enseignes',
-	'Enseignes ID' => 'Enseignes ID',
+	'Enseignes ID' => 'Enseignes N°',
 	'LBL_CUSTOM_INFORMATION' => 'Détails description',
 	'enseignes' => 'Enseignes',
 ];

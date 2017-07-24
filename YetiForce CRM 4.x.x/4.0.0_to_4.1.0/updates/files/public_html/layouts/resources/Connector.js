@@ -31,24 +31,26 @@ var AppConnector = {
 	 *
 	 *  @return - deferred promise
 	 */
-	request: function (params) {
-		return AppConnector._request(params, false);
+	request: function (params, rawData) {
+		return AppConnector._request(params, false, rawData);
 	},
 
-	_request: function (params, pjaxMode) {
+	_request: function (params, pjaxMode, rawData) {
 		var aDeferred = jQuery.Deferred();
-
+		if (typeof rawData == 'undefined') {
+			rawData = false;
+		}
 		if (typeof pjaxMode == 'undefined') {
 			pjaxMode = false;
 		}
-
-		if (typeof params == 'undefined')
+		if (typeof params == 'undefined') {
 			params = {};
-
+		}
+		var fullUrl = '';
 		//caller has send only data
-		if (typeof params.data == 'undefined') {
+		if (typeof params.data == 'undefined' || rawData) {
 			if (typeof params == 'string') {
-				var callerParams = params;
+				var callerParams = fullUrl = params;
 				var index = callerParams.indexOf('?');
 				if (index !== -1) {
 					var subStr = callerParams.substr(0, index + 1);//need to replace only "index.php?" or "?"
@@ -61,13 +63,13 @@ var AppConnector = {
 			params.data = callerParams;
 		}
 		//Make the request as post by default
-		if (typeof params.type == 'undefined')
+		if (typeof params.type == 'undefined' || rawData)
 			params.type = 'POST';
-		if (typeof params.jsonp == 'undefined')
+		if (typeof params.jsonp == 'undefined' || rawData)
 			params.jsonp = false;
 
 		//By default we expect json from the server
-		if (typeof params.dataType == 'undefined') {
+		if (typeof params.dataType == 'undefined' || rawData) {
 			var data = params.data;
 			//view will return html
 			params.dataType = 'json';
@@ -76,13 +78,13 @@ var AppConnector = {
 			} else if (typeof data == 'string' && data.indexOf('&view=') !== -1) {
 				params.dataType = 'html';
 			}
-
 			if (typeof params.url != 'undefined' && params.url.indexOf('&view=') !== -1) {
 				params.dataType = 'html';
 			}
 		}
 		//If url contains params then seperate them and make them as data
 		if (typeof params.url != 'undefined' && params.url.indexOf('?') !== -1) {
+			fullUrl = params.url;
 			var urlSplit = params.url.split('?');
 			var queryString = urlSplit[1];
 			params.url = urlSplit[0];
@@ -96,46 +98,25 @@ var AppConnector = {
 		if (typeof params.url == 'undefined' || params.url.length <= 0) {
 			params.url = 'index.php';
 		}
-		var success = function (data, status, jqXHR) {
-			if (data != null && typeof data == 'object' && data.error) {
+		params.success = function (data, status, jqXHR) {
+			if (data !== null && typeof data === 'object' && data.error) {
 				app.errorLog(data.error);
 			}
 			aDeferred.resolve(data);
-		}
-		var error = function (jqXHR, textStatus, errorThrown) {
+		};
+		params.error = function (jqXHR, textStatus, errorThrown, yyyy, uuu) {
 			app.errorLog(jqXHR, textStatus, errorThrown);
 			aDeferred.reject(textStatus, errorThrown);
-		}
+		};
+		jQuery.ajax(params);
 		if (pjaxMode) {
-			if (typeof params.container == 'undefined')
-				params.container = '#pjaxContainer';
-
-			params.type = 'GET';
-
-			var pjaxContainer = jQuery('#pjaxContainer');
-			//Clear contents existing before
-			if (params.container == '#pjaxContainer') {
-				pjaxContainer.html('');
+			if (fullUrl === '') {
+				fullUrl = 'index.php?' + $.param(params.data);
 			}
-
-			jQuery(document).on('pjax:success', function (event, data, status, jqXHR) {
-				pjaxContainer.html('');
-				success(data, status, jqXHR);
-			})
-
-			jQuery(document).on('pjax:error', function (event, jqXHR, textStatus, errorThrown) {
-				pjaxContainer.html('');
-				error(jqXHR, textStatus, errorThrown);
-			})
-			jQuery.pjax(params);
-
-		} else {
-			params.success = success;
-
-			params.error = error;
-			jQuery.ajax(params);
+			if (history.pushState && fullUrl !== '') {
+				window.history.replaceState("text", "Title", fullUrl);
+			}
 		}
-
 		return aDeferred.promise();
 	},
 

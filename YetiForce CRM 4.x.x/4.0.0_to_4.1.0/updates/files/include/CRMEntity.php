@@ -88,16 +88,6 @@ class CRMEntity
 		\App\Log::trace('Exiting ' . __METHOD__);
 	}
 
-	// Function which returns the value based on result type (array / ADODB ResultSet)
-	private function resolve_query_result_value($result, $index, $columnname)
-	{
-		$adb = PearDatabase::getInstance();
-		if (is_array($result))
-			return $result[$index][$columnname];
-		else
-			return $adb->query_result($result, $index, $columnname);
-	}
-
 	/** Function to delete a record in the specifed table
 	 * @param $table_name -- table name:: Type varchar
 	 * The function will delete a record .The id is obtained from the class variable $this->id and the columnname got from $this->tab_name_index[$table_name]
@@ -841,8 +831,8 @@ class CRMEntity
 		if ($queryPlanner->requireTable('vtiger_createdby' . $module)) {
 			$query .= ' left join vtiger_users as vtiger_createdby' . $module . ' on vtiger_createdby' . $module . '.id = vtiger_crmentity.smcreatorid';
 		}
-		if ($queryPlanner->requireTable('vtiger_entity_stats')) {
-			$query .= ' inner join vtiger_entity_stats on $moduletable.$moduleindex = vtiger_entity_stats.crmid';
+		if ($queryPlanner->requireTable('vtiger_entity_stats') && strpos($query, 'vtiger_entity_stats.crmid') === false) {
+			$query .= " inner join vtiger_entity_stats on $moduletable.$moduleindex = vtiger_entity_stats.crmid";
 		}
 		if ($queryPlanner->requireTable('u_yf_crmentity_showners')) {
 			$query .= ' LEFT JOIN u_yf_crmentity_showners ON u_yf_crmentity_showners.crmid = vtiger_crmentity.crmid';
@@ -1153,8 +1143,6 @@ class CRMEntity
 		if ($this->__inactive_fields_filtered) {
 			return;
 		}
-
-		$adb = PearDatabase::getInstance();
 		// Look for fields that has presence value NOT IN (0,2)
 		$cachedModuleFields = VTCacheUtils::lookupFieldInfo_Module($module, array('1'));
 		if ($cachedModuleFields === false) {
@@ -1185,70 +1173,6 @@ class CRMEntity
 
 		// To avoid re-initializing everytime.
 		$this->__inactive_fields_filtered = true;
-	}
-
-	/** END * */
-	public function buildSearchQueryForFieldTypes($uitypes, $value = false)
-	{
-		$adb = PearDatabase::getInstance();
-
-		if (!is_array($uitypes))
-			$uitypes = array($uitypes);
-		$module = get_class($this);
-
-		$cachedModuleFields = VTCacheUtils::lookupFieldInfo_Module($module);
-		if ($cachedModuleFields === false) {
-			getColumnFields($module); // This API will initialize the cache as well
-			// We will succeed now due to above function call
-			$cachedModuleFields = VTCacheUtils::lookupFieldInfo_Module($module);
-		}
-
-		$lookuptables = [];
-		$lookupcolumns = [];
-		foreach ($cachedModuleFields as $fieldinfo) {
-			if (in_array($fieldinfo['uitype'], $uitypes)) {
-				$lookuptables[] = $fieldinfo['tablename'];
-				$lookupcolumns[] = $fieldinfo['columnname'];
-			}
-		}
-
-		$entityfields = \vtlib\Functions::getEntityModuleSQLColumnString($module);
-		$querycolumnnames = implode(',', $lookupcolumns);
-		$entitycolumnnames = $entityfields['fieldname'];
-		$query = "select crmid as id, $querycolumnnames, $entitycolumnnames as name ";
-		$query .= " FROM $this->table_name ";
-		$query .= " INNER JOIN vtiger_crmentity ON $this->table_name.$this->table_index = vtiger_crmentity.crmid && deleted = 0 ";
-
-		//remove the base table
-		$LookupTable = array_unique($lookuptables);
-		$indexes = array_keys($LookupTable, $this->table_name);
-		if (!empty($indexes)) {
-			foreach ($indexes as $index) {
-				unset($LookupTable[$index]);
-			}
-		}
-		foreach ($LookupTable as $tablename) {
-			$query .= " INNER JOIN $tablename
-						on $this->table_name.$this->table_index = $tablename." . $this->tab_name_index[$tablename];
-		}
-		if (!empty($lookupcolumns) && $value !== false) {
-			$query .= " WHERE ";
-			$i = 0;
-			$columnCount = count($lookupcolumns);
-			foreach ($lookupcolumns as $columnname) {
-				if (!empty($columnname)) {
-					if ($i == 0 || $i == ($columnCount))
-						$query .= sprintf("%s = '%s'", $columnname, $value);
-					else
-						$query .= sprintf(" || %s = '%s'", $columnname, $value);
-					$i++;
-				}
-			}
-		}
-		if ($this->table_name == 'vtiger_leaddetails') {
-			$query .= " && $this->table_name.converted = 0 ";
-		}
-		return $query;
 	}
 
 	/**
@@ -1315,7 +1239,6 @@ class CRMEntity
 		$tabId = \App\Module::getModuleId($module);
 		$sharingRuleInfoVariable = $module . '_share_read_permission';
 		$sharingRuleInfo = $$sharingRuleInfoVariable;
-		$sharedTabId = null;
 		$query = '';
 		if (!empty($sharingRuleInfo) && (count($sharingRuleInfo['ROLE']) > 0 ||
 			count($sharingRuleInfo['GROUP']) > 0)) {
@@ -1395,7 +1318,7 @@ class CRMEntity
 		$query = preg_replace('/\s+/', ' ', $query);
 		if (strripos($query, ' WHERE ') !== false) {
 			vtlib_setup_modulevars($this->moduleName, $this);
-			$query = str_ireplace(' where ', " WHERE $this->table_name.$this->table_index > 0  AND ", $query);
+			$query = str_ireplace(' WHERE ', " WHERE $this->table_name.$this->table_index > 0  AND ", $query);
 		}
 		return $query;
 	}
@@ -1488,85 +1411,6 @@ class CRMEntity
 		$current_user = vglobal('current_user');
 		$currentTime = date('Y-m-d H:i:s');
 		\App\Db::getInstance()->createCommand()->update('vtiger_crmentity', ['modifiedtime' => $currentTime, 'modifiedby' => $current_user->id], ['crmid' => $crmId])->execute();
-	}
-
-	/**
-	 * Function which will give the basic query to find duplicates
-	 * @param string $module
-	 * @param string $tableColumns
-	 * @param string $selectedColumns
-	 * @param boolean $ignoreEmpty
-	 * @return string
-	 */
-	public function getQueryForDuplicates($module, $tableColumns, $selectedColumns = '', $ignoreEmpty = false, $additionalColumns = '')
-	{
-		if (is_array($tableColumns)) {
-			$tableColumnsString = implode(',', $tableColumns);
-		}
-		if (is_array($additionalColumns)) {
-			$additionalColumns = implode(',', $additionalColumns);
-		}
-		if (!empty($additionalColumns)) {
-			$additionalColumns = ',' . $additionalColumns;
-		}
-		$selectClause = sprintf('SELECT %s.%s AS recordid,%s%s', $this->table_name, $this->table_index, $tableColumnsString, $additionalColumns);
-
-		// Select Custom Field Table Columns if present
-		if (isset($this->customFieldTable))
-			$query .= ", " . $this->customFieldTable[0] . ".* ";
-
-		$fromClause = " FROM $this->table_name";
-
-		$fromClause .= " INNER JOIN vtiger_crmentity ON vtiger_crmentity.crmid = $this->table_name.$this->table_index";
-
-		if ($this->tab_name) {
-			foreach ($this->tab_name as $tableName) {
-				if ($tableName != 'vtiger_crmentity' && $tableName != $this->table_name && $tableName != 'vtiger_inventoryproductrel') {
-					if ($this->tab_name_index[$tableName]) {
-						$fromClause .= " INNER JOIN " . $tableName . " ON " . $tableName . '.' . $this->tab_name_index[$tableName] .
-							" = $this->table_name.$this->table_index";
-					}
-				}
-			}
-		}
-		$fromClause .= " LEFT JOIN vtiger_users ON vtiger_users.id = vtiger_crmentity.smownerid
-						LEFT JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid";
-
-		$whereClause = " WHERE vtiger_crmentity.deleted = 0";
-		$whereClause .= $this->getListViewSecurityParameter($module);
-
-		if ($ignoreEmpty) {
-			foreach ($tableColumns as $tableColumn) {
-				$whereClause .= " AND ($tableColumn IS NOT NULL AND $tableColumn != '') ";
-			}
-		}
-
-		if (isset($selectedColumns) && trim($selectedColumns) != '') {
-			$sub_query = "SELECT $selectedColumns FROM $this->table_name AS t " .
-				" INNER JOIN vtiger_crmentity AS crm ON crm.crmid = t." . $this->table_index;
-			// Consider custom table join as well.
-			if (isset($this->customFieldTable)) {
-				$sub_query .= " LEFT JOIN " . $this->customFieldTable[0] . " tcf ON tcf." . $this->customFieldTable[1] . " = t.$this->table_index";
-			}
-			$sub_query .= " WHERE crm.deleted=0 GROUP BY $selectedColumns HAVING COUNT(*)>1";
-		} else {
-			$sub_query = "SELECT $tableColumnsString $additionalColumns $fromClause $whereClause GROUP BY $tableColumnsString HAVING COUNT(*)>1";
-		}
-
-		$i = 1;
-		foreach ($tableColumns as $tableColumn) {
-			$tableInfo = explode('.', $tableColumn);
-			$duplicateCheckClause .= " ifnull($tableColumn,'null') = ifnull(temp.$tableInfo[1],'null')";
-			if (count($tableColumns) != $i++)
-				$duplicateCheckClause .= ' AND ';
-		}
-
-		$query = $selectClause . $fromClause .
-			" LEFT JOIN vtiger_users_last_import ON vtiger_users_last_import.bean_id=" . $this->table_name . "." . $this->table_index .
-			" INNER JOIN (" . $sub_query . ") AS temp ON " . $duplicateCheckClause .
-			$whereClause .
-			" ORDER BY $tableColumnsString," . $this->table_name . "." . $this->table_index . " ASC";
-		return $query;
 	}
 
 	public function getLockFields()

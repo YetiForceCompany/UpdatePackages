@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} --!>*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 2.0 that can be found in the following directory: licenses/License.html or yetiforce.com]} -->*}
 
  <div class=" supportProcessesContainer">
  	<div class="widget_header row">
@@ -7,7 +7,7 @@
 		</div>
 	</div>	
 	<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-		<li class="active"><a href="#project_configuration" data-toggle="tab">{vtranslate('LBL_PROJECT', $QUALIFIED_MODULE)} </a></li>
+		<li class="active"><a href="#project_configuration" data-toggle="tab">{\App\Language::translate('LBL_PROJECT', $QUALIFIED_MODULE)} </a></li>
 	</ul>
 	<br />
 	<div class="tab-content">
@@ -16,16 +16,16 @@
 				<thead>
 					<tr class="blockHeader" >
 						<th class="mediumWidthType">
-							<span>{vtranslate('LBL_INFO', $QUALIFIED_MODULE)}</span>
+							<span>{\App\Language::translate('LBL_INFO', $QUALIFIED_MODULE)}</span>
 						</th>
 						<th class="mediumWidthType">
-							<span>{vtranslate('LBL_TYPE', $QUALIFIED_MODULE)}</span>
+							<span>{\App\Language::translate('LBL_TYPE', $QUALIFIED_MODULE)}</span>
 						</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td><label>{vtranslate('LBL_PROJECT_STATUS_INFO', $QUALIFIED_MODULE)}</label></td>
+						<td><label>{\App\Language::translate('LBL_PROJECT_STATUS_INFO', $QUALIFIED_MODULE)}</label></td>
 						<td class="col-xs-6">
 							{assign var=STATUS_CLOSED value=$STATUS_NOT_MODIFY['Project']}
 							<select class="chzn-select projectStatus" multiple name="projectStatus" data-moduleid="{$STATUS_CLOSED.id}">

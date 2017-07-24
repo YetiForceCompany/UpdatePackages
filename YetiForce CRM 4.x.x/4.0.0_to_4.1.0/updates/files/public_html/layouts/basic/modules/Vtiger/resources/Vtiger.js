@@ -402,6 +402,65 @@ var Vtiger_Index_Js = {
 			Vtiger_Index_Js.adjustTopMenuBarItems();
 		});
 	},
+	registerChat: function () {
+		var modal = $('.chatModal');
+		if (modal.length === 0) {
+			return;
+		}
+		modal.on('shown.bs.modal', function (e) {
+			var modalBody = modal.find('.modal-body');
+			var modalFooter = modal.find('.modal-footer');
+			var modalHeader = modal.find('.modal-header');
+			var height = app.getScreenHeight() - modalFooter.outerHeight(true) - modalHeader.outerHeight(true);
+			modalBody.css('max-height', height + 'px');
+			modalBody.css('overflow', 'auto');
+			modalBody.perfectScrollbar();
+		});
+		$('.headerLinkChat').on('click', function (e) {
+			e.stopPropagation();
+			$('.chatModal').modal({backdrop: false});
+		});
+		this.registerChatLoadItems(modal.data('timer'));
+		modal.find('.addMsg').on('click', function (e) {
+			var message = modal.find('.message').val();
+			clearTimeout(Vtiger_Index_Js.chatTimer);
+			AppConnector.request({
+				dataType: 'html',
+				data: {
+					module: 'Chat',
+					action: 'Entries',
+					mode: 'add',
+					message: message,
+					cid: $('.chatModal .chatItem').last().data('cid')
+				}
+			}).then(function (html) {
+				$('.chatModal .modal-body').append(html);
+				Vtiger_Index_Js.registerChatLoadItems(modal.data('timer'));
+			});
+			modal.find('.message').val('');
+		});
+	},
+	registerChatLoadItems: function (timer) {
+		var icon = $('.chatModal .modal-title .glyphicon-comment');
+		this.chatTimer = setTimeout(function () {
+			icon.css('color', '#00e413');
+			Vtiger_Index_Js.getChatItems();
+			Vtiger_Index_Js.registerChatLoadItems(timer);
+			icon.css('color', '#000');
+		}, timer);
+	},
+	getChatItems: function () {
+		AppConnector.request({
+			module: 'Chat',
+			view: 'Entries',
+			mode: 'get',
+			cid: $('.chatModal .chatItem').last().data('cid')
+		}).then(function (html) {
+			if (html) {
+				$('.chatModal .modal-body').append(html);
+			}
+		});
+	},
 	/**
 	 * Function to make top-bar menu responsive.
 	 */
@@ -438,8 +497,8 @@ var Vtiger_Index_Js = {
 			}
 		} while (!stopLoop);
 		// Required to get the functionality of All drop-down working.
-		jQuery(window).load(function () {
-			jQuery("#topMenus").css({'overflow': 'visible'});
+		$(window).on("load", function (e) {
+			$("#topMenus").css({'overflow': 'visible'});
 		});
 	},
 	/**
@@ -630,6 +689,18 @@ var Vtiger_Index_Js = {
 		SaveResult = new SaveResult()
 		return SaveResult.checkData(form);
 	},
+	performPhoneCall: function (phoneNumber, record) {
+		AppConnector.request({
+			module: app.getModuleName(),
+			view: 'BasicAjax',
+			mode: 'performPhoneCall',
+			phoneNumber: phoneNumber,
+			record: record
+		}).then(function (response) {
+			response = jQuery.parseJSON(response);
+			Vtiger_Helper_Js.showMessage({text: response.result});
+		});
+	},
 	registerEvents: function () {
 		Vtiger_Index_Js.registerWidgetsEvents();
 		Vtiger_Index_Js.loadWidgetsOnLoad();
@@ -638,6 +709,7 @@ var Vtiger_Index_Js = {
 		Vtiger_Index_Js.registerPostAjaxEvents();
 		Vtiger_Index_Js.changeSkin();
 		Vtiger_Index_Js.registerResizeEvent();
+		Vtiger_Index_Js.registerChat();
 	},
 	registerPostAjaxEvents: function () {
 		Vtiger_Index_Js.registerTooltipEvents();

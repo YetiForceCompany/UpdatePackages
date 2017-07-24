@@ -12,7 +12,7 @@ class OSSTimeControl extends Vtiger_CRMEntity
 
 	public $table_name = 'vtiger_osstimecontrol';
 	public $table_index = 'osstimecontrolid';
-	public $column_fields = Array();
+	public $column_fields = [];
 
 	/** Indicator if this is a custom module or standard module */
 	public $IsCustomModule = true;
@@ -129,23 +129,10 @@ class OSSTimeControl extends Vtiger_CRMEntity
 		$this->column_fields['due_date'] = $end->format('Y-m-d');
 	}
 
-	public function saveentity($module_name, $fileid = '')
-	{
-		$date_start = $this->column_fields['date_start'];
-		$due_date = $this->column_fields['due_date'];
-		$start = DateTimeField::convertToDBTimeZone($this->column_fields['date_start'] . ' ' . $this->column_fields['time_start']);
-		$this->column_fields['date_start'] = $start->format(DateTimeField::getPHPDateFormat());
-		$end = DateTimeField::convertToDBTimeZone($this->column_fields['due_date'] . ' ' . $this->column_fields['time_end']);
-		$this->column_fields['due_date'] = $end->format(DateTimeField::getPHPDateFormat());
-		parent::saveentity($module_name, $fileid = '');
-		$this->column_fields['date_start'] = $date_start;
-		$this->column_fields['due_date'] = $due_date;
-	}
-
 	/** Function to unlink an entity with given Id from another entity */
 	public function unlinkRelationship($id, $returnModule, $returnId, $relatedName = false)
 	{
-		global $currentModule;
+		$currentModule = vglobal('currentModule');
 		$results = [];
 		parent::deleteRelatedFromDB($currentModule, $id, $returnModule, $returnId);
 		$dataReader = (new \App\Db\Query())->select(['vtiger_field.tabid', 'vtiger_field.tablename', 'vtiger_field.columnname', 'vtiger_tab.name'])

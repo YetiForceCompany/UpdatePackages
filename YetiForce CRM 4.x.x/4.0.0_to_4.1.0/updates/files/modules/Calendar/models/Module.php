@@ -262,7 +262,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		$result = $db->pquery($query, array($id, $id));
 		$rows = $db->num_rows($result);
 
-		$userIds = Array();
+		$userIds = [];
 		for ($i = 0; $i < $rows; $i++) {
 			$id = $db->query_result($result, $i, 'userid');
 			$userName = $db->query_result($result, $i, 'first_name') . ' ' . $db->query_result($result, $i, 'last_name');
@@ -285,7 +285,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		$result = $db->pquery($query, array($id));
 		$rows = $db->num_rows($result);
 
-		$sharedUsers = Array();
+		$sharedUsers = [];
 		for ($i = 0; $i < $rows; $i++) {
 			$sharedUserId = $db->query_result($result, $i, 'shareduserid');
 			$color = $db->query_result($result, $i, 'color');
@@ -311,7 +311,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		$result = $db->pquery($query, array($id, 1));
 		$rows = $db->num_rows($result);
 
-		$calendarViewTypes = Array();
+		$calendarViewTypes = [];
 		for ($i = 0; $i < $rows; $i++) {
 			$activityTypes = $db->query_result_rowdata($result, $i);
 			$moduleInstance = vtlib\Module::getInstance($activityTypes['module']);
@@ -423,7 +423,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 			$time = date('Y-m-d H:i:s', strtotime("+$activityReminder seconds", $currentTime));
 
 			$query = (new \App\Db\Query())
-				->select('recordid')
+				->select(['recordid', 'vtiger_activity_reminder_popup.datetime'])
 				->from('vtiger_activity_reminder_popup')
 				->innerJoin('vtiger_activity', 'vtiger_activity_reminder_popup.recordid = vtiger_activity.activityid')
 				->innerJoin('vtiger_crmentity', 'vtiger_activity_reminder_popup.recordid = vtiger_crmentity.crmid')
@@ -443,7 +443,7 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 				$link = $recordModel->get('link');
 				if ($link && $permissionToSendEmail) {
 					$url = "index.php?module=OSSMail&view=compose&mod=" . vtlib\Functions::getCRMRecordType($link) . "&record=$link";
-					$recordModel->set('mailUrl', "<a href='$url' class='btn btn-info' target='_blank'><span class='glyphicon glyphicon-envelope icon-white'></span>&nbsp;&nbsp;" . vtranslate('LBL_SEND_MAIL') . "</a>");
+					$recordModel->set('mailUrl', "<a href='$url' class='btn btn-info' target='_blank'><span class='glyphicon glyphicon-envelope icon-white'></span>&nbsp;&nbsp;" . \App\Language::translate('LBL_SEND_MAIL') . "</a>");
 				}
 				$recordModels[] = $recordModel;
 			}
