@@ -59,12 +59,14 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
-		$db = App\Db::getInstance();
-		$db->createCommand()->checkIntegrity(false)->execute();
-		$this->updateDbSchema();
-		$this->updatePicklistType();
-		$this->updateData();
-		$db->createCommand()->checkIntegrity(true)->execute();
+		/*
+		  $db = App\Db::getInstance();
+		  $db->createCommand()->checkIntegrity(false)->execute();
+		  $this->updateDbSchema();
+		  $this->updatePicklistType();
+		  $this->updateData();
+		  $db->createCommand()->checkIntegrity(true)->execute();
+		 */
 	}
 
 	/**
@@ -195,7 +197,7 @@ class YetiForceUpdate
 	public function renameTables()
 	{
 		$tables = [
-				['u_#__mail_address_boock', 'u_#__mail_address_book']
+			['u_#__mail_address_boock', 'u_#__mail_address_book']
 		];
 		$this->renameTablesExecute($tables);
 	}
@@ -263,9 +265,9 @@ class YetiForceUpdate
 		$columns = [
 //			['u_#__announcement', 'is_mandatory', 'smallint'],
 //			['vtiger_project', 'parentid', 'int(19) DEFAULT NULL'],
-				['vtiger_trees_templates', 'share', 'string DEFAULT NULL'],
-				['vtiger_ossmailview', 'cid', 'char(40) DEFAULT NULL'],
-				['vtiger_ossmailview', 'rc_user', 'varchar(3) DEFAULT NULL'],
+			['vtiger_trees_templates', 'share', 'string DEFAULT NULL'],
+			['vtiger_ossmailview', 'cid', 'char(40) DEFAULT NULL'],
+			['vtiger_ossmailview', 'rc_user', 'varchar(3) DEFAULT NULL'],
 		];
 		$this->addColumnsExecute($columns);
 	}
@@ -291,8 +293,8 @@ class YetiForceUpdate
 	public function renameColumns()
 	{
 		$columns = [
-				['s_#_mail_smtp', 'replay_to', 'reply_to'],
-				['vtiger_smsnotifier', 'status', 'smsnotifier_status'],
+			['s_#_mail_smtp', 'replay_to', 'reply_to'],
+			['vtiger_smsnotifier', 'status', 'smsnotifier_status'],
 		];
 		$this->renameColumnsExecute($columns);
 	}
@@ -318,24 +320,24 @@ class YetiForceUpdate
 	public function alterColumns()
 	{
 		$columns = [
-				['a_#__bruteforce_blocked', 'time', 'timestamp NULL DEFAULT NULL'],
-				['s_#__mail_queue', 'from', 'text'],
-				['s_#__mail_queue', 'to', 'text'],
-				['u_#__favorites', 'data', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_currency_info', 'defaultid', 'smallint'],
-				['vtiger_import_maps', 'date_entered', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_import_maps', 'date_modified', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_loginhistory', 'login_time', 'timestamp NOT NULL DEFAULT "0000-00-00 00:00:00"'],
-				['vtiger_ossmails_logs', 'start_time', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_ossmailscanner_folders_uid', 'user_id', 'int(10) unsigned DEFAULT NULL'],
-				['vtiger_ossmailscanner_log_cron', 'created_time', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_scheduled_reports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_schedulereports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_smsnotifier', 'smsnotifier_status', 'string DEFAULT NULL'],
-				['vtiger_trees_templates_data', 'state', "varchar(100) NOT NULL DEFAULT ''"],
-				['vtiger_users', 'date_entered', 'timestamp NULL DEFAULT NULL'],
-				['vtiger_users', 'date_modified', 'timestamp NULL DEFAULT NULL'],
-				['yetiforce_updates', 'time', 'timestamp NULL DEFAULT NULL'],
+			['a_#__bruteforce_blocked', 'time', 'timestamp NULL DEFAULT NULL'],
+			['s_#__mail_queue', 'from', 'text'],
+			['s_#__mail_queue', 'to', 'text'],
+			['u_#__favorites', 'data', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_currency_info', 'defaultid', 'smallint'],
+			['vtiger_import_maps', 'date_entered', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_import_maps', 'date_modified', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_loginhistory', 'login_time', 'timestamp NOT NULL DEFAULT "0000-00-00 00:00:00"'],
+			['vtiger_ossmails_logs', 'start_time', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_ossmailscanner_folders_uid', 'user_id', 'int(10) unsigned DEFAULT NULL'],
+			['vtiger_ossmailscanner_log_cron', 'created_time', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_scheduled_reports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_schedulereports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_smsnotifier', 'smsnotifier_status', 'string DEFAULT NULL'],
+			['vtiger_trees_templates_data', 'state', "varchar(100) NOT NULL DEFAULT ''"],
+			['vtiger_users', 'date_entered', 'timestamp NULL DEFAULT NULL'],
+			['vtiger_users', 'date_modified', 'timestamp NULL DEFAULT NULL'],
+			['yetiforce_updates', 'time', 'timestamp NULL DEFAULT NULL'],
 		];
 		$this->alterColumnsExecute($columns);
 	}
@@ -361,9 +363,9 @@ class YetiForceUpdate
 	public function dropColumns()
 	{
 		$columns = [
-				['vtiger_fixed_assets_fuel_type', 'picklist_valueid'],
-				['vtiger_users', 'user_hash'],
-				['vtiger_oss', 'rc_user']
+			['vtiger_fixed_assets_fuel_type', 'picklist_valueid'],
+			['vtiger_users', 'user_hash'],
+			['vtiger_oss', 'rc_user']
 		];
 		$this->dropColumnsExecute($columns);
 	}
@@ -389,18 +391,18 @@ class YetiForceUpdate
 	public function createIndex()
 	{
 		$columns = [
-				['u_#__ssalesprocesses', 'ssalesprocesses_no', 'ssalesprocesses_no', false],
-				['vtiger_currency_info', 'deleted', 'deleted', false],
-				['vtiger_ossmailscanner_folders_uid', 'user_id', 'user_id', false],
-				['vtiger_ossmailscanner_folders_uid', 'folder', 'folder', false],
-				['vtiger_ossmailview', 'verify', 'verify', false],
-				['vtiger_ossmailview', 'message_id', 'message_id', false],
-				['vtiger_ossmailview', 'mbox', 'mbox', false],
-				['vtiger_project', 'project_parentid_idx', 'parentid', false],
-				['vtiger_project', 'project_no', 'project_no', false],
-				['vtiger_troubletickets', 'ticket_no', 'ticket_no', false],
-				['u_#__browsinghistory', 'userid', 'browsinghistory_user_idx', false],
-				['vtiger_ossmailview', 'cid', 'ossmailview_cid_idx', false]
+			['u_#__ssalesprocesses', 'ssalesprocesses_no', 'ssalesprocesses_no', false],
+			['vtiger_currency_info', 'deleted', 'deleted', false],
+			['vtiger_ossmailscanner_folders_uid', 'user_id', 'user_id', false],
+			['vtiger_ossmailscanner_folders_uid', 'folder', 'folder', false],
+			['vtiger_ossmailview', 'verify', 'verify', false],
+			['vtiger_ossmailview', 'message_id', 'message_id', false],
+			['vtiger_ossmailview', 'mbox', 'mbox', false],
+			['vtiger_project', 'project_parentid_idx', 'parentid', false],
+			['vtiger_project', 'project_no', 'project_no', false],
+			['vtiger_troubletickets', 'ticket_no', 'ticket_no', false],
+			['u_#__browsinghistory', 'userid', 'browsinghistory_user_idx', false],
+			['vtiger_ossmailview', 'cid', 'ossmailview_cid_idx', false]
 		];
 		$this->createIndexExecute($columns);
 	}
@@ -426,7 +428,7 @@ class YetiForceUpdate
 	public function addForeignKey()
 	{
 		$columns = [
-				['vtiger_ossmailscanner_folders_uid_ibfk_1', 'user_id', 'vtiger_ossmailscanner_folders_uid', 'roundcube_users', 'user_id', 'CASCADE', null],
+			['vtiger_ossmailscanner_folders_uid_ibfk_1', 'user_id', 'vtiger_ossmailscanner_folders_uid', 'roundcube_users', 'user_id', 'CASCADE', null],
 		];
 		$this->addForeignKeyExecute($columns);
 	}
@@ -534,23 +536,23 @@ class YetiForceUpdate
 	public function updateRows()
 	{
 		$data = [
-				['u_#__squotes_invfield', ['colspan' => 25], ['id' => 1]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 2]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 3]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 5]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 7]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 8]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 9]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 10]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 11]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 15]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 16]],
-				['u_#__squotes_invfield', ['colspan' => 6], ['id' => 17]],
-				['vtiger_apiaddress', ['name' => 'min_length'], ['id' => 1]],
-				['vtiger_customview', ['viewname' => 'LBL_UNREAD'], ['cvid' => 104]],
-				['vtiger_cvcolumnlist', ['columnindex' => 2], ['cvid' => 43, 'columnindex' => 3]],
-				['vtiger_cvcolumnlist', ['columnindex' => 3, 'columnname' => 'vtiger_projectmilestone:projectid:projectid:ProjectMilestone_Related_to:V'], ['cvid' => 17, 'columnindex' => 4]],
-				['vtiger_cvcolumnlist', ['columnindex' => 4, 'columnname' => 'vtiger_projectmilestone:projectmilestone_priority:projectmilestone_priority:ProjectMilestone_LBL_PRIORITY:V'], ['cvid' => 17, 'columnindex' => 5]],
+			['u_#__squotes_invfield', ['colspan' => 25], ['id' => 1]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 2]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 3]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 5]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 7]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 8]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 9]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 10]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 11]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 15]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 16]],
+			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 17]],
+			['vtiger_apiaddress', ['name' => 'min_length'], ['id' => 1]],
+			['vtiger_customview', ['viewname' => 'LBL_UNREAD'], ['cvid' => 104]],
+			['vtiger_cvcolumnlist', ['columnindex' => 2], ['cvid' => 43, 'columnindex' => 3]],
+			['vtiger_cvcolumnlist', ['columnindex' => 3, 'columnname' => 'vtiger_projectmilestone:projectid:projectid:ProjectMilestone_Related_to:V'], ['cvid' => 17, 'columnindex' => 4]],
+			['vtiger_cvcolumnlist', ['columnindex' => 4, 'columnname' => 'vtiger_projectmilestone:projectmilestone_priority:projectmilestone_priority:ProjectMilestone_LBL_PRIORITY:V'], ['cvid' => 17, 'columnindex' => 5]],
 		];
 		$this->updateRowsExecute($data);
 	}
@@ -574,7 +576,7 @@ class YetiForceUpdate
 	public function insertRows()
 	{
 		$data = [
-				['vtiger_cvcolumnlist', ['cvid' => 43, 'columnindex' => 5, 'columnname' => 'vtiger_projectmilestone:projectmilestonetype:projectmilestonetype:ProjectMilestone_Type:V']],
+			['vtiger_cvcolumnlist', ['cvid' => 43, 'columnindex' => 5, 'columnname' => 'vtiger_projectmilestone:projectmilestonetype:projectmilestonetype:ProjectMilestone_Type:V']],
 			//next 4107+ linia
 		];
 
@@ -619,10 +621,10 @@ class YetiForceUpdate
 		switch ($index) {
 			case 1:
 				$crons = [
-						['type' => 'add', 'data' => ['LBL_BROWSING_HISTORY', 'cron/BrowsingHistory.php', 86400, NULL, NULL, 1, NULL, 29, NULL]],
-						['type' => 'add', 'data' => ['LBL_BATCH_PROCESSES', 'cron/BatchProcesses.php', 600, NULL, NULL, 1, NULL, 30, NULL]],
-						['type' => 'add', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE', 'cron/Attachments.php', 86400, NULL, NULL, 1, 'Vtiger', 27, NULL]],
-						['type' => 'add', 'data' => ['LBL_SMSNOTIFIER', 'modules/SMSNotifier/cron/SMSNotifier.php', 300, NULL, NULL, 1, 'SMSNotifier', 27, NULL]]
+					['type' => 'add', 'data' => ['LBL_BROWSING_HISTORY', 'cron/BrowsingHistory.php', 86400, NULL, NULL, 1, NULL, 29, NULL]],
+					['type' => 'add', 'data' => ['LBL_BATCH_PROCESSES', 'cron/BatchProcesses.php', 600, NULL, NULL, 1, NULL, 30, NULL]],
+					['type' => 'add', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE', 'cron/Attachments.php', 86400, NULL, NULL, 1, 'Vtiger', 27, NULL]],
+					['type' => 'add', 'data' => ['LBL_SMSNOTIFIER', 'modules/SMSNotifier/cron/SMSNotifier.php', 300, NULL, NULL, 1, 'SMSNotifier', 27, NULL]]
 				];
 				break;
 			default:
