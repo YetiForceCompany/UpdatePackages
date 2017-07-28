@@ -37,6 +37,12 @@ class YetiForceUpdate
 	private $cronAction = [];
 
 	/**
+	 * DbImporter
+	 * @var DbImporter 
+	 */
+	private $importer;
+
+	/**
 	 * Constructor
 	 * @param object $modulenode
 	 */
@@ -44,6 +50,14 @@ class YetiForceUpdate
 	{
 		$this->modulenode = $modulenode;
 		$this->filesToDelete = require_once('deleteFiles.php');
+		copy(__DIR__ . '/files/vendor/yii/db/mysql/ColumnSchemaBuilder.php', ROOT_DIRECTORY . '/vendor/yii/db/mysql/ColumnSchemaBuilder.php');
+		copy(__DIR__ . '/files/vendor/yii/db/ColumnSchemaBuilder.php', ROOT_DIRECTORY . '/vendor/yii/db/ColumnSchemaBuilder.php');
+		copy(__DIR__ . '/files/vendor/yii/db/Schema.php', ROOT_DIRECTORY . '/vendor/yii/db/Schema.php');
+		copy(__DIR__ . '/files/vtlib/Vtiger/Functions.php', ROOT_DIRECTORY . '/vtlib/Vtiger/Functions.php');
+		copy(__DIR__ . '/files/vendor/yetiforce/Db/Updater.php', ROOT_DIRECTORY . '/vendor/yetiforce/Db/Updater.php');
+		copy(__DIR__ . '/files/vendor/yetiforce/Db/Fixer.php', ROOT_DIRECTORY . '/vendor/yetiforce/Db/Fixer.php');
+		include_once __DIR__ . '/DbType.php';
+		include_once __DIR__ . '/DbImporter.php';
 	}
 
 	/**
@@ -59,14 +73,42 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
-		/*
-		  $db = App\Db::getInstance();
-		  $db->createCommand()->checkIntegrity(false)->execute();
-		  $this->updateDbSchema();
-		  $this->updatePicklistType();
-		  $this->updateData();
-		  $db->createCommand()->checkIntegrity(true)->execute();
-		 */
+		$this->updatePicklistType();
+
+		$db = App\Db::getInstance();
+		$db->createCommand()->checkIntegrity(false)->execute();
+		$this->importer = new DbImporter();
+		$this->updateDbSchema();
+
+		$this->importer->loadFiles(__DIR__ . '/dbscheme');
+		$this->importer->updateScheme();
+		$this->importer->postUpdate();
+		$this->importer->logs(false);
+		$this->importer->refreshSchema();
+
+		$db->createCommand()->checkIntegrity(true)->execute();
+
+		$this->updateData();
+		$this->addRecords();
+
+		$moduleBaseInstance = vtlib\Module::getInstance('WSAPP');
+		if ($moduleBaseInstance) {
+			$moduleBaseInstance->delete();
+		}
+		$moduleBaseInstance = vtlib\Module::getInstance('AJAXChat');
+		if ($moduleBaseInstance) {
+			$moduleBaseInstance->delete();
+		}
+		$module = new \vtlib\Module();
+		$module->name = 'Chat';
+		$module->tablabel = 'Chat';
+		$module->isentitytype = false;
+		$module->version = '0';
+		$module->presence = '0';
+		$module->ownedby = '0';
+		$module->customized = '0';
+		$module->type = '0';
+		$module->save();
 	}
 
 	/**
@@ -89,132 +131,10 @@ class YetiForceUpdate
 	public function updateDbSchema()
 	{
 		$this->dropTables();
-		$this->createTables($this->getTables(1));
+		$this->dropColumns();
 		$this->renameTables();
-		$this->dropColumns();
-		$this->addColumns();
 		$this->renameColumns();
-		$this->alterColumns();
-		$this->dropColumns();
-		$this->createIndex();
-		$this->addForeignKey();
-	}
-
-	/**
-	 * Create tables
-	 * @param array $tables
-	 */
-	public function createTables($tables)
-	{
-		\App\Log::trace('Entering ' . __METHOD__ . ' tables: ' . print_r(array_keys($tables), true));
-		$db = \App\Db::getInstance();
-
-		$importer = new \App\Db\Importers\Base();
-		$base = new \App\Db\Importer();
-		$base->dieOnError = AppConfig::debug('SQL_DIE_ON_ERROR');
-		foreach ($tables as $tableName => $data) {
-			if (!$db->isTableExists($tableName)) {
-				$importer->tables = [$tableName => $data];
-				$base->addTables($importer);
-			}
-		}
-		\App\Log::trace('Exiting ' . __METHOD__);
-	}
-
-	/**
-	 * Tables
-	 * @param int $index
-	 * @return array
-	 */
-	private function getTables($index)
-	{
-		$importer = new \App\Db\Importers\Base();
-		$tables = [];
-		switch ($index) {
-			case 1:
-				$tables = [
-					'a_#__smsnotifier_servers' => [
-						'columns' => [
-							'id' => $importer->primaryKey(),
-							'providertype' => $importer->stringType(50)->notNull(),
-							'isactive' => $importer->smallInteger(1),
-							'api_key' => $importer->stringType(255)->notNull(),
-							'parameters' => $importer->text()
-						],
-						'columns_mysql' => [
-							'isactive' => "tinyint(1) DEFAULT '0'",
-						],
-						'engine' => 'InnoDB',
-						'charset' => 'utf8'
-					],
-					's_#__smsnotifier_queue' => [
-						'columns' => [
-							'id' => $importer->primaryKey(),
-							'message' => $importer->stringType(255)->notNull(),
-							'tonumbers' => $importer->text()->notNull(),
-							'records' => $importer->text()->notNull(),
-							'module' => $importer->stringType(30)->notNull()
-						],
-						'engine' => 'InnoDB',
-						'charset' => 'utf8'
-					],
-					'u_#__attachments' => [
-						'columns' => [
-							'attachmentid' => $importer->primaryKey(19),
-							'name' => $importer->stringType(255)->notNull(),
-							'type' => $importer->stringType(100),
-							'path' => $importer->text()->notNull(),
-							'status' => $importer->smallInteger(1)->defaultValue(0),
-							'fieldid' => $importer->integer(19),
-							'crmid' => $importer->integer(19),
-							'createdtime' => $importer->datetime(),
-						],
-						'engine' => 'InnoDB',
-						'charset' => 'utf8'
-					],
-					'u_#__browsinghistory' => [
-						'columns' => [
-							'id' => $importer->primaryKey(19),
-							'userid' => $importer->integer(11)->notNull(),
-							'date' => $importer->datetime(),
-							'title' => $importer->stringType(255),
-							'url' => $importer->text(),
-						],
-						'engine' => 'InnoDB',
-						'charset' => 'utf8'
-					]
-				];
-				break;
-			default:
-				break;
-		}
-		return $tables;
-	}
-
-	/**
-	 * Rename tables
-	 */
-	public function renameTables()
-	{
-		$tables = [
-			['u_#__mail_address_boock', 'u_#__mail_address_book']
-		];
-		$this->renameTablesExecute($tables);
-	}
-
-	/**
-	 * Renaming tables function
-	 * @param array $tables
-	 */
-	public function renameTablesExecute($tables)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($tables as $table) {
-			if ($db->isTableExists($table[0])) {
-				$dbCommand->renameTable($table[0], $table[1])->execute();
-			}
-		}
+		$this->addFields();
 	}
 
 	/**
@@ -223,6 +143,10 @@ class YetiForceUpdate
 	public function dropTables()
 	{
 		$tables = [
+			'chat_bans',
+			'chat_invitations',
+			'chat_messages',
+			'chat_online',
 			'vtiger_home_layout',
 			'vtiger_homedashbd',
 			'vtiger_homedefault',
@@ -233,127 +157,18 @@ class YetiForceUpdate
 			'vtiger_homestuff',
 			'vtiger_homestuff_seq',
 			'vtiger_smsnotifier_servers',
-			'vtiger_tracker'
+			'vtiger_tracker',
+			'vtiger_wsapp',
+			'vtiger_wsapp_handlerdetails',
+			'vtiger_wsapp_queuerecords',
+			'vtiger_wsapp_recordmapping',
+			'vtiger_wsapp_sync_state',
 		];
-		$this->dropTablesExecute($tables);
+		$this->importer->dropTable($tables);
+		$db = App\Db::getInstance();
 		$table = 'vtiger_smsnotifier_status';
-		if ($db->isTableExists($table) && !is_null($db->getSchema()->getTableSchema($table, true)->getColumn('smsmessageid'))) {
-			$dbCommand->dropTable($table)->execute();
-		}
-	}
-
-	/**
-	 * Drop tables function
-	 * @param array $tables
-	 */
-	public function dropTablesExecute($tables)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($tables as $name) {
-			if ($db->isTableExists($name)) {
-				$dbCommand->dropTable($name)->execute();
-			}
-		}
-	}
-
-	/**
-	 * Add columns
-	 */
-	public function addColumns()
-	{
-		$columns = [
-//			['u_#__announcement', 'is_mandatory', 'smallint'],
-//			['vtiger_project', 'parentid', 'int(19) DEFAULT NULL'],
-			['vtiger_trees_templates', 'share', 'string DEFAULT NULL'],
-			['vtiger_ossmailview', 'cid', 'char(40) DEFAULT NULL'],
-			['vtiger_ossmailview', 'rc_user', 'varchar(3) DEFAULT NULL'],
-		];
-		$this->addColumnsExecute($columns);
-	}
-
-	/**
-	 * add columns function
-	 * @param array $columns
-	 */
-	public function addColumnsExecute($columns)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($tables as $name) {
-			if ($db->isTableExists($name)) {
-				$dbCommand->dropTable($name)->execute();
-			}
-		}
-	}
-
-	/**
-	 * Changing name of columns
-	 */
-	public function renameColumns()
-	{
-		$columns = [
-			['s_#_mail_smtp', 'replay_to', 'reply_to'],
-			['vtiger_smsnotifier', 'status', 'smsnotifier_status'],
-		];
-		$this->renameColumnsExecute($columns);
-	}
-
-	/**
-	 * rename columns function
-	 * @param array $columns
-	 */
-	public function renameColumnsExecute($columns)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($columns as $column) {
-			if ($db->isTableExists($column[0]) && !is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[1])) && is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[2]))) {
-				$dbCommand->renameColumn($column[0], $column[1], $column[2])->execute();
-			}
-		}
-	}
-
-	/**
-	 * alter columns
-	 */
-	public function alterColumns()
-	{
-		$columns = [
-			['a_#__bruteforce_blocked', 'time', 'timestamp NULL DEFAULT NULL'],
-			['s_#__mail_queue', 'from', 'text'],
-			['s_#__mail_queue', 'to', 'text'],
-			['u_#__favorites', 'data', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_currency_info', 'defaultid', 'smallint'],
-			['vtiger_import_maps', 'date_entered', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_import_maps', 'date_modified', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_loginhistory', 'login_time', 'timestamp NOT NULL DEFAULT "0000-00-00 00:00:00"'],
-			['vtiger_ossmails_logs', 'start_time', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_ossmailscanner_folders_uid', 'user_id', 'int(10) unsigned DEFAULT NULL'],
-			['vtiger_ossmailscanner_log_cron', 'created_time', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_scheduled_reports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_schedulereports', 'next_trigger_time', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_smsnotifier', 'smsnotifier_status', 'string DEFAULT NULL'],
-			['vtiger_trees_templates_data', 'state', "varchar(100) NOT NULL DEFAULT ''"],
-			['vtiger_users', 'date_entered', 'timestamp NULL DEFAULT NULL'],
-			['vtiger_users', 'date_modified', 'timestamp NULL DEFAULT NULL'],
-			['yetiforce_updates', 'time', 'timestamp NULL DEFAULT NULL'],
-		];
-		$this->alterColumnsExecute($columns);
-	}
-
-	/**
-	 * alter columns function
-	 * @param array $columns
-	 */
-	public function alterColumnsExecute($columns)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($columns as $column) {
-			if ($db->isTableExists($column[0]) && !is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[1])) && is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[2]))) {
-				$dbCommand->alterColumn($column[0], $column[1], $column[2])->execute();
-			}
+		if ($db->isTableExists($table) && !is_null($db->getSchema()->getTableSchema($table)->getColumn('smsmessageid'))) {
+			$this->importer->dropTable($table);
 		}
 	}
 
@@ -362,90 +177,31 @@ class YetiForceUpdate
 	 */
 	public function dropColumns()
 	{
-		$columns = [
+		$this->importer->dropColumns([
 			['vtiger_fixed_assets_fuel_type', 'picklist_valueid'],
 			['vtiger_users', 'user_hash'],
-			['vtiger_oss', 'rc_user']
-		];
-		$this->dropColumnsExecute($columns);
+		]);
 	}
 
 	/**
-	 * drop columns function
-	 * @param array $columns
+	 * Rename tables
 	 */
-	public function dropColumnsExecute($columns)
+	public function renameTables()
 	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($columns as $column) {
-			if ($db->isTableExists($column[0]) && !is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[1]))) {
-				$dbCommand->dropColumn($column[0], $column[1])->execute();
-			}
-		}
+		$this->importer->renameTables([
+			['u_yf_mail_address_boock', 'u_yf_mail_address_book']
+		]);
 	}
 
 	/**
-	 * alter columns
+	 * Changing name of columns
 	 */
-	public function createIndex()
+	public function renameColumns()
 	{
-		$columns = [
-			['u_#__ssalesprocesses', 'ssalesprocesses_no', 'ssalesprocesses_no', false],
-			['vtiger_currency_info', 'deleted', 'deleted', false],
-			['vtiger_ossmailscanner_folders_uid', 'user_id', 'user_id', false],
-			['vtiger_ossmailscanner_folders_uid', 'folder', 'folder', false],
-			['vtiger_ossmailview', 'verify', 'verify', false],
-			['vtiger_ossmailview', 'message_id', 'message_id', false],
-			['vtiger_ossmailview', 'mbox', 'mbox', false],
-			['vtiger_project', 'project_parentid_idx', 'parentid', false],
-			['vtiger_project', 'project_no', 'project_no', false],
-			['vtiger_troubletickets', 'ticket_no', 'ticket_no', false],
-			['u_#__browsinghistory', 'userid', 'browsinghistory_user_idx', false],
-			['vtiger_ossmailview', 'cid', 'ossmailview_cid_idx', false]
-		];
-		$this->createIndexExecute($columns);
-	}
-
-	/**
-	 * create index function
-	 * @param array $columns
-	 */
-	public function createIndexExecute($columns)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($columns as $column) {
-			if ($db->isTableExists($column[0]) && !is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[1]))) {
-				$dbCommand->createIndex($column[2], $column[0], $column[1], $column[3])->execute();
-			}
-		}
-	}
-
-	/**
-	 * add foreign key
-	 */
-	public function addForeignKey()
-	{
-		$columns = [
-			['vtiger_ossmailscanner_folders_uid_ibfk_1', 'user_id', 'vtiger_ossmailscanner_folders_uid', 'roundcube_users', 'user_id', 'CASCADE', null],
-		];
-		$this->addForeignKeyExecute($columns);
-	}
-
-	/**
-	 * create index function
-	 * @param array $columns
-	 */
-	public function addForeignKeyExecute($columns)
-	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($columns as $column) {
-			if ($db->isTableExists($column[0]) && !is_null($db->getSchema()->getTableSchema($column[0], true)->getColumn($column[1]))) {
-				$dbCommand->addForeignKey($column[2], $column[1], $column[1], $column[3], $column[4], $column[5], $column[6])->execute();
-			}
-		}
+		$this->importer->renameColumns([
+			['s_yf_mail_smtp', 'replay_to', 'reply_to'],
+			['vtiger_smsnotifier', 'status', 'smsnotifier_status'],
+		]);
 	}
 
 	/**
@@ -454,69 +210,85 @@ class YetiForceUpdate
 	public function updatePicklistType()
 	{
 		\App\Log::trace('Entering ' . __METHOD__);
-		$db = App\Db::getInstance();
-		$schema = $db->getSchema();
-		$query = (new \App\Db\Query())->from('vtiger_field')
-			->where(['uitype' => 16])
-			->andWhere(['fieldname' => [
-				'osstimecontrol_status',
-				'lin_status',
-				'lout_status',
-				'reservations_status',
-				'squoteenquiries_status',
-				'srequirementscards_status',
-				'scalculations_status',
-				'squotes_status',
-				'ssingleorders_status',
-				'srecurringorders_status',
-				'storage_status',
-				'ssalesprocesses_status',
-				'igrn_status',
-				'igdn_status',
-				'iidn_status',
-				'igin_status',
-				'ipreorder_status',
-				'istdn_status',
-				'istn_status',
-				'istrn_status',
-				'knowledgebase_status',
-				'igrnc_status',
-				'igdnc_status',
-//				'notification_status',
-				'svendorenquiries_status'
-		]]);
-		$dataReader = $query->createCommand()->query();
-		while ($row = $dataReader->read()) {
-			$picklistTable = 'vtiger_' . $row['fieldname'];
-			if ($db->isTableExists($picklistTable) && is_null($db->getSchema()->getTableSchema($picklistTable, true)->getColumn('picklist_valueid'))) {
-				$db->createCommand()->addColumn($picklistTable, 'picklist_valueid', $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_INTEGER, 11)->notNull()->defaultValue(0))->execute();
-				$db->createCommand()->insert('vtiger_picklist', ['name' => $row['fieldname']])->execute();
-				$newPicklistId = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist')->where(['name' => $row['fieldname']])->scalar();
-				if (!$newPicklistId) {
-					$newPicklistId = $db->getLastInsertID('vtiger_picklist_picklistid_seq');
-				}
+		\App\Db\Updater::addRoleToPicklist([
+			'osstimecontrol_status',
+			'lin_status',
+			'lout_status',
+			'reservations_status',
+			'squoteenquiries_status',
+			'srequirementscards_status',
+			'scalculations_status',
+			'squotes_status',
+			'ssingleorders_status',
+			'srecurringorders_status',
+			'storage_status',
+			'ssalesprocesses_status',
+			'igrn_status',
+			'igdn_status',
+			'iidn_status',
+			'igin_status',
+			'ipreorder_status',
+			'istdn_status',
+			'istn_status',
+			'istrn_status',
+			'knowledgebase_status',
+			'igrnc_status',
+			'igdnc_status',
+			'svendorenquiries_status'
+		]);
+		\App\Log::trace('Exiting ' . __METHOD__);
+	}
 
-				$identifier = $row['fieldname'] . 'id';
-				$query2 = (new \App\Db\Query())->select([$identifier, 'sortorderid'])->from($picklistTable);
-				$dataReader2 = $query2->createCommand()->query();
-				while ($picklistRow = $dataReader2->read()) {
-					$newPicklistValueId = $db->getUniqueID('vtiger_picklistvalues');
-					$db->createCommand()->update($picklistTable, ['picklist_valueid' => $newPicklistValueId], [$identifier => $picklistRow[$identifier]])->execute();
+	private function addFields()
+	{
 
-					$query = (new \App\Db\Query)->select('roleid')->from('vtiger_role');
-					$roleIds = $query->column();
-					$insertedData = [];
-					foreach ($roleIds as &$value) {
-						$insertedData [] = [$value, $newPicklistValueId, $newPicklistId, $picklistRow['sortorderid']];
-					}
-					$db->createCommand()
-						->batchInsert('vtiger_role2picklist', ['roleid', 'picklistvalueid', 'picklistid', 'sortid'], $insertedData)
-						->execute();
-				}
-				$db->createCommand()->update('vtiger_field', ['uitype' => 15], ['fieldid' => $row['fieldid']])->execute();
+//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleName'];
+		$fields = [
+			[43, 2604, 'parentid', 'vtiger_project', 1, 10, 'parentid', 'FL_MEMBER_OF', 1, 2, '', 100, 10, 108, 1, 'I~O', 1, 0, 'BAS', 0, '', 0, '', NULL, 'int(10)', 'LBL_CUSTOM_INFORMATION', [], ['Project'], 'Project'],
+			[83, 2605, 'is_mandatory', 'u_yf_announcement', 1, 56, 'is_mandatory', 'FL_IS_MANDATORY', 1, 2, '', 100, 5, 258, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'smallint(5)', 'LBL_ANNOUNCEMENTS_INFORMATION', [], [], 'Announcements'],
+			[45, 2606, 'smsnotifier_status', 'vtiger_smsnotifier', 1, 16, 'smsnotifier_status', 'FL_STATUS', 1, 2, '', 100, 9, 110, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_SMSNOTIFIER_INFORMATION', ['PLL_UNDEFINED', 'PLL_DELIVERED', 'PLL_FAILED'], [], 'SMSNotifier']
+		];
+		foreach ($fields as $field) {
+			$moduleId = \vtlib\Functions::getModuleId($field[28]);
+			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
+			if (!$moduleId || $isExists) {
+				continue;
+			}
+			$moduleInstance = \vtlib\Module::getInstance($field[28]);
+			$blockInstance = \vtlib\Block::getInstance($field[25], $moduleInstance);
+			if (!$blockInstance) {
+				App\Log::error("No block found to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
+				continue;
+			}
+			$fieldInstance = new \vtlib\Field();
+			$fieldInstance->column = $field[2];
+			$fieldInstance->name = $field[6];
+			$fieldInstance->label = $field[7];
+			$fieldInstance->table = $field[3];
+			$fieldInstance->uitype = $field[5];
+			$fieldInstance->typeofdata = $field[15];
+			$fieldInstance->readonly = $field[8];
+			$fieldInstance->displaytype = $field[14];
+			$fieldInstance->masseditable = $field[19];
+			$fieldInstance->quickcreate = $field[16];
+			$fieldInstance->columntype = $field[24];
+			$fieldInstance->presence = $field[9];
+			$fieldInstance->maximumlength = $field[11];
+			$fieldInstance->quicksequence = $field[17];
+			$fieldInstance->info_type = $field[18];
+			$fieldInstance->helpinfo = $field[20];
+			$fieldInstance->summaryfield = $field[21];
+			$fieldInstance->generatedtype = $field[4];
+			$fieldInstance->defaultvalue = $field[10];
+			$fieldInstance->fieldparams = $field[22];
+			$blockInstance->addField($fieldInstance);
+			if ($field[26] && ($field[5] == 15 || $field[5] == 16 || $field[5] == 33 )) {
+				$fieldInstance->setPicklistValues($field[26]);
+			}
+			if ($field[27] && $field[5] == 10) {
+				$fieldInstance->setRelatedModules($field[27]);
 			}
 		}
-		\App\Log::trace('Exiting ' . __METHOD__);
 	}
 
 	/**
@@ -525,9 +297,11 @@ class YetiForceUpdate
 	public function updateData()
 	{
 		$this->updateRows();
+		$this->deleteRows();
 		$this->insertRows();
-		$this->cron($this->getCronData(1));
-		$this->improvePermissions();
+		$this->updateCron();
+		App\Db\Fixer::defOrgField();
+		App\Db\Fixer::profileField();
 	}
 
 	/**
@@ -535,39 +309,43 @@ class YetiForceUpdate
 	 */
 	public function updateRows()
 	{
-		$data = [
-			['u_#__squotes_invfield', ['colspan' => 25], ['id' => 1]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 2]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 3]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 5]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 7]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 8]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 9]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 10]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 11]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 15]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 16]],
-			['u_#__squotes_invfield', ['colspan' => 6], ['id' => 17]],
-			['vtiger_apiaddress', ['name' => 'min_length'], ['id' => 1]],
-			['vtiger_customview', ['viewname' => 'LBL_UNREAD'], ['cvid' => 104]],
-			['vtiger_cvcolumnlist', ['columnindex' => 2], ['cvid' => 43, 'columnindex' => 3]],
-			['vtiger_cvcolumnlist', ['columnindex' => 3, 'columnname' => 'vtiger_projectmilestone:projectid:projectid:ProjectMilestone_Related_to:V'], ['cvid' => 17, 'columnindex' => 4]],
-			['vtiger_cvcolumnlist', ['columnindex' => 4, 'columnname' => 'vtiger_projectmilestone:projectmilestone_priority:projectmilestone_priority:ProjectMilestone_LBL_PRIORITY:V'], ['cvid' => 17, 'columnindex' => 5]],
-		];
-		$this->updateRowsExecute($data);
-	}
-
-	/**
-	 * update rows execute
-	 * @param array $data
-	 */
-	public function updateRowsExecute($data)
-	{
 		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($data as $row) {
-			$dbCommand->update($row[0], $row[1], $row[2]);
-		}
+		$db->createCommand("UPDATE a_yf_pdf SET body_content = REPLACE( body_content, '$(reletedRecord :', '$(relatedRecord :');")->execute();
+		$db->createCommand("UPDATE a_yf_pdf SET header_content = REPLACE( header_content, '$(reletedRecord :', '$(relatedRecord :');")->execute();
+		$db->createCommand("UPDATE a_yf_pdf SET footer_content = REPLACE( footer_content, '$(reletedRecord :', '$(relatedRecord :');")->execute();
+		$db->createCommand("UPDATE com_vtiger_workflowtasks SET task = REPLACE( task, 'HeldDesk', 'HelpDesk');")->execute();
+		$db->createCommand("UPDATE com_vtiger_workflowtasks_entitymethod SET method_name = REPLACE( method_name, 'HeldDesk', 'HelpDesk');")->execute();
+		$db->createCommand("UPDATE com_vtiger_workflowtasks_entitymethod SET function_name = REPLACE( function_name, 'HeldDesk', 'HelpDesk');")->execute();
+		\App\Db\Updater::batchUpdate([
+			['u_yf_squotes_invfield', ['colspan' => 25], ['columnname' => 'name']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'qty']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'discount']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'margin']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'price']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'total']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'purchase']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'tax']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'gross']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'net']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'subunit']],
+			['u_yf_squotes_invfield', ['colspan' => 6], ['columnname' => 'unit']],
+			['vtiger_apiaddress', ['name' => 'min_length'], ['name' => 'min_lenght']],
+			['vtiger_customview', ['viewname' => 'LBL_UNREAD'], ['viewname' => 'All', 'entitytype' => 'Notification']],
+			['vtiger_field', ['defaultvalue' => 'This Month'], ['columnname' => 'activity_view', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => 'yyyy-mm-dd'], ['columnname' => 'date_format', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '123,456,789'], ['columnname' => 'currency_grouping_pattern', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '.'], ['columnname' => 'currency_decimal_separator', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '1.0$'], ['columnname' => 'currency_symbol_placement', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '15 Minutes'], ['columnname' => 'reminder_interval', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '30'], ['columnname' => 'callduration', 'tablename' => 'vtiger_users', 'defaultvalue' => '5']],
+			['vtiger_field', ['defaultvalue' => '30'], ['columnname' => 'othereventduration', 'tablename' => 'vtiger_users', 'defaultvalue' => '5']],
+			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['columnname' => 'defaulteventstatus', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => 'Meeting'], ['columnname' => 'defaultactivitytype', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_field', ['defaultvalue' => '16:00'], ['columnname' => 'end_hour', 'tablename' => 'vtiger_users', 'defaultvalue' => '']],
+			['vtiger_timecontrol_type', ['timecontrol_type' => 'PLL_HOLIDAY_TIME'], ['timecontrol_type' => 'PLL_HOLIDAY']],
+			['vtiger_osstimecontrol', ['timecontrol_type' => 'PLL_HOLIDAY_TIME'], ['timecontrol_type' => 'PLL_HOLIDAY']],
+			['vtiger_smsnotifier_status', ['presence' => '0'], ['presence' => '1']],
+		]);
 	}
 
 	/**
@@ -576,38 +354,46 @@ class YetiForceUpdate
 	public function insertRows()
 	{
 		$data = [
-			['vtiger_cvcolumnlist', ['cvid' => 43, 'columnindex' => 5, 'columnname' => 'vtiger_projectmilestone:projectmilestonetype:projectmilestonetype:ProjectMilestone_Type:V']],
-			//next 4107+ linia
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_MultiReferenceUpdater_Handler', 'is_active' => 1, 'include_modules' => '', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0]],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Attachments_Handler', 'is_active' => 1, 'include_modules' => '', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0]],
+			['vtiger_language', ['name' => 'Portuguese', 'prefix' => 'pt_br', 'label' => 'Brazilian Portuguese', 'lastupdated' => '2017-06-05 11:20:40', 'sequence' => NULL, 'isdefault' => 0, 'active' => 1,]],
+			['vtiger_language', ['name' => 'Spanish', 'prefix' => 'es_es', 'label' => 'ES Spanish', 'lastupdated' => '2017-03-11 00:00:00', 'sequence' => NULL, 'isdefault' => 0, 'active' => 1,]],
+			['vtiger_links', ['tabid' => App\Module::getModuleId('SSalesProcesses'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'DW_TEAMS_ESTIMATED_SALES', 'linkurl' => 'index.php?module=SSalesProcesses&view=ShowWidget&name=TeamsEstimatedSales', 'linkicon' => '', 'sequence' => 0,]],
+			['vtiger_links', ['tabid' => App\Module::getModuleId('SSalesProcesses'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'DW_ACTUAL_SALES_OF_TEAM', 'linkurl' => 'index.php?module=SSalesProcesses&view=ShowWidget&name=ActualSalesOfTeam', 'linkicon' => '', 'sequence' => 0,]],
+			['vtiger_settings_field', ['blockid' => 5, 'name' => 'LBL_PBX', 'iconpath' => 'adminIcon-pbx-manager', 'description' => 'LBL_PBX_DESCRIPTION', 'linkto' => 'index.php?module=PBX&parent=Settings&view=List', 'sequence' => 3, 'active' => 0, 'pinned' => 0, 'admin_access' => NULL,]],
+			['vtiger_settings_field', ['blockid' => 5, 'name' => 'LBL_SMSNOTIFIER', 'iconpath' => 'userIcon-SMSNotifier', 'description' => 'LBL_SMSNOTIFIER_DESCRIPTION', 'linkto' => 'index.php?module=SMSNotifier&parent=Settings&view=List', 'sequence' => 12, 'active' => 0, 'pinned' => 0, 'admin_access' => NULL,]],
+			['vtiger_ws_fieldtype', ['uitype' => 311, 'fieldtype' => 'multiImage',]],
 		];
 
-		$cvid = $this->insertRowsExecute([['vtiger_cvadvfilter', ['cvid' => 104, 'columnindex' => 0, 'columnname' => 'u_yf_notification:notification_status:notification_status:Notification_FL_STATUS:V', 'comparator' => 'e', 'value' => 'PLL_UNREAD', 'groupid' => 1, 'column_condition' => '']]], true);
+		$cvid = (new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->where(['viewname' => 'LBL_UNREAD', 'entitytype' => 'Notification'])->scalar();
 		if ($cvid) {
-			$data[] = ['vtiger_cvadvfilter_grouping', ['cvid' => $cvid, 'group_condition' => 'and', 'condition_expression' => ' 0 ']];
-			$data[] = ['vtiger_cvadvfilter_grouping', ['cvid' => $cvid, 'group_condition' => '', 'condition_expression' => ' 0 ']];
+			$data[] = ['vtiger_cvadvfilter', ['cvid' => $cvid, 'columnindex' => 0, 'columnname' => 'u_yf_notification:notification_status:notification_status:Notification_FL_STATUS:V', 'comparator' => 'e', 'value' => 'PLL_UNREAD', 'groupid' => 1, 'column_condition' => '']];
+			$data[] = ['vtiger_cvadvfilter_grouping', ['groupid' => 1, 'cvid' => $cvid, 'group_condition' => 'and', 'condition_expression' => ' 0 ']];
+			$data[] = ['vtiger_cvadvfilter_grouping', ['groupid' => 2, 'cvid' => $cvid, 'group_condition' => '', 'condition_expression' => ' 0 ']];
 		}
-		$this->insertRowsExecute($data);
+
+
+		\App\Db\Updater::batchInsert($data);
 	}
 
-	/**
-	 * update rows execute
-	 * @param array $data
-	 * @param bool $return
-	 */
-	public function insertRowsExecute($data, $return = false)
+	public function deleteRows()
 	{
-		$db = \App\Db::getInstance();
-		$dbCommand = $db->createCommand();
-		foreach ($data as $row) {
-			if (empty((new \App\db\Query())->from($row[0])->where($row[1]))) {
-				$dbCommand->insert($row[0], $row[1]);
-				if ($return) {
-					return $db->lastInsertID;
-				}
-			}
-		}
-		if ($return) {
-			return false;
-		}
+		$data = [
+			['vtiger_picklist', ['name' => 'fixed_assets_fuel_type']],
+			['vtiger_relatedlists', ['tabid' => 4, 'label' => 'OSSPasswords']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_login']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_sync']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_query']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_logout']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_getchallenge']],
+			['vtiger_ws_operation', ['handler_method' => 'vtws_extendSession']],
+			['vtiger_ws_operation', ['handler_method' => 'wsapp_register']],
+			['vtiger_ws_operation', ['handler_method' => 'wsapp_deregister']],
+			['vtiger_ws_operation', ['handler_method' => 'wsapp_get']],
+			['vtiger_ws_operation', ['handler_method' => 'wsapp_put']],
+			['vtiger_ws_operation', ['handler_method' => 'wsapp_map']],
+		];
+		\App\Db\Updater::batchDelete($data);
 	}
 
 	/**
@@ -615,82 +401,34 @@ class YetiForceUpdate
 	 * @param int $index
 	 * @return array
 	 */
-	private function getCronData($index)
+	private function updateCron()
 	{
-		$crons = [];
-		switch ($index) {
-			case 1:
-				$crons = [
-					['type' => 'add', 'data' => ['LBL_BROWSING_HISTORY', 'cron/BrowsingHistory.php', 86400, NULL, NULL, 1, NULL, 29, NULL]],
-					['type' => 'add', 'data' => ['LBL_BATCH_PROCESSES', 'cron/BatchProcesses.php', 600, NULL, NULL, 1, NULL, 30, NULL]],
-					['type' => 'add', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE', 'cron/Attachments.php', 86400, NULL, NULL, 1, 'Vtiger', 27, NULL]],
-					['type' => 'add', 'data' => ['LBL_SMSNOTIFIER', 'modules/SMSNotifier/cron/SMSNotifier.php', 300, NULL, NULL, 1, 'SMSNotifier', 27, NULL]]
-				];
-				break;
-			default:
-				break;
-		}
-		return $crons;
+		\App\Db\Updater::cron([
+			['type' => 'add', 'data' => ['LBL_BROWSING_HISTORY', 'cron/BrowsingHistory.php', 86400, NULL, NULL, 1, 'Vtiger', 29, NULL]],
+			['type' => 'add', 'data' => ['LBL_BATCH_PROCESSES', 'cron/BatchProcesses.php', 600, NULL, NULL, 1, 'Vtiger', 30, NULL]],
+			['type' => 'add', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE', 'cron/Attachments.php', 86400, NULL, NULL, 1, 'Vtiger', 27, NULL]],
+			['type' => 'add', 'data' => ['LBL_SMSNOTIFIER', 'modules/SMSNotifier/cron/SMSNotifier.php', 300, NULL, NULL, 1, 'SMSNotifier', 27, NULL]],
+			['type' => 'add', 'data' => ['LBK_SYSTEM_WARNINGS', 'cron/SystemWarnings.php', 86400, NULL, NULL, 1, '86400', 29, NULL]],
+		]);
 	}
 
-	/**
-	 * Cron action
-	 * @param array $crons
-	 */
-	private function cron($crons = [])
+	private function addRecords()
 	{
-		\App\Log::trace('Entering ' . __METHOD__);
-		$db = App\Db::getInstance();
-		if ($crons) {
-			foreach ($crons as $cron) {
-				if (empty($cron)) {
-					continue;
-				}
-				$cronData = $cron['data'];
-				$isExists = (new \App\Db\Query())->from('vtiger_cron_task')->where(['name' => $cronData[0], 'handler_file' => $cronData[1]])->exists();
-				if (!$isExists && $cron['type'] === 'add') {
-					\vtlib\Cron::register($cronData[0], $cronData[1], $cronData[2], $cronData[6], $cronData[5], 0, $cronData[8]);
-					$this->cronAction[] = $cronData[0];
-				} elseif ($isExists && $cron['type'] === 'remove') {
-					\vtlib\Cron::deregister($cronData[0]);
-				}
-			}
-		}
-		\App\Log::trace('Exiting ' . __METHOD__);
-	}
-
-	/**
-	 * Improve permissions
-	 */
-	public function improvePermissions()
-	{
-		\App\Log::trace('Entering ' . __METHOD__);
 		$db = \App\Db::getInstance();
-		$subQuery = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_def_org_field');
-		$query = (new \App\Db\Query())->select(['tabid', 'fieldid'])->from('vtiger_field')->where(['not in', 'vtiger_field.fieldid', $subQuery]);
-		$data = $query->createCommand()->queryAllByGroup(2);
-		foreach ($data as $tabId => $fieldIds) {
-			foreach ($fieldIds as $fieldId) {
-				$isExists = (new \App\Db\Query())->from('vtiger_def_org_field')->where(['tabid' => $tabId, 'fieldid' => $fieldId])->exists();
-				if (!$isExists) {
-					$db->createCommand()->insert('vtiger_def_org_field', [
-						'tabid' => $tabId,
-						'fieldid' => $fieldId,
-						'visible' => 0,
-						'readonly' => 0,
-					])->execute();
-					if (empty($profileIds)) {
-						$profileIds = \vtlib\Profile::getAllIds();
-					}
-					foreach ($profileIds as &$profileId) {
-						$isExists = (new \App\Db\Query())->from('vtiger_profile2field')->where(['profileid' => $profileId, 'fieldid' => $fieldId])->exists();
-						if (!$isExists) {
-							$db->createCommand()->insert('vtiger_profile2field', ['profileid' => $profileId, 'tabid' => $tabId, 'fieldid' => $fieldId, 'visible' => 0, 'readonly' => 0])->execute();
-						}
-					}
-				}
-			}
-		}
-		\App\Log::trace('Exiting ' . __METHOD__);
+
+		$record = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
+		$record->set('name', 'System warnings');
+		$record->set('assigned_user_id', \App\User::getCurrentUserId());
+		$record->set('email_template_type', 'PLL_RECORD');
+		$record->set('module', 'Users');
+		$record->set('subject', 'System warnings');
+		$record->set('content', '$(params : warnings)$');
+		$record->set('email_template_priority', 7);
+		$record->save();
+		$db->createCommand()
+			->update('u_yf_emailtemplates', [
+				'sys_name' => 'SystemWarnings',
+				], ['emailtemplatesid' => $record->getId()])
+			->execute();
 	}
 }

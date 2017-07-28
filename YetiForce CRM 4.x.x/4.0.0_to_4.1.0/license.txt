@@ -1,1 +1,2 @@
-Required PHP version needs to be equal or greater than 5.6.
+The update time might be longer depending on the server speed and amount of data in the system. 
+Log files should be checked after update.

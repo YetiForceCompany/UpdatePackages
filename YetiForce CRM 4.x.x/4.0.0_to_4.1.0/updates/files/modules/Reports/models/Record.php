@@ -303,7 +303,6 @@ class Reports_Record_Model extends Vtiger_Record_Model
 			list($tableName, $columnName, $moduleFieldLabel, $fieldName, $type) = explode(':', $column);
 			$fieldLabel = explode('__', $moduleFieldLabel);
 			$module = $fieldLabel[0];
-			$dbFieldLabel = trim(str_replace(array($module, '__'), " ", $moduleFieldLabel));
 			if (\App\Field::getFieldPermission($module, $fieldName) && $columnName !== 'crmid') {
 				$selectedColumns[] = $column;
 			}
@@ -766,7 +765,7 @@ class Reports_Record_Model extends Vtiger_Record_Model
 		}
 
 		header('Content-Type: application/x-msexcel');
-		header('Content-Length: ' . @filesize($tempFileName));
+		header('Content-Length: ' . filesize($tempFileName));
 		header("Content-Disposition: attachment; filename=\"$fileName\"");
 
 		$fp = fopen($tempFileName, 'rb');
@@ -793,7 +792,7 @@ class Reports_Record_Model extends Vtiger_Record_Model
 		}
 
 		header('Content-Type: application/csv');
-		header('Content-Length: ' . @filesize($tempFileName));
+		header('Content-Length: ' . filesize($tempFileName));
 		header("Content-Disposition: attachment; filename=\"$fileName\"");
 
 		$fp = fopen($tempFileName, 'rb');
@@ -1209,7 +1208,7 @@ class Reports_Record_Model extends Vtiger_Record_Model
 		$fields = $this->getSecondaryModuleFields();
 		$secondaryModules = $this->getSecondaryModules();
 
-		$secondaryModules = @explode(':', $secondaryModules);
+		$secondaryModules = explode(':', $secondaryModules);
 		if (is_array($secondaryModules)) {
 			$secondaryModuleFieldInstances = [];
 			foreach ($secondaryModules as $secondaryModule) {

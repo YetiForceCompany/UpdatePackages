@@ -1,5 +1,6 @@
 <?php
 return [
+	'webservice.php',
 	'config/parent_tabdata.php',
 	'include/Tracker.php',
 	'include/events/VTBatchData.php',

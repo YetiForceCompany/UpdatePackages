@@ -144,8 +144,6 @@ class VTScheduledReport extends Reports
 		if ($reportFormat === 'pdf' || $reportFormat === 'both') {
 			$fileName = $baseFileName . '.pdf';
 			$filePath = 'storage/' . $fileName;
-			$attachments[$filePath] = $fileName;
-			$pdf = $oReportRun->getReportPDF();
 		}
 		if ($reportFormat === 'excel' || $reportFormat === 'both') {
 			$fileName = $baseFileName . '.xls';
@@ -240,11 +238,7 @@ class VTScheduledReport extends Reports
 	public function updateNextTriggerTime()
 	{
 		$adb = $this->db;
-
-		$currentTime = date('Y-m-d H:i:s');
-		$scheduledInterval = $this->scheduledInterval;
 		$nextTriggerTime = $this->getNextTriggerTime(); // Compute based on the frequency set
-
 		$adb->pquery('UPDATE vtiger_scheduled_reports SET next_trigger_time=? WHERE reportid=?', array($nextTriggerTime, $this->id));
 	}
 
