@@ -1541,6 +1541,10 @@ class Base3 extends \DbType
 					'folder' => $this->stringType(100),
 					'uid' => $this->integer(10)->defaultValue(0),
 				],
+				'index' => [
+					['user_id', 'user_id'],
+					['folder', 'folder'],
+				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],

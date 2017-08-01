@@ -86,7 +86,7 @@ class YetiForceUpdate
 		$this->importer->postUpdate();
 		$this->importer->logs(false);
 		$this->importer->refreshSchema();
-
+		\App\Db::getInstance()->createCommand()->dropIndex('github_id', 'u_yf_github')->execute();
 		$db->createCommand()->checkIntegrity(true)->execute();
 
 		$this->updateData();
@@ -109,6 +109,7 @@ class YetiForceUpdate
 		$module->customized = '0';
 		$module->type = '0';
 		$module->save();
+		$db->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => 'Chat'])->execute();
 	}
 
 	/**
@@ -289,6 +290,11 @@ class YetiForceUpdate
 				$fieldInstance->setRelatedModules($field[27]);
 			}
 		}
+		$importers = new \App\Db\Importers\Base();
+		$db = \App\Db::getInstance();
+		$dbCommand = $db->createCommand();
+		$dbCommand->alterColumn('vtiger_smsnotifier_status', 'smsnotifier_statusid', $importers->integer(10)->autoIncrement()->notNull())->execute();
+		$dbCommand->alterColumn('vtiger_smsnotifier_status', 'sortorderid', $importers->smallInteger(5)->defaultValue(0))->execute();
 	}
 
 	/**
@@ -408,7 +414,7 @@ class YetiForceUpdate
 			['type' => 'add', 'data' => ['LBL_BATCH_PROCESSES', 'cron/BatchProcesses.php', 600, NULL, NULL, 1, 'Vtiger', 30, NULL]],
 			['type' => 'add', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE', 'cron/Attachments.php', 86400, NULL, NULL, 1, 'Vtiger', 27, NULL]],
 			['type' => 'add', 'data' => ['LBL_SMSNOTIFIER', 'modules/SMSNotifier/cron/SMSNotifier.php', 300, NULL, NULL, 1, 'SMSNotifier', 27, NULL]],
-			['type' => 'add', 'data' => ['LBK_SYSTEM_WARNINGS', 'cron/SystemWarnings.php', 86400, NULL, NULL, 1, '86400', 29, NULL]],
+			['type' => 'add', 'data' => ['LBK_SYSTEM_WARNINGS', 'cron/SystemWarnings.php', 86400, NULL, NULL, 1, 'Vtiger', 31, NULL]],
 		]);
 	}
 
@@ -420,7 +426,7 @@ class YetiForceUpdate
 		$record->set('name', 'System warnings');
 		$record->set('assigned_user_id', \App\User::getCurrentUserId());
 		$record->set('email_template_type', 'PLL_RECORD');
-		$record->set('module', 'Users');
+		$record->set('module_name', 'Users');
 		$record->set('subject', 'System warnings');
 		$record->set('content', '$(params : warnings)$');
 		$record->set('email_template_priority', 7);

@@ -1,2 +1,4 @@
 The update time might be longer depending on the server speed and amount of data in the system. 
+The update package corrects missing elements in permissions that's why we recommend checking permissions configuration.
+The update overwrites all configuration files in the config directory, we recommend creating a backup copy of the files, and introduce your changes after the update.
 Log files should be checked after update.
