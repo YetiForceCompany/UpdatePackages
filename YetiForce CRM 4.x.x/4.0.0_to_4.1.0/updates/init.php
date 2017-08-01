@@ -73,6 +73,7 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
+		$this->addRecords();
 		$this->updatePicklistType();
 
 		$db = App\Db::getInstance();
@@ -89,7 +90,6 @@ class YetiForceUpdate
 		$db->createCommand()->checkIntegrity(true)->execute();
 
 		$this->updateData();
-		$this->addRecords();
 
 		$moduleBaseInstance = vtlib\Module::getInstance('WSAPP');
 		if ($moduleBaseInstance) {

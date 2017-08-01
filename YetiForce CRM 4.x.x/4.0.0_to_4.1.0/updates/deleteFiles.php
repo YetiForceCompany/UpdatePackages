@@ -179,4 +179,6 @@ return [
 	'vendor/yetiforce/SystemWarnings/SystemRequirements/LibraryChat.php',
 	'vtlib/thirdparty/dUnzip2.inc.php',
 	'vtlib/Vtiger/Unzip.php',
+	'modules/OSSMailView/views/summary.php',
+	'modules/CustomView/actions/DeleteAjax.php',
 ];
