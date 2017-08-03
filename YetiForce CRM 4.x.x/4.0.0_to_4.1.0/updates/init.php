@@ -110,6 +110,7 @@ class YetiForceUpdate
 		$module->type = '0';
 		$module->save();
 		$db->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => 'Chat'])->execute();
+		\vtlib\Functions::recurseCopy('storage/Logo', 'public_html/layouts/resources/Logo');
 	}
 
 	/**
