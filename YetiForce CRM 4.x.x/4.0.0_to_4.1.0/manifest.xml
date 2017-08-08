@@ -3,7 +3,7 @@
 	<name>YetiForce CRM 4.0.0 LTS + Service Pack 1</name>
 	<label>YetiForce CRM 4.0.0 LTS + Service Pack 1</label>
 	<type>update</type>
-	<version>2</version>
+	<version>3</version>
 	<from_version>4.0.0</from_version>
 	<to_version>4.1.0</to_version>
 	<dependencies>
