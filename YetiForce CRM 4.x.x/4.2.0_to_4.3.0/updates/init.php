@@ -82,42 +82,6 @@ class YetiForceUpdate
 		$this->addActions();
 	}
 
-	public function afterCopy()
-	{
-		var_dump($this->package->parameters['sendPasswordToAdmin']);
-		echo '<hr/>';
-		if ($this->package->parameters['sendPasswordToAdmin'] == 1) {
-			$query = (new \App\Db\Query())->select(['id'])->from('vtiger_users')->where(['is_admin' => 'on']);
-			$dataReader = $query->createCommand()->query();
-			$this->importer->logs .= "> start reset password\n";
-			while ($row = $dataReader->read()) {
-				try {
-					$password = \App\Encryption::generateUserPassword();
-					$userRecordModel = Users_Record_Model::getInstanceById($row['id'], 'Users');
-					$userRecordModel->set('user_password', $password);
-					$userRecordModel->set('date_password_change', date('Y-m-d H:i:s'));
-					$userRecordModel->set('force_password_change', 0);
-					$userRecordModel->save();
-					var_dump($row['id'], $password);
-					\App\Mailer::sendFromTemplate([
-						'template' => 'UsersResetPassword',
-						'moduleName' => 'Users',
-						'recordId' => $userRecordModel->getId(),
-						'to' => $userRecordModel->get('email1'),
-						'password' => $password,
-					]);
-					$this->importer->logs .= "done (user: {$row['id']})\n";
-				} catch (Exception $exc) {
-					echo $exc->getTraceAsString();
-					$this->importer->logs .= " | Error(reset user password: {$row['id']}) [{$exc->getMessage()}] in \n{$exc->getTraceAsString()} !!!\n";
-				}
-			}
-			$this->importer->logs .= "# end reset password\n";
-		} else {
-			$this->importer->logs .= "# skip reset password\n";
-		}
-	}
-
 	/**
 	 * Postupdate
 	 */

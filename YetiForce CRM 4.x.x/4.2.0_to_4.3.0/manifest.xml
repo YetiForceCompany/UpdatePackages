@@ -13,12 +13,4 @@
 	<license>
 		<file>license.txt</file>
 	</license>
-	<parameters>
-		<parameter>
-			<type>checkbox</type>
-			<name>sendPasswordToAdmin</name>
-			<checked>1</checked>
-			<lable>Mail all new passwords to administrators (requires active SMTP)</lable>
-		</parameter>
-	</parameters>
 </module>
