@@ -1,0 +1,48 @@
+<?php
+/* +***********************************************************************************
+ * The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ * *********************************************************************************** */
+
+class Leads_Detail_View extends Vtiger_Detail_View
+{
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function preProcess(\App\Request $request, $display = true)
+	{
+		$viewer = $this->getViewer($request);
+		$viewer->assign('CONVERSION_AVAILABLE_STATUS', \App\Json::encode(Leads_Module_Model::getConversionAvaibleStatuses()));
+		parent::preProcess($request);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getHeaderCss(\App\Request $request)
+	{
+		$cssFileNames = [
+			'~libraries/jquery/flot/jquery.flot.valuelabels.css',
+		];
+		return array_merge(parent::getHeaderCss($request), $this->checkAndConvertCssStyles($cssFileNames));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getFooterScripts(\App\Request $request)
+	{
+		$jsFileNames = [
+			'~libraries/jquery/flot/jquery.flot.min.js',
+			'~libraries/jquery/flot/jquery.flot.resize.js',
+			'~libraries/jquery/flot/jquery.flot.stack.min.js',
+			'~libraries/jquery/flot/jquery.flot.valuelabels.min.js',
+		];
+		return array_merge(parent::getFooterScripts($request), $this->checkAndConvertJsScripts($jsFileNames));
+	}
+}
