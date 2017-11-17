@@ -1,7 +1,7 @@
 1. IMPORTANT!!! 
 The update package introduces a new password encryption mechanism that requires setting a new password. We recommend enabling the reset password mechanism when performing the update and configure SMTP. 
-There is an option for the system to reset system administrators’ passwords and send then via email. Please enable the option below "".
 If the passwords are not mailed we recommend setting a new password for all users after the update.
+After the update should change the password for all users of the system.
 
 2. The update time might be longer depending on the server speed and amount of data in the system.
 3. Log files should be checked after update.
