@@ -29,7 +29,7 @@ class Base4 extends \App\Db\Importers\Base
 			],
 			'vtiger_relatedlists' => [
 				'columns' => [
-					'relation_id' => $this->primaryKey(5)->unsigned(),
+					'relation_id' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
 					'tabid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'related_tabid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'name' => $this->stringType(50),

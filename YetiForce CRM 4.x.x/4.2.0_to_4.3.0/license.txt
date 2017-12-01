@@ -1,3 +1,5 @@
+YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+
 1. IMPORTANT!!! 
 The update package introduces a new password encryption mechanism that requires setting a new password. We recommend enabling the reset password mechanism when performing the update and configure SMTP. 
 If the passwords are not mailed we recommend setting a new password for all users after the update.
