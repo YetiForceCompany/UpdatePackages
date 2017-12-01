@@ -75,6 +75,12 @@ class YetiForceUpdate
 		$this->importer->logs(false);
 		$this->importer->refreshSchema();
 		$db->createCommand()->checkIntegrity(true)->execute();
+
+		$moduleBaseInstance = vtlib\Module::getInstance('RecycleBin');
+		if ($moduleBaseInstance) {
+			$moduleBaseInstance->delete();
+		}
+
 		$this->updateRows();
 		$this->addRows();
 		$this->deleteRows();
@@ -179,6 +185,14 @@ class YetiForceUpdate
 			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1b']],
 			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
 		]);
 	}
 
@@ -205,6 +219,7 @@ class YetiForceUpdate
 			['vtiger_language', ['prefix' => 'fr_fr']],
 			['vtiger_settings_field', ['name' => 'LBL_DATAACCESS']],
 			['vtiger_settings_field', ['name' => 'LBL_ACTIVITY_TYPES']],
+			['vtiger_settings_blocks', ['label' => 'LBL_YETIFORCE_SHOP']],
 			['vtiger_ws_operation', ['name' => 'changePassword']],
 		];
 		\App\Db\Updater::batchDelete($data);
@@ -338,6 +353,15 @@ class YetiForceUpdate
 					['type' => 'remove', 'search' => 'List of date and time fields'],
 					['type' => 'remove', 'search' => '[Label => Name]'],
 					['type' => 'removeTo', 'search' => 'FIELD_TO_UPDATE_BY_BUTTON', 'end' => '],'],
+					['type' => 'add', 'search' => 'COUNT_IN_HIERARCHY', 'checkInContents' => 'Hide summary products services bookmark', 'addingType' => 'after', 'value' => "	// Hide summary products services bookmark
+"],
+					['type' => 'add', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'checkInContents' => 'Default view for record detail view', 'addingType' => 'after', 'value' => "	// Default view for record detail view. Values: LBL_RECORD_DETAILS or LBL_RECORD_SUMMARY
+"],
+					['type' => 'add', 'search' => 'DEFAULT_VIEW_RECORD', 'checkInContents' => 'defaultDetailViewName', 'addingType' => 'after', 'value' => "	// Default module view. Values: List, ListPreview or DashBoard
+	'defaultViewName' => 'List',
+	// Default record view for list preview. Values: full or summary
+	'defaultDetailViewName' => 'full',
+"],
 				]
 			],
 			['name' => 'config/modules/Notification.php', 'conditions' => [

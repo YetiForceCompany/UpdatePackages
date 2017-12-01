@@ -167,4 +167,13 @@ return [
 	'modules/OSSMail/roundcube/',
 	'licenses/copyright.html',
 	'licenses/License.html',
+	'layouts/basic/modules/Accounts/RelatedList.tpl',
+	'layouts/basic/modules/Vtiger/DetailViewSummaryContents.tpl',
+	'layouts/basic/modules/Vtiger/SummaryViewWidgets.tpl',
+	'modules/RecycleBin/',
+	'public_html/layouts/basic/modules/PriceBooks/resources/Detail.js',
+	'public_html/layouts/basic/modules/PriceBooks/resources/Detail.min.js',
+	'public_html/layouts/basic/modules/RecycleBin',
+	'public_html/modules/Users',
+	'layouts/basic/modules/RecycleBin',
 ];

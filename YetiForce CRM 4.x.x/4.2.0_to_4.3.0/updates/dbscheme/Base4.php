@@ -27,6 +27,31 @@ class Base4 extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'vtiger_relatedlists' => [
+				'columns' => [
+					'relation_id' => $this->primaryKey(5)->unsigned(),
+					'tabid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'related_tabid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'name' => $this->stringType(50),
+					'sequence' => $this->smallInteger(3)->unsigned()->notNull(),
+					'label' => $this->stringType(50)->notNull(),
+					'presence' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'actions' => $this->stringType(50)->notNull()->defaultValue(''),
+					'favorites' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'creator_detail' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'relation_comment' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'view_type' => $this->stringType(100)->notNull()->defaultValue('RelatedTab'),
+				],
+				'columns_mysql' => [
+					'sequence' => $this->tinyInteger(3)->unsigned()->notNull(),
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'favorites' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'creator_detail' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'relation_comment' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'vtiger_users' => [
 				'columns' => [
 					'id' => $this->integer(10)->autoIncrement()->notNull(),
