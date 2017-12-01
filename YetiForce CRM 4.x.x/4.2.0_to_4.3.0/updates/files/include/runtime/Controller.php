@@ -89,7 +89,7 @@ abstract class Vtiger_Controller
 		if (!empty($name) && $this->isMethodExposed($name)) {
 			return call_user_func_array([$this, $name], $parameters);
 		}
-		throw new \App\Exceptions\AppException('LBL_NOT_ACCESSIBLE');
+		throw new \App\Exceptions\AppException('ERR_NOT_ACCESSIBLE');
 	}
 
 	/**
@@ -227,7 +227,7 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 			$viewer->assign('MODULE_NAME', $request->getModule());
 			if ($request->isAjax()) {
 				$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
-				if (!$request->isEmpty('parent', true) && $request->getByType('parent', 1) === 'Settings') {
+				if (!$request->isEmpty('parent', true) && $request->getByType('parent', 2) === 'Settings') {
 					$viewer->assign('QUALIFIED_MODULE', $request->getModule(false));
 				}
 			}
@@ -292,11 +292,12 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 		$viewer->assign('LANGUAGE', \App\Language::getLanguage());
 		$viewer->assign('HTMLLANG', \App\Language::getShortLanguageName());
 		$viewer->assign('SHOW_BODY_HEADER', $this->showBodyHeader());
+		$viewer->assign('SHOW_BREAD_CRUMBS', $this->showBreadCrumbLine());
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
 		$viewer->assign('MODULE', $moduleName);
 		$viewer->assign('VIEW', $request->getByType('view', 1));
 		$viewer->assign('MODULE_NAME', $moduleName);
-		$viewer->assign('PARENT_MODULE', $request->getByType('parent', 1));
+		$viewer->assign('PARENT_MODULE', $request->getByType('parent', 2));
 		$companyDetails = App\Company::getInstanceById();
 		$viewer->assign('COMPANY_DETAILS', $companyDetails);
 		$viewer->assign('COMPANY_LOGO', $companyDetails->getLogo(false, false));
@@ -310,7 +311,29 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 		return 'Header.tpl';
 	}
 
+	/**
+	 * Show body header
+	 * @return boolean
+	 */
 	protected function showBodyHeader()
+	{
+		return true;
+	}
+
+	/**
+	 * Show footer
+	 * @return boolean
+	 */
+	protected function showFooter()
+	{
+		return true;
+	}
+
+	/**
+	 * Show bread crumbs
+	 * @return boolean
+	 */
+	protected function showBreadCrumbLine()
 	{
 		return true;
 	}
@@ -331,6 +354,7 @@ abstract class Vtiger_View_Controller extends Vtiger_Action_Controller
 		$currentUser = Users_Record_Model::getCurrentUserModel();
 		$viewer->assign('ACTIVITY_REMINDER', $currentUser->getCurrentUserActivityReminderInSeconds());
 		$viewer->assign('FOOTER_SCRIPTS', $this->getFooterScripts($request));
+		$viewer->assign('SHOW_FOOTER', $this->showFooter());
 		$viewer->view('Footer.tpl');
 	}
 

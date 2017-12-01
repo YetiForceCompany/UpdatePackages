@@ -18,7 +18,7 @@
 					</div>
 					{if isset($WIDGET['switchHeader'])}
 						<div class="col-xs-8 col-md-4 col-sm-3 paddingBottom10">
-							<input class="switchBtn switchBtnReload filterField" type="checkbox" checked="" data-size="small" data-label-width="5" data-on-text="{$WIDGET['switchHeaderLables']['on']}" data-off-text="{$WIDGET['switchHeaderLables']['off']}" data-urlparams="search_params" data-on-val='{$WIDGET['switchHeader']['on']}' data-off-val='{$WIDGET['switchHeader']['off']}'>
+							<input class="switchBtn switchBtnReload filterField" type="checkbox" checked="" data-size="small" data-label-width="5" data-on-text="{$WIDGET['switchHeaderLables']['on']}" data-off-text="{$WIDGET['switchHeaderLables']['off']}" data-urlparams="search_params" data-on-val='{\App\Purifier::encodeHtml($WIDGET['switchHeader']['on'])}' data-off-val='{\App\Purifier::encodeHtml($WIDGET['switchHeader']['off'])}'>
 						</div>
 					{/if}
 					<div class="col-md-3 col-sm-3 pull-right paddingBottom10">
@@ -60,7 +60,7 @@
 						</div>
 					</div>
 				</div>
-				<hr class="widgetHr"/>
+				<hr class="widgetHr" />
 				<div class="row">
 					{if (isset($WIDGET['data']['filter']) && $WIDGET['data']['filter'] neq '-') AND (isset($WIDGET['data']['checkbox']) && $WIDGET['data']['checkbox'] neq '-')}
 						{assign var=span value='col-xs-6'}

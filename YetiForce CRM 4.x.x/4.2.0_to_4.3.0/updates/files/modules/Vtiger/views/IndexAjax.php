@@ -14,7 +14,7 @@ class Vtiger_IndexAjax_View extends Vtiger_Index_View
 	public function __construct()
 	{
 		parent::__construct();
-		$this->exposeMethod('showActiveRecords');
+		//$this->exposeMethod('showActiveRecords');
 	}
 
 	public function preProcess(\App\Request $request, $display = true)
@@ -65,7 +65,7 @@ class Vtiger_IndexAjax_View extends Vtiger_Index_View
 			}
 		}
 		if (!empty($cvId) && $cvId == 'undefined') {
-			$sourceModule = $request->getByType('sourceModule', 1);
+			$sourceModule = $request->getByType('sourceModule', 2);
 			$cvId = CustomView_Record_Model::getAllFilterByModule($sourceModule)->getId();
 		}
 

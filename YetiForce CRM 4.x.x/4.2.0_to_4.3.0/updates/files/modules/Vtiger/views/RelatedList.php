@@ -26,7 +26,7 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 			throw new \App\Exceptions\NoPermittedToRecord('LBL_NO_PERMISSIONS_FOR_THE_RECORD', 406);
 		}
 		$currentUserPrivilegesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
-		if (!$currentUserPrivilegesModel->hasModulePermission($request->getByType('relatedModule', 1))) {
+		if (!$currentUserPrivilegesModel->hasModulePermission($request->getByType('relatedModule', 2))) {
 			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED', 406);
 		}
 	}
@@ -39,14 +39,17 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 	public function process(\App\Request $request)
 	{
 		$moduleName = $request->getModule();
-		$relatedModuleName = $request->getByType('relatedModule', 1);
+		$relatedModuleName = $request->getByType('relatedModule', 2);
 		$parentId = $request->getInteger('record');
 		$label = $request->get('tab_label');
-		$pageNumber = $request->getInteger('page');
-		$totalCount = $request->isEmpty('totalCount', true) ? false : $request->getInteger('totalCount');
-		if (empty($pageNumber)) {
-			$pageNumber = 1;
+		if ($request->isEmpty('relatedView', true)) {
+			$relatedView = empty($_SESSION['relatedView'][$moduleName][$relatedModuleName]) ? 'List' : $_SESSION['relatedView'][$moduleName][$relatedModuleName];
+		} else {
+			$relatedView = $request->getByType('relatedView');
+			$_SESSION['relatedView'][$moduleName][$relatedModuleName] = $relatedView;
 		}
+		$pageNumber = $request->isEmpty('page', true) ? 1 : $request->getInteger('page');
+		$totalCount = $request->isEmpty('totalCount', true) ? false : $request->getInteger('totalCount');
 		$pagingModel = new Vtiger_Paging_Model();
 		$pagingModel->set('page', $pageNumber);
 		if ($request->has('limit')) {
@@ -72,24 +75,25 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 			$relationListView->set('orderby', $orderBy);
 			$relationListView->set('sortorder', $sortOrder);
 		}
-		$searchKey = $request->getByType('search_key', 1);
-		$searchValue = $request->get('search_value');
-		$operator = $request->getByType('operator', 1);
-		if (!empty($operator)) {
-			$relationListView->set('operator', $operator);
+		if ($request->has('entityState')) {
+			$relationListView->set('entityState', $request->getByType('entityState'));
 		}
 		$viewer = $this->getViewer($request);
-		$viewer->assign('OPERATOR', $operator);
-		$viewer->assign('ALPHABET_VALUE', $searchValue);
-		if (!empty($searchKey) && !empty($searchValue)) {
-			$relationListView->set('search_key', $searchKey);
-			$relationListView->set('search_value', $searchValue);
+		if (!$request->isEmpty('operator', true)) {
+			$relationListView->set('operator', $request->getByType('operator'));
+			$viewer->assign('OPERATOR', $request->getByType('operator'));
+		}
+		if (!$request->isEmpty('search_key', true)) {
+			$relationListView->set('search_key', $request->getByType('search_key'));
+			$relationListView->set('search_value', $request->get('search_value'));
+			$viewer->assign('ALPHABET_VALUE', $request->get('search_value'));
 		}
 		$searchParmams = $request->get('search_params');
 		if (empty($searchParmams) || !is_array($searchParmams)) {
 			$searchParmams = [];
 		}
-		$transformedSearchParams = $relationListView->get('query_generator')->parseBaseSearchParamsToCondition($searchParmams);
+		$queryGenerator = $relationListView->getQueryGenerator();
+		$transformedSearchParams = $queryGenerator->parseBaseSearchParamsToCondition($searchParmams);
 		$relationListView->set('search_params', $transformedSearchParams);
 		//To make smarty to get the details easily accesible
 		foreach ($searchParmams as $fieldListGroup) {
@@ -100,22 +104,23 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 				$searchParmams[$fieldName] = $fieldSearchInfo;
 			}
 		}
+		if ($relatedView === 'ListPreview') {
+			$relationListView->setFields(array_merge(['id'], $relationListView->getRelatedModuleModel()->getNameFields()));
+		}
 		$models = $relationListView->getEntries($pagingModel);
 		$links = $relationListView->getLinks();
 		$header = $relationListView->getHeaders();
-		$noOfEntries = count($models);
-
 		$relationModel = $relationListView->getRelationModel();
-		$relatedModuleModel = $relationModel->getRelationModuleModel();
-		$relationField = $relationModel->getRelationField();
+
+		$viewer->assign('VIEW_MODEL', $relationListView);
 		$viewer->assign('RELATED_RECORDS', $models);
 		$viewer->assign('PARENT_RECORD', $parentRecordModel);
+		$viewer->assign('RELATED_VIEW', $relatedView);
 		$viewer->assign('RELATED_LIST_LINKS', $links);
 		$viewer->assign('RELATED_HEADERS', $header);
-		$viewer->assign('RELATED_MODULE', $relatedModuleModel);
-		$viewer->assign('RELATED_ENTIRES_COUNT', $noOfEntries);
-		$viewer->assign('RELATION_FIELD', $relationField);
-
+		$viewer->assign('RELATED_MODULE', $relationModel->getRelationModuleModel());
+		$viewer->assign('RELATED_ENTIRES_COUNT', count($models));
+		$viewer->assign('RELATION_FIELD', $relationModel->getRelationField());
 		if (AppConfig::performance('LISTVIEW_COMPUTE_PAGE_COUNT')) {
 			$totalCount = $relationListView->getRelatedEntriesCount();
 		}
@@ -124,12 +129,9 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 			$viewer->assign('LISTVIEW_COUNT', $totalCount);
 			$viewer->assign('TOTAL_ENTRIES', $totalCount);
 		}
-		$pageCount = $pagingModel->getPageCount();
-		$startPaginFrom = $pagingModel->getStartPagingFrom();
-
-		$viewer->assign('PAGE_COUNT', $pageCount);
+		$viewer->assign('PAGE_COUNT', $pagingModel->getPageCount());
 		$viewer->assign('PAGE_NUMBER', $pageNumber);
-		$viewer->assign('START_PAGIN_FROM', $startPaginFrom);
+		$viewer->assign('START_PAGIN_FROM', $pagingModel->getStartPagingFrom());
 		$viewer->assign('MODULE', $moduleName);
 		$viewer->assign('PAGING_MODEL', $pagingModel);
 		$viewer->assign('ORDER_BY', $orderBy);
@@ -151,7 +153,7 @@ class Vtiger_RelatedList_View extends Vtiger_Index_View
 		$viewer->assign('IS_DELETABLE', $relationModel->privilegeToDelete());
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
 		$viewer->assign('SEARCH_DETAILS', $searchParmams);
-		$viewer->assign('VIEW', $request->getByType('view', 1));
-		return $viewer->view('RelatedList.tpl', $moduleName, 'true');
+		$viewer->assign('VIEW', $request->getByType('view'));
+		return $viewer->view('RelatedList.tpl', $moduleName, true);
 	}
 }

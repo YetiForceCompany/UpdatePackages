@@ -136,9 +136,9 @@ class Vtiger_RelationListView_Model extends \App\Base
 
 	/**
 	 * Function to get Relation query
-	 * @return \App\Db\Query
+	 * @return \App\Db\Query|\App\QueryGenerator
 	 */
-	public function getRelationQuery()
+	public function getRelationQuery($returnQueryGenerator = false)
 	{
 		if ($this->has('Query')) {
 			return $this->get('Query');
@@ -154,6 +154,9 @@ class Vtiger_RelationListView_Model extends \App\Base
 					$queryGenerator->setCustomColumn($columnName);
 				}
 			}
+			if ($returnQueryGenerator) {
+				return $queryGenerator;
+			}
 			$query = $queryGenerator->createQuery();
 			$this->set('Query', $query);
 			return $query;
@@ -168,19 +171,17 @@ class Vtiger_RelationListView_Model extends \App\Base
 	{
 		$relatedModuleName = $this->getRelatedModuleModel()->getName();
 		$queryGenerator = $this->getRelationModel()->getQueryGenerator();
-		$srcRecord = $this->get('src_record');
-		if ($relatedModuleName === $this->get('src_module') && !empty($srcRecord)) {
-			$queryGenerator->addCondition('id', $srcRecord, 'n');
+		if ($entityState = $this->get('entityState')) {
+			$queryGenerator->setStateCondition($entityState);
 		}
-		$searchParams = $this->get('search_params');
-		if ($searchParams) {
+		if ($relatedModuleName === $this->get('src_module') && !$this->isEmpty('src_record')) {
+			$queryGenerator->addCondition('id', $this->get('src_record'), 'n');
+		}
+		if ($searchParams = $this->get('search_params')) {
 			$queryGenerator->parseAdvFilter($searchParams);
 		}
-		$searchKey = $this->get('search_key');
-		$searchValue = $this->get('search_value');
-		$operator = $this->get('operator');
-		if (!empty($searchKey)) {
-			$queryGenerator->addBaseSearchConditions($searchKey, $searchValue, $operator);
+		if (!$this->isEmpty('search_key')) {
+			$queryGenerator->addBaseSearchConditions($this->get('search_key'), $this->get('search_value'), $this->get('operator'));
 		}
 	}
 
@@ -420,6 +421,18 @@ class Vtiger_RelationListView_Model extends \App\Base
 			$selectLinkModel->set('_selectRelation', true)->set('_module', $relationModel->getRelationModuleModel());
 		}
 		$relatedLink = [];
+		$relatedLink['RELATEDLIST_VIEWS'][] = Vtiger_Link_Model::getInstanceFromValues([
+				'linktype' => 'RELATEDLIST_VIEWS',
+				'linklabel' => 'LBL_RECORDS_LIST',
+				'view' => 'List',
+				'linkicon' => 'glyphicon glyphicon-list-alt',
+		]);
+		$relatedLink['RELATEDLIST_VIEWS'][] = Vtiger_Link_Model::getInstanceFromValues([
+				'linktype' => 'RELATEDLIST_VIEWS',
+				'linklabel' => 'LBL_RECORDS_PREVIEW_LIST',
+				'view' => 'ListPreview',
+				'linkicon' => 'glyphicon glyphicon-blackboard',
+		]);
 		$relatedLink['LISTVIEWBASIC'] = array_merge($selectLinks, $this->getAddRelationLinks());
 		$relatedLink['RELATEDLIST_MASSACTIONS'][] = Vtiger_Link_Model::getInstanceFromValues([
 				'linktype' => 'RELATEDLIST_MASSACTIONS',

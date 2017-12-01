@@ -114,7 +114,7 @@ jQuery.Class("Vtiger_List_Js", {
 			};
 			AppConnector.request(actionParams).then(
 					function (data) {
-						progressIndicatorElement.progressIndicator({'mode': 'hide'});
+						progressIndicatorElement.progressIndicator({mode: 'hide'});
 						if (data) {
 							var callback = function (data) {
 								var params = app.validationEngineOptions;
@@ -184,7 +184,7 @@ jQuery.Class("Vtiger_List_Js", {
 			form.submit();
 			Vtiger_Helper_Js.showMessage({text: app.vtranslate('JS_STARTED_GENERATING_FILE'), type: 'info'})
 
-			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			progressIndicatorElement.progressIndicator({mode: 'hide'});
 		} else {
 			listInstance.noRecordSelectedAlert();
 		}
@@ -278,7 +278,7 @@ jQuery.Class("Vtiger_List_Js", {
 			}
 			var css = jQuery.extend({'text-align': 'left'}, css);
 			AppConnector.request(actionParams).then(function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				progressIndicatorElement.progressIndicator({mode: 'hide'});
 				if (data) {
 					var result = beforeShowCb(data);
 					if (!result) {
@@ -292,7 +292,7 @@ jQuery.Class("Vtiger_List_Js", {
 					}, css)
 				}
 			}, function (error, err) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				progressIndicatorElement.progressIndicator({mode: 'hide'});
 				Vtiger_Helper_Js.showPnotify({
 					title: app.vtranslate('JS_MESSAGE'),
 					text: err,
@@ -381,7 +381,7 @@ jQuery.Class("Vtiger_List_Js", {
 	showDuplicateSearchForm: function (url) {
 		var progressIndicatorElement = jQuery.progressIndicator();
 		app.showModalWindow("", url, function () {
-			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			progressIndicatorElement.progressIndicator({mode: 'hide'});
 			Vtiger_List_Js.registerDuplicateSearchButtonEvent();
 		});
 	},
@@ -445,7 +445,7 @@ jQuery.Class("Vtiger_List_Js", {
 			}
 		});
 		app.showModalWindow(null, url, function () {
-			progressIndicatorElement.progressIndicator({'mode': 'hide'})
+			progressIndicatorElement.progressIndicator({mode: 'hide'})
 		});
 	},
 	showMap: function () {
@@ -575,7 +575,7 @@ jQuery.Class("Vtiger_List_Js", {
 		var params = {
 			module: app.getModuleName(),
 			page: jQuery('#pageNumber').val(),
-			view: "List",
+			view: app.getViewName(),
 			viewname: this.getCurrentCvId(),
 			orderby: jQuery('#orderBy').val(),
 			sortorder: jQuery("#sortOrder").val(),
@@ -600,13 +600,14 @@ jQuery.Class("Vtiger_List_Js", {
 	 * Function which will give you all the list view params
 	 */
 	getListViewRecords: function (urlParams) {
-		var aDeferred = jQuery.Deferred();
+		var aDeferred = $.Deferred();
 		if (typeof urlParams == 'undefined') {
 			urlParams = {};
 		}
 		var thisInstance = this;
+		var listViewContentsContainer = $('#listViewContents');
 		var loadingMessage = jQuery('.listViewLoadingMsg').text();
-		var progressIndicatorElement = jQuery.progressIndicator({
+		var progressIndicatorElement = $.progressIndicator({
 			'message': loadingMessage,
 			'position': 'html',
 			'blockInfo': {
@@ -614,65 +615,62 @@ jQuery.Class("Vtiger_List_Js", {
 			}
 		});
 		var defaultParams = this.getDefaultParams();
-		var urlParams = jQuery.extend(defaultParams, urlParams);
-		AppConnector.requestPjax(urlParams).then(
-				function (data) {
-					progressIndicatorElement.progressIndicator({
-						'mode': 'hide'
-					})
-					var listViewContentsContainer = jQuery('#listViewContents')
-					var searchInstance = thisInstance.getListSearchInstance();
-					listViewContentsContainer.html(data);
-					app.showSelect2ElementView(listViewContentsContainer.find('select.select2'));
-					thisInstance.registerListViewSpecialOptiopn();
-					app.changeSelectElementView(listViewContentsContainer);
-					app.showPopoverElementView(listViewContentsContainer.find('.popoverTooltip'));
-					jQuery('body').trigger(jQuery.Event('LoadRecordList.PostLoad'), data);
-					if (searchInstance !== false) {
-						searchInstance.registerBasicEvents();
-					}
-					Vtiger_Index_Js.registerMailButtons(listViewContentsContainer);
-					//thisInstance.triggerDisplayTypeEvent();
-					Vtiger_Helper_Js.showHorizontalTopScrollBar();
-
-					var selectedIds = thisInstance.readSelectedIds();
-					if (selectedIds != '') {
-						if (selectedIds == 'all') {
-							jQuery('.listViewEntriesCheckBox').each(function (index, element) {
-								jQuery(this).prop('checked', true).closest('tr').addClass('highlightBackgroundColor');
-							});
-							jQuery('#deSelectAllMsgDiv').show();
-							var excludedIds = thisInstance.readExcludedIds();
-							if (excludedIds != '') {
-								jQuery('#listViewEntriesMainCheckBox').prop('checked', false);
-								jQuery('.listViewEntriesCheckBox').each(function (index, element) {
-									if (jQuery.inArray(jQuery(element).val(), excludedIds) != -1) {
-										jQuery(element).prop('checked', false).closest('tr').removeClass('highlightBackgroundColor');
-									}
-								});
-							}
-						} else {
-							jQuery('.listViewEntriesCheckBox').each(function (index, element) {
-								if (jQuery.inArray(jQuery(element).val(), selectedIds) != -1) {
-									jQuery(this).prop('checked', true).closest('tr').addClass('highlightBackgroundColor');
-								}
-							});
-						}
-						thisInstance.checkSelectAll();
-					}
-					thisInstance.calculatePages().then(function (data) {
-						aDeferred.resolve(data);
-						// Let listeners know about page state change.
-						app.notifyPostAjaxReady();
-					});
-					thisInstance.registerUnreviewedCountEvent();
-					thisInstance.registerLastRelationsEvent();
-				},
-				function (textStatus, errorThrown) {
-					aDeferred.reject(textStatus, errorThrown);
-				}
-		);
+		var urlParams = $.extend(defaultParams, urlParams);
+		AppConnector.requestPjax(urlParams).then(function (data) {
+			progressIndicatorElement.progressIndicator({mode: 'hide'});
+			listViewContentsContainer.html(data);
+			$('body').trigger($.Event('LoadRecordList.PostLoad'), data);
+			thisInstance.calculatePages().then(function (data) {
+				aDeferred.resolve(data);
+				// Let listeners know about page state change.
+				app.notifyPostAjaxReady();
+			});
+			thisInstance.postLoadListViewRecordsEvents(listViewContentsContainer);
+		}, function (textStatus, errorThrown) {
+			aDeferred.reject(textStatus, errorThrown);
+		});
 		return aDeferred.promise();
+	},
+	postLoadListViewRecordsEvents: function (container) {
+		var thisInstance = this;
+		app.showSelect2ElementView(container.find('select.select2'));
+		app.changeSelectElementView(container);
+		app.showPopoverElementView(container.find('.popoverTooltip'));
+		thisInstance.registerListViewSpecialOptiopn();
+		var searchInstance = thisInstance.getListSearchInstance();
+		if (searchInstance !== false) {
+			searchInstance.registerBasicEvents();
+		}
+		Vtiger_Index_Js.registerMailButtons(container);
+		//thisInstance.triggerDisplayTypeEvent();
+		Vtiger_Helper_Js.showHorizontalTopScrollBar();
+		var selectedIds = thisInstance.readSelectedIds();
+		if (selectedIds != '') {
+			if (selectedIds == 'all') {
+				$('.listViewEntriesCheckBox').each(function (index, element) {
+					$(this).prop('checked', true).closest('tr').addClass('highlightBackgroundColor');
+				});
+				$('#deSelectAllMsgDiv').show();
+				var excludedIds = thisInstance.readExcludedIds();
+				if (excludedIds != '') {
+					$('#listViewEntriesMainCheckBox').prop('checked', false);
+					$('.listViewEntriesCheckBox').each(function (index, element) {
+						if ($.inArray($(element).val(), excludedIds) != -1) {
+							$(element).prop('checked', false).closest('tr').removeClass('highlightBackgroundColor');
+						}
+					});
+				}
+			} else {
+				$('.listViewEntriesCheckBox').each(function (index, element) {
+					if ($.inArray($(element).val(), selectedIds) != -1) {
+						$(this).prop('checked', true).closest('tr').addClass('highlightBackgroundColor');
+					}
+				});
+			}
+			thisInstance.checkSelectAll();
+		}
+		thisInstance.registerUnreviewedCountEvent();
+		thisInstance.registerLastRelationsEvent();
 	},
 	/**
 	 * Function to calculate number of pages
@@ -1114,7 +1112,7 @@ jQuery.Class("Vtiger_List_Js", {
 						pageCount = 1;
 					}
 					element.text(pageCount);
-					element.progressIndicator({'mode': 'hide'});
+					element.progressIndicator({mode: 'hide'});
 				});
 			}
 		})
@@ -1715,13 +1713,13 @@ jQuery.Class("Vtiger_List_Js", {
 						url: target.data('url'),
 						data: postData
 					}).then(function (data) {
-						progressIndicatorElement.progressIndicator({'mode': 'hide'});
+						progressIndicatorElement.progressIndicator({mode: 'hide'});
 						if (data && data.result && data.result.notify) {
 							Vtiger_Helper_Js.showMessage(data.result.notify);
 						}
 						thisInstance.getListViewRecords();
 					}, function (error, err) {
-						progressIndicatorElement.progressIndicator({'mode': 'hide'});
+						progressIndicatorElement.progressIndicator({mode: 'hide'});
 					});
 				});
 			} else {
@@ -1884,7 +1882,7 @@ jQuery.Class("Vtiger_List_Js", {
 			} else {
 				thisInstance.showPagingInfo();
 			}
-			element.parent().progressIndicator({'mode': 'hide'});
+			element.parent().progressIndicator({mode: 'hide'});
 		})
 	},
 	showPagingInfo: function () {
@@ -1988,6 +1986,39 @@ jQuery.Class("Vtiger_List_Js", {
 			});
 		});
 	},
+	registerSummationEvent: function () {
+		var thisInstance = this;
+		this.getListViewContentContainer().on('click', '.listViewSummation button', function () {
+			var button = $(this);
+			var calculateValue = button.closest('td').find('.calculateValue');
+			var params = thisInstance.getDefaultParams();
+			var progress = $.progressIndicator({
+				message: app.vtranslate('JS_CALCULATING_IN_PROGRESS'),
+				position: 'html',
+				blockInfo: {
+					enabled: true
+				}
+			});
+			params['action'] = 'List';
+			params['mode'] = 'calculate';
+			params['fieldName'] = button.data('field');
+			params['calculateType'] = button.data('operator');
+			if (thisInstance.checkListRecordSelected() != true) {
+				params['selected_ids'] = thisInstance.readSelectedIds(true);
+				params['excluded_ids'] = thisInstance.readExcludedIds(true);
+			}
+			delete params['view'];
+			app.hidePopover(button);
+			AppConnector.request(params).then(function (response) {
+				if (response.success) {
+					calculateValue.html(response.result);
+				} else {
+					calculateValue.html('');
+				}
+				progress.progressIndicator({mode: 'hide'});
+			});
+		});
+	},
 	registerEvents: function () {
 		this.breadCrumbsFilter();
 		this.registerRowClickEvent();
@@ -2015,7 +2046,7 @@ jQuery.Class("Vtiger_List_Js", {
 		Vtiger_Helper_Js.showHorizontalTopScrollBar();
 		this.registerUrlFieldClickEvent();
 		this.registerEventForTotalRecordsCount();
-
+		this.registerSummationEvent();
 		//Just reset all the checkboxes on page load: added for chrome issue.
 		var listViewContainer = this.getListViewContentContainer();
 		listViewContainer.find('#listViewEntriesMainCheckBox,.listViewEntriesCheckBox').prop('checked', false);

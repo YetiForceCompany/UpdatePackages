@@ -330,10 +330,7 @@ var Settings_Index_Js = {
 	AddTranslationMondal: function (e) {
 		var currentTarget = $(e.currentTarget);
 		var container = currentTarget.closest('.modalContainer');
-		var SaveEvent = Settings_Index_Js.registerSaveEvent('addTranslation', {
-			'mod': $(".LangManagement #mods_list").val(),
-			'form_data': container.find(".AddTranslationForm").serializeFormData()
-		});
+		var SaveEvent = Settings_Index_Js.registerSaveEvent('addTranslation',$.extend({mod: $(".LangManagement #mods_list").val()}, container.find(".AddTranslationForm").serializeFormData()));
 		if (SaveEvent.resp) {
 			container.find('.AddNewTranslationMondal').modal('hide');
 		}
@@ -363,11 +360,11 @@ var Settings_Index_Js = {
 			parent: app.getParentModuleName(),
 			action: 'SaveAjax',
 			mode: mode,
-			params: data
 		}
+		params.data = $.extend(params.data, data);
 		params.async = false;
 		params.dataType = 'json';
-		AppConnector.request(params).done(
+		AppConnector.request(params).then(
 				function (data) {
 					response = data['result'];
 					var params = {

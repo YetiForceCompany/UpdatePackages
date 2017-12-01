@@ -104,6 +104,7 @@ class Colors
 								$css .= '.picklistCBr_' . $module['tabname'] . '_' . self::sanitizeValue($field->getName()) . '_' . self::sanitizeValue($item['picklistValue']) . ' { border-color: ' . $item['color'] . ' !important; }' . PHP_EOL;
 								$css .= '.picklistCBg_' . $module['tabname'] . '_' . self::sanitizeValue($field->getName()) . '_' . self::sanitizeValue($item['picklistValue']) . ' { background: ' . $item['color'] . ' !important; }' . PHP_EOL;
 								$css .= '.picklistCT_' . $module['tabname'] . '_' . self::sanitizeValue($field->getName()) . '_' . self::sanitizeValue($item['picklistValue']) . ' { color: ' . $item['color'] . ' !important; }' . PHP_EOL;
+								$css .= '.picklistLb_' . $module['tabname'] . '_' . self::sanitizeValue($field->getName()) . '_' . self::sanitizeValue($item['picklistValue']) . ' { background: ' . $item['color'] . '; padding: 2px 7px 3px 7px;}' . PHP_EOL;
 							}
 						}
 					}
@@ -127,7 +128,7 @@ class Colors
 	 * Sanitize value for use in css class name
 	 * @param string $value
 	 */
-	private static function sanitizeValue($value)
+	public static function sanitizeValue($value)
 	{
 		return str_replace([' ', '-', '=', '+', '@', '*', '!', '#', '$', '%', '^', '&', '(', ')', '[', ']', '{', '}', ';', ':', "\'", '"', ',', '<', '.', '>', '/', '?', '\\', '|'], '_', $value);
 	}

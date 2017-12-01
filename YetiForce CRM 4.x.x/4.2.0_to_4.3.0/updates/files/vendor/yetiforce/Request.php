@@ -150,7 +150,7 @@ class Request
 		if (is_bool($value)) {
 			return $value;
 		}
-		return strcasecmp('true', (string) $value) === 0;
+		return strcasecmp('true', (string) $value) === 0 || (string) $value === '1';
 	}
 
 	/**
@@ -208,9 +208,10 @@ class Request
 	 * Function to get the exploded values for a given key
 	 * @param string $key
 	 * @param string $delimiter
+	 * @param bool|string $type
 	 * @return array
 	 */
-	public function getExploded($key, $delimiter = ',')
+	public function getExploded($key, $delimiter = ', ', $type = false)
 	{
 		if (isset($this->purifiedValuesByExploded[$key])) {
 			return $this->purifiedValuesByExploded[$key];
@@ -221,7 +222,7 @@ class Request
 			}
 			$value = explode($delimiter, $this->rawValues[$key]);
 			if ($value) {
-				$value = Purifier::purify($value);
+				$value = $type ? Purifier::purifyByType($value, $type) : Purifier::purify($value);
 			}
 			return $this->purifiedValuesByExploded[$key] = $value;
 		}
@@ -242,7 +243,7 @@ class Request
 			if (!isset($this->rawValues[$key]) || $this->rawValues[$key] === '') {
 				return [];
 			}
-			$value = Purifier::purify(explode(',', $this->rawValues[$key]));
+			$value = Purifier::purify(explode(', ', $this->rawValues[$key]));
 			return $this->purifiedValuesByDateRange[$key] = ['start' => $value[0], 'end' => $value[1]];
 		}
 		return $value;
@@ -388,7 +389,7 @@ class Request
 	 */
 	public function getModule($raw = true)
 	{
-		$moduleName = $this->getByType('module', 1);
+		$moduleName = $this->getByType('module', 2);
 		if (!$raw) {
 			if (!$this->isEmpty('parent', true) && ($parentModule = $this->getByType('parent', 2)) === 'Settings') {
 				$moduleName = "$parentModule:$moduleName";

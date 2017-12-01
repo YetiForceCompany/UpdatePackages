@@ -27,18 +27,16 @@
 					{assign var=CHILD_COMMENTS_MODEL value=$COMMENT->getChildComments()}
 					<div class="col-xs-8 pull-left commentorInfo">
 						{assign var=COMMENTOR value=$COMMENT->getCommentedByModel()}
-						<span class="commentorName pull-left"><strong>{$COMMENTOR->getName()}</strong></span><br /> 
-								{if $HIERARCHY}
-									{assign var=RELATED_TO value=$COMMENT->get('related_to')}
+						<span class="commentorName pull-left">
+							<strong>{$COMMENTOR->getName()}</strong>
+						</span><br />
+						{if $HIERARCHY}
+							{assign var=RELATED_TO value=$COMMENT->get('related_to')}
 							<input hidden="" class="related_to" name="related_to" value="{$RELATED_TO}"  />
 							{assign var=RELATED_MODULE value=\App\Record::getType($RELATED_TO)}
 							<a href="index.php?module={$RELATED_MODULE}&view=Detail&record={$RELATED_TO}">
-								<strong>
-									{\App\Language::translate($RELATED_MODULE,$RELATED_MODULE)}: 
-								</strong>
-								<strong class="commentRelatedTitle">
-									{$COMMENT->getDisplayValue('related_to')}
-								</strong>
+								<strong>{\App\Language::translate($RELATED_MODULE,$RELATED_MODULE)}:&nbsp;&nbsp;</strong>
+								<strong class="commentRelatedTitle">{$COMMENT->getDisplayValue('related_to')}</strong>
 							</a>
 						{/if}
 						<div class="commentInfoContent ">
@@ -86,10 +84,11 @@
 								<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>&nbsp;{\App\Language::translate('LBL_EDIT',$MODULE_NAME)}
 							</button>
 						{/if}
-						{if $COMMENTS_MODULE_MODEL->isPermitted('Delete')}
-							<button type="button" class="btn btn-xs btn-danger deleteComment marginLeft5">
-								<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;{\App\Language::translate('LBL_DELETE',$MODULE_NAME)}
-							</button>
+						{assign var=LINKS value=$COMMENT->getCommentLinks()}
+						{if count($LINKS) > 0}
+							{foreach from=$LINKS item=LINK}
+								{include file=\App\Layout::getTemplatePath('ButtonLink.tpl', $MODULE) BUTTON_VIEW='comment'}
+							{/foreach}
 						{/if}
 						{assign var=CHILD_COMMENTS_COUNT value=$COMMENT->getChildCommentsCount()}
 						{if $CHILD_COMMENTS_MODEL neq null and ($CHILDS_ROOT_PARENT_ID neq $PARENT_COMMENT_ID)}

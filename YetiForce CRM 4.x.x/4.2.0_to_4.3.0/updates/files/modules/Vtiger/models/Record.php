@@ -757,7 +757,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function privilegeToMoveToTrash()
 	{
 		if (!isset($this->privileges['MoveToTrash'])) {
-			$this->privileges['MoveToTrash'] = \App\Record::getState($this->getId()) !== 'Trash' && \App\Privilege::isPermitted($this->getModuleName(), 'MoveToTrash', $this->getId()) && $this->checkLockFields();
+			$this->privileges['MoveToTrash'] = \App\Record::getState($this->getId()) !== 'Trash' && \App\Privilege::isPermitted($this->getModuleName(), 'MoveToTrash', $this->getId()) && $this->checkLockFields() && $this->isEditable();
 		}
 		return $this->privileges['MoveToTrash'];
 	}
@@ -769,7 +769,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function privilegeToArchive()
 	{
 		if (!isset($this->privileges['Archive'])) {
-			$this->privileges['Archive'] = \App\Record::getState($this->getId()) !== 'Archived' && \App\Privilege::isPermitted($this->getModuleName(), 'ArchiveRecord', $this->getId());
+			$this->privileges['Archive'] = \App\Record::getState($this->getId()) !== 'Archived' && \App\Privilege::isPermitted($this->getModuleName(), 'ArchiveRecord', $this->getId()) && $this->checkLockFields() && $this->isEditable();
 		}
 		return $this->privileges['Archive'];
 	}
@@ -781,7 +781,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function privilegeToActivate()
 	{
 		if (!isset($this->privileges['Activate'])) {
-			$this->privileges['Activate'] = \App\Record::getState($this->getId()) !== 'Active' && \App\Privilege::isPermitted($this->getModuleName(), 'ActiveRecord', $this->getId());
+			$this->privileges['Activate'] = \App\Record::getState($this->getId()) !== 'Active' && \App\Privilege::isPermitted($this->getModuleName(), 'ActiveRecord', $this->getId()) && $this->isEditable();
 		}
 		return $this->privileges['Activate'];
 	}
@@ -1264,7 +1264,8 @@ class Vtiger_Record_Model extends \App\Base
 				'linklabel' => 'LBL_SHOW_COMPLETE_DETAILS',
 				'linkurl' => $this->getFullDetailViewUrl(),
 				'linkicon' => 'glyphicon glyphicon-th-list',
-				'linkclass' => 'btn-sm btn-default'
+				'linkclass' => 'btn-sm btn-default',
+				'linkhref' => true
 			];
 		}
 		if ($this->isEditable()) {
@@ -1273,7 +1274,8 @@ class Vtiger_Record_Model extends \App\Base
 				'linklabel' => 'LBL_EDIT',
 				'linkurl' => $this->getEditViewUrl(),
 				'linkicon' => 'glyphicon glyphicon-pencil',
-				'linkclass' => 'btn-sm btn-default'
+				'linkclass' => 'btn-sm btn-default',
+				'linkhref' => true
 			];
 		}
 		if ($this->isViewable() && $this->getModule()->isPermitted('WatchingRecords')) {
@@ -1284,7 +1286,7 @@ class Vtiger_Record_Model extends \App\Base
 				'linkurl' => 'javascript:Vtiger_Index_Js.changeWatching(this)',
 				'linkicon' => 'glyphicon ' . ($watching ? 'glyphicon-eye-close' : 'glyphicon-eye-open'),
 				'linkclass' => 'btn-sm ' . ($watching ? 'btn-info' : 'btn-default'),
-				'linkdata' => ['module' => $this->getModuleName(), 'record' => $this->getId(), 'value' => !$watching, 'on' => 'btn-info', 'off' => 'btn-default', 'icon-on' => 'glyphicon-eye-open', 'icon-off' => 'glyphicon-eye-close'],
+				'linkdata' => ['module' => $this->getModuleName(), 'record' => $this->getId(), 'value' => (int) !$watching, 'on' => 'btn-info', 'off' => 'btn-default', 'icon-on' => 'glyphicon-eye-open', 'icon-off' => 'glyphicon-eye-close'],
 			];
 		}
 		$stateColors = AppConfig::search('LIST_ENTITY_STATE_COLOR');
@@ -1333,6 +1335,64 @@ class Vtiger_Record_Model extends \App\Base
 		}
 		foreach ($recordLinks as $recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
+		}
+		return $links;
+	}
+
+	/**
+	 * Get the related list view actions for the record
+	 * @return Vtiger_Link_Model[] - Associate array of Vtiger_Link_Model instances
+	 */
+	public function getRecordRelatedListViewLinksLeftSide(Vtiger_RelationListView_Model $viewModel)
+	{
+		$stateColors = AppConfig::search('LIST_ENTITY_STATE_COLOR');
+		$links = [];
+		if ($this->isViewable()) {
+			if ($this->getModule()->isSummaryViewSupported()) {
+				$links['LBL_SHOW_QUICK_DETAILS'] = Vtiger_Link_Model::getInstanceFromValues([
+						'linklabel' => 'LBL_SHOW_QUICK_DETAILS',
+						'linkhref' => true,
+						'linkurl' => 'index.php?module=' . $this->getModuleName() . '&view=QuickDetailModal&record=' . $this->getId(),
+						'linkicon' => 'glyphicon glyphicon-expand',
+						'linkclass' => 'btn-xs btn-default',
+						'modalView' => true
+				]);
+			}
+			$links['LBL_SHOW_COMPLETE_DETAILS'] = Vtiger_Link_Model::getInstanceFromValues([
+					'linklabel' => 'LBL_SHOW_COMPLETE_DETAILS',
+					'linkurl' => $this->getFullDetailViewUrl(),
+					'linkhref' => true,
+					'linkicon' => 'glyphicon glyphicon-th-list',
+					'linkclass' => 'btn-xs btn-default',
+			]);
+		}
+		$relationModel = $viewModel->getRelationModel();
+		if ($relationModel->isEditable() && $this->isEditable()) {
+			$links['LBL_EDIT'] = Vtiger_Link_Model::getInstanceFromValues([
+					'linklabel' => 'LBL_EDIT',
+					'linkhref' => true,
+					'linkurl' => $this->getEditViewUrl(),
+					'linkicon' => 'glyphicon glyphicon-pencil',
+					'linkclass' => 'btn-xs btn-default',
+			]);
+		}
+		if ($this->isViewable() && $this->getModule()->isPermitted('WatchingRecords')) {
+			$watching = intval($this->isWatchingRecord());
+			$links['BTN_WATCHING_RECORD'] = Vtiger_Link_Model::getInstanceFromValues([
+					'linklabel' => 'BTN_WATCHING_RECORD',
+					'linkurl' => 'javascript:Vtiger_Index_Js.changeWatching(this)',
+					'linkicon' => 'glyphicon ' . ($watching ? 'glyphicon-eye-close' : 'glyphicon-eye-open'),
+					'linkclass' => 'btn-xs ' . ($watching ? 'btn-info' : 'btn-default'),
+					'linkdata' => ['module' => $this->getModuleName(), 'record' => $this->getId(), 'value' => (int) !$watching, 'on' => 'btn-info', 'off' => 'btn-default', 'icon-on' => 'glyphicon-eye-open', 'icon-off' => 'glyphicon-eye-close'],
+			]);
+		}
+		if ($relationModel->privilegeToDelete() && $this->privilegeToMoveToTrash()) {
+			$links['LBL_DELETE'] = Vtiger_Link_Model::getInstanceFromValues([
+					'linklabel' => 'LBL_DELETE',
+					'linkicon' => 'glyphicon glyphicon-trash',
+					'linkclass' => 'btn-xs btn-default relationDelete entityStateBtn',
+					'style' => empty($stateColors['Trash']) ? '' : "background: {$stateColors['Trash']};"
+			]);
 		}
 		return $links;
 	}

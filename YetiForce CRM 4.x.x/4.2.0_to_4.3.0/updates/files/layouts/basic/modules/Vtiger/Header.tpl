@@ -55,11 +55,11 @@
 				<input type="hidden" id="gsAutocomplete" value="{AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE')}" />
 				<input type="hidden" id="gsMinLength" value="{AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE_MIN_LENGTH')}" />
 				<input type="hidden" id="gsAmountResponse" value="{AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE_LIMIT')}" />
-				<input type="hidden" id="module" value="{$MODULE}"/>
-				<input type="hidden" id="parent" value="{$PARENT_MODULE}"/>
-				<input type="hidden" id="view" value="{$VIEW}"/>
-				<input type="hidden" id="sounds" value="{\App\Purifier::encodeHtml(\App\Json::encode(AppConfig::sounds()))}"/>
-				<input type="hidden" id="intervalForNotificationNumberCheck" value="{AppConfig::performance('INTERVAL_FOR_NOTIFICATION_NUMBER_CHECK')}"/>
+				<input type="hidden" id="module" value="{$MODULE}" />
+				<input type="hidden" id="parent" value="{$PARENT_MODULE}" />
+				<input type="hidden" id="view" value="{$VIEW}" />
+				<input type="hidden" id="sounds" value="{\App\Purifier::encodeHtml(\App\Json::encode(AppConfig::sounds()))}" />
+				<input type="hidden" id="intervalForNotificationNumberCheck" value="{AppConfig::performance('INTERVAL_FOR_NOTIFICATION_NUMBER_CHECK')}" />
 				<input type="hidden" id="fieldsReferencesDependent" value="{AppConfig::security('FIELDS_REFERENCES_DEPENDENT')}" />
 				{if \App\Session::has('ShowUserPasswordChange')}
 					<input type="hidden" id="showUserPasswordChange" value="{\App\Session::get('ShowUserPasswordChange')}" />
@@ -69,10 +69,6 @@
 				{/if}
 			</div>
 			<div id="page">
-				{assign var="ANNOUNCEMENTS" value=Vtiger_Module_Model::getInstance('Announcements')}
-				{if $ANNOUNCEMENTS->checkActive()}
-					{include file=\App\Layout::getTemplatePath('Announcement.tpl', $MODULE)}
-				{/if}
 				{if $SHOW_BODY_HEADER}
 					{include file=\App\Layout::getTemplatePath('Body.tpl', $MODULE)}
 				{/if}
