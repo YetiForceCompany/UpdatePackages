@@ -65,7 +65,6 @@ class YetiForceUpdate
 	public function update()
 	{
 		$db = App\Db::getInstance();
-		$db->createCommand()->checkIntegrity(false)->execute();
 		$this->importer = new \App\Db\Importer();
 		$this->updateDbSchema();
 		$this->importer->loadFiles(__DIR__ . '/dbscheme');
@@ -74,7 +73,6 @@ class YetiForceUpdate
 		$this->importer->postUpdate();
 		$this->importer->logs(false);
 		$this->importer->refreshSchema();
-		$db->createCommand()->checkIntegrity(true)->execute();
 
 		$moduleBaseInstance = vtlib\Module::getInstance('RecycleBin');
 		if ($moduleBaseInstance) {
