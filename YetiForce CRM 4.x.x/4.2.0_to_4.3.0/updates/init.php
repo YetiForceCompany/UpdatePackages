@@ -398,12 +398,13 @@ $phoneFieldAdvancedVerification = true;'],
 			['name' => 'config/debug.php', 'conditions' => [
 					['type' => 'remove', 'search' => 'isplays information about the tracking code when an error occurs'],
 					['type' => 'remove', 'search' => 'DISPLAY_DEBUG_BACKTRACE'],
+					['type' => 'remove', 'search' => 'EXCEPTION_ERROR_HANDLER'],
+					['type' => 'remove', 'search' => 'Save logs to file'],
 					['type' => 'add', 'search' => 'EXCEPTION_ERROR_TO_SHOW', 'checkInContents' => 'DISPLAY_EXCEPTION_BACKTRACE', 'addingType' => 'after', 'value' => "	// Displays information about the tracking code when an error occurs. Available only with the active SQL_DIE_ON_ERROR = true
 	'DISPLAY_EXCEPTION_BACKTRACE' => false,
 	// Display logs when error exception occurs
 	'DISPLAY_EXCEPTION_LOGS' => false,
-"],
-					['type' => 'add', 'search' => 'DISPLAY_EXCEPTION_LOGS', 'checkInContents' => 'EXCEPTION_ERROR_HANDLER', 'addingType' => 'after', 'value' => "	// Turn on the error handler
+	// Turn on the error handler
 	'EXCEPTION_ERROR_HANDLER' => false,
 "],
 				]
