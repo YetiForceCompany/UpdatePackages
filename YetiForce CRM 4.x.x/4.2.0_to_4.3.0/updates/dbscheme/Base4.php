@@ -138,6 +138,17 @@ class Base4 extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'vtiger_reservations' => [
+				'index' => [
+					['process', 'process'],
+					['link', 'link'],
+					['subprocess', 'subprocess'],
+					['linkextend', 'linkextend'],
+					['deleted', 'deleted'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 	}
 }

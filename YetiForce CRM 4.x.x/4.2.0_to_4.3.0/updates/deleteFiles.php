@@ -176,4 +176,6 @@ return [
 	'public_html/layouts/basic/modules/RecycleBin',
 	'public_html/modules/Users',
 	'layouts/basic/modules/RecycleBin',
+	'vendor/yetiforce/Currency.php',
+	'modules/RecycleBin/',
 ];

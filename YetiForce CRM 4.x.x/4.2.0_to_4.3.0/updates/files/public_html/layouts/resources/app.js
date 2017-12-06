@@ -405,16 +405,24 @@ var app = {
 	},
 	showPopoverElementView: function (selectElement, params) {
 		if (typeof params == 'undefined') {
-			params = {trigger: 'manual', placement: 'bottom', html: true};
+			params = {
+				trigger: 'manual',
+				placement: 'bottom',
+				html: true,
+				template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+			};
 		}
 		params.container = 'body';
 		params.delay = 800;
 		var sparams;
 		selectElement.each(function (index, domElement) {
 			sparams = params;
-			var element = jQuery(domElement);
+			var element = $(domElement);
 			if (element.data('placement')) {
 				sparams.placement = element.data('placement');
+			}
+			if (element.data('class')) {
+				sparams.template = '<div class="popover ' + element.data('class') + '" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
 			}
 			if (element.hasClass('delay0')) {
 				sparams.delay = {show: 0, hide: 0}
@@ -577,19 +585,6 @@ var app = {
 					jQuery('.modal-backdrop:not(:first)').remove();
 				}
 				cb(modalContainer);
-
-				var modalBody = modalContainer.find('.modal-body');
-				var modalDialog = modalContainer.find('.modal-dialog');
-				$(window).resize(function () {
-					var height = app.getScreenHeight() - modalDialog.outerHeight(true);
-					modalBody.css('max-height', (modalBody.outerHeight() + height) + 'px');
-					modalBody.css('overflow', 'auto');
-					modalBody.perfectScrollbar('update');
-				});
-				var height = app.getScreenHeight() - modalDialog.outerHeight(true);
-				modalBody.css('max-height', (modalBody.outerHeight() + height) + 'px');
-				modalBody.css('overflow', 'auto');
-				modalBody.perfectScrollbar();
 			})
 		}
 		if (data) {
@@ -884,6 +879,7 @@ var app = {
 			clearBtn: true,
 			language: language,
 			starts: convertedFirstDay,
+			autoclose: true,
 			todayHighlight: true
 		}
 		if (typeof customParams != 'undefined') {
@@ -1330,7 +1326,12 @@ var app = {
 			moduleClassName = "Vtiger_" + view + "_Js";
 		}
 		if (typeof window[moduleClassName] != 'undefined') {
-			return new window[moduleClassName]();
+			if(typeof window[moduleClassName] == 'function'){
+				return new window[moduleClassName]();
+			}
+			if(typeof window[moduleClassName] == 'object'){
+				return window[moduleClassName];
+			}
 		}
 	},
 	/**
@@ -1592,13 +1593,17 @@ var app = {
 						currentElement.removeAttr("disabled");
 					}
 				}
-				var id = 'globalmodal';
-				if ($('#' + id).length) {
-					var numberGlobalModal = 1;
-					while ($('#' + id).length) {
-						id = 'globalmodal' + numberGlobalModal++;
+				if (currentElement.data('modalid')) {
+					var id = currentElement.data('modalid');
+				} else {
+					var id = 'globalmodal';
+					if ($('#' + id).length) {
+						var numberGlobalModal = 1;
+						while ($('#' + id).length) {
+							id = 'globalmodal' + numberGlobalModal++;
+						}
+						modalWindowParams['id'] = id;
 					}
-					modalWindowParams['id'] = id;
 				}
 				app.showModalWindow(modalWindowParams);
 			}
@@ -1738,7 +1743,7 @@ var app = {
 				AppConnector.request(params.url).then(function (data) {
 					Vtiger_Detail_Js.getInstance().reloadTabContent();
 				});
-				
+
 			}
 		});
 	},

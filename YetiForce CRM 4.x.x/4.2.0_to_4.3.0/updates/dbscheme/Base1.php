@@ -39,6 +39,16 @@ class Base1 extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__notification' => [
+				'index' => [
+					['link', 'link'],
+					['process', 'process'],
+					['subprocess', 'subprocess'],
+					['linkextend', 'linkextend'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['com_vtiger_workflowtasks_ibfk_1', 'com_vtiger_workflowtasks', 'workflow_id', 'com_vtiger_workflows', 'workflow_id', 'CASCADE', 'RESTRICT'],

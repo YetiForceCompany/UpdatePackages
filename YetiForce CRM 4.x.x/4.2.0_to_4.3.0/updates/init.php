@@ -187,7 +187,7 @@ class YetiForceUpdate
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+			//['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
@@ -241,6 +241,12 @@ class YetiForceUpdate
 			[29, 2626, 'force_password_change', 'vtiger_users', 1, 56, 'force_password_change', 'FL_FORCE_PASSWORD_CHANGE', 1, 2, '', 100, 28, 79, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'tinyint(1)', 'LBL_MORE_INFORMATION', [], [], 'Users'],
 			[37, 2627, 'contactid', 'vtiger_assets', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 8, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'Assets'],
 			[58, 2628, 'contactid', 'vtiger_osssoldservices', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 0, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'OSSSoldServices'],
+			[16, 2629, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Events'],
+			[9, 2630, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 0, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Calendar'],
+			[111, 2631, 'linkextend', 'u_yf_notification', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 15, 374, 1, 'I~O', 2, 8, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_NOTIFICATION_INFORMATION', [], ['Contacts'], 'Notification'],
+			[51, 2632, 'linkextend', 'vtiger_osstimecontrol', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'OSSTimeControl'],
+			[84, 2633, 'linkextend', 'vtiger_reservations', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 262, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'Reservations'],
+			[60, 2634, 'linkextend', 'vtiger_osspasswords', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 147, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_OSSPASSWORD_INFORMATION', [], [], 'OSSPasswords'],
 		]);
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -396,7 +402,8 @@ $phoneFieldAdvancedVerification = true;'],
 	'DISPLAY_EXCEPTION_BACKTRACE' => false,
 	// Display logs when error exception occurs
 	'DISPLAY_EXCEPTION_LOGS' => false,
-	// Turn on the error handler
+"],
+					['type' => 'add', 'search' => 'DISPLAY_EXCEPTION_LOGS', 'checkInContents' => 'EXCEPTION_ERROR_HANDLER', 'addingType' => 'after', 'value' => "	// Turn on the error handler
 	'EXCEPTION_ERROR_HANDLER' => false,
 "],
 				]
