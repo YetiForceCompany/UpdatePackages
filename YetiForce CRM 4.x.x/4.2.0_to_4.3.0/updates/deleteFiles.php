@@ -178,4 +178,5 @@ return [
 	'layouts/basic/modules/RecycleBin',
 	'vendor/yetiforce/Currency.php',
 	'modules/RecycleBin/',
+	'modules/Settings/CurrencyUpdate/models/BankModels/',
 ];
