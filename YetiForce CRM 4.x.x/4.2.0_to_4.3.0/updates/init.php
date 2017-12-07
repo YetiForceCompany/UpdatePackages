@@ -174,7 +174,6 @@ class YetiForceUpdate
 	</tbody>
 </table>
 ',], ['sys_name' => 'UsersForgotPassword']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
 			['vtiger_field', ['displaytype' => 1], ['tablename' => 'vtiger_users', 'columnname' => 'user_name']],
 			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=Logs'], ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=logs']],
 			['vtiger_settings_field', ['linkto' => 'index.php?module=Colors&parent=Settings&view=Index'], ['linkto' => 'index.php?module=Users&parent=Settings&view=Colors']],
@@ -186,13 +185,14 @@ class YetiForceUpdate
 			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+			//['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
 		]);
 	}
 
@@ -254,6 +254,7 @@ class YetiForceUpdate
 			if (!$moduleId || $isExists) {
 				continue;
 			}
+			\App\Cache::delete('BlockInstance', $field[25]);
 			$moduleInstance = \vtlib\Module::getInstance($field[28]);
 			$blockInstance = \vtlib\Block::getInstance($field[25], $moduleInstance);
 			if (!$blockInstance) {
