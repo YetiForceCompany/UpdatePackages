@@ -27,6 +27,9 @@ class YetiForceUpdate
 		$result = copy('cache/updates/files/vtlib/Vtiger/Utils.php', 'vtlib/Vtiger/Utils.php');
 		$result2 = copy('cache/updates/files/vtlib/Vtiger/PackageImport.php', 'vtlib/Vtiger/PackageImport.php');
 		$result3 = copy('cache/updates/files/modules/Vtiger/models/Inventory.php', 'modules/Vtiger/models/Inventory.php');
+		if (function_exists('opcache_reset')) {
+			opcache_reset();
+		}
 		if ($result && $result2 && $result3) {
 			exit(header('Location: ' . AppConfig::main('site_URL') . 'cache/updates/init2.php?from_version=' . $modulenode->from_version . '&to_version=' . $modulenode->to_version));
 		} else {
