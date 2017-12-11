@@ -125,6 +125,9 @@ class YetiForceUpdate
 				$cron->updateStatus(\vtlib\Cron::$STATUS_ENABLED);
 			}
 		}
+		if (function_exists('opcache_reset')) {
+			opcache_reset();
+		}
 		return true;
 	}
 
