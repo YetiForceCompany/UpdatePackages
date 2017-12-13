@@ -106,6 +106,7 @@ class YetiForceUpdate
 		$adb->update('vtiger_version', ['current_version' => $this->modulenode->to_version]);
 		\vtlib\Functions::recurseDelete('cache/updates');
 		\vtlib\Functions::recurseDelete('cache/templates_c');
+		\App\Session::set('UserAuthMethod', 'PASSWORD');
 		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
 		echo '<div class="modal fade in" style="display: block;top: 20%;"><div class="modal-dialog"><div class="modal-content"><div class="modal-header">';
 		echo '<h4 class="modal-title">' . \App\Language::translate('LBL_IMPORTING_MODULE', 'Settings:ModuleManager') . '</h4>';
