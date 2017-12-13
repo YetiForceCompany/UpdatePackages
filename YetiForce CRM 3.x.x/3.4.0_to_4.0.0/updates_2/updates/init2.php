@@ -1200,15 +1200,17 @@ class YetiForceUpdate2
 			$db->createCommand()->dropColumn('vtiger_activity_reminder', 'recurringid')->execute();
 		}
 		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'District'], ['subindustry' => 'Poviat'])->execute();
-		if ($res) {
+		$tableSchema = $db->getSchema()->getTableSchema('vtiger_leaddetails');
+		$subindustrySchema = $tableSchema->getColumn('subindustry');
+		if ($res && $subindustrySchema) {
 			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'District'], ['subindustry' => 'Poviat'])->execute();
 		}
 		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'Developers'], ['subindustry' => 'Deweloperzy'])->execute();
-		if ($res) {
+		if ($res && $subindustrySchema) {
 			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'Developers'], ['subindustry' => 'Deweloperzy'])->execute();
 		}
 		$res = $db->createCommand()->update('vtiger_subindustry', ['subindustry' => 'District Job Center'], ['subindustry' => 'Poviat Job Centre'])->execute();
-		if ($res) {
+		if ($res && $subindustrySchema) {
 			$db->createCommand()->update('vtiger_leaddetails', ['subindustry' => 'District Job Center'], ['subindustry' => 'Poviat Job Centre'])->execute();
 		}
 		$dataReader = (new \App\Db\Query())->from('vtiger_picklist_dependency')->where(['or like', 'targetvalues', ['"Poviat"', '"Deweloperzy"', '"Poviat Job Centre"']])->createCommand()->query();
