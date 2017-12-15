@@ -216,12 +216,14 @@ class YetiForceUpdate
 			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break']],
 			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'holiday']],
 			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'work']],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break_time']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
 			['vtiger_language', ['prefix' => 'fr_fr']],
 			['vtiger_settings_field', ['name' => 'LBL_DATAACCESS']],
 			['vtiger_settings_field', ['name' => 'LBL_ACTIVITY_TYPES']],
 			['vtiger_settings_blocks', ['label' => 'LBL_YETIFORCE_SHOP']],
 			['vtiger_ws_operation', ['name' => 'changePassword']],
+			['vtiger_module_dashboard', ['linkid' => (new \App\Db\Query())->select(['linkid'])->from('vtiger_links')->where(['linklabel' => 'ChartFilter'])]],
 		];
 		\App\Db\Updater::batchDelete($data);
 	}
