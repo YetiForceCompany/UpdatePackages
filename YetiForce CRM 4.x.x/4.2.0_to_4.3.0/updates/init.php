@@ -80,12 +80,17 @@ class YetiForceUpdate
 		if ($moduleBaseInstance) {
 			$moduleBaseInstance->delete();
 		}
-
+		$this->removeFields();
+		$this->removeBlocks();
 		$this->updateRows();
 		$this->addRows();
 		$this->deleteRows();
 		$this->updateConfigFile();
 		$this->addActions();
+		$this->addModules(['MultiCompany']);
+		$this->addFields(2);
+		$this->addPicklistValues();
+		$this->renameColumns();
 	}
 
 	/**
@@ -124,7 +129,7 @@ class YetiForceUpdate
 	public function updateDbSchema()
 	{
 		$this->droptFields();
-		$this->addFields();
+		$this->addFields(1);
 		$this->dropTables();
 		$this->importer->dropColumns([
 			['vtiger_users', 'crypt_type'],
@@ -194,6 +199,12 @@ class YetiForceUpdate
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
+			['vtiger_field', ['typeofdata' => 'V~M', 'quickcreate' => 2], ['tablename' => 'vtiger_lettersin', 'columnname' => 'lin_status']],
+			['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'cocument_no']],
+			['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'no_internal']],
+			['vtiger_lin_status', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
+			['vtiger_lin_status', ['lin_status' => 'PLL_REDIRECTED_TO_ANOTHER_DEPARTMENT'], ['lin_status' => 'PLL_SETTLED']],
+			['vtiger_blocks', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
 		]);
 	}
 
@@ -202,6 +213,19 @@ class YetiForceUpdate
 		$data = [
 			['vtiger_password', ['type' => 'change_time', 'val' => '0']],
 			['vtiger_password', ['type' => 'lock_time', 'val' => '5']],
+			['vtiger_settings_field', [
+					'fieldid' => 108,
+					'blockid' => 4,
+					'name' => 'LBL_COUNTRY_SETTINGS',
+					'iconpath' => 'glyphicon glyphicon-picture',
+					'description' => 'LBL_COUNTRY_DESCRIPTION',
+					'linkto' => 'index.php?module=Countries&parent=Settings&view=Index',
+					'sequence' => 12,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => NULL,
+				]
+			],
 		];
 		$rows = (new \App\Db\Query)->select(['user_name', 'id'])->from('vtiger_users')->all();
 		foreach ($rows as $row) {
@@ -228,29 +252,43 @@ class YetiForceUpdate
 		\App\Db\Updater::batchDelete($data);
 	}
 
-	private function addFields()
+	private function addFields($type)
 	{
 
 //		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleName'];
 		$fields = [];
-		$query = (new \App\Db\Query())->from('vtiger_field')->where(['uitype' => 11]);
-		$dataReader = $query->createCommand()->query();
-		while ($row = $dataReader->read()) {
-			$fields[] = [NULL, NULL, $row['columnname'] . '_extra', $row['tablename'], 1, 1, $row['fieldname'] . '_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, NULL, NULL, 3, 'V~O', 1, NULL, 'BAS', 1, '', 0, '', NULL, 'string(100)', $row['block'], [], [], App\Module::getModuleName($row['tabid'])];
+		if ($type === 1) {
+			$query = (new \App\Db\Query())->from('vtiger_field')->where(['uitype' => 11]);
+			$dataReader = $query->createCommand()->query();
+			while ($row = $dataReader->read()) {
+				$fields[] = [NULL, NULL, $row['columnname'] . '_extra', $row['tablename'], 1, 1, $row['fieldname'] . '_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, NULL, NULL, 3, 'V~O', 1, NULL, 'BAS', 1, '', 0, '', NULL, 'string(100)', $row['block'], [], [], App\Module::getModuleName($row['tabid'])];
+			}
+			$fields = array_merge($fields, [
+				[33, 2618, 'customernumber_extra', 'vtiger_pbxmanager', 1, 1, 'customernumber_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, 19, 88, 3, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(100)', 'LBL_PBXMANAGER_INFORMATION', [], [], 'PBXManager'],
+				[29, 2625, 'date_password_change', 'vtiger_users', 1, 80, 'date_password_change', 'FL_DATE_PASSWORD_CHANGE', 1, 2, '', 100, 27, 79, 2, 'DT~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'datetime', 'LBL_MORE_INFORMATION', [], [], 'Users'],
+				[29, 2626, 'force_password_change', 'vtiger_users', 1, 56, 'force_password_change', 'FL_FORCE_PASSWORD_CHANGE', 1, 2, '', 100, 28, 79, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'tinyint(1)', 'LBL_MORE_INFORMATION', [], [], 'Users'],
+				[37, 2627, 'contactid', 'vtiger_assets', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 8, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'Assets'],
+				[58, 2628, 'contactid', 'vtiger_osssoldservices', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 0, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'OSSSoldServices'],
+				[16, 2629, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Events'],
+				[9, 2630, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 0, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Calendar'],
+				[111, 2631, 'linkextend', 'u_yf_notification', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 15, 374, 1, 'I~O', 2, 8, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_NOTIFICATION_INFORMATION', [], ['Contacts'], 'Notification'],
+				[51, 2632, 'linkextend', 'vtiger_osstimecontrol', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'OSSTimeControl'],
+				[84, 2633, 'linkextend', 'vtiger_reservations', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 262, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'Reservations'],
+				[60, 2634, 'linkextend', 'vtiger_osspasswords', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 147, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_OSSPASSWORD_INFORMATION', [], [], 'OSSPasswords'],
+				[81, 2635, 'custom_sender', 'vtiger_lettersin', 1, 1, 'custom_sender', 'FL_CUSTOM_SENDER', 1, 2, '', 100, 20, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2636, 'lin_type', 'vtiger_lettersin', 1, 16, 'lin_type', 'FL_TYPE', 1, 2, '', 100, 21, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', ['PLL_REGULAR_LETTER', 'PLL_REGISTERED_LETTER', 'PLL_REGULAR_PARCEL', 'PLL_LARGESIZE_PARCEL', 'PLL_DOCUMENT', 'PLL_RETURN', 'PLL_POSTAL_ADVICE'], [], 'LettersIn'],
+				[81, 2637, 'cash_amount_on_delivery', 'vtiger_lettersin', 1, 71, 'cash_amount_on_delivery', 'FL_CASH_AMOUNT_ON_DELIVERY', 1, 2, '', 100, 22, 254, 1, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'decimal(25,8)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2638, 'date_of_receipt', 'vtiger_lettersin', 1, 5, 'date_of_receipt', 'FL_DATE_OF_RECEIPT', 1, 2, '', 100, 23, 254, 1, 'D~M', 1, 0, 'BAS', 1, '', 0, '', NULL, 'date', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2639, 'outgoing_correspondence', 'vtiger_lettersin', 1, 10, 'outgoing_correspondence', 'FL_OUTGOING_CORRESPONDENCE', 1, 2, '', 100, 24, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersOut'], 'LettersIn'],
+				[81, 2640, 'internal_notes', 'vtiger_lettersincf', 1, 300, 'internal_notes', 'FL_INTERNAL_NOTES', 1, 2, '', 100, 2, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
+				[81, 2641, 'public_notes', 'vtiger_lettersincf', 1, 300, 'public_notes', 'FL_PUBLIC_NOTES', 1, 2, '', 100, 3, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
+				[82, 2642, 'incoming_correspondence', 'vtiger_lettersout', 1, 10, 'incoming_correspondence', 'FL_INCOMING_CORRESPONDENCE', 1, 2, '', 100, 20, 256, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersIn'], 'LettersOut'],
+			]);
+		} elseif ($type === 2) {
+			$fields = [
+				[29, 2676, 'view_date_format', 'vtiger_users', 1, 16, 'view_date_format', 'FL_VIEW_DATE_FORMAT', 1, 2, 'PLL_ELAPSED', 100, 15, 118, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(50)', 'LBL_CALENDAR_SETTINGS', ['PLL_FULL', 'PLL_ELAPSED'], [], 'Users'],
+			];
 		}
-		$fields = array_merge($fields, [
-			[33, 2618, 'customernumber_extra', 'vtiger_pbxmanager', 1, 1, 'customernumber_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, 19, 88, 3, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(100)', 'LBL_PBXMANAGER_INFORMATION', [], [], 'PBXManager'],
-			[29, 2625, 'date_password_change', 'vtiger_users', 1, 80, 'date_password_change', 'FL_DATE_PASSWORD_CHANGE', 1, 2, '', 100, 27, 79, 2, 'DT~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'datetime', 'LBL_MORE_INFORMATION', [], [], 'Users'],
-			[29, 2626, 'force_password_change', 'vtiger_users', 1, 56, 'force_password_change', 'FL_FORCE_PASSWORD_CHANGE', 1, 2, '', 100, 28, 79, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'tinyint(1)', 'LBL_MORE_INFORMATION', [], [], 'Users'],
-			[37, 2627, 'contactid', 'vtiger_assets', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 8, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'Assets'],
-			[58, 2628, 'contactid', 'vtiger_osssoldservices', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 0, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'OSSSoldServices'],
-			[16, 2629, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Events'],
-			[9, 2630, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 0, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Calendar'],
-			[111, 2631, 'linkextend', 'u_yf_notification', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 15, 374, 1, 'I~O', 2, 8, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_NOTIFICATION_INFORMATION', [], ['Contacts'], 'Notification'],
-			[51, 2632, 'linkextend', 'vtiger_osstimecontrol', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'OSSTimeControl'],
-			[84, 2633, 'linkextend', 'vtiger_reservations', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 262, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'Reservations'],
-			[60, 2634, 'linkextend', 'vtiger_osspasswords', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 147, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_OSSPASSWORD_INFORMATION', [], [], 'OSSPasswords'],
-		]);
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
 			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
@@ -331,6 +369,7 @@ class YetiForceUpdate
 			'vtiger_ws_entity_name',
 			'vtiger_ws_entity_referencetype',
 			'vtiger_ws_entity_tables',
+			'vtiger_currency_info_seq',
 		];
 		$this->importer->dropTable($tables);
 	}
@@ -547,5 +586,92 @@ $phoneFieldAdvancedVerification = true;'],
 				}
 			}
 		}
+	}
+
+	private function removeFields()
+	{
+		$fields = [
+			'FCorectingInvoice' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'FInvoice' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'FInvoiceCost' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'FInvoiceProforma' => ['addresslevel1a', 'addresslevel2a', 'addresslevel3a', 'addresslevel4a', 'addresslevel5a', 'addresslevel6a', 'addresslevel7a', 'addresslevel8a', 'buildingnumbera', 'localnumbera', 'poboxa'],
+			'SQuotes' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'SRecurringOrders' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'SSingleOrders' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
+			'LettersIn' => ['description'],
+		];
+		$db = \App\Db::getInstance();
+		foreach ($fields as $moduleName => $columns) {
+			$ids = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['columnname' => $columns, 'tabid' => App\Module::getModuleId($moduleName)])->column();
+			foreach ($ids as $id) {
+				try {
+					$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($id);
+					$fieldInstance->delete();
+				} catch (Exception $e) {
+					\App\Log::error('RemoveFields' . __METHOD__ . ': code ' . $e->getCode() . " message " . $e->getMessage());
+				}
+			}
+		}
+	}
+
+	private function removeBlocks()
+	{
+		$moduleBlocks = [
+			'SQuotes' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'SSingleOrders' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'SRecurringOrders' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'FInvoice' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'FInvoiceProforma' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'FCorectingInvoice' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+			'FInvoiceCost' => ['LBL_ADDRESS_DELIVERY_INFORMATION'],
+		];
+		foreach ($moduleBlocks as $moduleName => $blocks) {
+			$ids = (new App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => $blocks, 'tabid' => App\Module::getModuleId($moduleName)])->column();
+			foreach ($ids as $id) {
+				try {
+					$blockInstance = Vtiger_Block_Model::getInstance($id);
+					$blockInstance->delete(true);
+				} catch (Exception $e) {
+					\App\Log::error('RemoveBlocks' . __METHOD__ . ': code ' . $e->getCode() . " message " . $e->getMessage());
+				}
+			}
+		}
+	}
+
+	private function addModules($modules)
+	{
+		foreach ($modules as $moduleName) {
+			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
+				$importInstance = new \vtlib\PackageImport();
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $moduleName . '.xml');
+				$importInstance->import_Module();
+				\App\Db::getInstance()->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				\App\Fields\RecordNumber::setNumber($moduleName, 'MC', '1');
+			} else {
+				\App\Log::warning('Module exists: ' . $moduleName);
+			}
+		}
+	}
+
+	private function addPicklistValues()
+	{
+		$values = ['PLL_REDIRECTED_TO_ANOTHER_ADDRESSEE', 'PLL_DESTOYED_UPON_ADDRESSEES_REQUEST', 'PLL_DESTROYED_IN_ACCORDANCE_WITH_INTERNAL_PROCEDURES', 'PLL_RETURN_TO_SENDER'];
+		$moduleModel = Settings_Picklist_Module_Model::getInstance('LettersIn');
+		$fieldModel = Settings_Picklist_Field_Model::getInstance('lin_status', $moduleModel);
+		$roleRecordList = Settings_Roles_Record_Model::getAll();
+		$rolesSelected = array_keys($roleRecordList);
+		foreach ($values as $newValue) {
+			$moduleModel->addPickListValues($fieldModel, $newValue, $rolesSelected);
+		}
+	}
+
+	/**
+	 * Changing name of columns
+	 */
+	private function renameColumns()
+	{
+		$this->importer->renameColumns([
+			['vtiger_salutationtype', 'salutationid', 'salutationtypeid'],
+		]);
 	}
 }

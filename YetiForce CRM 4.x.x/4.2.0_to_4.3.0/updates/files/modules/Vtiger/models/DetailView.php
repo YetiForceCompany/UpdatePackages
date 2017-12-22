@@ -153,7 +153,7 @@ class Vtiger_DetailView_Model extends \App\Base
 						'url' => 'index.php?module=' . $recordModel->getModuleName() . '&action=State&state=Active&record=' . $recordModel->getId(),
 						'confirm' => \App\Language::translate('LBL_ACTIVATE_RECORD_DESC')
 					],
-					'linkicon' => 'fa fa-refresh fa-spin',
+					'linkicon' => 'fa fa-undo',
 					'linkclass' => 'entityStateBtn',
 					'style' => empty($stateColors['Active']) ? '' : "background: {$stateColors['Active']};"
 			]);
@@ -368,14 +368,14 @@ class Vtiger_DetailView_Model extends \App\Base
 		$listLinkTypes = ['DETAILVIEWSIDEBARLINK', 'DETAILVIEWSIDEBARWIDGET'];
 		$listLinks = Vtiger_Link_Model::getAllByType($this->getModule()->getId(), $listLinkTypes);
 
-		if ($listLinks['DETAILVIEWSIDEBARLINK']) {
+		if (isset($listLinks['DETAILVIEWSIDEBARLINK'])) {
 			foreach ($listLinks['DETAILVIEWSIDEBARLINK'] as $link) {
 				$link->linkurl = $link->linkurl . '&record=' . $this->getRecord()->getId() . '&source_module=' . $this->getModule()->getName();
 				$moduleLinks['SIDEBARLINK'][] = $link;
 			}
 		}
 
-		if ($listLinks['DETAILVIEWSIDEBARWIDGET']) {
+		if (isset($listLinks['DETAILVIEWSIDEBARWIDGET'])) {
 			foreach ($listLinks['DETAILVIEWSIDEBARWIDGET'] as $link) {
 				$link->linkurl = $link->linkurl . '&record=' . $this->getRecord()->getId() . '&source_module=' . $this->getModule()->getName();
 				$moduleLinks['SIDEBARWIDGET'][] = $link;

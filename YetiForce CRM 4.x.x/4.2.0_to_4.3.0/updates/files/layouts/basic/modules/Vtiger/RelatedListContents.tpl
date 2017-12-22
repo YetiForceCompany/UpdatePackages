@@ -3,7 +3,7 @@
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
 	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 	{assign var=IS_INVENTORY value=($RELATED_VIEW === 'List' && $INVENTORY_MODULE && !empty($INVENTORY_FIELDS))}
-	<div class="listViewEntriesDiv contents-bottomscroll">
+	<div class="listViewEntriesDiv">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
 				<tr class="listViewHeaders">
@@ -98,7 +98,7 @@
 							</td>
 						{/foreach}
 						{if $SHOW_CREATOR_DETAIL}
-							<td class="medium" data-field-type="rel_created_time" nowrap>{Vtiger_Datetime_UIType::getDisplayDateTimeValue($RELATED_RECORD->get('rel_created_time'))}</td>
+							<td class="medium" data-field-type="rel_created_time" nowrap>{App\Fields\DateTime::formatToDisplay($RELATED_RECORD->get('rel_created_time'))}</td>
 							<td class="medium" data-field-type="rel_created_user" nowrap>{\App\Fields\Owner::getLabel($RELATED_RECORD->get('rel_created_user'))}</td>
 						{/if}
 						{if $SHOW_COMMENT}

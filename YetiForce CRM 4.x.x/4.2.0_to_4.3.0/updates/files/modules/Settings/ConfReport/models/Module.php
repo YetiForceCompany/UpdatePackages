@@ -357,10 +357,19 @@ class Settings_ConfReport_Module_Model extends Settings_Vtiger_Module_Model
 		if (function_exists('apache_response_headers')) {
 			$headers = array_change_key_case(apache_response_headers(), CASE_UPPER);
 		} else {
+			stream_context_set_default([
+				'ssl' => [
+					'verify_peer' => false,
+					'verify_peer_name' => false,
+				],
+			]);
 			$requestUrl = (\App\RequestUtil::getBrowserInfo()->https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
-			$headers = array_change_key_case(get_headers($requestUrl, 1), CASE_UPPER);
-			if (stripos($headers[0], '200') === false) {
-				$headers = [];
+			$rqheaders = get_headers($requestUrl, 1);
+			if ($rqheaders) {
+				$headers = array_change_key_case($rqheaders, CASE_UPPER);
+				if (stripos($headers[0], '200') === false) {
+					$headers = [];
+				}
 			}
 		}
 		if ($headers) {
@@ -406,16 +415,18 @@ class Settings_ConfReport_Module_Model extends Settings_Vtiger_Module_Model
 
 		$params = [
 			'LBL_OPERATING_SYSTEM' => \AppConfig::main('systemMode') === 'demo' ? php_uname('s') : php_uname(),
-			'LBL_PHPINI' => php_ini_loaded_file(),
-			'LBL_LOG_FILE' => ini_get('error_log'),
+			'LBL_PHP_SAPI' => PHP_SAPI,
+			'LBL_TMP_DIR' => App\Fields\File::getTmpPath(),
 			'LBL_CRM_DIR' => ROOT_DIRECTORY,
-			'LBL_PHP_SAPI' => PHP_SAPI
+			'LBL_LOG_FILE' => ini_get('error_log'),
+			'LBL_PHPINI' => php_ini_loaded_file(),
 		];
 		if (file_exists('user_privileges/cron.php')) {
 			include 'user_privileges/cron.php';
-			$params['LBL_CRON_PHP'] = $vphp;
+
 			$params['LBL_CRON_PHPINI'] = $ini;
 			$params['LBL_CRON_LOG_FILE'] = $log;
+			$params['LBL_CRON_PHP'] = $vphp;
 			$params['LBL_CRON_PHP_SAPI'] = $sapi;
 		}
 		return $params;

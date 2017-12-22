@@ -98,12 +98,12 @@
 										{elseif $VIEW_MODEL->get('entityState') === 'All'}
 											<span class="glyphicon glyphicon-menu-hamburger"></span>
 										{else}
-											<span class="fa fa-refresh"></span>
+											<span class="fa fa-undo"></span>
 										{/if}
 									</button>
 									<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownEntityState">
 										<li {if $COLOR['Active']}style="border-color: {$COLOR['Active']};"{/if}>
-											<a href="#" data-value="Active"><span class="fa fa-refresh"></span>&nbsp;&nbsp;{\App\Language::translate('LBL_ENTITY_STATE_ACTIVE')}</a>
+											<a href="#" data-value="Active"><span class="fa fa-undo"></span>&nbsp;&nbsp;{\App\Language::translate('LBL_ENTITY_STATE_ACTIVE')}</a>
 										</li>
 										<li {if $COLOR['Archived']}style="border-color: {$COLOR['Archived']};"{/if}>
 											<a href="#" data-value="Archived"><span class="fa fa-archive"></span>&nbsp;&nbsp;{\App\Language::translate('LBL_ENTITY_STATE_ARCHIVED')}</a>
@@ -125,27 +125,35 @@
 				</div>
 			</div>
 		</div>
-		<div class="contents-topscroll">
-			<div class="topscroll-div">
-				&nbsp;
-			</div>
-		</div>
 		{if $RELATED_VIEW === 'ListPreview'}
 			<div class="relatedContents">
 				<div id="recordsListPreview">
 					<input type="hidden" id="defaultDetailViewName" value="{AppConfig::module($MODULE, 'defaultDetailViewName')}" />
-					<div class="col-md-3" id="recordsList">
-						{include file=\App\Layout::getTemplatePath("RelatedListContents.tpl", $RELATED_MODULE->get('name'))}
+					<div class="wrappedPanel">
+						<div class="rotatedText">
+							<div class="textCenter"></div>
+						</div>
+					</div>
+					<div class="fixedListInitial col-md-3">
+						<div class="fixedListContent">
+							<div id="recordsList">
+								{include file=\App\Layout::getTemplatePath("RelatedListContents.tpl", $RELATED_MODULE->get('name'))}
+							</div>
+						</div>
 					</div>
 					<div class="col-md-9" id="listPreview">
 						<iframe class="border1px" id="listPreviewframe" frameborder="0"></iframe>
 					</div>
-
+					<div class="wrappedPanel">
+						<div class="rotatedText">
+							{\App\Language::translate('LBL_VIEW_DETAIL')}
+						</div>
+					</div>
 				</div>
 			</div>
 		{else}
-			<div class="relatedContents contents-bottomscroll">
-				<div class="bottomscroll-div">
+			<div class="relatedContents">
+				<div>
 					{include file=\App\Layout::getTemplatePath("RelatedListContents.tpl", $RELATED_MODULE->get('name'))}
 				</div>
 			</div>

@@ -5,6 +5,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
+ * Contributor(s): YetiForce Sp. z o.o. 
  *************************************************************************************/
 Vtiger_Base_Validator_Js("Vtiger_Email_Validator_Js", {
 	/**
@@ -85,7 +86,7 @@ Vtiger_Base_Validator_Js("Vtiger_Phone_Validator_Js", {}, {
 			AppConnector.request({
 				async: false,
 				data: {
-					module: form.find('[name="module"]').val(),
+					module: form.find('[name="module"]').length ? form.find('[name="module"]').val() : app.getModuleName(),
 					action: 'Fields',
 					mode: 'verifyPhoneNumber',
 					fieldName: fieldInfo.name,
@@ -264,7 +265,7 @@ Vtiger_Base_Validator_Js('Vtiger_Url_Validator_Js', {}, {
 		var result = regexp.test(fieldValue);
 		if (!result)
 		{
-			if (fieldValue.indexOf('http://') === 0 || fieldValue.indexOf('https://') === 0|| fieldValue.indexOf('ftp://') === 0|| fieldValue.indexOf('ftps://') === 0|| fieldValue.indexOf('telnet://') === 0 || fieldValue.indexOf('www.') === 0)
+			if (fieldValue.indexOf('http://') === 0 || fieldValue.indexOf('https://') === 0 || fieldValue.indexOf('ftp://') === 0 || fieldValue.indexOf('ftps://') === 0 || fieldValue.indexOf('telnet://') === 0 || fieldValue.indexOf('www.') === 0)
 			{
 				result = true;
 			}
@@ -1184,6 +1185,33 @@ Vtiger_Base_Validator_Js("Vtiger_InputMask_Validator_Js", {
 		}
 		if (window.inputMaskValidation) {
 			var errorInfo = app.vtranslate("JS_INVALID_LENGTH");
+			this.setError(errorInfo);
+			return false;
+		}
+		return true;
+	}
+});
+Vtiger_Base_Validator_Js("Vtiger_Textparser_Validator_Js", {
+	invokeValidation: function (field, rules, i, options) {
+		var instance = new Vtiger_TextParser_Validator_Js();
+		instance.setElement(field);
+		var response = instance.validate();
+		if (response != true) {
+			return instance.getError();
+		}
+	}
+
+}, {
+	validate: function () {
+		var response = this._super();
+		if (response != true) {
+			return response;
+		}
+		var field = this.getElement();
+		var fieldValue = field.val();
+		var regex = /^\$\((\w+) : ([,"\+\-\[\]\&\w\s\|]+)\)\$$/;
+		if (!regex.test(fieldValue)) {
+			var errorInfo = app.vtranslate('JS_INVALID_LENGTH');
 			this.setError(errorInfo);
 			return false;
 		}

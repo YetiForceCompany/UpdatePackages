@@ -24,6 +24,20 @@ class Base3 extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'vtiger_import_locks' => [
+				'columns' => [
+					'vtiger_import_lock_id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'userid' => $this->integer(10)->notNull(),
+					'tabid' => $this->smallInteger(5)->notNull(),
+					'importid' => $this->integer(10)->notNull(),
+					'locked_since' => $this->dateTime(),
+				],
+				'primaryKeys' => [
+					['import_locks_pk', 'vtiger_import_lock_id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 	}
 }
