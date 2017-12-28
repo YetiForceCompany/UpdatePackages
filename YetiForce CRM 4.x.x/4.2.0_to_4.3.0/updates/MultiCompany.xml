@@ -142,7 +142,7 @@
 				</field>
 				<field>
 					<fieldname>mulcomp_status</fieldname>
-					<uitype>16</uitype>
+					<uitype>1</uitype>
 					<columnname>mulcomp_status</columnname>
 					<columntype>varchar(255)</columntype>
 					<tablename>u_yf_multicompany</tablename>
@@ -162,10 +162,6 @@
 					<helpinfo></helpinfo>
 					<masseditable>1</masseditable>
 					<summaryfield>0</summaryfield>
-					<picklistvalues>
-						<picklistvalue>PLL_ACTIVE</picklistvalue>
-						<picklistvalue>PLL_INACTIVE</picklistvalue>
-					</picklistvalues>
 				</field>
 				<field>
 					<fieldname>parent_id</fieldname>

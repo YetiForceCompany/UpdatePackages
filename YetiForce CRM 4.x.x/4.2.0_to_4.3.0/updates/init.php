@@ -56,6 +56,7 @@ class YetiForceUpdate
 	 */
 	public function preupdate()
 	{
+		copy(__DIR__ . '/files/modules/Settings/Picklist/models/Module.php', ROOT_DIRECTORY . '/modules/Settings/Picklist/models/Module.php');
 		return true;
 	}
 
@@ -82,7 +83,7 @@ class YetiForceUpdate
 		}
 		$this->removeFields();
 		$this->removeBlocks();
-		$this->updateRows();
+		$this->updateRows(1);
 		$this->addRows();
 		$this->deleteRows();
 		$this->updateConfigFile();
@@ -91,6 +92,7 @@ class YetiForceUpdate
 		$this->addFields(2);
 		$this->addPicklistValues();
 		$this->renameColumns();
+		$this->updateRows(2);
 	}
 
 	/**
@@ -139,12 +141,13 @@ class YetiForceUpdate
 	/**
 	 * update rows
 	 */
-	public function updateRows()
+	public function updateRows($type)
 	{
-		$db = \App\Db::getInstance();
-		$db->createCommand("UPDATE u_yf_emailtemplates SET content = REPLACE(content, 'href=\"$(record%20%3A%20CrmDetailViewURL)$\"', 'href=\"$(record%20%3A%20PortalDetailViewURL)$\"') WHERE name = 'Notify Owner On Ticket Create';")->execute();
-		\App\Db\Updater::batchUpdate([
-			['u_yf_emailtemplates', ['name' => 'ResetPassword', 'sys_name' => 'UsersResetPassword', 'email_template_priority' => 9, 'subject' => 'Your password has been changed', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
+		if ($type === 1) {
+			$db = \App\Db::getInstance();
+			$db->createCommand("UPDATE u_yf_emailtemplates SET content = REPLACE(content, 'href=\"$(record%20%3A%20CrmDetailViewURL)$\"', 'href=\"$(record%20%3A%20PortalDetailViewURL)$\"') WHERE name = 'Notify Owner On Ticket Create';")->execute();
+			\App\Db\Updater::batchUpdate([
+				['u_yf_emailtemplates', ['name' => 'ResetPassword', 'sys_name' => 'UsersResetPassword', 'email_template_priority' => 9, 'subject' => 'Your password has been changed', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
 	<tbody>
 		<tr>
 			<td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
@@ -180,32 +183,49 @@ class YetiForceUpdate
 	</tbody>
 </table>
 ',], ['sys_name' => 'UsersForgotPassword']],
-			['vtiger_field', ['displaytype' => 1], ['tablename' => 'vtiger_users', 'columnname' => 'user_name']],
-			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=Logs'], ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=logs']],
-			['vtiger_settings_field', ['linkto' => 'index.php?module=Colors&parent=Settings&view=Index'], ['linkto' => 'index.php?module=Users&parent=Settings&view=Colors']],
-			['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'uid']],
-			['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'content']],
-			['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'orginal_mail']],
-			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1a']],
-			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1b']],
-			['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
-			['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
-			//['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
-			['vtiger_field', ['typeofdata' => 'V~M', 'quickcreate' => 2], ['tablename' => 'vtiger_lettersin', 'columnname' => 'lin_status']],
-			['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'cocument_no']],
-			['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'no_internal']],
-			['vtiger_lin_status', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
-			['vtiger_lin_status', ['lin_status' => 'PLL_REDIRECTED_TO_ANOTHER_DEPARTMENT'], ['lin_status' => 'PLL_SETTLED']],
-			['vtiger_blocks', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
-		]);
+				['vtiger_field', ['displaytype' => 1], ['tablename' => 'vtiger_users', 'columnname' => 'user_name']],
+				['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=Logs'], ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=logs']],
+				['vtiger_settings_field', ['linkto' => 'index.php?module=Colors&parent=Settings&view=Index'], ['linkto' => 'index.php?module=Users&parent=Settings&view=Colors']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'uid']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'content']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'orginal_mail']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1a']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1b']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
+				['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+				//['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
+				['vtiger_field', ['typeofdata' => 'V~M', 'quickcreate' => 2], ['tablename' => 'vtiger_lettersin', 'columnname' => 'lin_status']],
+				['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'cocument_no']],
+				['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'no_internal']],
+				['vtiger_lin_status', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
+				['vtiger_lin_status', ['lin_status' => 'PLL_REDIRECTED_TO_ANOTHER_DEPARTMENT'], ['lin_status' => 'PLL_SETTLED']],
+				['vtiger_language', ['name' => 'Italian',
+						'prefix' => 'it_it',
+						'label' => 'Italian',
+						'lastupdated' => '2017-12-23 15:12:39',
+						'sequence' => NULL,
+						'isdefault' => 0,
+						'active' => 1
+					], ['prefix' => 'fr_fr']],
+				['yetiforce_menu', ['label' => 'MEN_ORGANIZATION'], ['label' => 'MEN_SECRETARY']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","filter":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","action":"1","filter":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"-","checkbox":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']],
+			]);
+		} elseif ($type === 2) {
+			\App\Db\Updater::batchUpdate([
+				['vtiger_field', ['uitype' => 16], ['tablename' => 'u_yf_multicompany', 'columnname' => 'mulcomp_status']],
+			]);
+		}
 	}
 
 	public function addRows()
@@ -242,7 +262,6 @@ class YetiForceUpdate
 			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'work']],
 			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break_time']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
-			['vtiger_language', ['prefix' => 'fr_fr']],
 			['vtiger_settings_field', ['name' => 'LBL_DATAACCESS']],
 			['vtiger_settings_field', ['name' => 'LBL_ACTIVITY_TYPES']],
 			['vtiger_settings_blocks', ['label' => 'LBL_YETIFORCE_SHOP']],
@@ -600,7 +619,6 @@ $phoneFieldAdvancedVerification = true;'],
 			'SSingleOrders' => ['addresslevel1c', 'addresslevel2c', 'addresslevel3c', 'addresslevel4c', 'addresslevel5c', 'addresslevel6c', 'addresslevel7c', 'addresslevel8c', 'buildingnumberc', 'localnumberc', 'poboxc'],
 			'LettersIn' => ['description'],
 		];
-		$db = \App\Db::getInstance();
 		foreach ($fields as $moduleName => $columns) {
 			$ids = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['columnname' => $columns, 'tabid' => App\Module::getModuleId($moduleName)])->column();
 			foreach ($ids as $id) {
@@ -630,7 +648,7 @@ $phoneFieldAdvancedVerification = true;'],
 			foreach ($ids as $id) {
 				try {
 					$blockInstance = Vtiger_Block_Model::getInstance($id);
-					$blockInstance->delete(true);
+					$blockInstance->delete(false);
 				} catch (Exception $e) {
 					\App\Log::error('RemoveBlocks' . __METHOD__ . ': code ' . $e->getCode() . " message " . $e->getMessage());
 				}
@@ -640,13 +658,30 @@ $phoneFieldAdvancedVerification = true;'],
 
 	private function addModules($modules)
 	{
+		$command = \App\Db::getInstance()->createCommand();
 		foreach ($modules as $moduleName) {
 			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
 				$importInstance = new \vtlib\PackageImport();
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $moduleName . '.xml');
 				$importInstance->import_Module();
-				\App\Db::getInstance()->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
-				\App\Fields\RecordNumber::setNumber($moduleName, 'MC', '1');
+				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				$moduleId = (new App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar();
+				$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['or', ['label' => 'MEN_SECRETARY'], ['label' => 'MEN_ORGANIZATION']])->scalar();
+
+				$command->insert('yetiforce_menu', ['role' => 0,
+					'parentid' => $id,
+					'type' => 0,
+					'sequence' => 3,
+					'module' => $moduleId,
+					'label' => '',
+					'newwindow' => 0,
+					'dataurl' => NULL,
+					'showicon' => 0,
+					'icon' => '',
+					'sizeicon' => NULL,
+					'hotkey' => '',
+					'filters' => NULL])->execute();
+				\App\Fields\RecordNumber::setNumber($moduleId, 'MC', '1');
 			} else {
 				\App\Log::warning('Module exists: ' . $moduleName);
 			}

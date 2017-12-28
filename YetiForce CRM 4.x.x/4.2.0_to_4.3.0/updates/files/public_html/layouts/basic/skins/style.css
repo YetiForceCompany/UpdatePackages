@@ -1120,6 +1120,7 @@ td.fieldValue .input-group {
 .listViewEntriesDiv,
 .listViewEntriesDiv td {
 	overflow: visible;
+	position: relative;
 }
 .listViewEntriesTable .listViewHeaders a.listViewHeaderValues {
 	color: #444444;
@@ -5906,6 +5907,9 @@ select.form-control {
 	border-left: 10px solid #fff;
 }
 .listViewAll tbody tr.listViewEntries > td:first-child, .listViewAll .listViewEntriesTable tbody tr > td:first-child{
+	border-left: 5px solid #ddd;
+}
+#recordsListPreview .listViewAll tbody tr.listViewEntries > td:first-child, .listViewAll .listViewEntriesTable tbody tr > td:first-child{
 	border-left: 10px solid #ddd;
 }
 .entityStateIcon{
@@ -6074,8 +6078,9 @@ border1px{
 	background: transparent;
 }
 .gutter.gutter-horizontal {
-    cursor: ew-resize;	background-image: url('images/vertical.png');
-	height: -webkit-fill-available;
+    cursor: ew-resize;	
+	background-image: url('images/vertical.png');
+	height: calc(100vh - 33px);
 	float: left;
 }
 .gutterOnScroll {
@@ -6089,6 +6094,7 @@ border1px{
     position: absolute;
     top: 2px;
 	background: #eeeeee;
+	z-index: 100;
 }
 .wrappedPanelLeft {
 	display: block;
@@ -6105,11 +6111,7 @@ border1px{
 	text-align: center;
 }
 .wrappedPanelRight .rotatedText{
-    right: -13px;
-	color: white;
-	top: calc(50% - 33px);
-	width: max-content;
-	height: max-content;
+	color: #fff;
 }
 .wrappedPanelOnScroll {
 	position: fixed;
@@ -6140,4 +6142,7 @@ border1px{
 }
 .relatedContents .wrappedPanelRight.wrappedPanelOnScroll  {
 	right: 17px;
+}
+.ps-scrollbar-y-rail {
+	z-index: 100;
 }

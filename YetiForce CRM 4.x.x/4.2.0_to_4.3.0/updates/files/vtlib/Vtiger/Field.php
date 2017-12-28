@@ -36,7 +36,7 @@ class Field extends FieldBasic
 		// Non-Role based picklist values
 		if ($this->uitype === 16) {
 			$this->setNoRolePicklistValues($values);
-			return;
+			return true;
 		}
 		$db = \App\Db::getInstance();
 		$picklistTable = 'vtiger_' . $this->name;
@@ -71,7 +71,7 @@ class Field extends FieldBasic
 		// Add value to picklist now
 		$picklistValues = self::getPicklistValues();
 		$sortid = 0;
-		foreach ($values as &$value) {
+		foreach ($values as $value) {
 			if (in_array($value, $picklistValues)) {
 				continue;
 			}
@@ -86,7 +86,7 @@ class Field extends FieldBasic
 			$query = (new \App\Db\Query)->select('roleid')->from('vtiger_role');
 			$roleIds = $query->column();
 			$insertedData = [];
-			foreach ($roleIds as &$value) {
+			foreach ($roleIds as $value) {
 				$insertedData [] = [$value, $newPicklistValueId, $newPicklistId, $sortid];
 			}
 			$db->createCommand()
@@ -279,7 +279,7 @@ class Field extends FieldBasic
 	public function setTreeTemplate($tree, $moduleInstance)
 	{
 		$db = \App\Db::getInstance();
-		$db->createCommand()->insert('vtiger_trees_templates', ['name' => $tree->name, 'module' => $moduleInstance->id, 'access' => $tree->access])->execute();
+		$db->createCommand()->insert('vtiger_trees_templates', ['name' => (string) $tree->name, 'module' => $moduleInstance->id, 'access' => $tree->access])->execute();
 		$templateId = $db->getLastInsertID('vtiger_trees_templates_templateid_seq');
 
 		foreach ($tree->tree_values->tree_value as $treeValue) {
