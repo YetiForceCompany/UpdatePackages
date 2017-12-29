@@ -30,12 +30,6 @@ class YetiForceUpdate
 	public $filesToDelete = [];
 
 	/**
-	 * Cron list
-	 * @var string[] 
-	 */
-	private $cronAction = [];
-
-	/**
 	 * DbImporter
 	 * @var DbImporter 
 	 */
@@ -114,6 +108,15 @@ class YetiForceUpdate
 		\vtlib\Functions::recurseDelete('cache/updates');
 		\vtlib\Functions::recurseDelete('cache/templates_c');
 		\App\Session::set('UserAuthMethod', 'PASSWORD');
+		\vtlib\Access::syncSharingAccess();
+		\vtlib\Deprecated::createModuleMetaFile();
+		register_shutdown_function(function () {
+			if (function_exists('opcache_reset')) {
+				opcache_reset();
+			}
+		});
+		$menuRecordModel = new \Settings_Menu_Record_Model();
+		$menuRecordModel->refreshMenuFiles();
 		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
 		echo '<div class="modal fade in" style="display: block;top: 20%;"><div class="modal-dialog"><div class="modal-content"><div class="modal-header">';
 		echo '<h4 class="modal-title">' . \App\Language::translate('LBL_IMPORTING_MODULE', 'Settings:ModuleManager') . '</h4>';

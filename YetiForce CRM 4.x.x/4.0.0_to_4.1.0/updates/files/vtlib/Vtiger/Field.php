@@ -217,7 +217,7 @@ class Field extends FieldBasic
 		if ($cache->getBlockFields($blockInstance->id, $moduleInstance->id)) {
 			return $cache->getBlockFields($blockInstance->id, $moduleInstance->id);
 		} else {
-			$instances = false;
+			$instances = [];
 			$query = false;
 			if ($moduleInstance) {
 				$query = (new \App\Db\Query())->from('vtiger_field')->where(['block' => $blockInstance->id, 'tabid' => $moduleInstance->id])->orderBy('sequence');

@@ -199,4 +199,8 @@ return [
 	'vendor/simshaun',
 	'vendor/smarty',
 	'vendor/symfony',
+	'modules/Calendar/CalendarCommon.php',
+	'vtlib/tools',
+	'public_html/layouts/basic/modules/OSSMailView/resources/preview.js',
+	'public_html/layouts/basic/modules/OSSMailView/resources/preview.min.js',
 ];
