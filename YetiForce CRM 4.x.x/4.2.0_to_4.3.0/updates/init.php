@@ -31,7 +31,7 @@ class YetiForceUpdate
 
 	/**
 	 * DbImporter
-	 * @var DbImporter 
+	 * @var DbImporter
 	 */
 	private $importer;
 
@@ -235,11 +235,10 @@ class YetiForceUpdate
 	public function addRows()
 	{
 		$data = [
-				['vtiger_password', ['type' => 'change_time', 'val' => '0']],
-				['vtiger_password', ['type' => 'lock_time', 'val' => '5']],
+				['vtiger_password', ['type' => 'change_time', 'val' => '0'], ['type' => 'change_time']],
+				['vtiger_password', ['type' => 'lock_time', 'val' => '5'], ['type' => 'lock_time']],
 				['vtiger_settings_field', [
-					'fieldid' => 108,
-					'blockid' => 4,
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SYSTEM_TOOLS')->get('blockid'),
 					'name' => 'LBL_COUNTRY_SETTINGS',
 					'iconpath' => 'glyphicon glyphicon-picture',
 					'description' => 'LBL_COUNTRY_DESCRIPTION',
@@ -248,14 +247,20 @@ class YetiForceUpdate
 					'active' => 0,
 					'pinned' => 0,
 					'admin_access' => NULL,
-				]
+				], ['name' => 'LBL_COUNTRY_SETTINGS', 'linkto' => 'index.php?module=Countries&parent=Settings&view=Index']
 			],
 		];
 		$rows = (new \App\Db\Query)->select(['user_name', 'id'])->from('vtiger_users')->all();
 		foreach ($rows as $row) {
 			$data[] = ['l_#__username_history', ['user_name' => $row['user_name'], 'user_id' => $row['id'], 'date' => date('Y-m-d H:i:s')]];
 		}
-		\App\Db\Updater::batchInsert($data);
+
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		foreach ($data as $row) {
+			if (!isset($row[2]) || !(new \App\db\Query())->from($row[0])->where($row[2])->exists()) {
+				$dbCommand->insert($row[0], $row[1])->execute();
+			}
+		}
 	}
 
 	public function deleteRows()
@@ -594,10 +599,15 @@ $phoneFieldAdvancedVerification = true;'],
 	public function addActions()
 	{
 		$actions = [52 => 'MassArchived', 53 => 'MassActive', 54 => 'ArchiveRecord', 55 => 'ActiveRecord', 56 => 'MassTrash', 57 => 'MoveToTrash'];
-		$dbCommand = \App\Db::getInstance()->createCommand();
+		$db = \App\Db::getInstance();
+		$dbCommand = $db->createCommand();
 		$profileIds = \vtlib\Profile::getAllIds();
-		foreach ($actions as $actionId => $action) {
-			$dbCommand->insert('vtiger_actionmapping', ['actionid' => $actionId, 'actionname' => $action, 'securitycheck' => 0])->execute();
+		foreach ($actions as $action) {
+			$actionId = (new \App\Db\Query())->select(['actionid'])->from('vtiger_actionmapping')->where(['actionname' => $action])->limit(1)->scalar();
+			if (empty($actionId)) {
+				$actionId = $db->getUniqueID('vtiger_actionmapping', 'actionid', false);
+				$dbCommand->insert('vtiger_actionmapping', ['actionid' => $actionId, 'actionname' => $action, 'securitycheck' => 0])->execute();
+			}
 			foreach (vtlib\Functions::getAllModules(true) as $moduleId => $module) {
 				foreach ($profileIds as $profileId) {
 					$isExists = (new \App\Db\Query)->from('vtiger_profile2utility')
