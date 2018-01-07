@@ -78,6 +78,7 @@ class Base4 extends \App\Db\Importers\Base
 					'workdays' => $this->stringType(30),
 					'weekstart' => $this->integer(10),
 					'date_format' => $this->stringType(200),
+					'view_date_format' => $this->stringType(50)->defaultValue('PLL_ELAPSED'),
 					'hour_format' => $this->stringType(30)->defaultValue('am/pm'),
 					'start_hour' => $this->stringType(30)->defaultValue('10:00'),
 					'end_hour' => $this->stringType(30)->defaultValue('23:00'),

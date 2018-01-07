@@ -37,7 +37,6 @@ return [
 	'modules/Users/actions/UserSetupSave.php',
 	'modules/Users/actions/CheckUserPass.php',
 	'modules/Users/actions/CheckUserEmail.php',
-	'modules/Users/CreateUserPrivilegeFile.php',
 	'modules/Settings/Users/views/Colors.php',
 	'modules/Settings/PickListDependency/views/AddDependency.php',
 	'modules/Settings/LangManagement/views/EditHelpIcon.php',
