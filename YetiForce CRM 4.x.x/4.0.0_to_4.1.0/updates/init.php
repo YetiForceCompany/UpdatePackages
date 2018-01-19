@@ -56,8 +56,12 @@ class YetiForceUpdate
 		copy(__DIR__ . '/files/vtlib/Vtiger/Functions.php', ROOT_DIRECTORY . '/vtlib/Vtiger/Functions.php');
 		copy(__DIR__ . '/files/vendor/yetiforce/Db/Updater.php', ROOT_DIRECTORY . '/vendor/yetiforce/Db/Updater.php');
 		copy(__DIR__ . '/files/vendor/yetiforce/Db/Fixer.php', ROOT_DIRECTORY . '/vendor/yetiforce/Db/Fixer.php');
+		copy(__DIR__ . '/files/modules/Vtiger/uitypes/MultiReferenceValue.php', ROOT_DIRECTORY . '/modules/Vtiger/uitypes/MultiReferenceValue.php');
 		include_once __DIR__ . '/DbType.php';
 		include_once __DIR__ . '/DbImporter.php';
+		if (function_exists('opcache_reset')) {
+			opcache_reset();
+		}
 	}
 
 	/**
@@ -124,6 +128,9 @@ class YetiForceUpdate
 			if (!empty($cron)) {
 				$cron->updateStatus(\vtlib\Cron::$STATUS_ENABLED);
 			}
+		}
+		if (function_exists('opcache_reset')) {
+			opcache_reset();
 		}
 		return true;
 	}
@@ -423,6 +430,9 @@ class YetiForceUpdate
 	private function addRecords()
 	{
 		$db = \App\Db::getInstance();
+
+
+
 
 		$record = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
 		$record->set('name', 'System warnings');

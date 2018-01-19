@@ -1,15 +1,15 @@
 <?xml version='1.0'?>
 <module>
-<name>CMileageLogbook</name>
-<label>CMileageLogbook</label>
-<type>entity</type>
-<dependencies>
-<vtiger_version>3.4.1517</vtiger_version>
-</dependencies>
-<tables>
-<table>
-<name>u_yf_cmileagelogbook</name>
-<sql><![CDATA[CREATE TABLE `u_yf_cmileagelogbook` (
+	<name>CMileageLogbook</name>
+	<label>CMileageLogbook</label>
+	<type>entity</type>
+	<dependencies>
+		<vtiger_version>3.4.1517</vtiger_version>
+	</dependencies>
+	<tables>
+		<table>
+			<name>u_yf_cmileagelogbook</name>
+			<sql><![CDATA[CREATE TABLE `u_yf_cmileagelogbook` (
   `cmileagelogbookid` int(11) NOT NULL,
   `subject` varchar(255) DEFAULT NULL,
   `number` varchar(32) DEFAULT NULL,
@@ -18,449 +18,449 @@
   PRIMARY KEY (`cmileagelogbookid`),
   CONSTRAINT `fk_1_vtiger_cmileagelogbookcmileagelogbookid` FOREIGN KEY (`cmileagelogbookid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8]]></sql>
-</table>
-<table>
-<name>u_yf_cmileagelogbookcf</name>
-<sql><![CDATA[CREATE TABLE `u_yf_cmileagelogbookcf` (
+		</table>
+		<table>
+			<name>u_yf_cmileagelogbookcf</name>
+			<sql><![CDATA[CREATE TABLE `u_yf_cmileagelogbookcf` (
   `cmileagelogbookid` int(11) NOT NULL,
   PRIMARY KEY (`cmileagelogbookid`),
   CONSTRAINT `fk_1_vtiger_cmileagelogbookcfcmileagelogbookid` FOREIGN KEY (`cmileagelogbookid`) REFERENCES `u_yf_cmileagelogbook` (`cmileagelogbookid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8]]></sql>
-</table>
-</tables>
-<blocks>
-<block>
-<label>LBL_BASIC_INFORMATION</label>
-<sequence>1</sequence>
-<show_title>0</show_title>
-<visible>0</visible>
-<create_view>0</create_view>
-<edit_view>0</edit_view>
-<detail_view>0</detail_view>
-<display_status>1</display_status>
-<iscustom>0</iscustom>
-<islist></islist>
-<fields>
-<field>
-<fieldname>subject</fieldname>
-<uitype>2</uitype>
-<columnname>subject</columnname>
-<columntype>varchar(255)</columntype>
-<tablename>u_yf_cmileagelogbook</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>FL_SUBJECT</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>1</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~M</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-<entityidentifier>
-<entityidfield>cmileagelogbookid</entityidfield>
-<entityidcolumn>cmileagelogbookid</entityidcolumn>
-</entityidentifier>
-</field>
-<field>
-<fieldname>cmileage_logbook_status</fieldname>
-<uitype>15</uitype>
-<columnname>cmileage_logbook_status</columnname>
-<columntype>varchar(150)</columntype>
-<tablename>u_yf_cmileagelogbook</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>FL_STATUS</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>2</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-<picklistvalues>
-<picklistvalue>PLL_DRAFT</picklistvalue>
-<picklistvalue>PLL_FOR_APPROVAL</picklistvalue>
-<picklistvalue>PLL_ACCEPTED</picklistvalue>
-<picklistvalue>PLL_CANCELLED</picklistvalue>
-</picklistvalues>
-</field>
-<field>
-<fieldname>number_kilometers</fieldname>
-<uitype>7</uitype>
-<columnname>number_kilometers</columnname>
-<columntype>decimal(13,2)</columntype>
-<tablename>u_yf_cmileagelogbook</tablename>
-<generatedtype>2</generatedtype>
-<fieldlabel>FL_NUMBER_KILOMETERS</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>3</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>NN~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-</fields>
-</block>
-<block>
-<label>LBL_ATTENTION_BLOCK</label>
-<sequence>3</sequence>
-<show_title>0</show_title>
-<visible>0</visible>
-<create_view>0</create_view>
-<edit_view>0</edit_view>
-<detail_view>0</detail_view>
-<display_status>1</display_status>
-<iscustom>0</iscustom>
-<islist></islist>
-<fields>
-<field>
-<fieldname>attention</fieldname>
-<uitype>300</uitype>
-<columnname>attention</columnname>
-<columntype>text</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Attention</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>0</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-</fields>
-</block>
-<block>
-<label>LBL_DESCRIPTION_BLOCK</label>
-<sequence>4</sequence>
-<show_title>0</show_title>
-<visible>0</visible>
-<create_view>0</create_view>
-<edit_view>0</edit_view>
-<detail_view>0</detail_view>
-<display_status>1</display_status>
-<iscustom>1</iscustom>
-<islist></islist>
-<fields>
-<field>
-<fieldname>description</fieldname>
-<uitype>300</uitype>
-<columnname>description</columnname>
-<columntype>text</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Description</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>0</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-</fields>
-</block>
-<block>
-<label>LBL_ADDITIONAL_INFORMATION</label>
-<sequence>2</sequence>
-<show_title>0</show_title>
-<visible>0</visible>
-<create_view>0</create_view>
-<edit_view>0</edit_view>
-<detail_view>0</detail_view>
-<display_status>1</display_status>
-<iscustom>1</iscustom>
-<islist></islist>
-<fields>
-<field>
-<fieldname>number</fieldname>
-<uitype>4</uitype>
-<columnname>number</columnname>
-<columntype>varchar(32)</columntype>
-<tablename>u_yf_cmileagelogbook</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>FL_NUMBER</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>3</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-<field>
-<fieldname>assigned_user_id</fieldname>
-<uitype>53</uitype>
-<columnname>smownerid</columnname>
-<columntype>smallint(5) unsigned</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Assigned To</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>1</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~M</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-<field>
-<fieldname>createdtime</fieldname>
-<uitype>70</uitype>
-<columnname>createdtime</columnname>
-<columntype>datetime</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Created Time</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>5</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>DT~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>2</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-<field>
-<fieldname>modifiedtime</fieldname>
-<uitype>70</uitype>
-<columnname>modifiedtime</columnname>
-<columntype>datetime</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Modified Time</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>4</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>DT~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>2</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-<field>
-<fieldname>created_user_id</fieldname>
-<uitype>53</uitype>
-<columnname>smcreatorid</columnname>
-<columntype>smallint(5) unsigned</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Created By</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>6</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>3</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>2</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>0</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-<field>
-<fieldname>shownerid</fieldname>
-<uitype>120</uitype>
-<columnname>shownerid</columnname>
-<columntype>tinyint(1)</columntype>
-<tablename>vtiger_crmentity</tablename>
-<generatedtype>1</generatedtype>
-<fieldlabel>Share with users</fieldlabel>
-<readonly>1</readonly>
-<presence>2</presence>
-<defaultvalue></defaultvalue>
-<sequence>2</sequence>
-<maximumlength>100</maximumlength>
-<typeofdata>V~O</typeofdata>
-<quickcreate>1</quickcreate>
-<quickcreatesequence>0</quickcreatesequence>
-<displaytype>1</displaytype>
-<info_type>BAS</info_type>
-<fieldparams></fieldparams>
-<helpinfo></helpinfo>
-<masseditable>1</masseditable>
-<summaryfield>0</summaryfield>
-</field>
-</fields>
-</block>
-</blocks>
-<customviews>
-<customview>
-<viewname>All</viewname>
-<setdefault>true</setdefault>
-<setmetrics>false</setmetrics>
-<featured>0</featured>
-<privileges>1</privileges>
-<presence>0</presence>
-<sequence>0</sequence>
-<description><![CDATA[]]></description>
-<sort></sort>
-<fields>
-<field>
-<fieldname>subject</fieldname>
-<columnindex>0</columnindex>
-</field>
-<field>
-<fieldname>number</fieldname>
-<columnindex>1</columnindex>
-</field>
-<field>
-<fieldname>createdtime</fieldname>
-<columnindex>2</columnindex>
-</field>
-<field>
-<fieldname>assigned_user_id</fieldname>
-<columnindex>3</columnindex>
-</field>
-</fields>
-</customview>
-</customviews>
-<sharingaccess>
-<default>public_readwritedelete</default>
-</sharingaccess>
-<actions>
-<action>
-<name><![CDATA[Import]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[Export]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[CreateCustomFilter]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[DuplicateRecord]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[MassEdit]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[MassDelete]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[MassAddComment]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[MassComposeEmail]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[MassTransferOwnership]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[ExportPdf]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[RecordMapping]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[RecordMappingList]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[FavoriteRecords]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[WatchingRecords]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[WatchingModule]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[RemoveRelation]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[ReviewingUpdates]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[CreateDashboardChartFilter]]></name>
-<status>enabled</status>
-</action>
-<action>
-<name><![CDATA[TimeLineList]]></name>
-<status>enabled</status>
-</action>
-</actions>
-<crons>
-</crons>
+		</table>
+	</tables>
+	<blocks>
+		<block>
+			<label>LBL_BASIC_INFORMATION</label>
+			<sequence>1</sequence>
+			<show_title>0</show_title>
+			<visible>0</visible>
+			<create_view>0</create_view>
+			<edit_view>0</edit_view>
+			<detail_view>0</detail_view>
+			<display_status>1</display_status>
+			<iscustom>0</iscustom>
+			<islist></islist>
+			<fields>
+				<field>
+					<fieldname>subject</fieldname>
+					<uitype>2</uitype>
+					<columnname>subject</columnname>
+					<columntype>varchar(255)</columntype>
+					<tablename>u_yf_cmileagelogbook</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>FL_SUBJECT</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>1</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~M</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+					<entityidentifier>
+						<entityidfield>cmileagelogbookid</entityidfield>
+						<entityidcolumn>cmileagelogbookid</entityidcolumn>
+					</entityidentifier>
+				</field>
+				<field>
+					<fieldname>cmileage_logbook_status</fieldname>
+					<uitype>15</uitype>
+					<columnname>cmileage_logbook_status</columnname>
+					<columntype>varchar(150)</columntype>
+					<tablename>u_yf_cmileagelogbook</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>FL_STATUS</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>2</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+					<picklistvalues>
+						<picklistvalue>PLL_DRAFT</picklistvalue>
+						<picklistvalue>PLL_FOR_APPROVAL</picklistvalue>
+						<picklistvalue>PLL_ACCEPTED</picklistvalue>
+						<picklistvalue>PLL_CANCELLED</picklistvalue>
+					</picklistvalues>
+				</field>
+				<field>
+					<fieldname>number_kilometers</fieldname>
+					<uitype>7</uitype>
+					<columnname>number_kilometers</columnname>
+					<columntype>decimal(13,2)</columntype>
+					<tablename>u_yf_cmileagelogbook</tablename>
+					<generatedtype>2</generatedtype>
+					<fieldlabel>FL_NUMBER_KILOMETERS</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>3</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>NN~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+			</fields>
+		</block>
+		<block>
+			<label>LBL_ATTENTION_BLOCK</label>
+			<sequence>3</sequence>
+			<show_title>0</show_title>
+			<visible>0</visible>
+			<create_view>0</create_view>
+			<edit_view>0</edit_view>
+			<detail_view>0</detail_view>
+			<display_status>1</display_status>
+			<iscustom>0</iscustom>
+			<islist></islist>
+			<fields>
+				<field>
+					<fieldname>attention</fieldname>
+					<uitype>300</uitype>
+					<columnname>attention</columnname>
+					<columntype>text</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Attention</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>0</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+			</fields>
+		</block>
+		<block>
+			<label>LBL_DESCRIPTION_BLOCK</label>
+			<sequence>4</sequence>
+			<show_title>0</show_title>
+			<visible>0</visible>
+			<create_view>0</create_view>
+			<edit_view>0</edit_view>
+			<detail_view>0</detail_view>
+			<display_status>1</display_status>
+			<iscustom>1</iscustom>
+			<islist></islist>
+			<fields>
+				<field>
+					<fieldname>description</fieldname>
+					<uitype>300</uitype>
+					<columnname>description</columnname>
+					<columntype>text</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Description</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>0</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+			</fields>
+		</block>
+		<block>
+			<label>LBL_ADDITIONAL_INFORMATION</label>
+			<sequence>2</sequence>
+			<show_title>0</show_title>
+			<visible>0</visible>
+			<create_view>0</create_view>
+			<edit_view>0</edit_view>
+			<detail_view>0</detail_view>
+			<display_status>1</display_status>
+			<iscustom>1</iscustom>
+			<islist></islist>
+			<fields>
+				<field>
+					<fieldname>number</fieldname>
+					<uitype>4</uitype>
+					<columnname>number</columnname>
+					<columntype>varchar(32)</columntype>
+					<tablename>u_yf_cmileagelogbook</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>FL_NUMBER</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>3</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+				<field>
+					<fieldname>assigned_user_id</fieldname>
+					<uitype>53</uitype>
+					<columnname>smownerid</columnname>
+					<columntype>smallint(5) unsigned</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Assigned To</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>1</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~M</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+				<field>
+					<fieldname>createdtime</fieldname>
+					<uitype>70</uitype>
+					<columnname>createdtime</columnname>
+					<columntype>datetime</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Created Time</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>5</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>DT~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>2</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+				<field>
+					<fieldname>modifiedtime</fieldname>
+					<uitype>70</uitype>
+					<columnname>modifiedtime</columnname>
+					<columntype>datetime</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Modified Time</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>4</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>DT~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>2</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+				<field>
+					<fieldname>created_user_id</fieldname>
+					<uitype>53</uitype>
+					<columnname>smcreatorid</columnname>
+					<columntype>smallint(5) unsigned</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Created By</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>6</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>3</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>2</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>0</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+				<field>
+					<fieldname>shownerid</fieldname>
+					<uitype>120</uitype>
+					<columnname>shownerid</columnname>
+					<columntype>tinyint(1)</columntype>
+					<tablename>vtiger_crmentity</tablename>
+					<generatedtype>1</generatedtype>
+					<fieldlabel>Share with users</fieldlabel>
+					<readonly>1</readonly>
+					<presence>2</presence>
+					<defaultvalue></defaultvalue>
+					<sequence>2</sequence>
+					<maximumlength>100</maximumlength>
+					<typeofdata>V~O</typeofdata>
+					<quickcreate>1</quickcreate>
+					<quickcreatesequence>0</quickcreatesequence>
+					<displaytype>1</displaytype>
+					<info_type>BAS</info_type>
+					<fieldparams></fieldparams>
+					<helpinfo></helpinfo>
+					<masseditable>1</masseditable>
+					<summaryfield>0</summaryfield>
+				</field>
+			</fields>
+		</block>
+	</blocks>
+	<customviews>
+		<customview>
+			<viewname>All</viewname>
+			<setdefault>true</setdefault>
+			<setmetrics>false</setmetrics>
+			<featured>0</featured>
+			<privileges>1</privileges>
+			<presence>0</presence>
+			<sequence>0</sequence>
+			<description><![CDATA[]]></description>
+			<sort></sort>
+			<fields>
+				<field>
+					<fieldname>subject</fieldname>
+					<columnindex>0</columnindex>
+				</field>
+				<field>
+					<fieldname>number</fieldname>
+					<columnindex>1</columnindex>
+				</field>
+				<field>
+					<fieldname>createdtime</fieldname>
+					<columnindex>2</columnindex>
+				</field>
+				<field>
+					<fieldname>assigned_user_id</fieldname>
+					<columnindex>3</columnindex>
+				</field>
+			</fields>
+		</customview>
+	</customviews>
+	<sharingaccess>
+		<default>public_readwritedelete</default>
+	</sharingaccess>
+	<actions>
+		<action>
+			<name><![CDATA[Import]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[Export]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[CreateCustomFilter]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[DuplicateRecord]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[MassEdit]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[MassDelete]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[MassAddComment]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[MassComposeEmail]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[MassTransferOwnership]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[ExportPdf]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[RecordMapping]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[RecordMappingList]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[FavoriteRecords]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[WatchingRecords]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[WatchingModule]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[RemoveRelation]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[ReviewingUpdates]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[CreateDashboardChartFilter]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
+			<name><![CDATA[TimeLineList]]></name>
+			<status>enabled</status>
+		</action>
+	</actions>
+	<crons>
+	</crons>
 </module>

@@ -1,0 +1,13 @@
+vtlib uses third party libraries to enable certain functionality.
+
+1. For creating and unpacking zip files
+-- ====================================
+vtlib/thirdparty/Dzip.php
+vtlib/thirdparty/dUnzip2.inc.php
+
+DOWNLOAD URL:
+http://www.phpclasses.org/browse/package/2495/
+
+BSD License: http://www.opensource.org/licenses/bsd-license.html
+
+NOTE: Bug Fix was added to function addFile of dZip class.
