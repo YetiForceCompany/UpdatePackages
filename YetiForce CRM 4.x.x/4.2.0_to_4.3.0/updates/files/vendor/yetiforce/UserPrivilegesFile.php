@@ -382,7 +382,7 @@ class UserPrivilegesFile
 			if (!empty($varArr['GROUP'])) {
 				foreach ($varArr['GROUP'] as $groupId => $grpusers) {
 					if (!in_array($groupId, $grpArr)) {
-						$dbCommand->insert($tableName, ['userid' => $userId, 'tabid' => $tabId, 'shareduserid' => $groupId])->execute();
+						$dbCommand->insert($tableName, ['userid' => $userId, 'tabid' => $tabId, 'sharedgroupid' => $groupId])->execute();
 						$grpArr[] = $groupId;
 					}
 				}
@@ -451,7 +451,7 @@ class UserPrivilegesFile
 			if (!empty($varArr['GROUP'])) {
 				foreach ($varArr['GROUP'] as $groupId => $grpUsers) {
 					if (!in_array($groupId, $grpArr)) {
-						$dbCommand->insert($tableName, ['userid' => $userId, 'tabid' => $tabId, 'relatedtabid' => $relTabId, 'shareduserid' => $groupId])->execute();
+						$dbCommand->insert($tableName, ['userid' => $userId, 'tabid' => $tabId, 'relatedtabid' => $relTabId, 'sharedgroupid' => $groupId])->execute();
 						$grpArr[] = $groupId;
 					}
 				}
