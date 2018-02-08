@@ -1,0 +1,16 @@
+<?xml version='1.0'?>
+<module>
+	<name>YetiForce CRM 4 LTS + Service Pack 3</name>
+	<label>YetiForce CRM 4 LTS + Service Pack 3</label>
+	<type>update</type>
+	<version>5</version>
+	<from_version>4.2.0</from_version>
+	<to_version>4.3.0</to_version>
+	<dependencies>
+		<vtiger_version>4.2.0</vtiger_version>
+		<vtiger_max_version>4.3.0</vtiger_max_version>
+	</dependencies>
+	<license>
+		<file>license.txt</file>
+	</license>
+</module>
