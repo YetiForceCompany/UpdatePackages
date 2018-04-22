@@ -1,0 +1,48 @@
+/cache/*/*
+/cache/*/*/*
+!/cache/*/index.html
+!/cache/*/*/index.html
+
+/config/config_override.php
+/config/csrf_secret.php
+
+# dependencies YETIFORCE
+/public_html/modules/OSSMail/roundcube/
+
+/_private
+/public_html/_private
+/public_html/layouts/basic/styles/.sass-cache
+
+/layouts/basic/modules/Settings/TestData
+
+/modules/TestData
+/modules/Settings/TestData
+
+/user_privileges/cron.php
+/user_privileges/owners_colors.php
+
+/cache/addressBook/mails_1.php
+/cache/addressBook/mails_5.php
+/user_privileges/sharing_privileges_5.php
+/user_privileges/sharing_privileges_6.php
+/user_privileges/user_privileges_5.php
+/user_privileges/user_privileges_6.php
+
+# dependencies COMPOSER
+/vendor
+/public_html/vendor/*
+
+# dependencies YARN
+yarn-error.log
+/node_modules/
+/public_html/libraries/*
+!/public_html/libraries/js/
+
+# IDEs and editors
+/.buildpath
+.c9/
+.classpath
+.project
+*.launch
+.settings/
+*.sublime-workspace

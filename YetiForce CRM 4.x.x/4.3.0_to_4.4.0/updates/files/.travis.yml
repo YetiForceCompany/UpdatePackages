@@ -1,0 +1,53 @@
+sudo: required
+
+dist: trusty
+  
+language: php
+
+php:
+  - 7.1
+  - 7.2
+  - nightly
+  
+matrix:
+  fast_finish: true
+  allow_failures:
+    - php: hhvm
+    - php: nightly
+    
+branches:
+  only:
+    - developer
+   
+services:
+  - mysql
+  
+mysql:
+  database: yetiforce
+  username: root
+  encoding: utf8
+  
+before_script:
+- sudo chmod -R 777 tests/setup/
+- ./tests/setup/before_script.sh
+- ./tests/setup/apache.sh
+  
+script:
+- cd tests
+- /usr/local/bin/phpunit --debug --verbose
+    
+after_script:
+- sudo cat /var/log/apache2/error.log
+- sudo cat /var/log/apache2/access.log
+- sudo cat /var/log/apache2/other_vhosts_access.log
+- cat ../tests/records.log
+- cat ../cache/logs/errors.log
+- cat ../cache/logs/request.log
+- cat ../cache/logs/phpError.log
+- cat ../cache/logs/system.log
+- cat ../cache/logs/Importer.log
+- cat ../cache/logs/webserviceDebug.log
+- cat ../cache/logs/webserviceErrors.log
+- php ocular code-coverage:upload --format=php-clover coverage.xml
+- bash <(curl -s https://codecov.io/bash)
+- sudo ls -all ../screenshots

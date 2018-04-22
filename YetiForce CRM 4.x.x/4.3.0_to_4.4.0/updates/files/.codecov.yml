@@ -1,0 +1,13 @@
+coverage:
+  range: 15..25
+  status:
+    project:
+      default: false
+      tests:
+        target: 100%
+        paths: "tests/"
+      app:
+        target: 11%
+        paths: "!tests/"
+ignore:
+ - tests/copy/.*
