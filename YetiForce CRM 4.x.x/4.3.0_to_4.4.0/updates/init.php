@@ -65,16 +65,19 @@ class YetiForceUpdate
 		$this->importer = new \App\Db\Importer();
 		$this->importer->loadFiles(__DIR__ . '/dbscheme');
 		$this->importer->updateScheme();
-		$this->importer->dropColumns([['u_yf_github', 'client_id']]);
-		$this->removeModule();
-		$this->updateCron();
+		$this->importer->dropColumns([['u_#__github', 'client_id']]);
 		$this->dav();
-		$this->workflowTask();
+		$this->updateScheme();
 		$this->importer->postUpdate();
-		$this->importer->dropTable(['s_#__handler_updater']);
+		$this->importer->dropTable(['s_#__handler_updater', 'vtiger_selectquery_seq', 'vtiger_selectquery', 'vtiger_selectcolumn', 'vtiger_report', 'vtiger_reportdatefilter',
+			'vtiger_reportfilters', 'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary',
+			'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping']);
 		$this->importer->logs(false);
 		$this->importer->refreshSchema();
 		$db->createCommand()->checkIntegrity(true)->execute();
+		$this->updateCron();
+		$this->removeModule();
+		$this->workflowTask();
 		$this->addModules(['PermissionInspector']);
 		$this->updateLangFiles();
 		$this->addLanguages();
@@ -83,6 +86,103 @@ class YetiForceUpdate
 		$db->createCommand()->update('vtiger_cron_task', ['status' => 1], ['name' => 'LBL_BATCH_PROCESSES'])->execute();
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+	}
+
+	/**
+	 * Update scheme
+	 */
+	private function updateScheme()
+	{
+		$db = \App\Db::getInstance();
+		$this->importer->logs .= "> start update tables\n";
+		$dbIndexes = $db->getTableKeys('u_#__crmentity_label');
+		try {
+			if (!isset($dbIndexes['crmentity_label_fulltext']) && $db->getDriverName() === 'mysql') {
+				$this->importer->logs .= "  > create index: crmentity_label_fulltext ... ";
+				$db->createCommand('ALTER TABLE u_yf_crmentity_label ADD FULLTEXT KEY crmentity_label_fulltext(label);')->execute();
+				$this->importer->logs .= "done\n";
+			} else {
+
+			}
+			if (!isset($dbIndexes['crmentity_searchlabel_fulltext']) && $db->getDriverName() === 'mysql') {
+				$this->importer->logs .= "  > create index: crmentity_label_fulltext ... ";
+				$db->createCommand('ADD FULLTEXT KEY `crmentity_searchlabel_fulltext`(`searchlabel`);')->execute();
+				$this->importer->logs .= "done\n";
+			}
+		} catch (\Throwable $e) {
+			$this->importer->logs .= " | Error(8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
+		}
+		$this->dropIndex(['u_yf_crmentity_search_label' => ['searchlabel', 'searchlabel_2']]);
+	}
+
+	/**
+	 * Update data
+	 */
+	private function updateData()
+	{
+		$data = [
+			['vtiger_settings_field', ['name' => 'LBL_TERMS_AND_CONDITIONS']],
+			['vtiger_cron_task', ['handler_file' => 'cron/HandlerUpdater.php']],
+			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']]
+		];
+		\App\Db\Updater::batchDelete($data);
+
+		$data = [
+			['vtiger_ws_operation', ['handler_method' => 'vtwsConvertlead'], ['handler_method' => 'vtws_convertlead']],
+			['vtiger_field', ['typeofdata' => 'V~M'], ['columnname' => 'status', 'tablename' => 'vtiger_users']],
+			['vtiger_field', ['uitype' => 69], ['uitype' => 105]],
+			['vtiger_field', ['uitype' => 71], ['uitype' => 7, 'fieldname' => ['sum_total', 'sum_gross'], 'tabid' => array_map('\App\Module::getModuleId', ['FInvoice', 'SQuotes', 'SSingleOrders', 'FInvoiceProforma', 'FCorectingInvoice', 'FInvoiceCost', 'SCalculations', 'IGRN', 'ISTDN', 'ISTRN', 'IGRNC', 'SVendorEnquiries'])]],
+			['vtiger_ticketstatus', ['color' => '855000'], ['color' => '#E6FAD8', 'ticketstatus' => 'Open']],
+			['vtiger_ticketstatus', ['color' => '42c6ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'In Progress']],
+			['vtiger_ticketstatus', ['color' => 'ffa800'], ['color' => '#E6FAD8', 'ticketstatus' => 'Wait For Response']],
+			['vtiger_ticketstatus', ['color' => '00ff43'], ['color' => '#E6FAD8', 'ticketstatus' => 'Closed']],
+			['vtiger_ticketstatus', ['color' => '0038ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'Answered']],
+			['vtiger_ticketstatus', ['color' => 'e33d3d'], ['color' => '#E6FAD8', 'ticketstatus' => 'Rejected']],
+			['vtiger_ticketstatus', ['color' => 'fff500'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_SUBMITTED_COMMENTS']],
+			['vtiger_ticketstatus', ['color' => '8c4381'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_FOR_APPROVAL']],
+			['vtiger_ticketstatus', ['color' => 'ffb0e7'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_TO_CLOSE']],
+			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentAccount', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentAccount']],
+			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentContacts']],
+			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskChangeNotifyContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskChangeNotifyContacts']],
+			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskClosedNotifyContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskClosedNotifyContacts']],
+			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentOwner', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentOwner']],
+			['vtiger_relatedlists', ['actions' => 'ADD,SELECT'], ['related_tabid' => \App\Module::getModuleId('PriceBooks'), 'tabid' => \App\Module::getModuleId('Services'), 'name' => 'getServicePricebooks']],
+			['vtiger_settings_field', ['iconpath' => 'far fa-image'], ['name' => 'LBL_COUNTRY_SETTINGS']],
+			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=Index'], ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=index']],
+			['u_yf_emailtemplates', ['module' => 'Users', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;"><tr><td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
+			<h3 style="padding:0 0 6px 0;margin:0;font-family:Arial, \'Sans-serif\';font-size:16px;font-weight:bold;color:#222;"><span>$(translate : HelpDesk|LBL_NOTICE_WELCOME)$ YetiForce Sp. z o.o. </span></h3>
+			</td>
+		</tr><tr><td>
+			<div style="padding:2px;">
+			<table border="0"><tr><td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">Dear user,<br />
+						Failed login attempts have been detected.</td>
+					</tr></table></div>
+			</td>
+		</tr><tr><td style="background-color:#f6f6f6;color:#888;border-top:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
+			<div style="float:right;">$(organization : mailLogo)$</div>
+			 
+
+			<p><span style="font-size:12px;">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
+			</td>
+		</tr></table>'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
+		];
+		\App\Db\Updater::batchUpdate($data);
+
+		$data = [
+			['vtiger_settings_field', [
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
+					'name' => 'LBL_ENCRYPTION',
+					'iconpath' => 'fas fa-key',
+					'description' => NULL,
+					'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption',
+					'sequence' => 4,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => NULL,
+				], ['name' => 'LBL_ENCRYPTION', 'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption']
+			]
+		];
+		\App\Db\Updater::batchInsert($data);
 	}
 
 	/**
@@ -118,7 +218,7 @@ class YetiForceUpdate
 			if (!empty($action['tabsData'])) {
 				$tabsData = $action['tabsData'];
 			} else {
-				$modules = array_keys(\vtlib\Functions::getAllModules(true, ['SMSNotifier', 'ModComments', 'PBXManager', 'Events']));
+				$tabsData = array_keys(\vtlib\Functions::getAllModules(true, ['SMSNotifier', 'ModComments', 'PBXManager', 'Events']));
 			}
 			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
 			while ($profileId = $dataReader->readColumn(0)) {
@@ -222,85 +322,12 @@ class YetiForceUpdate
 	 */
 	public function postupdate()
 	{
-		$db = \App\Db::getInstance();
-		$dbIndexes = $db->getTableKeys('u_#__crmentity_label');
-		if (!isset($dbIndexes['crmentity_label_fulltext']) && $db->getDriverName() === 'mysql') {
-			$db->createCommand('ALTER TABLE u_yf_crmentity_label ADD FULLTEXT KEY crmentity_label_fulltext(label);')->execute();
-		}
-		if (!isset($dbIndexes['crmentity_label_fulltext']) && $db->getDriverName() === 'mysql') {
-			$db->createCommand('ADD FULLTEXT KEY `crmentity_searchlabel_fulltext`(`searchlabel`);')->execute();
-		}
-		$this->dropIndex(['u_yf_crmentity_search_label' => ['searchlabel', 'searchlabel_2']]);
-
-		$data = [
-			['vtiger_settings_field', ['name' => 'LBL_TERMS_AND_CONDITIONS']],
-			['vtiger_cron_task', ['handler_file' => 'cron/HandlerUpdater.php']],
-			['vtiger_actionmapping', ['actionname' => 'vtiger_actionmapping']],
-			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']]
-		];
-		\App\Db\Updater::batchDelete($data);
-
-		$data = [
-			['vtiger_ws_operation', ['handler_method' => 'vtwsConvertlead'], ['handler_method' => 'vtws_convertlead']],
-			['vtiger_field', ['typeofdata' => 'V~M'], ['columnname' => 'status', 'tablename' => 'vtiger_users']],
-			['vtiger_field', ['uitype' => 69], ['uitype' => 105]],
-			['vtiger_field', ['uitype' => 71], ['uitype' => 7, 'fieldname' => ['sum_total', 'sum_gross'], 'tabid' => array_map('\App\Module::getModuleId', ['FInvoice', 'SQuotes', 'SSingleOrders', 'FInvoiceProforma', 'FCorectingInvoice', 'FInvoiceCost', 'SCalculations', 'IGRN', 'ISTDN', 'ISTRN', 'IGRNC', 'SVendorEnquiries'])]],
-			['vtiger_ticketstatus', ['color' => '855000'], ['color' => '#E6FAD8', 'ticketstatus' => 'Open']],
-			['vtiger_ticketstatus', ['color' => '42c6ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'In Progress']],
-			['vtiger_ticketstatus', ['color' => 'ffa800'], ['color' => '#E6FAD8', 'ticketstatus' => 'Wait For Response']],
-			['vtiger_ticketstatus', ['color' => '00ff43'], ['color' => '#E6FAD8', 'ticketstatus' => 'Closed']],
-			['vtiger_ticketstatus', ['color' => '0038ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'Answered']],
-			['vtiger_ticketstatus', ['color' => 'e33d3d'], ['color' => '#E6FAD8', 'ticketstatus' => 'Rejected']],
-			['vtiger_ticketstatus', ['color' => 'fff500'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_SUBMITTED_COMMENTS']],
-			['vtiger_ticketstatus', ['color' => '8c4381'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_FOR_APPROVAL']],
-			['vtiger_ticketstatus', ['color' => 'ffb0e7'], ['color' => '#E6FAD8', 'ticketstatus' => 'PLL_TO_CLOSE']],
-			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentAccount', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentAccount']],
-			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentContacts']],
-			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskChangeNotifyContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskChangeNotifyContacts']],
-			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskClosedNotifyContacts', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskClosedNotifyContacts']],
-			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentOwner', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentOwner']],
-			['vtiger_relatedlists', ['actions' => 'ADD,SELECT'], ['related_tabid' => \App\Module::getModuleId('PriceBooks'), 'tabid' => \App\Module::getModuleId('Services'), 'name' => 'getServicePricebooks']],
-			['vtiger_settings_field', ['iconpath' => 'far fa-image'], ['name' => 'LBL_COUNTRY_SETTINGS']],
-			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=Index'], ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=index']],
-			['u_yf_emailtemplates', ['module' => 'Users', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;"><tr><td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
-			<h3 style="padding:0 0 6px 0;margin:0;font-family:Arial, \'Sans-serif\';font-size:16px;font-weight:bold;color:#222;"><span>$(translate : HelpDesk|LBL_NOTICE_WELCOME)$ YetiForce Sp. z o.o. </span></h3>
-			</td>
-		</tr><tr><td>
-			<div style="padding:2px;">
-			<table border="0"><tr><td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">Dear user,<br />
-						Failed login attempts have been detected.</td>
-					</tr></table></div>
-			</td>
-		</tr><tr><td style="background-color:#f6f6f6;color:#888;border-top:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
-			<div style="float:right;">$(organization : mailLogo)$</div>
-			 
-
-			<p><span style="font-size:12px;">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
-			</td>
-		</tr></table>'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
-		];
-		\App\Db\Updater::batchUpdate($data);
-
-		$data = [
-			['vtiger_settings_field', [
-					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
-					'name' => 'LBL_ENCRYPTION',
-					'iconpath' => 'fas fa-key',
-					'description' => NULL,
-					'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption',
-					'sequence' => 4,
-					'active' => 0,
-					'pinned' => 0,
-					'admin_access' => NULL,
-				], ['name' => 'LBL_ENCRYPTION', 'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption']
-			]
-		];
-		\App\Db\Updater::batchInsert($data);
 		register_shutdown_function(function () {
 			if (function_exists('opcache_reset')) {
 				opcache_reset();
 			}
 		});
+		return true;
 	}
 
 	/**
@@ -310,15 +337,23 @@ class YetiForceUpdate
 	 */
 	public function dropIndex(array $tables)
 	{
+		$this->importer->logs .= "> start drop indexes\n";
 		$db = \App\Db::getInstance();
 		foreach ($tables as $tableName => $indexes) {
 			$dbIndexes = $db->getTableKeys($tableName);
 			foreach ($indexes as $index) {
+				$this->importer->logs .= "  > drop index, $tableName:$index ... ";
 				if (isset($dbIndexes[$index])) {
-					$db->createCommand()->dropIndex($index, $tableName)->execute();
+					try {
+						$db->createCommand()->dropIndex($index, $tableName)->execute();
+						$this->importer->logs .= "done\n";
+					} catch (\Throwable $e) {
+						$this->importer->logs .= " | Error(12) [{$e->getMessage()}] in \n{$e->getTraceAsString()} !!!\n";
+					}
 				}
 			}
 		}
+		$this->importer->logs .= "# end drop keys\n";
 	}
 
 	/**
@@ -405,8 +440,7 @@ class YetiForceUpdate
 	private function removeModule()
 	{
 		$moduleName = 'Reports';
-		$db = \App\Db::getInstance();
-		$rows = (new \App\Db\Query)->select(['emailtemplatesid'])->from('u_#__emailtemplates')->where(['module' => $moduleName])->column();
+		$rows = (new \App\Db\Query)->select(['emailtemplatesid'])->from('u_#__emailtemplates')->where(['module' => 'Reports'])->column();
 		foreach ($rows as $recordId) {
 			\Vtiger_Record_Model::getInstanceById($recordId, 'EmailTemplates')->delete();
 		}
@@ -414,12 +448,8 @@ class YetiForceUpdate
 		if ($moduleInstance) {
 			$moduleInstance->delete();
 			$db->createCommand()->delete('vtiger_links', ['like', 'linkurl', "module={$moduleName}&"])->execute();
-			$db->createCommand()->delete('vtiger_profile2utility', ['tabid' => \App\Module::getModuleId($moduleName)])->execute();
+			$db->createCommand()->delete('vtiger_profile2utility', ['tabid' => $moduleInstance->id])->execute();
 		}
-		$this->importer->dropTable(['vtiger_selectquery_seq', 'vtiger_selectquery', 'vtiger_selectcolumn', 'vtiger_report', 'vtiger_reportdatefilter', 'vtiger_reportfilters',
-			'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary',
-			'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping'
-		]);
 	}
 
 	/**
