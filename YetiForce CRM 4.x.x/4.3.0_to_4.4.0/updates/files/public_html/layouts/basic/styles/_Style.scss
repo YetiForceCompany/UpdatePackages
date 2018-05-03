@@ -368,14 +368,6 @@ hr {
   background: #404952;
   border-radius: 0;
 }
-li.ui-timepicker-selected {
-  background: #404952;
-}
-.ui-timepicker-list {
-  li:hover, &:hover .ui-timepicker-selected:hover {
-	background: #404952;
-  }
-}
 /*Do not shrink select2 input box in layout editor*/
 #relatedTabOrder .select2-input {
   min-width: 200px;
@@ -459,16 +451,6 @@ li.ui-timepicker-selected {
   .details {
 	padding-bottom: 10px;
 	padding-top: 10px;
-  }
-  .related .nav-pills .active > a {
-	background: #404952;
-	border-radius: 1px;
-	margin-top: 0;
-	&:hover {
-	  background: #404952;
-	  border-radius: 1px;
-	  margin-top: 0;
-	}
   }
 }
 .commentContainer {
@@ -665,15 +647,15 @@ td.fieldValue {
 }
 .listViewEntriesTable {
   .listViewEntries {
-    .unreviewed .badge {
-      margin-left: 4px;
-    }
+	.unreviewed .badge {
+	  margin-left: 4px;
+	}
   }
   td.listViewEntryValue {
-	  vertical-align: middle;
+	vertical-align: middle;
 	cursor: pointer;
-    overflow: visible;
-    padding: 5px;
+	overflow: visible;
+	padding: 5px;
   }
 }
 .listViewEntries td {
@@ -1427,7 +1409,7 @@ td.fieldValue {
 .calendarPopover.popover {
   max-width: 30%;
   label {
-	  margin: 0;
+	margin: 0;
   }
 }
 .btn:focus {
@@ -1724,10 +1706,6 @@ form {
   [class^="icon-"], [class*=" icon-"] {
 	vertical-align: baseline;
   }
-}
-.timePicker {
-  width: 8.5em !important;
-  z-index: 1000029 !important;
 }
 .datepicker {
   z-index: 1000029 !important;
@@ -2177,7 +2155,7 @@ span[name=existingImages] img {
 }
 .container-fluid > .row {
   &:first-child {
-	height: 50px;
+	margin-bottom: 10px;
 	padding-right: 5px;
   }
   margin-left: 0px;
@@ -2329,7 +2307,7 @@ html, body, .baseContainer {
   margin: 0;
 }
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-  ::i-block-chrome, .baseContainer .leftPanel .menuContainer .subMenu a .menuName, ::i-block-chrome, .baseContainer .leftPanel .menuContainer .subMenu button .menuName {
+  ::i-block-chrome, ::i-block-chrome {
 	top: -4px;
   }
 }
@@ -2343,7 +2321,6 @@ html, body, .baseContainer {
   padding-top: 0px;
   padding-bottom: 15px;
 }
-
 .companyLogoContainer {
   display: block;
   width: 48px;
@@ -2377,20 +2354,12 @@ html, body, .baseContainer {
 	color: #000;
   }
 }
-.menuContainer {
-  overflow-y: auto;
-  overflow-x: hidden !important;
-  height: calc(100% - 50px);
-  width: 100%;
-  position: relative;
-}
 .vakata-context {
   z-index: 1031;
   ul {
 	z-index: 1031;
   }
 }
-
 .breadcrumbsLinks {
   margin-top: 7px;
   margin-left: 0px;
@@ -2432,11 +2401,9 @@ html, body, .baseContainer {
   margin: 1px;
   height: 27px;
 }
-
 .marginLeft15 {
   margin-left: 15px;
 }
-
 .mainBody {
   position: absolute;
   top: 50px;
@@ -2484,7 +2451,6 @@ html, body, .baseContainer {
 	padding-left: 0 !important;
   }
 }
-
 .sortTableUl {
   list-style-type: none;
   float: left;
@@ -2531,11 +2497,6 @@ html, body, .baseContainer {
 }
 .modalEditStatus .form-horizontal .form-group .control-label, #modalEditStatus .form-horizontal .form-group .control-label {
   padding-top: 0;
-}
-.pageNumber.active.disabled a {
-  background-color: #337AB7;
-  border-color: #337AB7;
-  color: #FFF;
 }
 .listViewEntriesCheckBox, #listViewEntriesMainCheckBox {
   cursor: pointer;
@@ -2728,7 +2689,7 @@ html, body, .baseContainer {
 	padding-right: 0;
 	padding-left: 0;
   }
- 
+
 }
 @media screen and (max-width: 992px) {
   .detailViewTable .fieldsLabelValue {
@@ -3087,36 +3048,6 @@ html, body, .baseContainer {
 .marginTop20 {
   margin-top: 20px !important;
 }
-.related {
-  .nav {
-	.relatedNav {
-	  background: #f1f1f1;
-	}
-	.dropdown {
-	  .mainNav {
-		background: #f1f1f1;
-	  }
-	  background: #f1f1f1;
-	}
-	> li > a {
-	  min-height: 38px;
-	}
-	li {
-	  position: relative !important;
-	  margin-left: 2px !important;
-	}
-  }
-  .nav-pills {
-	border-bottom: 3px solid #404952;
-  }
-  ul .dropdown-menu {
-	min-width: 300px;
-	z-index: 1025;
-  }
-  .iconModule {
-	font-size: 17px;
-  }
-}
 .detailViewIcon {
   font-size: 48px;
   padding: 10px;
@@ -3363,7 +3294,7 @@ select.form-control {
 	padding: 7px 7px 0px 7px;
 	hr + a {
 	  font-weight: bold;
-	  color: #337ab7 !important;
+	  color: $blue !important;
 	}
   }
   .noticeIcon {
@@ -3538,14 +3469,12 @@ select.form-control {
 .marginRight15 {
   margin-right: 15px;
 }
-
 .listViewEntries {
   background: #fff;
   &:hover {
 	background: #dddddd20;
   }
 }
-
 .widthMin {
   width: 1%;
 }
@@ -3650,14 +3579,6 @@ select.form-control {
   }
   .panel-body .btn.actionIcon {
 	margin-top: -5px;
-  }
-}
-.dashboardWidget {
-  .select2-selection--multiple .select2-search--inline .select2-search__field {
-	height: 25px;
-  }
-  .select2-container--bootstrap .select2-selection--multiple {
-	min-height: 30px;
   }
 }
 .dashboardWidgetContent {
@@ -3850,7 +3771,4 @@ border1px {
 }
 .popupEntriesDiv .listSearchTd {
   width: 57px;
-}
-.ps__rail-x, .ps__rail-y, .ps__thumb-x {
-  z-index: 10000;
 }

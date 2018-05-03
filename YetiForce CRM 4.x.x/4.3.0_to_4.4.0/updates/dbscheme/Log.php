@@ -18,7 +18,7 @@ class Log extends \App\Db\Importers\Base
 		$this->tables = [
 			'l_#__batchmethod' => [
 				'columns' => [
-					'id' => $this->integer()->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(11)->notNull(),
 					'method' => $this->stringType(50)->notNull(),
 					'params' => $this->text(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull(),
@@ -28,9 +28,6 @@ class Log extends \App\Db\Importers\Base
 				],
 				'columns_mysql' => [
 					'status' => $this->tinyInteger(1)->unsigned()->notNull(),
-				],
-				'primaryKeys' => [
-					['batchmethod_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -54,19 +51,7 @@ class Log extends \App\Db\Importers\Base
 			],
 			'l_#__settings_tracker_basic' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
 					'user_id' => $this->integer(10)->unsigned(), //
-					'type' => $this->smallInteger(1)->notNull(),
-					'action' => $this->stringType(50)->notNull(),
-					'record_id' => $this->integer(10),
-					'module_name' => $this->stringType(50)->notNull(),
-					'date' => $this->dateTime()->notNull(),
-				],
-				'columns_mysql' => [
-					'type' => $this->tinyInteger(1)->notNull(),
-				],
-				'primaryKeys' => [
-					['settings_tracker_basic_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

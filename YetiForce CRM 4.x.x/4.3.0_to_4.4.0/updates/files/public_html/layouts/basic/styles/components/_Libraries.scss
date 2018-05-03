@@ -16,15 +16,6 @@
 		line-height: 1.5;
 	}
 }
-.dashboardWidgetHeader{
-	.input-group-sm{
-		.select2-container--bootstrap4 {
-			.select2-selection--single {
-				padding: 0.275rem 1.125rem 0.375rem 0.75rem !important;
-			}
-		}
-	}
-}
 .select2-selection__arrow {
   @extend .mt-1;
 }
@@ -55,7 +46,6 @@ header {
 	.globalSearchInput .select2-selection.select2-selection--single {
 		font-size: $font-size-sm !important;
 		height: $menuItemsHeight !important;
-		@extend .pt-2;
 	}
 	.select2WithButtonWidth {
 		width: calc(100% - #{$iconButtonWidth});
@@ -69,12 +59,9 @@ header {
 }
 
 .select2HeaderWidth {
-	.select2-selection {
-		height: 2.5rem !important;
-	}
-	.select2-selection__rendered {
-		line-height: 1;
-	}
+  .select2-selection {
+	height: 2.5rem !important;
+  }
 }
 .fieldUiHolder {
 	width: 25%;
@@ -95,6 +82,9 @@ header {
 }
 .select2-selection[aria-labelledby^="select2-theme"] {
 	@extend .p-0;
+}
+.select2-search__field {
+  width: 100% !important;
 }
 //--- modal ---//
 .leaflet-popup-content {

@@ -150,9 +150,9 @@
     "LBL_PASSWORD_CONF": "Has\u0142a - konfiguracja",
     "LBL_PASSWORD_DESCRIPTION": "Ustaw z\u0142o\u017cono\u015bci has\u0142a dla u\u017cytkownik\u00f3w systemu",
     "LBL_ARRANGE_RELATED_TABS": "Modu\u0142y - wid\u017cety",
-    "LBL_About_YetiForce": "YetiForce",
+    "LBL_About_YetiForce": "O aplikacji",
     "LangManagement": "Edytor j\u0119zyk\u00f3w",
-    "License": "Licencja",
+    "License": "Licencje",
     "Mail Scanner": "Skaner poczty",
     "Mail View": "Maile",
     "Mail": "Poczta - RoundCube",
@@ -287,6 +287,7 @@
     "LBL_ICON_NAME": "Nazwa ikony",
     "LBL_ICON_EXAMPLE": "Przyk\u0142ad ikony",
     "RecordAllocation": "Przydzia\u0142 rekord\u00f3w",
+    "LBL_RECORDALLOCATION_DESCRIPTION": " ",
     "ERR_NO_REQUIRED_LIBRARY": "Nie znaleziono wymaganej biblioteki %s. Cz\u0119\u015b\u0107 funkcjonalno\u015bci zosta\u0142a zablokowana. Aby pobra\u0107 nale\u017cy przej\u015b\u0107 do <a href=\"index.php?module=ModuleManager&parent=Settings&view=List\">Modu\u0142y - instalacja<\/a>",
     "LBL_SYSTEM_WARNINGS": "Ostrze\u017cenia systemowe",
     "LBL_WARNINGS_FOLDERS": "Kategorie ostrze\u017ce\u0144",
@@ -350,7 +351,8 @@
     "LBL_LICENSE": "Licencja",
     "LBL_MISSING_LICENSE_FILE": "Brak pliku licencji",
     "LBL_VTIGER_DESCRIPTION": "Orginalnego kodu Vtigera zosta\u0142o oko\u0142o 30%. Pozosta\u0142y kod zosta\u0142 przepisany i rozszerzony",
-    "LBL_SUGAR_DESCRIPTION": "Vtgier bazowa\u0142 na Sugar CRM. Obecnie w Yetiforce pozosta\u0142o kilka plik\u00f3w po Sugar CRM"
+    "LBL_SUGAR_DESCRIPTION": "Vtgier bazowa\u0142 na Sugar CRM. Obecnie w Yetiforce pozosta\u0142o kilka plik\u00f3w po Sugar CRM",
+    "LBL_SHOP_YETIFORCE": "Sklep"
   },
   "js": {
     "JS_AUTHORIZATION_COMPLETE": "Autoryzacja zako\u0144czona pomy\u015blnie",

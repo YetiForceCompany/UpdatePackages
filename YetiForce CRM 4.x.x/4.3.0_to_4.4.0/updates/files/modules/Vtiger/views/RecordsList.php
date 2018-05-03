@@ -108,7 +108,7 @@ class Vtiger_RecordsList_View extends \App\Controller\Modal
 		$sourceModule = $request->getByType('src_module', 2);
 		$sourceRecord = $request->isEmpty('src_record', true) ? 0 : $request->getInteger('src_record');
 		$sourceField = $request->isEmpty('src_field', true) ? '' : $request->getByType('src_field', 2);
-		$currencyId = $request->getInteger('currency_id');
+		$currencyId = $request->isEmpty('currency_id', true) ? '' : $request->getInteger('currency_id');
 		$relatedParentModule = $request->isEmpty('related_parent_module', true) ? '' : $request->getByType('related_parent_module', 2);
 		$relatedParentId = $request->isEmpty('related_parent_id') ? '' : $request->getInteger('related_parent_id');
 		$filterFields = $request->getArray('filterFields', 'Alnum');
@@ -206,6 +206,9 @@ class Vtiger_RecordsList_View extends \App\Controller\Modal
 				$searchParmams[$fieldName] = $fieldSearchInfo;
 			}
 		}
+		if ($currencyId) {
+			$listViewModel->set('currency_id', $currencyId);
+		}
 		if (!empty($relatedParentModule) && !empty($relatedParentId)) {
 			$listViewHeaders = $listViewModel->getHeaders();
 			$listViewEntries = $listViewModel->getEntries($pagingModel);
@@ -282,6 +285,8 @@ class Vtiger_RecordsList_View extends \App\Controller\Modal
 		$viewer->assign('NEXT_SORT_ORDER', $nextSortOrder);
 		$viewer->assign('SORT_IMAGE', $sortImage);
 		$viewer->assign('CURRENCY_ID', $currencyId);
+		$viewer->assign('FILTER_FIELDS', $filterFields);
+		$viewer->assign('ADDITIONAL_INFORMATIONS', $request->getBoolean('additionalInformations'));
 		$viewer->assign('RECORD_STRUCTURE_MODEL', $recordStructureInstance);
 		$viewer->assign('RECORD_STRUCTURE', $recordStructureInstance->getStructure());
 		$viewer->assign('LISTVIEW_HEADERS', $listViewHeaders);

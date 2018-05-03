@@ -35,9 +35,9 @@
         <hr>
         <div class="contents tabbable">
             <ul class="nav nav-tabs layoutTabs massEditTabs">
-                <li class="active"><a data-toggle="tab" href="#detailViewLayout"><strong>{App\Language::translate('LBL_DETAILVIEW_LAYOUT', $QUALIFIED_MODULE)}</strong></a></li>
+                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#detailViewLayout"><strong>{App\Language::translate('LBL_DETAILVIEW_LAYOUT', $QUALIFIED_MODULE)}</strong></a></li>
 							{if $IS_INVENTORY}
-					<li class="inventoryNav"><a data-toggle="tab" href="#inventoryViewLayout"><strong>{App\Language::translate('LBL_MANAGING_AN_ADVANCED_BLOCK', $QUALIFIED_MODULE)}</strong></a></li>
+					<li class="nav-item inventoryNav"><a class="nav-link" data-toggle="tab" href="#inventoryViewLayout"><strong>{App\Language::translate('LBL_MANAGING_AN_ADVANCED_BLOCK', $QUALIFIED_MODULE)}</strong></a></li>
 							{/if}
             </ul>
             <div class="tab-content layoutContent p-3 themeTableColor overflowVisible">
@@ -77,7 +77,7 @@
                                             {if $BLOCK_MODEL->isAddCustomFieldEnabled()}
                                                 <div class="btn-group">
                                                     <button class="btn btn-success addCustomField" type="button">
-                                                        <strong>{App\Language::translate('LBL_ADD_CUSTOM_FIELD', $QUALIFIED_MODULE)}</strong>
+														<span class="fa fa-plus u-mr-5px"></span><strong>{App\Language::translate('LBL_ADD_CUSTOM_FIELD', $QUALIFIED_MODULE)}</strong>
                                                     </button>
                                                 </div>
                                             {/if}

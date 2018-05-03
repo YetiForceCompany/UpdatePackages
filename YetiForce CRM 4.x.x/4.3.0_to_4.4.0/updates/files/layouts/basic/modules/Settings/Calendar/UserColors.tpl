@@ -36,7 +36,7 @@
 									<td class="w-25"><p style="padding-top:10px;">{\App\Language::translate('LBL_NOTWORKEDDAYS_INFO', $QUALIFIED_MODULE)}</p></td>
 									<td>
 										<div class="col-md-4">
-											<select class="chzn-select workignDaysField float-left" multiple id="update_workingdays" name="notworkingdays" data-metod="updateNotWorkingDays">
+											<select class="select2 workignDaysField float-left" multiple id="update_workingdays" name="notworkingdays" data-metod="updateNotWorkingDays">
 												<option value="1" {if in_array(1, $NOTWORKINGDAYS)} selected {/if} >{\App\Language::translate(PLL_MONDAY,$QUALIFIED_MODULE)}</option>
 												<option value="2" {if in_array(2, $NOTWORKINGDAYS)} selected {/if} >{\App\Language::translate(PLL_TUESDAY,$QUALIFIED_MODULE)}</option>
 												<option value="3" {if in_array(3, $NOTWORKINGDAYS)} selected {/if} >{\App\Language::translate(PLL_WEDNESDAY,$QUALIFIED_MODULE)}</option>
@@ -75,7 +75,7 @@
 							</div>
 						</form>
 					</div>
-					{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', $MODULE)}
+					{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', $MODULE) BTN_SUCCESS='LBL_SAVE' BTN_DANGER='LBL_CANCEL'}}
 				</div>
 			</div>
 		</div>

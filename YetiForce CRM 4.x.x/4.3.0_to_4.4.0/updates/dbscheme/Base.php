@@ -18,7 +18,7 @@ class Base extends \App\Db\Importers\Base
 		$this->tables = [
 			'dav_calendarinstances' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10)->notNull(),
 					'calendarid' => $this->integer(10)->unsigned()->notNull(),
 					'principaluri' => $this->stringType(100),
 					'access' => $this->smallInteger(1)->notNull()->defaultValue(1),
@@ -47,15 +47,12 @@ class Base extends \App\Db\Importers\Base
 					['calendarid', ['calendarid', 'principaluri'], true],
 					['calendarid_2', ['calendarid', 'share_href'], true],
 				],
-				'primaryKeys' => [
-					['dav_calendarinstances_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8mb4'
 			],
 			'u_#__file_upload_temp' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10)->notNull(),
 					'name' => $this->stringType()->notNull(),
 					'type' => $this->stringType(100),
 					'path' => $this->text()->notNull(),
@@ -71,9 +68,6 @@ class Base extends \App\Db\Importers\Base
 				'index' => [
 					['key', 'key', true],
 					['crmid', 'crmid'],
-				],
-				'primaryKeys' => [
-					['file_upload_temp_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -94,28 +88,11 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'vtiger_projectmilestone' => [
-				'columns' => [
-					'parentid' => $this->integer(10)
-				],
-				'index' => [
-					['projectid', 'projectid'],
-					['vtiger_projectmilestone_parentid_idx', 'parentid'],
-				],
-				'primaryKeys' => [
-					['projectmilestone_pk', 'projectmilestoneid']
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'u_#__github' => [
 				'columns' => [
-					'github_id' => $this->integer(10)->autoIncrement()->notNull(),
+					'github_id' => $this->primaryKey(10)->notNull(),
 					'token' => $this->stringType(100), //
 					'username' => $this->stringType(32),
-				],
-				'primaryKeys' => [
-					['github_pk', 'github_id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

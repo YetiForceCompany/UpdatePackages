@@ -549,7 +549,7 @@ class CustomView
 		if (!$this->module) {
 			$this->module = \Vtiger_Module_Model::getInstance($this->moduleName);
 		}
-		if (empty($cvIds) || static::isMultiViewId($cvIds)) {
+		if (empty($cvIds) || !static::isMultiViewId($cvIds)) {
 			return $this->_getAdvFilterByCvid($cvIds);
 		}
 		$advftCriteria = [];
@@ -644,6 +644,9 @@ class CustomView
 				}
 			} else {
 				$viewId = (int) $viewId;
+				if (!$this->isPermittedCustomView($viewId)) {
+					throw new Exceptions\NoPermitted('ERR_NO_PERMITTED_TO_VIEW');
+				}
 			}
 		}
 		$this->defaultViewId = $viewId;

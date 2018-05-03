@@ -46,7 +46,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__batchmethod' => [
 				'columns' => [
-					'id' => $this->integer()->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(11)->notNull(),
 					'method' => $this->stringType(50)->notNull(),
 					'params' => $this->text()->notNull(),
 					'created_time' => $this->date()->notNull(),
@@ -55,9 +55,6 @@ class Admin extends \App\Db\Importers\Base
 				],
 				'columns_mysql' => [
 					'status' => $this->tinyInteger(1)->unsigned()->notNull(),
-				],
-				'primaryKeys' => [
-					['batchmethod_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

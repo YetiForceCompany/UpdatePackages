@@ -1,12 +1,10 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
-
 @charset 'UTF-8';
-
 //-------- global variables --------//
 @import '_Variables';
 //-------- bootstrap --------//
 @import '../../../libraries/bootstrap/scss/bootstrap';
-@import '../../../libraries/select2-bootstrap4-theme/src/select2-bootstrap4';
+@import '../../../libraries/select2-bootstrap-theme/dist/select2-bootstrap.css';
 //-------- base --------//
 @import '_Style';
 //-------- components --------//
