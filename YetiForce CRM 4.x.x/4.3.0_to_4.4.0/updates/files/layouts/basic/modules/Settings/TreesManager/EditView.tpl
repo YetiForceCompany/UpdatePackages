@@ -1,6 +1,6 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="editViewContainer">
+	<div class="tpl-Settings-TreesManager-EditView editViewContainer">
 		<form class="form-horizontal recordEditView" id="EditView" name="EditView" method="post" action="index.php" enctype="multipart/form-data">
 			<input type="hidden" name="module" value="TreesManager" />
 			<input type="hidden" name="parent" value="Settings" />
@@ -76,7 +76,7 @@
 				</div>
 				<div class="col-md-8 d-flex">
 					<input type="text" class="fieldValue col-md-4 addNewElement form-control">
-					<button class="btn btn-light addNewElementBtn ml-1" type="button"><strong>{\App\Language::translate('LBL_ADD_TO_TREES', $QUALIFIED_MODULE)}</strong></button>
+					<button class="btn btn-primary addNewElementBtn ml-1" type="button"><span class="fas fa-plus u-mr-5px"></span><strong>{\App\Language::translate('LBL_ADD_TO_TREES', $QUALIFIED_MODULE)}</strong></button>
 				</div>
 			</div>
 			<hr class="mt-1">
@@ -85,11 +85,11 @@
 			</div>
 			<br />
 			<div class="float-right">
-				<button class="btn btn-success saveTree">
-					<span class="fas fa-check"></span>&nbsp;&nbsp;
+				<button class="btn btn-success saveTree mr-1">
+					<span class="fas fa-check mr-1"></span>
 					<strong>{\App\Language::translate('LBL_SAVE', $MODULE)}</strong>
-				</button>&nbsp;&nbsp;
-				<button class="cancelLink btn btn-warning" type="reset" onclick="javascript:window.history.back();">
+				</button>
+				<button class="cancelLink btn btn-danger" type="reset" onclick="javascript:window.history.back();">
 					<span class="fas fa-times"></span>&nbsp;&nbsp;
 					<strong>{\App\Language::translate('LBL_CANCEL', $MODULE)}</strong>
 				</button>

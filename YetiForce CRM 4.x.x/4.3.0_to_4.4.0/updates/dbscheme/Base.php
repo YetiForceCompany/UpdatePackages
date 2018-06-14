@@ -74,7 +74,11 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_users' => [
 				'columns' => [
-					'imagename' => $this->text()
+					'imagename' => $this->text(),
+					'no_of_currency_decimals' => $this->stringType(1),
+					'callduration' => $this->stringType(3),
+					'othereventduration' => $this->stringType(3),
+					'authy_methods' => $this->stringType(255)
 				],
 				'index' => [
 					['email1', 'email1', true],
@@ -99,7 +103,8 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_contactdetails' => [
 				'columns' => [
-					'imagename' => $this->text()
+					'imagename' => $this->text(),
+					'reportsto' => $this->integer(11)
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -173,6 +178,9 @@ class Base extends \App\Db\Importers\Base
 				'charset' => 'utf8'
 			],
 			'vtiger_field' => [
+				'columns' => [
+					'maximumlength' => $this->stringType(30)
+				],
 				'index' => [
 					['field_tabid_idx', 'tabid'],
 					['field_fieldname_idx', 'fieldname'],
@@ -222,9 +230,268 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__activityregister' => [
+				'columns' => [
+					'activityregisterid' => $this->integer(10)->notNull(),
+					'subject' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'activityregister_status' => $this->stringType()->defaultValue(''),
+					'datasetregisterid' => $this->integer(11)->unsigned()->defaultValue(0),
+					'start_date' => $this->date(),
+					'end_date' => $this->date(),
+					'activity_type' => $this->text(),
+					'parent_id' => $this->integer(10),
+				],
+				'primaryKeys' => [
+					['activityregister_pk', 'activityregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__activityregistercf' => [
+				'columns' => [
+					'activityregisterid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['activityregistercf_pk', 'activityregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__auditregister' => [
+				'columns' => [
+					'auditregisterid' => $this->integer(10)->notNull(),
+					'name' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'locationregisterid' => $this->integer(11)->unsigned()->defaultValue(0),
+					'datasetregisterid' => $this->integer(11)->unsigned()->defaultValue(0),
+					'auditregister_status' => $this->stringType()->defaultValue(''),
+					'auditregister_type' => $this->stringType()->defaultValue(''),
+				],
+				'primaryKeys' => [
+					['auditregister_pk', 'auditregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__auditregistercf' => [
+				'columns' => [
+					'auditregisterid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['auditregistercf_pk', 'auditregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__datasetregister' => [
+				'columns' => [
+					'datasetregisterid' => $this->integer(10)->notNull(),
+					'subject' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'datasetregister_status' => $this->stringType()->defaultValue(''),
+					'legal_basis' => $this->text(),
+					'scope_data' => $this->text(),
+					'registered_dpo' => $this->smallInteger(1)->defaultValue(0),
+					'data_submitted' => $this->smallInteger(1)->defaultValue(0),
+					'internal_register' => $this->smallInteger(1)->defaultValue(0),
+					'data_set_shared' => $this->smallInteger(1)->defaultValue(0),
+					'added_to_register' => $this->date(),
+					'removed_from_register' => $this->date(),
+					'parent_id' => $this->integer(10)->notNull(),
+				],
+				'columns_mysql' => [
+					'registered_dpo' => $this->tinyInteger(1)->defaultValue(0),
+					'data_submitted' => $this->tinyInteger(1)->defaultValue(0),
+					'internal_register' => $this->tinyInteger(1)->defaultValue(0),
+					'data_set_shared' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'primaryKeys' => [
+					['datasetregister_pk', 'datasetregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__datasetregistercf' => [
+				'columns' => [
+					'datasetregisterid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['datasetregistercf_pk', 'datasetregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__incidentregister' => [
+				'columns' => [
+					'incidentregisterid' => $this->integer(10)->notNull(),
+					'name' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'locationregisterid' => $this->integer(11)->unsigned()->defaultValue(0),
+					'datasetregisterid' => $this->integer(11)->unsigned()->defaultValue(0),
+					'incidentregister_status' => $this->stringType()->defaultValue(''),
+					'incidentregister_type' => $this->stringType()->defaultValue(''),
+					'incident_date' => $this->date(),
+					'discovery_date' => $this->date(),
+					'incident_report_date' => $this->date(),
+					'incident_publication_date' => $this->date(),
+					'peoplne_number' => $this->integer(9)->defaultValue(0),
+					'breach_circumstances' => $this->text(),
+					'breach_nature' => $this->text(),
+					'possible_consequences' => $this->text(),
+					'security_measures' => $this->text(),
+				],
+				'primaryKeys' => [
+					['incidentregister_pk', 'incidentregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__incidentregistercf' => [
+				'columns' => [
+					'incidentregisterid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['incidentregistercf_pk', 'incidentregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__locationregister' => [
+				'columns' => [
+					'locationregisterid' => $this->integer(10)->notNull(),
+					'name' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'parent_id' => $this->integer(11)->unsigned()->defaultValue(0),
+					'locationregister_status' => $this->stringType()->defaultValue(''),
+					'security_type' => $this->text(),
+					'building_number' => $this->stringType(10)->defaultValue(''),
+					'street' => $this->stringType()->defaultValue(''),
+					'district' => $this->stringType()->defaultValue(''),
+					'township' => $this->stringType()->defaultValue(''),
+					'state' => $this->stringType()->defaultValue(''),
+					'pobox' => $this->stringType(100)->defaultValue(''),
+					'local_number' => $this->stringType(20)->defaultValue(''),
+					'post_code' => $this->stringType(20)->defaultValue(''),
+					'city' => $this->stringType(150)->defaultValue(''),
+					'county' => $this->stringType(150)->defaultValue(''),
+					'country' => $this->stringType(150)->defaultValue(''),
+				],
+				'primaryKeys' => [
+					['locationregister_pk', 'locationregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__locationregistercf' => [
+				'columns' => [
+					'locationregisterid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['locationregistercf_pk', 'locationregisterid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_actionmapping' => [
+				'columns' => [
+					'actionid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'actionname' => $this->stringType(200)->notNull(),
+					'securitycheck' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'securitycheck' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'index' => [
+					['actionname', 'actionname'],
+				],
+				'primaryKeys' => [
+					['actionmapping_pk', ['actionid', 'actionname']]
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_account' => [
+				'columns' => [
+					'siccode' => $this->stringType(255)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__emailtemplates' => [
+				'columns' => [
+					'email_template_priority' => $this->stringType(1)->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_activity' => [
+				'columns' => [
+					'duration_minutes' => $this->stringType(3)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_faq' => [
+				'columns' => [
+					'product_id' => $this->integer(11)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modcomments' => [
+				'columns' => [
+					'customer' => $this->integer(11)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_outsourcedproducts' => [
+				'columns' => [
+					'prodcount' => $this->integer(11)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_pbxmanager' => [
+				'columns' => [
+					'user' => $this->smallInteger(6)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_entity_stats' => [
+				'columns' => [
+					'crmactivity' => $this->integer(8),
+				],
+				'columns_mysql' => [
+					'presence' => 'mediumint(8)',
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_vendor' => [
+				'columns' => [
+					'vendorname' => $this->stringType(255),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['a_#__record_converter_fk_tab', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'RESTRICT', 'RESTRICT'],
+			['fk_1_u_#__activityregisteractivityregisterid', 'u_#__activityregister', 'activityregisterid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__activityregistercfactivityregisterid', 'u_#__activityregistercf', 'activityregisterid', 'u_#__activityregister', 'activityregisterid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__auditregisterauditregisterid', 'u_#__auditregister', 'auditregisterid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__auditregistercfauditregisterid', 'u_#__auditregistercf', 'auditregisterid', 'u_#__auditregister', 'auditregisterid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__datasetregisterdatasetregisterid', 'u_#__datasetregister', 'datasetregisterid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__datasetregistercfdatasetregisterid', 'u_#__datasetregistercf', 'datasetregisterid', 'u_#__datasetregister', 'datasetregisterid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__incidentregisterincidentregisterid', 'u_#__incidentregister', 'incidentregisterid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__incidentregistercfincidentregisterid', 'u_#__incidentregistercf', 'incidentregisterid', 'u_#__incidentregister', 'incidentregisterid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__locationregisterlocationregisterid', 'u_#__locationregister', 'locationregisterid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__locationregistercflocationregisterid', 'u_#__locationregistercf', 'locationregisterid', 'u_#__locationregister', 'locationregisterid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__multicompanymulticompanyid', 'u_#__multicompany', 'multicompanyid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__multicompanycfmulticompanyid', 'u_#__multicompanycf', 'multicompanyid', 'u_#__multicompany', 'multicompanyid', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }

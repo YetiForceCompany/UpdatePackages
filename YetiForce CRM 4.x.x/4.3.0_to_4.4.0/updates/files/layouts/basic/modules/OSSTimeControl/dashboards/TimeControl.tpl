@@ -49,22 +49,21 @@
 	{/foreach}
 	<div class="row">
 		<div class="col-md-8">
-			<div class="dashboardTitle" title="{App\Purifier::encodeHtml(App\Language::translate($WIDGET->getTitle(), $MODULE_NAME))}"><strong>&nbsp;&nbsp;{\App\Language::translate($WIDGET->getTitle(),$MODULE_NAME)}</strong></div>
+			<h5 class="dashboardTitle h6" title="{App\Purifier::encodeHtml(App\Language::translate($WIDGET->getTitle(), $MODULE_NAME))}"><strong>&nbsp;&nbsp;{\App\Language::translate($WIDGET->getTitle(),$MODULE_NAME)}</strong></h5>
 		</div>
 		<div class="col-md-4">
 			<div class="box float-right">
 				{if \App\Privilege::isPermitted('OSSTimeControl', 'CreateView')}
-					<a class="btn btn-sm btn-light" onclick="Vtiger_Header_Js.getInstance().quickCreateModule('OSSTimeControl');
-							return false;" title="{\App\Language::translate('LBL_ADD_RECORD')}" alt="{\App\Language::translate('LBL_ADD_RECORD')}">
-						<span class='fas fa-plus' border='0'></span>
+					<a class="btn btn-sm btn-light" onclick="Vtiger_Header_Js.getInstance().quickCreateModule('OSSTimeControl'); return false;">
+						<span class="fas fa-plus" title="{\App\Language::translate('LBL_ADD_RECORD')}"></span>
 					</a>
 				{/if}
-				<a class="btn btn-sm btn-light" href="javascript:void(0);" name="drefresh" data-url="{$WIDGET->getUrl()}&linkid={$WIDGET->get('linkid')}&content=data" title="{\App\Language::translate('LBL_REFRESH')}" alt="{\App\Language::translate('LBL_REFRESH')}">
-					<span class="fas fa-sync-alt" hspace="2" border="0" align="absmiddle"></span>
+				<a class="btn btn-sm btn-light" href="javascript:void(0);" name="drefresh" data-url="{$WIDGET->getUrl()}&linkid={$WIDGET->get('linkid')}&content=data">
+					<span class="fas fa-sync-alt" title="{\App\Language::translate('LBL_REFRESH')}"></span>
 				</a>
 				{if !$WIDGET->isDefault()}
 					<a class="btn btn-sm btn-light" name="dclose" class="widget" data-url="{$WIDGET->getDeleteUrl()}">
-						<span class="fas fa-times" hspace="2" border="0" align="absmiddle" title="{\App\Language::translate('LBL_CLOSE')}" alt="{\App\Language::translate('LBL_CLOSE')}"></span>
+						<span class="fas fa-times" title="{\App\Language::translate('LBL_CLOSE')}"></span>
 					</a>
 				{/if}
 			</div>

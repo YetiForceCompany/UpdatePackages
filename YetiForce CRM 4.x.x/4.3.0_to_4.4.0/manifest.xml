@@ -5,10 +5,10 @@
 	<type>update</type>
 	<version>1</version>
 	<from_version>4.3.0</from_version>
-	<to_version>4.3.327</to_version>
+	<to_version>4.3.380</to_version>
 	<dependencies>
 		<vtiger_version>4.3.0</vtiger_version>
-		<vtiger_max_version>4.3.327</vtiger_max_version>
+		<vtiger_max_version>4.3.380</vtiger_max_version>
 	</dependencies>
 	<license>
 		<file>license.txt</file>

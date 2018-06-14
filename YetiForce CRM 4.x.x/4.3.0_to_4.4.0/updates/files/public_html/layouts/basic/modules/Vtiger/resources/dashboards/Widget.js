@@ -37,7 +37,8 @@ jQuery.Class('Vtiger_Widget_Js', {
 	chartData: [],
 	paramCache: false,
 	init: function init(container, reload, widgetClassName) {
-		this.setContainer(jQuery(container));
+		container = $(container);
+		this.setContainer(container);
 		this.registerWidgetPostLoadEvent(container);
 		if (!reload) {
 			this.registerWidgetPostRefreshEvent(container);
@@ -1194,10 +1195,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 		return this;
 	},
 	isEmptyData: function isEmptyData() {
-		return this.getContainer().find('.noDataMsg').length > 0;
+		return this.getContainer().find('.widgetData').length === 0 || this.getContainer().find('.noDataMsg').length > 0;
 	},
 	getUserDateFormat: function getUserDateFormat() {
-		return jQuery('#userDateFormat').val();
+		return CONFIG.dateFormat;
 	},
 	getChartContainer: function getChartContainer(useCache) {
 		if (typeof useCache === "undefined") {
@@ -1215,8 +1216,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 			var url = recordsCountBtn.data('url');
 			AppConnector.request(url).then(function (response) {
 				recordsCountBtn.find('.count').html(response.result.totalCount);
-				recordsCountBtn.find('span:not(.count)').addClass('d-none');
-				recordsCountBtn.find('a').removeClass('d-none');
+				recordsCountBtn.find('[data-fa-i2svg]').addClass('d-none')
+					.attr('aria-hidden', true);
+				recordsCountBtn.find('a').removeClass('d-none')
+					.attr('aria-hidden', false);
 			});
 		});
 	},
@@ -1275,6 +1278,55 @@ jQuery.Class('Vtiger_Widget_Js', {
 			'of': widgetContentsContainer
 		});
 	},
+	/**
+	 * Print html content as image
+	 * @param {jQuery} element
+	 */
+	printHtml(element) {
+		let widget = element.closest('.dashboardWidget'),
+			title = widget.find('.dashboardTitle').prop('title'),
+			printContainer = widget.find('.js-print__container').get(0),
+			imgEl = $('<img style="width:100%">');
+		imgEl.get(0).onload = () => {
+			let width = $(printContainer).outerWidth();
+			let height = $(printContainer).outerHeight();
+			if (width < 600) {
+				width = 600;
+			}
+			if (height < 400) {
+				height = 400;
+			}
+			this.print(imgEl.get(0), title, width, height);
+		};
+		app.htmlToImage(printContainer, (imageBase64) => {
+			imgEl.get(0).src = imageBase64;
+		});
+	},
+	/**
+	 * Download html content as image
+	 * @param {jQuery} element
+	 */
+	downloadHtmlAsImage(element) {
+		let widget = element.closest('.dashboardWidget'),
+			title = widget.find('.dashboardTitle').prop('title');
+		app.htmlToImage(element.closest('.dashboardWidget').find('.js-print__container').get(0), (imageBase64) => {
+			let anchor = document.createElement('a');
+			anchor.setAttribute('href', imageBase64);
+			anchor.setAttribute('download', title + '.png');
+			anchor.click();
+		});
+	},
+	/**
+	 * register print image fields (html2canvas)
+	 */
+	registerPrintAndDownload() {
+		$('.js-print--download', this.getContainer()).on('click', (e) => {
+			this.downloadHtmlAsImage(e.target);
+		});
+		$('.js-print', this.getContainer()).on('click', (e) => {
+			this.printHtml(e.target);
+		});
+	},
 	//Place holdet can be extended by child classes and can use this to handle the post load
 	postLoadWidget: function postLoadWidget() {
 		if (!this.isEmptyData()) {
@@ -1286,12 +1338,12 @@ jQuery.Class('Vtiger_Widget_Js', {
 		this.registerFilter();
 		this.registerFilterChangeEvent();
 		this.restrictContentDrag();
-		app.showBtnSwitch(this.getContainer().find('.switchBtn'));
 		app.showPopoverElementView(this.getContainer().find('.js-popover-tooltip'));
 		this.registerWidgetSwitch();
 		this.registerChangeSorting();
 		this.registerLoadMore();
 		this.registerHeaderButtons();
+		this.registerPrintAndDownload();
 		this.loadScrollbar();
 	},
 	postRefreshWidget: function postRefreshWidget() {
@@ -1375,10 +1427,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 	},
 	registerWidgetSwitch: function registerWidgetSwitch() {
 		var thisInstance = this;
-		var switchButtons = this.getContainer().find('.dashboardWidgetHeader .js-calcuations-switch');
+		var switchButtons = this.getContainer().find('.dashboardWidgetHeader .js-switch--calculations');
 		thisInstance.setUrlSwitch(switchButtons);
-		switchButtons.on('switchChange.bootstrapSwitch', function (e, state) {
-			var currentElement = jQuery(e.currentTarget);
+		switchButtons.on('change', (e) => {
+			var currentElement = $(e.currentTarget);
 			var dashboardWidgetHeader = currentElement.closest('.dashboardWidgetHeader');
 			var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
 			thisInstance.setUrlSwitch(currentElement).then(function (data) {
@@ -1396,16 +1448,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 			var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
 			var url = drefresh.data('url');
 			var urlparams = currentElement.data('urlparams');
-			if (urlparams != '') {
-				var onval = currentElement.data('on-val');
-				var offval = currentElement.data('off-val');
-				url = url.replace('&' + urlparams + '=' + onval, '');
-				url = url.replace('&' + urlparams + '=' + offval, '');
-				url += '&' + urlparams + '=';
-				if (currentElement.prop('checked'))
-					url += onval;
-				else
-					url += offval;
+			if (urlparams !== '') {
+				var switchUrl = currentElement.data('url-value');
+				url = url.replace('&' + urlparams + '=' + switchUrl, '');
+				url += '&' + urlparams + '=' + switchUrl;
 				drefresh.data('url', url);
 				aDeferred.resolve(true);
 			} else {
@@ -1422,20 +1468,37 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 * @returns {undefined}
 	 */
 	refreshWidget: function refreshWidget() {
-		var thisInstance = this;
-		var parent = this.getContainer();
-		var element = parent.find('a[name="drefresh"]');
-		var url = element.data('url');
-		var contentContainer = parent.find('.dashboardWidgetContent');
-		var params = url;
-		var widgetFilters = parent.find('.js-chartFilter__additional-filter-field');
+		let thisInstance = this;
+		let parent = this.getContainer();
+		let element = parent.find('a[name="drefresh"]');
+		let url = element.data('url');
+		let contentContainer = parent.find('.dashboardWidgetContent');
+		let params = url;
+
+		let widgetFilters = parent.find('.widgetFilter');
 		if (widgetFilters.length > 0) {
 			params = {};
 			params.url = url;
 			params.data = {};
-			widgetFilters.each(function (index, domElement) {
-				var widgetFilter = jQuery(domElement);
-				var filterName = widgetFilter.attr('name');
+			widgetFilters.each((index, domElement) => {
+				let widgetFilter = $(domElement);
+				let filterName = widgetFilter.attr('name');
+				if ('checkbox' === widgetFilter.attr('type')) {
+					params.data[filterName] = widgetFilter.is(':checked');
+				} else {
+					params.data[filterName] = widgetFilter.val();
+				}
+			});
+		}
+
+		let additionalWidgetFilters = parent.find('.js-chartFilter__additional-filter-field');
+		if (additionalWidgetFilters.length > 0) {
+			params = {};
+			params.url = url;
+			params.data = {};
+			additionalWidgetFilters.each((index, domElement) => {
+				let widgetFilter = jQuery(domElement);
+				let filterName = widgetFilter.attr('name');
 				let arr = false;
 				if (filterName.substr(-2) === '[]') {
 					arr = true;
@@ -1460,36 +1523,35 @@ jQuery.Class('Vtiger_Widget_Js', {
 				}
 			});
 		}
-		var refreshContainer = parent.find('.dashboardWidgetContent');
-		var refreshContainerFooter = parent.find('.dashboardWidgetFooter');
+		let refreshContainer = parent.find('.dashboardWidgetContent');
+		let refreshContainerFooter = parent.find('.dashboardWidgetFooter');
 		refreshContainer.html('');
 		refreshContainerFooter.html('');
 		refreshContainer.progressIndicator();
-		if (this.paramCache && widgetFilters.length > 0) {
+		if (this.paramCache && (additionalWidgetFilters.length || widgetFilters.length)) {
 			thisInstance.setFilterToCache(params.url, params.data);
 		}
-		AppConnector.request(params).then(function (data) {
-				var data = jQuery(data);
-				var footer = data.filter('.widgetFooterContent');
-				refreshContainer.progressIndicator({
-					'mode': 'hide'
-				});
-				if (footer.length) {
-					footer = footer.clone(true, true);
-					refreshContainerFooter.html(footer);
-					data.each(function (n, e) {
-						if (jQuery(this).hasClass('widgetFooterContent')) {
-							data.splice(n, 1);
-						}
-					})
-				}
-				contentContainer.html(data).trigger(YetiForce_Widget_Js.widgetPostRefereshEvent);
-			}, function () {
-				refreshContainer.progressIndicator({
-					'mode': 'hide'
-				});
+		AppConnector.request(params).then((data) => {
+			data = $(data);
+			let footer = data.filter('.widgetFooterContent');
+			refreshContainer.progressIndicator({
+				'mode': 'hide'
+			});
+			if (footer.length) {
+				footer = footer.clone(true, true);
+				refreshContainerFooter.html(footer);
+				data.each(function (n, e) {
+					if (jQuery(this).hasClass('widgetFooterContent')) {
+						data.splice(n, 1);
+					}
+				})
 			}
-		);
+			contentContainer.html(data).trigger(YetiForce_Widget_Js.widgetPostRefereshEvent);
+		}, () => {
+			refreshContainer.progressIndicator({
+				'mode': 'hide'
+			});
+		});
 	},
 	registerFilter: function registerFilter() {
 		const container = this.getContainer();
@@ -1499,7 +1561,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 		const selects = container.find('.select2noactive');
 		search.css('width', '100%');
 		search.parent().addClass('w-100');
-		search.each((index,element) => {
+		search.each((index, element) => {
 			const fieldInfo = $(element).data('fieldinfo');
 			$(element).attr('placeholder', fieldInfo.label).data('placeholder', fieldInfo.label);
 		});
@@ -1508,13 +1570,13 @@ jQuery.Class('Vtiger_Widget_Js', {
 		App.Fields.Date.registerRange(container);
 		search.on('change apply.daterangepicker', (e) => {
 			const searchParams = [];
-			container.find('.listSearchContributor').each(function (index, domElement) {
+			container.find('.listSearchContributor').each((index, domElement) => {
 				const searchInfo = [];
 				const searchContributorElement = $(domElement);
 				const fieldInfo = searchContributorElement.data('fieldinfo');
 				const fieldName = searchContributorElement.attr('name');
 				let searchValue = searchContributorElement.val();
-				if (typeof searchValue == "object") {
+				if (typeof searchValue === "object") {
 					if (searchValue == null) {
 						searchValue = "";
 					} else {
@@ -1531,17 +1593,16 @@ jQuery.Class('Vtiger_Widget_Js', {
 					searchOperator = fieldInfo.searchOperator;
 				} else if (jQuery.inArray(fieldInfo.type, ['modules', 'time', 'userCreator', 'owner', 'picklist', 'tree', 'boolean', 'fileLocationType', 'userRole', 'companySelect', 'multiReferenceValue']) >= 0) {
 					searchOperator = 'e';
-				} else if (fieldInfo.type == "date" || fieldInfo.type == "datetime") {
+				} else if (fieldInfo.type === "date" || fieldInfo.type === "datetime") {
 					searchOperator = 'bw';
-				} else if (fieldInfo.type == 'multipicklist' || fieldInfo.type == 'categoryMultipicklist') {
+				} else if (fieldInfo.type === 'multipicklist' || fieldInfo.type === 'categoryMultipicklist') {
 					searchOperator = 'c';
 				}
 				searchInfo.push(fieldName);
 				searchInfo.push(searchOperator);
 				searchInfo.push(searchValue);
-				if (fieldInfo.type == 'tree' || fieldInfo.type == 'categoryMultipicklist') {
-					var searchInSubcategories = jQuery('.listViewHeaders .searchInSubcategories[data-columnname="' + fieldName + '"]').prop('checked');
-					searchInfo.push(searchInSubcategories);
+				if (fieldInfo.type === 'tree' || fieldInfo.type === 'categoryMultipicklist') {
+					searchInfo.push($('.listViewHeaders .searchInSubcategories[data-columnname="' + fieldName + '"]').prop('checked'));
 				}
 				searchParams.push(searchInfo);
 			});
@@ -1552,6 +1613,16 @@ jQuery.Class('Vtiger_Widget_Js', {
 
 	},
 	registerFilterChangeEvent: function registerFilterChangeEvent() {
+		let container = this.getContainer();
+		container.on('change', '.widgetFilter', (e) => {
+			$(e.currentTarget).closest('li').find('a[name="drefresh"]').trigger('click');
+		});
+		if (container.find('.widgetFilterByField').length) {
+			App.Fields.Picklist.showSelect2ElementView(container.find('.select2noactive'));
+			this.getContainer().on('change', '.widgetFilterByField .form-control', (e) => {
+				$(e.currentTarget).closest('li').find('a[name="drefresh"]').trigger('click');
+			});
+		}
 	},
 	registerWidgetPostLoadEvent: function registerWidgetPostLoadEvent(container) {
 		var thisInstance = this;
@@ -2084,7 +2155,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 				for (var key in event.event) {
 					element += '<a class="" href="javascript:;"' +
 						' data-date="' + event.date + '"' + ' data-type="' + key + '" title="' + event.event[key].label + '">' +
-						'<span class="' + event.event[key].className + ((event.width <= 20) ? ' small-badge' : '') + ((event.width >= 24) ? ' big-badge' : '') + ' badge badge-secondary">' + event.event[key].count + '</span>' +
+						'<span class="' + event.event[key].className + ((event.width <= 20) ? ' small-badge' : '') + ((event.width >= 24) ? ' big-badge' : '') + ' badge badge-secondary u-font-size-95per">' + event.event[key].count + '</span>' +
 						'</a>\n';
 				}
 				element += '</div>';
@@ -2112,14 +2183,14 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 			};
 			Vtiger_Header_Js.getInstance().quickCreateModule('Calendar', params);
 		});
-		var switchBtn = container.find('.switchBtn');
-		app.showBtnSwitch(switchBtn);
-		switchBtn.on('switchChange.bootstrapSwitch', function (e, state) {
-			if (state)
+		var switchBtn = container.find('.js-switch--calendar');
+		switchBtn.on('change', (e) => {
+			const currentTarget = $(e.currentTarget);
+			if (typeof currentTarget.data('on-text') !== 'undefined')
 				container.find('.widgetFilterSwitch').val('current');
-			else
+			else if (typeof currentTarget.data('off-text') !== 'undefined')
 				container.find('.widgetFilterSwitch').val('history');
-			thisInstance.refreshWidget();
+			this.refreshWidget();
 		})
 	},
 	loadCalendarData: function (allEvents) {

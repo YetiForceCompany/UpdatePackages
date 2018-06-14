@@ -93,7 +93,7 @@ Vtiger_Base_Validator_Js("Vtiger_Phone_Validator_Js", {}, {
 					phoneNumber: fieldValue,
 					phoneCountry: phoneCountryList.val(),
 				}
-			}).then(function (data) {
+			}).done(function (data) {
 				if (data.result.isValidNumber == false) {
 					thisInstance.setError(data.result.message);
 					result = false;
@@ -168,11 +168,34 @@ Vtiger_Base_Validator_Js("Vtiger_PositiveNumber_Validator_Js", {
 	validate: function () {
 		var fieldValue = this.getFieldValue();
 		var negativeRegex = /(^[-]+\d+)$/;
-		parseFieldValue = app.parseNumberToFloat(this.getFieldValue())
+		var parseFieldValue = app.parseNumberToFloat(this.getFieldValue())
 		if (isNaN(parseFieldValue) || fieldValue < 0 || fieldValue.match(negativeRegex)) {
 			var errorInfo = app.vtranslate('JS_ACCEPT_POSITIVE_NUMBER');
 			this.setError(errorInfo);
 			return false;
+		}
+		var maximumLength = null;
+		if (this.getElement().data().fieldinfo) {
+			maximumLength = this.getElement().data().fieldinfo.maximumlength;
+		} else {
+			maximumLength = this.getElement().data('maximumlength');
+		}
+		if (!maximumLength) {
+			return true;
+		}
+		let ranges = maximumLength.split(',');
+		if (ranges.length === 2) {
+			if (fieldValue > parseFloat(ranges[1]) || fieldValue < parseFloat(ranges[0])) {
+				errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
+				this.setError(errorInfo);
+				return false;
+			}
+		} else {
+			if (fieldValue > parseFloat(ranges[0]) || fieldValue < 0) {
+				errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
+				this.setError(errorInfo);
+				return false;
+			}
 		}
 		return true;
 	}
@@ -207,12 +230,27 @@ Vtiger_Base_Validator_Js("Vtiger_Integer_Validator_Js", {
 				var errorInfo = app.vtranslate("JS_PLEASE_ENTER_INTEGER_VALUE");
 				this.setError(errorInfo);
 				return false;
-			} else {
-				return true;
 			}
-		} else {
+		}
+		let fieldInfo = this.getElement().data().fieldinfo;
+		if (!fieldInfo || !fieldInfo.maximumlength) {
 			return true;
 		}
+		let ranges = fieldInfo.maximumlength.split(',');
+		if (ranges.length === 2) {
+			if (fieldValue > parseFloat(ranges[1]) || fieldValue < parseFloat(ranges[0])) {
+				errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
+				this.setError(errorInfo);
+				return false;
+			}
+		} else {
+			if (fieldValue > parseFloat(ranges[0]) || fieldValue < 0) {
+				errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
+				this.setError(errorInfo);
+				return false;
+			}
+		}
+		return true;
 	}
 });
 
@@ -768,6 +806,12 @@ Vtiger_Base_Validator_Js('Vtiger_Currency_Validator_Js', {
 			this.setError(errorInfo);
 			return false;
 		}
+		const maximumLength = typeof fieldData.fieldinfo !== 'undefined' ? fieldData.fieldinfo.maximumlength : null;
+		if (maximumLength && strippedValue > parseFloat(maximumLength)) {
+			errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
+			this.setError(errorInfo);
+			return false;
+		}
 		return true;
 	}
 });
@@ -822,6 +866,20 @@ Vtiger_Base_Validator_Js("Vtiger_NumberUserFormat_Validator_Js", {
 		strippedValue = parseFloat(strippedValue);
 		if (strippedValue != strippedValue.toString()) {
 			errorInfo = app.vtranslate('JS_CONTAINS_ILLEGAL_CHARACTERS');
+			this.setError(errorInfo);
+			return false;
+		}
+		var maximumLength = null;
+		if (this.getElement().data().fieldinfo) {
+			maximumLength = this.getElement().data().fieldinfo.maximumlength;
+		} else {
+			maximumLength = this.getElement().data('maximumlength');
+		}
+		if (!maximumLength) {
+			return true;
+		}
+		if (maximumLength && strippedValue > parseFloat(maximumLength)) {
+			errorInfo = app.vtranslate('JS_ERROR_MAX_VALUE');
 			this.setError(errorInfo);
 			return false;
 		}

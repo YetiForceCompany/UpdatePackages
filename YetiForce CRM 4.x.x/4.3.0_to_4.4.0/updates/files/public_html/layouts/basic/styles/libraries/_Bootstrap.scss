@@ -1,0 +1,24 @@
+/* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+
+//Switch button
+label.btn.btn-outline-primary {
+	&:not(.active) {
+		background: $white;
+
+		&:hover {
+			color: $blue;
+			background: $gray-200;
+		}
+	}
+}
+
+.dropdown-item {
+	cursor: pointer;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid transparent;
+
+	&:hover {
+		border-top: 1px solid $color-grey-light;
+		border-bottom: 1px solid $color-grey-light;
+	}
+}

@@ -58,7 +58,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linklabel' => 'LBL_DELETE',
 				'linkurl' => 'javascript:Users_Detail_Js.triggerDeleteUser("' . $recordModel->getDeleteUrl() . '")',
 				'linkicon' => 'fas fa-trash-alt',
-				'linkclass' => 'btn-warning',
+				'linkclass' => 'btn-danger text-white',
 				'showLabel' => true,
 			];
 			foreach ($detailViewLinks as $detailViewLink) {
@@ -73,12 +73,22 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linktype' => 'DETAIL_VIEW_BASIC',
 				'linklabel' => 'LBL_CHANGE_ACCESS_KEY',
 				'linkurl' => "javascript:Users_Detail_Js.triggerChangeAccessKey('index.php?module = Users&action = SaveAjax&mode = changeAccessKey&record = $recordId')",
-				'linkicon' => '',
+				'linkicon' => 'fas fa-edit',
+				'showLabel' => true,
 			];
+			if (AppConfig::security('USER_AUTHY_MODE') !== 'TOTP_OFF') {
+				$detailViewActionLinks[] = [
+					'linktype' => 'DETAIL_VIEW_BASIC',
+					'linklabel' => 'LBL_2FA_TOTP_QR_CODE',
+					'linkdata' => ['url' => 'index.php?module=Users&view=TwoFactorAuthenticationModal&record=' . $recordId],
+					'linkclass' => 'showModal',
+					'linkicon' => 'fas fa-key',
+					'showLabel' => true,
+				];
+			}
 			foreach ($detailViewActionLinks as $detailViewLink) {
 				$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues($detailViewLink);
 			}
-
 			return $linkModelList;
 		}
 	}

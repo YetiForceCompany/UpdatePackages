@@ -16,6 +16,8 @@ class Vtiger_Comment_InventoryField extends Vtiger_Basic_InventoryField
 	protected $dbType = 'text';
 	protected $onlyOne = false;
 	protected $blocks = [2];
+	public $height = 50;
+	public $isVisible = false;
 
 	/**
 	 * {@inheritdoc}
@@ -35,7 +37,7 @@ class Vtiger_Comment_InventoryField extends Vtiger_Basic_InventoryField
 			return false;
 		}
 		$value = $request->getForHtml($column . $i);
-		$this->validate($value, $column . $i, true);
+		$this->validate($value, $column, true);
 		$insertData[$column] = $value;
 	}
 

@@ -432,7 +432,6 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 			'show_chart' => false,
 		];
 		$datasetIndex = 0;
-		$datasetsDividings = [];
 		foreach ($this->getRows() as $dividingValue => &$dividing) {
 			if (!isset($chartData['datasets'][$datasetIndex])) {
 				$chartData['datasets'][] = [
@@ -447,7 +446,6 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 			} elseif ($this->isDividedByField()) {
 				$dataset['label'] = $dividingValue;
 			}
-			$datasetsDividings[$datasetIndex] = $dividingValue;
 			foreach ($dividing as $groupValue => &$group) {
 				if (!in_array($groupValue, $chartData['labels'])) {
 					$chartData['labels'][] = $groupValue;
@@ -764,9 +762,6 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 				$values[$this->valueType] = (float) $values[$this->valueType];
 				foreach ($values as $valueKey => $value) {
 					foreach ($this->data as $otherDividingValueKey => &$otherDividing) {
-						if (!isset($otherDividing[$groupValueKey])) {
-							$otherGroup[$groupValueKey] = [];
-						}
 						if (!isset($otherDividing[$groupValueKey][$valueKey])) {
 							// if record doesn't have this value,
 							// doesn't have records with picklist value that other records have
@@ -883,7 +878,7 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 	 *
 	 * @return array
 	 */
-	protected function _getRows($query, $dividingValue)
+	protected function getRowsDb($query, $dividingValue)
 	{
 		$dataReader = $query->createCommand()->query();
 		while ($row = $dataReader->read()) {
@@ -913,17 +908,17 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 		// could be also 0 for simple charts
 		if ($this->withSectors()) {
 			$query = $this->getQuery($this->filterIds[0]);
-			$this->_getRows($query, 0);
+			$this->getRowsDb($query, 0);
 			return $this->generateSectorsData();
 		}
 		if ($this->isMultiFilter()) {
 			$queries = $this->getQueries();
 			foreach ($queries as $dividingValue => $query) {
-				$this->_getRows($query, $dividingValue);
+				$this->getRowsDb($query, $dividingValue);
 			}
 		} else {
 			$query = $this->getQuery($this->filterIds[0]);
-			$this->_getRows($query, 0);
+			$this->getRowsDb($query, 0);
 		}
 		$this->calculateAverage();
 		$this->normalizeData();

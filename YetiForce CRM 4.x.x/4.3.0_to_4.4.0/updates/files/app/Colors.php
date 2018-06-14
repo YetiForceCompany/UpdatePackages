@@ -4,6 +4,7 @@
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Sławomir Kłos <s.klos@yetiforce.com>
  */
 
@@ -119,6 +120,26 @@ class Colors
 			}
 		}
 		file_put_contents(ROOT_DIRECTORY . '/public_html/layouts/resources/colors/picklists.css', $css);
+	}
+
+	/**
+	 * Get normalized color or generate if empty.
+	 *
+	 * @param string $color
+	 * @param mixed  $value
+	 *
+	 * @return string
+	 */
+	public static function get($color, $value)
+	{
+		if (empty($color)) {
+			return static::getRandomColor($value, '#');
+		}
+		$color = ltrim($color, "#\t ");
+		if (empty($color)) {
+			return static::getRandomColor($value, '#');
+		}
+		return '#' . $color;
 	}
 
 	/**

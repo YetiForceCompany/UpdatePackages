@@ -114,6 +114,22 @@ class Language
 	}
 
 	/**
+	 * Get IETF language tag.
+	 *
+	 * @see https://en.wikipedia.org/wiki/IETF_language_tag
+	 *
+	 * @return string
+	 */
+	public static function getLanguageInIetf()
+	{
+		$lang = \explode('_', static::getLanguage());
+		if (isset($lang[1])) {
+			$lang[1] = \strtoupper($lang[1]);
+		}
+		return \implode('-', $lang);
+	}
+
+	/**
 	 * Functions that gets translated string.
 	 *
 	 * @param string      $key        - string which need to be translated
@@ -127,7 +143,7 @@ class Language
 		if (empty($key)) { // nothing to translate
 			return $key;
 		}
-		if (!$language) {
+		if (!$language || ($language && strlen($language) !== 5)) {
 			$language = static::getLanguage();
 		}
 		if (is_array($moduleName)) {
@@ -141,19 +157,19 @@ class Language
 		}
 		static::loadLanguageFile($language, $moduleName);
 		if (isset(static::$languageContainer[$language][$moduleName]['php'][$key])) {
-			return Purifier::encodeHtml(static::$languageContainer[$language][$moduleName]['php'][$key]);
+			return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$moduleName]['php'][$key]));
 		}
 		// Lookup for the translation in base module, in case of sub modules, before ending up with common strings
 		if (strpos($moduleName, 'Settings') === 0) {
 			$base = 'Settings' . DIRECTORY_SEPARATOR . '_Base';
 			static::loadLanguageFile($language, $base);
 			if (isset(static::$languageContainer[$language][$base]['php'][$key])) {
-				return Purifier::encodeHtml(static::$languageContainer[$language][$base]['php'][$key]);
+				return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$base]['php'][$key]));
 			}
 		}
 		static::loadLanguageFile($language);
 		if (isset(static::$languageContainer[$language]['_Base']['php'][$key])) {
-			return Purifier::encodeHtml(static::$languageContainer[$language]['_Base']['php'][$key]);
+			return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language]['_Base']['php'][$key]));
 		}
 		\App\Log::info("Cannot translate this: '$key' for module '$moduleName', lang: $language");
 		return $key;
@@ -574,43 +590,64 @@ class Language
 	/**
 	 * Function to get the label name of the Langauge package.
 	 *
-	 * @param string $name
+	 * @param string $prefix
 	 *
 	 * @return string|bool
 	 */
-	public static function getLanguageLabel($name)
+	public static function getLanguageLabel(string $prefix)
 	{
-		if (Cache::has('getLanguageLabel', $name)) {
-			return Cache::get('getLanguageLabel', $name);
-		}
-		$label = (new \App\Db\Query())->select(['label'])->from('vtiger_language')->where(['prefix' => $name])->scalar();
-		return Cache::save('getLanguageLabel', $name, $label);
+		return static::getLangInfo($prefix)['label'] ?? null;
 	}
 
 	/**
-	 * Function return languange.
+	 * Function return languanges data.
 	 *
 	 * @param bool $active
 	 * @param bool $allData
 	 *
 	 * @return array
 	 */
-	public static function getAll($active = true, $allData = false)
+	public static function getAll(bool $active = true, bool $allData = false)
 	{
-		$cacheKey = (int) $active . ':' . (int) $allData;
-		if (Cache::has('getAll', $cacheKey)) {
-			return Cache::get('getAll', $cacheKey);
+		$cacheKey = $active ? 'Active' : 'All';
+		if (Cache::has('getAllLanguages', $cacheKey)) {
+			if (!$allData) {
+				return array_column(Cache::get('getAllLanguages', $cacheKey), 'label', 'prefix');
+			}
+			return Cache::get('getAllLanguages', $cacheKey);
 		}
-		$query = (new Db\Query())->from('vtiger_language');
-		if ($active) {
-			$query->where(['active' => 1]);
+		$all = [];
+		$actives = [];
+		$dataReader = (new Db\Query())->from('vtiger_language')->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$all[$row['prefix']] = $row;
+			if ((int) $row['active'] === 1) {
+				$actives[$row['prefix']] = $row;
+			}
+			Cache::save('getLangInfo', $row['prefix'], $row);
 		}
-		if ($allData) {
-			$output = $query->indexBy('prefix')->all();
-		} else {
-			$output = $query->select(['prefix', 'label'])->createCommand()->queryAllByGroup();
+		$dataReader->close();
+		Cache::save('getAllLanguages', 'All', $all);
+		Cache::save('getAllLanguages', 'Active', $actives);
+		if (!$allData) {
+			return array_column(Cache::get('getAllLanguages', $cacheKey), 'label', 'prefix');
 		}
-		return Cache::save('getAll', $cacheKey, $output);
+		return Cache::get('getAllLanguages', $cacheKey);
+	}
+
+	/**
+	 * Function return languange data.
+	 *
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
+	public static function getLangInfo(string $prefix)
+	{
+		if (Cache::has('getLangInfo', $prefix)) {
+			return Cache::get('getLangInfo', $prefix);
+		}
+		return Cache::save('getLangInfo', $prefix, (new Db\Query())->from('vtiger_language')->where(['prefix' => $prefix])->one());
 	}
 
 	/**

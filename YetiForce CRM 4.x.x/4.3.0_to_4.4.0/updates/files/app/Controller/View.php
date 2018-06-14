@@ -233,7 +233,6 @@ abstract class View extends Base
 			'~libraries/simplebar/dist/simplebar.css',
 			'~libraries/perfect-scrollbar/css/perfect-scrollbar.css',
 			'~libraries/jQuery-Validation-Engine/css/validationEngine.jquery.css',
-			'~libraries/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css',
 			'~libraries/bootstrap-tabdrop/css/tabdrop.css',
 			'~libraries/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css',
 			'~libraries/bootstrap-daterangepicker/daterangepicker.css',
@@ -293,7 +292,6 @@ abstract class View extends Base
 			'~libraries/jquery-hoverintent/jquery.hoverIntent.js',
 			'~libraries/popper.js/dist/umd/popper.js',
 			'~libraries/bootstrap/dist/js/bootstrap.js',
-			'~libraries/bootstrap-switch/dist/js/bootstrap-switch.js',
 			'~libraries/bootstrap-tabdrop/js/bootstrap-tabdrop.js',
 			'~libraries/bootbox/bootbox.js',
 			'~libraries/microplugin/src/microplugin.js',
@@ -564,7 +562,7 @@ abstract class View extends Base
 					 'startHour' => $userModel->getDetail('start_hour'),
 					 'endHour' => $userModel->getDetail('end_hour'),
 					 'firstDayOfWeek' => $userModel->getDetail('dayoftheweek'),
-					 'firstDayOfWeekNo' => \App\Fields\Date::$dayOfWeek[$userModel->getDetail('dayoftheweek')],
+					 'firstDayOfWeekNo' => \App\Fields\Date::$dayOfWeek[$userModel->getDetail('dayoftheweek')] ?? false,
 					 'timeZone' => $userModel->getDetail('time_zone'),
 					 'currencyId' => $userModel->getDetail('currency_id'),
 					 'currencyName' => $userModel->getDetail('currency_name'),
@@ -574,7 +572,7 @@ abstract class View extends Base
 					 'currencyDecimalSeparator' => $userModel->getDetail('currency_decimal_separator'),
 					 'currencyGroupingSeparator' => $userModel->getDetail('currency_grouping_separator'),
 					 'currencySymbolPlacement' => $userModel->getDetail('currency_symbol_placement'),
-					 'noOfCurrencyDecimals' => $userModel->getDetail('no_of_currency_decimals'),
+					 'noOfCurrencyDecimals' => (int) $userModel->getDetail('no_of_currency_decimals'),
 					 'truncateTrailingZeros' => $userModel->getDetail('truncate_trailing_zeros'),
 					 'rowHeight' => $userModel->getDetail('rowheight'),
 					 'userId' => $userModel->getId(),
@@ -588,6 +586,15 @@ abstract class View extends Base
 					 'soundFilesPath' => \App\Layout::getPublicUrl('layouts/resources/sounds/'),
 				 ] as $key => $value) {
 			\App\Config::setJsEnv($key, $value);
+		}
+		if (\App\Session::has('ShowAuthy2faModal')) {
+			\App\Config::setJsEnv('ShowAuthy2faModal', \App\Session::get('ShowAuthy2faModal'));
+		}
+		if (\App\Session::has('ShowUserPasswordChange')) {
+			\App\Config::setJsEnv('ShowUserPasswordChange', \App\Session::get('ShowUserPasswordChange'));
+			if ((int) \App\Session::get('ShowUserPasswordChange') === 1) {
+				\App\Session::delete('ShowUserPasswordChange');
+			}
 		}
 	}
 }

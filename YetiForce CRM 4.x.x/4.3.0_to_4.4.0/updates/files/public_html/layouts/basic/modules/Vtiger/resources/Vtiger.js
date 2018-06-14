@@ -399,71 +399,6 @@ var Vtiger_Index_Js = {
 			}, 600);
 		});
 	},
-	registerChat: function () {
-		var modal = $('.chatModal');
-		if (modal.length === 0) {
-			return;
-		}
-		modal.on('shown.bs.modal', function (e) {
-			var modalBody = modal.find('.modal-body');
-			var modalFooter = modal.find('.modal-footer');
-			var modalHeader = modal.find('.modal-header');
-			var height = app.getScreenHeight() - modalFooter.outerHeight(true) - modalHeader.outerHeight(true);
-			modalBody.css('max-height', height + 'px');
-			app.showNewScrollbar(modalBody, {wheelPropagation: true});
-		});
-		$('.headerLinkChat').on('click', function (e) {
-			e.stopPropagation();
-			var remindersNoticeContainer = $('.remindersNoticeContainer,.remindersNotificationContainer');
-			if (remindersNoticeContainer.hasClass('toggled')) {
-				remindersNoticeContainer.removeClass('toggled');
-			}
-			$('.actionMenu').removeClass('actionMenuOn');
-			$('.chatModal').modal({backdrop: false});
-		});
-		this.registerChatLoadItems(modal.data('timer'));
-		modal.find('.addMsg').on('click', function (e) {
-			var message = modal.find('.message').val();
-			clearTimeout(Vtiger_Index_Js.chatTimer);
-			AppConnector.request({
-				dataType: 'html',
-				data: {
-					module: 'Chat',
-					action: 'Entries',
-					mode: 'add',
-					message: message,
-					cid: $('.chatModal .chatItem').last().data('cid')
-				}
-			}).then(function (html) {
-				$('.chatModal .modal-body').append(html);
-				Vtiger_Index_Js.registerChatLoadItems(modal.data('timer'));
-			});
-			modal.find('.message').val('');
-		});
-	},
-	registerChatLoadItems: function (timer) {
-		var icon = $('.chatModal .modal-title .fa-comments');
-		this.chatTimer = setTimeout(function () {
-			icon.css('color', '#00e413');
-			Vtiger_Index_Js.getChatItems();
-			Vtiger_Index_Js.registerChatLoadItems(timer);
-			icon.css('color', '#000');
-		}, timer);
-	},
-	getChatItems: function () {
-		AppConnector.request({
-			module: 'Chat',
-			view: 'Entries',
-			mode: 'get',
-			cid: $('.chatModal .chatItem').last().data('cid')
-		}).then(function (html) {
-			if (html) {
-				$('.chatModal .modal-body').append(html);
-			}
-		}, function (error, err) {
-			clearTimeout(Vtiger_Index_Js.chatTimer);
-		});
-	},
 	/**
 	 * Function to trigger tooltip feature.
 	 */
@@ -495,18 +430,21 @@ var Vtiger_Index_Js = {
 				});
 			}
 		}
+
 		function get_popover_placement(el) {
 			if (window.innerWidth - jQuery(el).offset().left < 400 || checkLastElement(el)) {
 				return 'left';
 			}
 			return 'right';
 		}
+
 		//The function checks if the selected element is the last element of the table in list view.
 		function checkLastElement(el) {
 			let parent = el.closest('tr');
 			let lastElementTd = parent.find('td.listViewEntryValue:last a');
 			return el.attr('href') === lastElementTd.attr('href');
 		}
+
 		function showTooltip(el, data) {
 			el.popover({
 				//title: '', - Is derived from the Anchor Element (el).
@@ -520,11 +458,13 @@ var Vtiger_Index_Js = {
 			lastPopovers.push(el.popover('show'));
 			registerToolTipDestroy();
 		}
+
 		function hideAllTooltipViews() {
 			while (lastPopover = lastPopovers.pop()) {
 				lastPopover.popover('hide');
 			}
 		}
+
 		function hidePop() {
 			$(".popover").on("mouseleave", function () {
 				hideAllTooltipViews();
@@ -537,6 +477,7 @@ var Vtiger_Index_Js = {
 				}, 100);
 			});
 		}
+
 		function registerToolTipDestroy() {
 			$('button[name="vtTooltipClose"]').on('click', function (e) {
 				const lastPopover = lastPopovers.pop();
@@ -544,6 +485,7 @@ var Vtiger_Index_Js = {
 				$('.popover').css("display", "none", "important");
 			});
 		}
+
 		references.hoverIntent({
 			interval: 100,
 			sensitivity: 7,
@@ -660,9 +602,15 @@ var Vtiger_Index_Js = {
 			Vtiger_Helper_Js.showMessage({text: response.result});
 		});
 	},
-	registerUserPasswordChangeModal: function (timer) {
-		if (app.getMainParams('showUserPasswordChange')) {
+	registerAterloginEvents: function () {
+		if (typeof CONFIG.ShowUserPasswordChange !== 'undefined') {
 			app.showModalWindow(null, 'index.php?module=Users&view=PasswordModal&mode=change&record=' + CONFIG.userId);
+		}
+		if (typeof CONFIG.ShowAuthy2faModal !== 'undefined') {
+			app.showModalWindow({
+				backdrop: 'static',
+				url: 'index.php?module=Users&view=TwoFactorAuthenticationModal&record=' + CONFIG.userId
+			});
 		}
 	},
 	registerEvents: function () {
@@ -672,8 +620,7 @@ var Vtiger_Index_Js = {
 		Vtiger_Index_Js.registerTooltipEvents();
 		Vtiger_Index_Js.changeSkin();
 		Vtiger_Index_Js.registerResizeEvent();
-		Vtiger_Index_Js.registerChat();
-		Vtiger_Index_Js.registerUserPasswordChangeModal();
+		Vtiger_Index_Js.registerAterloginEvents();
 	},
 	registerPostAjaxEvents: function () {
 		Vtiger_Index_Js.registerTooltipEvents();

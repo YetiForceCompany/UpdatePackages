@@ -15,6 +15,7 @@ app = {
 	languageString: [],
 	cacheParams: [],
 	modalEvents: [],
+	childFrame: false,
 	event: new function () {
 		this.el = $({});
 		this.trigger = function () {
@@ -76,6 +77,17 @@ app = {
 		return document.title;
 	},
 	/**
+	 * Function gets current window parent
+	 * @returns {object}
+	 */
+	getWindowParent() {
+		if (typeof window.frames[0] !== "undefined" && typeof window.frames[0].app !== "undefined" && window.frames[0].app.childFrame) {
+			return window.frames[0];
+		} else {
+			return window;
+		}
+	},
+	/**
 	 * Function to set page title
 	 */
 	setPageTitle: function (title) {
@@ -97,12 +109,12 @@ app = {
 	showPopoverElementView: function (selectElement, params) {
 		if (typeof params === "undefined") {
 			params = {
+				trigger: 'manual',
 				placement: 'auto',
 				html: true,
 				template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
 			};
 		}
-		params.trigger = 'hover';
 		params.container = 'body';
 		params.delay = {"show": 300, "hide": 100};
 		var sparams;
@@ -123,6 +135,21 @@ app = {
 				sparams = $.extend(sparams, data);
 			}
 			element.popover(sparams);
+			element.hoverIntent({
+				timeout: 150,
+				over: function () {
+					const self = this;
+					$(this).popover("show");
+					$(".popover").on("mouseleave", function () {
+						$(self).popover('hide');
+					});
+				},
+				out: function () {
+					if (!$(".popover:hover").length) {
+						$(this).popover('hide');
+					}
+				}
+			});
 		});
 		return selectElement;
 	},
@@ -175,6 +202,22 @@ app = {
 		}
 		return keyValueMap;
 	},
+	/**
+	 * Function animates bootstrap modal with animate.css
+	 * @params: jQuery object with class .modal,
+	 * @params: string with animation name,
+	 * @params: string with animation name,
+	 */
+	animateModal(modal, openAnimation, closeAnimation) {
+		modal.on('show.bs.modal', function (e) {
+			modal.removeClass(`animated ${closeAnimation}`);
+			modal.addClass(`animated ${openAnimation}`);
+		});
+		modal.on('hide.bs.modal', function (e) {
+			modal.removeClass(`animated ${openAnimation}`);
+			modal.addClass(`animated ${closeAnimation}`);
+		});
+	},
 	showModalData(data, container, paramsObject, cb, url, sendByAjaxCb) {
 		const thisInstance = this;
 		let params = {
@@ -222,6 +265,11 @@ app = {
 		thisInstance.registerDataTables(modalContainer.find('.dataTable'));
 	},
 	showModalWindow: function (data, url, cb, paramsObject) {
+		if (window.parent !== window) {
+			this.childFrame = true;
+			window.parent.app.showModalWindow(data, url, cb, paramsObject);
+			return;
+		}
 		const thisInstance = this;
 		Window.lastModalId = 'modal_' + Math.random().toString(36).substr(2, 9);
 		//null is also an object
@@ -873,35 +921,6 @@ app = {
 	getDecodedValue: function (value) {
 		return $('<div></div>').html(value).text();
 	},
-	updateRowHeight: function () {
-		var rowType = CONFIG.rowHeight;
-		if (rowType !== null) {
-			//Need to update the row height
-			var widthType = app.cacheGet('widthType', 'mediumWidthType');
-			var serverWidth = widthType;
-			switch (serverWidth) {
-				case 'narrowWidthType' :
-					serverWidth = 'narrow';
-					break;
-				case 'wideWidthType' :
-					serverWidth = 'wide';
-					break;
-				default :
-					serverWidth = 'medium';
-			}
-			var userid = CONFIG.userId;
-			var params = {
-				'module': 'Users',
-				'action': 'SaveAjax',
-				'record': userid,
-				'value': serverWidth,
-				'field': 'rowheight'
-			};
-			AppConnector.request(params).then(function () {
-				$(rowType).val(serverWidth);
-			});
-		}
-	},
 	getCookie: function (c_name) {
 		var c_value = document.cookie;
 		var c_start = c_value.indexOf(" " + c_name + "=");
@@ -988,13 +1007,6 @@ app = {
 			}
 		);
 		return aDeferred.promise();
-	},
-	showBtnSwitch: function (selectElement, params) {
-		if (typeof params === "undefined") {
-			params = {};
-		}
-		selectElement.bootstrapSwitch(params);
-		return selectElement;
 	},
 	getMainParams: function (param, json) {
 		if (param in CONFIG) {
@@ -1184,8 +1196,8 @@ app = {
 		self.sidebarBtn = $('.js-sidebar-btn').first();
 		self.sidebar = $('.js-sidebar').first();
 		self.sidebarBtn.on('click', self.toggleSidebar.bind(self));
-		$('a[href],[tabindex],input,select,textarea,button,object').on('focus', (e) => {
-			if (self.sidebarBtn.find($(e.target).length)) return;
+		$('a[href]:not(.c-header__btn),[tabindex],input,select,textarea,button').on('focus', (e) => {
+			if (self.sidebarBtn[0] == e.target) return;
 			if (self.sidebar.find(':focus').length) {
 				self.openSidebar();
 			} else if (self.sidebar.hasClass('js-expand')) {
@@ -1193,7 +1205,7 @@ app = {
 			}
 		});
 		self.sidebar.on('mouseenter', self.openSidebar.bind(self)).on('mouseleave', self.closeSidebar.bind(self));
-		self.sidebar.find('.js-menu').on('keydown', self.sidebarKeyboard.bind(self));
+		self.sidebar.find('.js-menu__content').on('keydown', self.sidebarKeyboard.bind(self));
 		self.sidebar.on('keydown', (e) => {
 			if (e.which == self.keyboard.ESCAPE) {
 				self.closeSidebar();
@@ -1209,6 +1221,8 @@ app = {
 				window.location = $(e.currentTarget).attr('href');
 			}
 		});
+
+		this.registerPinEvent();
 	},
 	openSidebar: function () {
 		this.sidebar.addClass('js-expand');
@@ -1223,20 +1237,66 @@ app = {
 			this.closeSidebar();
 		} else {
 			this.openSidebar();
-			this.sidebar.find('.js-menu :tabbable').first().focus();
+			this.sidebar.find('.js-menu__content :tabbable').first().focus();
 		}
+	},
+	registerPinEvent: function () {
+		const self = this;
+		let pinButton = self.sidebar.find('.js-menu--pin');
+		let baseContainer = self.sidebar.closest('.js-base-container');
+		pinButton.on('click', () => {
+			let hideMenu = 0;
+			baseContainer.removeClass('c-menu--animation');
+			if (pinButton.attr('data-show') === '0') {
+				hideMenu = 'on';
+				pinButton.removeClass('u-opacity-muted');
+				baseContainer.addClass('c-menu--open');
+				self.sidebar.off('mouseleave mouseenter');
+			} else {
+				pinButton.addClass('u-opacity-muted');
+				baseContainer.removeClass('c-menu--open');
+				self.sidebar.on('mouseenter', self.openSidebar.bind(self)).on('mouseleave', self.closeSidebar.bind(self));
+				self.closeSidebar.bind(self);
+			}
+			AppConnector.request({
+				module: 'Users',
+				action: 'SaveAjax',
+				field: 'leftpanelhide',
+				record: CONFIG.userId,
+				value: hideMenu
+			}).then(function (responseData) {
+				if (responseData.success && responseData.result) {
+					pinButton.attr('data-show', hideMenu);
+				}
+			});
+			setTimeout(() => {
+				baseContainer.addClass('c-menu--animation');
+			}, 300);
+		});
 	},
 	sidebarKeyboard: function (e) {
 		let target = $(e.target);
-		if ((target.hasClass('js-submenu-toggler') && (e.which == this.keyboard.RIGHT || e.which == this.keyboard.SPACE) && target.hasClass('collapsed'))
-			|| (target.hasClass('js-submenu-toggler') && (e.which == this.keyboard.LEFT || e.which == this.keyboard.SPACE) && !target.hasClass('collapsed'))) {
+		let toggler = $(e.target).closest('.js-submenu-toggler');
+		if (e.which == this.keyboard.LEFT) {
+			if (target.hasClass('js-submenu-toggler') && !target.hasClass('collapsed')) {
+				target.click();
+				return false;
+			} else {
+				let toggler = $(e.target).closest('.js-submenu').prev('.js-submenu-toggler');
+				if (toggler.length && !toggler.hasClass('collapsed')) {
+					toggler.click().focus();
+					return false;
+				}
+			}
+		} else if ((target.hasClass('js-submenu-toggler') && (e.which == this.keyboard.RIGHT) && target.hasClass('collapsed'))
+			|| (target.hasClass('js-submenu-toggler') && e.which == this.keyboard.SPACE)) {
 			target.click();
 			return false;
 		} else if (e.which == this.keyboard.UP) {
-			this.sidebar.find('.js-menu :tabbable').eq(parseInt(this.sidebar.find('.js-menu :tabbable').index(target)) - 1).focus();
+			this.sidebar.find('.js-menu__content :tabbable').eq(parseInt(this.sidebar.find('.js-menu__content :tabbable').index(target)) - 1).focus();
 			return false;
 		} else if (e.which == this.keyboard.DOWN) {
-			this.sidebar.find('.js-menu :tabbable').eq(parseInt(this.sidebar.find('.js-menu :tabbable').index(target)) + 1).focus();
+			this.sidebar.find('.js-menu__content :tabbable').eq(parseInt(this.sidebar.find('.js-menu__content :tabbable').index(target)) + 1).focus();
 			return false;
 		}
 	},
@@ -1268,7 +1328,7 @@ app = {
 		return $(window).height() * percantage / 100;
 	},
 	setCalendarHeight() {
-		const container = $('.baseContainer');
+		const container = $('.js-base-container');
 		const paddingTop = 10;
 		if ($(window).width() > 993) {
 			let calendarH = $(window).height() - container.find('.o-calendar-container').offset().top - $('.js-footer').height() - paddingTop;
@@ -1284,10 +1344,10 @@ app = {
 	},
 	clearBrowsingHistory: function () {
 		AppConnector.request({
-			module: app.getModuleName(),
+			module: 'Home',
 			action: 'BrowsingHistory',
 		}).then(function (response) {
-			$('ul.historyList').remove();
+			$('.historyList').html(`<a class="item dropdown-item" href="#" role="listitem">${app.vtranslate('JS_NO_RECORDS')}</a>`);
 		});
 	},
 	showConfirmation: function (data, element) {
@@ -1356,19 +1416,37 @@ app = {
 				}
 			});
 		});
+	},
+	/**
+	 * Convert html content to base64 image
+	 * This function can be used in promise chain or with callback if specified
+	 *
+	 * @param {HTMLElement} element
+	 * @param {function} callback with imageString argument which contains an image in base64 string format
+	 * @param {object} options see: https://html2canvas.hertzen.com/configuration , imageType is our custom option
+	 * @return {Promise} with base64 string image as argument
+	 */
+	htmlToImage(element, callback, options = {imageType: 'image/png', logging: false}) {
+		element = $(element).get(0); // make sure we have HTMLElement not jQuery because it will not work
+		const imageType = options.imageType;
+		delete options.imageType;
+		return html2canvas(element, options).then((canvas) => {
+			const base64Image = canvas.toDataURL(imageType);
+			if (typeof callback === 'function') {
+				callback(base64Image);
+			}
+			return base64Image;
+		});
 	}
-}
+};
 $(document).ready(function () {
 	App.Fields.Picklist.changeSelectElementView();
 	app.showPopoverElementView($('body').find('.js-popover-tooltip'));
-	app.showBtnSwitch($('body').find('.switchBtn'));
 	app.registerSticky();
 	app.registerMoreContent($('body').find('button.moreBtn'));
 	app.registerModal();
 	app.registerMenu();
 	app.registerTabdrop();
-	//Updating row height
-	app.updateRowHeight();
 	String.prototype.toCamelCase = function () {
 		var value = this.valueOf();
 		return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()

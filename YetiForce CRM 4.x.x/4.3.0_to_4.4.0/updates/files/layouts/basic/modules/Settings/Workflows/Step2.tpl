@@ -35,7 +35,8 @@
 					<span class="col-md-6"><input type="radio" id="enableAdvanceFilters" name="conditionstype" class="alignMiddle recreate" />&nbsp;&nbsp;<span class="alignMiddle">{\App\Language::translate('LBL_RECREATE_CONDITIONS',$QUALIFIED_MODULE)}</span></span>
 				</div><br />
 			{/if}
-			<div id="advanceFilterContainer" {if $IS_FILTER_SAVED_NEW == false} class="zeroOpacity conditionsContainer padding1per" {else} class="row conditionsContainer padding1per" {/if}>
+			<div id="advanceFilterContainer" {if $IS_FILTER_SAVED_NEW == false} class="zeroOpacity js-conditions-container padding1per" {else} class="row js-conditions-container padding1per" {/if}
+				 data-js="container">
 				<h5 class="padding-bottom1per col-md-10"><strong>{\App\Language::translate('LBL_CHOOSE_FILTER_CONDITIONS',$MODULE)}</strong></h5>
 				<div class="col-md-10" >
 					{include file=\App\Layout::getTemplatePath('AdvanceFilter.tpl') RECORD_STRUCTURE=$RECORD_STRUCTURE}
@@ -44,9 +45,22 @@
 			</div>
 		</div><br />
 		<div class="float-right">
-			<button class="btn btn-danger backStep" type="button"><strong>{\App\Language::translate('LBL_BACK', $QUALIFIED_MODULE)}</strong></button>&nbsp;&nbsp;
-			<button class="btn btn-success" type="submit"><strong>{\App\Language::translate('LBL_NEXT', $QUALIFIED_MODULE)}</strong></button>&nbsp;&nbsp;
-			<button class="btn btn-warning cancelLink" type="reset" onclick="javascript:window.history.back();">{\App\Language::translate('LBL_CANCEL', $QUALIFIED_MODULE)}</button>
+			<button class="btn btn-secondary backStep mr-1" type="button">
+				<strong>
+					<span class="fas fa-caret-left mr-1"></span>
+					{\App\Language::translate('LBL_BACK', $QUALIFIED_MODULE)}
+				</strong>
+			</button>
+			<button class="btn btn-success" type="submit">
+				<strong>
+					<span class="fas fa-caret-right mr-1"></span>
+					{\App\Language::translate('LBL_NEXT', $QUALIFIED_MODULE)}
+				</strong>
+			</button>
+			<button class="btn btn-danger cancelLink" type="reset" onclick="javascript:window.history.back();">
+				<span class="fas fa-times mr-1"></span>
+				{\App\Language::translate('LBL_CANCEL', $QUALIFIED_MODULE)}
+			</button>
 		</div>
 		<br /><br />
 

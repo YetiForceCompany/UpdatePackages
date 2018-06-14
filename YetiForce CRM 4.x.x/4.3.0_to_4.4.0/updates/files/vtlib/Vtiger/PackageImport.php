@@ -312,7 +312,7 @@ class PackageImport extends PackageExport
 			!empty($this->_modulexml->dependencies) &&
 			!empty($this->_modulexml->dependencies->vtiger_version)) {
 			$moduleVersion = (string) $this->_modulexml->dependencies->vtiger_version;
-			if (\App\Version::check($moduleVersion) === true) {
+			if (\App\Version::check($moduleVersion) >= 0) {
 				$moduleVersionFound = true;
 			} else {
 				$_errorText = \App\Language::translate('LBL_ERROR_VERSION', 'Settings:ModuleManager');
@@ -337,6 +337,10 @@ class PackageImport extends PackageExport
 		if ($this->isLanguageType() && $manifestxml_found && strpos($this->_modulexml->prefix, '/') !== false) {
 			$validzip = false;
 			$this->_errorText = \App\Language::translate('LBL_ERROR_NO_VALID_PREFIX', 'Settings:ModuleManager');
+		}
+		if ($manifestxml_found && !empty($this->_modulexml->type) && in_array(strtolower($this->_modulexml->type), ['entity', 'inventory', 'extension']) && $modulename && \Settings_ModuleManager_Module_Model::checkModuleName($modulename)) {
+			$validzip = false;
+			$this->_errorText = \App\Language::translate('LBL_INVALID_MODULE_NAME', 'Settings:ModuleManager');
 		}
 		if ($validzip) {
 			if (!empty($this->_modulexml->license)) {
@@ -977,12 +981,10 @@ class PackageImport extends PackageExport
 	{
 		$dirName = 'cache/updates';
 		$result = false;
-		$adb = \PearDatabase::getInstance();
+		$db = \App\Db::getInstance();
 		ob_start();
 		if (file_exists($dirName . '/init.php')) {
 			require_once $dirName . '/init.php';
-			$adb->query('SET FOREIGN_KEY_CHECKS = 0;');
-
 			$updateInstance = new \YetiForceUpdate($modulenode);
 			$updateInstance->package = $this;
 			$result = $updateInstance->preupdate();
@@ -1008,11 +1010,10 @@ class PackageImport extends PackageExport
 				ob_start();
 				$result = $updateInstance->postupdate();
 			}
-			$adb->query('SET FOREIGN_KEY_CHECKS = 1;');
 		} else {
 			Functions::recurseCopy($dirName . '/files', '');
 		}
-		$adb->insert('yetiforce_updates', [
+		$db->createCommand()->insert('yetiforce_updates', [
 			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
 			'name' => $modulenode->label,
 			'from_version' => $modulenode->from_version,
@@ -1021,12 +1022,11 @@ class PackageImport extends PackageExport
 			'time' => date('Y-m-d H:i:s'),
 		]);
 		if ($result) {
-			$adb->update('vtiger_version', ['current_version' => $modulenode->to_version]);
+			$db->createCommand()->update('vtiger_version', ['current_version' => $modulenode->to_version]);
 		}
 		Functions::recurseDelete($dirName);
 		Functions::recurseDelete('cache/templates_c');
 
-		\vtlib\Access::syncSharingAccess();
 		\App\Module::createModuleMetaFile();
 		\App\Cache::clear();
 		\App\Cache::clearOpcache();

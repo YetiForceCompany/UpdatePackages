@@ -26,6 +26,12 @@ class Vtiger_Integer_UIType extends Vtiger_Base_UIType
 		if (!is_numeric($value)) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
 		}
+		if ($maximumLength = $this->getFieldModel()->get('maximumlength')) {
+			$rangeValues = explode(',', $maximumLength);
+			if (($rangeValues[1] ?? $rangeValues[0]) < $value || (isset($rangeValues[1]) ? $rangeValues[0] : 0) > $value) {
+				throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . (isset($rangeValues[1]) ? $rangeValues[0] : 0) . ' < ' . $value . ' < ' . ($rangeValues[1] ?? $rangeValues[0]), 406);
+			}
+		}
 		$this->validate = true;
 	}
 
@@ -37,5 +43,13 @@ class Vtiger_Integer_UIType extends Vtiger_Base_UIType
 	public function getTemplateName()
 	{
 		return 'Edit/Field/Number.tpl';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getAllowedColumnTypes()
+	{
+		return ['bigint', 'integer', 'smallint', 'tinyint'];
 	}
 }

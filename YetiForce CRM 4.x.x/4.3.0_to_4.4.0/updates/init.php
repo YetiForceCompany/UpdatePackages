@@ -77,22 +77,21 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$db = App\Db::getInstance();
+		$db = \App\Db::getInstance();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		$db->createCommand()->update('vtiger_cron_task', ['status' => 0])->execute();
 		try {
 			$this->importer = new \App\Db\Importer();
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->updateScheme();
-			$this->importer->dropColumns([['u_#__github', 'client_id'], ['vtiger_widgets', 'nomargin']]);
+			$this->importer->dropColumns([['u_#__github', 'client_id'], ['vtiger_widgets', 'nomargin'], ['vtiger_entity_stats', 'presence']]);
 			$this->importer->refreshSchema();
 			$this->dav();
 			$this->updateScheme();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 			$this->importer->dropTable(['s_#__handler_updater', 'vtiger_selectquery_seq', 'vtiger_selectquery', 'vtiger_selectcolumn', 'vtiger_report', 'vtiger_reportdatefilter',
-				'vtiger_reportfilters', 'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary',
-				'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping']);
+				'vtiger_reportfilters', 'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary', 'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping', 'vtiger_apiaddress']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -105,16 +104,30 @@ class YetiForceUpdate
 		$this->updateCron();
 		$this->removeModule();
 		$this->workflowTask();
-		$this->addModules(['PermissionInspector']);
+		$this->addModules(['PermissionInspector', 'DataSetRegister', 'ActivityRegister', 'LocationRegister', 'IncidentRegister', 'AuditRegister']);
 		$this->updateLangFiles();
 		$this->addLanguages();
 		$this->addFields();
 		$this->actionMapp();
+		$this->updateSecondData();
 		$this->updateConfigurationFiles();
 		$db->createCommand()->update('vtiger_cron_task', ['status' => 1], ['name' => 'LBL_BATCH_PROCESSES'])->execute();
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Update data
+	 */
+	public function updateSecondData()
+	{
+		\App\EventHandler::registerHandler('EntityAfterTransferLink', 'ModTracker_ModTrackerHandler_Handler');
+		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'ModTracker_ModTrackerHandler_Handler');
+		\App\EventHandler::registerHandler('EntityAfterTransferLink', 'Vtiger_MultiReferenceUpdater_Handler');
+		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'Vtiger_MultiReferenceUpdater_Handler');
+		\App\Db::getInstance()->createCommand()->update('vtiger_field', ['maximumlength' => null])->execute();
+		$this->setTrees($this->getTrees(1));
 	}
 
 	/**
@@ -152,9 +165,11 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
 		$data = [
 			['vtiger_settings_field', ['name' => 'LBL_TERMS_AND_CONDITIONS']],
 			['vtiger_cron_task', ['handler_file' => 'cron/HandlerUpdater.php']],
+			['vtiger_cron_task', ['handler_file' => 'cron/FileUploadTemp.php']],
 			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']]
 		];
 		\App\Db\Updater::batchDelete($data);
@@ -181,6 +196,7 @@ class YetiForceUpdate
 			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentOwner', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentOwner']],
 			['vtiger_relatedlists', ['actions' => 'ADD,SELECT'], ['related_tabid' => \App\Module::getModuleId('PriceBooks'), 'tabid' => \App\Module::getModuleId('Services'), 'name' => 'getServicePricebooks']],
 			['vtiger_settings_field', ['iconpath' => 'far fa-image'], ['name' => 'LBL_COUNTRY_SETTINGS']],
+			['vtiger_actionmapping', ['actionname' => 'ModTracker'], ['actionname' => 'Print']],
 			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=Index'], ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=index']],
 			['u_yf_emailtemplates', ['module' => 'Users', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;"><tr><td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
 			<h3 style="padding:0 0 6px 0;margin:0;font-family:Arial, \'Sans-serif\';font-size:16px;font-weight:bold;color:#222;"><span>$(translate : HelpDesk|LBL_NOTICE_WELCOME)$ YetiForce Sp. z o.o. </span></h3>
@@ -216,7 +232,121 @@ class YetiForceUpdate
 			]
 		];
 		\App\Db\Updater::batchInsert($data);
+
+		$dbCommand = $db->createCommand();
+		$address = [['min_length', 'global', '3'], ['key', 'google_map_api', ''], ['nominatim', 'google_map_api', '0'], ['key', 'opencage_data', ''], ['nominatim', 'opencage_data', '0'], ['result_num', 'global', '10']];
+		foreach ($addresses as $address) {
+			if (!(new \App\Db\Query())->from('s_#__address_finder_config')->where(['name' => $address[0], 'type' => $address[1]])->exists()) {
+				$dbCommand->insert('s_#__address_finder_config', ['id' => $db->getUniqueId('s_#__address_finder_config', 'id', false), 'name' => $address[0], 'type' => $address[1], 'val' => $address[2]])->execute();
+			}
+		}
+
+		$actions = [
+			['type' => 'remove', 'name' => 'DuplicatesHandling']
+		];
+		foreach ($actions as $action) {
+			$key = (new \App\Db\Query())->select(['actionid'])->from('vtiger_actionmapping')->where(['actionname' => $action['name']])->scalar();
+			if ($action['type'] === 'remove' && $key) {
+				$dbCommand->delete('vtiger_actionmapping', ['actionid' => $key])->execute();
+				$dbCommand->delete('vtiger_profile2utility', ['activityid' => $key])->execute();
+			}
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function getTrees($index)
+	{
+		$trees = [];
+		switch ($index) {
+			case 1:
+				$trees = [
+					[
+						'column' => 'legal_basis',
+						'base' => [25, 'LBL_LEGAL_BASIS', \App\Module::getModuleId('DataSetRegister'), 1, ''],
+						'data' => [[25, 'PLL_CONSENT', 'T1', 'T1', 0, 'PLL_CONSENT', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[25, 'PLL_FULFIILMENT', 'T2', 'T2', 0, 'PLL_FULFIILMENT', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[25, 'PLL_EXECUCTION_OF_AGREMMENT', 'T3', 'T3', 0, 'PLL_EXECUCTION_OF_AGREMMENT', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[25, 'PLL_PERFORMACNE_PUBLIC_TASKS', 'T4', 'T4', 0, 'PLL_PERFORMACNE_PUBLIC_TASKS', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[25, 'PLL_JUSTIFIED_ADMIN_DATA', 'T5', 'T5', 0, 'PLL_JUSTIFIED_ADMIN_DATA', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1']]
+					],
+					[
+						'column' => 'scope_data',
+						'base' => [26, 'LBL_SCOPE_DATA', \App\Module::getModuleId('DataSetRegister'), 1, ''],
+						'data' => [[26, 'PLL_NAME_AND_LASTNAME', 'T1', 'T1', 0, 'PLL_NAME_AND_LASTNAME', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_PARENTS_NAMES', 'T2', 'T2', 0, 'PLL_PARENTS_NAMES', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_BIRTHDAY', 'T3', 'T3', 0, 'PLL_BIRTHDAY', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_PLACE_OF_BIRTH', 'T4', 'T4', 0, 'PLL_PLACE_OF_BIRTH', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_ADDRESS', 'T5', 'T5', 0, 'PLL_ADDRESS', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_PESEL_NUMBER', 'T6', 'T6', 0, 'PLL_PESEL_NUMBER', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_VAT', 'T7', 'T7', 0, 'PLL_VAT', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_EDUCATION', 'T8', 'T8', 0, 'PLL_EDUCATION', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_ID_CARD_NUMBER', 'T10', 'T10', 0, 'PLL_ID_CARD_NUMBER', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_PHONE', 'T11', 'T11', 0, 'PLL_PHONE', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_EMAIL', 'T12', 'T12', 0, 'PLL_EMAIL', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_EMPLOYMENT_PLACE', 'T13', 'T13', 0, 'PLL_EMPLOYMENT_PLACE', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[26, 'PLL_PROFESSION', 'T14', 'T14', 0, 'PLL_PROFESSION', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1']]
+					],
+					[
+						'column' => 'activity_type',
+						'base' => [27, 'LBL_ACTIVITY_TYPE', \App\Module::getModuleId('ActivityRegister'), 1, ''],
+						'data' => [[27, 'PLL_ENTRUSTMENT', 'T1', 'T1', 0, 'PLL_ENTRUSTMENT', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[27, 'PLL_SHARING', 'T2', 'T2', 0, 'PLL_SHARING', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[27, 'PLL_TRANSFER', 'T3', 'T3', 0, 'PLL_TRANSFER', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[27, 'PLL_ENTRUSTMENT_ACCEPTANCE', 'T4', 'T4', 0, 'PLL_ENTRUSTMENT_ACCEPTANCE', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[27, 'PLL_INTERNAL', 'T5', 'T5', 0, 'PLL_INTERNAL', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1']]
+					],
+					[
+						'column' => 'security_type',
+						'base' => [28, 'LBL_SECURITY_TYPE', \App\Module::getModuleId('LocationRegister'), 1, ''],
+						'data' => [[28, 'PLL_PHYSICAL', 'T1', 'T1', 0, 'PLL_PHYSICAL', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1'],
+							[28, 'PLL_ELECTRONIC', 'T2', 'T2', 0, 'PLL_ELECTRONIC', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '1']]
+					]
+				];
+				break;
+			default:
+				break;
+		}
+		return $trees;
+	}
+
+	private function setTrees($trees)
+	{
+		$db = PearDatabase::getInstance();
+		foreach ($trees as $tree) {
+			$skipCheckData = false;
+			$result = $db->pquery('SELECT templateid FROM vtiger_trees_templates WHERE module = ?;', [$tree['base'][2]]);
+			if ($result->rowCount()) {
+				$templateId = $db->getSingleValue($result);
+			} else {
+				$db->insert('vtiger_trees_templates', [
+					'name' => $tree['base'][1],
+					'module' => $tree['base'][2],
+					'access' => $tree['base'][3],
+					'share' => $tree['base'][4]
+				]);
+				$templateId = $db->getLastInsertID();
+				$db->update('vtiger_field', ['fieldparams' => $templateId], '`tabid` = ? AND columnname = ?;', [$tree['base'][2], $tree['column']]);
+				$skipCheckData = true;
+			}
+			foreach ($tree['data'] as $data) {
+				if (!$skipCheckData) {
+					$result = $db->pquery('SELECT templateid FROM vtiger_trees_templates_data WHERE templateid = ? AND `name` = ?;', [$templateId, $data[1]]);
+					if ($result->rowCount()) {
+						continue;
+					}
+				}
+				$db->insert('vtiger_trees_templates_data', [
+					'templateid' => $templateId,
+					'name' => $data[1],
+					'tree' => $data[2],
+					'parenttrre' => $data[3],
+					'depth' => $data[4],
+					'label' => $data[5],
+					'state' => $data[6],
+					'icon' => $data[7]
+				]);
+			}
+		}
 	}
 
 	/**
@@ -321,11 +451,126 @@ class YetiForceUpdate
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $moduleName . '.xml');
 				$importInstance->importModule();
 				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				$this->postInstalModule($moduleName);
 			} else {
 				\App\Log::warning('Module exists: ' . $moduleName);
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Post instal
+	 * @param string $moduleName
+	 */
+	public function postInstalModule(string $moduleName)
+	{
+		$this->widgets($moduleName);
+		$tabId = \App\Module::getModuleId($moduleName);
+		$settingsModel = Settings_Menu_Module_Model::getInstance();
+		$settingsModel->getMenuTypeKey($item);
+		if (!(new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->exists()) {
+			$menu = ['yetiforce_menu',
+				['role' => 0, 'parentid' => 0, 'type' => $settingsModel->getMenuTypeKey('Label'),
+					'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => 0])->max('sequence') + 1,
+					'label' => 'MEN_GDPR', 'newwindow' => 0, 'showicon' => 0, 'icon' => '', 'hotkey' => ''],
+				['label' => 'MEN_GDPR']
+			];
+			\App\Db\Updater::batchInsert([$menu]);
+		}
+
+		$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->scalar();
+		if ($id) {
+			$menu = ['yetiforce_menu', ['role' => 0,
+					'parentid' => $id,
+					'type' => $settingsModel->getMenuTypeKey('Module'),
+					'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => $id])->max('sequence') + 1,
+					'module' => $tabId,
+					'label' => '',
+					'newwindow' => 0,
+					'showicon' => 0,
+					'icon' => '',
+					'hotkey' => ''], ['label' => 'MEN_GDPR']];
+			\App\Db\Updater::batchInsert([$menu]);
+		}
+		$prefixes = [
+			'DataSetRegister' => 'DSR',
+			'ActivityRegister' => 'AR',
+			'LocationRegister' => 'LR',
+			'IncidentRegister' => 'IR',
+			'AuditRegister' => 'N'
+		];
+		if (isset($prefixes[$moduleName])) {
+			\App\Fields\RecordNumber::setNumber($tabId, $prefixes[$moduleName], 1);
+		}
+	}
+
+	/**
+	 * Get widgets data
+	 * @param string $moduleName
+	 * @return array
+	 */
+	public function getWidgetToSummary(string $moduleName)
+	{
+		$widgets = [];
+		$calendarId = \App\Module::getModuleId('Calendar');
+		$documentId = \App\Module::getModuleId('Documents');
+		switch ($moduleName) {
+			case 'LocationRegister':
+				$widgets = [
+					['186', $moduleName, 'Summary', null, '1', '0', '[]'],
+					['187', $moduleName, 'Updates', 'LBL_UPDATES', '1', '1', '[]'],
+					['188', $moduleName, 'Comments', 'ModComments', '1', '2', '{"relatedmodule":"ModComments","limit":"5"}'],
+					['189', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
+					['190', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+				];
+				break;
+			case 'IncidentRegister':
+				$widgets = [
+					['191', $moduleName, 'Summary', null, '1', '0', '[]'],
+					['192', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
+					['193', $moduleName, 'Updates', 'LBL_UPDATES', '1', '2', '[]'],
+					['194', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
+					['195', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+				];
+				break;
+			case 'AuditRegister':
+				$widgets = [
+					['196', $moduleName, 'Summary', null, '1', '0', '[]'],
+					['197', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
+					['198', $moduleName, 'Updates', 'LBL_UPDATES', '1', '2', '[]'],
+					['199', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'
+					],
+					['200', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+				];
+				break;
+			default:
+				break;
+		}
+		return $widgets;
+	}
+
+	/**
+	 * Widgets
+	 * @param string $moduleName
+	 */
+	public function widgets(string $moduleName)
+	{
+		$rows = [];
+		foreach ($this->getWidgetToSummary($moduleName) as $widget) {
+			if (empty($widget)) {
+				continue;
+			}
+			$rows[] = ['vtiger_widgets', [
+					'tabid' => \App\Module::getModuleId($widget[1]),
+					'type' => $widget[2],
+					'label' => $widget[3],
+					'wcol' => $widget[4],
+					'sequence' => $widget[5],
+					'data' => $widget[6]
+			]];
+		}
+		\App\Db\Updater::batchInsert($rows);
 	}
 
 	/**
@@ -385,9 +630,11 @@ class YetiForceUpdate
 		\vtlib\Functions::recurseDelete('cache/updates');
 		\vtlib\Functions::recurseDelete('cache/templates_c');
 		\App\Session::set('UserAuthMethod', 'PASSWORD');
-		$loader = require 'vendor/autoload.php';
-		$loader->addPsr4('App\\', 'app/', true);
-		\App\UserPrivilegesFile::recalculateAll();
+		$userIds = (new \App\Db\Query())->select(['id'])->from('vtiger_users')->where(['deleted' => 0])->column();
+		foreach ($userIds as $id) {
+			\App\UserPrivilegesFile::createUserPrivilegesfile($id);
+			\App\UserPrivilegesFile::createUserSharingPrivilegesfile($id);
+		}
 		if (method_exists('\vtlib\Deprecated', 'createModuleMetaFile')) {
 			\vtlib\Deprecated::createModuleMetaFile();
 		} else {
@@ -558,7 +805,10 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleName'];
 		$fields = [
+			[41, 2763, 'projectmilestone_status', 'vtiger_projectmilestone', 1, 15, 'projectmilestone_status', 'FL_STATUS', 1, 2, '', '255', 6, 101, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_PROJECT_MILESTONE_INFORMATION', ['PLL_OPEN', 'PLL_IN_PROGRESS', 'PLL_COMPLETED', 'PLL_DEFERRED', 'PLL_CANCELLED'], [], 'ProjectMilestone'],
 			[42, 1318, 'parentid', 'vtiger_projectmilestone', 1, 10, 'parentid', 'FL_PARENT_PROJECT_MILESTONE', 1, 2, '', 100, 13, 104, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '', null, 'int(10)', 'LBL_PROJECT_MILESTONE_INFORMATION', [], ['ProjectMilestone'], 'ProjectMilestone'],
+			[29, 2764, 'authy_methods', 'vtiger_users', 1, 16, 'authy_methods', 'FL_AUTHY_METHODS', 1, 2, '', null, 3, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', ['PLL_AUTHY_TOTP'], [], 'Users'],
+			[29, 2765, 'authy_secret_totp', 'vtiger_users', 1, 358, 'authy_secret_totp', 'FL_AUTHY_SECRET_TOTP', 1, 2, '', null, 4, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', [], [], 'Users']
 		];
 
 		foreach ($fields as $field) {
@@ -641,6 +891,9 @@ class YetiForceUpdate
 	'CRON_BATCH_METHODS_LIMIT' => 15,
 "],
 					['type' => 'update', 'search' => "vendor/yetiforce/Session", 'replace' => ["vendor/yetiforce/Session", "app/Session"]],
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_MERGE_RECORDS', 'addingType' => 'before', 'value' => "	// Maximum number of merged records
+	'MAX_MERGE_RECORDS' => 4,
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_ADDITIONAL_FILTERS_LIMIT', 'addingType' => 'before', 'value' => "	//Additional filters limit for ChartFilter's
 	'CHART_ADDITIONAL_FILTERS_LIMIT'=>6,
 "],
@@ -649,7 +902,7 @@ class YetiForceUpdate
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_MULTI_FILTER_LIMIT', 'addingType' => 'before', 'value' => "	//Charts multi filter limit
 	'CHART_MULTI_FILTER_LIMIT' => 5,
-"],
+"]
 				]
 			],
 			['name' => 'config/modules/Accounts.php', 'conditions' => [
@@ -669,6 +922,19 @@ class YetiForceUpdate
 				]
 			],
 			['name' => 'config/security.php', 'conditions' => [
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'USER_AUTHY_MODE', 'addingType' => 'before', 'value' => "	/**
+	 * User authentication mode possible values:
+	 * TOTP_OFF - 2FA TOTP is checking off
+	 * TOTP_OPTIONAL - It is defined by the user
+	 * TOTP_OBLIGATORY - It is obligatory.
+	 */
+	'USER_AUTHY_MODE' => 'TOTP_OPTIONAL',
+	/**
+	 * Exceptions list of users (int[])
+	 * TOTP - Time-based One-time Password.
+	 */
+	'USER_AUTHY_TOTP_EXCEPTIONS' => [],
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_LIFETIME_SESSION', 'addingType' => 'before', 'value' => "	// Lifetime session (in seconds)
 	'MAX_LIFETIME_SESSION' => 21600,
 "],

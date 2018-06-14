@@ -21,11 +21,17 @@ class Project_Detail_View extends Vtiger_Detail_View
 		$this->exposeMethod('showGantt');
 	}
 
+	/**
+	 * Show time control chart.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 */
 	public function showCharts(\App\Request $request)
 	{
 		$recordId = $request->getInteger('record');
 		$moduleName = $request->getModule();
-
 		$viewer = $this->getViewer($request);
 		$moduleModel = Vtiger_Module_Model::getInstance('OSSTimeControl');
 		if ($moduleModel) {
@@ -36,16 +42,20 @@ class Project_Detail_View extends Vtiger_Detail_View
 		$viewer->view('charts/ShowTimeProjectUsers.tpl', $moduleName);
 	}
 
+	/**
+	 * Show gantt.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @throws \App\Exceptions\AppException
+	 * @throws \App\Exceptions\IllegalValue
+	 */
 	public function showGantt(\App\Request $request)
 	{
-		$recordId = $request->getInteger('record');
 		$moduleName = $request->getModule();
-
 		$viewer = $this->getViewer($request);
-		$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
-		$data = $moduleModel->getGanttProject($recordId);
 		$viewer->assign('MODULE_NAME', $moduleName);
-		$viewer->assign('DATA', \App\Json::encode($data));
+		$viewer->assign('DATA', (new Project_Gantt_Model())->getById($request->getInteger('record')));
 		$viewer->view('gantt/GanttContents.tpl', $moduleName);
 	}
 
@@ -55,7 +65,9 @@ class Project_Detail_View extends Vtiger_Detail_View
 	public function getHeaderCss(\App\Request $request)
 	{
 		return array_merge(parent::getHeaderCss($request), $this->checkAndConvertCssStyles([
-				'~libraries/gantt/skins/dhtmlxgantt_broadway.css',
+			'~libraries/jquery-gantt-editor/platform.css',
+			'~libraries/jquery-gantt-editor/libs/dateField/jquery.dateField.css',
+			'~libraries/jquery-gantt-editor/gantt.css',
 		]));
 	}
 
@@ -65,7 +77,28 @@ class Project_Detail_View extends Vtiger_Detail_View
 	public function getFooterScripts(\App\Request $request)
 	{
 		return array_merge(parent::getFooterScripts($request), $this->checkAndConvertJsScripts([
-				'~libraries/gantt/dhtmlxgantt.js',
+			'~libraries/chart.js/dist/Chart.js',
+			'~libraries/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/jquery.livequery.1.1.1.min.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/jquery.timers.js',
+			'~libraries/jquery-gantt-editor/libs/utilities.js',
+			'~libraries/jquery-gantt-editor/libs/forms.js',
+			'~libraries/jquery-gantt-editor/libs/date.js',
+			'~libraries/jquery-gantt-editor/libs/dialogs.js',
+			'~libraries/jquery-gantt-editor/libs/layout.js',
+			'~libraries/jquery-gantt-editor/libs/i18nJs.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/dateField/jquery.dateField.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/JST/jquery.JST.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/svg/jquery.svg.min.js',
+			'~libraries/jquery-gantt-editor/libs/jquery/svg/jquery.svgdom.1.8.js',
+			'~libraries/jquery-gantt-editor/ganttUtilities.js',
+			'~libraries/jquery-gantt-editor/ganttTask.js',
+			'~libraries/jquery-gantt-editor/ganttDrawerSVG.js',
+			'~libraries/jquery-gantt-editor/ganttZoom.js',
+			'~libraries/jquery-gantt-editor/ganttGridEditor.js',
+			'~libraries/jquery-gantt-editor/ganttMaster.js',
+			'modules.Project.resources.Gantt',
+			'modules.Project.resources.GanttController',
 		]));
 	}
 }
