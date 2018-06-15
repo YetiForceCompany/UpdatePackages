@@ -215,7 +215,7 @@ class YetiForceUpdate
 			<p><span style="font-size:12px;">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
 			</td>
 		</tr></table>'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
-			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION']]],
+			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION']]],
 			['vtiger_eventhandlers', ['priority' => 4], ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Workflow_Handler']]
 		];
 		\App\Db\Updater::batchUpdate($data);
@@ -523,7 +523,7 @@ class YetiForceUpdate
 			\App\Fields\RecordNumber::setNumber($tabId, $prefixes[$moduleName], 1);
 			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['tablename' => 'vtiger_modcomments', 'columnname' => 'related_to'])->scalar();
 			$fieldModel = Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
-			$fieldModel->setRelatedModules($moduleName);
+			$fieldModel->setRelatedModules([$moduleName]);
 		}
 	}
 
