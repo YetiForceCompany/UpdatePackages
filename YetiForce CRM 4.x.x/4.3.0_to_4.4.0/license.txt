@@ -1,11 +1,3 @@
 YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
 
 1. IMPORTANT!!! 
-The update package introduces a new password encryption mechanism that requires setting a new password. We recommend enabling the reset password mechanism when performing the update and configure SMTP. 
-If the passwords are not mailed we recommend setting a new password for all users after the update.
-After the update should change the password for all users of the system.
-The update package removes all widgets with charts because they were rebuilt and require creating them once again.
-
-2. The update time might be longer depending on the server speed and amount of data in the system.
-3. Log files should be checked after update.
-4. All widgets in record summary should be configured once again after the update ( Software configuration > Standard modules > Modules – Widgets); the configuration has been rebuilt which will cause the widgets to stop working. Please open the widget and save it again.

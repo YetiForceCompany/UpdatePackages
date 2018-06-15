@@ -169,8 +169,9 @@ class YetiForceUpdate
 		$data = [
 			['vtiger_settings_field', ['name' => 'LBL_TERMS_AND_CONDITIONS']],
 			['vtiger_cron_task', ['handler_file' => 'cron/HandlerUpdater.php']],
-			['vtiger_cron_task', ['handler_file' => 'cron/FileUploadTemp.php']],
-			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']]
+			['vtiger_cron_task', ['handler_file' => 'cron/Attachments.php']],
+			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']],
+			['vtiger_relatedlists', ['name' => 'getParentProducts']]
 		];
 		\App\Db\Updater::batchDelete($data);
 
@@ -214,6 +215,8 @@ class YetiForceUpdate
 			<p><span style="font-size:12px;">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
 			</td>
 		</tr></table>'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
+			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION']]],
+			['vtiger_eventhandlers', ['priority' => 4], ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Workflow_Handler']]
 		];
 		\App\Db\Updater::batchUpdate($data);
 
@@ -229,12 +232,25 @@ class YetiForceUpdate
 					'pinned' => 0,
 					'admin_access' => null,
 				], ['name' => 'LBL_ENCRYPTION', 'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption']
-			]
+			],
+			['com_vtiger_workflow_tasktypes', [
+					'id' => $db->getUniqueId('com_vtiger_workflow_tasktypes'),
+					'tasktypename' => 'SumFieldFromDependent',
+					'label' => 'LBL_SUM_FIELD_FROM_DEPENDENT',
+					'classname' => 'SumFieldFromDependent',
+					'classpath' => 'modules/com_vtiger_workflow/tasks/SumFieldFromDependent.php',
+					'templatepath' => 'com_vtiger_workflow/taskforms/SumFieldFromDependent.tpl',
+					'modules' => '{"include":[],"exclude":[]}',
+					'sourcemodule' => ''
+				], ['tasktypename' => 'SumFieldFromDependent']
+			],
+			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectMilestone'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectMilestone')]],
+			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectTask'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectTask')]]
 		];
 		\App\Db\Updater::batchInsert($data);
 
 		$dbCommand = $db->createCommand();
-		$address = [['min_length', 'global', '3'], ['key', 'google_map_api', ''], ['nominatim', 'google_map_api', '0'], ['key', 'opencage_data', ''], ['nominatim', 'opencage_data', '0'], ['result_num', 'global', '10']];
+		$addresses = [['min_length', 'global', '3'], ['key', 'google_map_api', ''], ['nominatim', 'google_map_api', '0'], ['key', 'opencage_data', ''], ['nominatim', 'opencage_data', '0'], ['result_num', 'global', '10']];
 		foreach ($addresses as $address) {
 			if (!(new \App\Db\Query())->from('s_#__address_finder_config')->where(['name' => $address[0], 'type' => $address[1]])->exists()) {
 				$dbCommand->insert('s_#__address_finder_config', ['id' => $db->getUniqueId('s_#__address_finder_config', 'id', false), 'name' => $address[0], 'type' => $address[1], 'val' => $address[2]])->execute();
@@ -314,7 +330,7 @@ class YetiForceUpdate
 		$db = PearDatabase::getInstance();
 		foreach ($trees as $tree) {
 			$skipCheckData = false;
-			$result = $db->pquery('SELECT templateid FROM vtiger_trees_templates WHERE module = ?;', [$tree['base'][2]]);
+			$result = $db->pquery('SELECT templateid FROM vtiger_trees_templates WHERE module = ? AND name=?;', [$tree['base'][2], $tree['base'][1]]);
 			if ($result->rowCount()) {
 				$templateId = $db->getSingleValue($result);
 			} else {
@@ -467,32 +483,7 @@ class YetiForceUpdate
 	{
 		$this->widgets($moduleName);
 		$tabId = \App\Module::getModuleId($moduleName);
-		$settingsModel = Settings_Menu_Module_Model::getInstance();
-		$settingsModel->getMenuTypeKey($item);
-		if (!(new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->exists()) {
-			$menu = ['yetiforce_menu',
-				['role' => 0, 'parentid' => 0, 'type' => $settingsModel->getMenuTypeKey('Label'),
-					'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => 0])->max('sequence') + 1,
-					'label' => 'MEN_GDPR', 'newwindow' => 0, 'showicon' => 0, 'icon' => '', 'hotkey' => ''],
-				['label' => 'MEN_GDPR']
-			];
-			\App\Db\Updater::batchInsert([$menu]);
-		}
 
-		$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->scalar();
-		if ($id) {
-			$menu = ['yetiforce_menu', ['role' => 0,
-					'parentid' => $id,
-					'type' => $settingsModel->getMenuTypeKey('Module'),
-					'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => $id])->max('sequence') + 1,
-					'module' => $tabId,
-					'label' => '',
-					'newwindow' => 0,
-					'showicon' => 0,
-					'icon' => '',
-					'hotkey' => ''], ['label' => 'MEN_GDPR']];
-			\App\Db\Updater::batchInsert([$menu]);
-		}
 		$prefixes = [
 			'DataSetRegister' => 'DSR',
 			'ActivityRegister' => 'AR',
@@ -501,7 +492,38 @@ class YetiForceUpdate
 			'AuditRegister' => 'N'
 		];
 		if (isset($prefixes[$moduleName])) {
+			$settingsModel = Settings_Menu_Module_Model::getInstance();
+			$settingsModel->getMenuTypeKey($item);
+			if (!(new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->exists()) {
+				$menu = ['yetiforce_menu',
+					['role' => 0, 'parentid' => 0, 'type' => $settingsModel->getMenuTypeKey('Label'),
+						'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => 0])->max('sequence') + 1,
+						'label' => 'MEN_GDPR', 'newwindow' => 0, 'showicon' => 0, 'icon' => 'fas fa-lock', 'hotkey' => ''],
+					['label' => 'MEN_GDPR']
+				];
+				\App\Db\Updater::batchInsert([$menu]);
+			}
+
+			$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->scalar();
+			if ($id) {
+				$menu = ['yetiforce_menu', ['role' => 0,
+						'parentid' => $id,
+						'type' => $settingsModel->getMenuTypeKey('Module'),
+						'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => $id])->max('sequence') + 1,
+						'module' => $tabId,
+						'label' => '',
+						'newwindow' => 0,
+						'showicon' => 0,
+						'icon' => '',
+						'hotkey' => ''], ['label' => 'MEN_GDPR']];
+				\App\Db\Updater::batchInsert([$menu]);
+			}
+
+			\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
 			\App\Fields\RecordNumber::setNumber($tabId, $prefixes[$moduleName], 1);
+			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['tablename' => 'vtiger_modcomments', 'columnname' => 'related_to'])->scalar();
+			$fieldModel = Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
+			$fieldModel->setRelatedModules($moduleName);
 		}
 	}
 
@@ -542,6 +564,23 @@ class YetiForceUpdate
 					['199', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'
 					],
 					['200', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+				];
+				break;
+			case 'ActivityRegister':
+				$widgets = [
+					['182', $moduleName, 'Summary', NULL, '1', '0', '[]'],
+					['183', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
+					['184', $moduleName, 'RelatedModule', '', '2', '2', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
+					['185', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+				];
+				break;
+			case 'DataSetRegister':
+				$widgets = [
+					['177', $moduleName, 'Comments', 'ModComments', '2', '3', '{"relatedmodule":"ModComments","limit":"5"}'],
+					['178', $moduleName, 'Summary', NULL, '1', '0', '[]'],
+					['179', $moduleName, 'Updates', 'LBL_UPDATES', '1', '1', '[]'],
+					['180', $moduleName, 'RelatedModule', '', '2', '2', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
+					['181', $moduleName, 'RelatedModule', '', '1', '4', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
 			default:
