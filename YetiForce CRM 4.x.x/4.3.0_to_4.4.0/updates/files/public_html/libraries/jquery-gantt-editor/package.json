@@ -1,8 +1,11 @@
 {
   "name": "jquery-gantt-editor",
-  "version": "1.0.0",
+  "version": "1.0.2",
+  "license": "MIT",
   "description": "jQuery Gantt editor",
   "dependencies": {
+    "jquery-timers": "https://github.com/patryk/jquery.timers",
+    "svg": "https://github.com/kbwood/svg"
   },
   "repository": {
     "type": "git",

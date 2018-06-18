@@ -128,6 +128,18 @@ class YetiForceUpdate
 		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'Vtiger_MultiReferenceUpdater_Handler');
 		\App\Db::getInstance()->createCommand()->update('vtiger_field', ['maximumlength' => null])->execute();
 		$this->setTrees($this->getTrees(1));
+		$data = [
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('ActivityRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('AuditRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('DataSetRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('IncidentRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getRelatedList', 'label' => 'DataSetRegister']],
+			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'timing_change']],
+			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cmileagelogbook', 'columnname' => 'number_kilometers']],
+			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION', 'LBL_INCIDENT_DATES', 'LBL_DESCRIPTION', 'LBL_CUSTOM_INFORMATION', 'LBL_REGISTRATION_INFORMATION'], 'tabid' => array_map('\App\Module::getModuleId', ['ActivityRegister', 'AuditRegister', 'Competition', 'DataSetRegister', 'EmailTemplates', 'IncidentRegister', 'LocationRegister', 'MultiCompany', 'Partners', 'SCalculations', 'SQuoteEnquiries', 'SQuotes', 'SRecurringOrders', 'SRequirementsCards', 'SSalesProcesses', 'SSingleOrders', 'SVendorEnquiries'])]]
+		];
+		\App\Db\Updater::batchUpdate($data);
 	}
 
 	/**
@@ -140,6 +152,7 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$this->importer->logs .= "> start update tables\n";
 		$dbIndexes = $db->getTableKeys('u_#__crmentity_label');
+		$dbIndexes2 = $db->getTableKeys('u_#_address_finder');
 		try {
 			if (!isset($dbIndexes['crmentity_label_fulltext']) && $db->getDriverName() === 'mysql') {
 				$this->importer->logs .= "  > create index: crmentity_label_fulltext ... ";
@@ -150,6 +163,14 @@ class YetiForceUpdate
 				$this->importer->logs .= "  > create index: crmentity_label_fulltext ... ";
 				$db->createCommand('ALTER TABLE u_yf_crmentity_search_label ADD FULLTEXT KEY `crmentity_searchlabel_fulltext`(`searchlabel`);')->execute();
 				$this->importer->logs .= "done\n";
+			}
+			if (!isset($dbIndexes2['name']) && $db->getDriverName() === 'mysql') {
+				$this->importer->logs .= "  > create index: name ... ";
+				$db->createCommand('ALTER TABLE s_yf_address_finder ADD FULLTEXT KEY `name`(`name`);')->execute();
+				$this->importer->logs .= "done\n";
+			}
+			if ($db->getDriverName() === 'mysql') {
+				$db->createCommand('ALTER TABLE vtiger_entity_stats  CHANGE `crmactivity` `crmactivity` MEDIUMINT(8) NULL;')->execute();
 			}
 		} catch (\Throwable $e) {
 			$this->importer->logs .= " | Error(8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
@@ -171,7 +192,9 @@ class YetiForceUpdate
 			['vtiger_cron_task', ['handler_file' => 'cron/HandlerUpdater.php']],
 			['vtiger_cron_task', ['handler_file' => 'cron/Attachments.php']],
 			['vtiger_eventhandlers', ['handler_class' => 'Vtiger_Attachments_Handler']],
-			['vtiger_relatedlists', ['name' => 'getParentProducts']]
+			['vtiger_relatedlists', ['name' => 'getParentProducts']],
+			['vtiger_settings_field', ['name' => 'Credits']],
+			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('IStorages'), 'name' => 'getDependentsList', 'label' => 'SSingleOrders']]
 		];
 		\App\Db\Updater::batchDelete($data);
 
@@ -180,6 +203,21 @@ class YetiForceUpdate
 			['vtiger_field', ['typeofdata' => 'V~M'], ['columnname' => 'status', 'tablename' => 'vtiger_users']],
 			['vtiger_field', ['uitype' => 69], ['uitype' => 105]],
 			['vtiger_field', ['uitype' => 311], ['uitype' => 69, 'tablename' => 'vtiger_products', 'columnname' => 'imagename']],
+			['vtiger_tab', ['tablabel' => 'MultiCompany'], ['name' => 'MultiCompany']],
+			['vtiger_field', ['typeofdata' => 'D~O'], ['tablename' => 'vtiger_troubletickets', 'columnname' => 'contracts_end_date']],
+			['vtiger_field', ['maximumlength' => '-8388607,8388607'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
+			['vtiger_field', ['displaytype' => 2], ['tablename' => 'u_yf_squotes', 'columnname' => 'sum_gross']],
+			['vtiger_field', ['displaytype' => 2], ['tablename' => 'u_yf_squotes', 'columnname' => 'sum_discount']],
+			['vtiger_field', ['displaytype' => 2], ['tablename' => 'u_yf_ssingleorders', 'columnname' => 'sum_gross']],
+			['vtiger_field', ['displaytype' => 2], ['tablename' => 'u_yf_ssingleorders', 'columnname' => 'sum_discount']],
+			['vtiger_field', ['typeofdata' => 'DT~O'], ['tablename' => 'vtiger_crmentity', 'columnname' => 'modifiedtime']],
+			['vtiger_field', ['uitype' => 1, 'maximumlength' => '150'], ['uitype' => 300, 'tablename' => 'vtiger_ossmailview', 'columnname' => 'uid']],
+			['vtiger_field', ['uitype' => 7, 'typeofdata' => 'I~O', 'maximumlength' => '-128,127'], ['uitype' => 1, 'tablename' => 'vtiger_ossmailview', 'columnname' => 'type']],
+			['vtiger_field', ['uitype' => 7, 'typeofdata' => 'I~O', 'maximumlength' => '-2147483648,2147483647'], ['uitype' => 1, 'tablename' => 'vtiger_pbxmanager', 'columnname' => 'totalduration']],
+			['vtiger_field', ['uitype' => 7, 'typeofdata' => 'I~O', 'maximumlength' => '-2147483648,2147483647'], ['uitype' => 1, 'tablename' => 'vtiger_pbxmanager', 'columnname' => 'billduration']],
+			['vtiger_field', ['typeofdata' => 'NN~O', 'maximumlength' => '999'], ['tablename' => 'vtiger_servicecontracts', 'columnname' => 'total_units']],
+			['vtiger_field', ['typeofdata' => 'NN~O', 'maximumlength' => '999'], ['tablename' => 'vtiger_servicecontracts', 'columnname' => 'used_units']],
+			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'vtiger_modcomments', 'columnname' => 'reasontoedit']],
 			['vtiger_field', ['uitype' => 71], ['uitype' => 7, 'fieldname' => ['sum_total', 'sum_gross'], 'tabid' => array_map('\App\Module::getModuleId', ['FInvoice', 'SQuotes', 'SSingleOrders', 'FInvoiceProforma', 'FCorectingInvoice', 'FInvoiceCost', 'SCalculations', 'IGRN', 'ISTDN', 'ISTRN', 'IGRNC', 'SVendorEnquiries'])]],
 			['vtiger_ticketstatus', ['color' => '855000'], ['color' => '#E6FAD8', 'ticketstatus' => 'Open']],
 			['vtiger_ticketstatus', ['color' => '42c6ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'In Progress']],
@@ -197,6 +235,8 @@ class YetiForceUpdate
 			['com_vtiger_workflowtasks_entitymethod', ['method_name' => 'helpDeskNewCommentOwner', 'function_name' => 'HelpDeskWorkflow'], ['method_name' => 'HelpDeskNewCommentOwner']],
 			['vtiger_relatedlists', ['actions' => 'ADD,SELECT'], ['related_tabid' => \App\Module::getModuleId('PriceBooks'), 'tabid' => \App\Module::getModuleId('Services'), 'name' => 'getServicePricebooks']],
 			['vtiger_settings_field', ['iconpath' => 'far fa-image'], ['name' => 'LBL_COUNTRY_SETTINGS']],
+			['vtiger_settings_field', ['iconpath' => 'fab fa-autoprefixer'], ['name' => 'LBL_ADVANCED_PERMISSION']],
+			['vtiger_settings_field', ['linkto' => 'index.php?module=Vtiger&view=Credits&parent=Settings'], ['name' => 'License']],
 			['vtiger_actionmapping', ['actionname' => 'ModTracker'], ['actionname' => 'Print']],
 			['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=Index'], ['linkto' => 'index.php?module=OSSMail&parent=Settings&view=index']],
 			['u_yf_emailtemplates', ['module' => 'Users', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;"><tr><td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
@@ -205,8 +245,8 @@ class YetiForceUpdate
 		</tr><tr><td>
 			<div style="padding:2px;">
 			<table border="0"><tr><td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">Dear user,<br />
-						Failed login attempts have been detected.</td>
-					</tr></table></div>
+						Failed login attempts have been detected. - $(general : SiteUrl)$</td>
+					</tr><tr><td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">$(custom : Bruteforce|Users)$</td></tr></table></div>
 			</td>
 		</tr><tr><td style="background-color:#f6f6f6;color:#888;border-top:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
 			<div style="float:right;">$(organization : mailLogo)$</div>
@@ -214,8 +254,7 @@ class YetiForceUpdate
 
 			<p><span style="font-size:12px;">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
 			</td>
-		</tr></table>'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
-			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION']]],
+		</tr></table>	'], ['module' => 'Contacts', 'sys_name' => 'BruteForceSecurityRiskHasBeenDetected']],
 			['vtiger_eventhandlers', ['priority' => 4], ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Workflow_Handler']]
 		];
 		\App\Db\Updater::batchUpdate($data);
@@ -245,7 +284,35 @@ class YetiForceUpdate
 				], ['tasktypename' => 'SumFieldFromDependent']
 			],
 			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectMilestone'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectMilestone')]],
-			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectTask'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectTask')]]
+			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectTask'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectTask')]],
+			//$menu = ['yetiforce_menu',
+//					['role' => 0, 'parentid' => 0, 'type' => $settingsModel->getMenuTypeKey('Label'),
+//						'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => 0])->max('sequence') + 1,
+//						'label' => 'MEN_GDPR', 'newwindow' => 0, 'showicon' => 0, 'icon' => 'fas fa-lock', 'hotkey' => ''],
+//					['label' => 'MEN_GDPR']
+//				];
+			['vtiger_settings_field', [
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_About_YetiForce')->get('blockid'),
+					'name' => 'LBL_SHOP_YETIFORCE',
+					'iconpath' => 'fas fa-shopping-cart',
+					'description' => 'LBL_SHOP_YETIFORCE_DESCRIPTION',
+					'linkto' => 'https://yetiforce.shop/',
+					'sequence' => 5,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null,
+				], ['name' => 'LBL_SHOP_YETIFORCE', 'linkto' => 'https://yetiforce.shop/']],
+			['vtiger_settings_field', [
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
+					'name' => 'LBL_2FA_CONF',
+					'iconpath' => 'adminIcon-passwords-configuration',
+					'description' => 'LBL_2FA_DESCRIPTION',
+					'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index',
+					'sequence' => 5,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null,
+				], ['name' => 'LBL_2FA_CONF', 'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index']]
 		];
 		\App\Db\Updater::batchInsert($data);
 
@@ -422,8 +489,8 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		\App\Db\Updater::cron([
-			['type' => 'add', 'data' => ['LBL_BATCH_METHODS', 'cron/BatchMethods.php', 900, null, null, 1, 'Vtiger', 31, null]],
 			['type' => 'add', 'data' => ['LBL_CLEAR_FILE_UPLOAD_TEMP', 'cron/FileUploadTemp.php', 86400, null, null, 1, 'Vtiger', 27, null]],
+			['type' => 'add', 'data' => ['LBL_BATCH_METHODS', 'cron/BatchMethods.php', 900, null, null, 1, 'Vtiger', 31, null]],
 			['type' => 'add', 'data' => ['LBL_SESSION_CLEANER', 'cron/SessionCleaner.php', 60, null, null, 1, 'Vtiger', 32, '']],
 			['type' => 'remove', 'data' => ['LBL_CLEAR_ATTACHMENTS_TABLE']]
 		]);
@@ -439,10 +506,11 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$langs = [
 			['name' => 'Turkish', 'prefix' => 'tr_tr', 'label' => 'Turkish', 'lastupdated' => date('Y-m-d H:i:s'), 'sequence' => null, 'isdefault' => 0, 'active' => 1],
-			['name' => 'French', 'prefix' => 'fr_fr', 'label' => 'French', 'lastupdated' => date('Y-m-d H:i:s'), 'sequence' => null, 'isdefault' => 0, 'active' => 1]
+			['name' => 'French', 'prefix' => 'fr_fr', 'label' => 'French', 'lastupdated' => date('Y-m-d H:i:s'), 'sequence' => null, 'isdefault' => 0, 'active' => 1],
+			['name' => 'Rumunia', 'prefix' => 'ro_ro', 'label' => 'Rumunia', 'lastupdated' => date('Y-m-d H:i:s'), 'sequence' => null, 'isdefault' => 0, 'active' => 1]
 		];
 		$id = $db->getUniqueId('vtiger_language', 'id', false);
-		$db->createCommand()->insert('vtiger_language_seq', ['id' => $id])->execute();
+		$db->createCommand()->update('vtiger_language_seq', ['id' => $id])->execute();
 		foreach ($langs as $lang) {
 			if (!(new \App\Db\Query())->from('vtiger_language')->where(['prefix' => $lang['prefix']])->exists()) {
 				$lang['id'] = $db->getUniqueId('vtiger_language');
@@ -535,7 +603,6 @@ class YetiForceUpdate
 	public function getWidgetToSummary(string $moduleName)
 	{
 		$widgets = [];
-		$calendarId = \App\Module::getModuleId('Calendar');
 		$documentId = \App\Module::getModuleId('Documents');
 		switch ($moduleName) {
 			case 'LocationRegister':
@@ -543,7 +610,6 @@ class YetiForceUpdate
 					['186', $moduleName, 'Summary', null, '1', '0', '[]'],
 					['187', $moduleName, 'Updates', 'LBL_UPDATES', '1', '1', '[]'],
 					['188', $moduleName, 'Comments', 'ModComments', '1', '2', '{"relatedmodule":"ModComments","limit":"5"}'],
-					['189', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
 					['190', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
@@ -552,7 +618,6 @@ class YetiForceUpdate
 					['191', $moduleName, 'Summary', null, '1', '0', '[]'],
 					['192', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
 					['193', $moduleName, 'Updates', 'LBL_UPDATES', '1', '2', '[]'],
-					['194', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
 					['195', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
@@ -561,8 +626,6 @@ class YetiForceUpdate
 					['196', $moduleName, 'Summary', null, '1', '0', '[]'],
 					['197', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
 					['198', $moduleName, 'Updates', 'LBL_UPDATES', '1', '2', '[]'],
-					['199', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'
-					],
 					['200', $moduleName, 'RelatedModule', '', '2', '4', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
@@ -570,7 +633,6 @@ class YetiForceUpdate
 				$widgets = [
 					['182', $moduleName, 'Summary', NULL, '1', '0', '[]'],
 					['183', $moduleName, 'Comments', 'ModComments', '1', '1', '{"relatedmodule":"ModComments","limit":"5"}'],
-					['184', $moduleName, 'RelatedModule', '', '2', '2', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
 					['185', $moduleName, 'RelatedModule', '', '2', '3', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
@@ -579,8 +641,7 @@ class YetiForceUpdate
 					['177', $moduleName, 'Comments', 'ModComments', '2', '3', '{"relatedmodule":"ModComments","limit":"5"}'],
 					['178', $moduleName, 'Summary', NULL, '1', '0', '[]'],
 					['179', $moduleName, 'Updates', 'LBL_UPDATES', '1', '1', '[]'],
-					['180', $moduleName, 'RelatedModule', '', '2', '2', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'],
-					['181', $moduleName, 'RelatedModule', '', '1', '4', '{"relatedmodule":"' . $calendarId . '","relatedfields":["' . $calendarId . '::subject","' . $calendarId . '::assigned_user_id","' . $calendarId . '::activitystatus","' . $calendarId . '::taskpriority"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+					['180', $moduleName, 'RelatedModule', '', '2', '2', '{"relatedmodule":"' . $documentId . '","relatedfields":["' . $documentId . '::notes_title","' . $documentId . '::assigned_user_id","' . $documentId . '::ossdc_status"],"viewtype":"List","limit":"5","action":"0","actionSelect":"0","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
 				];
 				break;
 			default:

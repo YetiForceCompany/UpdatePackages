@@ -74,8 +74,7 @@ class Admin extends \App\Db\Importers\Base
 					'source' => $this->stringType(10),
 				],
 				'index' => [
-					['source', 'source'],
-					['name', 'name'],
+					['source', 'source']
 				],
 				'engine' => 'MyISAM',
 				'charset' => 'utf8'

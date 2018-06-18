@@ -60,6 +60,7 @@ class ComposerStaticInitYT
             'Symfony\\Component\\VarDumper\\' => 28,
             'Symfony\\Component\\Translation\\' => 30,
             'Symfony\\Component\\Console\\' => 26,
+            'Sonata\\GoogleAuthenticator\\' => 27,
             'Sabre\\Xml\\' => 10,
             'Sabre\\VObject\\' => 14,
             'Sabre\\Uri\\' => 10,
@@ -90,6 +91,7 @@ class ComposerStaticInitYT
         ),
         'G' => 
         array (
+            'Google\\Authenticator\\' => 21,
             'Giggsey\\Locale\\' => 15,
         ),
         'E' => 
@@ -167,6 +169,10 @@ class ComposerStaticInitYT
         array (
             0 => __DIR__ . '/..' . '/symfony/console',
         ),
+        'Sonata\\GoogleAuthenticator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
+        ),
         'Sabre\\Xml\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/xml/lib',
@@ -238,6 +244,10 @@ class ComposerStaticInitYT
         'Illuminate\\Contracts\\' => 
         array (
             0 => __DIR__ . '/..' . '/illuminate/contracts',
+        ),
+        'Google\\Authenticator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
         ),
         'Giggsey\\Locale\\' => 
         array (
@@ -514,6 +524,7 @@ class ComposerStaticInitYT
         'App\\Session\\Base' => __DIR__ . '/../..' . '/app/Session/Base.php',
         'App\\Session\\File' => __DIR__ . '/../..' . '/app/Session/File.php',
         'App\\SystemWarnings' => __DIR__ . '/../..' . '/app/SystemWarnings.php',
+        'App\\SystemWarnings\\Security\\Dependencies' => __DIR__ . '/../..' . '/app/SystemWarnings/Security/Dependencies.php',
         'App\\SystemWarnings\\Security\\Encryption' => __DIR__ . '/../..' . '/app/SystemWarnings/Security/Encryption.php',
         'App\\SystemWarnings\\Security\\ServerHttps' => __DIR__ . '/../..' . '/app/SystemWarnings/Security/ServerHttps.php',
         'App\\SystemWarnings\\SystemRequirements\\ConfReport' => __DIR__ . '/../..' . '/app/SystemWarnings/SystemRequirements/ConfReport.php',
@@ -1045,7 +1056,6 @@ class ComposerStaticInitYT
         'Milon\\Barcode\\PDF417' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/PDF417.php',
         'Milon\\Barcode\\QRcode' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/QRcode.php',
         'Milon\\Barcode\\WrongCheckDigitException' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/WrongCheckDigitException.php',
-        'PHPGangsta_GoogleAuthenticator' => __DIR__ . '/..' . '/phpgangsta/googleauthenticator/PHPGangsta/GoogleAuthenticator.php',
         'PHPMailer\\PHPMailer\\Exception' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/Exception.php',
         'PHPMailer\\PHPMailer\\OAuth' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/OAuth.php',
         'PHPMailer\\PHPMailer\\PHPMailer' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/PHPMailer.php',
@@ -2346,6 +2356,10 @@ class ComposerStaticInitYT
         'SensioLabs\\Security\\Formatters\\SimpleFormatter' => __DIR__ . '/..' . '/sensiolabs/security-checker/SensioLabs/Security/Formatters/SimpleFormatter.php',
         'SensioLabs\\Security\\Formatters\\TextFormatter' => __DIR__ . '/..' . '/sensiolabs/security-checker/SensioLabs/Security/Formatters/TextFormatter.php',
         'SensioLabs\\Security\\SecurityChecker' => __DIR__ . '/..' . '/sensiolabs/security-checker/SensioLabs/Security/SecurityChecker.php',
+        'Sonata\\GoogleAuthenticator\\FixedBitNotation' => __DIR__ . '/..' . '/sonata-project/google-authenticator/src/FixedBitNotation.php',
+        'Sonata\\GoogleAuthenticator\\GoogleAuthenticator' => __DIR__ . '/..' . '/sonata-project/google-authenticator/src/GoogleAuthenticator.php',
+        'Sonata\\GoogleAuthenticator\\GoogleQrUrl' => __DIR__ . '/..' . '/sonata-project/google-authenticator/src/GoogleQrUrl.php',
+        'Sonata\\GoogleAuthenticator\\RuntimeException' => __DIR__ . '/..' . '/sonata-project/google-authenticator/src/RuntimeException.php',
         'Symfony\\Component\\Console\\Application' => __DIR__ . '/..' . '/symfony/console/Application.php',
         'Symfony\\Component\\Console\\CommandLoader\\CommandLoaderInterface' => __DIR__ . '/..' . '/symfony/console/CommandLoader/CommandLoaderInterface.php',
         'Symfony\\Component\\Console\\CommandLoader\\ContainerCommandLoader' => __DIR__ . '/..' . '/symfony/console/CommandLoader/ContainerCommandLoader.php',

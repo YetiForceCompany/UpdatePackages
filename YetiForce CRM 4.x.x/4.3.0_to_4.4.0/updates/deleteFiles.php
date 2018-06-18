@@ -2242,5 +2242,6 @@ return [
 	'modules/Vtiger/views/FindDuplicatesAjax.php',
 	'public_html/layouts/basic/modules/Vtiger/resources/FindDuplicates.js',
 	'public_html/layouts/basic/modules/Vtiger/resources/FindDuplicates.min.js',
-	'public_html/layouts/basic/styles/components/_Libraries.scss'
+	'public_html/layouts/basic/styles/components/_Libraries.scss',
+	'public_html/layouts/basic/modules/Migration'
 ];

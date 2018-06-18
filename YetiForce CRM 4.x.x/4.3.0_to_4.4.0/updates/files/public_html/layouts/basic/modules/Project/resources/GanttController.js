@@ -34,11 +34,11 @@ $.Class("Project_Gantt_Js", {}, {
 		});
 		let defaultParams = this.getDefaultParams();
 		urlParams = $.extend(defaultParams, urlParams);
-		AppConnector.request(urlParams).then(function (data) {
+		AppConnector.request(urlParams).done(function (data) {
 			progressIndicatorElement.progressIndicator({mode: 'hide'});
 			aDeferred.resolve(data);
 			app.notifyPostAjaxReady();
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 		});
 		return aDeferred.promise();
@@ -80,29 +80,12 @@ $.Class("Project_Gantt_Js", {}, {
 			app.setMainParams('sortOrder', selectOption.data('sortorder'));
 			thisInstance.getGanttData({
 				"viewname": jQuery(this).val(),
-			}).then(function (data) {
-				thisInstance.breadCrumbsFilter(selectOption.text());
+			}).done(function (data) {
 				thisInstance.reloadData(data.result);
 			});
 			event.stopPropagation();
 		});
 	},
-	breadCrumbsFilter: function (text) {
-		var breadCrumbs = jQuery('.breadcrumbsContainer');
-		var breadCrumbsLastSpan = breadCrumbs.last('span');
-		var filterExist = breadCrumbsLastSpan.find('.breadCrumbsFilter');
-		if (filterExist.length && text != undefined) {
-			filterExist.text(' [' + app.vtranslate('JS_FILTER') + ': ' + text + ']');
-		} else if (filterExist.length < 1) {
-			text = (text == undefined) ? this.getFilterSelectElement().find(':selected').text() : text;
-			if (breadCrumbsLastSpan.hasClass('breadCrumbsFilter')) {
-				breadCrumbsLastSpan.text(': ' + text);
-			} else {
-				breadCrumbs.append('<small class="breadCrumbsFilter hideToHistory p-1 js-text-content" data-js="text"> [' + app.vtranslate('JS_FILTER') + ': ' + text + ']</small>');
-			}
-		}
-	},
-
 	getSelectOptionFromChosenOption: function (liElement) {
 		var id = liElement.attr("id");
 		var idArr = id.split("-");
@@ -136,7 +119,6 @@ $.Class("Project_Gantt_Js", {}, {
 		}
 	},
 	registerEvents: function () {
-		this.breadCrumbsFilter();
 		this.changeCustomFilterElementView();
 		this.registerChangeCustomFilterEvent();
 		Vtiger_Helper_Js.showHorizontalTopScrollBar();

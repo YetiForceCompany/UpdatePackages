@@ -49,7 +49,7 @@ var DATA_ATTR = /^data-[\-\w.\u00B7-\uFFFF]/; // eslint-disable-line no-useless-
 var ARIA_ATTR = /^aria-[\-\w]+$/; // eslint-disable-line no-useless-escape
 var IS_ALLOWED_URI = /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i; // eslint-disable-line no-useless-escape
 var IS_SCRIPT_OR_DATA = /^(?:\w+script|data):/i;
-var ATTR_WHITESPACE = /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205f\u3000]/g; // This needs to be extensive thanks to Webkit/Blink's behavior
+var ATTR_WHITESPACE = /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205f\u3000]/g; // eslint-disable-line no-control-regex
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -70,7 +70,7 @@ function createDOMPurify() {
    * Version label, exposed for easier checks
    * if DOMPurify is up to date or not
    */
-  DOMPurify.version = '1.0.4';
+  DOMPurify.version = '1.0.5';
 
   /**
    * Array of elements that DOMPurify removed during sanitation.
@@ -88,7 +88,6 @@ function createDOMPurify() {
 
   var originalDocument = window.document;
   var useDOMParser = false; // See comment below
-  var useXHR = false;
 
   var document = window.document;
   var DocumentFragment = window.DocumentFragment,
@@ -99,11 +98,7 @@ function createDOMPurify() {
       NamedNodeMap = _window$NamedNodeMap === undefined ? window.NamedNodeMap || window.MozNamedAttrMap : _window$NamedNodeMap,
       Text = window.Text,
       Comment = window.Comment,
-      DOMParser = window.DOMParser,
-      _window$XMLHttpReques = window.XMLHttpRequest,
-      XMLHttpRequest = _window$XMLHttpReques === undefined ? window.XMLHttpRequest : _window$XMLHttpReques,
-      _window$encodeURI = window.encodeURI,
-      encodeURI = _window$encodeURI === undefined ? window.encodeURI : _window$encodeURI;
+      DOMParser = window.DOMParser;
 
   // As per issue #47, the web-components registry is inherited by a
   // new document created via createHTMLDocument. As per the spec
@@ -124,8 +119,8 @@ function createDOMPurify() {
       createNodeIterator = _document.createNodeIterator,
       getElementsByTagName = _document.getElementsByTagName,
       createDocumentFragment = _document.createDocumentFragment;
-
   var importNode = originalDocument.importNode;
+
 
   var hooks = {};
 
@@ -140,8 +135,6 @@ function createDOMPurify() {
       ARIA_ATTR$$1 = ARIA_ATTR,
       IS_SCRIPT_OR_DATA$$1 = IS_SCRIPT_OR_DATA,
       ATTR_WHITESPACE$$1 = ATTR_WHITESPACE;
-
-
   var IS_ALLOWED_URI$$1 = IS_ALLOWED_URI;
   /**
    * We consider the elements and attributes below to be safe. Ideally
@@ -149,6 +142,7 @@ function createDOMPurify() {
    */
 
   /* allowed element names */
+
   var ALLOWED_TAGS = null;
   var DEFAULT_ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray(html), _toConsumableArray(svg), _toConsumableArray(svgFilters), _toConsumableArray(mathMl), _toConsumableArray(text)));
 
@@ -232,7 +226,7 @@ function createDOMPurify() {
   /**
    * _parseConfig
    *
-   * @param  optional config literal
+   * @param  {Object} cfg optional config literal
    */
   // eslint-disable-next-line complexity
   var _parseConfig = function _parseConfig(cfg) {
@@ -316,6 +310,11 @@ function createDOMPurify() {
       ALLOWED_TAGS['#text'] = true;
     }
 
+    /* Add html, head and body to ALLOWED_TAGS in case WHOLE_DOCUMENT is true */
+    if (WHOLE_DOCUMENT) {
+      addToSet(ALLOWED_TAGS, ['html', 'head', 'body']);
+    }
+
     // Prevent further manipulation of configuration.
     // Not available in IE8, Safari 5, etc.
     if (Object && 'freeze' in Object) {
@@ -328,7 +327,7 @@ function createDOMPurify() {
   /**
    * _forceRemove
    *
-   * @param  a DOM node
+   * @param  {Node} node a DOM node
    */
   var _forceRemove = function _forceRemove(node) {
     DOMPurify.removed.push({ element: node });
@@ -342,8 +341,8 @@ function createDOMPurify() {
   /**
    * _removeAttribute
    *
-   * @param  an Attribute name
-   * @param  a DOM node
+   * @param  {String} name an Attribute name
+   * @param  {Node} node a DOM node
    */
   var _removeAttribute = function _removeAttribute(name, node) {
     try {
@@ -363,28 +362,15 @@ function createDOMPurify() {
   /**
    * _initDocument
    *
-   * @param  a string of dirty markup
-   * @return a DOM, filled with the dirty markup
+   * @param  {String} dirty a string of dirty markup
+   * @return {Document} a DOM, filled with the dirty markup
    */
   var _initDocument = function _initDocument(dirty) {
     /* Create a HTML document */
     var doc = void 0;
-    var body = void 0;
 
     if (FORCE_BODY) {
       dirty = '<remove></remove>' + dirty;
-    }
-
-    /* Use XHR if necessary because Safari 10.1 and newer are buggy */
-    if (useXHR) {
-      try {
-        dirty = encodeURI(dirty);
-      } catch (err) {}
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = 'document';
-      xhr.open('GET', 'data:text/html;charset=utf-8,' + dirty, false);
-      xhr.send(null);
-      doc = xhr.response;
     }
 
     /* Use DOMParser to workaround Firefox bug (see comment below) */
@@ -398,7 +384,9 @@ function createDOMPurify() {
     Safari (see comment below) */
     if (!doc || !doc.documentElement) {
       doc = implementation.createHTMLDocument('');
-      body = doc.body;
+      var _doc = doc,
+          body = _doc.body;
+
       body.parentNode.removeChild(body.parentNode.firstElementChild);
       body.outerHTML = dirty;
     }
@@ -407,19 +395,7 @@ function createDOMPurify() {
     return getElementsByTagName.call(doc, WHOLE_DOCUMENT ? 'html' : 'body')[0];
   };
 
-  // Safari 10.1+ (unfixed as of time of writing) has a catastrophic bug in
-  // its implementation of DOMParser such that the following executes the
-  // JavaScript:
-  //
-  // new DOMParser()
-  //   .parseFromString('<svg onload=alert(document.domain)>', 'text/html');
-  //
-  // Later, it was also noticed that even more assumed benign and inert ways
-  // of creating a document are now insecure thanks to Safari. So we work
-  // around that with a feature test and use XHR to create the document in
-  // case we really have to. That one seems safe for now.
-  //
-  // However, Firefox uses a different parser for innerHTML rather than
+  // Firefox uses a different parser for innerHTML rather than
   // DOMParser (see https://bugzilla.mozilla.org/show_bug.cgi?id=1205631)
   // which means that you *must* use DOMParser, otherwise the output may
   // not be safe if used in a document.write context later.
@@ -427,12 +403,8 @@ function createDOMPurify() {
   // So we feature detect the Firefox bug and use the DOMParser if necessary.
   if (DOMPurify.isSupported) {
     (function () {
-      var doc = _initDocument('<svg><g onload="this.parentNode.remove()"></g></svg>');
-      if (!doc.querySelector('svg')) {
-        useXHR = true;
-      }
       try {
-        doc = _initDocument('<svg><p><style><img src="</style><img src=x onerror=alert(1)//">');
+        var doc = _initDocument('<svg><p><style><img src="</style><img src=x onerror=alert(1)//">');
         if (doc.querySelector('svg img')) {
           useDOMParser = true;
         }
@@ -443,8 +415,8 @@ function createDOMPurify() {
   /**
    * _createIterator
    *
-   * @param  document/fragment to create iterator for
-   * @return iterator instance
+   * @param  {Document} root document/fragment to create iterator for
+   * @return {Iterator} iterator instance
    */
   var _createIterator = function _createIterator(root) {
     return createNodeIterator.call(root.ownerDocument || root, root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT, function () {
@@ -455,8 +427,8 @@ function createDOMPurify() {
   /**
    * _isClobbered
    *
-   * @param  element to check for clobbering attacks
-   * @return true if clobbered, false if safe
+   * @param  {Node} elm element to check for clobbering attacks
+   * @return {Boolean} true if clobbered, false if safe
    */
   var _isClobbered = function _isClobbered(elm) {
     if (elm instanceof Text || elm instanceof Comment) {
@@ -471,8 +443,8 @@ function createDOMPurify() {
   /**
    * _isNode
    *
-   * @param object to check whether it's a DOM node
-   * @return true is object is a DOM node
+   * @param  {Node} obj object to check whether it's a DOM node
+   * @return {Boolean} true is object is a DOM node
    */
   var _isNode = function _isNode(obj) {
     return (typeof Node === 'undefined' ? 'undefined' : _typeof(Node)) === 'object' ? obj instanceof Node : obj && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && typeof obj.nodeType === 'number' && typeof obj.nodeName === 'string';
@@ -483,7 +455,8 @@ function createDOMPurify() {
    * Execute user configurable hooks
    *
    * @param  {String} entryPoint  Name of the hook's entry point
-   * @param  {Node} currentNode
+   * @param  {Node} currentNode node to work on with the hook
+   * @param  {Object} data additional hook parameters
    */
   var _executeHook = function _executeHook(entryPoint, currentNode, data) {
     if (!hooks[entryPoint]) {
@@ -502,8 +475,8 @@ function createDOMPurify() {
    * @protect textContent
    * @protect removeChild
    *
-   * @param   node to check for permission to exist
-   * @return  true if node was killed, false if left alive
+   * @param   {Node} currentNode to check for permission to exist
+   * @return  {Boolean} true if node was killed, false if left alive
    */
   var _sanitizeElements = function _sanitizeElements(currentNode) {
     var content = void 0;
@@ -541,7 +514,11 @@ function createDOMPurify() {
     /* Convert markup to cover jQuery behavior */
     if (SAFE_FOR_JQUERY && !currentNode.firstElementChild && (!currentNode.content || !currentNode.content.firstElementChild) && /</g.test(currentNode.textContent)) {
       DOMPurify.removed.push({ element: currentNode.cloneNode() });
-      currentNode.innerHTML = currentNode.textContent.replace(/</g, '&lt;');
+      if (currentNode.innerHTML) {
+        currentNode.innerHTML = currentNode.innerHTML.replace(/</g, '&lt;');
+      } else {
+        currentNode.innerHTML = currentNode.textContent.replace(/</g, '&lt;');
+      }
     }
 
     /* Sanitize element content to be template-safe */
@@ -576,18 +553,17 @@ function createDOMPurify() {
   // eslint-disable-next-line complexity
   var _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
     var attr = void 0;
-    var name = void 0;
     var value = void 0;
     var lcName = void 0;
     var idAttr = void 0;
-    var attributes = void 0;
     var l = void 0;
     /* Execute a hook if present */
     _executeHook('beforeSanitizeAttributes', currentNode, null);
 
-    attributes = currentNode.attributes;
+    var attributes = currentNode.attributes;
 
     /* Check if we have attributes; if not we might have a text node */
+
     if (!attributes) {
       return;
     }
@@ -603,7 +579,9 @@ function createDOMPurify() {
     /* Go backwards over all attributes; safely remove bad ones */
     while (l--) {
       attr = attributes[l];
-      name = attr.name;
+      var _attr = attr,
+          name = _attr.name;
+
       value = attr.value.trim();
       lcName = name.toLowerCase();
 
@@ -707,8 +685,7 @@ function createDOMPurify() {
   /**
    * _sanitizeShadowDOM
    *
-   * @param  fragment to iterate over recursively
-   * @return void
+   * @param  {DocumentFragment} fragment to iterate over recursively
    */
   var _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
     var shadowNode = void 0;
@@ -778,7 +755,8 @@ function createDOMPurify() {
       if (_typeof(window.toStaticHTML) === 'object' || typeof window.toStaticHTML === 'function') {
         if (typeof dirty === 'string') {
           return window.toStaticHTML(dirty);
-        } else if (_isNode(dirty)) {
+        }
+        if (_isNode(dirty)) {
           return window.toStaticHTML(dirty.outerHTML);
         }
       }
@@ -881,8 +859,7 @@ function createDOMPurify() {
    * Public method to set the configuration once
    * setConfig
    *
-   * @param {Object} configuration object
-   * @return void
+   * @param {Object} cfg configuration object
    */
   DOMPurify.setConfig = function (cfg) {
     _parseConfig(cfg);
@@ -893,7 +870,6 @@ function createDOMPurify() {
    * Public method to remove the configuration
    * clearConfig
    *
-   * @return void
    */
   DOMPurify.clearConfig = function () {
     CONFIG = null;
@@ -904,8 +880,8 @@ function createDOMPurify() {
    * AddHook
    * Public method to add DOMPurify hooks
    *
-   * @param {String} entryPoint
-   * @param {Function} hookFunction
+   * @param {String} entryPoint entry point for the hook to add
+   * @param {Function} hookFunction function to execute
    */
   DOMPurify.addHook = function (entryPoint, hookFunction) {
     if (typeof hookFunction !== 'function') {
@@ -920,8 +896,7 @@ function createDOMPurify() {
    * Public method to remove a DOMPurify hook at a given entryPoint
    * (pops it from the stack of hooks if more are present)
    *
-   * @param {String} entryPoint
-   * @return void
+   * @param {String} entryPoint entry point for the hook to remove
    */
   DOMPurify.removeHook = function (entryPoint) {
     if (hooks[entryPoint]) {
@@ -933,8 +908,7 @@ function createDOMPurify() {
    * RemoveHooks
    * Public method to remove all DOMPurify hooks at a given entryPoint
    *
-   * @param  {String} entryPoint
-   * @return void
+   * @param  {String} entryPoint entry point for the hooks to remove
    */
   DOMPurify.removeHooks = function (entryPoint) {
     if (hooks[entryPoint]) {
@@ -946,7 +920,6 @@ function createDOMPurify() {
    * RemoveAllHooks
    * Public method to remove all DOMPurify hooks
    *
-   * @return void
    */
   DOMPurify.removeAllHooks = function () {
     hooks = {};

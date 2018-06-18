@@ -29,7 +29,7 @@ class UpdateFields
 	public function process()
 	{
 		$dbCommand = \App\Db::getInstance()->createCommand();
-		$dataReader = (new \App\Db\Query())->from('vtiger_field')->createCommand()->query();
+		$dataReader = (new \App\Db\Query())->from('vtiger_field')->where(['not', ['columnname' => ['crmactivity', 'total_units', 'used_units', 'reasontoedit', 'uid', 'totalduration', 'billduration']]])->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($row['fieldid']);
 			try {
