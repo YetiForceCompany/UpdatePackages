@@ -126,18 +126,17 @@ class YetiForceUpdate
 		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'ModTracker_ModTrackerHandler_Handler');
 		\App\EventHandler::registerHandler('EntityAfterTransferLink', 'Vtiger_MultiReferenceUpdater_Handler');
 		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'Vtiger_MultiReferenceUpdater_Handler');
-		\App\Db::getInstance()->createCommand()->update('vtiger_field', ['maximumlength' => null])->execute();
 		$this->setTrees($this->getTrees(1));
 		$data = [
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('ActivityRegister'), 'name' => 'getActivities']],
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('AuditRegister'), 'name' => 'getActivities']],
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('DataSetRegister'), 'name' => 'getActivities']],
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('IncidentRegister'), 'name' => 'getActivities']],
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getActivities']],
-			['vtiger_relatedlists', ['presence' => 0], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getRelatedList', 'label' => 'DataSetRegister']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('ActivityRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('AuditRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('DataSetRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('IncidentRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getActivities']],
+			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getRelatedList', 'label' => 'DataSetRegister']],
 			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'timing_change']],
 			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cmileagelogbook', 'columnname' => 'number_kilometers']],
-			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION', 'LBL_INCIDENT_DATES', 'LBL_DESCRIPTION', 'LBL_CUSTOM_INFORMATION', 'LBL_REGISTRATION_INFORMATION'], 'tabid' => array_map('\App\Module::getModuleId', ['ActivityRegister', 'AuditRegister', 'Competition', 'DataSetRegister', 'EmailTemplates', 'IncidentRegister', 'LocationRegister', 'MultiCompany', 'Partners', 'SCalculations', 'SQuoteEnquiries', 'SQuotes', 'SRecurringOrders', 'SRequirementsCards', 'SSalesProcesses', 'SSingleOrders', 'SVendorEnquiries'])]]
+			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION', 'LBL_INCIDENT_DATES', 'LBL_DESCRIPTION', 'LBL_CUSTOM_INFORMATION', 'LBL_REGISTRATION_INFORMATION'], 'tabid' => array_map('\App\Module::getModuleId', ['Accounts', 'ActivityRegister', 'Announcements', 'Assets', 'AuditRegister', 'Calendar', 'CallHistory', 'Campaigns', 'CFixedAssets', 'CInternalTickets', 'CMileageLogbook', 'Competition', 'Contacts', 'DataSetRegister', 'Documents', 'EmailTemplates', 'Events', 'Faq', 'FBookkeeping', 'FCorectingInvoice', 'FInvoice', 'FInvoiceCost', 'FInvoiceProforma', 'HelpDesk', 'HolidaysEntitlement', 'Ideas', 'IGDN', 'IGDNC', 'IGIN', 'IGRN', 'IGRNC', 'IIDN', 'IncidentRegister', 'IPreOrder', 'ISTDN', 'ISTN', 'IStorages', 'ISTRN', 'KnowledgeBase', 'Leads', 'LettersIn', 'LettersOut', 'LocationRegister', 'ModComments', 'MultiCompany', 'Notification', 'OSSEmployees', 'OSSMailView', 'OSSOutsourcedServices', 'OSSPasswords', 'OSSSoldServices', 'OSSTimeControl', 'OutsourcedProducts', 'Partners', 'PaymentsIn', 'PaymentsOut', 'PBXManager', 'PriceBooks', 'Products', 'Project', 'ProjectMilestone', 'ProjectTask', 'Reservations', 'SCalculations', 'ServiceContracts', 'Services', 'SMSNotifier', 'SQuoteEnquiries', 'SQuotes', 'SRecurringOrders', 'SRequirementsCards', 'SSalesProcesses', 'SSingleOrders', 'SVendorEnquiries', 'Users', 'Vendors'])]]
 		];
 		\App\Db\Updater::batchUpdate($data);
 	}
@@ -197,10 +196,10 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('IStorages'), 'name' => 'getDependentsList', 'label' => 'SSingleOrders']]
 		];
 		\App\Db\Updater::batchDelete($data);
-
 		$data = [
 			['vtiger_ws_operation', ['handler_method' => 'vtwsConvertlead'], ['handler_method' => 'vtws_convertlead']],
 			['vtiger_field', ['typeofdata' => 'V~M'], ['columnname' => 'status', 'tablename' => 'vtiger_users']],
+			['vtiger_field', ['maximumlength' => null]],
 			['vtiger_field', ['uitype' => 69], ['uitype' => 105]],
 			['vtiger_field', ['uitype' => 311], ['uitype' => 69, 'tablename' => 'vtiger_products', 'columnname' => 'imagename']],
 			['vtiger_tab', ['tablabel' => 'MultiCompany'], ['name' => 'MultiCompany']],
@@ -217,7 +216,7 @@ class YetiForceUpdate
 			['vtiger_field', ['uitype' => 7, 'typeofdata' => 'I~O', 'maximumlength' => '-2147483648,2147483647'], ['uitype' => 1, 'tablename' => 'vtiger_pbxmanager', 'columnname' => 'billduration']],
 			['vtiger_field', ['typeofdata' => 'NN~O', 'maximumlength' => '999'], ['tablename' => 'vtiger_servicecontracts', 'columnname' => 'total_units']],
 			['vtiger_field', ['typeofdata' => 'NN~O', 'maximumlength' => '999'], ['tablename' => 'vtiger_servicecontracts', 'columnname' => 'used_units']],
-			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'vtiger_modcomments', 'columnname' => 'reasontoedit']],
+			['vtiger_field', ['maximumlength' => '100', 'uitype' => 1], ['tablename' => 'vtiger_modcomments', 'columnname' => 'reasontoedit']],
 			['vtiger_field', ['uitype' => 71], ['uitype' => 7, 'fieldname' => ['sum_total', 'sum_gross'], 'tabid' => array_map('\App\Module::getModuleId', ['FInvoice', 'SQuotes', 'SSingleOrders', 'FInvoiceProforma', 'FCorectingInvoice', 'FInvoiceCost', 'SCalculations', 'IGRN', 'ISTDN', 'ISTRN', 'IGRNC', 'SVendorEnquiries'])]],
 			['vtiger_ticketstatus', ['color' => '855000'], ['color' => '#E6FAD8', 'ticketstatus' => 'Open']],
 			['vtiger_ticketstatus', ['color' => '42c6ff'], ['color' => '#E6FAD8', 'ticketstatus' => 'In Progress']],
