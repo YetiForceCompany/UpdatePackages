@@ -464,9 +464,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'crmactivity' => $this->integer(8),
 				],
-				'columns_mysql' => [
-					'presence' => 'mediumint(8)',
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],

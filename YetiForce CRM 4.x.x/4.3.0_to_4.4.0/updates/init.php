@@ -470,9 +470,9 @@ class YetiForceUpdate
 			}
 			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
 			while ($profileId = $dataReader->readColumn(0)) {
-				foreach ($tabsData as $tabid) {
+				foreach ($tabsData as $tabId) {
 					if (!(new \App\Db\Query())->from('vtiger_profile2utility')->where(['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key])->exists()) {
-						$dbCommand->insert('vtiger_profile2utility', ['profileid' => $profileId, 'tabid' => $tabid, 'activityid' => $key, 'permission' => $permission])->execute();
+						$dbCommand->insert('vtiger_profile2utility', ['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission])->execute();
 					}
 				}
 			}
@@ -677,6 +677,7 @@ class YetiForceUpdate
 	 */
 	public function workflowTask()
 	{
+		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$tasks = [
