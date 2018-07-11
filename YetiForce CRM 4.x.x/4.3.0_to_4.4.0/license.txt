@@ -1,3 +1,4 @@
 YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
 
 1. IMPORTANT!!! 
+Zmodyfikowano blok zaawansawany w module 'Zamówienia okresowe'

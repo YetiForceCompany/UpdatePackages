@@ -344,6 +344,10 @@ class ComposerStaticInitYT
         ),
     );
 
+    public static $fallbackDirsPsr0 = array (
+        0 => __DIR__ . '/..' . '/kzykhys/php-csv-parser/src',
+    );
+
     public static $classMap = array (
         'Api\\Controller' => __DIR__ . '/../..' . '/api/webservice/Controller.php',
         'Api\\Core\\Auth' => __DIR__ . '/../..' . '/api/webservice/Core/Auth.php',
@@ -563,6 +567,7 @@ class ComposerStaticInitYT
         'Carbon\\CarbonInterval' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/CarbonInterval.php',
         'Carbon\\CarbonPeriod' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/CarbonPeriod.php',
         'Carbon\\Exceptions\\InvalidDateException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/InvalidDateException.php',
+        'Carbon\\Laravel\\ServiceProvider' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Laravel/ServiceProvider.php',
         'Carbon\\Translator' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Translator.php',
         'Composer\\CaBundle\\CaBundle' => __DIR__ . '/..' . '/composer/ca-bundle/src/CaBundle.php',
         'CsrfMagic\\Csrf' => __DIR__ . '/..' . '/yetiforce/csrf-magic/src/Csrf.php',
@@ -1047,6 +1052,9 @@ class ComposerStaticInitYT
         'Illuminate\\Support\\Traits\\Macroable' => __DIR__ . '/..' . '/illuminate/support/Traits/Macroable.php',
         'Illuminate\\Support\\ViewErrorBag' => __DIR__ . '/..' . '/illuminate/support/ViewErrorBag.php',
         'JsonSerializable' => __DIR__ . '/..' . '/nesbot/carbon/src/JsonSerializable.php',
+        'KzykHys\\CsvParser\\CsvParser' => __DIR__ . '/..' . '/kzykhys/php-csv-parser/src/KzykHys/CsvParser/CsvParser.php',
+        'KzykHys\\CsvParser\\Iterator\\CsvIterator' => __DIR__ . '/..' . '/kzykhys/php-csv-parser/src/KzykHys/CsvParser/Iterator/CsvIterator.php',
+        'KzykHys\\CsvParser\\Iterator\\FileIterator' => __DIR__ . '/..' . '/kzykhys/php-csv-parser/src/KzykHys/CsvParser/Iterator/FileIterator.php',
         'Milon\\Barcode\\BarcodeServiceProvider' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/BarcodeServiceProvider.php',
         'Milon\\Barcode\\DNS1D' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/DNS1D.php',
         'Milon\\Barcode\\DNS2D' => __DIR__ . '/..' . '/milon/barcode/src/Milon/Barcode/DNS2D.php',
@@ -2553,6 +2561,7 @@ class ComposerStaticInitYT
         'Symfony\\Component\\VarDumper\\Dumper\\HtmlDumper' => __DIR__ . '/..' . '/symfony/var-dumper/Dumper/HtmlDumper.php',
         'Symfony\\Component\\VarDumper\\Dumper\\ServerDumper' => __DIR__ . '/..' . '/symfony/var-dumper/Dumper/ServerDumper.php',
         'Symfony\\Component\\VarDumper\\Exception\\ThrowingCasterException' => __DIR__ . '/..' . '/symfony/var-dumper/Exception/ThrowingCasterException.php',
+        'Symfony\\Component\\VarDumper\\Server\\Connection' => __DIR__ . '/..' . '/symfony/var-dumper/Server/Connection.php',
         'Symfony\\Component\\VarDumper\\Server\\DumpServer' => __DIR__ . '/..' . '/symfony/var-dumper/Server/DumpServer.php',
         'Symfony\\Component\\VarDumper\\Test\\VarDumperTestTrait' => __DIR__ . '/..' . '/symfony/var-dumper/Test/VarDumperTestTrait.php',
         'Symfony\\Component\\VarDumper\\VarDumper' => __DIR__ . '/..' . '/symfony/var-dumper/VarDumper.php',
@@ -2902,6 +2911,7 @@ class ComposerStaticInitYT
             $loader->prefixDirsPsr4 = ComposerStaticInitYT::$prefixDirsPsr4;
             $loader->fallbackDirsPsr4 = ComposerStaticInitYT::$fallbackDirsPsr4;
             $loader->prefixesPsr0 = ComposerStaticInitYT::$prefixesPsr0;
+            $loader->fallbackDirsPsr0 = ComposerStaticInitYT::$fallbackDirsPsr0;
             $loader->classMap = ComposerStaticInitYT::$classMap;
 
         }, null, ClassLoader::class);

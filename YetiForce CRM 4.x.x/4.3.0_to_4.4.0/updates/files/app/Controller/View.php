@@ -225,6 +225,7 @@ abstract class View extends Base
 			'~layouts/resources/icons/userIcons.css',
 			'~layouts/resources/icons/adminIcons.css',
 			'~layouts/resources/icons/additionalIcons.css',
+			'~libraries/fontawesome-web/css/fontawesome-all.css',
 			'~libraries/chosen-js/chosen.css',
 			'~libraries/bootstrap-chosen/bootstrap-chosen.css',
 			'~libraries/jquery-ui-dist/jquery-ui.css',
@@ -422,7 +423,6 @@ abstract class View extends Base
 				}
 			}
 		}
-
 		return $jsScriptInstances;
 	}
 
@@ -522,7 +522,6 @@ abstract class View extends Base
 				}
 			}
 		}
-
 		return $cssStyleInstances;
 	}
 
@@ -589,6 +588,9 @@ abstract class View extends Base
 		}
 		if (\App\Session::has('ShowAuthy2faModal')) {
 			\App\Config::setJsEnv('ShowAuthy2faModal', \App\Session::get('ShowAuthy2faModal'));
+			if (AppConfig::security('USER_AUTHY_MODE') === 'TOTP_OPTIONAL') {
+				\App\Session::delete('ShowAuthy2faModal');
+			}
 		}
 		if (\App\Session::has('ShowUserPasswordChange')) {
 			\App\Config::setJsEnv('ShowUserPasswordChange', \App\Session::get('ShowUserPasswordChange'));

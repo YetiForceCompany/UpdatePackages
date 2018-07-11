@@ -122,6 +122,9 @@ class YetiForceUpdate
 	 */
 	public function updateSecondData()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
 		\App\EventHandler::registerHandler('EntityAfterTransferLink', 'ModTracker_ModTrackerHandler_Handler');
 		\App\EventHandler::registerHandler('EntityAfterTransferUnLink', 'ModTracker_ModTrackerHandler_Handler');
 		\App\EventHandler::registerHandler('EntityAfterTransferLink', 'Vtiger_MultiReferenceUpdater_Handler');
@@ -136,9 +139,53 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['presence' => 1], ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getRelatedList', 'label' => 'DataSetRegister']],
 			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'timing_change']],
 			['vtiger_field', ['generatedtype' => 1], ['tablename' => 'u_yf_cmileagelogbook', 'columnname' => 'number_kilometers']],
-			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION', 'LBL_INCIDENT_DATES', 'LBL_DESCRIPTION', 'LBL_CUSTOM_INFORMATION', 'LBL_REGISTRATION_INFORMATION'], 'tabid' => array_map('\App\Module::getModuleId', ['Accounts', 'ActivityRegister', 'Announcements', 'Assets', 'AuditRegister', 'Calendar', 'CallHistory', 'Campaigns', 'CFixedAssets', 'CInternalTickets', 'CMileageLogbook', 'Competition', 'Contacts', 'DataSetRegister', 'Documents', 'EmailTemplates', 'Events', 'Faq', 'FBookkeeping', 'FCorectingInvoice', 'FInvoice', 'FInvoiceCost', 'FInvoiceProforma', 'HelpDesk', 'HolidaysEntitlement', 'Ideas', 'IGDN', 'IGDNC', 'IGIN', 'IGRN', 'IGRNC', 'IIDN', 'IncidentRegister', 'IPreOrder', 'ISTDN', 'ISTN', 'IStorages', 'ISTRN', 'KnowledgeBase', 'Leads', 'LettersIn', 'LettersOut', 'LocationRegister', 'ModComments', 'MultiCompany', 'Notification', 'OSSEmployees', 'OSSMailView', 'OSSOutsourcedServices', 'OSSPasswords', 'OSSSoldServices', 'OSSTimeControl', 'OutsourcedProducts', 'Partners', 'PaymentsIn', 'PaymentsOut', 'PBXManager', 'PriceBooks', 'Products', 'Project', 'ProjectMilestone', 'ProjectTask', 'Reservations', 'SCalculations', 'ServiceContracts', 'Services', 'SMSNotifier', 'SQuoteEnquiries', 'SQuotes', 'SRecurringOrders', 'SRequirementsCards', 'SSalesProcesses', 'SSingleOrders', 'SVendorEnquiries', 'Users', 'Vendors'])]]
+			['vtiger_blocks', ['iscustom' => 0], ['blocklabel' => ['Contact Information', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_REGISTRATION_INFO', 'BLOCK_INFORMATION_TIME', 'LBL_CONTACT_INFO', 'LBL_ADVANCED_BLOCK', 'LBL_FINANSIAL_SUMMARY', 'LBL_ATTENTION_BLOCK', 'LBL_TICKET_RESOLUTION', 'LBL_STATISTICS', 'LBL_DESCRIPTION_INFORMATION', 'LBL_PERIODIC_GENERATION', 'LBL_ADDRESS_INFORMATION', 'LBL_DESCRIPTION_BLOCK', 'LBL_ADDITIONAL_INFORMATION', 'LBL_CONTACT_INFORMATION', 'LBL_INCIDENT_DATES', 'LBL_DESCRIPTION', 'LBL_CUSTOM_INFORMATION', 'LBL_REGISTRATION_INFORMATION'], 'tabid' => array_map('\App\Module::getModuleId', ['Accounts', 'ActivityRegister', 'Announcements', 'Assets', 'AuditRegister', 'Calendar', 'CallHistory', 'Campaigns', 'CFixedAssets', 'CInternalTickets', 'CMileageLogbook', 'Competition', 'Contacts', 'DataSetRegister', 'Documents', 'EmailTemplates', 'Events', 'Faq', 'FBookkeeping', 'FCorectingInvoice', 'FInvoice', 'FInvoiceCost', 'FInvoiceProforma', 'HelpDesk', 'HolidaysEntitlement', 'Ideas', 'IGDN', 'IGDNC', 'IGIN', 'IGRN', 'IGRNC', 'IIDN', 'IncidentRegister', 'IPreOrder', 'ISTDN', 'ISTN', 'IStorages', 'ISTRN', 'KnowledgeBase', 'Leads', 'LettersIn', 'LettersOut', 'LocationRegister', 'ModComments', 'MultiCompany', 'Notification', 'OSSEmployees', 'OSSMailView', 'OSSOutsourcedServices', 'OSSPasswords', 'OSSSoldServices', 'OSSTimeControl', 'OutsourcedProducts', 'Partners', 'PaymentsIn', 'PaymentsOut', 'PBXManager', 'PriceBooks', 'Products', 'Project', 'ProjectMilestone', 'ProjectTask', 'Reservations', 'SCalculations', 'ServiceContracts', 'Services', 'SMSNotifier', 'SQuoteEnquiries', 'SQuotes', 'SRecurringOrders', 'SRequirementsCards', 'SSalesProcesses', 'SSingleOrders', 'SVendorEnquiries', 'Users', 'Vendors'])]],
+			['vtiger_field', ['summaryfield' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'subject']],
+			['vtiger_field', ['summaryfield' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'number']],
+			['vtiger_field', ['summaryfield' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'fixed_assets_type']],
+			['vtiger_field', ['summaryfield' => 1], ['tablename' => 'u_yf_cfixedassets', 'columnname' => 'fixed_assets_status']],
+			['vtiger_field', ['summaryfield' => 1], ['tabid' => \App\Module::getModuleId('CFixedAssets'), 'columnname' => 'smownerid']],
+			['vtiger_field', ['summaryfield' => 1], ['tabid' => \App\Module::getModuleId('CFixedAssets'), 'columnname' => 'description']],
 		];
 		\App\Db\Updater::batchUpdate($data);
+
+		$moduleName = 'SRecurringOrders';
+		if (Vtiger_Module_Model::getInstance($moduleName)->isInventory()) {
+			$inventory = Vtiger_InventoryField_Model::getInstance($moduleName);
+			$inventoryFields = $inventory->getFields();
+			$addFields = ['price' => 'UnitPrice', 'total' => 'TotalPrice', 'net' => 'NetPrice', 'purchase' => 'Purchase', 'gross' => 'GrossPrice', 'discountmode' => 'DiscountMode', 'taxmode' => 'TaxMode', 'currency' => 'Currency'];
+			foreach ($addFields as $fieldName => $type) {
+				if (!isset($inventoryFields[$fieldName])) {
+					$inventory->addField($type, ['block' => in_array($fieldName, ['discountmode', 'taxmode', 'currency']) ? 0 : 1]);
+				}
+			}
+		}
+
+		if ($db->isTableExists('u_yf_srecurringorders_invfield')) {
+			$data = [];
+			foreach ([['name', 0, 30], ['qty', 3, 7], ['discount', 6, 7], ['marginp', 9, 10], ['margin', 10, 7], ['tax', 11, 7], ['comment1', 7, 0], ['price', 4, 7], ['total', 5, 7], ['net', 7, 7], ['purchase', 8, 7], ['gross', 12, 7], ['discountmode', 11, 1], ['taxmode', 12, 1], ['currency', 13, 1],
+			['unit', 1, 7],
+			['subunit', 2, 7]] as $inventoryData) {
+				$data[] = ['u_yf_srecurringorders_invfield', ['colspan' => $inventoryData[2], 'sequence' => $inventoryData[1]], ['columnname' => $inventoryData[0]]];
+			}
+			\App\Db\Updater::batchUpdate($data);
+		}
+
+		$tabels = ['u_yf_ssingleorders_invmap', 'u_yf_fcorectinginvoice_invmap', 'u_yf_finvoice_invmap', 'u_yf_finvoiceproforma_invmap', 'u_yf_scalculations_invmap', 'u_yf_squoteenquiries_invmap', 'u_yf_squotes_invmap', 'u_yf_srecurringorders_invmap', 'u_yf_srequirementscards_invmap'];
+		foreach ($tabels as $table) {
+			if ($db->isTableExists($table)) {
+				\App\Db\Updater::batchInsert([
+					[$table, ['module' => 'Services', 'field' => 'service_usageunit', 'tofield' => 'unit'], ['module' => 'Services', 'field' => 'service_usageunit']]
+				]);
+			}
+		}
+		$fieldModel = Vtiger_Field_Model::getInstance('authy_methods', Vtiger_Module_Model::getInstance('Users'));
+		$picklist = $fieldModel->getPicklistValues();
+		if (!isset($picklist['-'])) {
+			$db->createCommand()->delete('vtiger_authy_methods')->execute();
+			$fieldModel->setPicklistValues(['-', 'PLL_AUTHY_TOTP']);
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -441,7 +488,9 @@ class YetiForceUpdate
 		$actions = [
 			['type' => 'remove', 'name' => 'NotificationCreateMail'],
 			['type' => 'remove', 'name' => 'NotificationPreview'],
-			['type' => 'add', 'name' => 'RecordConventer', 'tabsData' => []]
+			['type' => 'add', 'name' => 'RecordConventer', 'tabsData' => []],
+			['type' => 'add', 'name' => 'CreateDashboardFilter', 'permission' => 0, 'tabsData' => [\App\Module::getModuleId('Dashboard')]],
+			['type' => 'add', 'name' => 'CreateDashboardChartFilter', 'permission' => 0, 'tabsData' => [\App\Module::getModuleId('Dashboard')]]
 		];
 		$db = \App\Db::getInstance();
 		foreach ($actions as $action) {
@@ -740,13 +789,21 @@ class YetiForceUpdate
 		} else {
 			\App\Module::createModuleMetaFile();
 		}
-		register_shutdown_function(function () {
-			if (function_exists('opcache_reset')) {
-				opcache_reset();
-			}
-		});
+
+		if (function_exists('opcache_reset')) {
+			opcache_reset();
+		}
+		$viewer = Vtiger_Viewer::getInstance();
+		$viewer->clear_all_cache();
+		$viewer->clearAllCache();
+		\App\Cache::clear();
+
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
 		echo '<div class="modal fade in" style="display: block;top: 20%;"><div class="modal-dialog"><div class="modal-content"><div class="modal-header">';
 		echo '<h4 class="modal-title">' . \App\Language::translate('LBL_IMPORTING_MODULE', 'Settings:ModuleManager') . '</h4>';
 		echo '</div><div class="modal-body">';
@@ -754,7 +811,7 @@ class YetiForceUpdate
 		echo '</div><div class="modal-footer">';
 		echo '<a class="btn btn-success" href="index.php">' . \App\Language::translate('LBL_MAIN_PAGE') . '<a>';
 		echo '</div></div></div></div>';
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+//		header('Location: ' . \AppConfig::main('site_URL'));
 		exit;
 	}
 
@@ -903,11 +960,11 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleName'];
+//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleName'];
 		$fields = [
 			[41, 2763, 'projectmilestone_status', 'vtiger_projectmilestone', 1, 15, 'projectmilestone_status', 'FL_STATUS', 1, 2, '', '255', 6, 101, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_PROJECT_MILESTONE_INFORMATION', ['PLL_OPEN', 'PLL_IN_PROGRESS', 'PLL_COMPLETED', 'PLL_DEFERRED', 'PLL_CANCELLED'], [], 'ProjectMilestone'],
 			[42, 1318, 'parentid', 'vtiger_projectmilestone', 1, 10, 'parentid', 'FL_PARENT_PROJECT_MILESTONE', 1, 2, '', 100, 13, 104, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '', null, 'int(10)', 'LBL_PROJECT_MILESTONE_INFORMATION', [], ['ProjectMilestone'], 'ProjectMilestone'],
-			[29, 2764, 'authy_methods', 'vtiger_users', 1, 16, 'authy_methods', 'FL_AUTHY_METHODS', 1, 2, '', null, 3, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', ['PLL_AUTHY_TOTP'], [], 'Users'],
+			[29, 2764, 'authy_methods', 'vtiger_users', 1, 16, 'authy_methods', 'FL_AUTHY_METHODS', 1, 2, '', null, 3, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', ['-', 'PLL_AUTHY_TOTP'], [], 'Users'],
 			[29, 2765, 'authy_secret_totp', 'vtiger_users', 1, 358, 'authy_secret_totp', 'FL_AUTHY_SECRET_TOTP', 1, 2, '', null, 4, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', [], [], 'Users']
 		];
 
@@ -991,6 +1048,12 @@ class YetiForceUpdate
 	'CRON_BATCH_METHODS_LIMIT' => 15,
 "],
 					['type' => 'update', 'search' => "vendor/yetiforce/Session", 'replace' => ["vendor/yetiforce/Session", "app/Session"]],
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHANGE_LOCALE', 'addingType' => 'before', 'value' => "	//Change the locale for sort the data
+	'CHANGE_LOCALE' => true,
+"],
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'ACCESS_TO_INTERNET', 'addingType' => 'before', 'value' => "	//Can CRM have access to the Internet?
+	'ACCESS_TO_INTERNET' => true,
+"],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_MERGE_RECORDS', 'addingType' => 'before', 'value' => "	// Maximum number of merged records
 	'MAX_MERGE_RECORDS' => 4,
 "],

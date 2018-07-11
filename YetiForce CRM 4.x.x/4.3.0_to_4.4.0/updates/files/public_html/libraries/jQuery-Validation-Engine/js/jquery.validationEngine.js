@@ -774,8 +774,12 @@
 				options.showArrow = options.showArrowOnRadioAndCheckbox;
 			}
 
-			if(field.is(":hidden") && options.prettySelect && !field.is('textarea')) {
-				field = form.find("#" + options.usePrefix + methods._jqSelector(field.attr('id')) + options.useSuffix);
+			if (field.is(":hidden") && options.prettySelect && !field.is('textarea')) {
+				var jqSelector = methods._jqSelector(field.attr('id'));
+				field = form.find("#" + options.usePrefix + jqSelector);
+				if (field.length <= 0) {
+					field = form.find("#" + jqSelector + options.useSuffix);
+				}
 			}
 
 			if (options.isError && options.showPrompts){

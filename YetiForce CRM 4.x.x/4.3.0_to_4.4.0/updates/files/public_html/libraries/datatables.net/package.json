@@ -1,11 +1,11 @@
 {
     "name": "datatables.net",
-    "version": "1.10.16",
+    "version": "1.10.19",
     "description": "DataTables for jQuery ",
     "files": [
-        "js/jquery.dataTables.js"
+        "js/**/*.js"
     ],
-    "main": "./js/jquery.dataTables.js",
+    "main": "js/jquery.dataTables.js",
     "keywords": [
         "filter",
         "sort",

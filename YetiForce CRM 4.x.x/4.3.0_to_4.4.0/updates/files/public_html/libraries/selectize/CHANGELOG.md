@@ -1,6 +1,20 @@
 <!-- Feel free to put either your handle and/or full name, according to
      your privacy needs -->
 
+*  Allow the dropdown to reopen on click if it is closed without losing focus
+   by closeAfterSelect: true
+
+   *@fishpercolator*
+
+
+*  Fixed bug making `clearOptions` function. Now it doesn't remove already selected options.
+
+   *(thanks @caseymct - #1079)*
+
+*  New feature: allow to disable single options or complete optgroups
+
+   *@zeitiger*
+
 ## v0.12.3 · 24 August 2016
 *  Make `label[for]` work after applying Selectize (#755)
 

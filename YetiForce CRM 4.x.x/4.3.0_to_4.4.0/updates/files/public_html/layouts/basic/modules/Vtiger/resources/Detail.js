@@ -284,7 +284,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 			}
 			thisInstance.registerEmailEvents(widgetContent);
 			if (relatedModuleName === 'DetailView') {
-				thisInstance.registerBlockAnimationEvent();
 				thisInstance.registerBlockStatusCheckOnLoad();
 			}
 		});
@@ -1573,7 +1572,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		var aDeferred = jQuery.Deferred();
 		var thisInstance = this;
 		if (selectedTabElement == undefined) {
-			var selectedTabElement = thisInstance.getSelectedTab();
+			selectedTabElement = thisInstance.getSelectedTab();
 		}
 		var relatedController = Vtiger_RelatedList_Js.getInstance(thisInstance.getRecordId(), app.getModuleName(), selectedTabElement, relatedModule);
 		relatedController.addRelations(relatedModuleRecordId).done(function (data) {
@@ -2410,9 +2409,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			});
 		});
 		thisInstance.registerEventForRelatedList();
-		if (selectedTabElement.data('reference') === 'Details') {
-			thisInstance.registerBlockAnimationEvent();
-		}
+		thisInstance.registerBlockAnimationEvent();
 		thisInstance.registerMailPreviewWidget(detailContentsHolder.find('.widgetContentBlock[data-type="EmailList"]'));
 		thisInstance.registerMailPreviewWidget(detailContentsHolder.find('.widgetContentBlock[data-type="HistoryRelation"]'));
 		detailContentsHolder.find('.js-switch--recentActivities').off().on('change', function (e) {

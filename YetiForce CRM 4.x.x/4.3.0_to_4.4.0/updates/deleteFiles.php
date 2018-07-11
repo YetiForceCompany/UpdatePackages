@@ -2243,5 +2243,8 @@ return [
 	'public_html/layouts/basic/modules/Vtiger/resources/FindDuplicates.js',
 	'public_html/layouts/basic/modules/Vtiger/resources/FindDuplicates.min.js',
 	'public_html/layouts/basic/styles/components/_Libraries.scss',
-	'public_html/layouts/basic/modules/Migration'
+	'public_html/layouts/basic/modules/Migration',
+	'public_html/layouts/resources/BaseList.js',
+	'public_html/layouts/resources/BaseList.min.js',
+	'public_html/libraries/.yarn-integrity'
 ];

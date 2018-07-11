@@ -59,8 +59,7 @@
 }
 
 header {
-	.globalSearchInput .select2-selection.select2-selection--single {
-		font-size: $font-size-sm !important;
+	.o-global-search__input .select2-selection.select2-selection--single {
 		height: $h-menu-items !important;
 	}
 
@@ -159,20 +158,6 @@ header {
 	margin-top: 3px;
 }
 
-//-------- dataTable --------//
-
-.dataTables_wrapper {
-	@extend .p-0;
-
-	.col-sm-12, .row {
-		@extend .p-0;
-	}
-
-	table.dataTable {
-		margin: 0 !important;
-	}
-}
-
 //-------- daterangepicker --------//
 
 .daterangepicker {
@@ -253,5 +238,11 @@ ul.ui-autocomplete {
 //-------- js-tree --------//
 
 .jstree-proton{
-  	font-family: $font-family-base !important;
+	font-family: $font-family-base !important;
+}
+
+//-------- perfectscrollbar --------//
+
+.leftPanel .ps-scrollbar-y-rail {
+	display: none !important;
 }

@@ -1065,7 +1065,7 @@ class Carbon extends DateTime implements JsonSerializable
      *
      * @throws \InvalidArgumentException
      *
-     * @return string|int|\DateTimeZone
+     * @return string|int|bool|\DateTimeZone
      */
     public function __get($name)
     {
@@ -1447,10 +1447,16 @@ class Carbon extends DateTime implements JsonSerializable
      *
      * @param int $day week start day
      *
+     * @throws InvalidArgumentException
+     *
      * @return void
      */
     public static function setWeekStartsAt($day)
     {
+        if ($day > static::SATURDAY || $day < static::SUNDAY) {
+            throw new InvalidArgumentException('Day of a week should be greater than or equal to 0 and less than or equal to 6.');
+        }
+
         static::$weekStartsAt = $day;
     }
 
@@ -1469,10 +1475,16 @@ class Carbon extends DateTime implements JsonSerializable
      *
      * @param int $day
      *
+     * @throws InvalidArgumentException
+     *
      * @return void
      */
     public static function setWeekEndsAt($day)
     {
+        if ($day > static::SATURDAY || $day < static::SUNDAY) {
+            throw new InvalidArgumentException('Day of a week should be greater than or equal to 0 and less than or equal to 6.');
+        }
+
         static::$weekEndsAt = $day;
     }
 
@@ -1650,6 +1662,142 @@ class Carbon extends DateTime implements JsonSerializable
     public static function setLocale($locale)
     {
         return static::translator()->setLocale($locale) !== false;
+    }
+
+    /**
+     * Set the current locale to the given, execute the passed function, reset the locale to previous one,
+     * then return the result of the closure (or null if the closure was void).
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return mixed
+     */
+    public static function executeWithLocale($locale, $func)
+    {
+        $currentLocale = static::getLocale();
+        $result = call_user_func($func, static::setLocale($locale) ? static::getLocale() : false, static::translator());
+        static::setLocale($currentLocale);
+
+        return $result;
+    }
+
+    /**
+     * Returns true if the given locale is internally supported and has short-units support.
+     * Support is considered enabled if either year, day or hour has a short variant translated.
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return bool
+     */
+    public static function localeHasShortUnits($locale)
+    {
+        return static::executeWithLocale($locale, function ($newLocale, TranslatorInterface $translator) {
+            return $newLocale &&
+                (
+                    ($y = $translator->trans('y')) !== 'y' &&
+                    $y !== $translator->trans('year')
+                ) || (
+                    ($y = $translator->trans('d')) !== 'd' &&
+                    $y !== $translator->trans('day')
+                ) || (
+                    ($y = $translator->trans('h')) !== 'h' &&
+                    $y !== $translator->trans('hour')
+                );
+        });
+    }
+
+    /**
+     * Returns true if the given locale is internally supported and has diff syntax support (ago, from now, before, after).
+     * Support is considered enabled if the 4 sentences are translated in the given locale.
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return bool
+     */
+    public static function localeHasDiffSyntax($locale)
+    {
+        return static::executeWithLocale($locale, function ($newLocale, TranslatorInterface $translator) {
+            return $newLocale &&
+                $translator->trans('ago') !== 'ago' &&
+                $translator->trans('from_now') !== 'from_now' &&
+                $translator->trans('before') !== 'before' &&
+                $translator->trans('after') !== 'after';
+        });
+    }
+
+    /**
+     * Returns true if the given locale is internally supported and has words for 1-day diff (just now, yesterday, tomorrow).
+     * Support is considered enabled if the 3 words are translated in the given locale.
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return bool
+     */
+    public static function localeHasDiffOneDayWords($locale)
+    {
+        return static::executeWithLocale($locale, function ($newLocale, TranslatorInterface $translator) {
+            return $newLocale &&
+                $translator->trans('diff_now') !== 'diff_now' &&
+                $translator->trans('diff_yesterday') !== 'diff_yesterday' &&
+                $translator->trans('diff_tomorrow') !== 'diff_tomorrow';
+        });
+    }
+
+    /**
+     * Returns true if the given locale is internally supported and has words for 2-days diff (before yesterday, after tomorrow).
+     * Support is considered enabled if the 2 words are translated in the given locale.
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return bool
+     */
+    public static function localeHasDiffTwoDayWords($locale)
+    {
+        return static::executeWithLocale($locale, function ($newLocale, TranslatorInterface $translator) {
+            return $newLocale &&
+                $translator->trans('diff_before_yesterday') !== 'diff_before_yesterday' &&
+                $translator->trans('diff_after_tomorrow') !== 'diff_after_tomorrow';
+        });
+    }
+
+    /**
+     * Returns true if the given locale is internally supported and has period syntax support (X times, every X, from X, to X).
+     * Support is considered enabled if the 4 sentences are translated in the given locale.
+     *
+     * @param string $locale locale ex. en
+     *
+     * @return bool
+     */
+    public static function localeHasPeriodSyntax($locale)
+    {
+        return static::executeWithLocale($locale, function ($newLocale, TranslatorInterface $translator) {
+            return $newLocale &&
+                $translator->trans('period_recurrences') !== 'period_recurrences' &&
+                $translator->trans('period_interval') !== 'period_interval' &&
+                $translator->trans('period_start_date') !== 'period_start_date' &&
+                $translator->trans('period_end_date') !== 'period_end_date';
+        });
+    }
+
+    /**
+     * Returns the list of internally available locales and already loaded custom locales.
+     * (It will ignore custom translator dynamic loading.)
+     *
+     * @return array
+     */
+    public static function getAvailableLocales()
+    {
+        $translator = static::translator();
+        $locales = array();
+        if ($translator instanceof Translator) {
+            foreach (glob(__DIR__.'/Lang/*.php') as $file) {
+                $locales[] = substr($file, strrpos($file, '/') + 1, -4);
+            }
+
+            $locales = array_unique(array_merge($locales, array_keys($translator->getMessages())));
+        }
+
+        return $locales;
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -3985,9 +4133,8 @@ class Carbon extends DateTime implements JsonSerializable
                     }
                 }
             }
-            // Some langs have special pluralization for past and future tense.
+            // Some languages have special pluralization for past and future tense.
             $key = $unit.'_'.$transId;
-            $count = isset($count) ? $count : 1;
             if ($key !== static::translator()->transChoice($key, $count)) {
                 $time = static::translator()->transChoice($key, $count, array(':count' => $count));
             }
