@@ -17,7 +17,7 @@ class MigrateImages
 	/**
 	 * Time limit
 	 */
-	CONST TIME_LIMIT = 20;
+	const TIME_LIMIT = 20;
 
 	/**
 	 * Module name
@@ -65,18 +65,15 @@ class MigrateImages
 	public function preProcess()
 	{
 		$db = \App\Db::getInstance();
-		$uitypes = [69];
-		$tables = ['u_#__attachments' => 311, 'vtiger_salesmanattachmentsrel' => 105];
-		foreach ($tables as $table => $uitype) {
-			if ($db->isTableExists($table)) {
-				$uitypes[] = $uitype;
-			} else {
-				unset($tables[$table]);
+		$tables = ['u_#__attachments', 'vtiger_salesmanattachmentsrel'];
+		foreach ($tables as $key => $table) {
+			if (!$db->isTableExists($table)) {
+				unset($tables[$key]);
 			}
 		}
 		if ($tables) {
-			$this->uitypes = $uitypes;
-			$this->tables = array_keys($tables);
+			$this->uitypes = [69, 311];
+			$this->tables = $tables;
 		}
 		$this->startPrcess = time();
 		return !empty($tables);
@@ -100,6 +97,7 @@ class MigrateImages
 				}
 				unset($migrateClassModel);
 			} catch (\Throwable $ex) {
+				$this->break = true;
 				\App\Log::error("MIGRATE FILES:" . $ex->getMessage());
 			}
 		}
@@ -126,8 +124,7 @@ class MigrateImages
 			}
 			switch ($uitype) {
 				case 69:
-				case 105:
-					$this->migrateImage($uitype);
+					$this->migrateImage();
 					break;
 				case 311:
 					$this->migrateMultiImage();
@@ -139,26 +136,37 @@ class MigrateImages
 
 	/**
 	 * Migrate image field
-	 * @param int $uitype
+	 * @param string $field
+	 * @return void
 	 */
-	private function migrateImage(int $uitype)
+	private function migrateImage(string $field = null)
 	{
 		$queryGenerator = new \App\QueryGenerator($this->moduleName);
 		$entityModel = $queryGenerator->getEntityModel();
-		$fields = $queryGenerator->getModuleModel()->getFieldsByUiType($uitype);
+		if ($field) {
+			$field = $queryGenerator->getModuleModel()->getField($field);
+			$fields = $field ? [$field] : [];
+		} else {
+			$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(69);
+		}
 		$field = reset($fields);
 		if (empty($fields) || count($fields) !== 1 || !isset($entityModel->tab_name_index[$field->getTableName()])) {
 			\App\Log::error("MIGRATE FILES ID:" . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
 			return;
 		}
 		$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
-		$relTable = $uitype === 105 ? 'vtiger_salesmanattachmentsrel' : 'vtiger_seattachmentsrel';
 		$queryGenerator->permissions = false;
 		$queryGenerator->setStateCondition('All');
 		$queryGenerator->setFields(['id', $field->getName()]);
 		$queryGenerator->setCustomColumn(['vtiger_attachments.*']);
-		$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.crmid"]);
-		$queryGenerator->addJoin(['INNER JOIN', 'vtiger_attachments', '$relTable.attachmentsid = vtiger_attachments.attachmentsid']);
+		if ($field->getModuleName() === 'Users') {
+			$relTable = 'vtiger_salesmanattachmentsrel';
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.smid"]);
+		} else {
+			$relTable = 'vtiger_seattachmentsrel';
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.crmid"]);
+		}
+		$queryGenerator->addJoin(['INNER JOIN', 'vtiger_attachments', "$relTable.attachmentsid = vtiger_attachments.attachmentsid"]);
 		$dataReader = $queryGenerator->createQuery()->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			if (time() > ($this->startPrcess + (static::TIME_LIMIT * 60))) {
@@ -183,13 +191,20 @@ class MigrateImages
 				\App\Log::error("MIGRATE FILES ID:{$field->getName()}|{$this->moduleName} - Incorrect data");
 				continue;
 			}
+			if ($field->getModuleName() === 'Contacts' || $field->getModuleName() === 'Products') {
+				$this->migrateImage($field->getName());
+				continue;
+			}
+			if (!\App\Db::getInstance()->isTableExists('u_#__attachments')) {
+				continue;
+			}
 			$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
 			$queryGenerator->permissions = false;
 			$queryGenerator->setStateCondition('All');
 			$queryGenerator->setFields(['id', $field->getName()]);
 			$queryGenerator->setCustomColumn(['attachmentsid' => 'u_#__attachments.attachmentid', 'path' => 'u_#__attachments.path', 'name' => 'u_#__attachments.name']);
 			$queryGenerator->addJoin(['INNER JOIN', 'u_#__attachments', $queryGenerator->getColumnName('id') . '=u_#__attachments.crmid']);
-			$queryGenerator->addNativeCondition(['and', ['u_#__attachments.fieldid' => $field->getId()], ['status' => 1]]);
+			$queryGenerator->addNativeCondition(['and', ['u_#__attachments.fieldid' => $field->getId()], ['u_#__attachments.status' => 1]]);
 			$dataReader = $queryGenerator->createQuery()->createCommand()->query();
 			while ($row = $dataReader->read()) {
 				if (time() > ($this->startPrcess + (static::TIME_LIMIT * 60))) {
@@ -238,8 +253,9 @@ class MigrateImages
 				} else {
 					$dbCommand->delete('vtiger_crmentity', ['and', ['crmid' => $row['attachmentsid']], ['not in', 'setype', $this->modules]])->execute();
 					$dbCommand->delete('vtiger_attachments', ['attachmentsid' => $row['attachmentsid']])->execute();
-					if ($field->getUIType() === 105) {
+					if ($field->getModuleName() === 'Users') {
 						$dbCommand->delete('vtiger_salesmanattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
+						\App\UserPrivilegesFile::createUserPrivilegesfile($row['id']);
 					} else {
 						$dbCommand->delete('vtiger_seattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
 					}
@@ -258,8 +274,11 @@ class MigrateImages
 	{
 		$db = \App\Db::getInstance();
 		foreach ($this->tables as $table) {
+			if ($table === 'u_#__attachments') {
+				$db->createCommand()->delete('u_#__attachments', ['status' => 0])->execute();
+			}
 			if (!(new \App\Db\Query)->from($table)->exists()) {
-				$db->createCommand()->dropTable($table);
+				$db->createCommand()->dropTable($table)->execute();
 			} else {
 				\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");
 			}

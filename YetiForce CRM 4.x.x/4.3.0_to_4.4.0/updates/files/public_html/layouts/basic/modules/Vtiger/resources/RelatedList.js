@@ -12,7 +12,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	getInstance: function (parentId, parentModule, selectedRelatedTabElement, relatedModuleName) {
 		var moduleClassName = app.getModuleName() + "_RelatedList_Js";
 		var fallbackClassName = Vtiger_RelatedList_Js;
-		if (typeof window[moduleClassName] != 'undefined') {
+		if (typeof window[moduleClassName] !== "undefined") {
 			var instance = new window[moduleClassName]();
 		} else {
 			var instance = new fallbackClassName();
@@ -44,7 +44,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			if (listViewInstance.getListSearchInstance()) {
 				var searchValue = listViewInstance.getListSearchInstance().getAlphabetSearchValue();
 				postData.search_params = JSON.stringify(listViewInstance.getListSearchInstance().getListSearchParams());
-				if ((typeof searchValue != "undefined") && (searchValue.length > 0)) {
+				if ((typeof searchValue !== "undefined") && (searchValue.length > 0)) {
 					postData['search_key'] = listViewInstance.getListSearchInstance().getAlphabetSearchField();
 					postData['search_value'] = searchValue;
 					postData['operator'] = 's';
@@ -57,7 +57,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			};
 			if (type === 'sendByForm') {
 				var form = $('<form method="POST" action="' + massActionUrl + '">');
-				if (typeof csrfMagicName !== 'undefined') {
+				if (typeof csrfMagicName !== "undefined") {
 					form.append($('<input />', {name: csrfMagicName, value: csrfMagicToken}));
 				}
 				$.each(postData, function (k, v) {
@@ -67,26 +67,23 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				form.submit();
 				progressIndicatorElement.progressIndicator({'mode': 'hide'});
 			} else {
-				AppConnector.request(actionParams).then(
-						function (responseData) {
-							progressIndicatorElement.progressIndicator({'mode': 'hide'});
-							if (responseData && responseData.result !== null) {
-								if (responseData.result.notify) {
-									Vtiger_Helper_Js.showMessage(responseData.result.notify);
-								}
-								if (responseData.result.reloadList) {
-									Vtiger_Detail_Js.reloadRelatedList();
-								}
-								if (responseData.result.procesStop) {
-									progressIndicatorElement.progressIndicator({'mode': 'hide'});
-									return false;
-								}
-							}
-						},
-						function (error, err) {
-							progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				AppConnector.request(actionParams).done(function (responseData) {
+					progressIndicatorElement.progressIndicator({'mode': 'hide'});
+					if (responseData && responseData.result !== null) {
+						if (responseData.result.notify) {
+							Vtiger_Helper_Js.showMessage(responseData.result.notify);
 						}
-				);
+						if (responseData.result.reloadList) {
+							Vtiger_Detail_Js.reloadRelatedList();
+						}
+						if (responseData.result.procesStop) {
+							progressIndicatorElement.progressIndicator({'mode': 'hide'});
+							return false;
+						}
+					}
+				}).fail(function (error, err) {
+					progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				});
 			}
 		} else {
 			listInstance.noRecordSelectedAlert();
@@ -157,25 +154,19 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		if (container.find('.entityState').length) {
 			params['entityState'] = container.find('.entityState').val();
 		}
-		if (this.moduleName == 'Calendar') {
-			if (this.content.find('.switchBtn').is(':checked'))
-				params['time'] = 'current';
-			else
-				params['time'] = 'history';
-		}
 		if (this.listSearchInstance) {
 			var searchValue = this.listSearchInstance.getAlphabetSearchValue();
 			params.search_params = JSON.stringify(this.listSearchInstance.getListSearchParams());
 		}
-		if ((typeof searchValue != "undefined") && (searchValue.length > 0)) {
+		if ((typeof searchValue !== "undefined") && (searchValue.length > 0)) {
 			params['search_key'] = this.listSearchInstance.getAlphabetSearchField();
 			params['search_value'] = searchValue;
 			params['operator'] = 's';
 		}
 		if (this.moduleName == 'Calendar') {
-			var switchBtn = container.find('.switchBtn');
+			var switchBtn = container.find('.js-switch--calendar');
 			if (switchBtn.length) {
-				params.time = switchBtn.prop('checked') ? 'current' : 'history';
+				params.time = switchBtn.first().prop('checked') ? 'current' : 'history';
 			}
 		}
 		return params;
@@ -183,7 +174,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	loadRelatedList: function (params) {
 		var aDeferred = jQuery.Deferred();
 		var thisInstance = this;
-		if (typeof thisInstance.moduleName == "undefined" || thisInstance.moduleName.length <= 0) {
+		if (typeof thisInstance.moduleName === "undefined" || thisInstance.moduleName.length <= 0) {
 			var currentInstance = Vtiger_Detail_Js.getInstance();
 			currentInstance.loadWidgets();
 			return aDeferred.promise();
@@ -196,15 +187,14 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		});
 		var completeParams = this.getCompleteParams();
 		var activeTabsReference = thisInstance.relatedTabsContainer.find('li.active').data('reference');
-		AppConnector.request($.extend(completeParams, params)).then(function (responseData) {
+		AppConnector.request($.extend(completeParams, params)).done(function (responseData) {
 			var currentInstance = Vtiger_Detail_Js.getInstance();
 			currentInstance.loadWidgets();
-			if (activeTabsReference != 'ProductsAndServices') {
+			progressInstance.progressIndicator({'mode': 'hide'});
+			if (activeTabsReference !== 'ProductsAndServices') {
 				thisInstance.relatedTabsContainer.find('li').removeClass('active');
 				thisInstance.selectedRelatedTabElement.addClass('active');
 				thisInstance.content.html(responseData);
-				progressInstance.progressIndicator({'mode': 'hide'});
-				Vtiger_Helper_Js.showHorizontalTopScrollBar();
 				$('.pageNumbers', thisInstance.content).tooltip();
 				thisInstance.registerPostLoadEvents();
 				if (thisInstance.listSearchInstance) {
@@ -212,8 +202,9 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				}
 			}
 			aDeferred.resolve(responseData);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
+			progressInstance.progressIndicator({'mode': 'hide'});
 		});
 		return aDeferred.promise();
 	},
@@ -228,10 +219,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		let params = $.extend(this.getRecordsListParams(), extendParams);
 		app.showRecordsList(params, (modal, instance) => {
 			instance.setSelectEvent((responseData) => {
-				this.addRelations(Object.keys(responseData)).then( () =>{
+				this.addRelations(Object.keys(responseData)).done(() => {
 					app.event.trigger("RelatedListView.AfterSelectRelation", responseData, this, instance, params);
 					let detail = Vtiger_Detail_Js.getInstance();
-					this.loadRelatedList().then(function () {
+					this.loadRelatedList().done(function () {
 						detail.registerRelatedModulesRecordCount();
 					});
 					if (this.getSelectedTabElement().data('link-key') === 'LBL_RECORD_SUMMARY') {
@@ -259,9 +250,9 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			related_module: this.moduleName,
 			src_record: this.parentRecordId,
 			related_record_list: $.isArray(idList) ? JSON.stringify(idList) : idList
-		}).then(function (responseData) {
+		}).done(function (responseData) {
 			aDeferred.resolve(responseData);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 		});
 		return aDeferred.promise();
@@ -275,9 +266,9 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			related_module: this.moduleName,
 			src_record: this.parentRecordId,
 			related_record_list: JSON.stringify(relatedIdList)
-		}).then(function (responseData) {
+		}).done(function (responseData) {
 			aDeferred.resolve(responseData);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 		});
 		return aDeferred.promise();
@@ -288,15 +279,15 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	sortHandler: function (headerElement) {
 		var aDeferred = jQuery.Deferred();
 		var sortOrderVal = headerElement.data('nextsortorderval');
-		if (typeof sortOrderVal === 'undefined') {
+		if (typeof sortOrderVal === "undefined") {
 			return;
 		}
 		this.loadRelatedList({
 			orderby: headerElement.data('fieldname'),
 			sortorder: sortOrderVal,
-		}).then(function (data) {
+		}).done(function (data) {
 			aDeferred.resolve(data);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 		});
 		return aDeferred.promise();
@@ -314,10 +305,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			var nextPage = parseInt(pageNumber) + 1;
 			this.loadRelatedList({
 				page: nextPage
-			}).then(function (data) {
+			}).done(function (data) {
 				thisInstance.setCurrentPageNumber(nextPage);
 				aDeferred.resolve(data);
-			}, function (textStatus, errorThrown) {
+			}).fail(function (textStatus, errorThrown) {
 				aDeferred.reject(textStatus, errorThrown);
 			});
 		}
@@ -335,10 +326,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			var previousPage = parseInt(pageNumber) - 1;
 			this.loadRelatedList({
 				page: previousPage
-			}).then(function (data) {
+			}).done(function (data) {
 				thisInstance.setCurrentPageNumber(previousPage);
 				aDeferred.resolve(data);
-			}, function (textStatus, errorThrown) {
+			}).fail(function (textStatus, errorThrown) {
 				aDeferred.reject(textStatus, errorThrown);
 			});
 		}
@@ -353,10 +344,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		var aDeferred = jQuery.Deferred();
 		this.loadRelatedList({
 			page: pageNumber,
-		}).then(function (data) {
+		}).done(function (data) {
 			thisInstance.setCurrentPageNumber(pageNumber);
 			aDeferred.resolve(data);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 		});
 		return aDeferred.promise();
@@ -370,7 +361,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		if (e.which == 13) {
 			var element = jQuery(e.currentTarget);
 			var response = Vtiger_WholeNumberGreaterThanZero_Validator_Js.invokeValidation(element);
-			if (typeof response != "undefined") {
+			if (typeof response !== "undefined") {
 				element.validationEngine('showPrompt', response, '', "topLeft", true);
 				e.preventDefault();
 			} else {
@@ -396,10 +387,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 					}
 					this.loadRelatedList({
 						page: jumpToPage
-					}).then(function (data) {
+					}).done(function (data) {
 						thisInstance.setCurrentPageNumber(jumpToPage);
 						aDeferred.resolve(data);
-					}, function (textStatus, errorThrown) {
+					}).fail(function (textStatus, errorThrown) {
 						aDeferred.reject(textStatus, errorThrown);
 					});
 				} else {
@@ -430,7 +421,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 
 			//To handle switch to task tab when click on add task from related list of activities
 			//As this is leading to events tab intially even clicked on add task
-			if (typeof fullFormUrl != 'undefined' && fullFormUrl.indexOf('?') !== -1) {
+			if (typeof fullFormUrl !== "undefined" && fullFormUrl.indexOf('?') !== -1) {
 				var urlSplit = fullFormUrl.split('?');
 				var queryString = urlSplit[1];
 				var queryParameters = queryString.split('&');
@@ -446,7 +437,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			jQuery('<input type="hidden" name="sourceRecord" value="' + parentId + '" />').appendTo(data);
 			jQuery('<input type="hidden" name="relationOperation" value="true" />').appendTo(data);
 
-			if (typeof relatedField != "undefined") {
+			if (typeof relatedField !== "undefined") {
 				var field = data.find('[name="' + relatedField + '"]');
 				//If their is no element with the relatedField name,we are adding hidden element with
 				//name as relatedField name,for saving of record with relation to parent record
@@ -461,19 +452,18 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 					jQuery('<input type="hidden" name="' + queryParamComponents[0] + '" value="' + queryParamComponents[1] + '" />').appendTo(data);
 				}
 			}
-			if (typeof callback !== 'undefined') {
+			if (typeof callback !== "undefined") {
 				callback();
 			}
 		}
 		var postQuickCreateSave = function (data) {
-			thisInstance.loadRelatedList().then(
-					function (data) {
-						aDeferred.resolve(data);
-					})
+			thisInstance.loadRelatedList().done(function (data) {
+				aDeferred.resolve(data);
+			})
 		}
 
 		//If url contains params then seperate them and make them as relatedParams
-		if (typeof fullFormUrl != 'undefined' && fullFormUrl.indexOf('?') !== -1) {
+		if (typeof fullFormUrl !== "undefined" && fullFormUrl.indexOf('?') !== -1) {
 			var urlSplit = fullFormUrl.split('?');
 			var queryString = urlSplit[1];
 			var queryParameters = queryString.split('&');
@@ -506,14 +496,14 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				mode: "getRelatedListPageCount",
 				record: this.getParentId(),
 				relatedModule: this.moduleName,
-			}).then(function (data) {
+			}).done(function (data) {
 				var pageCount = data['result']['page'];
 				var numberOfRecords = data['result']['numberOfRecords'];
 				totalCountElem.val(numberOfRecords);
 				element.text(pageCount);
 				element.progressIndicator({'mode': 'hide'});
 				aDeferred.resolve();
-			}, function (error, err) {
+			}).fail(function (error, err) {
 				aDeferred.reject(false);
 			});
 		} else {
@@ -532,10 +522,10 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				relcrmid: relcrmId,
 				relatedModule: this.moduleName,
 				actionMode: state ? 'delete' : 'add',
-			}).then(function (data) {
+			}).done(function (data) {
 				if (data.result)
 					aDeferred.resolve(true);
-			}, function (error, err) {
+			}).fail(function (error, err) {
 				aDeferred.reject(false);
 			});
 		} else {
@@ -577,14 +567,14 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			module: 'ModTracker',
 			sourceModule: this.moduleName,
 			recordsId: ids
-		}).then(function (appData) {
+		}).done(function (appData) {
 			var data = appData.result;
 			$.each(data, function (id, value) {
 				if (value.a > 0) {
-					relatedContent.find('tr[data-id="' + id + '"] .unreviewed .badge.all').text(value.a);
+					relatedContent.find('tr[data-id="' + id + '"] .unreviewed .badge.all').text(value.a).parent().removeClass('d-none');
 				}
 				if (value.m > 0) {
-					relatedContent.find('tr[data-id="' + id + '"] .unreviewed .badge.mail').text(value.m);
+					relatedContent.find('tr[data-id="' + id + '"] .unreviewed .badge.mail').text(value.m).parent().removeClass('d-none');
 				}
 			});
 		});
@@ -606,9 +596,9 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			this.content.find('.listViewEntries').on('click', function (e) {
 				if ($(e.target).is('td')) {
 					if (app.getViewName() == 'DetailPreview') {
-						top.document.location.href = target.closest('tr').data('recordurl');
+						top.document.location.href = $(e.target).closest('tr').data('recordurl');
 					} else {
-						document.location.href = target.closest('tr').data('recordurl');
+						document.location.href = $(e.target).closest('tr').data('recordurl');
 					}
 				}
 			});
@@ -663,7 +653,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				}
 			});
 			app.hidePopover(button);
-			AppConnector.request(params).then(function (response) {
+			AppConnector.request(params).done(function (response) {
 				if (response.success) {
 					calculateValue.html(response.result);
 				} else {
@@ -677,7 +667,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	registerPreviewEvent: function () {
 		var thisInstance = this;
 		var contentHeight = this.content.find('.js-detail-preview,.js-list-preview');
-		contentHeight.height(app.getScreenHeight() - (this.content.offset().top + $('.footerContainer').height()));
+		contentHeight.height(app.getScreenHeight() - (this.content.offset().top + $('.js-footer').height()));
 		this.content.find('.listPreviewframe').on('load', function () {
 			if (thisInstance.frameProgress) {
 				thisInstance.frameProgress.progressIndicator({mode: 'hide'});
@@ -726,7 +716,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			if (relatedContent.find('.entityState').length) {
 				params['entityState'] = relatedContent.find('.entityState').val();
 			}
-			AppConnector.request(params).then(function (response) {
+			AppConnector.request(params).done(function (response) {
 				relatedContent.find('.paginationDiv').html(response);
 			});
 		});
@@ -746,7 +736,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			});
 			var element = $(this);
 			var row = element.closest('tr');
-			thisInstance.favoritesRelation(row.data('id'), element.data('state')).then(function (response) {
+			thisInstance.favoritesRelation(row.data('id'), element.data('state')).done(function (response) {
 				if (response) {
 					var state = element.data('state') ? 0 : 1;
 					element.data('state', state);
@@ -773,7 +763,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				return;
 			}
 			thisInstance.addRelatedRecord(element);
-		})
+		});
 		this.content.on('click', 'button.selectRelation', function (e) {
 			let restrictionsField = $(this).data('rf');
 			let params = {};
@@ -788,9 +778,9 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		this.content.on('click', 'button.relationDelete', function (e) {
 			e.stopImmediatePropagation();
 			var element = $(this);
-			Vtiger_Helper_Js.showConfirmationBox({message: app.vtranslate('JS_DELETE_CONFIRMATION')}).then(function (e) {
+			Vtiger_Helper_Js.showConfirmationBox({message: app.vtranslate('JS_DELETE_CONFIRMATION')}).done(function (e) {
 				var row = element.closest('tr');
-				thisInstance.deleteRelation([row.data('id')]).then(function (response) {
+				thisInstance.deleteRelation([row.data('id')]).done(function (response) {
 					if (response.result) {
 						var widget = element.closest('.widgetContentBlock');
 						var detail = Vtiger_Detail_Js.getInstance();
@@ -810,7 +800,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				});
 			});
 		});
-		this.content.off('switchChange.bootstrapSwitch').on('switchChange.bootstrapSwitch', '.switchBtn', function (e, state) {
+		this.content.on('change', '.js-switch--calendar', function (e) {
 			thisInstance.loadRelatedList();
 		});
 		this.content.on('click', '.relatedViewGroup a', function (e) {
@@ -822,21 +812,21 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	},
 	registerPostLoadEvents: function () {
 		var thisInstance = this;
-		app.showBtnSwitch(this.content.find('.switchBtn'));
 		app.showPopoverElementView(this.content.find('.js-popover-tooltip'));
 		this.registerRowsEvent();
+		this.registerListScroll();
 		if (this.relatedView === 'ListPreview') {
 			this.registerPreviewEvent();
+			if (!this.content.find('.gutter').length) {
+				if (!this.content.find('.js-list-preview').length)
+					return;
+				this.getDomParams(this.content);
+				this.toggleSplit(this.content);
+				this.registerListPreviewEvents(this.content);
+			}
 		}
 		this.listSearchInstance = YetiForce_ListSearch_Js.getInstance(this.content, false, this);
 		app.event.trigger("RelatedList.AfterLoad", thisInstance);
-		if (!this.content.find('.gutter').length) {
-			if (!this.content.find('.js-list-preview').length)
-				return;
-			this.getDomParams(this.content);
-			this.toggleSplit(this.content);
-			this.registerListPreviewEvents(this.content);
-		}
 	},
 	getSecondColMinWidth: function (container) {
 		let maxWidth, thisWidth;
@@ -863,9 +853,8 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		this.list = container.find('.js-list-preview');
 		this.preview = container.find('.js-detail-preview');
 		this.rotatedText = container.find('.u-rotate-90');
-		this.infoUser = $('.infoUser');
-		this.footerH = $('.js-footer').outerHeight() + (this.infoUser.length ? this.infoUser.outerHeight() : 0);
-		this.headerH = $('.bodyHeader').outerHeight();
+		this.footerH = $('.js-footer').outerHeight();
+		this.headerH = $('.js-header').outerHeight();
 	},
 	getDefaultSplitSizes: function () {
 		let thWidth = ((this.listColumnFirstWidth + this.listColumnSecondWidth + 82) / this.windowW) * 100;
@@ -882,8 +871,8 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 	registerListPreviewEvents: function (container) {
 		var listPreview = container.find('.js-detail-preview');
 		var mainBody = container.closest('.mainBody');
-		app.showNewBottomTopScrollbar(container.find('.js-list-preview--scroll'));
-		app.showNewLeftScrollbar(this.list);
+		app.showNewScrollbarTopBottom(container.find('.js-list-preview--scroll'));
+		app.showNewScrollbarLeft(this.list);
 		let listOffsetTop = this.list.offset().top - this.headerH;
 		let initialH = this.sideBlocks.height();
 		let mainViewPortHeightCss = {height: mainBody.height()};
@@ -892,11 +881,23 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		let fixedElements = container.find('.js-fixed-scroll');
 		if (!mainBody.length) {
 			mainBody = $(top.document).find('.mainBody');
-			this.headerH = $(top.document).find('.bodyHeader').outerHeight();
+			this.headerH = $(top.document).find('.js-header').outerHeight();
 			let iframe = $(top.document).find('.js-detail-preview');
 			listOffsetTop = this.list.offset().top + iframe.offset().top - this.headerH + 1;
 			mainViewPortHeightCss = {height: mainBody.height()};
 			mainViewPortWidthCss = {width: mainBody.height()};
+		}
+		this.list.on('click', '.listViewEntries', () => {
+			if (this.split.getSizes()[1] < 10) {
+				const defaultGutterPosition = this.getDefaultSplitSizes();
+				this.split.setSizes(defaultGutterPosition);
+				listPreview.show();
+				this.sideBlockRight.removeClass('d-block');
+				app.moduleCacheSet('userRelatedSplitSet', defaultGutterPosition);
+			}
+		});
+		if (this.list.parents('.blockContent').length) {
+			return;
 		}
 		mainBody.on('scroll', () => {
 			if (mainBody.scrollTop() >= listOffsetTop) {
@@ -912,15 +913,6 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 					width: initialH + mainBody.scrollTop(),
 					height: initialH + mainBody.scrollTop(),
 				});
-			}
-		});
-		this.list.on('click', '.listViewEntries', () => {
-			if (this.split.getSizes()[1] < 10) {
-				const defaultGutterPosition = this.getDefaultSplitSizes();
-				this.split.setSizes(defaultGutterPosition);
-				listPreview.show();
-				this.sideBlockRight.removeClass('d-block');
-				app.moduleCacheSet('userRelatedSplitSet', defaultGutterPosition);
 			}
 		});
 	},
@@ -1049,13 +1041,15 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 			let iframe = $(top.document).find('.js-detail-preview');
 			mainWindowHeightCss = {height: mainBody - this.list.offset().top - iframe.offset().top + 50};
 		}
-		this.gutter.css(mainWindowHeightCss);
-		this.list.css(mainWindowHeightCss);
-		this.sideBlocks.css(mainWindowHeightCss);
-		this.rotatedText.css({
-			width: this.sideBlockLeft.height(),
-			height: this.sideBlockLeft.height()
-		});
+		if (!this.list.parents('.blockContent').length) {
+			this.gutter.css(mainWindowHeightCss);
+			this.list.css(mainWindowHeightCss);
+			this.sideBlocks.css(mainWindowHeightCss);
+			this.rotatedText.css({
+				width: this.sideBlockLeft.height(),
+				height: this.sideBlockLeft.height()
+			});
+		}
 		this.registerSplitEvents(container, split);
 		return split;
 	},
@@ -1089,7 +1083,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				var currentSplit = splitsArray[splitsArray.length - 1];
 				var minWidth = (15 / $(window).width()) * 100;
 				var maxWidth = 100 - minWidth;
-				if (typeof currentSplit === 'undefined')
+				if (typeof currentSplit === "undefined")
 					return;
 				if (currentSplit.getSizes()[0] < minWidth + 5) {
 					currentSplit.setSizes([minWidth, maxWidth]);
@@ -1098,6 +1092,12 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				}
 			}
 		});
+	},
+	registerListScroll: function () {
+		let container = $('.listViewEntriesDiv');
+		if (this.relatedView !== 'ListPreview') {
+			app.showNewScrollbarTopBottomRight(container);
+		}
 	},
 	registerRelatedEvents: function () {
 		var relatedContainer = this.getRelatedContainer();

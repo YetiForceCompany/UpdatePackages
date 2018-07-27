@@ -39,7 +39,7 @@ class Settings_MappedFields_Record_Model extends Settings_Vtiger_Record_Model
 	/**
 	 * Function to get the list view actions for the record.
 	 *
-	 * @return <Array> - Associate array of Vtiger_Link_Model instances
+	 * @return array - Associate array of Vtiger_Link_Model instances
 	 */
 	public function getRecordLinks()
 	{
@@ -51,24 +51,26 @@ class Settings_MappedFields_Record_Model extends Settings_Vtiger_Record_Model
 				'linklabel' => 'LBL_EDIT_RECORD',
 				'linkurl' => $this->getEditViewUrl(),
 				'linkicon' => 'fas fa-edit',
+				'linkclass' => 'btn btn-info btn-sm'
 			],
 			[
 				'linktype' => 'LISTVIEWRECORD',
 				'linklabel' => 'LBL_EXPORT_RECORD',
 				'linkurl' => 'index.php?module=MappedFields&parent=Settings&action=ExportTemplate&id=' . $this->getId(),
 				'linkicon' => 'fas fa-upload',
+				'linkclass' => 'btn btn-primary btn-sm'
 			],
 			[
 				'linktype' => 'LISTVIEWRECORD',
 				'linklabel' => 'LBL_DELETE_RECORD',
 				'class' => 'deleteMap',
 				'linkicon' => 'fas fa-trash-alt',
+				'linkclass' => 'btn btn-danger btn-sm deleteMap'
 			],
 		];
 		foreach ($recordLinks as $recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 		}
-
 		return $links;
 	}
 
@@ -87,7 +89,6 @@ class Settings_MappedFields_Record_Model extends Settings_Vtiger_Record_Model
 				$value = $value ? 'active' : 'inactive';
 				break;
 		}
-
 		return $value;
 	}
 }

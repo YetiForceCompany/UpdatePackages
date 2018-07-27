@@ -12,7 +12,7 @@
 	<input type='hidden' value="{$PAGE_NUMBER}" id='pageNumber'>
 	<input type='hidden' value="{$PAGING_MODEL->getPageLimit()}" id='pageLimit'>
 	<input type="hidden" value="{$LISTVIEW_ENTRIES_COUNT}" id="noOfEntries">
-	<div class="listViewEntriesDiv">
+	<div class="tpl-Settings-Mail-ListViewContents listViewEntriesDiv u-overflow-scroll-xs-down mt-3">
 		<span class="listViewLoadingImageBlock d-none modal" id="loadingListViewModal">
 			<img class="listViewLoadingImage" src="{\App\Layout::getImagePath('loading.gif')}" alt="no-image" title="{\App\Language::translate('LBL_LOADING')}" />
 			<p class="listViewLoadingMsg">{\App\Language::translate('LBL_LOADING_LISTVIEW_CONTENTS')}........</p>
@@ -38,7 +38,10 @@
 			<tbody>
 				<tr>
 					<td>
-						<a class="btn btn-light" data-trigger="listSearch" href="javascript:void(0);"><span class="fas fa-search"></span></a>
+						<a class="btn btn-light" role="button" data-trigger="listSearch" href="javascript:void(0);">
+							<span class="fas fa-search" title="{\App\Language::translate('LBL_SEARCH')}"></span>
+							<span class="sr-only">{\App\Language::translate('LBL_SEARCH')}</span>
+						</a>
 					</td>
 					{assign var="FILTER_FIELDS" value=$MODULE_MODEL->getFilterFields()}
 					{assign var="SMTP_NAMES" value=Settings_MailSmtp_Module_Model::getSmtpNames()}
@@ -113,6 +116,7 @@
 																																					event.stopPropagation();{rdelim} else{ldelim}
 																																								event.cancelBubble = true;{rdelim}" {else} href='{$RECORD_LINK_URL}' {/if}>
 																																	<span class="{$RECORD_LINK->getIcon()} alignMiddle" title="{App\Language::translate($RECORD_LINK->getLabel(), $QUALIFIED_MODULE)}"></span>
+																																	<span class="sr-only">{App\Language::translate($RECORD_LINK->getLabel(), $QUALIFIED_MODULE)}</span>
 																																</a>
 																																{if !$RECORD_LINK@last}
 																																	&nbsp;
@@ -141,5 +145,5 @@
 																										</tbody>
 																									</table>
 																								{/if}
-																							</div>	
+																							</div>
 																							{/strip}

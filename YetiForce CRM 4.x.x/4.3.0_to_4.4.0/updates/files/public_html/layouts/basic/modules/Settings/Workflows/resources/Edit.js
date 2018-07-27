@@ -56,7 +56,7 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 	 * Function to initiate the step 1 instance
 	 */
 	initiate: function (container) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('.workFlowContents');
 		}
 		if (container.is('.workFlowContents')) {
@@ -99,7 +99,7 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 					var specialValidation = thisInstance.currentInstance.isFormValidate();
 				}
 				if (form.validationEngine('validate') && specialValidation) {
-					thisInstance.currentInstance.submit().then(function (data) {
+					thisInstance.currentInstance.submit().done(function (data) {
 						thisInstance.getContainer().append(data);
 						var stepVal = thisInstance.getStepValue();
 						var nextStepVal = parseInt(stepVal) + 1;
@@ -109,7 +109,6 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 						thisInstance.registerFormSubmitEvent(container);
 						thisInstance.currentInstance.registerEvents();
 					});
-
 				}
 				e.preventDefault();
 			})
@@ -134,7 +133,7 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 	},
 	getPopUp: function (container) {
 		var thisInstance = this;
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = thisInstance.getContainer();
 		}
 		container.on('click', '.getPopupUi', function (e) {
@@ -145,8 +144,8 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 			if (valueType == '') {
 				valueType = 'rawtext';
 			}
-			var conditionsContainer = fieldValueElement.closest('.conditionsContainer');
-			var conditionRow = fieldValueElement.closest('.conditionRow');
+			var conditionsContainer = fieldValueElement.closest('.js-conditions-container');
+			var conditionRow = fieldValueElement.closest('.js-conditions-row');
 
 			var clonedPopupUi = conditionsContainer.find('.popupUi').clone(true, true).removeClass('popupUi').addClass('clonedPopupUi')
 			clonedPopupUi.find('select').addClass('chzn-select');

@@ -69,7 +69,6 @@ class PackageExport
 			// Set the module xml filename to be written for exporting.
 			$this->_export_modulexml_filename = 'manifest-' . time() . '.xml';
 		}
-
 		return "$this->_export_tmpdir/$this->_export_modulexml_filename";
 	}
 
@@ -191,7 +190,7 @@ class PackageExport
 			$zip->addFile("config/modules/$module.php", "config/$module.php");
 		}
 		if ($directDownload) {
-			$zip->download();
+			$zip->download($module);
 		} else {
 			$zip->close();
 			if ($todir) {

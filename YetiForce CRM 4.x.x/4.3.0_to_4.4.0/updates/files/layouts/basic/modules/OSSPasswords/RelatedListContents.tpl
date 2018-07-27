@@ -2,7 +2,7 @@
 {strip}
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
 	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
-	<div class="listViewEntriesDiv contents-bottomscroll">
+	<div class="listViewEntriesDiv u-overflow-scroll-xs-down contents-bottomscroll">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
 				<tr class="listViewHeaders">
@@ -37,7 +37,9 @@
 				{if $RELATED_MODULE->isQuickSearchEnabled()}
 					<tr>
 						<td>
-							<a class="btn btn-light" data-trigger="listSearch" href="javascript:void(0);"><span class="fas fa-search"></span></a>
+							<a class="btn btn-light" role="button" data-trigger="listSearch" href="javascript:void(0);">
+								<span class="fas fa-search" title="{\App\Language::translate('LBL_SEARCH')}"></span>
+							</a>
 						</td>
 						{foreach item=HEADER_FIELD from=$RELATED_HEADERS}
 							<td>
@@ -53,8 +55,8 @@
 						{/foreach}
 						<td>
 							<button type="button" class="btn btn-light removeSearchConditions">
-								<span class="fas fa-times"></button>
-							</a>
+								<span class="fas fa-times" title="{\App\Language::translate('LBL_CLEAR_SEARCH')}"></span>
+							</button>
 						</td>
 					</tr>
 				{/if}

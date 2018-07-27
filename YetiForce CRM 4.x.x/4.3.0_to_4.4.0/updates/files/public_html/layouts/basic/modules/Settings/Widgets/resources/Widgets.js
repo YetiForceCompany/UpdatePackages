@@ -12,7 +12,6 @@ jQuery.Class('Settings_Widgets_Index_Js', {}, {
 		var progressIndicatorElement = jQuery.progressIndicator({'position': 'html'});
 		app.showModalWindow(null, "index.php?parent=Settings&module=Widgets&view=Widget&mode=createStep2&type=" + type + "&tabId=" + tabId, function (wizardContainer) {
 			app.showPopoverElementView(wizardContainer.find('.js-help-info'));
-			app.showBtnSwitch(wizardContainer.find('.switchBtn'));
 			if (type == 'RelatedModule') {
 				thisInstance.loadFilters(wizardContainer);
 				thisInstance.relatedModuleFields(wizardContainer);
@@ -91,13 +90,11 @@ jQuery.Class('Settings_Widgets_Index_Js', {}, {
 		params['view'] = 'Index';
 		params['parent'] = 'Settings';
 		params['source'] = $("input[name='tabid']").val();
-		AppConnector.request(params).then(
-			function (data) {
-				var container = jQuery('div.contentsDiv').html(data);
-				thisInstance.registerEvents(container);
-				Indicator.progressIndicator({'mode': 'hide'});
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			var container = jQuery('div.contentsDiv').html(data);
+			thisInstance.registerEvents(container);
+			Indicator.progressIndicator({'mode': 'hide'});
+		});
 	},
 	registerSaveEvent: function (mode, data) {
 		var resp = '';
@@ -115,20 +112,15 @@ jQuery.Class('Settings_Widgets_Index_Js', {}, {
 			params.async = true;
 		}
 		params.dataType = 'json';
-		AppConnector.request(params).then(
-			function (data) {
-				var response = data['result'];
-				var params = {
-					text: response['message'],
-					type: 'success'
-				};
-				Vtiger_Helper_Js.showPnotify(params);
-				resp = response['success'];
-			},
-			function (data, err) {
-
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			var response = data['result'];
+			var params = {
+				text: response['message'],
+				type: 'success'
+			};
+			Vtiger_Helper_Js.showPnotify(params);
+			resp = response['success'];
+		});
 	},
 	loadFilters: function (contener) {
 		var types = ['filter', 'checkbox', 'switchHeader'];
@@ -191,7 +183,7 @@ jQuery.Class('Settings_Widgets_Index_Js', {}, {
 	registerEvents: function (container) {
 		var thisInstance = this;
 		this.loadWidgets();
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('.WidgetsManage');
 		}
 		App.Fields.Picklist.showSelect2ElementView(container.find('.select2'));
@@ -219,7 +211,6 @@ jQuery.Class('Settings_Widgets_Index_Js', {}, {
 			var blockSortable = target.closest('.blockSortable');
 			app.showModalWindow(null, "index.php?parent=Settings&module=Widgets&view=Widget&mode=edit&id=" + blockSortable.data('id'), function (wizardContainer) {
 				jQuery('#massEditHeader.modal-title').text(app.vtranslate('JS_EDIT_WIDGET'));
-				app.showBtnSwitch(wizardContainer.find('.switchBtn'));
 				app.showPopoverElementView(wizardContainer.find('.js-help-info'));
 				if (thisInstance.getType() == 'RelatedModule') {
 					thisInstance.loadFilters(wizardContainer);

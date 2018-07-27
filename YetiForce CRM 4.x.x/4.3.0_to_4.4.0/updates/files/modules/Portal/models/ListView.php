@@ -16,6 +16,7 @@ class Portal_ListView_Model extends Vtiger_ListView_Model
 {
 	public function getListViewEntries(Vtiger_Paging_Model $pagingModel, $searchResult = false)
 	{
+		$listViewRecordModels =[];
 		$moduleModel = Vtiger_Module_Model::getInstance('Portal');
 
 		$query = $this->getQuery();
@@ -49,7 +50,6 @@ class Portal_ListView_Model extends Vtiger_ListView_Model
 			$record['id'] = $recordId;
 			$listViewRecordModels[$recordId] = $moduleModel->getRecordFromArray($record, $dataReader[$index++]);
 		}
-
 		return $listViewRecordModels;
 	}
 
@@ -62,7 +62,6 @@ class Portal_ListView_Model extends Vtiger_ListView_Model
 		if (!empty($searchValue)) {
 			$query->where(['like', 'portalname', $searchValue]);
 		}
-
 		return $query;
 	}
 
@@ -72,6 +71,7 @@ class Portal_ListView_Model extends Vtiger_ListView_Model
 		$page = $pagingModel->get('page');
 
 		$startSequence = ($page - 1) * $pageLimit + 1;
+
 		$endSequence = $startSequence + count($record) - 1;
 		$recordCount = self::getRecordCount();
 

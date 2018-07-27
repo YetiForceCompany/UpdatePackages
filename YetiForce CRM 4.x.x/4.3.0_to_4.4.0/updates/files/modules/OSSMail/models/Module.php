@@ -25,7 +25,7 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_MODULE_CONFIGURATION',
 			'linkurl' => 'index.php?module=OSSMail&parent=Settings&view=index&block=4&fieldid=' . $fieldId,
-			'linkicon' => Vtiger_Theme::getImagePath('LayoutEditor.gif'),
+			'linkicon' => 'adminIcon-mail-download-history',
 		];
 
 		return $settingsLinks;
@@ -53,7 +53,6 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 		if ($type) {
 			$url .= '&type=' . $type;
 		}
-
 		return $url;
 	}
 
@@ -123,7 +122,6 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 		if (!$request->isEmpty('emails')) {
 			$return['bcc'] = implode(',', $request->get('emails'));
 		}
-
 		return $return;
 	}
 
@@ -142,7 +140,6 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 			$config['popup'] = $config['target'] == '_blank' ? true : false;
 			self::$composeParam = $config;
 		}
-
 		return self::$composeParam;
 	}
 
@@ -179,7 +176,6 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 				}
 			}
 		}
-
 		return $url;
 	}
 
@@ -278,5 +274,16 @@ class OSSMail_Module_Model extends Vtiger_Module_Model
 		$url .= '&body=' . rawurlencode($content);
 
 		return $url;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getModalRecordsListSourceFields(\App\QueryGenerator $queryGenerator, Vtiger_Module_Model $baseModule, $popupFields)
+	{
+		foreach ($baseModule->getFieldsByType('email') as $item) {
+			$popupFields[$item->getName()] = $item->getName();
+		}
+		return $popupFields;
 	}
 }

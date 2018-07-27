@@ -29,7 +29,7 @@ jQuery.Class('Settings_Password_Encryption_Js', {}, {
 			var length = mapLengthVector[methodElement.val()];
 			var validator = '';
 			var passwordElement = container.find('[name="password"]');
-			if (typeof length === 'undefined' || length === 0) {
+			if (typeof length === "undefined" || length === 0) {
 				passwordElement.val('');
 				passwordElement.attr('disabled', 'disabled');
 			} else {
@@ -55,7 +55,7 @@ jQuery.Class('Settings_Password_Encryption_Js', {}, {
 						enabled: true
 					}
 				});
-				AppConnector.request(container.serializeFormData()).then(function (response) {
+				AppConnector.request(container.serializeFormData()).done(function (response) {
 					progressIndicatorElement.progressIndicator({mode: 'hide'});
 					Vtiger_Helper_Js.showPnotify({
 						text: response.result,

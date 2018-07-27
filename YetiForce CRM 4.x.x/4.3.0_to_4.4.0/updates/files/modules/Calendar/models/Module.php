@@ -130,7 +130,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 					'linkicon' => '',
 			]);
 		}
-
 		return $links;
 	}
 
@@ -257,7 +256,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 				$recordModels[] = $recordModel;
 			}
 		}
-
 		return $recordModels;
 	}
 
@@ -287,7 +285,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 				}
 			}
 		}
-
 		return $fieldList;
 	}
 
@@ -306,17 +303,16 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_EDIT_FIELDS',
 				'linkurl' => 'index.php?parent=Settings&module=LayoutEditor&sourceModule=' . $this->getName(),
-				'linkicon' => Vtiger_Theme::getImagePath('LayoutEditor.gif'),
+				'linkicon' => 'adminIcon-triggers',
 			];
 
 			$settingLinks[] = [
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_EDIT_PICKLIST_VALUES',
 				'linkurl' => 'index.php?parent=Settings&module=Picklist&view=Index&source_module=' . $this->getName(),
-				'linkicon' => '',
+				'linkicon' => 'adminIcon-fields-picklists',
 			];
 		}
-
 		return $settingLinks;
 	}
 
@@ -328,7 +324,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		if ($orderBy == 'status') {
 			return $orderBy;
 		}
-
 		return parent::getOrderBySql($orderBy);
 	}
 
@@ -339,7 +334,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		if (is_array($eventConfig)) {
 			$calendarConfig = array_merge($calendarConfig, $eventConfig);
 		}
-
 		return $calendarConfig;
 	}
 
@@ -378,7 +372,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 
 			return $state;
 		}
-
 		return false;
 	}
 
@@ -425,7 +418,6 @@ class Calendar_Module_Model extends Vtiger_Module_Model
 		} elseif ($key) {
 			return $componentsActivityState[$key];
 		}
-
 		return $componentsActivityState;
 	}
 }

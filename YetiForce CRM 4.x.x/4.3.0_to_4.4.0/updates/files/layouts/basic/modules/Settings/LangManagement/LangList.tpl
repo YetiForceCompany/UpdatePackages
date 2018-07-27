@@ -1,5 +1,14 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
-<button class="btn btn-primary add_lang btn-sm float-right marginBottom10px">{\App\Language::translate('LBL_ADD_LANG', $QUALIFIED_MODULE)}</button>
+<div class="tpl-Settings-LangManagement-LangList">
+	<div class="btn-toolbar" role="toolbar">
+		<div class="btn-group mr-2" role="group">
+			<a class="btn btn-primary btn-sm float-right marginBottom10px" href="{Settings_ModuleManager_Module_Model::getUserModuleImportUrl()}"><span class="fas fa-download u-mr-5px"></span>{\App\Language::translate('LBL_IMPORT_LANG', $QUALIFIED_MODULE)}</a>
+		</div>
+		<div class="btn-group mr-2" role="group">
+			<button class="btn btn-info add_lang btn-sm float-right marginBottom10px"><span class="fa fa-plus u-mr-5px"></span>{\App\Language::translate('LBL_ADD_LANG', $QUALIFIED_MODULE)}</button>
+		</div>
+		
+	</div>
 <table  class="table tableRWD table-bordered table-sm listViewEntriesTable">
 	<thead>
 		<tr class="blockHeader">
@@ -26,3 +35,4 @@
 		{/foreach}
 	</tbody>
 </table>
+</div>

@@ -31,7 +31,7 @@ $.Class("Vtiger_Header_Js", {
 	contentContainer: false,
 	quickCreateCallBacks: [],
 	init: function () {
-		this.setContentsContainer('.baseContainer');
+		this.setContentsContainer('.js-base-container');
 	},
 	setContentsContainer: function (element) {
 		if (element instanceof $) {
@@ -48,23 +48,23 @@ $.Class("Vtiger_Header_Js", {
 		var thisInstance = this;
 		var aDeferred = $.Deferred();
 		var requestParams;
-		if (typeof params == 'undefined') {
+		if (typeof params === "undefined") {
 			params = {};
 		}
-		if ((!params.noCache) || (typeof (params.noCache) == "undefined")) {
-			if (typeof Vtiger_Header_Js.quickCreateModuleCache[moduleName] != 'undefined') {
+		if ((!params.noCache) || (typeof (params.noCache) === "undefined")) {
+			if (typeof Vtiger_Header_Js.quickCreateModuleCache[moduleName] !== "undefined") {
 				aDeferred.resolve(Vtiger_Header_Js.quickCreateModuleCache[moduleName]);
 				return aDeferred.promise();
 			}
 		}
 		requestParams = url;
-		if (typeof params.data != "undefined") {
+		if (typeof params.data !== "undefined") {
 			var requestParams = {};
 			requestParams['data'] = params.data;
 			requestParams['url'] = url;
 		}
-		AppConnector.request(requestParams).then(function (data) {
-			if ((!params.noCache) || (typeof (params.noCache) == "undefined")) {
+		AppConnector.request(requestParams).done(function (data) {
+			if ((!params.noCache) || (typeof (params.noCache) === "undefined")) {
 				Vtiger_Header_Js.quickCreateModuleCache[moduleName] = data;
 			}
 			aDeferred.resolve(data);
@@ -86,13 +86,13 @@ $.Class("Vtiger_Header_Js", {
 	quickCreateSave: function (form) {
 		var aDeferred = $.Deferred();
 		var quickCreateSaveUrl = form.serializeFormData();
-		AppConnector.request(quickCreateSaveUrl).then(
-				function (data) {
-					aDeferred.resolve(data);
-				},
-				function (textStatus, errorThrown) {
-					aDeferred.reject(textStatus, errorThrown);
-				}
+		AppConnector.request(quickCreateSaveUrl).done(
+			function (data) {
+				aDeferred.resolve(data);
+			},
+			function (textStatus, errorThrown) {
+				aDeferred.reject(textStatus, errorThrown);
+			}
 		);
 		return aDeferred.promise();
 	},
@@ -127,7 +127,7 @@ $.Class("Vtiger_Header_Js", {
 						mode: 'mark',
 						record: aid,
 						type: $(this).data('type')
-					}).then(function (res) {
+					}).done(function (res) {
 						app.hideModalWindow(modal);
 						thisInstance.showAnnouncement();
 					})
@@ -167,13 +167,13 @@ $.Class("Vtiger_Header_Js", {
 		});
 	},
 	registerHelpInfo: function (container) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = $('form[name="QuickCreate"]');
 		}
 		app.showPopoverElementView(container.find('.js-help-info'));
 	},
 	handleQuickCreateData: function (data, params) {
-		if (typeof params == 'undefined') {
+		if (typeof params === "undefined") {
 			params = {};
 		}
 		var thisInstance = this;
@@ -184,7 +184,7 @@ $.Class("Vtiger_Header_Js", {
 			editViewInstance.registerBasicEvents(quickCreateForm);
 			thisInstance.registerChangeNearCalendarEvent(quickCreateForm, moduleName);
 			quickCreateForm.validationEngine(app.validationEngineOptions);
-			if (typeof params.callbackPostShown != "undefined") {
+			if (typeof params.callbackPostShown !== "undefined") {
 				params.callbackPostShown(quickCreateForm);
 			}
 			thisInstance.registerQuickCreatePostLoadEvents(quickCreateForm, params);
@@ -201,7 +201,7 @@ $.Class("Vtiger_Header_Js", {
 	getNearCalendarEvent: function (container, module) {
 		var thisInstance = this;
 		var dateStartVal = container.find('[name="date_start"]').val();
-		if (typeof dateStartVal == 'undefined' || dateStartVal === '') {
+		if (typeof dateStartVal === "undefined" || dateStartVal === '') {
 			return;
 		}
 		var params = {
@@ -217,7 +217,7 @@ $.Class("Vtiger_Header_Js", {
 				elementToBlock: container.find('.eventsTable')
 			}
 		});
-		AppConnector.request(params).then(function (events) {
+		AppConnector.request(params).done(function (events) {
 			progressIndicatorElement.progressIndicator({'mode': 'hide'});
 			container.find('.eventsTable').html(events);
 			thisInstance.registerHelpInfo(container);
@@ -225,7 +225,7 @@ $.Class("Vtiger_Header_Js", {
 	},
 	registerChangeNearCalendarEvent: function (data, module) {
 		var thisInstance = this;
-		if (!data || module != 'Calendar' || typeof module == 'undefined' || !data.find('.eventsTable').length) {
+		if (!data || module != 'Calendar' || typeof module === "undefined" || !data.find('.eventsTable').length) {
 			return;
 		}
 		var user = data.find('[name="assigned_user_id"]');
@@ -277,7 +277,7 @@ $.Class("Vtiger_Header_Js", {
 		var thisInstance = this;
 		var submitSuccessCallbackFunction = params.callbackFunction;
 		var goToFullFormCallBack = params.goToFullFormcallback;
-		if (typeof submitSuccessCallbackFunction == 'undefined') {
+		if (typeof submitSuccessCallbackFunction === "undefined") {
 			submitSuccessCallbackFunction = function () {
 			};
 		}
@@ -289,29 +289,20 @@ $.Class("Vtiger_Header_Js", {
 			}
 			var module = form.find('[name="module"]').val();
 			//Form should submit only once for multiple clicks also
-			if (typeof form.data('submit') != "undefined") {
+			if (typeof form.data('submit') !== "undefined") {
 				return false;
 			} else {
 				var invalidFields = form.data('jqv').InvalidFields;
 				if (invalidFields.length > 0) {
 					//If validation fails, form should submit again
 					form.removeData('submit');
-					form.closest('#' + Window.lastModalId).find('.modal-header h3').progressIndicator({
-						'mode': 'hide'
-					});
+					$.progressIndicator({'mode': 'hide'});
 					e.preventDefault();
 					return;
 				} else {
 					//Once the form is submiting add data attribute to that form element
 					form.data('submit', 'true');
-					form.closest('#' + Window.lastModalId).find('.modal-header h3').progressIndicator({
-						smallLoadingImage: true,
-						imageContainerCss: {
-							display: 'inline',
-							'margin-left': '18%',
-							position: 'absolute'
-						}
-					});
+					$.progressIndicator({'mode': 'hide'});
 				}
 
 				var recordPreSaveEvent = $.Event(Vtiger_Edit_Js.recordPreSave);
@@ -325,7 +316,7 @@ $.Class("Vtiger_Header_Js", {
 					if (typeof (moduleInstance.quickCreateSave) === 'function') {
 						targetInstance = moduleInstance;
 					}
-					targetInstance.quickCreateSave(form).then(function (data) {
+					targetInstance.quickCreateSave(form).done(function (data) {
 						app.hideModalWindow();
 						var parentModule = app.getModuleName();
 						var viewname = app.getViewName();
@@ -343,13 +334,12 @@ $.Class("Vtiger_Header_Js", {
 							});
 						}
 						app.event.trigger("QuickCreate.AfterSaveFinal", data, form);
+						$.progressIndicator({'mode': 'hide'});
 					});
 				} else {
 					//If validation fails in recordPreSaveEvent, form should submit again
 					form.removeData('submit');
-					form.closest('#' + Window.lastModalId).find('.modal-header h3').progressIndicator({
-						'mode': 'hide'
-					});
+					$.progressIndicator({'mode': 'hide'});
 				}
 				e.preventDefault();
 			}
@@ -358,7 +348,7 @@ $.Class("Vtiger_Header_Js", {
 		form.find('#goToFullForm').on('click', function (e) {
 			var form = $(e.currentTarget).closest('form');
 			var editViewUrl = $(e.currentTarget).data('editViewUrl');
-			if (typeof goToFullFormCallBack != "undefined") {
+			if (typeof goToFullFormCallBack !== "undefined") {
 				goToFullFormCallBack(form);
 			}
 			thisInstance.quickCreateGoToFullForm(form, editViewUrl);
@@ -400,18 +390,18 @@ $.Class("Vtiger_Header_Js", {
 	},
 	basicSearch: function () {
 		var thisInstance = this;
-		$('.globalSearchValue').on('keypress', function (e) {
+		$('.js-global-search__value').on('keypress', function (e) {
 			var currentTarget = $(e.currentTarget)
 			if (e.which == 13) {
 				thisInstance.hideSearchMenu();
 				thisInstance.labelSearch(currentTarget);
 			}
 		});
-		$('.globalSearchOperator').on('click', function (e) {
+		$('.js-global-search-operator').on('click', function (e) {
 			var currentTarget = $(e.target);
-			var block = currentTarget.closest('.globalSearchInput');
-			block.find('.globalSearchValue').data('operator', currentTarget.data('operator'));
-			block.find('.globalSearchOperator .dropdown-item').removeClass('active');
+			var block = currentTarget.closest('.js-global-search__input');
+			block.find('.js-global-search__value').data('operator', currentTarget.data('operator'));
+			block.find('.js-global-search-operator .dropdown-item').removeClass('active');
 			currentTarget.closest('.dropdown-item').addClass('active');
 		});
 		if ($('#gsAutocomplete').val() == 1) {
@@ -437,19 +427,19 @@ $.Class("Vtiger_Header_Js", {
 				_renderItem: function (ul, item) {
 					var url = 'index.php?module=' + item.module + '&view=Detail&record=' + item.id;
 					return $("<li>")
-							.data("item.autocomplete", item)
-							.append($("<a href='" + url + "'></a>").html(item.label))
-							.appendTo(ul);
+						.data("item.autocomplete", item)
+						.append($("<a href='" + url + "'></a>").html(item.label))
+						.appendTo(ul);
 				},
 			});
-			$('.globalSearchValue').gsAutocomplete({
+			$('.js-global-search__value').gsAutocomplete({
 				minLength: app.getMainParams('gsMinLength'),
 				source: function (request, response) {
 					var basicSearch = new Vtiger_BasicSearch_Js();
 					basicSearch.reduceNumberResults = app.getMainParams('gsAmountResponse');
 					basicSearch.returnHtml = false;
-					basicSearch.setMainContainer(this.element.closest('.globalSearchInput'));
-					basicSearch.search(request.term).then(function (data) {
+					basicSearch.setMainContainer(this.element.closest('.js-global-search__input'));
+					basicSearch.search(request.term).done(function (data) {
 						var data = JSON.parse(data);
 						var serverDataFormat = data.result;
 						var reponseDataList = [];
@@ -469,7 +459,7 @@ $.Class("Vtiger_Header_Js", {
 					return false;
 				},
 				close: function (event, ui) {
-					//$('.globalSearchValue').val('');
+					//$('.js-global-search__value').val('');
 				}
 			});
 		}
@@ -488,8 +478,8 @@ $.Class("Vtiger_Header_Js", {
 			}
 		});
 		var basicSearch = new Vtiger_BasicSearch_Js();
-		basicSearch.setMainContainer(currentTarget.closest('.globalSearchInput'));
-		basicSearch.search(val).then(function (data) {
+		basicSearch.setMainContainer(currentTarget.closest('.js-global-search__input'));
+		basicSearch.search(val).done(function (data) {
 			basicSearch.showSearchResults(data);
 			progress.progressIndicator({
 				'mode': 'hide'
@@ -501,18 +491,22 @@ $.Class("Vtiger_Header_Js", {
 			var thisObject = this;
 			var key = $(thisObject).data('hotkeys');
 			if (key != '') {
-				Mousetrap.on(key, function () {
+				Mousetrap.bind(key, function () {
 					thisObject.click();
 				});
 			}
 		});
 	},
 	quickCreateModule: function (moduleName, params) {
+		if (window !== window.parent) {
+			window.parent.Vtiger_Header_Js.getInstance().quickCreateModule(moduleName, params);
+			return;
+		}
 		var thisInstance = this;
-		if (typeof params == 'undefined') {
+		if (typeof params === "undefined") {
 			params = {};
 		}
-		if (typeof params.callbackFunction == 'undefined') {
+		if (typeof params.callbackFunction === "undefined") {
 			params.callbackFunction = function () {
 			};
 		}
@@ -522,7 +516,7 @@ $.Class("Vtiger_Header_Js", {
 			url += '&sourceRecord=' + app.getRecordId();
 		}
 		var progress = $.progressIndicator();
-		thisInstance.getQuickCreateForm(url, moduleName, params).then(function (data) {
+		thisInstance.getQuickCreateForm(url, moduleName, params).done(function (data) {
 			thisInstance.handleQuickCreateData(data, params);
 			app.registerEventForClockPicker();
 			progress.progressIndicator({
@@ -531,79 +525,108 @@ $.Class("Vtiger_Header_Js", {
 		});
 	},
 	registerReminderNotice: function () {
-		var thisInstance = this;
-		$('#page').before('<div class="remindersNoticeContainer"></div>');
+		var self = this;
+		$('#page').before(`<div class="remindersNoticeContainer" tabindex="-1" role="dialog" aria-label="${app.vtranslate('JS_REMINDER')}" aria-hidden="true"></div>`);
 		var block = $('.remindersNoticeContainer');
 		var remindersNotice = $('.remindersNotice');
 		remindersNotice.on('click', function () {
 			if (!remindersNotice.hasClass('autoRefreshing')) {
 				Vtiger_Index_Js.requestReminder();
 			}
-			thisInstance.hideActionMenu();
+			self.hideActionMenu();
+			self.hideBreadcrumbActionMenu()
 			block.toggleClass("toggled");
-			thisInstance.hideReminderNotification();
-			thisInstance.hideMobileMenu();
-			thisInstance.hideSearchMenu();
+			self.hideReminderNotification();
+			app.closeSidebar();
+			self.hideSearchMenu();
 		});
 	},
 	registerReminderNotification: function () {
-		var thisInstance = this;
-		$('#page').before('<div class="remindersNotificationContainer"></div>');
+		var self = this;
+		$('#page').before('<div class="remindersNotificationContainer" tabindex="-1" role="dialog"></div>');
 		var block = $('.remindersNotificationContainer');
 		var remindersNotice = $('.notificationsNotice');
 		remindersNotice.on('click', function () {
 			if (!remindersNotice.hasClass('autoRefreshing')) {
 				Vtiger_Index_Js.getNotificationsForReminder();
 			}
-			thisInstance.hideActionMenu();
+			self.hideActionMenu();
+			self.hideBreadcrumbActionMenu();
 			block.toggleClass("toggled");
-			thisInstance.hideReminderNotice();
-			thisInstance.hideMobileMenu();
-			thisInstance.hideSearchMenu();
+			self.hideReminderNotice();
+			app.closeSidebar();
+			self.hideSearchMenu();
+		});
+	},
+	toggleBreadcrumActions(container) {
+		if (!container.find('.js-breadcrumb').length) {
+			return;
+		}
+		let breadcrumb = container.find('.js-breadcrumb'),
+			actionBtn = breadcrumb.find('.js-breadcrumb__actions-btn'),
+			cssActionsTop = {top: breadcrumb.offset().top + breadcrumb.height()};
+			breadcrumb.find('.o-breadcrumb__actions').css(cssActionsTop);
+		actionBtn.on('click', () => {
+			breadcrumb.find('.o-breadcrumb__actions').toggleClass('is-active');
 		});
 	},
 	registerMobileEvents: function () {
-		var thisInstance = this;
+		const self = this,
+			container = this.getContentsContainer();
 		$('.rightHeaderBtnMenu').on('click', function () {
-			thisInstance.hideActionMenu();
-			thisInstance.hideSearchMenu();
-			thisInstance.hideReminderNotice();
-			thisInstance.hideReminderNotification();
+			self.hideActionMenu();
+			self.hideBreadcrumbActionMenu();
+			self.hideSearchMenu();
+			self.hideReminderNotice();
+			self.hideReminderNotification();
 			$('.mobileLeftPanel ').toggleClass('mobileMenuOn');
 		});
-		$('.actionMenuBtn').on('click', function () {
-			thisInstance.hideSearchMenu();
-			thisInstance.hideMobileMenu();
-			thisInstance.hideReminderNotice();
-			thisInstance.hideReminderNotification();
+		$('.js-quick-action-btn').on('click', function () {
+			let currentTarget = $(this);
+			app.closeSidebar();
+			self.hideBreadcrumbActionMenu();
+			self.hideSearchMenu();
+			self.hideReminderNotice();
+			self.hideReminderNotification();
 			$('.actionMenu').toggleClass('actionMenuOn');
-			if ( $(this).hasClass('active') ) {
-				$(this).removeClass('active');
-				$('.actionMenuBtn .headerButton').attr('aria-expanded', 'false');
-				$('.actionMenu .headerButton').popover();
+			if (currentTarget.hasClass('active')) {
+				currentTarget.removeClass('active');
+				currentTarget.attr('aria-expanded', 'false');
+				currentTarget.popover();
 			} else {
-				$(this).addClass('active');
-				$('.actionMenuBtn .headerButton').attr('aria-expanded', 'true');
-				$('.actionMenu .headerButton').popover('disable');
+				currentTarget.addClass('active');
+				currentTarget.attr('aria-expanded', 'true');
+				currentTarget.popover('disable');
 			}
 			$('.quickCreateModules').on('click', function () {
-				thisInstance.hideActionMenu();
+				self.hideActionMenu();
 			});
 		});
 		$('.searchMenuBtn').on('click', function () {
-			thisInstance.hideActionMenu();
-			thisInstance.hideMobileMenu();
-			thisInstance.hideReminderNotice();
-			thisInstance.hideReminderNotification();
+			let currentTarget = $(this);
+			app.closeSidebar();
+			self.hideActionMenu();
+			self.hideBreadcrumbActionMenu();
+			self.hideReminderNotice();
+			self.hideReminderNotification();
 			$('.searchMenu').toggleClass('toogleSearchMenu');
-			if ( $(this).hasClass('active') ) {
-				$(this).removeClass('active');
-				$('.searchMenuBtn .headerButton').attr('aria-expanded', 'false');
+			if (currentTarget.hasClass('active')) {
+				currentTarget.removeClass('active');
+				$('.searchMenuBtn .c-header__btn').attr('aria-expanded', 'false');
 			} else {
-				$(this).addClass('active');
-				$('.searchMenuBtn .headerButton').attr('aria-expanded', 'true');
+				currentTarget.addClass('active');
+				$('.searchMenuBtn .c-header__btn').attr('aria-expanded', 'true');
 			}
 		});
+		$('.js-header__btn--mail .dropdown').on('show.bs.dropdown', function () {
+			app.closeSidebar();
+			self.hideActionMenu();
+			self.hideBreadcrumbActionMenu();
+			self.hideReminderNotice();
+			self.hideReminderNotification();
+			self.hideSearchMenu();
+		});
+		this.toggleBreadcrumActions(container);
 	},
 	hideMobileMenu: function () {
 		$('.mobileLeftPanel ').removeClass('mobileMenuOn');
@@ -613,6 +636,9 @@ $.Class("Vtiger_Header_Js", {
 	},
 	hideActionMenu: function () {
 		$('.actionMenu').removeClass('actionMenuOn');
+	},
+	hideBreadcrumbActionMenu: function () {
+		$('.js-breadcrumb__actions').removeClass('is-active');
 	},
 	hideReminderNotice: function () {
 		$('.remindersNoticeContainer').removeClass('toggled');
@@ -675,24 +701,24 @@ $.Class("Vtiger_Header_Js", {
 		});
 	},
 	hideSiteBar: function (container, toogleButton) {
-		var key, toogleButton, siteBarRight, content, buttonImage;
+		var key, siteBarRight, content, buttonImage;
 		siteBarRight = toogleButton.closest('.siteBarRight');
 		content = container.find('.rowContent');
 		buttonImage = toogleButton.find('[data-fa-i2svg]');
 
 		siteBarRight.addClass('hideSiteBar');
-		content.removeClass('col-md-9').addClass('col-md-12');
+		content.removeClass('js-sitebar--active');
 		buttonImage.removeClass('fa-chevron-right').addClass("fa-chevron-left");
 		toogleButton.addClass('hideToggleSiteBarRightButton');
 	},
 	showSiteBar: function (container, toogleButton) {
-		var key, toogleButton, siteBarRight, content, buttonImage;
+		var key, siteBarRight, content, buttonImage;
 		siteBarRight = toogleButton.closest('.siteBarRight');
 		content = container.find('.rowContent');
 		buttonImage = toogleButton.find('[data-fa-i2svg]');
 
 		siteBarRight.removeClass('hideSiteBar');
-		content.removeClass('col-md-12').addClass('col-md-9');
+		content.addClass('js-sitebar--active');
 		buttonImage.removeClass('fa-chevron-left').addClass("fa-chevron-right");
 		toogleButton.removeClass('hideToggleSiteBarRightButton');
 	},
@@ -719,28 +745,94 @@ $.Class("Vtiger_Header_Js", {
 		elem.scrollTop(0);
 		elem.height(elem[0].scrollHeight - elem[0].clientHeight + elem.height());
 	},
+	registerChat: function () {
+		const self = this;
+		var modal = $('.chatModal');
+		if (modal.length === 0) {
+			return;
+		}
+		var modalBody = modal.find('.modal-body');
+		app.showNewScrollbar(modalBody, {wheelPropagation: true});
+		$('.headerLinkChat').on('click', function (e) {
+			e.stopPropagation();
+			var remindersNoticeContainer = $('.remindersNoticeContainer,.remindersNotificationContainer');
+			if (remindersNoticeContainer.hasClass('toggled')) {
+				remindersNoticeContainer.removeClass('toggled');
+			}
+			$('.actionMenu').removeClass('actionMenuOn');
+			$('.chatModal').modal({backdrop: false});
+		});
+		var modalDialog = modal.find('.modal-dialog');
+		this.registerChatLoadItems(modal.data('timer'));
+		modal.find('.addMsg').on('click', function (e) {
+			var message = modal.find('.message').val();
+			clearTimeout(self.chatTimer);
+			AppConnector.request({
+				dataType: 'html',
+				data: {
+					module: 'Chat',
+					action: 'Entries',
+					mode: 'add',
+					message: message,
+					cid: $('.chatModal .chatItem').last().data('cid')
+				}
+			}).done(function (html) {
+				$('.chatModal .modal-body').append(html);
+				self.registerChatLoadItems(modal.data('timer'));
+			});
+			modal.find('.message').val('');
+		});
+		app.animateModal(modal, 'slideInRight', 'slideOutRight');
+	},
+	registerChatLoadItems: function (timer) {
+		const self = this;
+		var icon = $('.chatModal .modal-title .fa-comments');
+		this.chatTimer = setTimeout(function () {
+			icon.css('color', '#00e413');
+			self.getChatItems();
+			self.registerChatLoadItems(timer);
+			icon.css('color', '#000');
+		}, timer);
+	},
+	getChatItems: function () {
+		const self = this;
+		AppConnector.request({
+			module: 'Chat',
+			view: 'Entries',
+			mode: 'get',
+			cid: $('.chatModal .chatItem').last().data('cid')
+		}).done(function (html) {
+			if (html) {
+				$('.chatModal .modal-body').append(html);
+			}
+		}).fail(function (error, err) {
+			clearTimeout(self.chatTimer);
+		});
+	},
 	registerEvents: function () {
 		var thisInstance = this;
 		const container = thisInstance.getContentsContainer(),
-			menuContainer = container.find('.leftPanel .menuContainer'),
+			menuContainer = container.find('.js-menu--scroll'),
 			quickCreateModal = container.find('.quickCreateModules');
-		app.showNewLeftScrollbar(menuContainer, {suppressScrollX: true});
+		app.showNewScrollbarLeft(menuContainer, {suppressScrollX: true});
 		app.showNewScrollbar(menuContainer.find('.subMenu').last(), {suppressScrollX: true});
-		app.showNewScrollbar(container.find('.mobileLeftPanel .menuContainer'), {suppressScrollX: true});
 		thisInstance.listenTextAreaChange();
 		thisInstance.registerFooTable(); //Enable footable
 		thisInstance.registerShowHideRightPanelEvent($('#centerPanel'));
+		$('.js-clear-history').on('click', () => {
+			app.clearBrowsingHistory();
+		});
 		$('.globalSearch').on('click', function () {
 			var currentTarget = $(this);
 			thisInstance.hideSearchMenu();
 			var advanceSearchInstance = new Vtiger_AdvanceSearch_Js();
-			advanceSearchInstance.setParentContainer(currentTarget.closest('.globalSearchInput'));
-			advanceSearchInstance.initiateSearch().then(function () {
+			advanceSearchInstance.setParentContainer(currentTarget.closest('.js-global-search__input'));
+			advanceSearchInstance.initiateSearch().done(function () {
 				advanceSearchInstance.selectBasicSearchValue();
 			});
 		});
 		$('.searchIcon').on('click', function (e) {
-			var currentTarget = $(this).closest('.globalSearchInput').find('.globalSearchValue');
+			var currentTarget = $(this).closest('.js-global-search__input').find('.js-global-search__value');
 			var pressEvent = $.Event("keypress");
 			pressEvent.which = 13;
 			currentTarget.trigger(pressEvent);
@@ -751,15 +843,12 @@ $.Class("Vtiger_Header_Js", {
 		//this.registerCalendarButtonClickEvent();
 		//After selecting the global search module, focus the input element to type
 		$('.basicSearchModulesList').on('change', function () {
-			var value = $(this).closest('.globalSearchInput').find('.globalSearchValue')
+			var value = $(this).closest('.js-global-search__input').find('.js-global-search__value')
 			setTimeout(function () {
 				value.focus();
 			}, 100);
 		});
 		thisInstance.basicSearch();
-		$('.bodyHeader .dropdownMenu').on("click", function (e) {
-			$(this).next('.dropdown-menu').toggle();
-		});
 		quickCreateModal.on("click", ".quickCreateModule", function (e, params) {
 			var moduleName = $(e.currentTarget).data('name');
 			quickCreateModal.modal('hide');
@@ -787,12 +876,13 @@ $.Class("Vtiger_Header_Js", {
 		}
 		thisInstance.registerReminderNotice();
 		thisInstance.registerReminderNotification();
-	},
+		thisInstance.registerChat();
+	}
 });
 $(document).ready(function () {
-	$(window).on('popstate', function (event) {
+	window.addEventListener('popstate', (event) => {
 		if (event.state) {
-			window.location.href = event.state.url;
+			window.location.href = event.state;
 		}
 	});
 	Vtiger_Header_Js.getInstance().registerEvents();

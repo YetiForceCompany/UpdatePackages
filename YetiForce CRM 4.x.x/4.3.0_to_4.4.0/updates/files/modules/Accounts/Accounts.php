@@ -102,7 +102,6 @@ class Accounts extends CRMEntity
 		if ($secModule === false) {
 			return $relTables;
 		}
-
 		return $relTables[$secModule];
 	}
 
@@ -197,9 +196,11 @@ class Accounts extends CRMEntity
 			}
 		}
 		$listviewEntries[$accountId] = $accountInfoData;
-		foreach ($accountInfoBase as $accId => $accountInfo) {
-			if (is_array($accountInfo) && (int) $accId) {
-				$listviewEntries = $this->getHierarchyData($id, $accountInfo, $accId, $listviewEntries);
+		if (is_array($accountInfoBase)) {
+			foreach ($accountInfoBase as $accId => $accountInfo) {
+				if (is_array($accountInfo) && (int) $accId) {
+					$listviewEntries = $this->getHierarchyData($id, $accountInfo, $accId, $listviewEntries);
+				}
 			}
 		}
 		\App\Log::trace('Exiting getHierarchyData method ...');
@@ -394,7 +395,6 @@ class Accounts extends CRMEntity
 		if (empty($entityIds)) {
 			$entityIds = [];
 		}
-
 		return $entityIds;
 	}
 }

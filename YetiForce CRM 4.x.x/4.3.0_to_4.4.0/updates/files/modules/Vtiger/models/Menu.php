@@ -29,7 +29,6 @@ class Vtiger_Menu_Model
 		if (count($menus) == 0) {
 			require 'user_privileges/menu_0.php';
 		}
-
 		return $menus;
 	}
 
@@ -150,7 +149,6 @@ class Vtiger_Menu_Model
 				}
 			}
 		}
-
 		return $breadcrumbs;
 	}
 
@@ -165,22 +163,23 @@ class Vtiger_Menu_Model
 				$return = self::getParentMenu($parentList, $parentList[$parent]['parent'], $module, $return);
 			}
 		}
-
 		return $return;
 	}
 
 	/**
-	 * @param type $url
+	 * @param string $url
 	 *
 	 * @return type modulename
 	 */
 	public static function getModuleNameFromUrl($url)
 	{
+		if ($url === 'https://yetiforce.shop/') {
+			return 'Settings:Vtiger';
+		}
 		$params = vtlib\Functions::getQueryParams($url);
 		if ($params['parent']) {
 			return $params['parent'] . ':' . $params['module'];
 		}
-
 		return $params['module'];
 	}
 
@@ -195,7 +194,7 @@ class Vtiger_Menu_Model
 	public static function getMenuIcon($menu, $title = '')
 	{
 		if ($title == '') {
-			$title = self::vtranslateMenu($menu['label']);
+			$title = self::vtranslateMenu($menu['label'], $menu['mod']);
 		}
 		if (is_string($menu)) {
 			$iconName = \Vtiger_Theme::getImagePath($menu);
@@ -217,7 +216,6 @@ class Vtiger_Menu_Model
 		if (isset($menu['type']) && $menu['type'] == 'Module') {
 			return '<span class="menuIcon userIcon-' . $menu['mod'] . '" aria-hidden="true"></span>';
 		}
-
 		return '';
 	}
 }

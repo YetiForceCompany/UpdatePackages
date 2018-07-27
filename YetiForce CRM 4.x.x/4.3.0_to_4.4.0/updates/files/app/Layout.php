@@ -24,7 +24,6 @@ class Layout
 		if (Session::has('layout')) {
 			return Session::get('layout');
 		}
-
 		return \AppConfig::main('defaultLayout');
 	}
 
@@ -50,7 +49,6 @@ class Layout
 		if (!IS_PUBLIC_DIR) {
 			$basePath = 'public_html/' . $basePath;
 		}
-
 		return $basePath . $name;
 	}
 
@@ -68,7 +66,6 @@ class Layout
 		foreach ($all as $row) {
 			$folders[$row['name']] = Language::translate($row['label']);
 		}
-
 		return $folders;
 	}
 
@@ -89,7 +86,6 @@ class Layout
 		if (!IS_PUBLIC_DIR) {
 			$basePath .= 'public_html/';
 		}
-
 		return $basePath . $name;
 	}
 
@@ -116,5 +112,17 @@ class Layout
 	public static function getTemplatePath($templateName, $moduleName = '')
 	{
 		return \Vtiger_Viewer::getInstance()->getTemplatePath($templateName, $moduleName);
+	}
+
+	/**
+	 * Get unique id for HTML ids.
+	 *
+	 * @param string $name
+	 *
+	 * @return string
+	 */
+	public static function getUniqueId($name = '')
+	{
+		return $name . mt_rand(100, 99999);
 	}
 }

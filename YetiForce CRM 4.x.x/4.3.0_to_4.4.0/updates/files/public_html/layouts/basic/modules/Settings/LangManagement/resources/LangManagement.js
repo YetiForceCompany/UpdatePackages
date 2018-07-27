@@ -17,7 +17,7 @@ var Settings_Index_Js = {
 	LoadEditLang: function (e) {
 		var element = jQuery(e);
 		var position = element.attr('href');
-		if (typeof position == 'undefined') {
+		if (typeof position === "undefined") {
 			position = '#' + element.attr('id');
 		}
 		var progress = $.progressIndicator({
@@ -41,7 +41,7 @@ var Settings_Index_Js = {
 		if (document.showDiff == true) {
 			param.sd = 1;
 		}
-		AppConnector.request(param).then(function (data) {
+		AppConnector.request(param).done(function (data) {
 			jQuery(position).html(data);
 			Settings_Index_Js.initEditLang(position);
 			progress.progressIndicator({'mode': 'hide'});
@@ -95,7 +95,7 @@ var Settings_Index_Js = {
 	changeTranslation: function (e, position, mod) {
 
 		var target = $(e.currentTarget);
-		if (typeof e.currentTarget == 'undefined')
+		if (typeof e.currentTarget === "undefined")
 			target = jQuery(e);
 		var closestTrElement = target.closest('tr');
 		var progress = $.progressIndicator({
@@ -121,7 +121,7 @@ var Settings_Index_Js = {
 	},
 	deleteTranslation: function (e, position) {
 		var target = $(e.currentTarget);
-		if (typeof e.currentTarget == 'undefined') {
+		if (typeof e.currentTarget === "undefined") {
 			target = e;
 		}
 		var closestTrElement = target.closest('tr');
@@ -254,22 +254,17 @@ var Settings_Index_Js = {
 		params.data = $.extend(params.data, data);
 		params.async = false;
 		params.dataType = 'json';
-		AppConnector.request(params).then(
-				function (data) {
-					response = data['result'];
-					var params = {
-						text: response['message'] ? response['message'] : app.vtranslate('JS_ERROR'),
-					};
-					if (response['success'] == true) {
-						params.type = 'info';
-					}
-					Vtiger_Helper_Js.showPnotify(params);
-					resp = response['success'];
-				},
-				function (data, err) {
-
-				}
-		);
+		AppConnector.request(params).done(function (data) {
+			response = data['result'];
+			var params = {
+				text: response['message'] ? response['message'] : app.vtranslate('JS_ERROR'),
+			};
+			if (response['success'] == true) {
+				params.type = 'info';
+			}
+			Vtiger_Helper_Js.showPnotify(params);
+			resp = response['success'];
+		});
 		return {resp: resp, params: params.data.params, result: response};
 	},
 	registerStats: function () {
@@ -284,33 +279,31 @@ var Settings_Index_Js = {
 				langBase: jQuery('[name="langs_basic"]').val(),
 				langs: langs
 			}
-			AppConnector.request(params).then(
-					function (data) {
-						var response = data['result'];
-						if (response['success'] && response['data'].length !== 0) {
-							thisInstance.showStats(response['data'], response['modules']);
-						}
-					},
-					function (data, err) {
-					}
-			);
+			AppConnector.request(params).done(function (data) {
+				var response = data['result'];
+				if (response['success'] && response['data'].length !== 0) {
+					thisInstance.showStats(response['data'], response['modules']);
+				}
+			});
 		})
 	},
 	showStats: function (data, modules) {
 		var thisInstance = this;
-		var html = '<div class="col-md-8"><div class="panel panel-default"><div class="panel-body">';
+		var html = '<div class="col-md-12"><div class="panel panel-default"><div class="panel-body">';
 		var langStats = 0;
 		var shortages = [];
 		for (var i in modules) {
 			for (var k in modules[i]) {
-				if (data[k].length == 1)
+				if (data[k].length == 1) {
+					langStats += data[k][0];
 					continue;
+				}
 				var max = data[k][0];
 				langStats += max;
 				delete data[k][0];
-				html += '<div class="row moduleRow" data-module="' + k + '"><label class="col-md-3 form-control-plaintext col-form-label marginTop2">' + modules[i][k] + ': </label><div class="form-control-plaintext col-md-9">'
+				html += '<div class="row moduleRow" data-module="' + k + '"><label class="col-md-3 form-control-plaintext col-form-label mt-2">' + modules[i][k] + ': </label><div class="form-control-plaintext col-md-9">'
 				for (var q in data[k]) {
-					if (typeof shortages[q] == 'undefined') {
+					if (typeof shortages[q] === "undefined") {
 						shortages[q] = 0;
 					}
 					shortages[q] += data[k][q].length;
@@ -341,12 +334,12 @@ var Settings_Index_Js = {
 			var element = jQuery(e.currentTarget);
 			var row = element.closest('.moduleRow');
 			var url =
-					'index.php?module=' + app.getModuleName() +
-					'&parent=' + app.getParentModuleName() +
-					'&view=GetLabels' +
-					'&langBase=' + jQuery('[name="langs_basic"]').val() +
-					'&lang=' + element.data('lang') +
-					'&sourceModule=' + row.data('module');
+				'index.php?module=' + app.getModuleName() +
+				'&parent=' + app.getParentModuleName() +
+				'&view=GetLabels' +
+				'&langBase=' + jQuery('[name="langs_basic"]').val() +
+				'&lang=' + element.data('lang') +
+				'&sourceModule=' + row.data('module');
 			app.showModalWindow(null, url, function (data) {
 				progress.progressIndicator({'mode': 'hide'});
 				data.find('button:not(.close)').on('click', function (e) {
@@ -396,10 +389,10 @@ var Settings_Index_Js = {
 		instance.loadChart({
 			scales: {
 				xAxes: [{
-						ticks: {
-							minRotation: 0
-						}
-					}]
+					ticks: {
+						minRotation: 0
+					}
+				}]
 			}
 		});
 	},

@@ -13,7 +13,7 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 		this.mainContainer = container;
 	},
 	getTreeListValues: function (container) {
-		if (this.treeData == false && container != 'undefined') {
+		if (this.treeData == false && container !== "undefined") {
 			var treeValues = container.find('#treeListValues').val();
 			if (treeValues != '') {
 				this.treeData = JSON.parse(treeValues);
@@ -90,12 +90,12 @@ jQuery.Class("Vtiger_TreeRecords_Js", {}, {
 			}
 		});
 
-		AppConnector.request(thisInstance.getRecordsParams(container)).then(function (data) {
+		AppConnector.request(thisInstance.getRecordsParams(container)).done(function (data) {
 			container.find('#recordsListContents').html(data);
 			container.find('#recordsListContents table').dataTable();
 
 			progressIndicator.progressIndicator({mode: 'hide'});
-		}, function (error) {
+		}).fail(function (error) {
 			progressIndicator.progressIndicator({mode: 'hide'});
 		});
 	},

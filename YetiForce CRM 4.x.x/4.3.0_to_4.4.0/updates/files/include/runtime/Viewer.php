@@ -82,7 +82,6 @@ class Vtiger_Viewer extends SmartyBC
 			} else {
 				$debugViewerURI = \App\Request::_getServer('REQUEST_URI');
 			}
-
 			$this->log("URI: $debugViewerURI, TYPE: " . \App\Request::_getServer('REQUEST_METHOD'));
 		}
 	}
@@ -97,7 +96,6 @@ class Vtiger_Viewer extends SmartyBC
 		if (!empty(self::$currentLayout)) {
 			return self::$currentLayout;
 		}
-
 		return self::getDefaultLayoutName();
 	}
 
@@ -209,7 +207,6 @@ class Vtiger_Viewer extends SmartyBC
 
 			return true;
 		}
-
 		return false;
 	}
 

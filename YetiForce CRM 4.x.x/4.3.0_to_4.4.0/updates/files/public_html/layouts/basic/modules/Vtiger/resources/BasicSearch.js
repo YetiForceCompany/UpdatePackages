@@ -26,7 +26,7 @@ jQuery.Class('Vtiger_BasicSearch_Js', {}, {
 		if (this.searchModule === false) {
 			//default gives current module
 			var module = app.getModuleName();
-			if (typeof this.getCurrentSearchModule() != 'undefined') {
+			if (typeof this.getCurrentSearchModule() !== "undefined") {
 				module = this.getCurrentSearchModule();
 			}
 
@@ -62,10 +62,14 @@ jQuery.Class('Vtiger_BasicSearch_Js', {}, {
 	 */
 	_search: function (params) {
 		var aDeferred = jQuery.Deferred();
-		if (typeof params == 'undefined') {
+		if (typeof params === "undefined") {
 			params = {};
 		}
-		params.module = app.getModuleName();
+		if(params.searchModule && params.searchModule !== '-'){
+			params.module = params.searchModule;
+		}else{
+			params.module = app.getModuleName();
+		}
 		params.view = 'BasicAjax';
 		params.mode = 'showSearchResults';
 		params.limit = this.reduceNumberResults;
@@ -76,9 +80,9 @@ jQuery.Class('Vtiger_BasicSearch_Js', {}, {
 		if (this.mainConatiner.find('input[data-operator]').length && this.mainConatiner.find('input[data-operator]').data('operator') != '') {
 			params.operator = this.mainConatiner.find('input[data-operator]').data('operator');
 		}
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			aDeferred.resolve(data);
-		}, function (error, err) {
+		}).fail(function (error, err) {
 			aDeferred.reject(error);
 		});
 		return aDeferred.promise();
@@ -90,7 +94,7 @@ jQuery.Class('Vtiger_BasicSearch_Js', {}, {
 		var searchModule = this.getCurrentSearchModule();
 		var params = {};
 		params.value = value;
-		if (typeof searchModule != 'undefined') {
+		if (typeof searchModule !== "undefined") {
 			params.searchModule = searchModule;
 		}
 		return this._search(params);

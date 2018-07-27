@@ -26,7 +26,7 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 	 * Function  to intialize the reports step1
 	 */
 	initialize: function (container) {
-		if (typeof container === 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('#mf_step2');
 		}
 		if (container.is('#mf_step2')) {
@@ -41,7 +41,7 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 		var formData = form.serializeFormData();
 		var saveData = this.getData(formData);
 		saveData.record = formData.record;
-		this.validationMappingFields().then(function (data) {
+		this.validationMappingFields().done(function (data) {
 			if (data) {
 				var progressIndicatorElement = jQuery.progressIndicator({
 					'position': 'html',
@@ -49,7 +49,7 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 						'enabled': true
 					}
 				});
-				app.saveAjax('step2', saveData).then(function (data) {
+				app.saveAjax('step2', saveData).done(function (data) {
 					if (data.success == true) {
 						Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_MF_SAVED_SUCCESSFULLY')});
 						var mfRecordElement = jQuery('[name="record"]', form);
@@ -58,18 +58,15 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 							formData['record'] = data.result.id;
 						}
 						formData['record'] = data.result.id;
-						AppConnector.request(formData).then(
-							function (data) {
-								form.hide();
-								progressIndicatorElement.progressIndicator({
-									'mode': 'hide'
-								})
-								aDeferred.resolve(data);
-							},
-							function (error, err) {
-								app.errorLog(error, err);
-							}
-						);
+						AppConnector.request(formData).done(function (data) {
+							form.hide();
+							progressIndicatorElement.progressIndicator({
+								'mode': 'hide'
+							})
+							aDeferred.resolve(data);
+						}).fail(function (error, err) {
+							app.errorLog(error, err);
+						});
 					}
 				});
 			} else {
@@ -181,7 +178,7 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 					options.append(element);
 				}
 			})
-			delete fieldsBasedOnType;
+			fieldsBasedOnType = false;
 
 			container.find('.selectedFieldDataType').html(selectedOption.data('type-name') ? selectedOption.data('type-name') : '');
 			fieldsSelectElement.html(options.children());
@@ -220,7 +217,7 @@ Settings_MappedFields_Edit_Js("Settings_MappedFields_Edit2_Js", {}, {
 		if (copyOfDefaultValue.is(':checkbox') && defaultValue) {
 			copyOfDefaultValue.prop('checked', true);
 		} else if (defaultValue) {
-			defaultValue = typeof copyOfDefaultValue.attr('multiple') != 'undefined' ? defaultValue.split(',') : defaultValue;
+			defaultValue = typeof copyOfDefaultValue.attr('multiple') !== "undefined" ? defaultValue.split(',') : defaultValue;
 			copyOfDefaultValue.val(defaultValue);
 		}
 		copyOfDefaultValue.appendTo(dafeultTd);

@@ -46,7 +46,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__batchmethod' => [
 				'columns' => [
-					'id' => $this->integer()->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(11)->notNull(),
 					'method' => $this->stringType(50)->notNull(),
 					'params' => $this->text()->notNull(),
 					'created_time' => $this->date()->notNull(),
@@ -56,8 +56,48 @@ class Admin extends \App\Db\Importers\Base
 				'columns_mysql' => [
 					'status' => $this->tinyInteger(1)->unsigned()->notNull(),
 				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			's_#__address_finder' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(11)->notNull(),
+					'name' => $this->stringType(),
+					'level1' => $this->stringType(100),
+					'level2' => $this->stringType(100),
+					'level3' => $this->stringType(100),
+					'level4' => $this->stringType(100),
+					'level5' => $this->stringType(100),
+					'level6' => $this->stringType(100),
+					'level7' => $this->stringType(100),
+					'level8' => $this->stringType(100),
+					'source' => $this->stringType(10),
+				],
+				'index' => [
+					['source', 'source']
+				],
+				'engine' => 'MyISAM',
+				'charset' => 'utf8'
+			],
+			's_#__address_finder_config' => [
+				'columns' => [
+					'id' => $this->smallInteger(4)->unsigned()->notNull(),
+					'name' => $this->stringType(50)->notNull(),
+					'type' => $this->stringType(50)->notNull(),
+					'val' => $this->stringType()->notNull(),
+				],
 				'primaryKeys' => [
-					['batchmethod_pk', 'id']
+					['address_finder_config_pk', 'id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'a_#__taxes_global' => [
+				'columns' => [
+					'default' => $this->smallInteger(1)->notNull()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'default' => $this->tinyInteger(1)->notNull()->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

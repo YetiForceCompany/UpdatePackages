@@ -204,7 +204,6 @@ class CustomView_Record_Model extends \App\Base
 		if (!$cvId) {
 			return false;
 		}
-
 		return (new App\Db\Query())->from('u_#__featured_filter')
 			->where(['cvid' => $cvId, 'user' => 'Users:' . Users_Record_Model::getCurrentUserModel()->getId()])
 			->exists($db);
@@ -244,7 +243,6 @@ class CustomView_Record_Model extends \App\Base
 		if ($this->isMine() || $this->isOthers()) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -314,7 +312,6 @@ class CustomView_Record_Model extends \App\Base
 				}
 			}
 		}
-
 		return $queryGenerator;
 	}
 
@@ -606,7 +603,6 @@ class CustomView_Record_Model extends \App\Base
 		if (!$cvId) {
 			return [];
 		}
-
 		return (new App\Db\Query())->select('vtiger_cvcolumnlist.columnindex, vtiger_cvcolumnlist.columnname')
 			->from('vtiger_cvcolumnlist')
 			->innerJoin('vtiger_customview', 'vtiger_cvcolumnlist.cvid = vtiger_customview.cvid')
@@ -648,7 +644,6 @@ class CustomView_Record_Model extends \App\Base
 				$stdFilterList['enddate'] = $endDateTime->getDisplayDate();
 			}
 		}
-
 		return $stdFilterList;
 	}
 
@@ -738,7 +733,6 @@ class CustomView_Record_Model extends \App\Base
 		if (!empty($advFtCriteria[$i - 1]['condition'])) {
 			$advFtCriteria[$i - 1]['condition'] = '';
 		}
-
 		return $advFtCriteria;
 	}
 
@@ -927,10 +921,8 @@ class CustomView_Record_Model extends \App\Base
 		}
 		if ($row) {
 			$customView = new self();
-
 			return $customView->setData($row)->setModule($row['entitytype']);
 		}
-
 		return null;
 	}
 
@@ -944,8 +936,8 @@ class CustomView_Record_Model extends \App\Base
 	public static function getAllByGroup($moduleName = '', $menuId = false)
 	{
 		$customViews = self::getAll($moduleName);
-		$filters = $groupedCustomViews = [];
-		$menuFilter = false;
+		$filters = array_keys($customViews);
+		$groupedCustomViews = [];
 		if ($menuId) {
 			$userPrivModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
 			$roleMenu = 'user_privileges/menu_' . filter_var($userPrivModel->get('roleid'), FILTER_SANITIZE_NUMBER_INT) . '.php';
@@ -958,14 +950,15 @@ class CustomView_Record_Model extends \App\Base
 				require 'user_privileges/menu_0.php';
 			}
 			if (array_key_exists($menuId, $filterList)) {
-				$filters = explode(',', $filterList[$menuId]['filters']);
-				$menuFilter = true;
+				$filtersMenu = explode(',', $filterList[$menuId]['filters']);
+				$filters = array_intersect($filtersMenu, $filters);
+				if (empty($filters)) {
+					$filters = [App\CustomView::getInstance($moduleName)->getDefaultCvId()];
+				}
 			}
 		}
-		foreach ($customViews as $index => $customView) {
-			if ($menuFilter && !in_array($customView->getId(), $filters)) {
-				continue;
-			}
+		foreach ($filters as $id) {
+			$customView = $customViews[$id];
 			if ($customView->isSystem()) {
 				$groupedCustomViews['System'][] = $customView;
 			} elseif ($customView->isMine()) {
@@ -1002,7 +995,6 @@ class CustomView_Record_Model extends \App\Base
 		if ($cvid) {
 			$query->andWhere(['<>', 'cvid', $cvid]);
 		}
-
 		return $query->exists();
 	}
 
@@ -1096,7 +1088,6 @@ class CustomView_Record_Model extends \App\Base
 		if (!$viewId) {
 			$viewId = App\CustomView::getInstance($module)->getViewId();
 		}
-
 		return self::getInstanceById($viewId);
 	}
 
@@ -1116,7 +1107,6 @@ class CustomView_Record_Model extends \App\Base
 			default:
 				break;
 		}
-
 		return $return;
 	}
 }

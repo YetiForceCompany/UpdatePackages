@@ -91,7 +91,6 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 				break;
 			}
 		}
-
 		return $dashboardId;
 	}
 
@@ -341,7 +340,7 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 	 */
 	public function addWidget($data, $moduleName, $addToUser = false)
 	{
-		\App\Log::trace('Entering Settings_WidgetsManagement_Module_Model::addWidget(' . $data . ', ' . $moduleName . ') method ...');
+		\App\Log::trace('Entering Settings_WidgetsManagement_Module_Model::addWidget(' . $moduleName . ') method ...');
 		$db = App\Db::getInstance();
 		$status = false;
 		$widgetWithLimit = self::getWidgetsWithLimit();
@@ -354,21 +353,25 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 		if ($data['isdefault'] != 1 || $data['isdefault'] != '1') {
 			$data['isdefault'] = 0;
 		}
-		if (isset($data['filtersId'])) {
-			if (is_string($data['filtersId'])) {
-				$filters = explode(',', $data['filtersId']);
-			} elseif (is_array($data['filtersId'])) {
-				$filters = $data['filtersId'];
+		if (!empty($data['filterid'])) {
+			if (is_string($data['filterid'])) {
+				$filters = explode(',', $data['filterid']);
+			} elseif (is_array($data['filterid'])) {
+				$filters = $data['filterid'];
 			}
 			if (count($filters) > \AppConfig::performance('CHART_MULTI_FILTER_LIMIT')) {
-				throw new App\Exceptions\IllegalValue('ERR_VALUE_IS_TOO_LONG||filtersId||' . $data['filtersId'], 406);
+				throw new App\Exceptions\IllegalValue('ERR_VALUE_IS_TOO_LONG||filterid||' . $data['filterid'], 406);
 			}
 			// if filters total length will be longer than database column
-			if (strlen($data['filtersId']) > \AppConfig::performance('CHART_MULTI_FILTER_STR_LEN')) {
-				throw new App\Exceptions\IllegalValue('ERR_VALUE_IS_TOO_LONG||filtersId||' . $data['filtersId'], 406);
+			if (strlen(implode(',', $filters)) > \AppConfig::performance('CHART_MULTI_FILTER_STR_LEN')) {
+				throw new App\Exceptions\IllegalValue('ERR_VALUE_IS_TOO_LONG||filterid||' . $data['filterid'], 406);
 			}
 		}
-		$data['data'] = \App\Purifier::decodeHtml($data['data']);
+		$data['data'] = App\Json::decode(\App\Purifier::decodeHtml($data['data']));
+		if (!empty($data['additionalFiltersFields']) && count($data['additionalFiltersFields']) > App\Config::performance('CHART_ADDITIONAL_FILTERS_LIMIT')) {
+			throw new App\Exceptions\IllegalValue('ERR_VALUE_IS_TOO_LONG||additionalFiltersFields||' . implode(',', $data['additionalFiltersFields']), 406);
+		}
+		$data['data'] = App\Json::encode($data['data']);
 		$size = \App\Json::encode([
 			'width' => $data['width'],
 			'height' => $data['height'],
@@ -380,15 +383,15 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 		$db->createCommand()->insert('vtiger_module_dashboard', [
 			'linkid' => $data['linkid'],
 			'blockid' => $data['blockid'],
-			'filterid' => $data['filtersId'],
+			'filterid' => $data['filterid'],
 			'title' => $data['title'],
 			'data' => $data['data'],
 			'size' => $size,
-			'limit' => $data['limit'],
+			'limit' => $data['limit'] ?? null,
 			'owners' => $owners,
 			'isdefault' => $data['isdefault'],
-			'cache' => $data['cache'],
-			'date' => $data['default_date'],
+			'cache' => $data['cache'] ?? null,
+			'date' => $data['default_date'] ?? null,
 		])->execute();
 		$templateId = $db->getLastInsertID('vtiger_module_dashboard_id_seq');
 		if ($addToUser) {
@@ -398,22 +401,21 @@ class Settings_WidgetsManagement_Module_Model extends Settings_Vtiger_Module_Mod
 			}
 			$db->createCommand()->insert('vtiger_module_dashboard_widgets', [
 				'linkid' => $data['linkid'], 'userid' => \App\User::getCurrentUserId(), 'templateid' => $templateId,
-				'filterid' => $data['filtersId'],
+				'filterid' => $data['filterid'],
 				'title' => $data['title'],
 				'data' => $data['data'],
-				'size' => $size, 'limit' => $data['limit'],
+				'size' => $size, 'limit' => $data['limit'] ?? null,
 				'owners' => $owners,
 				'isdefault' => $data['isdefault'],
 				'active' => $active,
 				'module' => \App\Module::getModuleId($moduleName),
-				'cache' => $data['cache'],
-				'date' => $data['default_date'],
+				'cache' => $data['cache'] ?? null,
+				'date' => $data['default_date'] ?? null,
 				'dashboardid' => empty($data['dashboardId']) ? self::getDefaultDashboard() : $data['dashboardId'],
 			])->execute();
 			$widgetId = $db->getLastInsertID('vtiger_module_dashboard_widgets_id_seq');
 		}
 		\App\Log::trace('Exiting Settings_WidgetsManagement_Module_Model::addWidget() method ...');
-
 		return ['success' => true, 'id' => $templateId, 'wid' => $widgetId, 'status' => $status, 'text' => \App\Language::translate('LBL_WIDGET_ADDED', 'Settings::WidgetsManagement')];
 	}
 

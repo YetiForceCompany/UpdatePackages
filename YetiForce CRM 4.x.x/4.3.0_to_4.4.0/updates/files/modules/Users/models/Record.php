@@ -15,7 +15,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if (App\Session::has('baseUserId') && App\Session::get('baseUserId') != '') {
 			return App\Session::get('baseUserId');
 		}
-
 		return $this->getId();
 	}
 
@@ -29,7 +28,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if (empty($this->module)) {
 			$this->module = Vtiger_Module_Model::getInstance('Users');
 		}
-
 		return $this->module;
 	}
 
@@ -46,7 +44,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if (property_exists($this, $key)) {
 			return $this->$key;
 		}
-
 		return parent::get($key);
 	}
 
@@ -133,7 +130,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if ($this->get('is_admin') === 'on' || $this->get('is_admin') == 1) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -163,8 +159,10 @@ class Users_Record_Model extends Vtiger_Record_Model
 		$entityInstance->column_fields['user_name'] = $this->get('user_name');
 		if (!$this->isNew() && empty($this->getPreviousValue())) {
 			App\Log::info('ERR_NO_DATA');
-
 			return false;
+		}
+		if ($this->getPreviousValue('user_password')) {
+			$this->set('date_password_change', date('Y-m-d H:i:s'));
 		}
 		$eventHandler = new App\EventHandler();
 		$eventHandler->setRecordModel($this);
@@ -255,7 +253,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				$forSave[$fieldModel->getTableName()][$fieldModel->getColumnName()] = $uitypeModel->convertToSave($value, $this);
 			}
 		}
-
 		return $forSave;
 	}
 
@@ -288,7 +285,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				return 'off';
 				break;
 		}
-
 		return false;
 	}
 
@@ -379,7 +375,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 
 			return $currentUserModel;
 		}
-
 		return new self();
 	}
 
@@ -395,7 +390,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		foreach ($userDetails as $key => $value) {
 			$userModel->$key = $value;
 		}
-
 		return $userModel->setData($userDetails)->setModule('Users')->setId($currentUser->getId());
 	}
 
@@ -446,7 +440,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				}
 			}
 		}
-
 		return $subordinateUsers;
 	}
 
@@ -463,7 +456,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 			$privilegesModel = Users_Privileges_Model::getInstanceById($this->getId());
 			$this->set('privileges', $privilegesModel);
 		}
-
 		return $privilegesModel->get('roleid');
 	}
 
@@ -503,7 +495,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				$profiles[$profile] = Settings_Profiles_Record_Model::getInstanceById($profile);
 			}
 		}
-
 		return $profiles;
 	}
 
@@ -517,7 +508,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 			}
 			$this->set('groups', $userGroups);
 		}
-
 		return $this->get('groups');
 	}
 
@@ -532,7 +522,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 			}
 			$this->set('parentRoles', $userParentRoles);
 		}
-
 		return $this->get('parentRoles');
 	}
 
@@ -548,7 +537,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 			$privilegesModel = Users_Privileges_Model::getInstanceById($this->getId());
 			$this->set('privileges', $privilegesModel);
 		}
-
 		return $privilegesModel;
 	}
 
@@ -588,7 +576,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if (empty($picklistDependencyData['hour_format']['__DEFAULT__']['start_hour'])) {
 			$picklistDependencyData['hour_format']['__DEFAULT__']['start_hour'] = $defaultValues;
 		}
-
 		return $picklistDependencyData;
 	}
 
@@ -638,7 +625,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				}
 			}
 		}
-
 		return $activityReminderInSeconds;
 	}
 
@@ -655,7 +641,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if ($onlyActive) {
 			$query->where(['status' => 'Active']);
 		}
-
 		return $query->count();
 	}
 
@@ -684,7 +669,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		if ($id) {
 			return self::getInstanceById($id, 'Users');
 		}
-
 		return false;
 	}
 
@@ -745,7 +729,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 				$users[$userModel->getId()] = $userModel;
 			}
 		}
-
 		return $users;
 	}
 
@@ -804,7 +787,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 
 			return $locks[$this->getId()];
 		}
-
 		return [];
 	}
 
@@ -827,7 +809,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 					break;
 			}
 		}
-
 		return '';
 	}
 
@@ -850,7 +831,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 					break;
 			}
 		}
-
 		return $return;
 	}
 
@@ -938,11 +918,10 @@ class Users_Record_Model extends Vtiger_Record_Model
 	{
 		$auth = $this->getAuthDetail();
 		if ($auth['ldap']['active'] === 'true') {
-			$authMethod = new Users_Ldap_AuthMethod($this);
+			$authMethod = new Users_Ldap_Authmethod($this);
 
 			return $authMethod->process($auth['ldap'], $password);
 		}
-
 		return null;
 	}
 
@@ -978,6 +957,9 @@ class Users_Record_Model extends Vtiger_Record_Model
 	{
 		$passConfig = \Settings_Password_Record_Model::getUserPassConfig();
 		$time = (int) $passConfig['change_time'];
+		if ((int) $userModel->getDetail('force_password_change') === 1) {
+			\App\Session::set('ShowUserPasswordChange', 2);
+		}
 		if ($time === 0) {
 			return false;
 		}
@@ -988,10 +970,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 			}
 			\App\Session::set('ShowUserPasswordChange', 1);
 		}
-		if ((int) $userModel->getDetail('force_password_change') === 1) {
-			\App\Session::set('ShowUserPasswordChange', 2);
-		}
-
 		return false;
 	}
 }

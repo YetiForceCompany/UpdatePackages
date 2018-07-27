@@ -42,6 +42,7 @@ $.Class("Base_RecordsList_JS", {}, {
 			multi_select: this.container.find('.js-multi-select').val(),
 			totalCount: this.container.find('.js-total-count').val(),
 			noOfEntries: this.container.find('.js-no-entries').val(),
+			filterFields: JSON.parse(this.container.find('.js-filter-fields').val()),
 			onlyBody: true
 		}
 		let searchValue = this.listSearchInstance.getAlphabetSearchValue();
@@ -67,12 +68,12 @@ $.Class("Base_RecordsList_JS", {}, {
 				elementToBlock: body
 			}
 		});
-		AppConnector.request($.extend(this.getParams(), params)).then((responseData) => {
+		AppConnector.request($.extend(this.getParams(), params)).done((responseData) => {
 			progressIndicatorElement.progressIndicator({mode: 'hide'});
 			body.html($(responseData).html());
 			this.registerBasicEvents();
 			aDeferred.resolve(responseData);
-		}, function (textStatus, errorThrown) {
+		}).fail(function (textStatus, errorThrown) {
 			aDeferred.reject(textStatus, errorThrown);
 			progressIndicatorElement.progressIndicator({mode: 'hide'});
 		});
@@ -86,7 +87,7 @@ $.Class("Base_RecordsList_JS", {}, {
 		this.container.on('click', '.js-change-order', function (e) {
 			e.preventDefault();
 			const element = $(this);
-			if (typeof element.data('nextOrder') === 'undefined') {
+			if (typeof element.data('nextOrder') === "undefined") {
 				return;
 			}
 			thisInstance.loadRecordList({
@@ -105,7 +106,7 @@ $.Class("Base_RecordsList_JS", {}, {
 		if (countNumberRecords) {
 			params['showTotalCount'] = true;
 		}
-		AppConnector.request(params).then((responseData) => {
+		AppConnector.request(params).done((responseData) => {
 			this.container.find('.js-pagination-container').html(responseData);
 			let totalCount = this.container.find('.js-pagination-list').data('totalCount')
 			if (totalCount) {
@@ -127,7 +128,7 @@ $.Class("Base_RecordsList_JS", {}, {
 				let pageNumber = thisInstance.container.find('.js-page-number');
 				let nextPageNumber = parseInt(parseFloat(pageNumber.val())) + 1;
 				pageNumber.val(nextPageNumber)
-				thisInstance.loadRecordList().then(function () {
+				thisInstance.loadRecordList().done(function () {
 					thisInstance.updatePagination();
 				});
 			}
@@ -137,7 +138,7 @@ $.Class("Base_RecordsList_JS", {}, {
 			if (pageNumber.val() > 1) {
 				let nextPageNumber = parseInt(parseFloat(pageNumber.val())) - 1;
 				pageNumber.val(nextPageNumber)
-				thisInstance.loadRecordList().then(function () {
+				thisInstance.loadRecordList().done(function () {
 					thisInstance.updatePagination();
 				});
 			}
@@ -147,7 +148,7 @@ $.Class("Base_RecordsList_JS", {}, {
 				return;
 			}
 			thisInstance.container.find('.js-page-number').val($(this).data("id"));
-			thisInstance.loadRecordList().then(function () {
+			thisInstance.loadRecordList().done(function () {
 				thisInstance.updatePagination();
 			});
 		});
@@ -167,7 +168,7 @@ $.Class("Base_RecordsList_JS", {}, {
 				e.stopImmediatePropagation();
 				const element = $(this);
 				const response = Vtiger_WholeNumberGreaterThanZero_Validator_Js.invokeValidation(element);
-				if (typeof response != "undefined") {
+				if (typeof response !== "undefined") {
 					element.validationEngine('showPrompt', response, '', "topLeft", true);
 				} else {
 					element.validationEngine('hideAll');
@@ -188,7 +189,7 @@ $.Class("Base_RecordsList_JS", {}, {
 						return;
 					}
 					pageNumber.val(newPageNumber);
-					thisInstance.loadRecordList().then(function () {
+					thisInstance.loadRecordList().done(function () {
 						thisInstance.updatePagination();
 					});
 				}
@@ -207,17 +208,30 @@ $.Class("Base_RecordsList_JS", {}, {
 	 */
 	registerListEvents: function () {
 		const thisInstance = this;
+		let additional = this.container.find('.js-additional-informations').val() == 1;
 		thisInstance.container.on('click', ".js-select-row", function (e) {
 			if ($(e.target).hasClass('js-select-checkbox') || $(e.target).hasClass('u-cursor-auto')) {
 				return true;
 			}
 			let data = $(this).data();
-			if(thisInstance.container.find('.js-multi-select').val() === 'true'){
+			if (thisInstance.container.find('.js-multi-select').val() === 'true') {
 				let selected = {};
-				selected[data.id] = data.name;
-				thisInstance.selectEvent(selected);
-			}else{
-				thisInstance.selectEvent(data);
+				if (additional) {
+					selected[data.id] = [];
+					$(this).closest('tr').find('td[data-field]').each(function (index, field) {
+						field = $(field);
+						selected[data.id].push({
+							value: field.text(),
+							field: field.data('field'),
+							type: field.data('type')
+						});
+					});
+				} else {
+					selected[data.id] = data.name;
+				}
+				thisInstance.selectEvent(selected, e);
+			} else {
+				thisInstance.selectEvent(data, e);
 			}
 			app.hideModalWindow(false, thisInstance.container.parent().attr('id'));
 
@@ -225,19 +239,31 @@ $.Class("Base_RecordsList_JS", {}, {
 		thisInstance.container.on('click', '.js-selected-rows', function (e) {
 			let selected = {};
 			thisInstance.container.find('table .js-select-checkbox').each(function (index, element) {
-				element = jQuery(element)
+				element = $(element)
 				if (!element.is(":checked")) {
 					return true;
 				}
 				let data = element.closest('tr').data();
-				selected[data.id] = data.name;
+				if (additional) {
+					selected[data.id] = [];
+					element.closest('tr').find('td[data-field]').each(function (index, field) {
+						field = $(field);
+						selected[data.id].push({
+							value: field.text(),
+							field: field.data('field'),
+							type: field.data('type')
+						});
+					});
+				} else {
+					selected[data.id] = data.name;
+				}
 			});
 			if (Object.keys(selected).length <= 0) {
 				Vtiger_Helper_Js.showPnotify({
 					text: app.vtranslate('JS_PLEASE_SELECT_ONE_RECORD'),
 				});
 			} else {
-				thisInstance.selectEvent(selected);
+				thisInstance.selectEvent(selected, e);
 				app.hideModalWindow($(e.target).closest('.js-modal-container'));
 			}
 		});
@@ -245,7 +271,7 @@ $.Class("Base_RecordsList_JS", {}, {
 			thisInstance.container.find('.js-related-parent-id').val(this.value);
 			thisInstance.container.find('.js-total-count').val('');
 			thisInstance.container.find('.js-page-number').val(1);
-			thisInstance.loadRecordList().then(function () {
+			thisInstance.loadRecordList().done(function () {
 				thisInstance.updatePagination();
 			});
 		});

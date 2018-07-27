@@ -15,11 +15,13 @@
 					</div>
 					{assign var=COUNT_ALPHABETS value=count($ALPHABETS)}
 					<div class="modal-body p-1">
-						<div class="u-alphabet-sorting noprint">
+						<div class="text-center noprint">
 							<div class="p-0 m-auto alphabet_{$COUNT_ALPHABETS} row ">
 								{foreach item=ALPHABET from=$ALPHABETS}
 									<div class="alphabetSearch u-cursor-pointer">
-										<a class="btn {if isset($ALPHABET_VALUE) && $ALPHABET_VALUE == $ALPHABET}btn-primary{else}btn-light{/if}" id="{$ALPHABET}" href="#">{$ALPHABET}</a>
+									<h5>
+										<a class="btn font-weight-bold {if isset($ALPHABET_VALUE) && $ALPHABET_VALUE == $ALPHABET}btn-primary{else}btn-light{/if}" role="button" id="{$ALPHABET}" href="#">{$ALPHABET}</a>
+									</h5>
 									</div>
 								{/foreach}
 							</div>

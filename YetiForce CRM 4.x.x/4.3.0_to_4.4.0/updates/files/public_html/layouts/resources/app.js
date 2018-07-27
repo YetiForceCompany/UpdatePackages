@@ -7,14 +7,25 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  *************************************************************************************/
-App = {};
-app = {
+var App = {},
+	AppConnector,
+	app = {
 	/**
 	 * variable stores client side language strings
 	 */
 	languageString: [],
+	breakpoints: {
+		xs: 0,
+		sm: 576,
+		md: 768,
+		lg: 992,
+		xl: 1200,
+		xxl: 1300,
+		xxxl: 1700
+	},
 	cacheParams: [],
 	modalEvents: [],
+	childFrame: false,
 	event: new function () {
 		this.el = $({});
 		this.trigger = function () {
@@ -70,16 +81,21 @@ app = {
 		return $('body').data('language');
 	},
 	/**
-	 * Function to get path to layout
-	 */
-	getLayoutPath: function () {
-		return $('body').data('layoutpath');
-	},
-	/**
 	 * Function to get page title
 	 */
 	getPageTitle: function () {
 		return document.title;
+	},
+	/**
+	 * Function gets current window parent
+	 * @returns {object}
+	 */
+	getWindowParent() {
+		if (typeof window.frames[0] !== "undefined" && typeof window.frames[0].app !== "undefined" && window.frames[0].app.childFrame) {
+			return window.frames[0];
+		} else {
+			return window;
+		}
 	},
 	/**
 	 * Function to set page title
@@ -95,54 +111,76 @@ app = {
 		return $('.bodyContents');
 	},
 	hidePopover: function (element) {
-		if (typeof element == 'undefined') {
+		if (typeof element === "undefined") {
 			element = $('body .js-popover-tooltip');
 		}
 		element.popover('hide');
 	},
-	showPopoverElementView: function (selectElement, params) {
-		if (typeof params == 'undefined') {
-			params = {
-				trigger: 'manual',
-				placement: 'auto',
-				html: true,
-				template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
-			};
-		}
-		params.container = 'body';
-		params.delay = 800;
-		var sparams;
-		selectElement.each(function (index, domElement) {
-			sparams = params;
-			var element = $(domElement);
-			if (element.data('placement')) {
-				sparams.placement = element.data('placement');
-			}
-			if (element.data('class')) {
-				sparams.template = '<div class="popover ' + element.data('class') + '" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
-			}
-			if (element.hasClass('delay0')) {
-				sparams.delay = {show: 0, hide: 0}
-			}
-			var data = element.data();
-			if (data != null) {
-				sparams = $.extend(sparams, data);
-			}
-			element.popover(sparams);
-			element.on("mouseenter focus", function () {
-				var _this = this;
+	hidePopoversAfterClick(popoverParent) {
+		popoverParent.on('click', (e) => {
+			setTimeout(() => {
+				popoverParent.popover('hide');
+			}, 100);
+		});
+	},
+	registerPopoverManualTrigger(element) {
+		element.hoverIntent({
+			timeout: 150,
+			over: function () {
+				const self = this;
 				$(this).popover("show");
 				$(".popover").on("mouseleave", function () {
-					$(_this).popover('hide');
+					$(self).popover('hide');
 				});
-			}).on("mouseleave blur", function () {
-				var _this = this;
-				setTimeout(function () {
-					if (!$(".popover:hover").length) {
-						$(_this).popover("hide");
-					}
-				}, 100);
-			});
+			},
+			out: function () {
+				if (!$(".popover:hover").length) {
+					$(this).popover('hide');
+				}
+			}
+		});
+		app.hidePopoversAfterClick(element);
+	},
+	isEllipsisActive(element) {
+		let clone = element
+			.clone()
+			.addClass('u-text-ellipsis--not-active')
+			.appendTo('body');
+		if (clone.width() > element.width()) {
+			clone.remove();
+			return true;
+		}
+		clone.remove();
+		return false;
+	},
+	showPopoverElementView: function (selectElement, params = {}) {
+		let defaultParams = {
+			trigger: 'manual',
+			placement: 'auto',
+			html: true,
+			template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+			container: 'body',
+			delay: {"show": 300, "hide": 100},
+		};
+		selectElement.each(function (index, domElement) {
+			let element = $(domElement);
+			if (element.data('ellipsis')) {
+				defaultParams.trigger = 'hover focus';
+				if (!app.isEllipsisActive(element)) {
+					return;
+				}
+			}
+			let elementParams = $.extend(true, defaultParams, params, element.data());
+			if (element.data('class')) {
+				elementParams.template = '<div class="popover ' + element.data('class') + '" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
+			}
+			if (element.hasClass('delay0')) {
+				elementParams.delay = {show: 0, hide: 0}
+			}
+			element.popover(elementParams);
+			if (elementParams.trigger === 'manual' || typeof elementParams.trigger === 'undefined') {
+				app.registerPopoverManualTrigger(element);
+			}
 		});
 		return selectElement;
 	},
@@ -153,7 +191,7 @@ app = {
 	 */
 
 	registerChangeEventForMultiSelect: function (selectElement, params) {
-		if (typeof selectElement == 'undefined') {
+		if (typeof selectElement === "undefined") {
 			return;
 		}
 		var instance = selectElement.data('select2');
@@ -173,7 +211,7 @@ app = {
 	 * @return <object> - encoded string or value map
 	 */
 	getSerializedData: function (parentElement, returnFormat) {
-		if (typeof returnFormat == 'undefined') {
+		if (typeof returnFormat === "undefined") {
 			returnFormat = 'string';
 		}
 
@@ -194,6 +232,22 @@ app = {
 			keyValueMap[nameOfElement] = decodeURIComponent(valueOfElement);
 		}
 		return keyValueMap;
+	},
+	/**
+	 * Function animates bootstrap modal with animate.css
+	 * @params: jQuery object with class .modal,
+	 * @params: string with animation name,
+	 * @params: string with animation name,
+	 */
+	animateModal(modal, openAnimation, closeAnimation) {
+		modal.on('show.bs.modal', function (e) {
+			modal.removeClass(`animated ${closeAnimation}`);
+			modal.addClass(`animated ${openAnimation}`);
+		});
+		modal.on('hide.bs.modal', function (e) {
+			modal.removeClass(`animated ${openAnimation}`);
+			modal.addClass(`animated ${closeAnimation}`);
+		});
 	},
 	showModalData(data, container, paramsObject, cb, url, sendByAjaxCb) {
 		const thisInstance = this;
@@ -222,11 +276,8 @@ app = {
 		};
 		const modalContainer = container.find('.modal:first');
 		modalContainer.one('shown.bs.modal', function () {
-			if ($('.modal-backdrop').length > 1) {
-				$('.modal-backdrop:not(:first)').remove();
-			}
 			cb(modalContainer);
-			App.Fields.Picklist.showSelect2ElementView(modalContainer.find('select.select2'), {dropdownParent: modalContainer});
+			App.Fields.Picklist.showSelect2ElementView(modalContainer.find('select.select2'));
 			App.Fields.Picklist.showSelectizeElementView(modalContainer.find('select.selectize'));
 			App.Fields.Picklist.showChoosenElementView(modalContainer.find('select.chzn-select'));
 			App.Fields.Date.register(modalContainer);
@@ -234,47 +285,55 @@ app = {
 				height: '5em',
 				toolbar: 'Min'
 			});
+			let modalScroll = modalContainer.find('.js-show-scroll');
+			if (modalScroll.length) {
+				app.showNewScrollbar(modalScroll);
+			}
 		});
-		modalContainer.modal(params);
-
 		$('body').append(container);
+		modalContainer.modal(params);
 		thisInstance.registerModalEvents(modalContainer, sendByAjaxCb);
 		thisInstance.showPopoverElementView(modalContainer.find('.js-popover-tooltip'));
 		thisInstance.registerDataTables(modalContainer.find('.dataTable'));
 	},
 	showModalWindow: function (data, url, cb, paramsObject) {
+		if (window.parent !== window) {
+			this.childFrame = true;
+			window.parent.app.showModalWindow(data, url, cb, paramsObject);
+			return;
+		}
 		const thisInstance = this;
 		Window.lastModalId = 'modal_' + Math.random().toString(36).substr(2, 9);
 		//null is also an object
-		if (typeof data == 'object' && data != null && !(data instanceof $)) {
+		if (typeof data === 'object' && data != null && !(data instanceof $)) {
 			if (data.id != undefined) {
 				Window.lastModalId = data.id;
 			}
 			paramsObject = data.css;
 			cb = data.cb;
 			url = data.url;
-			if (data.sendByAjaxCb != 'undefined') {
+			if (data.sendByAjaxCb !== "undefined") {
 				var sendByAjaxCb = data.sendByAjaxCb;
 			}
 			data = data.data;
 		}
-		if (typeof url == 'function') {
-			if (typeof cb == 'object') {
+		if (typeof url === 'function') {
+			if (typeof cb === 'object') {
 				paramsObject = cb;
 			}
 			cb = url;
 			url = false;
-		} else if (typeof url == 'object') {
+		} else if (typeof url === 'object') {
 			cb = function () {
 			};
 			paramsObject = url;
 			url = false;
 		}
-		if (typeof cb != 'function') {
+		if (typeof cb !== 'function') {
 			cb = function () {
 			}
 		}
-		if (typeof sendByAjaxCb != 'function') {
+		if (typeof sendByAjaxCb !== 'function') {
 			var sendByAjaxCb = function () {
 			}
 		}
@@ -299,7 +358,7 @@ app = {
 		if (data) {
 			thisInstance.showModalData(data, container, paramsObject, cb, url, sendByAjaxCb);
 		} else {
-			$.get(url).then(function (response) {
+			$.get(url).done(function (response) {
 				thisInstance.showModalData(response, container, paramsObject, cb, url, sendByAjaxCb);
 			});
 		}
@@ -314,7 +373,7 @@ app = {
 		if (typeof callback === 'object') {
 			container = callback;
 		} else if (id == undefined) {
-			container= $('.modalContainer');
+			container = $('.modalContainer');
 		} else {
 			container = $('#' + id);
 		}
@@ -333,22 +392,33 @@ app = {
 		}
 		modalContainer.one('hidden.bs.modal', callback);
 	},
-	registerModalController: function () {
-		let modalContainer = $('#' + Window.lastModalId + ' .js-modal-data');
+	registerModalController: function (modalId, modalContainer, cb) {
+		if (modalId === undefined) {
+			modalId = Window.lastModalId;
+		}
+		if (modalContainer === undefined) {
+			modalContainer = $('#' + modalId + ' .js-modal-data');
+		}
 		let modalClass = modalContainer.data('module') + '_' + modalContainer.data('view') + '_JS';
-		if (typeof window[modalClass] !== 'undefined') {
+		if (typeof window[modalClass] !== "undefined") {
 			let instance = new window[modalClass]();
+			if (typeof cb === 'function') {
+				cb(modalContainer, instance);
+			}
 			instance.registerEvents(modalContainer);
-			if (app.modalEvents[Window.lastModalId]) {
-				app.modalEvents[Window.lastModalId](modalContainer, instance);
+			if (modalId && app.modalEvents[modalId]) {
+				app.modalEvents[modalId](modalContainer, instance);
 			}
 		}
 		modalClass = 'Base_' + modalContainer.data('view') + '_JS';
-		if (typeof window[modalClass] !== 'undefined') {
+		if (typeof window[modalClass] !== "undefined") {
 			let instance = new window[modalClass]();
+			if (typeof cb === 'function') {
+				cb(modalContainer, instance);
+			}
 			instance.registerEvents(modalContainer);
-			if (app.modalEvents[Window.lastModalId]) {
-				app.modalEvents[Window.lastModalId](modalContainer, instance);
+			if (modalId && app.modalEvents[modalId]) {
+				app.modalEvents[modalId](modalContainer, instance);
 			}
 		}
 	},
@@ -372,7 +442,7 @@ app = {
 						blockInfo: {'enabled': true}
 					});
 					var formData = form.serializeFormData();
-					AppConnector.request(formData).then(function (responseData) {
+					AppConnector.request(formData).done(function (responseData) {
 						sendByAjaxCb(formData, responseData);
 						if (responseData.success && responseData.result) {
 							if (responseData.result.notify) {
@@ -384,6 +454,8 @@ app = {
 							}
 						}
 						app.hideModalWindow();
+						progressIndicatorElement.progressIndicator({'mode': 'hide'});
+					}).fail(function () {
 						progressIndicatorElement.progressIndicator({'mode': 'hide'});
 					});
 				}
@@ -479,13 +551,13 @@ app = {
 	convertTojQueryDatePickerFormat: function (dateFormat) {
 		var i = 0;
 		var dotMode = '-';
-		if (dateFormat.indexOf("-") != -1) {
+		if (dateFormat.indexOf("-") !== -1) {
 			dotMode = '-';
 		}
-		if (dateFormat.indexOf(".") != -1) {
+		if (dateFormat.indexOf(".") !== -1) {
 			dotMode = '.';
 		}
-		if (dateFormat.indexOf("/") != -1) {
+		if (dateFormat.indexOf("/") !== -1) {
 			dotMode = '/';
 		}
 		var splitDateFormat = dateFormat.split(dotMode);
@@ -506,25 +578,18 @@ app = {
 	getDateInDBInsertFormat: function (dateFormat, dateString) {
 		var i = 0;
 		var dotMode = '-';
-		if (dateFormat.indexOf("-") != -1) {
+		if (dateFormat.indexOf("-") !== -1) {
 			dotMode = '-';
-		}
-		if (dateFormat.indexOf(".") != -1) {
+		} else if (dateFormat.indexOf(".") !== -1) {
 			dotMode = '.';
-		}
-		if (dateFormat.indexOf("/") != -1) {
+		} else if (dateFormat.indexOf("/") !== -1) {
 			dotMode = '/';
 		}
-
 		var dateFormatParts = dateFormat.split(dotMode);
+		var day = '', month = '', year = '';
 		var dateParts = dateString.split(dotMode);
-		var day = '';
-		var month = '';
-		var year = '';
-
 		for (i in dateFormatParts) {
 			var sectionDate = dateFormatParts[i];
-
 			switch (sectionDate) {
 				case 'dd':
 					day = dateParts[i];
@@ -539,11 +604,10 @@ app = {
 					break;
 			}
 		}
-
 		return year + '-' + month + '-' + day;
 	},
 	registerEventForDateFields: function (parentElement) {
-		if (typeof parentElement == 'undefined') {
+		if (typeof parentElement === "undefined") {
 			parentElement = $('body');
 		}
 
@@ -563,7 +627,7 @@ app = {
 	},
 	registerEventForClockPicker: function (object) {
 		let elementClockBtn, formatTime;
-		if (typeof object === 'undefined') {
+		if (typeof object === "undefined") {
 			elementClockBtn = $('.clockPicker');
 			formatTime = CONFIG.hourFormat;
 		} else {
@@ -621,30 +685,13 @@ app = {
 		return table.DataTable();
 	},
 	/**
-	 * Function to destroy time fields
-	 */
-	destroyTimeFields: function (container) {
-
-		if (typeof cotainer == 'undefined') {
-			container = $('body');
-		}
-
-		if (container.hasClass('timepicker-default')) {
-			var element = container;
-		} else {
-			var element = container.find('.timepicker-default');
-		}
-		element.data('timepicker-list', null);
-		return container;
-	},
-	/**
 	 * Function to get the chosen element from the raw select element
 	 * @params: select element
 	 * @return : chosenElement - corresponding chosen element
 	 */
 	getChosenElementFromSelect: function (selectElement) {
 		var selectId = selectElement.attr('id');
-		var chosenEleId = selectId + "_chosen";
+		var chosenEleId = selectId + '_chosen';
 		return $('#' + chosenEleId);
 	},
 	/**
@@ -680,15 +727,31 @@ app = {
 		});
 	},
 	showNewScrollbar: function (element, options) {
-		if (typeof element === 'undefined' || !element.length)
+		if (typeof element === "undefined" || !element.length)
 			return;
-		if (typeof options === 'undefined')
+		if (typeof options === "undefined")
 			options = {};
 
 		return new PerfectScrollbar(element[0], options);
 	},
-	showNewBottomTopScrollbar: function (element) {
-		if (typeof element === 'undefined' || !element.length)
+	showNewScrollbarTopBottomRight: function (element) {
+		if (typeof element === "undefined" || !element.length)
+			return;
+		let scrollbarTopLeftInit = new PerfectScrollbar(element[0], {wheelPropagation: true});
+		let scrollbarTopElement = element.find('.ps__rail-x').first();
+		scrollbarTopElement.css({
+			top: 0,
+			bottom: 'auto'
+		});
+		scrollbarTopElement.find('.ps__thumb-x').css({
+			top: 2,
+			bottom: 'auto'
+		});
+		let scrollbarBottomRightInit = new PerfectScrollbar(element[0], {wheelPropagation: true});
+		return [scrollbarTopLeftInit, scrollbarBottomRightInit];
+	},
+	showNewScrollbarTopBottom: function (element) {
+		if (typeof element === "undefined" || !element.length)
 			return;
 		var scrollbarTopInit = new PerfectScrollbar(element[0], {
 			wheelPropagation: true,
@@ -708,10 +771,10 @@ app = {
 			bottom: 'auto'
 		});
 	},
-	showNewLeftScrollbar: function (element, options) {
-		if (typeof element === 'undefined' || !element.length)
+	showNewScrollbarLeft: function (element, options) {
+		if (typeof element === "undefined" || !element.length)
 			return;
-		if (typeof options === 'undefined')
+		if (typeof options === "undefined")
 			options = {};
 		options.wheelPropagation = true;
 		var scrollbarLeftInit = new PerfectScrollbar(element[0], options);
@@ -726,25 +789,11 @@ app = {
 		});
 	},
 	showScrollBar: function (element, options) {
-		if (typeof options === 'undefined')
+		if (typeof options === "undefined")
 			options = {};
-		if (typeof options.height === 'undefined')
+		if (typeof options.height === "undefined")
 			options.height = element.css('height');
 		return element.slimScroll(options);
-	},
-	showHorizontalScrollBar: function (element, options) {
-		if (typeof options === 'undefined')
-			options = {};
-		var params = {
-			horizontalScroll: true,
-			theme: "dark-thick",
-			advanced: {
-				autoExpandHorizontalScroll: true
-			}
-		}
-		if (typeof options !== 'undefined')
-			var params = $.extend(params, options);
-		return element.mCustomScrollbar(params);
 	},
 	/**
 	 * Function returns translated string
@@ -754,14 +803,6 @@ app = {
 			return LANG[key];
 		}
 		return key;
-	},
-	/**
-	 * Function will return the current users layout + skin path
-	 * @param <string> img - image name
-	 * @return <string>
-	 */
-	vimage_path: function (img) {
-		return app.getLayoutPath() + '/images/' + img;
 	},
 	/*
 	 * Cache API on client-side
@@ -886,30 +927,32 @@ app = {
 	 * Function returns the javascript controller based on the current view
 	 */
 	getPageController: function () {
-		var moduleName = app.getModuleName();
-		var view = app.getViewName()
-		var parentModule = app.getParentModuleName();
-
-		var moduleClassName = parentModule + "_" + moduleName + "_" + view + "_Js";
-		if (typeof window[moduleClassName] == 'undefined') {
+		if (window.pageController) {
+			return window.pageController;
+		}
+		const moduleName = app.getModuleName();
+		const view = app.getViewName()
+		const parentModule = app.getParentModuleName();
+		let moduleClassName = parentModule + "_" + moduleName + "_" + view + "_Js";
+		if (typeof window[moduleClassName] === "undefined") {
 			moduleClassName = parentModule + "_Vtiger_" + view + "_Js";
 		}
-		if (typeof window[moduleClassName] == 'undefined') {
+		if (typeof window[moduleClassName] === "undefined") {
 			moduleClassName = moduleName + "_" + view + "_Js";
 		}
 		var extendModules = $('#extendModules').val();
-		if (typeof window[moduleClassName] == 'undefined' && extendModules != undefined) {
+		if (typeof window[moduleClassName] === "undefined" && extendModules != undefined) {
 			moduleClassName = extendModules + "_" + view + "_Js";
 		}
-		if (typeof window[moduleClassName] == 'undefined') {
+		if (typeof window[moduleClassName] === "undefined") {
 			moduleClassName = "Vtiger_" + view + "_Js";
 		}
-		if (typeof window[moduleClassName] != 'undefined') {
-			if (typeof window[moduleClassName] == 'function') {
-				return new window[moduleClassName]();
+		if (typeof window[moduleClassName] !== "undefined") {
+			if (typeof window[moduleClassName] === 'function') {
+				return window.pageController = new window[moduleClassName]();
 			}
-			if (typeof window[moduleClassName] == 'object') {
-				return window[moduleClassName];
+			if (typeof window[moduleClassName] === 'object') {
+				return window.pageController = window[moduleClassName];
 			}
 		}
 	},
@@ -919,47 +962,18 @@ app = {
 	getDecodedValue: function (value) {
 		return $('<div></div>').html(value).text();
 	},
-	updateRowHeight: function () {
-		var rowType = CONFIG.rowHeight;
-		if (rowType.length <= 0) {
-			//Need to update the row height
-			var widthType = app.cacheGet('widthType', 'mediumWidthType');
-			var serverWidth = widthType;
-			switch (serverWidth) {
-				case 'narrowWidthType' :
-					serverWidth = 'narrow';
-					break;
-				case 'wideWidthType' :
-					serverWidth = 'wide';
-					break;
-				default :
-					serverWidth = 'medium';
-			}
-			var userid = CONFIG.userId;
-			var params = {
-				'module': 'Users',
-				'action': 'SaveAjax',
-				'record': userid,
-				'value': serverWidth,
-				'field': 'rowheight'
-			};
-			AppConnector.request(params).then(function () {
-				$(rowType).val(serverWidth);
-			});
-		}
-	},
 	getCookie: function (c_name) {
 		var c_value = document.cookie;
 		var c_start = c_value.indexOf(" " + c_name + "=");
-		if (c_start == -1) {
+		if (c_start === -1) {
 			c_start = c_value.indexOf(c_name + "=");
 		}
-		if (c_start == -1) {
+		if (c_start === -1) {
 			c_value = null;
 		} else {
 			c_start = c_value.indexOf("=", c_start) + 1;
 			var c_end = c_value.indexOf(";", c_start);
-			if (c_end == -1) {
+			if (c_end === -1) {
 				c_end = c_value.length;
 			}
 			c_value = unescape(c_value.substring(c_start, c_end));
@@ -1025,22 +1039,12 @@ app = {
 				params[i] = addToParams[i];
 			}
 		}
-		AppConnector.request(params).then(
-			function (data) {
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				aDeferred.reject();
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			aDeferred.resolve(data);
+		}).fail(function (textStatus, errorThrown) {
+			aDeferred.reject(textStatus, errorThrown);
+		});
 		return aDeferred.promise();
-	},
-	showBtnSwitch: function (selectElement, params) {
-		if (typeof params == 'undefined') {
-			params = {};
-		}
-		selectElement.bootstrapSwitch(params);
-		return selectElement;
 	},
 	getMainParams: function (param, json) {
 		if (param in CONFIG) {
@@ -1064,31 +1068,27 @@ app = {
 		app.cacheParams[param] = value;
 		$('#' + param).val(value);
 	},
-	parseNumberToShow: function (val) {
-		if (val == undefined) {
+	parseNumberToShow(val, numberOfDecimal = CONFIG.noOfCurrencyDecimals) {
+		if (val === undefined) {
 			val = 0;
 		}
-		var numberOfDecimal = parseInt(CONFIG.noOfCurrencyDecimals);
-		var decimalSeparator = CONFIG.currencyDecimalSeparator;
-		var groupSeparator = CONFIG.currencyGroupingSeparator;
-		var groupingPattern = app.getMainParams('currencyGroupingPattern');
+		let groupSeparator = CONFIG.currencyGroupingSeparator;
+		let groupingPattern = app.getMainParams('currencyGroupingPattern');
 		val = parseFloat(val).toFixed(numberOfDecimal);
-		var a = val.toString().split('.');
-		var integer = a[0];
-		var decimal = a[1];
-
-		if (groupingPattern == '123,456,789') {
+		let a = val.toString().split('.');
+		let integer = a[0];
+		let decimal = a[1];
+		if (groupingPattern === '123,456,789') {
 			integer = integer.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + groupSeparator);
-		} else if (groupingPattern == '123456,789') {
-			var t = integer.slice(-3);
-			var o = integer.slice(0, -3);
-			integer = o + groupSeparator + t;
-		} else if (groupingPattern == '12,34,56,789') {
-			var t = integer.slice(-3);
-			var o = integer.slice(0, -3);
-			integer = o.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + groupSeparator) + groupSeparator + t;
+		} else if (groupingPattern === '123456,789') {
+			integer = integer.slice(0, -3) + groupSeparator + integer.slice(-3);
+		} else if (groupingPattern === '12,34,56,789') {
+			integer = integer.slice(0, -3).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + groupSeparator) + groupSeparator + integer.slice(-3);
 		}
-		return integer + decimalSeparator + decimal;
+		if (numberOfDecimal) {
+			return integer + CONFIG.currencyDecimalSeparator + decimal;
+		}
+		return integer;
 	},
 	parseNumberToFloat: function (val) {
 		var numberOfDecimal = parseInt(CONFIG.noOfCurrencyDecimals);
@@ -1103,10 +1103,10 @@ app = {
 		return parseFloat(val);
 	},
 	errorLog: function (error, err, errorThrown) {
-		if (typeof error == 'object' && error.responseText) {
+		if (typeof error === 'object' && error.responseText) {
 			error = error.responseText;
 		}
-		if (typeof error == 'object' && error.statusText) {
+		if (typeof error === 'object' && error.statusText) {
 			error = error.statusText;
 		}
 		if (error) {
@@ -1120,7 +1120,7 @@ app = {
 		}
 	},
 	registerModal: function (container) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = $('body');
 		}
 		container.off('click', 'button.showModal, a.showModal, .js-show-modal').on('click', 'button.showModal, a.showModal, .js-show-modal', function (e) {
@@ -1128,7 +1128,7 @@ app = {
 			var currentElement = $(e.currentTarget);
 			var url = currentElement.data('url');
 
-			if (typeof url != 'undefined') {
+			if (typeof url !== "undefined") {
 				if (currentElement.hasClass('js-popover-tooltip')) {
 					currentElement.popover('hide');
 				}
@@ -1139,8 +1139,8 @@ app = {
 					url: url,
 					cb: function (container) {
 						var call = currentElement.data('cb');
-						if (typeof call !== 'undefined') {
-							if (call.indexOf('.') != -1) {
+						if (typeof call !== "undefined") {
+							if (call.indexOf(".") !== -1) {
 								var callerArray = call.split('.');
 								if (typeof window[callerArray[0]] === 'object') {
 									window[callerArray[0]][callerArray[1]](container);
@@ -1165,9 +1165,8 @@ app = {
 	},
 	playSound: function (action) {
 		var soundsConfig = app.getMainParams('sounds');
-		soundsConfig = JSON.parse(soundsConfig);
 		if (soundsConfig['IS_ENABLED']) {
-			var audio = new Audio(app.getLayoutPath() + '/sounds/' + soundsConfig[action]);
+			var audio = new Audio(app.getMainParams('soundFilesPath') + soundsConfig[action]);
 			audio.play();
 		}
 	},
@@ -1225,59 +1224,160 @@ app = {
 			}
 		});
 	},
+	registerMenuTextHoverEvent() {
+		$('.js-menu__item').on('mouseenter', function () {
+			setTimeout(() => {
+				let target = $(this);
+				if (target.is(':hover')) {
+					target.find('.js-menu__item__text').first().addClass('u-white-space-n');
+				}
+			}, 300);
+		}).on('mouseleave', function () {
+			let target = $(this);
+			if (!target.is(':hover')) {
+				target.find('.js-menu__item__text').first().removeClass('u-white-space-n');
+			}
+		})
+	},
 	registerMenu: function () {
-		let btn 	= $('.js-menu-btn').first(),
-			side 	= $('.js-sidebar').first();
-		let focusable = side.find('a[href], [tabindex]');
-		let items	= side.find('a[aria-haspopup="true"]');
-		focusable.on('focus', function(){
-			side.addClass('open-menu');
-		}).on('blur', function(){
-			side.removeClass('open-menu');
+		const self = this;
+		self.keyboard = {DOWN: 40, ESCAPE: 27, LEFT: 37, RIGHT: 39, SPACE: 32, UP: 38};
+		self.sidebarBtn = $('.js-sidebar-btn').first();
+		self.sidebar = $('.js-sidebar').first();
+		self.sidebarBtn.on('click', self.toggleSidebar.bind(self));
+		$(`a.nav-link,[tabindex],input,select,textarea,button`).on('focus', (e) => {
+			if (self.sidebarBtn[0] == e.target || self.sidebar.find(e.target).length) return;
+			if (self.sidebar.find(':focus').length) {
+				self.openSidebar();
+			} else if (self.sidebar.hasClass('js-expand')) {
+				self.closeSidebar();
+			}
 		});
-		side.on('mouseenter', function(){
-			side.addClass('open-menu');
-		}).on('mouseleave', function(){
-			side.removeClass('open-menu');
-			items.each(function(j){
-				closeSub(j);
-			});
+		self.sidebar.on('mouseenter', self.openSidebar.bind(self)).on('mouseleave', self.closeSidebar.bind(self));
+		self.sidebar.find('.js-menu__content').on('keydown', self.sidebarKeyboard.bind(self));
+		self.sidebar.on('keydown', (e) => {
+			if (e.which == self.keyboard.ESCAPE) {
+				self.closeSidebar();
+				if (self.sidebarBtn.is(':tabbable')) self.sidebarBtn.focus();
+				else $(':tabbable').eq(parseInt($(':tabbable').index(self.sidebar.find(':tabbable').last())) + 1).focus();
+			}
 		});
-		let closeSub = function(i) {
-			$(items[i]).removeClass('active');
-			items[i].sub.removeClass('expand');
-			items[i].sub.attr('aria-expanded', false);
-			items[i].sub.attr('aria-hidden', true);
-		};
-		let openSub = function(i) {
-			$(items[i]).addClass('active');
-			items[i].sub.addClass('expand');
-			items[i].sub.attr('aria-expanded', true);
-			items[i].sub.attr('aria-hidden', false);
-		};
-		items.each(function(i){
-			let item = $(this);
-			items[i].sub = item.next('[role="menu"]');
-			item.on('click', function(e){
-				if(item.hasClass('active')) { // close submenu
-					closeSub(i);
-				} else { // open submenu
-					items.each(function(j){
-						closeSub(j);
-					});
-					openSub(i);
+		self.sidebar.find('.js-submenu').on('shown.bs.collapse', (e) => {
+			$(e.target).find(':tabbable').first().focus();
+		});
+		$('.js-submenu-toggler').on('click', (e) => {
+			if (!$(e.currentTarget).hasClass('collapsed') && !$(e.target).closest('.toggler').length) {
+				window.location = $(e.currentTarget).attr('href');
+			}
+		});
+		self.registerMenuTextHoverEvent();
+		self.registerPinEvent();
+	},
+	openSidebar: function () {
+		this.sidebar.addClass('js-expand');
+		this.sidebarBtn.attr('aria-expanded', true);
+	},
+	closeSidebar: function () {
+		this.sidebar.removeClass('js-expand');
+		this.sidebarBtn.attr('aria-expanded', false);
+	},
+	toggleSidebar: function () {
+		if (this.sidebar.hasClass('js-expand')) {
+			this.closeSidebar();
+		} else {
+			this.openSidebar();
+			this.sidebar.find('.js-menu__content :tabbable').first().focus();
+		}
+	},
+	registerPinEvent: function () {
+		const self = this;
+		let pinButton = self.sidebar.find('.js-menu--pin');
+		let baseContainer = self.sidebar.closest('.js-base-container');
+		pinButton.on('click', () => {
+			let hideMenu = 0;
+			baseContainer.removeClass('c-menu--animation');
+			if (pinButton.attr('data-show') === '0') {
+				hideMenu = 'on';
+				pinButton.removeClass('u-opacity-muted');
+				baseContainer.addClass('c-menu--open');
+				self.sidebar.off('mouseleave mouseenter');
+			} else {
+				pinButton.addClass('u-opacity-muted');
+				baseContainer.removeClass('c-menu--open');
+				self.sidebar.on('mouseenter', self.openSidebar.bind(self)).on('mouseleave', self.closeSidebar.bind(self));
+				self.closeSidebar.bind(self);
+			}
+			AppConnector.request({
+				module: 'Users',
+				action: 'SaveAjax',
+				field: 'leftpanelhide',
+				record: CONFIG.userId,
+				value: hideMenu
+			}).done(function (responseData) {
+				if (responseData.success && responseData.result) {
+					pinButton.attr('data-show', hideMenu);
 				}
 			});
+			setTimeout(() => {
+				baseContainer.addClass('c-menu--animation');
+			}, 300);
 		});
 	},
+	sidebarKeyboard: function (e) {
+		let target = $(e.target);
+		let toggler = $(e.target).closest('.js-submenu-toggler');
+		if (e.which == this.keyboard.LEFT) {
+			if (target.hasClass('js-submenu-toggler') && !target.hasClass('collapsed')) {
+				target.click();
+				return false;
+			} else {
+				let toggler = $(e.target).closest('.js-submenu').prev('.js-submenu-toggler');
+				if (toggler.length && !toggler.hasClass('collapsed')) {
+					toggler.click().focus();
+					return false;
+				}
+			}
+		} else if ((target.hasClass('js-submenu-toggler') && (e.which == this.keyboard.RIGHT) && target.hasClass('collapsed'))
+			|| (target.hasClass('js-submenu-toggler') && e.which == this.keyboard.SPACE)) {
+			target.click();
+			return false;
+		} else if (e.which == this.keyboard.UP) {
+			this.sidebar.find('.js-menu__content :tabbable').eq(parseInt(this.sidebar.find('.js-menu__content :tabbable').index(target)) - 1).focus();
+			return false;
+		} else if (e.which == this.keyboard.DOWN) {
+			this.sidebar.find('.js-menu__content :tabbable').eq(parseInt(this.sidebar.find('.js-menu__content :tabbable').index(target)) + 1).focus();
+			return false;
+		}
+	},
+	registerTabdrop: function () {
+		let tabs = $('.js-tabdrop');
+		if (!tabs.length) return;
+		let tab = tabs.find('> li');
+		tab.each(function () {
+			$(this).removeClass('d-none');
+		});
+		tabs.tabdrop({
+			text: app.vtranslate('JS_MORE'),
+		});
+		//change position to the last element (wcag keyboard navigation)
+		let dropdown = tabs.find('> li.dropdown');
+		dropdown.appendTo(tabs);
+		//fix for toggle button text not changing
+		tab.on('click', function (e) {
+			setTimeout(function () {
+				$(window).trigger('resize');
+			}, 500);
+		});
+
+	},
 	getScreenHeight: function (percantage) {
-		if (typeof percantage == 'undefined') {
+		if (typeof percantage === "undefined") {
 			percantage = 100;
 		}
 		return $(window).height() * percantage / 100;
 	},
 	setCalendarHeight() {
-		const container = $('.baseContainer');
+		const container = $('.js-base-container');
 		const paddingTop = 10;
 		if ($(window).width() > 993) {
 			let calendarH = $(window).height() - container.find('.o-calendar-container').offset().top - $('.js-footer').height() - paddingTop;
@@ -1293,10 +1393,10 @@ app = {
 	},
 	clearBrowsingHistory: function () {
 		AppConnector.request({
-			module: app.getModuleName(),
+			module: 'Home',
 			action: 'BrowsingHistory',
-		}).then(function (response) {
-			$('ul.historyList').remove();
+		}).done(function (response) {
+			$('.historyList').html(`<a class="item dropdown-item" href="#" role="listitem">${app.vtranslate('JS_NO_RECORDS')}</a>`);
 		});
 	},
 	showConfirmation: function (data, element) {
@@ -1316,13 +1416,13 @@ app = {
 				params.url = element.data('url');
 			}
 		}
-		Vtiger_Helper_Js.showConfirmationBox(params).then(function () {
+		Vtiger_Helper_Js.showConfirmationBox(params).done(function () {
 			if (params.type == 'href') {
-				AppConnector.request(params.url).then(function (data) {
+				AppConnector.request(params.url).done(function (data) {
 					window.location.href = data.result;
 				});
 			} else if (params.type == 'reloadTab') {
-				AppConnector.request(params.url).then(function (data) {
+				AppConnector.request(params.url).done(function (data) {
 					Vtiger_Detail_Js.getInstance().reloadTabContent();
 				});
 			}
@@ -1355,28 +1455,59 @@ app = {
 		if (!params.view) {
 			params.view = "RecordsList";
 		}
-		AppConnector.request(params).then(function (requestData) {
-			app.showModalWindow(requestData, function (data) {
-				if (typeof afterShowModal === 'function') {
-					afterShowModal(data);
-				}
-				if (typeof cb === 'function') {
-					app.modalEvents[Window.lastModalId] = cb;
-				}
+		this.showRecordsListModal(params).done(function (modal) {
+			if (typeof afterShowModal === 'function') {
+				afterShowModal(modal);
+			}
+			app.registerModalController(false, modal, cb);
+		});
+	},
+	/**
+	 * Show records list modal
+	 * @param {object} params
+	 * @returns {Promise}
+	 */
+	showRecordsListModal: function (params) {
+		const aDeferred = $.Deferred();
+		AppConnector.request(params).done(function (requestData) {
+			app.showModalWindow(requestData, function (modal) {
+				aDeferred.resolve(modal);
 			});
+		}).fail(function (textStatus, errorThrown) {
+			aDeferred.reject(textStatus, errorThrown);
+		});
+		return aDeferred.promise();
+	},
+	/**
+	 * Convert html content to base64 image
+	 * This function can be used in promise chain or with callback if specified
+	 *
+	 * @param {HTMLElement} element
+	 * @param {function} callback with imageString argument which contains an image in base64 string format
+	 * @param {object} options see: https://html2canvas.hertzen.com/configuration , imageType is our custom option
+	 * @return {Promise} with base64 string image as argument
+	 */
+	htmlToImage(element, callback, options = {imageType: 'image/png', logging: false}) {
+		element = $(element).get(0); // make sure we have HTMLElement not jQuery because it will not work
+		const imageType = options.imageType;
+		delete options.imageType;
+		return html2canvas(element, options).then((canvas) => {
+			const base64Image = canvas.toDataURL(imageType);
+			if (typeof callback === 'function') {
+				callback(base64Image);
+			}
+			return base64Image;
 		});
 	}
-}
+};
 $(document).ready(function () {
 	App.Fields.Picklist.changeSelectElementView();
 	app.showPopoverElementView($('body').find('.js-popover-tooltip'));
-	app.showBtnSwitch($('body').find('.switchBtn'));
 	app.registerSticky();
 	app.registerMoreContent($('body').find('button.moreBtn'));
 	app.registerModal();
 	app.registerMenu();
-	//Updating row height
-	app.updateRowHeight();
+	app.registerTabdrop();
 	String.prototype.toCamelCase = function () {
 		var value = this.valueOf();
 		return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
@@ -1388,8 +1519,7 @@ $(document).ready(function () {
 	// Instantiate Page Controller
 	var pageController = app.getPageController();
 	if (pageController) {
-		window.pageController = pageController;
-		window.pageController.registerEvents();
+		pageController.registerEvents();
 	}
 });
 (function ($) {
@@ -1414,7 +1544,7 @@ $(document).ready(function () {
 		var data = {};
 		if (values) {
 			$(values).each(function (k, v) {
-				if (v.name in data && (typeof data[v.name] != 'object')) {
+				if (v.name in data && (typeof data[v.name] !== 'object')) {
 					var element = form.find('[name="' + v.name + '"]');
 					//Only for muti select element we need to send array of values
 					if (element.is('select') && element.attr('multiple') != undefined) {
@@ -1423,7 +1553,7 @@ $(document).ready(function () {
 						data[v.name].push(prevValue)
 					}
 				}
-				if (typeof data[v.name] == 'object') {
+				if (typeof data[v.name] === 'object') {
 					data[v.name].push(v.value);
 				} else {
 					data[v.name] = v.value;
@@ -1440,7 +1570,12 @@ $(document).ready(function () {
 	}
 	// Case-insensitive :icontains expression
 	$.expr[':'].icontains = function (obj, index, meta, stack) {
-		return (obj.textContent || obj.innerText || $(obj).text() || '').toLowerCase().indexOf(meta[3].toLowerCase()) >= 0;
+		return (obj.textContent || obj.innerText || $(obj).text() || '').toLowerCase().indexOf(meta[3].toLowerCase()) !== -1;
+	}
+	$.fn.removeTextNode = function () {
+		$(this).contents().filter(function () {
+			return this.nodeType == 3; //Node.TEXT_NODE
+		}).remove();
 	}
 	bootbox.setLocale(CONFIG.langKey);
 })($);

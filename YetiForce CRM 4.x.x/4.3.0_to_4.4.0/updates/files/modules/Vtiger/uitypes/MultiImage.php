@@ -35,10 +35,11 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if ($this->validate || empty($value)) {
+		$hashValue = is_array($value) ? implode('|', $value) : $value;
+		if (isset($this->validate[$hashValue]) || empty($value)) {
 			return;
 		}
-		if (!$isUserFormat) {
+		if (!$isUserFormat && is_string($value)) {
 			$value = \App\Json::decode($value);
 		}
 		$fieldInfo = $this->getFieldModel()->getFieldInfo();
@@ -54,8 +55,8 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 				continue;
 			}
 			$file = \App\Fields\File::loadFromInfo([
-				'path' => $path,
-				'name' => $item['name'],
+					'path' => $path,
+					'name' => $item['name'],
 			]);
 			$validFormat = $file->validate('image');
 			$validExtension = false;
@@ -69,7 +70,7 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 				throw new \App\Exceptions\Security('ERR_FILE_WRONG_IMAGE||' . $this->getFieldModel()->getFieldName() . '||' . \App\Json::encode($value), 406);
 			}
 		}
-		$this->validate = true;
+		$this->validate[$hashValue] = true;
 	}
 
 	/**
@@ -248,7 +249,10 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 	public function getEditViewDisplayValue($value, $recordModel = false)
 	{
 		$value = \App\Json::decode($value);
-		$id = $recordModel->getId();
+		$id = false;
+		if ($recordModel) {
+			$id = $recordModel->getId();
+		}
 		if (!$id && \App\Request::_has('record')) {
 			$id = \App\Request::_get('record');
 		}
@@ -312,11 +316,10 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 	/**
 	 * Duplicate value from record.
 	 *
-	 * @param              $value
+	 * @param array        $value
 	 * @param \App\Request $request
 	 *
-	 * @throws \App\Exceptions\AppException
-	 * @throws \App\Exceptions\IllegalValue
+	 * @throws \App\Exceptions\FieldException
 	 */
 	public function duplicateValueFromRecord(&$value, \App\Request $request)
 	{
@@ -330,16 +333,52 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 				if ($key === false) {
 					continue;
 				}
-				$suffix = \App\Encryption::generatePassword(2);
-				if (copy($item['path'], $item['path'] . $suffix)) {
-					$item['key'] .= $suffix;
-					$item['path'] .= $suffix;
+				$file = \App\Fields\File::loadFromPath($item['path']);
+				$dirPath = $file->getDirectoryPath();
+				$newKey = $file->generateHash(true, $dirPath);
+				$path = $dirPath . DIRECTORY_SEPARATOR . $newKey;
+				if (copy($item['path'], $path)) {
+					$item['key'] = $newKey;
+					$item['path'] = $path;
 					$value[$key] = $item;
 				} else {
-					\App\Log::error("Error during file copy: {$item['path']} >> {$item['path']}{$suffix}");
+					\App\Log::error("Error during file copy: {$item['path']} >> {$path}");
+					throw new \App\Exceptions\FieldException('ERR_CREATE_FILE_FAILURE');
 				}
 			}
 		}
+	}
+
+	/**
+	 * Duplicate value from record.
+	 *
+	 * @param Vtiger_Record_Model $recordModel
+	 *
+	 * @throws \App\Exceptions\FieldException
+	 *
+	 * @return string
+	 */
+	public function getDuplicateValue(Vtiger_Record_Model $recordModel)
+	{
+		$value = [];
+		$copyValue = $recordModel->get($this->getFieldModel()->getFieldName());
+		if ($copyValue && $copyValue !== '[]' && $copyValue !== '""') {
+			foreach (\App\Json::decode($copyValue) as $item) {
+				$file = \App\Fields\File::loadFromPath($item['path']);
+				$dirPath = $file->getDirectoryPath();
+				$newKey = $file->generateHash(true, $dirPath);
+				$path = $dirPath . DIRECTORY_SEPARATOR . $newKey;
+				if (copy($item['path'], $path)) {
+					$item['key'] = $newKey;
+					$item['path'] = $path;
+					$value[] = $item;
+				} else {
+					\App\Log::error("Error during file copy: {$item['path']} >> {$item['path']}{$suffix}");
+					throw new \App\Exceptions\FieldException('ERR_CREATE_FILE_FAILURE');
+				}
+			}
+		}
+		return $this->getDBValue($value, $recordModel);
 	}
 
 	/**
@@ -358,5 +397,13 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 				}
 			}
 		}
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getAllowedColumnTypes()
+	{
+		return ['text'];
 	}
 }

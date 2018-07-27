@@ -16,22 +16,34 @@ jQuery.Class("Settings_ConfReport_Index_Js", {}, {
 				parent: 'Settings',
 				module: 'ConfReport',
 				view: 'Speed'
-			}).then(function (response) {
+			}).done(function (response) {
 				app.showModalWindow(response, function (data) {
 
 				});
 				progress.progressIndicator({mode: 'hide'});
-			}, function (data, err) {
+			}).fail(function (data, err) {
 				progress.progressIndicator({mode: 'hide'});
-			})
+			});
+		});
+	},
 
+	/**
+	 * Download image of the whole config page
+	 * @param {jQuery} container
+	 */
+	registerImageDownload(container){
+		container.find('#download-image').on('click',(e)=>{
+			app.htmlToImage(container).then((img)=>{
+				$(`<a href="${img}" download="yetiforce_settings.png"></a>`).get(0).click();
+			});
 		});
 	},
 	/**
 	 * Register events
 	 */
 	registerEvents: function () {
-		var container = jQuery('.contentsDiv');
+		var container = $('.contentsDiv');
 		this.registerTestButton(container);
+		this.registerImageDownload(container);
 	}
 });

@@ -23,10 +23,9 @@ class OSSPasswords_Module_Model extends Vtiger_Module_Model
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_PASS_CONFIGURATION',
 				'linkurl' => 'index.php?module=OSSPasswords&view=ConfigurePass&parent=Settings',
-				'linkicon' => '',
+				'linkicon' => 'adminIcon-passwords-encryption',
 			];
 		}
-
 		return $settingLinks;
 	}
 

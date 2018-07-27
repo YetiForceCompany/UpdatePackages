@@ -35,15 +35,13 @@ Vtiger_Detail_Js("Campaigns_Detail_Js", {}, {
 					}
 				});
 				var url = tabElement.data('url');
-				if (typeof urlAttributes != 'undefined') {
+				if (typeof urlAttributes !== "undefined") {
 					var callBack = urlAttributes.callback;
 					delete urlAttributes.callback;
 				}
-				thisInstance.loadContents(url, urlAttributes).then(
-					function (data) {
+				thisInstance.loadContents(url, urlAttributes).done(	function (data) {
 						thisInstance.deSelectAllrelatedTabs();
 						thisInstance.markTabAsSelected(tabElement);
-						app.showBtnSwitch(detailContentsHolder.find('.switchBtn'));
 						Vtiger_Helper_Js.showHorizontalTopScrollBar();
 						thisInstance.registerHelpInfo();
 						app.registerModal(detailContentsHolder);
@@ -62,11 +60,10 @@ Vtiger_Detail_Js("Campaigns_Detail_Js", {}, {
 							thisInstance.loadWidgets();
 						}
 						thisInstance.registerBasicEvents();
-					},
-					function () {
-						element.progressIndicator({'mode': 'hide'});
 					}
-				);
+				).fail(function (error) {
+					element.progressIndicator({'mode': 'hide'});
+				});
 			}
 		});
 	},

@@ -8,15 +8,29 @@
 						<h5 class="mb-0">
 							{if $WIDGET['label'] eq ''}
 								{App\Language::translate('LBL_ACTIVITIES',$MODULE_NAME)}
-							{else}	
+							{else}
 								{App\Language::translate($WIDGET['label'],$MODULE_NAME)}
 							{/if}
 						</h5>
 					</div>
 				</div>
-				<div class="col-8 col-md-4 col-sm-3">
-						<input class="switchBtn" title="{App\Language::translate('LBL_CHANGE_ACTIVITY_TYPE')}" type="checkbox" checked data-size="small" data-label-width="5" data-handle-width="100" data-on-text="{App\Language::translate('LBL_CURRENT')}" data-off-text="{App\Language::translate('LBL_HISTORY')}" data-basic-texton="{App\Language::translate('LBL_CURRENT')}" data-basic-textoff="{App\Language::translate('LBL_HISTORY')}">
-						</div>
+				<div class="btn-group btn-group-toggle" data-toggle="buttons">
+					<label class="btn btn-sm btn-outline-primary active">
+						<input class="js-switch" type="radio" name="options" id="option1" data-js="change"
+							   data-on-text="{App\Language::translate('LBL_CURRENT')}"
+							   data-on-val="{\App\Purifier::encodeHtml($WIDGET['switchHeader']['on'])}"
+							   data-basic-text="{App\Language::translate('LBL_CURRENT')}"
+							   autocomplete="off"
+							   > {App\Language::translate('LBL_CURRENT')}
+					</label>
+					<label class="btn btn-sm btn-outline-primary">
+						<input class="js-switch" type="radio" name="options" id="option2" data-js="change"
+							   data-basic-text="{App\Language::translate('LBL_HISTORY')}"
+							   data-off-text="data-off-text {App\Language::translate('LBL_HISTORY')}"
+							   data-off-val="{\App\Purifier::encodeHtml($WIDGET['switchHeader']['off'])}"
+							   autocomplete="off"> {App\Language::translate('LBL_HISTORY')}
+					</label>
+				</div>
 				<div class="col float-right">
 					<button class="btn btn-sm btn-light float-right addButton createActivity" data-url="sourceModule={$RECORD->getModuleName()}&sourceRecord={$RECORD->getId()}&relationOperation=true" type="button"
 							title="{App\Language::translate('LBL_ADD',$MODULE_NAME)}">

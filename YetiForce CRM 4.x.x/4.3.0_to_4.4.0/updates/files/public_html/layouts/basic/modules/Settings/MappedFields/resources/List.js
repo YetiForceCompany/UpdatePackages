@@ -19,12 +19,10 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 			jQuery('#recordsCount').val('');
 			//Make total number of pages as empty
 			jQuery('#totalPageCount').text("");
-			thisInstance.getListViewRecords(params).then(
-				function (data) {
-					thisInstance.updatePagination();
-					thisInstance.registerBasic();
-				}
-			);
+			thisInstance.getListViewRecords(params).done(function (data) {
+				thisInstance.updatePagination();
+				thisInstance.registerBasic();
+			});
 		});
 	},
 	/*
@@ -62,7 +60,7 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 		jQuery('#importButton', container).on('click', function (e) {
 			var currentElement = jQuery(e.currentTarget);
 			var url = currentElement.data('url');
-			if (typeof url != 'undefined') {
+			if (typeof url !== "undefined") {
 				app.showModalWindow(null, url,
 					function (data) {
 						var form = data.find('form');
@@ -81,16 +79,13 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 									'enabled': true
 								}
 							});
-							thisInstance.importSave(form).then(
-								function (data) {
-									app.hideModalWindow();
-									progressIndicatorElement.progressIndicator({'mode': 'hide'})
-									Settings_Vtiger_Index_Js.showMessage({text: data.result.message, type: 'info'});
-									jQuery('#moduleFilter').trigger('change');
-								},
-								function (error, err) {
-								}
-							);
+							thisInstance.importSave(form).done(function (data) {
+								app.hideModalWindow();
+								progressIndicatorElement.progressIndicator({'mode': 'hide'})
+								Settings_Vtiger_Index_Js.showMessage({text: data.result.message, type: 'info'});
+								jQuery('#moduleFilter').trigger('change');
+							}).fail(function (error, err) {
+							});
 							e.preventDefault();
 						});
 					});
@@ -101,9 +96,9 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 	importSave: function (form) {
 		var aDeferred = jQuery.Deferred();
 		var formData = new FormData(form[0]);
-		if (typeof file != "undefined") {
+		if (typeof file !== "undefined") {
 			formData.append("imported_xml", file);
-			delete file;
+			file = false;
 		}
 		if (formData) {
 			var params = {
@@ -113,14 +108,11 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 				processData: false,
 				contentType: false
 			};
-			AppConnector.request(params).then(
-				function (data) {
-					aDeferred.resolve(data);
-				},
-				function (textStatus, errorThrown) {
-					aDeferred.reject(textStatus, errorThrown);
-				}
-			);
+			AppConnector.request(params).done(function (data) {
+				aDeferred.resolve(data);
+			}).fail(function (textStatus, errorThrown) {
+				aDeferred.reject(textStatus, errorThrown);
+			});
 		}
 		return aDeferred.promise();
 	},
@@ -131,7 +123,7 @@ Settings_Vtiger_List_Js("Settings_MappedFields_List_Js", {}, {
 				e.stopPropagation();
 				e.preventDefault();
 				var templateId = jQuery(this).closest('tr').data('id');
-				Settings_MappedFields_List_Js.deleteById(templateId).then(function () {
+				Settings_MappedFields_List_Js.deleteById(templateId).done(function () {
 					thisInstance.registerBasic();
 				});
 			});

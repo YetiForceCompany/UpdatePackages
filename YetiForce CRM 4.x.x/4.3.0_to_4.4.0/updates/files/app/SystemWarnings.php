@@ -12,7 +12,7 @@ namespace App;
 class SystemWarnings
 {
 	const FOLDERS = 'app/SystemWarnings';
-	const SELECTED_FOLDERS = ['SystemRequirements', 'YetiForce'];
+	const SELECTED_FOLDERS = ['SystemRequirements', 'YetiForce', 'Security'];
 
 	/**
 	 * Returns a list of folders warnings.
@@ -40,7 +40,6 @@ class SystemWarnings
 			}
 			++$i;
 		}
-
 		return $folders;
 	}
 
@@ -119,7 +118,6 @@ class SystemWarnings
 				}
 			}
 		}
-
 		return $i;
 	}
 }

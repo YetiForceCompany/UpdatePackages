@@ -63,17 +63,14 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'updateSequenceNumber';
 		params['sequence'] = sequence;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = app.vtranslate('JS_BLOCK_SEQUENCE_UPDATED');
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = app.vtranslate('JS_BLOCK_SEQUENCE_UPDATED');
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		});
 	},
 	/**
 	 * Function which will arrange the sequence number of blocks
@@ -174,16 +171,12 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 					params['action'] = 'Relation';
 					params['mode'] = 'addRelation';
 					$.extend(params, form);
-					AppConnector.request(params).then(
-						function (data) {
-							thisInstance.getRelModuleLayoutEditor(container.find('[name="layoutEditorRelModules"]').val()).then(
-								function (data) {
-									contentsDiv.html(data);
-									thisInstance.registerEvents();
-								}
-							);
-						}
-					);
+					AppConnector.request(params).done(function (data) {
+						thisInstance.getRelModuleLayoutEditor(container.find('[name="layoutEditorRelModules"]').val()).done(function (data) {
+							contentsDiv.html(data);
+							thisInstance.registerEvents();
+						});
+					});
 				});
 			}
 			app.showModalWindow(addRelationContainer, function (data) {
@@ -231,7 +224,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			mode: 'updateRelatedViewType',
 			relationId: relatedModule.data('relation-id'),
 			types: currentTarget.val(),
-		}).then(function (data) {
+		}).done(function (data) {
 			if (data.success) {
 				Settings_Vtiger_Index_Js.showMessage({
 					text: data.result.text
@@ -242,7 +235,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 					text: data.error.message
 				});
 			}
-		}, function (error) {
+		}).fail(function (error) {
 			Settings_Vtiger_Index_Js.showMessage({
 				text: error.message
 			});
@@ -260,24 +253,21 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['relationId'] = relatedModule.data('relation-id');
 		params['status'] = status;
 
-		AppConnector.request(params).then(
-			function (data) {
-				currentTarget.data('state', status);
-				currentTarget.find('[data-fa-i2svg]').each(function () {
-					if ($(this).hasClass('d-none')) {
-						$(this).removeClass('d-none');
-					} else {
-						$(this).addClass('d-none');
-					}
-				})
-				Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_SAVE_NOTIFY_OK')});
-			},
-			function (error) {
-				var params = {};
-				params['text'] = error;
-				Settings_Vtiger_Index_Js.showMessage(params);
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			currentTarget.data('state', status);
+			currentTarget.find('[data-fa-i2svg]').each(function () {
+				if ($(this).hasClass('d-none')) {
+					$(this).removeClass('d-none');
+				} else {
+					$(this).addClass('d-none');
+				}
+			})
+			Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_SAVE_NOTIFY_OK')});
+		}).fail(function (error) {
+			var params = {};
+			params['text'] = error;
+			Settings_Vtiger_Index_Js.showMessage(params);
+		});
 	},
 	changeStatusRelatedModule: function (relationId, status) {
 		var params = {};
@@ -287,55 +277,46 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'changeStatusRelation';
 		params['relationId'] = relationId;
 		params['status'] = status;
-		AppConnector.request(params).then(
-			function (data) {
-				var params = {};
-				if (status) {
-					params['text'] = app.vtranslate('JS_SAVED_CHANGE_STATUS_1');
-				} else {
-					params['text'] = app.vtranslate('JS_SAVED_CHANGE_STATUS_0');
-				}
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				var params = {};
-				params['text'] = error;
-				params['type'] = 'error';
-				Settings_Vtiger_Index_Js.showMessage(params);
+		AppConnector.request(params).done(function (data) {
+			var params = {};
+			if (status) {
+				params['text'] = app.vtranslate('JS_SAVED_CHANGE_STATUS_1');
+			} else {
+				params['text'] = app.vtranslate('JS_SAVED_CHANGE_STATUS_0');
 			}
-		);
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			var params = {};
+			params['text'] = error;
+			params['type'] = 'error';
+			Settings_Vtiger_Index_Js.showMessage(params);
+		});
 	},
 	removeRelation: function (relatedModule) {
 		var thisInstance = this;
 		var message = app.vtranslate('JS_DELETE_RELATION_CONFIRMATION');
-		Vtiger_Helper_Js.showConfirmationBox({'message': message}).then(
-			function (e) {
-				var params = {};
-				params['module'] = app.getModuleName();
-				params['parent'] = app.getParentModuleName();
-				params['action'] = 'Relation';
-				params['mode'] = 'removeRelation';
-				params['relationId'] = relatedModule.data('relation-id');
+		Vtiger_Helper_Js.showConfirmationBox({'message': message}).done(function (e) {
+			var params = {};
+			params['module'] = app.getModuleName();
+			params['parent'] = app.getParentModuleName();
+			params['action'] = 'Relation';
+			params['mode'] = 'removeRelation';
+			params['relationId'] = relatedModule.data('relation-id');
 
-				AppConnector.request(params).then(
-					function (data) {
-						var params = {};
-						params['text'] = app.vtranslate('JS_REMOVE_RELATION_OK');
-						relatedModule.remove();
-						Settings_Vtiger_Index_Js.showMessage(params);
-					},
-					function (error) {
-						var params = {
-							text: message,
-							type: 'error'
-						};
-						Settings_Vtiger_Index_Js.showMessage(params);
-					}
-				);
-			},
-			function (error, err) {
-			}
-		)
+			AppConnector.request(params).done(function (data) {
+				var params = {};
+				params['text'] = app.vtranslate('JS_REMOVE_RELATION_OK');
+				relatedModule.remove();
+				Settings_Vtiger_Index_Js.showMessage(params);
+			}).fail(function (error) {
+				var params = {
+					text: message,
+					type: 'error'
+				};
+				Settings_Vtiger_Index_Js.showMessage(params);
+			});
+		}).fail(function (error, err) {
+		});
 	},
 	updateSequenceRelatedModule: function () {
 		var thisInstance = this;
@@ -359,20 +340,17 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'updateSequenceRelatedModule';
 		params['modules'] = modules;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = app.vtranslate('JS_UPDATE_SEQUENCE');
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = error;
-				Settings_Vtiger_Index_Js.showMessage(params);
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = app.vtranslate('JS_UPDATE_SEQUENCE');
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = error;
+			Settings_Vtiger_Index_Js.showMessage(params);
+		});
 	},
 	updateSelectedFields: function (target) {
 		var thisInstance = this;
@@ -396,20 +374,17 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'updateSelectedFields';
 		params['relationId'] = relatedModule.data('relation-id');
 		params['fields'] = selectedFields;
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = app.vtranslate('JS_UPDATED_FIELD_LIST_MODULE_RELATED');
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = error;
-				Settings_Vtiger_Index_Js.showMessage(params);
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = app.vtranslate('JS_UPDATED_FIELD_LIST_MODULE_RELATED');
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = error;
+			Settings_Vtiger_Index_Js.showMessage(params);
+		});
 	},
 	/**
 	 * Function to regiser the event to make the fields sortable
@@ -573,18 +548,15 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'move';
 		params['updatedFields'] = thisInstance.updatedBlockFieldsList;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				window.location.reload();
-				var params = {};
-				params['text'] = app.vtranslate('JS_FIELD_SEQUENCE_UPDATED');
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			window.location.reload();
+			var params = {};
+			params['text'] = app.vtranslate('JS_FIELD_SEQUENCE_UPDATED');
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		});
 	},
 	/**
 	 * Function to register click evnet add custom field button
@@ -603,9 +575,10 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 
 				var form = data.find('.createCustomFieldForm');
 				form.attr('id', 'createFieldForm');
-				var select2params = {tags: [], tokenSeparators: [","]}
-				App.Fields.Picklist.showSelect2ElementView(form.find('[name="pickListValues"]'), select2params);
-
+				App.Fields.Picklist.showSelect2ElementView(form.find('[name="pickListValues"]'), {
+					tags: true,
+					tokenSeparators: [","]
+				});
 				thisInstance.registerFieldTypeChangeEvent(form);
 				thisInstance.registerTableTypeChangeEvent(form);
 				thisInstance.registerMultiReferenceFieldsChangeEvent(form);
@@ -618,7 +591,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 						var fieldNameValue = $('[name="fieldName"]', form).val();
 
 						if (fieldTypeValue == 'Picklist' || fieldTypeValue == 'MultiSelectCombo') {
-							var pickListValueElement = $('#picklistUi', form);
+							var pickListValueElement = $('#pickListValues', form);
 							var pickListValuesArray = pickListValueElement.val();
 							var pickListValuesArraySize = pickListValuesArray.length;
 							var specialChars = /["]/;
@@ -660,7 +633,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 						}
 						var saveButton = form.find(':submit');
 						saveButton.attr('disabled', 'disabled');
-						thisInstance.addCustomField(blockId, form).then(function (data) {
+						thisInstance.addCustomField(blockId, form).done(function (data) {
 							var result = data['result'];
 							var params = {};
 							if (data['success']) {
@@ -710,7 +683,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 */
 	addCustomField: function (blockId, form) {
 		var thisInstance = this;
-		var modalHeader = form.closest('#'+Window.lastModalId).find('.modal-header h3');
+		var modalHeader = form.closest('#' + Window.lastModalId).find('.modal-header h3');
 		var aDeferred = $.Deferred();
 
 		modalHeader.progressIndicator({
@@ -726,16 +699,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['blockid'] = blockId;
 		params['sourceModule'] = $('#selectedModuleName').val();
 
-		AppConnector.request(params).then(
-			function (data) {
-				modalHeader.progressIndicator({'mode': 'hide'});
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				modalHeader.progressIndicator({'mode': 'hide'});
-				aDeferred.reject(error);
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			modalHeader.progressIndicator({'mode': 'hide'});
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			modalHeader.progressIndicator({'mode': 'hide'});
+			aDeferred.reject(error);
+		});
 		return aDeferred.promise();
 	},
 	registerTableTypeChangeEvent: function (form) {
@@ -780,7 +750,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 				var decimalInput = decimalFieldUi.find('[name="decimal"]');
 				var maxFloatingDigits = selectedOption.data('maxfloatingdigits');
 
-				if (typeof maxFloatingDigits != "undefined") {
+				if (typeof maxFloatingDigits !== "undefined") {
 					decimalInput.data('validator', decimalValidator);
 					lengthInput.data('validator', lengthValidator);
 				}
@@ -868,24 +838,22 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 					if (valid) {
 						var formData = form.serializeFormData();
 						if ($.inArray(formData['label'], thisInstance.blockNamesList) == -1) {
-							thisInstance.saveBlockDetails(form).then(
-								function (data) {
-									var params = {};
-									if (data['success']) {
-										var result = data['result'];
-										thisInstance.displayNewCustomBlock(result);
-										thisInstance.updateNewSequenceForBlocks(result['sequenceList']);
-										thisInstance.appendNewBlockToBlocksList(result, form);
-										thisInstance.makeFieldsListSortable();
+							thisInstance.saveBlockDetails(form).done(function (data) {
+								var params = {};
+								if (data['success']) {
+									var result = data['result'];
+									thisInstance.displayNewCustomBlock(result);
+									thisInstance.updateNewSequenceForBlocks(result['sequenceList']);
+									thisInstance.appendNewBlockToBlocksList(result, form);
+									thisInstance.makeFieldsListSortable();
 
-										params['text'] = app.vtranslate('JS_CUSTOM_BLOCK_ADDED');
-									} else {
-										params['text'] = data['error']['message'];
-										params['type'] = 'error';
-									}
-									Settings_Vtiger_Index_Js.showMessage(params);
+									params['text'] = app.vtranslate('JS_CUSTOM_BLOCK_ADDED');
+								} else {
+									params['text'] = data['error']['message'];
+									params['type'] = 'error';
 								}
-							);
+								Settings_Vtiger_Index_Js.showMessage(params);
+							});
 							app.hideModalWindow();
 							return valid;
 						} else {
@@ -928,16 +896,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['action'] = 'Block';
 		params['mode'] = 'save';
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.reject(error);
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.reject(error);
+		});
 		return aDeferred.promise();
 	},
 	/**
@@ -1030,18 +995,16 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['blockid'] = currentTarget.data('blockId');
 		params['display_status'] = blockStatus;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				if (blockStatus == '1') {
-					params['text'] = app.vtranslate('JS_BLOCK_VISIBILITY_SHOW');
-				} else {
-					params['text'] = app.vtranslate('JS_BLOCK_VISIBILITY_HIDE');
-				}
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			if (blockStatus == '1') {
+				params['text'] = app.vtranslate('JS_BLOCK_VISIBILITY_SHOW');
+			} else {
+				params['text'] = app.vtranslate('JS_BLOCK_VISIBILITY_HIDE');
+			}
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
 				progressIndicatorElement.progressIndicator({'mode': 'hide'});
 			}
 		);
@@ -1132,20 +1095,17 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['blockId'] = currentBlock.data('blockId');
 		params['fieldIdList'] = JSON.stringify(thisInstance.reactiveFieldsList);
 
-		AppConnector.request(params).then(
-			function (data) {
-				for (var index in data.result) {
-					thisInstance.showCustomField(data.result[index]);
-				}
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				params['text'] = app.vtranslate('JS_SELECTED_FIELDS_REACTIVATED');
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		AppConnector.request(params).done(function (data) {
+			for (var index in data.result) {
+				thisInstance.showCustomField(data.result[index]);
 			}
-		);
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			params['text'] = app.vtranslate('JS_SELECTED_FIELDS_REACTIVATED');
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		});
 	},
 	/**
 	 * Function to register the click event for delete custom block
@@ -1160,14 +1120,11 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			var blockId = table.data('blockId');
 
 			var message = app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE');
-			Vtiger_Helper_Js.showConfirmationBox({'message': message}).then(
-				function (e) {
-					thisInstance.deleteCustomBlock(blockId);
-				},
-				function (error, err) {
+			Vtiger_Helper_Js.showConfirmationBox({'message': message}).done(function (e) {
+				thisInstance.deleteCustomBlock(blockId);
+			}).fail(function (error, err) {
 
-				}
-			);
+			});
 		});
 	},
 	/**
@@ -1189,24 +1146,21 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'delete';
 		params['blockid'] = blockId;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				var params = {};
-				if (data['success']) {
-					thisInstance.removeDeletedBlock(blockId);
-					thisInstance.removeBlockFromBlocksList(blockId);
-					params['text'] = app.vtranslate('JS_CUSTOM_BLOCK_DELETED');
-				} else {
-					params['text'] = data['error']['message'];
-					params['type'] = 'error';
-				}
-				Settings_Vtiger_Index_Js.showMessage(params);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			var params = {};
+			if (data['success']) {
+				thisInstance.removeDeletedBlock(blockId);
+				thisInstance.removeBlockFromBlocksList(blockId);
+				params['text'] = app.vtranslate('JS_CUSTOM_BLOCK_DELETED');
+			} else {
+				params['text'] = data['error']['message'];
+				params['type'] = 'error';
 			}
-		);
+			Settings_Vtiger_Index_Js.showMessage(params);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		});
 	},
 	/**
 	 * Function to remove the deleted custom block from the ui
@@ -1221,34 +1175,29 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 */
 	registerDeleteCustomFieldEvent: function (contents) {
 		var thisInstance = this;
-		if (typeof contents == 'undefined') {
+		if (typeof contents === "undefined") {
 			contents = $('#layoutEditorContainer').find('.contents');
 		}
 		contents.find('.deleteCustomField').on('click', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var fieldId = currentTarget.data('fieldId');
 			var message = app.vtranslate('JS_LBL_ARE_YOU_SURE_YOU_WANT_TO_DELETE');
-			Vtiger_Helper_Js.showConfirmationBox({'message': message}).then(
-				function (e) {
-					thisInstance.deleteCustomField(fieldId).then(
-						function (data) {
-							var field = currentTarget.closest('div.editFields');
-							var blockId = field.data('blockId');
-							field.parent().fadeOut('slow').remove();
-							var block = $('#block_' + blockId);
-							thisInstance.reArrangeBlockFields(block);
-							var params = {};
-							params['text'] = app.vtranslate('JS_CUSTOM_FIELD_DELETED');
-							Settings_Vtiger_Index_Js.showMessage(params);
-						}, function (error, err) {
+			Vtiger_Helper_Js.showConfirmationBox({'message': message}).done(function (e) {
+				thisInstance.deleteCustomField(fieldId).done(function (data) {
+					var field = currentTarget.closest('div.editFields');
+					var blockId = field.data('blockId');
+					field.parent().fadeOut('slow').remove();
+					var block = $('#block_' + blockId);
+					thisInstance.reArrangeBlockFields(block);
+					var params = {};
+					params['text'] = app.vtranslate('JS_CUSTOM_FIELD_DELETED');
+					Settings_Vtiger_Index_Js.showMessage(params);
+				}).fail(function (error, err) {
 
-						}
-					);
-				},
-				function (error, err) {
+				});
+			}).fail(function (error, err) {
 
-				}
-			);
+			});
 		});
 	},
 	/**
@@ -1271,16 +1220,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'delete';
 		params['fieldid'] = fieldId;
 
-		AppConnector.request(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.reject();
-			}
-		);
+		AppConnector.request(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.reject();
+		});
 		return aDeferred.promise();
 	},
 	/**
@@ -1346,17 +1292,14 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['view'] = 'Index';
 		params['mode'] = 'showRelatedListLayout';
 
-		AppConnector.request(params).then(
-			function (data) {
-				relatedContainer.html(data);
-				if ($(data).find('.relatedListContainer').length > 0) {
-					thisInstance.makeRelatedModuleSortable();
-					thisInstance.registerRelatedListEvents();
-				}
-			},
-			function (error) {
+		AppConnector.request(params).done(function (data) {
+			relatedContainer.html(data);
+			if ($(data).find('.relatedListContainer').length > 0) {
+				thisInstance.makeRelatedModuleSortable();
+				thisInstance.registerRelatedListEvents();
 			}
-		);
+		}).fail(function (error) {
+		});
 	},
 	/**
 	 * Function to get the respective module layout editor through pjax
@@ -1377,16 +1320,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['view'] = 'Index';
 		params['sourceModule'] = selectedModule;
 
-		AppConnector.requestPjax(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.reject();
-			}
-		);
+		AppConnector.requestPjax(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.reject();
+		});
 		return aDeferred.promise();
 	},
 	getRelModuleLayoutEditor: function (selectedModule) {
@@ -1406,16 +1346,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		params['mode'] = 'showRelatedListLayout';
 		params['sourceModule'] = selectedModule;
 
-		AppConnector.requestPjax(params).then(
-			function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				aDeferred.reject();
-			}
-		);
+		AppConnector.requestPjax(params).done(function (data) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			aDeferred.reject();
+		});
 		return aDeferred.promise();
 	},
 	/**
@@ -1431,12 +1368,10 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		container.on('change', '[name="layoutEditorModules"]', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var selectedModule = currentTarget.val();
-			thisInstance.getModuleLayoutEditor(selectedModule).then(
-				function (data) {
-					contentsDiv.html(data);
-					thisInstance.registerEvents();
-				}
-			);
+			thisInstance.getModuleLayoutEditor(selectedModule).done(function (data) {
+				contentsDiv.html(data);
+				thisInstance.registerEvents();
+			});
 		});
 
 	},
@@ -1450,12 +1385,10 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		container.on('change', '[name="layoutEditorRelModules"]', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var selectedModule = currentTarget.val();
-			thisInstance.getRelModuleLayoutEditor(selectedModule).then(
-				function (data) {
-					contentsDiv.html(data);
-					thisInstance.registerEvents();
-				}
-			);
+			thisInstance.getRelModuleLayoutEditor(selectedModule).done(function (data) {
+				contentsDiv.html(data);
+				thisInstance.registerEvents();
+			});
 		});
 
 	},
@@ -1475,7 +1408,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	},
 	registerEditFieldDetailsClick: function (contents) {
 		var thisInstance = this;
-		if (typeof contents === 'undefined') {
+		if (typeof contents === "undefined") {
 			contents = $('#layoutEditorContainer').find('.contents');
 		}
 		contents.find('.editFieldDetails').on('click', function (e) {
@@ -1568,7 +1501,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 */
 	registerFieldEvents: function (contents) {
 		var thisInstance = this;
-		if (typeof contents == 'undefined') {
+		if (typeof contents === "undefined") {
 			contents = $('#layoutEditorContainer').find('.contents');
 		}
 		App.Fields.Date.register(contents);
@@ -1597,39 +1530,33 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 */
 	registerSwitch: function () {
 		var container = $('#layoutEditorContainer');
-		app.showBtnSwitch(container.find('.switchBtn'))
 		var inventoryNav = container.find('.inventoryNav');
-		container.find('#inventorySwitch').on('switchChange.bootstrapSwitch', function (event, state) {
+		container.find('.js-switch--inventory').on('change', function (event) {
 			var switchBtn = $(event.currentTarget);
+			var state = switchBtn.data('value');
 			var message = app.vtranslate('JS_EXTENDED_MODULE');
 			Vtiger_Helper_Js.showConfirmationBox({
 				'message': '<span class="message-medium">' + message + '</span>',
 				className: "test"
-			}).then(
-				function (e) {
-					var progressIndicatorElement = $.progressIndicator({
-						'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
-						'position': 'html',
-						'blockInfo': {
-							'enabled': true
-						}
-					});
-					var params = {};
-					params['module'] = container.find('[name="layoutEditorModules"]').val();
-					params['status'] = state ? 0 : 1;
-					app.saveAjax('setInventory', params).then(function (data) {
-						if (data.result) {
-							//Settings_Vtiger_Index_Js.showMessage({type: 'success', text: data.result.message});
-							window.location.reload();
-						}
-					});
-					//window.location.reload();
-				},
-				function (error, err) {
-					switchBtn.bootstrapSwitch('toggleState', true);
-				}
-			);
-
+			}).done(function (e) {
+				var progressIndicatorElement = $.progressIndicator({
+					'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
+					'position': 'html',
+					'blockInfo': {
+						'enabled': true
+					}
+				});
+				var params = {};
+				params['module'] = container.find('[name="layoutEditorModules"]').val();
+				params['status'] = state === 'basic' ? 0 : 1;
+				app.saveAjax('setInventory', params).done(function (data) {
+					if (data.result) {
+						//Settings_Vtiger_Index_Js.showMessage({type: 'success', text: data.result.message});
+						window.location.reload();
+					}
+				});
+				//window.location.reload();
+			});
 		});
 	},
 	/**
@@ -1724,7 +1651,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			if (errorExists != false) {
 				formData.block = blockId;
 				formData.module = selectedModule;
-				app.saveAjax('saveInventoryField', formData).then(function (data) {
+				app.saveAjax('saveInventoryField', formData).done(function (data) {
 					var result = data.result;
 					if (result && result.edit) {
 						app.hideModalWindow();
@@ -1761,7 +1688,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			})
 			params.module = selectedModule;
 			params.ids = fieldId;
-			app.saveAjax('saveSequence', params).then(function (data) {
+			app.saveAjax('saveSequence', params).done(function (data) {
 				button.addClass('invisible');
 			});
 		});
@@ -1777,41 +1704,38 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			var currentTarget = $(e.currentTarget);
 			var liElement = currentTarget.closest('li');
 			var message = app.vtranslate('JS_DELETE_INVENTORY_CONFIRMATION');
-			Vtiger_Helper_Js.showConfirmationBox({'message': message}).then(
-				function (e) {
-					var progressIndicatorElement = $.progressIndicator({
-						'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
-						'position': 'html',
-						'blockInfo': {
-							'enabled': true
-						}
+			Vtiger_Helper_Js.showConfirmationBox({'message': message}).done(function (e) {
+				var progressIndicatorElement = $.progressIndicator({
+					'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
+					'position': 'html',
+					'blockInfo': {
+						'enabled': true
+					}
+				});
+				var editFields = liElement.find('.editFields');
+				var params = {};
+				params.id = editFields.data('id');
+				params.module = selectedModule;
+				params.name = editFields.data('name');
+				params.column = editFields.data('column');
+				app.saveAjax('delete', params).done(function (data) {
+					liElement.remove();
+					Settings_Vtiger_Index_Js.showMessage({
+						type: 'success',
+						text: app.vtranslate('JS_SAVE_CHANGES')
 					});
-					var editFields = liElement.find('.editFields');
-					var params = {};
-					params.id = editFields.data('id');
-					params.module = selectedModule;
-					params.name = editFields.data('name');
-					params.column = editFields.data('column');
-					app.saveAjax('delete', params).then(function (data) {
-						liElement.remove();
-						Settings_Vtiger_Index_Js.showMessage({
-							type: 'success',
-							text: app.vtranslate('JS_SAVE_CHANGES')
-						});
-						progressIndicatorElement.progressIndicator({'mode': 'hide'});
+					progressIndicatorElement.progressIndicator({'mode': 'hide'});
 
-					});
-				},
-				function (error, err) {
-				}
-			);
+				});
+			}).fail(function (error, err) {
+			});
 		});
 	},
 	/**
 	 * get inventory params
 	 */
 	getParamsInventory: function () {
-		if (typeof app.getMainParams('params') != 'undefined') {
+		if (typeof app.getMainParams('params') !== "undefined") {
 			return JSON.parse(app.getMainParams('params'));
 		}
 	},
@@ -1868,16 +1792,14 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 
 			form.find('[name="MRVFilterValue"]').select2('destroy');
 			form.find('[name="MRVFilterValue"] option').remove();
-			AppConnector.request(params).then(
-				function (data) {
-					$.each(data.result, function (index, value) {
-						form.find('[name="MRVFilterValue"]').append(
-							$('<option>').val(index).html(value)
-						);
-					});
-					App.Fields.Picklist.showSelect2ElementView(form.find('[name="MRVFilterValue"]'), {width: '100%'});
-				}
-			);
+			AppConnector.request(params).done(function (data) {
+				$.each(data.result, function (index, value) {
+					form.find('[name="MRVFilterValue"]').append(
+						$('<option>').val(index).html(value)
+					);
+				});
+				App.Fields.Picklist.showSelect2ElementView(form.find('[name="MRVFilterValue"]'), {width: '100%'});
+			});
 		});
 	},
 	/**
@@ -1907,7 +1829,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 				parent: app.getParentModuleName(),
 				view: 'HelpInfo',
 				field: element.data('field-id')
-			}).then(function (data) {
+			}).done(function (data) {
 				app.showModalWindow(data, function (modalContainer) {
 					const customConfig = {
 						toolbar: 'Min',
@@ -1936,10 +1858,10 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 						e.preventDefault();
 						var form = $(e.currentTarget);
 						var params = form.serializeFormData();
-						if (typeof params.views === 'undefined') {
+						if (typeof params.views === "undefined") {
 							params.views = form.find('[name="views"]').val();
 						}
-						app.saveAjax('contextHelp', '', params).then(function (data) {
+						app.saveAjax('contextHelp', '', params).done(function (data) {
 							Vtiger_Helper_Js.showPnotify({
 								type: 'success',
 								text: app.vtranslate('JS_SAVE_CHANGES')
@@ -2170,9 +2092,9 @@ Vtiger_Base_Validator_Js("Vtiger_PicklistFieldValues_Validator_Js", {
 	 * @return error if validation fails true on success
 	 */
 	invokeValidation: function (field, rules, i, options) {
-		var instance = new Vtiger_PicklistFieldValues_Validator_Js();
+		let instance = new Vtiger_PicklistFieldValues_Validator_Js();
 		instance.setElement(field);
-		var response = instance.validate();
+		let response = instance.validate();
 		if (response != true) {
 			return instance.getError();
 		}
@@ -2185,16 +2107,17 @@ Vtiger_Base_Validator_Js("Vtiger_PicklistFieldValues_Validator_Js", {
 	 * @return false if validation error occurs
 	 */
 	validate: function () {
-		var fieldValue = this.getFieldValue();
-		return this.validateValue(fieldValue);
+		return this.validateValue(this.getElement().val());
 	},
 	validateValue: function (fieldValue) {
-		var specialChars = /[<\>\"\,#]/;
-		if (specialChars.test(fieldValue)) {
-			var errorInfo = app.vtranslate('JS_SPECIAL_CHARACTERS') + " < >" + app.vtranslate('JS_NOT_ALLOWED');
-			this.setError(errorInfo);
-			return false;
-		}
-		return true;
+		let specialChars = /[\<\>\"\,\#]/;
+		let r = true;
+		$.each(fieldValue, (i, val) => {
+			if (specialChars.test(val)) {
+				this.setError(app.vtranslate('JS_SPECIAL_CHARACTERS') + " < > \" , # " + app.vtranslate('JS_NOT_ALLOWED'));
+				r = false;
+			}
+		});
+		return r;
 	}
 });

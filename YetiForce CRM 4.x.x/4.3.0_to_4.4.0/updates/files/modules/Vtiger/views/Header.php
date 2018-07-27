@@ -36,7 +36,6 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 		if (strpos($filename, 'modules') === 0) {
 			$filename = $filename;
 		}
-
 		return file_exists(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'public_html' . DIRECTORY_SEPARATOR . $filename);
 	}
 
@@ -65,7 +64,7 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 				'linktype' => 'HEADERLINK',
 				'linklabel' => 'LBL_MY_PREFERENCES',
 				'linkurl' => $userModel->getPreferenceDetailViewUrl(),
-				'icon' => 'fas fa-tasks fa-fw',
+				'icon' => 'fas fa-user fa-fw',
 			];
 		}
 		if ($userModel->isAdminUser()) {
@@ -81,7 +80,7 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 					'linktype' => 'HEADERLINK',
 					'linklabel' => 'LBL_USER_PANEL',
 					'linkurl' => 'index.php',
-					'icon' => 'fas fa-user fa-fw',
+					'icon' => 'fas fa-user-cog fa-fw',
 				];
 			}
 		}
@@ -108,7 +107,6 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 				$headerLinkInstances[] = Vtiger_Link_Model::getInstanceFromLinkObject($headerLink);
 			}
 		}
-
 		return $headerLinkInstances;
 	}
 
@@ -133,7 +131,6 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 				}
 			}
 		}
-
 		return $headerScriptInstances;
 	}
 
@@ -159,7 +156,6 @@ abstract class Vtiger_Header_View extends \App\Controller\View
 				}
 			}
 		}
-
 		return $headerCssInstances;
 	}
 }

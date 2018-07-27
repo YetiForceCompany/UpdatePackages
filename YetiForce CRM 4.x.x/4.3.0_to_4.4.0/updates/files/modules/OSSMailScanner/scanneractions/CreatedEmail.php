@@ -74,7 +74,6 @@ class OSSMailScanner_CreatedEmail_ScannerAction
 				return ['mailViewId' => $mailId];
 			}
 		}
-
 		return false;
 	}
 
@@ -145,7 +144,7 @@ class OSSMailScanner_CreatedEmail_ScannerAction
 				$src = substr($src, 4);
 				if (isset($attachments[$src])) {
 					$fileInstance = App\Fields\File::loadFromContent($attachments[$src]['attachment'], $attachments[$src]['filename']);
-					if ($fileInstance->validate() && ($ids = App\Fields\File::saveFromContent($fileInstance, $params))) {
+					if ($fileInstance && $fileInstance->validate() && ($ids = App\Fields\File::saveFromContent($fileInstance, $params))) {
 						$img->setAttribute('src', "file.php?module=Documents&action=DownloadFile&record={$ids['crmid']}&fileid={$ids['attachmentsId']}&show=true");
 						if (!$img->hasAttribute('alt')) {
 							$img->setAttribute('alt', $attachments[$src]['filename']);
@@ -160,7 +159,6 @@ class OSSMailScanner_CreatedEmail_ScannerAction
 		}
 		$mail->set('files', $files);
 		$mail->set('attachments', $attachments);
-
 		return \App\Purifier::purifyHtml(str_replace('<?xml encoding="utf-8"?>', '', $doc->saveHTML()));
 	}
 }

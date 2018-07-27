@@ -94,7 +94,7 @@ class Vtiger_DetailView_Model extends \App\Base
 					'linkurl' => 'javascript:Vtiger_Detail_Js.showWorkflowTriggerView(this)',
 					'linkicon' => 'fas fa-plus-circle',
 					'linkhint' => 'BTN_WORKFLOW_TRIGGER',
-					'linkclass' => 'btn-warning',
+					'linkclass' => 'btn-outline-warning',
 				];
 			}
 		}
@@ -114,18 +114,20 @@ class Vtiger_DetailView_Model extends \App\Base
 		}
 		if (AppConfig::module('ModTracker', 'WATCHDOG') && $moduleModel->isPermitted('WatchingRecords')) {
 			$watchdog = Vtiger_Watchdog_Model::getInstanceById($recordId, $moduleName);
-			$class = 'btn-light';
+			$class = 'btn-outline-dark';
+			$iconclass = 'fa-eye-slash';
 			if ($watchdog->isWatchingRecord()) {
-				$class = 'btn-info';
+				$class = 'btn-dark';
+				$iconclass = 'fa-eye';
 			}
 			$detailViewLinks[] = [
 				'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 				'linklabel' => '',
 				'linkurl' => 'javascript:Vtiger_Index_Js.changeWatching(this)',
-				'linkicon' => 'fas fa-eye',
+				'linkicon' => 'fas ' . $iconclass,
 				'linkhint' => 'BTN_WATCHING_RECORD',
 				'linkclass' => $class,
-				'linkdata' => ['off' => 'btn-light', 'on' => 'btn-info', 'value' => $watchdog->isWatchingRecord() ? 0 : 1, 'record' => $recordId],
+				'linkdata' => ['off' => 'btn-outline-dark', 'on' => 'btn-dark', 'value' => $watchdog->isWatchingRecord() ? 0 : 1, 'record' => $recordId],
 			];
 		}
 		$userPrivilegesModel = Users_Privileges_Model::getCurrentUserPrivilegesModel();
@@ -301,7 +303,7 @@ class Vtiger_DetailView_Model extends \App\Base
 				'countRelated' => AppConfig::relation('SHOW_RECORDS_COUNT'),
 			];
 		}
-		if ($parentModuleModel->isTrackingEnabled()) {
+		if ($parentModuleModel->isTrackingEnabled() && $parentModuleModel->isPermitted('ModTracker')) {
 			$relatedLinks[] = [
 				'linktype' => 'DETAILVIEWTAB',
 				'linklabel' => 'LBL_UPDATES',
@@ -323,7 +325,6 @@ class Vtiger_DetailView_Model extends \App\Base
 				];
 			}
 		}
-
 		return $relatedLinks;
 	}
 
@@ -346,7 +347,6 @@ class Vtiger_DetailView_Model extends \App\Base
 				]);
 			}
 		}
-
 		return $relatedLinks;
 	}
 
@@ -407,7 +407,6 @@ class Vtiger_DetailView_Model extends \App\Base
 				$moduleLinks['SIDEBARWIDGET'][] = $link;
 			}
 		}
-
 		return $moduleLinks;
 	}
 

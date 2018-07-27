@@ -47,26 +47,20 @@ class Documents_Module_Model extends Vtiger_Module_Model
 	}
 
 	/**
-	 * Function to get popup view fields.
-	 *
-	 * @param string|bool $sourceModule
-	 *
-	 * @return string[]
+	 * {@inheritdoc}
 	 */
-	public function getPopupViewFieldsList($sourceModule = false)
+	public function getModalRecordsListFields(\App\QueryGenerator $queryGenerator, $sourceModule = false)
 	{
-		$popupFields = parent::getPopupViewFieldsList($sourceModule);
-		$reqPopUpFields = ['filestatus', 'filesize', 'filelocationtype'];
-		foreach ($reqPopUpFields as &$fieldName) {
-			if (!isset($popupFields[$fieldName])) {
+		parent::getModalRecordsListFields($queryGenerator, $sourceModule);
+		$headerFields = $queryGenerator->getListViewFields();
+		foreach (['filestatus', 'filesize', 'filelocationtype'] as $fieldName) {
+			if (!isset($headerFields[$fieldName])) {
 				$fieldModel = Vtiger_Field_Model::getInstance($fieldName, $this);
 				if ($fieldModel->getPermissions()) {
-					$popupFields[$fieldName] = $fieldName;
+					$queryGenerator->setField($fieldName);
 				}
 			}
 		}
-
-		return $popupFields;
 	}
 
 	/**
@@ -77,34 +71,35 @@ class Documents_Module_Model extends Vtiger_Module_Model
 		return 'notes_title';
 	}
 
+	/**
+	 * Function to get Settings links.
+	 *
+	 * @return <Array>
+	 */
 	public function getSettingLinks()
 	{
 		Vtiger_Loader::includeOnce('~~modules/com_vtiger_workflow/VTWorkflowUtils.php');
-
-		$layoutEditorImagePath = Vtiger_Theme::getImagePath('LayoutEditor.gif');
-		$editWorkflowsImagePath = Vtiger_Theme::getImagePath('EditWorkflows.png');
 		$settingsLinks = [];
-
 		if (VTWorkflowUtils::checkModuleWorkflow($this->getName())) {
 			$settingsLinks[] = [
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_EDIT_WORKFLOWS',
 				'linkurl' => 'index.php?parent=Settings&module=Workflows&view=List&sourceModule=' . $this->getName(),
-				'linkicon' => $editWorkflowsImagePath,
+				'linkicon' => 'adminIcon-triggers',
 			];
 		}
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_EDIT_FIELDS',
 			'linkurl' => 'index.php?parent=Settings&module=LayoutEditor&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-modules-fields',
 		];
 
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_EDIT_PICKLIST_VALUES',
 			'linkurl' => 'index.php?parent=Settings&module=Picklist&source_module=' . $this->getName(),
-			'linkicon' => '',
+			'linkicon' => 'adminIcon-fields-picklists',
 		];
 
 		if ($this->hasSequenceNumberField()) {
@@ -112,10 +107,9 @@ class Documents_Module_Model extends Vtiger_Module_Model
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_MODULE_SEQUENCE_NUMBERING',
 				'linkurl' => 'index.php?parent=Settings&module=Vtiger&view=CustomRecordNumbering&sourceModule=' . $this->getName(),
-				'linkicon' => '',
+				'linkicon' => 'fas fa-exchange-alt',
 			];
 		}
-
 		return $settingsLinks;
 	}
 

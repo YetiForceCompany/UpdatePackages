@@ -33,7 +33,7 @@ jQuery.Class('Settings_AutomaticAssignment_Edit_Js', {}, {
 				e.preventDefault();
 				var element = jQuery(e.currentTarget);
 				var dataElement = element.closest('tr');
-				app.saveAjax('changeRoleType', dataElement.data('value'), {'record': app.getMainParams('record')}).then(function (data) {
+				app.saveAjax('changeRoleType', dataElement.data('value'), {'record': app.getMainParams('record')}).done(function (data) {
 					thisInstance.refreshTab();
 				});
 			});
@@ -47,7 +47,7 @@ jQuery.Class('Settings_AutomaticAssignment_Edit_Js', {}, {
 					value: dataElement.data('value'),
 					name: dataElement.data('name')
 				};
-				app.saveAjax('deleteElement', null, params).then(function (data) {
+				app.saveAjax('deleteElement', null, params).done(function (data) {
 					thisInstance.refreshTab();
 				});
 			});
@@ -75,23 +75,24 @@ jQuery.Class('Settings_AutomaticAssignment_Edit_Js', {}, {
 
 			var params = [];
 			params[baseFieldName] = value;
-			app.saveAjax('save', jQuery.extend({}, params), {'record': app.getMainParams('record')}).then(function (respons) {
+			app.saveAjax('save', jQuery.extend({}, params), {'record': app.getMainParams('record')}).done(function (respons) {
 				thisInstance.refreshTab();
 			});
 		});
-		container.find('.switchBtn').on('switchChange.bootstrapSwitch', function (event, state) {
-			var element = jQuery(this);
-			var params = [];
-			if (element.hasClass('noField')) {
-				if (state) {
-					element.closest('form').find('.fieldToShowHide').removeClass('d-none');
+		container.find('.js-switch').on('change', (e) => {
+			const currentTarget = $(e.currentTarget),
+				state = currentTarget.val();
+			let params = [];
+			if (currentTarget.hasClass('noField')) {
+				if (state === '1') {
+					currentTarget.closest('form').find('.fieldToShowHide').removeClass('d-none');
 					return false;
-				} else {
-					element.closest('form').find('.fieldToShowHide').addClass('d-none');
+				} else if (state === '0') {
+					currentTarget.closest('form').find('.fieldToShowHide').addClass('d-none');
 				}
 			}
-			params[element.attr('name')] = Number(state)
-			app.saveAjax('save', jQuery.extend({}, params), {'record': app.getMainParams('record')}).then(function (respons) {
+			params[currentTarget.attr('name')] = Number(state)
+			app.saveAjax('save', jQuery.extend({}, params), {'record': app.getMainParams('record')}).done(function (respons) {
 				thisInstance.refreshTab();
 			});
 		});
@@ -103,15 +104,12 @@ jQuery.Class('Settings_AutomaticAssignment_Edit_Js', {}, {
 		if (tabContainer.hasClass('noRefresh')) {
 			return false;
 		}
-		AppConnector.request(tabContainer.data('url')).then(
-			function (data) {
-				tabContainer.html(data);
-				thisInstance.registerBasicEvents(tabContainer);
-			},
-			function (textStatus, errorThrown) {
-				app.errorLog(textStatus, errorThrown);
-			}
-		);
+		AppConnector.request(tabContainer.data('url')).done(function (data) {
+			tabContainer.html(data);
+			thisInstance.registerBasicEvents(tabContainer);
+		}).fail(function (textStatus, errorThrown) {
+			app.errorLog(textStatus, errorThrown);
+		});
 	},
 	registerEvents: function () {
 		this.registerBasicEvents(this.getContainer());

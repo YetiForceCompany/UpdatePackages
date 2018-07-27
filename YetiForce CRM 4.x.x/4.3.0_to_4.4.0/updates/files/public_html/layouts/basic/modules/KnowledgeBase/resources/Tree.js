@@ -41,7 +41,7 @@ jQuery.Class("KnowledgeBase_Tree_Js", {},
 			if (reload) {
 				thisInstance.treeInstance.jstree('destroy');
 			}
-			AppConnector.request(params).then(function (data) {
+			AppConnector.request(params).done(function (data) {
 				progressIndicatorElement.progressIndicator({mode: 'hide'});
 				thisInstance.generateTree(container, data);
 				thisInstance.registerTreeEvents(container);
@@ -70,7 +70,7 @@ jQuery.Class("KnowledgeBase_Tree_Js", {},
 				module: app.getModuleName(),
 				view: 'Content',
 			};
-			if (typeof recordId != 'undefined') {
+			if (typeof recordId !== "undefined") {
 				params['record'] = recordId;
 			}
 			var progressIndicatorElement = jQuery.progressIndicator({
@@ -79,10 +79,10 @@ jQuery.Class("KnowledgeBase_Tree_Js", {},
 					enabled: true
 				}
 			});
-			AppConnector.request(params).then(function (data) {
+			AppConnector.request(params).done(function (data) {
 				progressIndicatorElement.progressIndicator({mode: 'hide'});
 				contentData.html(data);
-				if (typeof recordId == 'undefined') {
+				if (typeof recordId === "undefined") {
 					$.extend($.fn.dataTable.defaults, {
 						language: {
 							sLengthMenu: app.vtranslate('JS_S_LENGTH_MENU'),

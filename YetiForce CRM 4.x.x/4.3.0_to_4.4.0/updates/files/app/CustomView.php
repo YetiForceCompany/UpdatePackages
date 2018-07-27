@@ -109,7 +109,6 @@ class CustomView
 			$dateFilters[$filterType]['startdate'] = $dateValues[0];
 			$dateFilters[$filterType]['enddate'] = $dateValues[1];
 		}
-
 		return $dateFilters;
 	}
 
@@ -126,7 +125,6 @@ class CustomView
 		if (!empty($_SESSION['lvs'][$moduleName][$viewId]['start'])) {
 			return $_SESSION['lvs'][$moduleName][$viewId]['start'];
 		}
-
 		return 1;
 	}
 
@@ -270,7 +268,6 @@ class CustomView
 		if ($viewId && ($viewId !== $_SESSION['lvs'][$moduleName]['viewname'])) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -317,14 +314,14 @@ class CustomView
 	 *
 	 * @throws Exceptions\AppException
 	 */
-	private function _getCustomViewFromFile($cvId)
+	private function getCustomViewFromFile($cvId)
 	{
 		\App\Log::trace(__METHOD__ . ' - ' . $cvId);
 		$filterDir = 'modules' . DIRECTORY_SEPARATOR . $this->moduleName . DIRECTORY_SEPARATOR . 'filters' . DIRECTORY_SEPARATOR . $cvId . '.php';
 		if (file_exists($filterDir)) {
 			$handlerClass = \Vtiger_Loader::getComponentClassName('Filter', $cvId, $this->moduleName);
 			$filter = new $handlerClass();
-			Cache::staticSave('getCustomViewFile', $cvId, $filter);
+			Cache::staticSave('getCustomView', $cvId, $filter);
 		} else {
 			Log::error(Language::translate('LBL_NOT_FOUND_VIEW') . "cvId: $cvId");
 			throw new Exceptions\AppException('LBL_NOT_FOUND_VIEW');
@@ -339,20 +336,20 @@ class CustomView
 	 *
 	 * @throws Exceptions\AppException
 	 */
-	public function getCustomViewFromFile($cvIds)
+	public function getCustomView($cvIds)
 	{
 		\App\Log::trace(__METHOD__ . ' - ' . $cvIds);
-		if (Cache::staticHas('getCustomViewFile', $cvIds)) {
-			return Cache::staticGet('getCustomViewFile', $cvIds);
+		if (Cache::staticHas('getCustomView', $cvIds)) {
+			return Cache::staticGet('getCustomView', $cvIds);
 		}
 		if (empty($cvIds) || !static::isMultiViewId($cvIds)) {
-			return $this->_getCustomViewFromFile($cvIds);
+			return $this->getCustomViewFromFile($cvIds);
 		}
 		$filters = [];
 		foreach (explode(',', $cvIds) as $cvId) {
-			$filters[] = $this->_getCustomViewFromFile($cvId);
+			$filters[] = $this->getCustomViewFromFile($cvId);
 		}
-		Cache::save('getCustomViewFromFile', $cvIds, $filters);
+		Cache::staticSave('getCustomView', $cvIds, $filters);
 		return $filters;
 	}
 
@@ -365,7 +362,7 @@ class CustomView
 	 *
 	 * @return array
 	 */
-	private function _getColumnsListByCvid($cvId)
+	private function getColumnsByCvidFromDb($cvId)
 	{
 		\App\Log::trace(__METHOD__ . ' - ' . $cvId);
 		if (is_numeric($cvId)) {
@@ -375,7 +372,7 @@ class CustomView
 				Cache::save('getColumnsListByCvid', $cvId, $columnList);
 			}
 		} else {
-			$view = $this->_getCustomViewFromFile($cvId);
+			$view = $this->getCustomViewFromFile($cvId);
 			$columnList = $view->getColumnList();
 			Cache::save('getColumnsListByCvid', $cvId, $columnList);
 		}
@@ -398,11 +395,11 @@ class CustomView
 			return Cache::get('getColumnsListByCvid', $cvIds);
 		}
 		if (empty($cvIds) || !static::isMultiViewId($cvIds)) {
-			return $this->_getColumnsListByCvid($cvIds);
+			return $this->getColumnsByCvidFromDb($cvIds);
 		}
 		$columnLists = [];
 		foreach (explode(',', $cvIds) as $cvId) {
-			$columnLists[] = $this->_getColumnsListByCvid($cvId);
+			$columnLists[] = $this->getColumnsByCvidFromDb($cvId);
 		}
 		Cache::save('getColumnsListByCvid', $cvIds, $columnLists);
 		return $columnLists;
@@ -415,7 +412,7 @@ class CustomView
 	 *
 	 * @return array
 	 */
-	public function _getStdFilterByCvid($cvId)
+	public function getStdFilterByCvidFromDb($cvId)
 	{
 		if (Cache::has('getStdFilterByCvid', $cvId)) {
 			return Cache::get('getStdFilterByCvid', $cvId);
@@ -427,7 +424,7 @@ class CustomView
 				->where(['vtiger_cvstdfilter.cvid' => $cvId])
 				->one();
 		} else {
-			$stdFilter = $this->_getCustomViewFromFile($cvId)->getStdCriteria();
+			$stdFilter = $this->getCustomViewFromFile($cvId)->getStdCriteria();
 		}
 		if ($stdFilter) {
 			$stdFilter = static::resolveDateFilterValue($stdFilter);
@@ -449,11 +446,11 @@ class CustomView
 			return Cache::get('getStdFilterByCvid', $cvIds);
 		}
 		if (empty($cvIds) || !static::isMultiViewId($cvIds)) {
-			return $this->_getStdFilterByCvid($cvIds);
+			return $this->getStdFilterByCvidFromDb($cvIds);
 		}
 		$stdFilters = [];
 		foreach (explode(',', $cvIds) as $cvId) {
-			$stdFilters[] = $this->_getStdFilterByCvid($cvId);
+			$stdFilters[] = $this->getStdFilterByCvidFromDb($cvId);
 		}
 		Cache::save('getStdFilterByCvid', $cvId, $stdFilters);
 		return $stdFilters;
@@ -495,7 +492,7 @@ class CustomView
 	 *
 	 * @return array
 	 */
-	public function _getAdvFilterByCvid($cvId)
+	public function getAdvFilterByCvidFromDb($cvId)
 	{
 		if (Cache::has('getAdvFilterByCvid', $cvId)) {
 			return Cache::get('getAdvFilterByCvid', $cvId);
@@ -526,7 +523,7 @@ class CustomView
 				}
 			}
 		} else {
-			$fromFile = $this->_getCustomViewFromFile($cvId)->getAdvftCriteria($this);
+			$fromFile = $this->getCustomViewFromFile($cvId)->getAdvftCriteria($this);
 			$advftCriteria = $fromFile;
 		}
 		Cache::save('getAdvFilterByCvid', $cvId, $advftCriteria);
@@ -549,12 +546,12 @@ class CustomView
 		if (!$this->module) {
 			$this->module = \Vtiger_Module_Model::getInstance($this->moduleName);
 		}
-		if (empty($cvIds) || static::isMultiViewId($cvIds)) {
-			return $this->_getAdvFilterByCvid($cvIds);
+		if (empty($cvIds) || !static::isMultiViewId($cvIds)) {
+			return $this->getAdvFilterByCvidFromDb($cvIds);
 		}
 		$advftCriteria = [];
 		foreach (explode(',', $cvIds) as $cvId) {
-			foreach ($this->_getAdvFilterByCvid($cvId) as $criteria) {
+			foreach ($this->getAdvFilterByCvidFromDb($cvId) as $criteria) {
 				$advftCriteria[] = $criteria;
 			}
 		}
@@ -603,7 +600,6 @@ class CustomView
 			}
 			$advFilterVal = implode(',', $val);
 		}
-
 		return [
 			'columnname' => html_entity_decode($relCriteriaRow['columnname'], ENT_QUOTES, \AppConfig::main('default_charset')),
 			'comparator' => $comparator,
@@ -644,6 +640,9 @@ class CustomView
 				}
 			} else {
 				$viewId = (int) $viewId;
+				if (!$this->isPermittedCustomView($viewId)) {
+					throw new Exceptions\NoPermitted('ERR_NO_PERMITTED_TO_VIEW');
+				}
 			}
 		}
 		$this->defaultViewId = $viewId;
@@ -749,7 +748,6 @@ class CustomView
 				$permission = false;
 			}
 		}
-
 		return $permission;
 	}
 

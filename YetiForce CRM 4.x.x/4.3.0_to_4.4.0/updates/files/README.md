@@ -5,12 +5,11 @@
 [![Scrutinizer](https://scrutinizer-ci.com/g/YetiForceCompany/YetiForceCRM/badges/quality-score.png?b=developer)](https://scrutinizer-ci.com/g/YetiForceCompany/YetiForceCRM/)
 [![codecov](https://codecov.io/gh/YetiForceCompany/YetiForceCRM/branch/developer/graph/badge.svg)](https://codecov.io/gh/YetiForceCompany/YetiForceCRM)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/161d09ea3c824405b762a0c9edc2845e)](https://www.codacy.com/app/mariuszkrzaczkowski/YetiForceCRM?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=YetiForceCompany/YetiForceCRM&amp;utm_campaign=Badge_Grade)
-[![Dependency Status](https://gemnasium.com/badges/github.com/YetiForceCompany/YetiForceCRM.svg)](https://gemnasium.com/github.com/YetiForceCompany/YetiForceCRM)
-[![Dependency Status](https://www.versioneye.com/user/projects/5acb03fd0fb24f3a025bfe03/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/5acb03fd0fb24f3a025bfe03)
 [![Maintainability](https://api.codeclimate.com/v1/badges/2e9276651b48a905f0ee/maintainability)](https://codeclimate.com/github/YetiForceCompany/YetiForceCRM/maintainability)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/YetiForceCompany/YetiForceCRM.svg)](http://isitmaintained.com/project/YetiForceCompany/YetiForceCRM "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/YetiForceCompany/YetiForceCRM.svg)](http://isitmaintained.com/project/YetiForceCompany/YetiForceCRM "Percentage of issues still open")
 [![Snyk - Known Vulnerabilities](https://snyk.io/test/github/YetiForceCompany/YetiForceCRM/badge.svg)](https://snyk.io/test/github/YetiForceCompany/YetiForceCRM)
+[![Depfu](https://badges.depfu.com/badges/56870798a59eff717ff60bc775ca6a33/overview.svg)](https://depfu.com/github/YetiForceCompany/YetiForceCRM)
 
 <a href='http://www.capterra.com/customer-relationship-management-software/reviews/159123/Yetiforce%20/YetiForce?utm_source=vendor&utm_medium=badge&utm_campaign=capterra_reviews_badge'>  <img border='0' src='https://assets.capterra.com/badge/470cd214b89233aa4e89972fa49c3253.png?v=2111411&p=159123' /></a>
 <a href='https://www.capterra.com/customer-relationship-management-software/#affordable' width="50"><img border='0' src='https://public.yetiforce.com/img/CRM-AF-2017.png' width="150" /></a>
@@ -35,7 +34,7 @@ Visit our [online store](https://shop.yetiforce.com/en/) with commercial modules
 - [Sourceforge](https://sourceforge.net/projects/yetiforce/)
 - [Softaculous](http://www.softaculous.com/apps/erp/YetiForce)
 - [Packagist](https://packagist.org/packages/yetiforce/yetiforce-crm)
-- [Development version](https://download.yetiforce.com/developer.zip)  
+- [Development version](https://download.yetiforce.com/developer.zip) - full package (composer + yarn)
 
 1. Installation [our website](https://yetiforce.com/en/knowledge-base/documentation/implementer-documentation/item/crm-installation)
 2. The lists of changes for previous versions of YetiForce CRM are available at [our website](https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes).
@@ -49,6 +48,11 @@ https://github.com/YetiForceCompany/YetiForceScripts
 https://github.com/YetiForceCompany/YetiForceIncompleteLanguages
 
 YetiForce CRM was orginally forked from Vtiger CRM and has mechanisms that allow to easily migrate from Vtiger to YetiForce.
+
+Testing Supported By<br/>
+<a href="http://browserstack.com">
+<img width="160" src="http://foundation.zurb.com/sites/docs/assets/img/logos/browser-stack.svg" alt="BrowserStack"/>
+</a>
 
 ### Gallery: https://public.yetiforce.com/gallery
 

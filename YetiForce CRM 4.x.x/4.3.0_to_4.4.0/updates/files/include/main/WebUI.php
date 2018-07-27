@@ -52,7 +52,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 			$returnUrl = $request->getServer('QUERY_STRING');
 			if ($returnUrl && !$_SESSION['return_params']) {
 				//Take the url that user would like to redirect after they have successfully logged in.
-				App\Session::set('return_params', $returnUrl);
+				App\Session::set('return_params', str_replace('&amp;', '&', $returnUrl));
 			}
 			if (!$request->isAjax()) {
 				header('Location: index.php');
@@ -76,7 +76,6 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 				$this->setLogin();
 			}
 		}
-
 		return $user;
 	}
 
@@ -184,11 +183,11 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 			$response = $handler->process($request);
 			$this->triggerPostProcess($handler, $request);
 		} catch (Exception $e) {
-			\App\Log::error($e->getMessage() . ' => ' . $e->getFile() . ':' . $e->getLine());
+			\App\Log::error($e->getMessage() . PHP_EOL . $e->__toString());
 			$tpl = 'OperationNotPermitted.tpl';
 			if ($e instanceof \App\Exceptions\NoPermittedToRecord || $e instanceof WebServiceException) {
 				$tpl = 'NoPermissionsForRecord.tpl';
-			} elseif ($e instanceof \App\Exceptions\Security || $e instanceof \App\Exceptions\Security) {
+			} elseif ($e instanceof \App\Exceptions\Security) {
 				$tpl = 'IllegalValue.tpl';
 			}
 			\vtlib\Functions::throwNewException($e, false, $tpl);

@@ -208,6 +208,9 @@ class File
 			Log::error('No url: ' . $url, __CLASS__);
 			return false;
 		}
+		if (!\App\RequestUtil::isNetConnection()) {
+			return false;
+		}
 		try {
 			$responsse = \Requests::get($url);
 			if ($responsse->status_code !== 200) {
@@ -296,7 +299,6 @@ class File
 		if (empty($this->mimeShortType)) {
 			$this->mimeShortType = explode('/', $this->getMimeType());
 		}
-
 		return $this->mimeShortType[$type];
 	}
 
@@ -325,6 +327,16 @@ class File
 	public function getPath()
 	{
 		return $this->path;
+	}
+
+	/**
+	 * Get directory path.
+	 *
+	 * @return string
+	 */
+	public function getDirectoryPath()
+	{
+		return pathinfo($this->getPath(), PATHINFO_DIRNAME);
 	}
 
 	/**
@@ -507,15 +519,16 @@ class File
 	/**
 	 * Generate file hash.
 	 *
-	 * @param bool $checkInAttachments
+	 * @param bool   $checkInAttachments
+	 * @param string $uploadFilePath
 	 *
 	 * @return string File hash sha256
 	 */
-	public function generateHash($checkInAttachments = false)
+	public function generateHash(bool $checkInAttachments = false, string $uploadFilePath = '')
 	{
 		if ($checkInAttachments) {
 			$hash = hash('sha1', $this->getContents()) . \App\Encryption::generatePassword(10);
-			if ((new \App\Db\Query())->from('u_#__file_upload_temp')->where(['key' => $hash])->exists()) {
+			if ((new \App\Db\Query())->from('u_#__file_upload_temp')->where(['key' => $hash])->exists() || ($uploadFilePath && file_exists($uploadFilePath . $hash))) {
 				$hash = $this->generateHash($checkInAttachments);
 			}
 			return $hash;
@@ -552,7 +565,6 @@ class File
 		if ($badExtensionFound) {
 			$newFileName .= '.txt';
 		}
-
 		return $newFileName;
 	}
 
@@ -580,7 +592,6 @@ class File
 		} elseif (is_writable(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'upload')) {
 			static::$tmpPath = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR;
 		}
-
 		return static::$tmpPath;
 	}
 
@@ -617,7 +628,6 @@ class File
 		} else {
 			$mimeType = 'application/octet-stream';
 		}
-
 		return $mimeType;
 	}
 
@@ -656,7 +666,6 @@ class File
 		if ($fileInstance->validate() && ($id = static::saveFromContent($fileInstance, $params))) {
 			return $id;
 		}
-
 		return false;
 	}
 
@@ -672,14 +681,11 @@ class File
 	{
 		$fileInstance = static::loadFromUrl($url);
 		if (empty($url) || !$fileInstance) {
-			Log::error('Invalid url: ' . $url, __CLASS__);
-
 			return false;
 		}
 		if ($fileInstance->validate() && ($id = static::saveFromContent($fileInstance, $params))) {
 			return $id;
 		}
-
 		return false;
 	}
 
@@ -713,7 +719,6 @@ class File
 		if (isset($record->ext['attachmentsId'])) {
 			return array_merge(['crmid' => $record->getId()], $record->ext);
 		}
-
 		return false;
 	}
 
@@ -863,7 +868,6 @@ class File
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -967,7 +971,7 @@ class File
 					continue;
 				}
 				$uploadFilePath = static::initStorageFileDirectory($storageName);
-				$key = $file->generateHash(true);
+				$key = $file->generateHash(true, $uploadFilePath);
 				$db->createCommand()->insert('u_#__file_upload_temp', [
 					'name' => $file->getName(),
 					'type' => $file->getMimeType(),

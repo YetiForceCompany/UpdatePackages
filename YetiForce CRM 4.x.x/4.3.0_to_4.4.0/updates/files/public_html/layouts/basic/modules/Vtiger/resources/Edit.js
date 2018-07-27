@@ -20,24 +20,24 @@ $.Class("Vtiger_Edit_Js", {
 	 * @params moduleName:-- Name of the module to create instance
 	 */
 	getInstanceByModuleName: function (moduleName) {
-		if (typeof moduleName == "undefined") {
+		if (typeof moduleName === "undefined") {
 			moduleName = app.getModuleName();
 		}
 		var parentModule = app.getParentModuleName();
 		if (parentModule == 'Settings') {
 			var moduleClassName = parentModule + "_" + moduleName + "_Edit_Js";
-			if (typeof window[moduleClassName] == 'undefined') {
+			if (typeof window[moduleClassName] === "undefined") {
 				moduleClassName = moduleName + "_Edit_Js";
 			}
 			var fallbackClassName = parentModule + "_Vtiger_Edit_Js";
-			if (typeof window[fallbackClassName] == 'undefined') {
+			if (typeof window[fallbackClassName] === "undefined") {
 				fallbackClassName = "Vtiger_Edit_Js";
 			}
 		} else {
 			moduleClassName = moduleName + "_Edit_Js";
 			fallbackClassName = "Vtiger_Edit_Js";
 		}
-		if (typeof window[moduleClassName] != 'undefined') {
+		if (typeof window[moduleClassName] !== "undefined") {
 			var instance = new window[moduleClassName]();
 		} else {
 			var instance = new window[fallbackClassName]();
@@ -55,8 +55,6 @@ $.Class("Vtiger_Edit_Js", {
 	}
 
 }, {
-	addressDataOG: [],
-	addressDataGM: [],
 	formElement: false,
 	relationOperation: '',
 	moduleName: app.getModuleName(),
@@ -132,16 +130,17 @@ $.Class("Vtiger_Edit_Js", {
 		});
 	},
 	setReferenceFieldValue: function (container, params) {
-		var thisInstance = this;
-		var sourceFieldElement = container.find('input.sourceField');
-		var sourceField = sourceFieldElement.attr('name');
-		var fieldElement = container.find('input[name="' + sourceField + '"]');
-		var sourceFieldDisplay = sourceField + "_display";
-		var fieldDisplayElement = container.find('input[name="' + sourceFieldDisplay + '"]');
-		var popupReferenceModule = container.find('input[name="popupReferenceModule"]').val();
+		const thisInstance = this;
+		let sourceFieldElement = container.find('input.sourceField');
+		let sourceField = sourceFieldElement.attr('name');
+		let fieldElement = container.find('input[name="' + sourceField + '"]');
+		let sourceFieldDisplay = sourceField + "_display";
+		let fieldDisplayElement = container.find('input[name="' + sourceFieldDisplay + '"]');
+		let popupReferenceModule = container.find('input[name="popupReferenceModule"]').val();
+		let selectedName = params.name;
+		let id = params.id;
 
-		var selectedName = params.name;
-		var id = params.id;
+		container.find('.clearReferenceSelection').trigger('click');
 
 		fieldElement.val(id)
 		fieldDisplayElement.val(selectedName).attr('readonly', true);
@@ -154,15 +153,16 @@ $.Class("Vtiger_Edit_Js", {
 		if (sourceFieldElement.data('type') == 'inventory') {
 			return params;
 		}
-		var formElement = container.closest('form');
-		var mappingRelatedField = this.getMappingRelatedField(sourceField, popupReferenceModule, formElement);
+		let formElement = container.closest('form');
+		let mappingRelatedField = this.getMappingRelatedField(sourceField, popupReferenceModule, formElement);
 		if (typeof mappingRelatedField != undefined) {
-			var params = {
+			let params = {
 				source_module: popupReferenceModule,
 				record: id
 			};
-			this.getRecordDetails(params).then(function (data) {
+			this.getRecordDetails(params).done(function (data) {
 				var response = params.data = data['result']['data'];
+				app.event.trigger("EditView.SelectReference", params, formElement);
 				$.each(mappingRelatedField, function (key, value) {
 					if (response[value[0]] != 0 && !thisInstance.getMappingValuesFromUrl(key)) {
 						var mapFieldElement = formElement.find('[name="' + key + '"]');
@@ -222,8 +222,8 @@ $.Class("Vtiger_Edit_Js", {
 	},
 	treePopupRegisterEvent: function (container) {
 		var thisInstance = this;
-		container.on("click", '.treePopup', function (e) {
-			thisInstance.openTreePopUp(e);
+		container.on("click", '.js-tree-modal', function (e) {
+			thisInstance.openTreeModal($(e.target));
 		});
 	},
 	/**
@@ -237,34 +237,26 @@ $.Class("Vtiger_Edit_Js", {
 			e.preventDefault();
 		})
 	},
-	openTreePopUp: function (e) {
-		var thisInstance = this;
-		var parentElem = $(e.target).closest('.fieldValue');
-		var form = $(e.target).closest('form');
-		var params = {};
-		var moduleName = $('input[name="module"]', form).val();
-		var sourceFieldElement = $('input[class="sourceField"]', parentElem);
-		var sourceFieldDisplay = sourceFieldElement.attr('name') + "_display";
-		var fieldDisplayElement = $('input[name="' + sourceFieldDisplay + '"]', parentElem);
-		var sourceRecordElement = $('input[name="record"]');
-		var sourceRecordId = '';
-		if (sourceRecordElement.length > 0) {
-			sourceRecordId = sourceRecordElement.val();
-		}
-		urlOrParams = 'module=' + moduleName + '&view=TreePopup&template=' + sourceFieldElement.data('treetemplate') + '&src_field=' + sourceFieldElement.attr('name') + '&src_record=' + sourceRecordId + '&multiple=' + sourceFieldElement.data('multiple') + '&value=' + sourceFieldElement.val();
-		var popupInstance = Vtiger_Popup_Js.getInstance();
-		popupInstance.show(urlOrParams, function (data) {
-			var responseData = JSON.parse(data);
-			var ids = '';
-			if (responseData.id) {
-				ids = responseData.id.split(',');
-				$.each(ids, function (index, value) {
-					ids[index] = 'T' + value;
-				});
-				ids.join();
-			}
-			sourceFieldElement.val(ids);
-			fieldDisplayElement.val(responseData.name).attr('readonly', true);
+	openTreeModal: function (element) {
+		let parentElem = element.closest('.fieldValue');
+		let sourceFieldElement = $('input[class="sourceField"]', parentElem);
+		let fieldDisplayElement = $('input[name="' + sourceFieldElement.attr('name') + '_display"]', parentElem);
+		AppConnector.request({
+			module: $('input[name="module"]', element.closest('form')).val(),
+			view: 'TreeModal',
+			template: sourceFieldElement.data('treetemplate'),
+			fieldName: sourceFieldElement.attr('name'),
+			multiple: sourceFieldElement.data('multiple'),
+			value: sourceFieldElement.val()
+		}).done(function (requestData) {
+			app.showModalWindow(requestData, function (data) {
+				app.modalEvents[Window.lastModalId] = function (modal, instance) {
+					instance.setSelectEvent((responseData) => {
+						sourceFieldElement.val(responseData.id);
+						fieldDisplayElement.val(responseData.name).attr('readonly', true);
+					});
+				};
+			});
 		});
 	},
 	/**
@@ -272,22 +264,20 @@ $.Class("Vtiger_Edit_Js", {
 	 * @params - container <jQuery> - element in which auto complete fields needs to be searched
 	 */
 	registerTreeAutoCompleteFields: function (container) {
-		var thisInstance = this;
 		container.find('input.treeAutoComplete').autocomplete({
 			'delay': '600',
 			'minLength': '3',
 			'source': function (request, response) {
 				//element will be array of dom elements
 				//here this refers to auto complete instance
-				var inputElement = $(this.element[0]);
-				var searchValue = request.term;
-				var parentElem = inputElement.closest('.fieldValue');
-				var sourceFieldElement = $('input[class="sourceField"]', parentElem);
-				var fieldInfo = sourceFieldElement.data('fieldinfo');
-				var allValues = fieldInfo.picklistvalues;
-				var reponseDataList = [];
-				for (var id in allValues) {
-					var name = allValues[id][0];
+				let inputElement = $(this.element[0]);
+				let searchValue = request.term.toLowerCase();
+				let parentElem = inputElement.closest('.fieldValue');
+				let sourceFieldElement = $('input[class="sourceField"]', parentElem);
+				let fieldInfo = sourceFieldElement.data('fieldinfo');
+				let allValues = fieldInfo.picklistvalues;
+				let reponseDataList = [];
+				for (let id in allValues) {
 					if (allValues[id].toLowerCase().indexOf(searchValue) >= 0) {
 						reponseDataList.push({label: allValues[id], value: id, id: id});
 					}
@@ -304,7 +294,7 @@ $.Class("Vtiger_Edit_Js", {
 			'select': function (event, ui) {
 				var selectedItemData = ui.item;
 				//To stop selection if no results is selected
-				if (typeof selectedItemData.type != 'undefined' && selectedItemData.type == "no results") {
+				if (typeof selectedItemData.type !== "undefined" && selectedItemData.type == "no results") {
 					return false;
 				}
 				selectedItemData.name = selectedItemData.value;
@@ -353,21 +343,19 @@ $.Class("Vtiger_Edit_Js", {
 	searchModuleNames: function (params) {
 		var aDeferred = $.Deferred();
 
-		if (typeof params.module == 'undefined') {
+		if (typeof params.module === "undefined") {
 			params.module = app.getModuleName();
 		}
 
-		if (typeof params.action == 'undefined') {
+		if (typeof params.action === "undefined") {
 			params.action = 'BasicAjax';
 		}
 
-		AppConnector.request(params).then(function (data) {
-				aDeferred.resolve(data);
-			},
-			function (error) {
-				aDeferred.reject();
-			}
-		)
+		AppConnector.request(params).done(function (data) {
+			aDeferred.resolve(data);
+		}).fail(function (error) {
+			aDeferred.reject();
+		});
 		return aDeferred.promise();
 	},
 	/**
@@ -398,7 +386,7 @@ $.Class("Vtiger_Edit_Js", {
 				params.search_value = searchValue;
 				//params.parent_id = app.getRecordId();
 				//params.parent_module = app.getModuleName();
-				thisInstance.searchModuleNames(params).then(function (data) {
+				thisInstance.searchModuleNames(params).done(function (data) {
 					var reponseDataList = [];
 					var serverDataFormat = data.result
 					if (serverDataFormat.length <= 0) {
@@ -418,7 +406,7 @@ $.Class("Vtiger_Edit_Js", {
 			select: function (event, ui) {
 				var selectedItemData = ui.item;
 				//To stop selection if no results is selected
-				if (typeof selectedItemData.type != 'undefined' && selectedItemData.type == "no results") {
+				if (typeof selectedItemData.type !== "undefined" && selectedItemData.type == "no results") {
 					return false;
 				}
 				selectedItemData.name = selectedItemData.value;
@@ -504,17 +492,15 @@ $.Class("Vtiger_Edit_Js", {
 		if (app.getParentModuleName() == 'Settings') {
 			url += '&parent=Settings';
 		}
-		AppConnector.request(url).then(function (data) {
-				if (data['success']) {
-					aDeferred.resolve(data);
-				} else {
-					aDeferred.reject(data['message']);
-				}
-			},
-			function (error) {
-				aDeferred.reject();
+		AppConnector.request(url).done(function (data) {
+			if (data['success']) {
+				aDeferred.resolve(data);
+			} else {
+				aDeferred.reject(data['message']);
 			}
-		)
+		}).fail(function (error) {
+			aDeferred.reject();
+		});
 		return aDeferred.promise();
 	},
 	registerTimeFields: function (container) {
@@ -757,7 +743,7 @@ $.Class("Vtiger_Edit_Js", {
 		var sourceModule = data['source_module'];
 		var noAddress = true;
 		var errorMsg;
-		thisInstance.getRecordDetails(data).then(function (data) {
+		thisInstance.getRecordDetails(data).done(function (data) {
 			var response = data['result'];
 			thisInstance.addressFieldsData = response;
 			thisInstance.copyAddress(from, to, true, sourceModule);
@@ -821,11 +807,10 @@ $.Class("Vtiger_Edit_Js", {
 	},
 	copyAddressDetailsRef: function (data, container) {
 		var thisInstance = this;
-		thisInstance.getRecordDetails(data).then(function (data) {
+		thisInstance.getRecordDetails(data).done(function (data) {
 				var response = data['result'];
 				thisInstance.mapAddressDetails(response, container);
-			},
-			function (error, err) {
+			}).fail(function (error, err) {
 
 			});
 	},
@@ -874,7 +859,7 @@ $.Class("Vtiger_Edit_Js", {
 		var editViewForm = this.getForm();
 		editViewForm.on('submit', function (e) {
 			//Form should submit only once for multiple clicks also
-			if (typeof editViewForm.data('submit') != "undefined") {
+			if (typeof editViewForm.data('submit') !== "undefined") {
 				return false;
 			} else {
 				document.progressLoader = $.progressIndicator({
@@ -947,12 +932,12 @@ $.Class("Vtiger_Edit_Js", {
 			var targetObjectForSelectedSourceValue = configuredDependencyObject[selectedValue];
 			var picklistmap = configuredDependencyObject["__DEFAULT__"];
 
-			if (typeof targetObjectForSelectedSourceValue == 'undefined') {
+			if (typeof targetObjectForSelectedSourceValue === "undefined") {
 				targetObjectForSelectedSourceValue = picklistmap;
 			}
 			$.each(picklistmap, function (targetPickListName, targetPickListValues) {
 				var targetPickListMap = targetObjectForSelectedSourceValue[targetPickListName];
-				if (typeof targetPickListMap == "undefined") {
+				if (typeof targetPickListMap === "undefined") {
 					targetPickListMap = targetPickListValues;
 				}
 				var targetPickList = $('[name="' + targetPickListName + '"]', container);
@@ -961,7 +946,7 @@ $.Class("Vtiger_Edit_Js", {
 				}
 
 				var listOfAvailableOptions = targetPickList.data('availableOptions');
-				if (typeof listOfAvailableOptions == "undefined") {
+				if (typeof listOfAvailableOptions === "undefined") {
 					listOfAvailableOptions = $('option', targetPickList);
 					targetPickList.data('available-options', listOfAvailableOptions);
 				}
@@ -1016,11 +1001,11 @@ $.Class("Vtiger_Edit_Js", {
 	loadEditorElement: function (noteContentElement) {
 		var customConfig = {};
 		if (noteContentElement.is(':visible')) {
-			if (noteContentElement.hasClass("js-editor__basic")) {
+			if (noteContentElement.hasClass("js-editor--basic")) {
 				customConfig.toolbar = 'Min';
 			}
-			if (noteContentElement.hasClass("js-editor__small")) {
-				customConfig.height = '5em';
+			if (noteContentElement.data('height')) {
+				customConfig.height = noteContentElement.data('height');
 			}
 			new App.Fields.Text.Editor(noteContentElement, customConfig);
 		}
@@ -1086,198 +1071,77 @@ $.Class("Vtiger_Edit_Js", {
 			}
 		});
 	},
-	getDataFromOG: function (request, apiData) {
-		var thisInstance = this;
-
-		if (apiData["opencage_data"]) {
-			return $.ajax({
-				url: apiData["opencage_data"].geoCodeURL,
-				data: {
-					format: "json",
-					q: request.term,
-					pretty: '1',
-					key: apiData["opencage_data"].geoCodeKey
-				},
-				success: function (data, textStatus, jqXHR) {
-					if (data.results.length) {
-						thisInstance.addressDataOG = $.map(data.results, function (item) {
-							return {
-								label: item.formatted,
-								source: 'opencage_geocoder',
-								source_label: 'OpenCage Geocoder',
-								value: item.components.road,
-								components: item.components
-							}
-						});
-					}
-				}
-			})
-		}
-
-		return [];
-	},
-	getDataFromGM: function (request, apiData) {
-		var thisInstance = this;
-
-		if (apiData["google_map_api"]) {
-			return $.ajax({
-				url: apiData["google_map_api"].geoCodeURL,
-				data: {
-					address: request.term,
-					key: apiData["google_map_api"].geoCodeKey
-				},
-				success: function (addressData) {
-
-					if (0 < addressData.results.length) {
-						var result = addressData.results[0].geometry.location;
-
-						$.ajax({
-							url: apiData["google_map_api"].geoCodeURL,
-							data: {
-								latlng: result.lat + "," + result.lng,
-								key: apiData["google_map_api"].geoCodeKey
-							},
-							success: function (data, textStatus, jqXHR) {
-								thisInstance.addressDataGM = $.map(data.results, function (item) {
-									return {
-										label: item.formatted_address,
-										source: 'google_geocoding',
-										source_label: 'Google Geocoding',
-										value: item.formatted_address,
-										components: thisInstance.mappingAddressDataFromGoogle(item.address_components)
-									}
-								})
-							}
-						})
-					}
-				}
-			})
-		}
-
-		return [];
-	},
-	mappingAddressDataFromGoogle: function (address) {
-
-		var data = {}
-
-		for (var key in address) {
-			var types = address[key]['types'];
-
-			if ('route' === types[0]) {
-				data.road = address[key]['long_name'];
-			}
-
-			if ('street_number' === types[0]) {
-				var numbers = address[key]['long_name'];
-				if (numbers.indexOf('/' > -1)) {
-					var tab = numbers.split('/');
-
-					data.house_number = tab[0];
-					data.local_number = tab[1];
-
-				} else {
-					data.house_number = address[key]['long_name'];
-				}
-			}
-
-			if ('country' === types[0] && 'political' === types[1]) {
-				data.country = address[key]['long_name'];
-			}
-
-			if ('administrative_area_level_1' === types[0] && 'political' === types[1]) {
-				data.state = address[key]['long_name'];
-			}
-
-			if ('administrative_area_level_2' === types[0] && 'political' === types[1]) {
-				data.powiat = address[key]['long_name'];
-			}
-
-			if ('sublocality_level_1' === types[0] && 'sublocality' === types[1] && 'political' === types[2]) {
-				data.region_city = address[key]['long_name'];
-			}
-
-			if ('postal_code' === types[0]) {
-				data.postcode = address[key]['long_name'];
-			}
-
-			if ('locality' === types[0] && 'political' === types[1]) {
-				data.city = address[key]['long_name'];
-			}
-
-		}
-
-		return data;
-	},
-	registerApiAddress: function () {
-		var thisInstance = this;
-		var apiElement = $('[name="apiAddress"]');
-		var apiData = [];
-
-		$(apiElement).each(function (index, item) {
-			var apiName = $(item).data('api-name');
-			var info = {
-				geoCodeURL: $(item).data('url'),
-				geoCodeKey: $(item).val()
-			}
-
-			apiData[apiName] = info;
-			apiData["minLookupLength"] = $(item).data('length');
-			apiData["max_num"] = $(item).data('max-num');
-		});
-
-		if (!apiData) {
-			return false;
-		}
-		$('.api_address_autocomplete').each(function () {
-			$(this).autocomplete({
+	registerAutoloadAddress: function () {
+		this.getForm().find('.js-search-address').each(function (index, item) {
+			let search = $(item);
+			let container = search.closest('.js-block-content');
+			let input = search.find('.js-autoload-address');
+			search.find('.js-select-operator').on('click', function (e) {
+				input.data('type', $(this).data('type'));
+			});
+			input.autocomplete({
 				source: function (request, response) {
-					$.when(
-						thisInstance.getDataFromOG(request, apiData),
-						thisInstance.getDataFromGM(request, apiData)
-					).then(function (og, gm) {
-
-						var result = thisInstance.addressDataOG.concat(thisInstance.addressDataGM);
-
-						response(result.slice(0, apiData['max_num']));
-
-					}).fail(function (e) {
-						response([{label: app.vtranslate('An error has occurred. No results.'), value: ''}]);
+					AppConnector.request({
+						module: app.getModuleName(),
+						action: 'Fields',
+						mode: 'findAddress',
+						type: input.data('type'),
+						value: request.term
+					}).done(function (requestData) {
+						if (requestData.result === false) {
+							Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_ERROR'));
+						} else if (requestData.result.length) {
+							response(requestData.result);
+						} else {
+							response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
+						}
+					}).fail( function () {
+						response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
 					});
 				},
-				minLength: apiData.minLookupLength,
+				minLength: input.data('min'),
 				select: function (event, ui) {
-					for (var key in ui.item.components) {
-						var addressType = thisInstance.addressFieldsMappingFromApi[key];
-						var element = $(this).parents('.js-toggle-panel').find('[name^="' + addressType + '"]');
-						element.val(ui.item.components[key]);
-						if (element.is("select")) {
-							element.val(element.find('option[data-code="' + ui.item.components[key].toUpperCase() + '"]').val()).trigger('chosen:updated');
+					$.each(ui.item.address, function (index, value) {
+						let field = container.find('.fieldValue [name^=' + index + ']');
+						if (field.length && value) {
+							if (typeof value !== 'object') {
+								value = [value];
+							}
+							$.each(value, function (index, v) {
+								let select = false, element = false;
+								if (field.prop("tagName") === 'SELECT') {
+									if (typeof v === 'object') {
+										$.each(v, function (index, x) {
+											element = field.find("option[data-" + index + "='" + x + "']");
+											if (x && element.length) {
+												select = element.val();
+											}
+										});
+									} else {
+										element = field.find('option:contains(' + v + ')');
+										if (v && element.length) {
+											select = element.val();
+										}
+										element = field.find('option[value="' + v + '"]');
+										if (v && element.length) {
+											select = element.val();
+										}
+									}
+								} else {
+									select = v;
+								}
+								if (select) {
+									field.val(select).change();
+								}
+							});
+						} else {
+							field.val('').change();
 						}
-					}
+					});
+					ui.item.value = input.val();
 				}
-			}).data("ui-autocomplete")._renderItem = function (ul, item) {
-				return $("<li>")
-					.data("item.autocomplete", item)
-					.append('<a><img style="width: 24px; height: 24px;" class="alignMiddle" src="layouts/basic/images/' +
-						item.source + '.png" title="' + item.source_label + '" alt="' + item.source_label + '">' + item.label + "</a>")
-					.appendTo(ul);
-			};
+			});
 		});
-	},
-	addressFieldsMappingFromApi: {
-		country_code: 'addresslevel1',
-		state: 'addresslevel2',
-		state_district: 'addresslevel3',
-		county: 'addresslevel4',
-		village: 'addresslevel5',
-		city: 'addresslevel5',
-		neighbourhood: 'addresslevel6',
-		city_district: 'addresslevel6',
-		suburb: 'addresslevel6',
-		postcode: 'addresslevel7',
-		road: 'addresslevel8',
-		house_number: 'buildingnumber',
-		local_number: 'localnumber',
 	},
 	setEnabledFields: function (element) {
 		var fieldValue = element.closest('.fieldValue');
@@ -1308,7 +1172,7 @@ $.Class("Vtiger_Edit_Js", {
 	getMappingRelatedField: function (sourceField, sourceFieldModule, container) {
 		var mappingRelatedField = container.find('input[name="mappingRelatedField"]').val();
 		var mappingRelatedModule = mappingRelatedField ? JSON.parse(mappingRelatedField) : [];
-		if (typeof mappingRelatedModule[sourceField] != 'undefined' && typeof mappingRelatedModule[sourceField][sourceFieldModule] != 'undefined')
+		if (typeof mappingRelatedModule[sourceField] !== "undefined" && typeof mappingRelatedModule[sourceField][sourceFieldModule] !== "undefined")
 			return mappingRelatedModule[sourceField][sourceFieldModule];
 		return [];
 	},
@@ -1480,8 +1344,7 @@ $.Class("Vtiger_Edit_Js", {
 		this.registerLeavePageWithoutSubmit(editViewForm);
 		this.registerValidationsFields(editViewForm);
 		this.registerReferenceCreate(editViewForm);
-		this.registerApiAddress();
+		this.registerAutoloadAddress();
 		//this.triggerDisplayTypeEvent();
 	}
 });
-

@@ -23,7 +23,6 @@ class Events_Field_Model extends Calendar_Field_Model
 
 			return $this->$propertyName;
 		}
-
 		return null;
 	}
 
@@ -36,12 +35,11 @@ class Events_Field_Model extends Calendar_Field_Model
 			if ($this->getName() === 'due_date') {
 				$displayValue = $value . ' ' . $recordModel->get('time_end');
 				$value = $this->getUITypeModel()->getDisplayValue($displayValue);
-				list($endDate, $endTime, $meridiem) = explode(' ', $value);
+				list($endDate, $endTime) = explode(' ', $value);
 
-				return $endDate . ' ' . $endTime . ' ' . $meridiem;
+				return $endDate . ' ' . $endTime;
 			}
 		}
-
 		return parent::getDisplayValue($value, $record, $recordModel, $rawText, $length);
 	}
 }

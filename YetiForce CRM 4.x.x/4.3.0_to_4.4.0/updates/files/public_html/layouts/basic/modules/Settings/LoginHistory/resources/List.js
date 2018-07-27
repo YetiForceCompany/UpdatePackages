@@ -19,11 +19,9 @@ Settings_Vtiger_List_Js("Settings_LoginHistory_List_Js", {}, {
 			}
 			//Make total number of pages as empty
 			jQuery('#totalPageCount').text("");
-			thisInstance.getListViewRecords(params).then(
-				function (data) {
-					thisInstance.updatePagination();
-				}
-			);
+			thisInstance.getListViewRecords(params).done(function (data) {
+				thisInstance.updatePagination();
+			});
 		});
 	},
 
@@ -62,7 +60,7 @@ Settings_Vtiger_List_Js("Settings_LoginHistory_List_Js", {}, {
 	},
 
 	updatePagination: function (pageNumber) {
-		pageNumber = typeof pageNumber !== 'undefined' ? pageNumber : 1;
+		pageNumber = typeof pageNumber !== "undefined" ? pageNumber : 1;
 		var thisInstance = this;
 		var cvId = thisInstance.getCurrentCvId();
 		var params = {};
@@ -81,10 +79,9 @@ Settings_Vtiger_List_Js("Settings_LoginHistory_List_Js", {}, {
 		params['operator'] = 's';
 
 		params['noOfEntries'] = jQuery('#noOfEntries').val();
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			jQuery('.paginationDiv').html(data);
 			thisInstance.registerPageNavigationEvents();
-
 		});
 	},
 

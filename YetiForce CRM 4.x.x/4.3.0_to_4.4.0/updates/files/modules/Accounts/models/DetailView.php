@@ -33,7 +33,6 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 			];
 			$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues($massActionLink);
 		}
-
 		return $linkModelList;
 	}
 
@@ -94,7 +93,7 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 				'countRelated' => AppConfig::relation('SHOW_RECORDS_COUNT'),
 			];
 		}
-		if ($parentModuleModel->isTrackingEnabled()) {
+		if ($parentModuleModel->isTrackingEnabled() && $parentModuleModel->isPermitted('ModTracker')) {
 			$relatedLinks[] = [
 				'linktype' => 'DETAILVIEWTAB',
 				'linklabel' => 'LBL_UPDATES',
@@ -125,7 +124,6 @@ class Accounts_DetailView_Model extends Vtiger_DetailView_Model
 				];
 			}
 		}
-
 		return $relatedLinks;
 	}
 }

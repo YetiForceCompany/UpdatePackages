@@ -303,6 +303,7 @@
     "LBL_SWITCH": "Cambiar",
     "LBL_SWITCH_USER": "Cambiar usuario",
     "LBL_SWITCH_TO_YOURSELF": "Cambiar a ti mismo",
+    "LBL_CHANGE_ACCESS_KEY": "Cambiar Access Key",
     "LBL_USER_EXISTS": "el usuario ya existe",
     "LBL_FAILED_TO_UPDATE_ACCESS_KEY": "Fall\u00f3 actualizar la llave de acceso",
     "LBL_USER_MAIL_EXIST": "El usuario con este correo ya existe",
@@ -336,7 +337,19 @@
     "LBL_NOT_CHANGE_PASS_AUTH_EXTERNAL_SYSTEM": "No puede cambiar la contrase\u00f1a, el usuario usa la autorizaci\u00f3n en un sistema externo",
     "FL_VIEW_DATE_FORMAT": "Vista previa del formato de fecha",
     "PLL_FULL": "Fecha y hora completa",
-    "PLL_ELAPSED": "Tiempo transcurrido"
+    "PLL_ELAPSED": "Tiempo transcurrido",
+    "LBL_AUTHENTICATION_CODE": "Authentication code",
+    "LBL_TWO_FACTOR_AUTHENTICATION": "Two factor authentication",
+    "LBL_2FA_SECRET": "Secret code",
+    "LBL_2FA_TOTP_QR_CODE": "Single-use code",
+    "LBL_AUTHY_SECRET_TOTP_SUCCESS": "Two factor authentication was succesfully enabled.",
+    "LBL_2FA_WRONG_CODE": "Incorrect code - enter again or contact the Administrator",
+    "LBL_2FA_OFF": "Enable two-factor authentication",
+    "LBL_2FA_DESCRIPTION": "This step confirms that the person who is trying to log in is actually you",
+    "LBL_2FA_SECRET_ALREADY_SET": "Private key (TOTP) has been already generated, in order to change it, activate a new key.",
+    "FL_AUTHY_METHODS":"2FA authentication method",
+    "PLL_AUTHY_TOTP": "Single-use code (TOTP)",
+    "FL_AUTHY_SECRET_TOTP": "Private key (TOTP)"
   },
   "js": {
     "JS_DECIMAL_SEPARATOR_AND_GROUPING_SEPARATOR_CANT_BE_SAME": "Separador decimal y separador de agrupaci\u00f3n no pueden ser iguales.",

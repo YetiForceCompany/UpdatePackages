@@ -21,20 +21,18 @@ Settings_Vtiger_List_Js('Settings_WebserviceUsers_List_Js', {}, {
 	getListViewRecords: function (urlParams) {
 		var thisInstance = this;
 		var aDeferred = jQuery.Deferred();
-		if (typeof urlParams == 'undefined') {
+		if (typeof urlParams === "undefined") {
 			urlParams = {};
 		}
-		this.reloadTab(urlParams).then(
-			function (data) {
+		this.reloadTab(urlParams).done(function (data) {
 				aDeferred.resolve(data);
-			},
-			function (textStatus, errorThrown) {
+			}).fail(function (textStatus, errorThrown) {
 				aDeferred.reject(textStatus, errorThrown);
 			});
 		return aDeferred.promise();
 	},
 	updatePagination: function (pageNumber) {
-		pageNumber = typeof pageNumber !== 'undefined' ? pageNumber : 1;
+		pageNumber = typeof pageNumber !== "undefined" ? pageNumber : 1;
 		var thisInstance = this;
 		var params = this.getDefaultParams();
 		params.view = 'Pagination';
@@ -42,7 +40,7 @@ Settings_Vtiger_List_Js('Settings_WebserviceUsers_List_Js', {}, {
 		params.mode = 'getPagination';
 		params.totalCount = $('.pagination').data('totalCount');
 		params.noOfEntries = jQuery('#noOfEntries').val();
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			jQuery('.paginationDiv').html(data);
 			thisInstance.registerPageNavigationEvents();
 		});
@@ -68,18 +66,15 @@ Settings_Vtiger_List_Js('Settings_WebserviceUsers_List_Js', {}, {
 		var tabContainer = this.getContainer().find('.listViewContent');
 		var defaultParams = this.getDefaultParams();
 		var params = jQuery.extend(defaultParams, urlParams);
-		AppConnector.request(params).then(
-			function (data) {
+		AppConnector.request(params).done(function (data) {
 				tabContainer.html(data);
 				Vtiger_Header_Js.getInstance().registerFooTable();
 				thisInstance.registerPageNavigationEvents();
 				aDeferred.resolve(data);
-			},
-			function (textStatus, errorThrown) {
+			}).fail(function (textStatus, errorThrown) {
 				app.errorLog(textStatus, errorThrown);
 				aDeferred.reject(textStatus, errorThrown);
-			}
-		);
+			});
 		return aDeferred.promise();
 	},
 	registerEvents: function () {
@@ -88,6 +83,6 @@ Settings_Vtiger_List_Js('Settings_WebserviceUsers_List_Js', {}, {
 		this.getContainer().find('li.tabApi').on('click', function (e) {
 			thisInstance.reloadTab({typeApi: jQuery(this).data('typeapi')});
 		});
-		App.Fields.Password.registerCopyClipboard();
+		App.Fields.Text.registerCopyClipboard(this.getContainer());
 	}
 })

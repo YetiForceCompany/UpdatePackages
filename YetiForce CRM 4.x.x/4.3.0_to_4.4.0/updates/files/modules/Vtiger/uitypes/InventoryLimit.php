@@ -17,7 +17,6 @@ class Vtiger_InventoryLimit_UIType extends Vtiger_Picklist_UIType
 		if (is_array($value)) {
 			$value = implode(',', $value);
 		}
-
 		return \App\Purifier::decodeHtml($value);
 	}
 
@@ -26,11 +25,19 @@ class Vtiger_InventoryLimit_UIType extends Vtiger_Picklist_UIType
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if ($this->validate || empty($value)) {
+		$hashValue = is_array($value) ? implode('|', $value) : $value;
+		if (isset($this->validate[$hashValue]) || empty($value)) {
 			return;
 		}
 		if (!is_numeric($value)) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
+		}
+		$maximumLength = $this->getFieldModel()->get('maximumlength');
+		if ($maximumLength) {
+			$rangeValues = explode(',', $maximumLength);
+			if (($rangeValues[1] ?? $rangeValues[0]) < $value || (isset($rangeValues[1]) ? $rangeValues[0] : 0) > $value) {
+				throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
+			}
 		}
 		if (is_array($value)) {
 			foreach ($value as $value) {
@@ -39,7 +46,7 @@ class Vtiger_InventoryLimit_UIType extends Vtiger_Picklist_UIType
 				}
 			}
 		}
-		$this->validate = true;
+		$this->validate[$hashValue] = true;
 	}
 
 	/**
@@ -94,7 +101,14 @@ class Vtiger_InventoryLimit_UIType extends Vtiger_Picklist_UIType
 		foreach ($limits as $key => $limit) {
 			$limits[$key] = $limit['value'] . ' - ' . $limit['name'];
 		}
-
 		return $limits;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getAllowedColumnTypes()
+	{
+		return ['integer'];
 	}
 }

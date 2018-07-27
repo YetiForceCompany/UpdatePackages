@@ -19,7 +19,7 @@
 	<div id="deSelectAllMsgDiv" class="alert-block msgDiv noprint">
 		<strong><a id="deSelectAllMsg">{\App\Language::translate('LBL_DESELECT_ALL_RECORDS',$MODULE)}</a></strong>
 	</div>
-	<div class="listViewEntriesDiv">
+	<div class="listViewEntriesDiv u-overflow-scroll-xs-down">
 		<input type="hidden" value="{$ORDER_BY}" id="orderBy" />
 		<input type="hidden" value="{$SORT_ORDER}" id="sortOrder" />
 		<div class="listViewLoadingImageBlock d-none modal noprint" id="loadingListViewModal">
@@ -55,9 +55,11 @@
 				<tr>
 					<td class="listViewSearchTd">
 						<div class="flexWrapper">
-							<a class="btn btn-light" data-trigger="listSearch" href="javascript:void(0);"><span class="fas fa-search"></span></a>
-							<a class="btn btn-light float-right listRemoveBtn" href="index.php?view={$VIEW}&module={$MODULE}" >
-								<span class="fas fa-times"></span>
+							<a class="btn btn-light" role="button" data-trigger="listSearch" href="javascript:void(0);">
+								<span class="fas fa-search" title="{\App\Language::translate('LBL_SEARCH')}"></span>
+							</a>
+							<a class="btn btn-light float-right listRemoveBtn" role="button" href="index.php?view={$VIEW}&module={$MODULE}">
+								<span class="fas fa-times" title="{\App\Language::translate('LBL_CLEAR_SEARCH')}"></span>
 							</a>
 						</div>
 					</td>

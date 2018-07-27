@@ -94,7 +94,7 @@
 								{App\Language::translate('LBL_PICKLIST_VALUES', $QUALIFIED_MODULE)}
 							</div>
 							<div class="col-md-8 controls">
-								<select id="picklistUi" class="form-control" name="pickListValues" multiple="" tabindex="-1" aria-hidden="true" placeholder="{App\Language::translate('LBL_ENTER_PICKLIST_VALUES', $QUALIFIED_MODULE)}" 
+								<select id="pickListValues" class="form-control" name="pickListValues" multiple="" tabindex="-1" aria-hidden="true" placeholder="{App\Language::translate('LBL_ENTER_PICKLIST_VALUES', $QUALIFIED_MODULE)}"
 										data-validation-engine="validate[required, funcCall[Vtiger_Base_Validator_Js.invokeValidation]]" data-validator={\App\Json::encode([['name'=>'PicklistFieldValues']])}>
 								</select>
 							</div>
@@ -198,7 +198,7 @@
 							</div>
 						</div>
 					</div>
-					{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', 'Vtiger')}
+					{include file=App\Layout::getTemplatePath('Modals/Footer.tpl', 'Vtiger') BTN_SUCCESS='LBL_SAVE' BTN_DANGER='LBL_CANCEL'}
 				</form>
 			</div>
 		</div>

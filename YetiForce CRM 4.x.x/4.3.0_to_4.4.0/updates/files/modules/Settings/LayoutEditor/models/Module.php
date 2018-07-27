@@ -61,7 +61,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			}
 			$this->fieldsModule = $fieldList;
 		}
-
 		return $this->fieldsModule;
 	}
 
@@ -97,7 +96,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			}
 			$this->blocks = $blocksList;
 		}
-
 		return $this->blocks;
 	}
 
@@ -109,12 +107,12 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 	public function getAddSupportedFieldTypes()
 	{
 		return [
-			'Text', 'Decimal', 'Integer', 'Percent', 'Currency', 'Date', 'Email', 'Phone', 'Picklist', 'URL', 'Checkbox', 'TextArea', 'MultiSelectCombo', 'Skype', 'Time', 'Related1M', 'Editor', 'Tree', 'MultiReferenceValue', 'CategoryMultipicklist', 'DateTime', 'Image', 'MultiImage'
+			'Text', 'Decimal', 'Integer', 'Percent', 'Currency', 'Date', 'Email', 'Phone', 'Picklist', 'Country', 'URL', 'Checkbox', 'TextArea', 'MultiSelectCombo', 'Skype', 'Time', 'Related1M', 'Editor', 'Tree', 'MultiReferenceValue', 'CategoryMultipicklist', 'DateTime', 'Image', 'MultiImage'
 		];
 	}
 
 	/**
-	 * Function whcih will give information about the field types that are supported for add.
+	 * Function which will give information about the field types that are supported for add.
 	 *
 	 * @return <Array>
 	 */
@@ -150,7 +148,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			}
 			$fieldTypesInfo[$fieldType] = $details;
 		}
-
 		return $fieldTypesInfo;
 	}
 
@@ -189,6 +186,20 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		$supportedFieldTypes = $this->getAddSupportedFieldTypes();
 		if (!in_array($fieldType, $supportedFieldTypes)) {
 			throw new Exception(\App\Language::translate('LBL_WRONG_FIELD_TYPE', 'Settings::LayoutEditor'), 513);
+		}
+		if ($fieldType === 'Picklist' || $fieldType === 'MultiSelectCombo') {
+			$pickListValues = $params['pickListValues'];
+			if (is_string($pickListValues)) {
+				$pickListValues = [$pickListValues];
+			}
+			foreach ($pickListValues as $value) {
+				if (preg_match('/[\<\>\"\#\,]/', $value)) {
+					throw new Exception(\App\Language::translateArgs('ERR_SPECIAL_CHARACTERS_NOT_ALLOWED', 'Other.Exceptions', '<>"#,'), 512);
+				}
+				if (strlen($value) > 200) {
+					throw new Exception(\App\Language::translate('ERR_EXCEEDED_NUMBER_CHARACTERS', 'Other.Exceptions'), 512);
+				}
+			}
 		}
 		$moduleName = $this->getName();
 		$focus = CRMEntity::getInstance($moduleName);
@@ -234,10 +245,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		$blockModel = Vtiger_Block_Model::getInstance($blockId, $moduleName);
 		$blockModel->addField($fieldModel);
 		if ($fieldType === 'Picklist' || $fieldType === 'MultiSelectCombo') {
-			$pickListValues = $params['pickListValues'];
-			if (is_string($pickListValues)) {
-				$pickListValues = [$pickListValues];
-			}
 			$fieldModel->setPicklistValues($pickListValues);
 		}
 		if ($fieldType === 'Related1M') {
@@ -407,8 +414,12 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 				$uitype = 79;
 				$type = $importerType->dateTime();
 				break;
+			case 'Country':
+				$uitype = 35;
+				$uichekdata = 'V~O';
+				$type = $importerType->text();
+				break;
 		}
-
 		return [
 			'uitype' => $uitype,
 			'typeofdata' => $uichekdata,
@@ -425,7 +436,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if (strpos($name, ' ') !== false) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -467,7 +477,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 				$exceptions[] = $columnName;
 			}
 		}
-
 		return in_array($fieldName, $exceptions);
 	}
 
@@ -478,7 +487,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if (empty(self::$supportedModules)) {
 			self::$supportedModules = self::getEntityModulesList();
 		}
-
 		return self::$supportedModules;
 	}
 
@@ -490,7 +498,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		foreach ($objectProperties as $properName => $propertyValue) {
 			$selfInstance->$properName = $propertyValue;
 		}
-
 		return $selfInstance;
 	}
 
@@ -517,7 +524,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if (!array_key_exists('Calendar', $modulesList)) {
 			unset($modulesList['Events']);
 		}
-
 		return $modulesList;
 	}
 
@@ -532,7 +538,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if (in_array($moduleName, ['Calendar', 'Events'])) {
 			return false;
 		}
-
 		return true;
 	}
 
@@ -547,7 +552,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if (in_array($moduleName, ['Calendar', 'Events'])) {
 			return false;
 		}
-
 		return true;
 	}
 
@@ -572,7 +576,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -594,7 +597,6 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 				array_splice($this->relations, $contactsIndex, 1);
 			}
 		}
-
 		return $this->relations;
 	}
 

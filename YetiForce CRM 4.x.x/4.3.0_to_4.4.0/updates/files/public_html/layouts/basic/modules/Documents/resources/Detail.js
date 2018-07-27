@@ -17,11 +17,9 @@ Vtiger_Detail_Js("Documents_Detail_Js", {
 	 * @param: CheckFileIntegrity url.
 	 */
 	checkFileIntegrity: function (checkFileIntegrityUrl) {
-		Documents_Detail_Js.getFileIntegrityResponse(checkFileIntegrityUrl).then(
-			function (data) {
-				Documents_Detail_Js.displayCheckFileIntegrityResponse(data);
-			}
-		);
+		Documents_Detail_Js.getFileIntegrityResponse(checkFileIntegrityUrl).done(function (data) {
+			Documents_Detail_Js.displayCheckFileIntegrityResponse(data);
+		});
 	},
 
 	/*
@@ -34,13 +32,11 @@ Vtiger_Detail_Js("Documents_Detail_Js", {
 		if (!(jQuery.isEmptyObject(Documents_Detail_Js.checkFileIntegrityResponseCache))) {
 			aDeferred.resolve(Documents_Detail_Js.checkFileIntegrityResponseCache);
 		} else {
-			AppConnector.request(params).then(
-				function (data) {
-					//store it in the cache, so that we dont do multiple request
-					Documents_Detail_Js.checkFileIntegrityResponseCache = data;
-					aDeferred.resolve(Documents_Detail_Js.checkFileIntegrityResponseCache);
-				}
-			);
+			AppConnector.request(params).done(function (data) {
+				//store it in the cache, so that we dont do multiple request
+				Documents_Detail_Js.checkFileIntegrityResponseCache = data;
+				aDeferred.resolve(Documents_Detail_Js.checkFileIntegrityResponseCache);
+			});
 		}
 		return aDeferred.promise();
 	},
@@ -74,7 +70,6 @@ Vtiger_Detail_Js("Documents_Detail_Js", {
 			title: app.vtranslate('JS_CHECK_FILE_INTEGRITY'),
 			text: customParams.text,
 			type: customParams.type,
-			width: '30%',
 			delay: '2000'
 		};
 		Vtiger_Helper_Js.showPnotify(params);

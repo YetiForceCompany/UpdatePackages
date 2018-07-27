@@ -3,7 +3,7 @@
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
 	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 	{assign var=IS_INVENTORY value=($RELATED_VIEW === 'List' && $INVENTORY_MODULE && !empty($INVENTORY_FIELDS))}
-	<div class="listViewEntriesDiv">
+	<div class="listViewEntriesDiv u-overflow-scroll-xs-down">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
 			<tr class="listViewHeaders">
@@ -45,9 +45,11 @@
 				<tr>
 					<td class="listViewSearchTd">
 						<div class="flexWrapper">
-								<a class="btn btn-light" data-trigger="listSearch" href="javascript:void(0);"><span class="fas fa-search"></span></a>
+								<a class="btn btn-light" role="button" data-trigger="listSearch" href="javascript:void(0);">
+									<span class="fas fa-search" title="{\App\Language::translate('LBL_SEARCH')}"></span>
+								</a>
 							<button type="button" class="btn btn-light removeSearchConditions">
-									<span class="fas fa-times">
+								<span class="fas fa-times" title="{\App\Language::translate('LBL_CLEAR_SEARCH')}"></span>
 							</button>
 						</div>
 					</td>
@@ -90,12 +92,14 @@
 							</a>
 						{elseif $HEADER_FIELD->get('fromOutsideList') eq true}
 							{if $HEADER_FIELD->get('isEditable')}
-								<input name="{$RELATED_HEADERNAME}" class="form-control"
+								<input name="{$RELATED_HEADERNAME}" class="form-control form-control-sm js-edit-{$RELATED_HEADERNAME} {$HEADER_FIELD->get('class')}"
 									   title="{App\Language::translate($HEADER_FIELD->getFieldLabel(), $RELATED_MODULE_NAME)}"
+									   data-fieldinfo="{\App\Purifier::encodeHtml(\App\Json::encode($HEADER_FIELD->getFieldInfo()))}"
 									   value="{$HEADER_FIELD->getDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}"
+									   data-js="change"
 								/>
 							{else}
-								{$HEADER_FIELD->getDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}11
+								{$HEADER_FIELD->getDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}
 							{/if}
 						{else}
 							{$RELATED_RECORD->getListViewDisplayValue($RELATED_HEADERNAME)}

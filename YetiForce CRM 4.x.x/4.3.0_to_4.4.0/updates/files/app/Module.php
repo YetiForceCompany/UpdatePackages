@@ -61,7 +61,6 @@ class Module
 				}
 			}
 		}
-
 		return $entity;
 	}
 
@@ -79,7 +78,6 @@ class Module
 		} else {
 			$entity = static::$moduleEntityCacheById;
 		}
-
 		return $entity;
 	}
 
@@ -166,7 +164,6 @@ class Module
 				$sharingModules[] = $row['name'];
 			}
 		}
-
 		return $sharingModules;
 	}
 
@@ -192,7 +189,6 @@ class Module
 			$fieldsName = array_pop($fieldsName);
 			$formattedName = "{$db->quoteTableName($entityFieldInfo['tablename'])}.{$db->quoteColumnName($fieldsName)}";
 		}
-
 		return $formattedName;
 	}
 

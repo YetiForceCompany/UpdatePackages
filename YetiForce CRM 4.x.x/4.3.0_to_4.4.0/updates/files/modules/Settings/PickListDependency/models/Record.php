@@ -41,6 +41,7 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 			'linkurl' => "javascript:Settings_PickListDependency_Js.triggerEdit(event, '$soureModule', '$sourceField', '$targetField')",
 			'linklabel' => 'LBL_EDIT',
 			'linkicon' => 'fas fa-edit',
+			'linkclass' => 'btn btn-sm btn-info',
 		];
 		$editLinkInstance = Vtiger_Link_Model::getInstanceFromValues($editLink);
 
@@ -48,6 +49,7 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 			'linkurl' => "javascript:Settings_PickListDependency_Js.triggerDelete(event, '$soureModule','$sourceField', '$targetField')",
 			'linklabel' => 'LBL_DELETE',
 			'linkicon' => 'fas fa-trash-alt',
+			'linkclass' => 'btn btn-sm btn-danger',
 		];
 		$deleteLinkInstance = Vtiger_Link_Model::getInstanceFromValues($deleteLink);
 
@@ -78,7 +80,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 			$dependency = Vtiger_DependencyPicklist::getPickListDependency($this->get('sourceModule'), $this->get('sourcefield'), $this->get('targetfield'));
 			$this->mapping = $dependency['valuemapping'];
 		}
-
 		return $this->mapping;
 	}
 
@@ -92,7 +93,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 		if (empty($this->sourcePickListValues)) {
 			$this->sourcePickListValues = $this->getPickListValues($this->get('sourcefield'));
 		}
-
 		return $this->sourcePickListValues;
 	}
 
@@ -101,7 +101,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 		if (empty($this->targetPickListValues)) {
 			$this->targetPickListValues = $this->getPickListValues($this->get('targetfield'));
 		}
-
 		return $this->targetPickListValues;
 	}
 
@@ -115,7 +114,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 			}
 			$this->nonMappedSourcePickListValues = $sourcePickListValues;
 		}
-
 		return $this->nonMappedSourcePickListValues;
 	}
 
@@ -162,7 +160,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 		if (empty($sourceFieldLabel)) {
 			$this->loadFieldLabels();
 		}
-
 		return \App\Language::translate($this->get('sourcelabel'), $this->get('sourceModule'));
 	}
 
@@ -172,7 +169,6 @@ class Settings_PickListDependency_Record_Model extends Settings_Vtiger_Record_Mo
 		if (empty($targetFieldLabel)) {
 			$this->loadFieldLabels();
 		}
-
 		return \App\Language::translate($this->get('targetlabel'), $this->get('sourceModule'));
 	}
 

@@ -82,7 +82,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 				$this->parent = null;
 			}
 		}
-
 		return $this->parent;
 	}
 
@@ -110,7 +109,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 			$dataReader->close();
 			$this->children = $roles;
 		}
-
 		return $this->children;
 	}
 
@@ -141,7 +139,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 			$dataReader->close();
 			$this->children = $roles;
 		}
-
 		return $this->children;
 	}
 
@@ -195,7 +192,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 		if ($row && (int) $row['directly_related_to_role'] === 1) {
 			return $row['profileid'];
 		}
-
 		return false;
 	}
 
@@ -230,16 +226,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 	}
 
 	/**
-	 * Function to get the Popup Window Url for the current role.
-	 *
-	 * @return string
-	 */
-	public function getPopupWindowUrl()
-	{
-		return 'module=Roles&parent=Settings&view=Popup&src_record=' . $this->getId();
-	}
-
-	/**
 	 * Function to get all the profiles associated with the current role.
 	 *
 	 * @return <Array> Settings_Profiles_Record_Model instances
@@ -249,7 +235,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 		if (!isset($this->profiles)) {
 			$this->profiles = Settings_Profiles_Record_Model::getAllByRole($this->getId());
 		}
-
 		return $this->profiles;
 	}
 
@@ -323,7 +308,9 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 			$this->set('parentrole', $parentRole->getParentRoleString() . '::' . $roleId);
 		}
 		$searchunpriv = $this->get('searchunpriv');
-		$searchunpriv = implode(',', empty($searchunpriv) ? [] : $searchunpriv);
+		if (is_array($searchunpriv)) {
+			$searchunpriv = implode(',', $searchunpriv);
+		}
 		$permissionsRelatedField = $this->get('permissionsrelatedfield');
 		$permissionsRelatedField = implode(',', empty($permissionsRelatedField) ? [] : $permissionsRelatedField);
 		$values = [
@@ -342,7 +329,7 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 			'globalsearchadv' => (int) $this->get('globalsearchadv'),
 			'auto_assign' => (int) $this->get('auto_assign'),
 		];
-		if ($mode == 'edit') {
+		if ($mode === 'edit') {
 			$db->createCommand()->update('vtiger_role', $values, ['roleid' => $roleId])
 				->execute();
 		} else {
@@ -453,7 +440,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 				$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 			}
 		}
-
 		return $links;
 	}
 
@@ -505,7 +491,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 
 			return $instance;
 		}
-
 		return $instance;
 	}
 
@@ -523,7 +508,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 
 			return $instance;
 		}
-
 		return null;
 	}
 
@@ -545,7 +529,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 
 			return $instance;
 		}
-
 		return null;
 	}
 
@@ -574,7 +557,6 @@ class Settings_Roles_Record_Model extends Settings_Vtiger_Record_Model
 		foreach ($userIds as $userId) {
 			$usersList[$userId] = Users_Record_Model::getInstanceById($userId, 'Users');
 		}
-
 		return $usersList;
 	}
 }

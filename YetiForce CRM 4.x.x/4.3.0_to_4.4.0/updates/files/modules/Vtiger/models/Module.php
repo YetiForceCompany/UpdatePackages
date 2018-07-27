@@ -170,7 +170,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		} else {
 			$enabled = false;
 		}
-
 		return $enabled;
 	}
 
@@ -193,7 +192,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				Vtiger_Cache::set('module', $moduleObject->name, $instance);
 			}
 		}
-
 		return $instance;
 	}
 
@@ -212,7 +210,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($objectProperties as $properName => $propertyValue) {
 			$moduleModel->$properName = $propertyValue;
 		}
-
 		return $moduleModel;
 	}
 
@@ -315,7 +312,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		if (!empty($viewName)) {
 			return $viewName;
 		}
-
 		return 'List';
 	}
 
@@ -380,16 +376,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 	}
 
 	/**
-	 * Function to get the url for the Find Duplicates action of the module.
-	 *
-	 * @return string - url
-	 */
-	public function getFindDuplicatesUrl()
-	{
-		return 'index.php?module=' . $this->getName() . '&view=FindDuplicates';
-	}
-
-	/**
 	 * Function to get the url to view Dashboard for the module.
 	 *
 	 * @return string - url
@@ -430,7 +416,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 			}
 		}
 		$recordInstance->setFullForm(false);
-
 		return $recordInstance->setData($valueArray)->setModuleFromInstance($this)->setRawData($rawData);
 	}
 
@@ -449,7 +434,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 			}
 			$this->blocks = $blocksList;
 		}
-
 		return $this->blocks;
 	}
 
@@ -473,7 +457,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				}
 			}
 		}
-
 		return $this->fields;
 	}
 
@@ -488,7 +471,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($this->getFields() as &$field) {
 			$fieldList[$field->getBlockName()][$field->getName()] = $field;
 		}
-
 		return $fieldList;
 	}
 
@@ -518,7 +500,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				return $field;
 			}
 		}
-
 		return null;
 	}
 
@@ -591,7 +572,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				$fieldList[$field->getName()] = $field;
 			}
 		}
-
 		return $fieldList;
 	}
 
@@ -606,7 +586,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($this->getFields() as &$field) {
 			$fieldList[$field->get('label')] = $field;
 		}
-
 		return $fieldList;
 	}
 
@@ -622,7 +601,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($fields as &$field) {
 			$fieldList[$field->getId()] = $field;
 		}
-
 		return $fieldList;
 	}
 
@@ -639,7 +617,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				$fieldList[$field->getName()] = $field;
 			}
 		}
-
 		return $fieldList;
 	}
 
@@ -661,7 +638,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach (App\Field::getFieldsPermissions($tabId, false) as $field) {
 			$editFields[] = $field['fieldname'];
 		}
-
 		return array_diff($editFields, ['closedtime', 'shownerid', 'smcreatorid', 'modifiedtime', 'modifiedby']);
 	}
 
@@ -681,7 +657,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 			}
 			$this->summaryFields = $summaryFields;
 		}
-
 		return $this->summaryFields;
 	}
 
@@ -709,7 +684,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($quickSequenceTemp as $key => $value) {
 			$quickCreateSortedList[$key] = $quickCreateFieldList[$key];
 		}
-
 		return $quickCreateSortedList;
 	}
 
@@ -723,7 +697,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		if (empty($this->relations)) {
 			$this->relations = Vtiger_Relation_Model::getAllRelations($this);
 		}
-
 		return $this->relations;
 	}
 
@@ -739,7 +712,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		foreach ($entityInfo['fieldnameArr'] as $columnName) {
 			$fieldsName[] = $this->getFieldByColumn($columnName)->getFieldName();
 		}
-
 		return $fieldsName;
 	}
 
@@ -758,7 +730,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		if ($this->isEntityModule()) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -781,7 +752,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				->where(['uitype' => 4, 'tabid' => $this->getId()])
 				->exists();
 		}
-
 		return false;
 	}
 
@@ -814,7 +784,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				}
 			}
 		}
-
 		return $moduleModels;
 	}
 
@@ -828,7 +797,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		if (isset($this->entityInstance)) {
 			return $this->entityInstance;
 		}
-
 		return $this->entityInstance = CRMEntity::getInstance($this->getName());
 	}
 
@@ -846,7 +814,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 			}
 			Vtiger_Cache::set('vtiger', 'EntityModules', $moduleModels);
 		}
-
 		return $moduleModels;
 	}
 
@@ -906,7 +873,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				$searchableModules[$moduleName] = $moduleModel;
 			}
 		}
-
 		return $searchableModules;
 	}
 
@@ -925,7 +891,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 			$instance->label = $moduleData['tabname'];
 			$modulesModelsList[] = $instance;
 		}
-
 		return $modulesModelsList;
 	}
 
@@ -977,7 +942,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 					'linkicon' => '',
 			]);
 		}
-
 		return $links;
 	}
 
@@ -1069,7 +1033,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 
 			return $history;
 		}
-
 		return false;
 	}
 
@@ -1166,6 +1129,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 			if ($row['activitytype'] == 'Task') {
 				unset($row['visibility']);
 			}
+			$row['selectedusers'] = [];
 			$dataReaderSecond = (new \App\Db\Query())->select(['inviteesid'])->from('u_#__activity_invitation')->where(['activityid' => $row['crmid']])
 				->createCommand()->query();
 			while ($invite = $dataReaderSecond->readColumn(0)) {
@@ -1183,7 +1147,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		} else {
 			$pagingModel->set('nextPageExists', false);
 		}
-
 		return $activities;
 	}
 
@@ -1229,71 +1192,65 @@ class Vtiger_Module_Model extends \vtlib\Module
 			return [];
 		}
 		Vtiger_Loader::includeOnce('~~modules/com_vtiger_workflow/VTWorkflowUtils.php');
-
-		$layoutEditorImagePath = Vtiger_Theme::getImagePath('LayoutEditor.gif');
-		$editWorkflowsImagePath = Vtiger_Theme::getImagePath('EditWorkflows.png');
 		$settingsLinks = [];
-
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_EDIT_FIELDS',
 			'linkurl' => 'index.php?parent=Settings&module=LayoutEditor&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-modules-fields',
 		];
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_ARRANGE_RELATED_TABS',
 			'linkurl' => 'index.php?parent=Settings&module=LayoutEditor&mode=showRelatedListLayout&block=2&fieldid=41&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-modules-relations',
 		];
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_QUICK_CREATE_EDITOR',
 			'linkurl' => 'index.php?parent=Settings&module=QuickCreateEditor&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-fields-quick-create',
 		];
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_TREES_MANAGER',
 			'linkurl' => 'index.php?parent=Settings&module=TreesManager&view=List&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-field-folders',
 		];
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_WIDGETS_MANAGMENT',
 			'linkurl' => 'index.php?parent=Settings&module=Widgets&view=Index&sourceModule=' . $this->getName(),
-			'linkicon' => $layoutEditorImagePath,
+			'linkicon' => 'adminIcon-modules-widgets',
 		];
 		if (VTWorkflowUtils::checkModuleWorkflow($this->getName())) {
 			$settingsLinks[] = [
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_EDIT_WORKFLOWS',
 				'linkurl' => 'index.php?parent=Settings&module=Workflows&view=List&sourceModule=' . $this->getName(),
-				'linkicon' => $editWorkflowsImagePath,
+				'linkicon' => 'adminIcon-triggers',
 			];
 		}
-
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_EDIT_PICKLIST_VALUES',
 			'linkurl' => 'index.php?parent=Settings&module=Picklist&view=Index&source_module=' . $this->getName(),
-			'linkicon' => '',
+			'linkicon' => 'adminIcon-fields-picklists',
 		];
 		$settingsLinks[] = [
 			'linktype' => 'LISTVIEWSETTING',
 			'linklabel' => 'LBL_PICKLIST_DEPENDENCY',
 			'linkurl' => 'index.php?parent=Settings&module=PickListDependency&view=List&formodule=' . $this->getName(),
-			'linkicon' => '',
+			'linkicon' => 'adminIcon-fields-picklists-relations',
 		];
 		if ($this->hasSequenceNumberField()) {
 			$settingsLinks[] = [
 				'linktype' => 'LISTVIEWSETTING',
 				'linklabel' => 'LBL_MODULE_SEQUENCE_NUMBERING',
 				'linkurl' => 'index.php?parent=Settings&module=Vtiger&view=CustomRecordNumbering&sourceModule=' . $this->getName(),
-				'linkicon' => '',
+				'linkicon' => 'fas fa-exchange-alt',
 			];
 		}
-
 		return $settingsLinks;
 	}
 
@@ -1344,7 +1301,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				$matchingRecords[$moduleName][$row['id']] = $recordInstance->setData($row)->setModuleFromInstance($moduleModel);
 			}
 		}
-
 		return $matchingRecords;
 	}
 
@@ -1369,7 +1325,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 		if (empty($focus->mandatory_fields)) {
 			return [];
 		}
-
 		return $focus->mandatory_fields;
 	}
 
@@ -1389,7 +1344,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				}
 			}
 		}
-
 		return $mandatoryFields;
 	}
 
@@ -1404,34 +1358,48 @@ class Vtiger_Module_Model extends \vtlib\Module
 	}
 
 	/**
-	 * Function to get popup view fields.
+	 * Function to get modal records list view fields.
 	 *
-	 * @param string|bool $sourceModule
+	 * @param \App\QueryGenerator $queryGenerator
+	 * @param string|bool         $sourceModule
+	 */
+	public function getModalRecordsListFields(\App\QueryGenerator $queryGenerator, $sourceModule = false)
+	{
+		if (App\Cache::staticHas('PopupViewFieldsList', $this->getName())) {
+			$popupFields = App\Cache::staticGet('PopupViewFieldsList', $this->getName());
+		} else {
+			$popupFields = [];
+			if (!empty($sourceModule) && ($parentModuleModel = self::getInstance($sourceModule))) {
+				$relationModel = Vtiger_Relation_Model::getInstance($parentModuleModel, $this);
+				if ($relationModel) {
+					foreach (App\Field::getFieldsFromRelation($relationModel->getId()) as $fieldName) {
+						$popupFields[$fieldName] = $fieldName;
+					}
+				}
+				if (!$popupFields) {
+					foreach ($this->getPopupFields() as $fieldName) {
+						$popupFields[$fieldName] = $fieldName;
+					}
+					$popupFields = $parentModuleModel->getModalRecordsListSourceFields($queryGenerator, $this, $popupFields);
+				}
+			}
+			$popupFields[] = 'id';
+			App\Cache::staticSave('PopupViewFieldsList', $this->getName(), $popupFields);
+		}
+		$queryGenerator->setFields($popupFields);
+	}
+
+	/**
+	 * Function to get modal records list view fields by source.
+	 *
+	 * @param \App\QueryGenerator $queryGenerator
+	 * @param Vtiger_Module_Model $baseModule
+	 * @param string[]            $popupFields
 	 *
 	 * @return string[]
 	 */
-	public function getPopupViewFieldsList($sourceModule = false)
+	public function getModalRecordsListSourceFields(\App\QueryGenerator $queryGenerator, self $baseModule, $popupFields)
 	{
-		if (App\Cache::staticHas('PopupViewFieldsList', $this->getName())) {
-			return App\Cache::staticGet('PopupViewFieldsList', $this->getName());
-		}
-		$parentRecordModel = self::getInstance($sourceModule);
-		if (!empty($sourceModule) && $parentRecordModel) {
-			$relationModel = Vtiger_Relation_Model::getInstance($parentRecordModel, $this);
-		}
-		$popupFields = [];
-		if ($relationModel) {
-			foreach (App\Field::getFieldsFromRelation($relationModel->getId()) as &$fieldName) {
-				$popupFields[$fieldName] = $fieldName;
-			}
-		}
-		if (!$popupFields) {
-			foreach ($this->getPopupFields() as &$fieldName) {
-				$popupFields[$fieldName] = $fieldName;
-			}
-		}
-		App\Cache::staticSave('PopupViewFieldsList', $this->getName(), $popupFields);
-
 		return $popupFields;
 	}
 
@@ -1541,7 +1509,6 @@ class Vtiger_Module_Model extends \vtlib\Module
 				$data[$relationField] = $recordModel->getId();
 			}
 		}
-
 		return $data;
 	}
 }

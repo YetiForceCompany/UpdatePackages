@@ -379,7 +379,6 @@ class Import_Data_Action extends \App\Controller\Action
 				}
 			}
 		}
-
 		return $value;
 	}
 
@@ -406,7 +405,6 @@ class Import_Data_Action extends \App\Controller\Action
 				$value = \App\Record::getCrmIdByLabel($referenceModuleName, $entityLabel);
 			}
 		}
-
 		return $getArray ? [$referenceModuleName, $value] : $value;
 	}
 
@@ -434,7 +432,6 @@ class Import_Data_Action extends \App\Controller\Action
 		if (empty($ownerId)) {
 			$ownerId = $this->user->getId();
 		}
-
 		return $ownerId;
 	}
 
@@ -464,7 +461,6 @@ class Import_Data_Action extends \App\Controller\Action
 				}
 			}
 		}
-
 		return $values;
 	}
 
@@ -556,7 +552,6 @@ class Import_Data_Action extends \App\Controller\Action
 				}
 			}
 		}
-
 		return $entityId;
 	}
 
@@ -574,9 +569,12 @@ class Import_Data_Action extends \App\Controller\Action
 		$defaultCharset = \AppConfig::main('default_charset', 'UTF-8');
 		$fieldName = $fieldInstance->getFieldName();
 		$fieldValue = trim($fieldValue);
-
-		if (empty($fieldValue) && isset($defaultFieldValues[$fieldName])) {
-			$fieldValue = $defaultFieldValues[$fieldName];
+		if (empty($fieldValue)) {
+			if (isset($defaultFieldValues[$fieldName])) {
+				$fieldValue = $defaultFieldValues[$fieldName];
+			} else {
+				return $fieldValue;
+			}
 		}
 		if (!isset($this->allPicklistValues[$fieldName])) {
 			$this->allPicklistValues[$fieldName] = array_keys($fieldInstance->getPicklistValues());
@@ -588,15 +586,15 @@ class Import_Data_Action extends \App\Controller\Action
 
 		if (!in_array($picklistValueInLowerCase, $allPicklistValuesInLowerCase)) {
 			if (\AppConfig::module('Import', 'ADD_PICKLIST_VALUE')) {
-				$fieldObject = \vtlib\Field::getInstance($fieldName, $this->module);
+				$fieldObject = \vtlib\Field::getInstance($fieldName, Vtiger_Module_Model::getInstance($this->module));
 				$fieldObject->setPicklistValues([$fieldValue]);
 				unset($this->allPicklistValues[$fieldName]);
-				\App\Cache::delete('getPickListValues', $fieldName);
+				\App\Cache::delete('getValuesName', $fieldName);
+				\App\Cache::delete('getPickListFieldValuesRows', $fieldName);
 			}
 		} else {
 			$fieldValue = $picklistDetails[$picklistValueInLowerCase];
 		}
-
 		return $fieldValue;
 	}
 
@@ -625,7 +623,6 @@ class Import_Data_Action extends \App\Controller\Action
 				}
 			}
 		}
-
 		return $fieldValue;
 	}
 
@@ -701,7 +698,6 @@ class Import_Data_Action extends \App\Controller\Action
 				}
 			}
 		}
-
 		return $fieldData;
 	}
 
@@ -737,7 +733,6 @@ class Import_Data_Action extends \App\Controller\Action
 				\App\Record::updateLabel($moduleName, $recordModel->getId());
 			}
 		}
-
 		return $recordId;
 	}
 
@@ -820,7 +815,6 @@ class Import_Data_Action extends \App\Controller\Action
 		foreach ($importQueue as $importId => $importInfo) {
 			$scheduledImports[$importId] = new self($importInfo, \App\User::getUserModel($importInfo['user_id']));
 		}
-
 		return $scheduledImports;
 	}
 
@@ -860,7 +854,6 @@ class Import_Data_Action extends \App\Controller\Action
 			}
 			$dataReader->close();
 		}
-
 		return $importRecords;
 	}
 
@@ -888,7 +881,6 @@ class Import_Data_Action extends \App\Controller\Action
 			case 'none': $temp_status = self::IMPORT_RECORD_NONE;
 				break;
 		}
-
 		return $temp_status;
 	}
 
@@ -918,7 +910,6 @@ class Import_Data_Action extends \App\Controller\Action
 		if (!empty($ID)) {
 			return ['id' => $ID, 'status' => self::IMPORT_RECORD_CREATED];
 		}
-
 		return null;
 	}
 
@@ -967,7 +958,6 @@ class Import_Data_Action extends \App\Controller\Action
 				$inventoryModel->set($name . $i, $value);
 			}
 		}
-
 		return $inventoryModel;
 	}
 }

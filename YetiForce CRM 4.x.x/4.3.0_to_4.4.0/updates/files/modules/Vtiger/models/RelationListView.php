@@ -237,7 +237,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 			$this->getEntryExtend($recordModel);
 			$relatedRecordList[$row['id']] = $recordModel;
 		}
-
 		return $relatedRecordList;
 	}
 
@@ -282,7 +281,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 				unset($fields[$fieldName]);
 			}
 		}
-
 		return $fields;
 	}
 
@@ -361,7 +359,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 			}
 			$trees[] = $tree;
 		}
-
 		return $trees;
 	}
 
@@ -396,7 +393,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 			$relationField = $relationModel->getRelationField();
 			$createViewUrl .= '&' . $relationField->getName() . '=' . $parentRecordModule->getId();
 		}
-
 		return $createViewUrl;
 	}
 
@@ -415,7 +411,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 			$relationField = $relationModel->getRelationField();
 			$createViewUrl .= '&' . $relationField->getName() . '=' . $parentRecordModule->getId();
 		}
-
 		return $createViewUrl;
 	}
 
@@ -434,7 +429,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 			$relationField = $relationModel->getRelationField();
 			$createViewUrl .= '&' . $relationField->getName() . '=' . $parentRecordModule->getId();
 		}
-
 		return $createViewUrl;
 	}
 
@@ -510,7 +504,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 		foreach ($selectLinkList as $selectLink) {
 			$selectLinkModel[] = Vtiger_Link_Model::getInstanceFromValues($selectLink);
 		}
-
 		return $selectLinkModel;
 	}
 
@@ -564,7 +557,6 @@ class Vtiger_RelationListView_Model extends \App\Base
 		foreach ($addLinkList as &$addLink) {
 			$addLinkModel[] = Vtiger_Link_Model::getInstanceFromValues($addLink);
 		}
-
 		return $addLinkModel;
 	}
 

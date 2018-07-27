@@ -37,7 +37,6 @@ class Project_DetailView_Model extends Vtiger_DetailView_Model
 			];
 			$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues($viewLinks);
 		}
-
 		return $linkModelList;
 	}
 
@@ -62,7 +61,7 @@ class Project_DetailView_Model extends Vtiger_DetailView_Model
 				'related' => 'Charts',
 			];
 		}
-		if (!Settings_ModuleManager_Library_Model::checkLibrary('Gantt') && \App\Module::isModuleActive('ProjectTask') && \App\Module::isModuleActive('ProjectMilestone')) {
+		if (\App\Module::isModuleActive('ProjectTask') && \App\Module::isModuleActive('ProjectMilestone')) {
 			$relatedLinks[] = [
 				'linktype' => 'DETAILVIEWTAB',
 				'linklabel' => \App\Language::translate('LBL_GANTT', $moduleName),
@@ -72,7 +71,6 @@ class Project_DetailView_Model extends Vtiger_DetailView_Model
 				'related' => 'Gantt',
 			];
 		}
-
 		return $relatedLinks;
 	}
 }

@@ -19,7 +19,6 @@ class Vtiger_RangeTime_UIType extends Vtiger_Base_UIType
 		if (empty($mode)) {
 			$mode = 'short';
 		}
-
 		return \App\Purifier::encodeHtml($result[$mode]);
 	}
 
@@ -29,5 +28,13 @@ class Vtiger_RangeTime_UIType extends Vtiger_Base_UIType
 	public function isActiveSearchView()
 	{
 		return false;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getAllowedColumnTypes()
+	{
+		return null;
 	}
 }

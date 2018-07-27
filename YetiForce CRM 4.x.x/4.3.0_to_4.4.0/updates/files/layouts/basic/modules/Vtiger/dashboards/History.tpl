@@ -11,15 +11,9 @@
 -->*}
 {strip}
 	<div class="dashboardWidgetHeader">
-		<div class="row">
-			<div class="col-md-8">
-				<div class="dashboardTitle u-text-ellipsis" title="{\App\Language::translate($WIDGET->getTitle(), $MODULE_NAME)}"><strong>{\App\Language::translate($WIDGET->getTitle(), $MODULE_NAME)}</strong></div>
-			</div>
-			<div class="col-md-4">
-				<div class="box float-right">
-					{include file=\App\Layout::getTemplatePath('dashboards/DashboardHeaderIcons.tpl', $MODULE_NAME)}
-				</div>
-			</div>
+		<div class="d-flex flex-row flex-nowrap no-gutters justify-content-between">
+			{include file=\App\Layout::getTemplatePath('dashboards/WidgetHeaderTitle.tpl', $MODULE_NAME)}
+			{include file=\App\Layout::getTemplatePath('dashboards/WidgetHeaderButtons.tpl', $MODULE_NAME)}
 		</div>
 		<hr class="widgetHr" />
 		<div class="row justify-content-end" >

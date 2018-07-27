@@ -103,7 +103,6 @@ class Settings_Mail_Record_Model extends Settings_Vtiger_Record_Model
 				}
 				break;
 		}
-
 		return $value;
 	}
 
@@ -128,7 +127,6 @@ class Settings_Mail_Record_Model extends Settings_Vtiger_Record_Model
 				}
 			}
 		}
-
 		return rtrim($value, ', ');
 	}
 
@@ -165,13 +163,12 @@ class Settings_Mail_Record_Model extends Settings_Vtiger_Record_Model
 			'linklabel' => 'LBL_DELETE_RECORD',
 			'linkurl' => "javascript:Settings_Vtiger_List_Js.deleteById('{$this->getId()}')",
 			'linkicon' => 'fas fa-trash-alt',
-			'linkclass' => 'btn btn-xs btn-danger',
+			'linkclass' => 'btn btn-xs btn-danger text-white',
 		];
 
 		foreach ($recordLinks as &$recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 		}
-
 		return $links;
 	}
 
@@ -191,7 +188,6 @@ class Settings_Mail_Record_Model extends Settings_Vtiger_Record_Model
 			$instance = new self();
 			$instance->setData($row);
 		}
-
 		return $instance;
 	}
 }

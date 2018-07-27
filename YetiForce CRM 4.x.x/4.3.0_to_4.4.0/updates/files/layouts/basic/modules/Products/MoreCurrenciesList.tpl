@@ -31,7 +31,7 @@
 									<td><strong>{\App\Language::translate('LBL_BASE_CURRENCY',$MODULE)}</strong></td>
 								</tr>
 								{foreach item=price key=count from=$PRICE_DETAILS}
-									<tr data-currency-id={$price.curname}>
+									<tr data-currency-id="{$price.curname}" data-currency-symbol="{$price.currencysymbol}">
 										{if $price.check_value eq 1 || $price.is_basecurrency eq 1}
 											{assign var=check_value value="checked"}
 											{assign var=disable_value value=""}
@@ -57,7 +57,7 @@
 										</td>
 										<td class="align-middle">
 											<div class="row justify-content-center">
-												<input {$disable_value} type="text" size="10" class="col-md-9 convertedPrice form-control" name="{$price.curname}" id="{$price.curname}" value="{$price.curvalue}" title="{$price.curvalue}" data-validation-engine="validate[funcCall[Vtiger_Currency_Validator_Js.invokeValidation]]" data-decimal-separator='{$USER_MODEL->get('currency_decimal_separator')}' data-group-separator='{$USER_MODEL->get('currency_grouping_separator')}' />
+												<input {$disable_value} type="text" size="10" class="col-md-9 convertedPrice form-control" name="{$price.curname}" id="{$price.curname}" value="{$price.curvalue}" title="{$price.curvalue}" data-validation-engine="validate[funcCall[Vtiger_Currency_Validator_Js.invokeValidation]]" data-decimal-separator='{$USER_MODEL->get('currency_decimal_separator')}' data-group-separator='{$USER_MODEL->get('currency_grouping_separator')}' data-fieldinfo="{\App\Purifier::encodeHtml(\App\Json::encode($price.fieldInfo))}"/>
 											</div>
 										</td>
 										<td class="align-middle">
@@ -80,7 +80,7 @@
 							</table>
 						</div>
 					</div>
-					{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', $MODULE)}
+					{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', $MODULE) BTN_SUCCESS='LBL_SAVE' BTN_DANGER='LBL_CANCEL'}
 				</div>
 			</div>
 		</div>

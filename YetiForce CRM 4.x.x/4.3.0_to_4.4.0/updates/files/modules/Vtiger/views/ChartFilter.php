@@ -23,6 +23,7 @@ class Vtiger_ChartFilter_View extends Vtiger_Index_View
 		$moduleName = $request->getModule();
 		$viewer->assign('MODULE_NAME', $moduleName);
 		$viewer->assign('WIZARD_STEP', $request->getByType('step', 2));
+
 		switch ($request->get('step')) {
 			case 'step1':
 				$modules = vtlib\Functions::getAllModules(true, false, 0);
@@ -42,8 +43,14 @@ class Vtiger_ChartFilter_View extends Vtiger_Index_View
 				$viewer->assign('MODULES', $modules);
 				break;
 			case 'step2':
+				$selectedModuleName = $request->getByType('selectedModule', 2);
 				$viewer->assign('CHART_TYPE', $request->getByType('chartType'));
 				$viewer->assign('ALLFILTERS', CustomView_Record_Model::getAllByGroup($request->getByType('selectedModule', 2)));
+				foreach (Vtiger_Module_Model::getInstance($selectedModuleName)->getFields() as $field) {
+					if (in_array($field->getFieldDataType(), ['currency', 'double', 'percentage', 'integer'])) {
+						$viewer->assign('IS_NUMERAL_VALUE', true);
+					}
+				}
 				break;
 			case 'step3':
 				$selectedModuleName = $request->getByType('selectedModule', 2);
@@ -57,6 +64,7 @@ class Vtiger_ChartFilter_View extends Vtiger_Index_View
 				$selectedModuleModel = Vtiger_Module_Model::getInstance($selectedModuleName);
 				$viewer->assign('SELECTED_MODULE', $selectedModuleName);
 				$viewer->assign('SELECTED_MODULE_MODEL', $selectedModuleModel);
+				$viewer->assign('MODULE_FIELDS', Vtiger_Module_Model::getInstance($selectedModuleName)->getFieldsByBlocks());
 				$viewer->assign('CHART_TYPE', $request->getByType('chartType'));
 				$viewer->assign('GROUP_FIELD', $request->getByType('groupField'));
 				$viewer->assign('GROUP_FIELD_MODEL', $selectedModuleModel->getFieldByName($request->getByType('groupField')));

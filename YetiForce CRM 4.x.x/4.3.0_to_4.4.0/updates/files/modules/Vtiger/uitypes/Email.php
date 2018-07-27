@@ -21,13 +21,17 @@ class Vtiger_Email_UIType extends Vtiger_Base_UIType
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if ($this->validate || empty($value)) {
+		if (isset($this->validate[$value]) || empty($value)) {
 			return;
 		}
 		if (!filter_var($value, FILTER_VALIDATE_EMAIL) || $value !== filter_var($value, FILTER_SANITIZE_EMAIL)) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
 		}
-		$this->validate = true;
+		$maximumLength = $this->getFieldModel()->get('maximumlength');
+		if ($maximumLength && App\TextParser::getTextLength($value) > $maximumLength) {
+			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
+		}
+		$this->validate[$value] = true;
 	}
 
 	/**
@@ -54,7 +58,6 @@ class Vtiger_Email_UIType extends Vtiger_Base_UIType
 				}
 			}
 		}
-
 		return \App\Purifier::encodeHtml($value);
 	}
 
@@ -70,10 +73,10 @@ class Vtiger_Email_UIType extends Vtiger_Base_UIType
 			$rawValue = \App\Purifier::encodeHtml($value);
 			$value = \App\Purifier::encodeHtml(App\TextParser::textTruncate($value, $this->getFieldModel()->get('maxlengthtext')));
 			if ($internalMailer === 1 && \App\Privilege::isPermitted('OSSMail')) {
-				$url = OSSMail_Module_Model::getComposeUrl($moduleName, $recordId, 'Detail', 'new');
+				$url = OSSMail_Module_Model::getComposeUrl($moduleName, $record, 'Detail', 'new');
 				$mailConfig = OSSMail_Module_Model::getComposeParameters();
 
-				return "<a class = \"u-cursor-pointer sendMailBtn\" data-url=\"$url\" data-module=\"$moduleName\" data-record=\"$recordId\" data-to=\"$rawValue\" data-popup=" . $mailConfig['popup'] . ' title=' . \App\Language::translate('LBL_SEND_EMAIL') . ">{$value}</a>";
+				return "<a class = \"u-cursor-pointer sendMailBtn\" data-url=\"$url\" data-module=\"$moduleName\" data-record=\"$record\" data-to=\"$rawValue\" data-popup=" . $mailConfig['popup'] . ' title=' . \App\Language::translate('LBL_SEND_EMAIL') . ">{$value}</a>";
 			} else {
 				if ($moduleName === 'Users' && $fieldName === 'user_name') {
 					return "<a class='u-cursor-pointer' href='mailto:" . $rawValue . "'>" . $value . '</a>';
@@ -82,7 +85,6 @@ class Vtiger_Email_UIType extends Vtiger_Base_UIType
 				}
 			}
 		}
-
 		return \App\Purifier::encodeHtml($value);
 	}
 

@@ -48,13 +48,13 @@ function passwordStrength(password, translations) {
 	// password hidden
 	if (password == '') {
 		document.getElementById("passwordDescription").innerHTML = app.vtranslate('Enter the password');
-		document.getElementById("passwordStrength").className = "strength0";
+		document.getElementById("passwordStrength").className = "input-group-text strength0";
 	} else if (password == '**********') {
 		document.getElementById("passwordDescription").innerHTML = app.vtranslate('Password is hidden');
-		document.getElementById("passwordStrength").className = "strength0";
+		document.getElementById("passwordStrength").className = "input-group-text strength0";
 	} else {
 		document.getElementById("passwordDescription").innerHTML = desc[score];
-		document.getElementById("passwordStrength").className = "strength" + score;
+		document.getElementById("passwordStrength").className = "input-group-text strength" + score;
 	}
 }
 
@@ -70,20 +70,15 @@ function showPassword(record) {
 			'record': record
 		};
 
-		AppConnector.request(params).then(
-			function (data) {
-				var response = data['result'];
-				if (response['success']) {
-					var el = document.getElementById("OSSPasswords_editView_fieldName_password");
-					el.value = response['password'];
-					el.onchange();
-					$('#copy-button').removeClass('d-none').show();
-				}
-			},
-			function (data, err) {
-
+		AppConnector.request(params).done(function (data) {
+			var response = data['result'];
+			if (response['success']) {
+				var el = document.getElementById("OSSPasswords_editView_fieldName_password");
+				el.value = response['password'];
+				el.onchange();
+				$('#copy-button').removeClass('d-none').show();
 			}
-		);
+		});
 
 		// validate password
 		passwordStrength('', '');
@@ -110,25 +105,20 @@ function showDetailsPassword(record) {
 			'record': record
 		};
 
-		AppConnector.request(params).then(
-			function (data) {
-				var response = data['result'];
-				if (response['success']) {
-					var el = document.getElementById("detailPassword");
-					el.innerHTML = response['password'];
-					$('#copy-button').removeClass('d-none').show();
-				}
-			},
-			function (data, err) {
-
+		AppConnector.request(params).done(function (data) {
+			var response = data['result'];
+			if (response['success']) {
+				var el = document.getElementById("detailPassword");
+				el.innerHTML = response['password'];
+				$('#copy-button').removeClass('d-none').show();
 			}
-		);
+		});
 
 		// change buttons label
-		$('#show-btn').text(hidePassText);
+		$('#show-btn').html('<span class="fas fa-eye-slash u-mr-5px"></span>' + hidePassText);
 	} else {
 		document.getElementById("detailPassword").innerHTML = '**********';
-		$('#show-btn').text(showPassText);
+		$('#show-btn').html('<span class="fas fa-eye u-mr-5px"></span>' + showPassText);
 		$('#copy-button').hide();
 	}
 }
@@ -142,22 +132,15 @@ function showPasswordQuickEdit(record) {
 		'action': "GetPass",
 		'record': record
 	};
-
-	AppConnector.request(params).then(
-		function (data) {
-			var response = data['result'];
-			if (response['success']) {
-				var el = document.getElementById("detailPassword");
-				el.innerHTML = response['password'];
-				$("input[name='password']").val(response['password']);
-				$('#copy-button').removeClass('d-none').show();
-			}
-		},
-		function (data, err) {
-
+	AppConnector.request(params).done(function (data) {
+		var response = data['result'];
+		if (response['success']) {
+			var el = document.getElementById("detailPassword");
+			el.innerHTML = response['password'];
+			$("input[name='password']").val(response['password']);
+			$('#copy-button').removeClass('d-none').show();
 		}
-	);
-
+	});
 	// change buttons label
 	$('#show-btn').text(hidePassText);
 }

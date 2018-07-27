@@ -25,7 +25,7 @@ Settings_PDF_Edit_Js("Settings_PDF_Edit3_Js", {}, {
 	 * Function  to intialize the reports step1
 	 */
 	initialize: function (container) {
-		if (typeof container === 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('#pdf_step3');
 		}
 		if (container.is('#pdf_step3')) {
@@ -51,30 +51,24 @@ Settings_PDF_Edit_Js("Settings_PDF_Edit3_Js", {}, {
 		var saveData = form.serializeFormData();
 		saveData['action'] = 'Save';
 		saveData['step'] = 3;
-		AppConnector.request(saveData).then(
-			function (data) {
-				data = JSON.parse(data);
-				if (data.success == true) {
-					Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_PDF_SAVED_SUCCESSFULLY')});
+		AppConnector.request(saveData).done(function (data) {
+			data = JSON.parse(data);
+			if (data.success == true) {
+				Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_PDF_SAVED_SUCCESSFULLY')});
 
-					AppConnector.request(formData).then(
-						function (data) {
-							form.hide();
-							progressIndicatorElement.progressIndicator({
-								'mode': 'hide'
-							})
-							aDeferred.resolve(data);
-						},
-						function (error, err) {
-							app.errorLog(error, err);
-						}
-					);
-				}
-			},
-			function (error, err) {
-				app.errorLog(error, err);
+				AppConnector.request(formData).done(function (data) {
+					form.hide();
+					progressIndicatorElement.progressIndicator({
+						'mode': 'hide'
+					})
+					aDeferred.resolve(data);
+				}).fail(function (error, err) {
+					app.errorLog(error, err);
+				});
 			}
-		);
+		}).fail(function (error, err) {
+			app.errorLog(error, err);
+		});
 		return aDeferred.promise();
 	},
 	registerCancelStepClickEvent: function (form) {
@@ -82,22 +76,9 @@ Settings_PDF_Edit_Js("Settings_PDF_Edit3_Js", {}, {
 			window.history.back();
 		});
 	},
-	/**
-	 * Registers updated version of CkEditor on textarea fields
-	 * spellcheck disabled
-	 */
-	registerNewEditor: function () {
-		CKEDITOR.replace('header_content', {
-				disableNativeSpellChecker: true,
-				scayt_autoStartup: false,
-				removePlugins: 'scayt'
-			}
-		);
-	},
 	registerEvents: function () {
-		var container = this.getContainer();
-
-		var opts = app.validationEngineOptions;
+		let container = this.getContainer(),
+			opts = app.validationEngineOptions;
 		// to prevent the page reload after the validation has completed
 		opts['onValidationComplete'] = function (form, valid) {
 			//returns the valid status
@@ -106,7 +87,7 @@ Settings_PDF_Edit_Js("Settings_PDF_Edit3_Js", {}, {
 		opts['promptPosition'] = "bottomRight";
 		container.validationEngine(opts);
 		App.Fields.Picklist.showSelect2ElementView(container.find('select'));
+		new App.Fields.Text.Editor('.js-editor', {toolbar: 'Full'});
 		this.registerCancelStepClickEvent(container);
-		this.registerNewEditor();
 	}
 });

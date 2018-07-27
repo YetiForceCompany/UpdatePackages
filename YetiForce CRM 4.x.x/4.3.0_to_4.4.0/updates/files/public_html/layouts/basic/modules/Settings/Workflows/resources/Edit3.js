@@ -35,7 +35,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 	 * Function  to intialize the reports step1
 	 */
 	initialize: function (container) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = $('#workflow_step3');
 		}
 		if (container.is('#workflow_step3')) {
@@ -45,31 +45,35 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 		}
 	},
 	registerEditTaskEvent: function () {
-		var thisInstance = this;
-		var container = this.getContainer();
-		App.Fields.Password.registerCopyClipboard();
+		let thisInstance = this,
+			container = this.getContainer();
 		container.on('click', '[data-url]', function (e) {
-			var currentElement = $(e.currentTarget);
-			var params = currentElement.data('url');
-			var progressIndicatorElement = $.progressIndicator({
-				position: 'html',
-				blockInfo: {
-					enabled: true
-				}
-			});
+			let currentElement = $(e.currentTarget),
+				params = currentElement.data('url'),
+				progressIndicatorElement = $.progressIndicator({
+					position: 'html',
+					blockInfo: {
+						enabled: true
+					}
+				});
 			app.showModalWindow(null, params, function (data) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'})
+				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				if (data) {
+					let clipboard = App.Fields.Text.registerCopyClipboard(data);
+					container.one('hidden.bs.modal', () => {
+						clipboard.destroy();
+					});
+				}
 				thisInstance.registerVTCreateTodoTaskEvents();
 				var taskType = $('#taskType').val();
 				var functionName = 'register' + taskType + 'Events';
-				if (typeof thisInstance[functionName] != 'undefined') {
+				if (typeof thisInstance[functionName] !== "undefined") {
 					thisInstance[functionName].apply(thisInstance);
 				}
 				thisInstance.registerSaveTaskSubmitEvent(taskType);
 				$('#saveTask').validationEngine(app.validationEngineOptions);
 				thisInstance.registerFillTaskFieldsEvent();
 				thisInstance.registerCheckSelectDateEvent();
-				app.showBtnSwitch($(data).find('.switchBtn'));
 				app.showPopoverElementView($(data).find('.js-popover-tooltip'));
 				var contentHeight = parseInt(data.find('.modal-body').height());
 				var maxHeight = app.getScreenHeight(80);
@@ -98,7 +102,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 			var validationResult = form.validationEngine('validate');
 			if (validationResult == true) {
 				var customValidationFunctionName = taskType + 'CustomValidation';
-				if (typeof thisInstance[customValidationFunctionName] != 'undefined') {
+				if (typeof thisInstance[customValidationFunctionName] !== "undefined") {
 					var result = thisInstance[customValidationFunctionName].apply(thisInstance);
 					if (result != true) {
 						var params = {
@@ -112,11 +116,11 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 					}
 				}
 				var preSaveActionFunctionName = 'preSave' + taskType;
-				if (typeof thisInstance[preSaveActionFunctionName] != 'undefined') {
+				if (typeof thisInstance[preSaveActionFunctionName] !== "undefined") {
 					thisInstance[preSaveActionFunctionName].apply(thisInstance, [taskType]);
 				}
 				var params = form.serializeFormData();
-				AppConnector.request(params).then(function (data) {
+				AppConnector.request(params).done(function (data) {
 					if (data.result) {
 						thisInstance.getTaskList();
 						app.hideModalWindow();
@@ -133,7 +137,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 		return this.checkDuplicateFieldsSelected();
 	},
 	checkDuplicateFieldsSelected: function () {
-		var selectedFieldNames = $('#save_fieldvaluemapping').find('.conditionRow').find('[name="fieldname"]');
+		var selectedFieldNames = $('#save_fieldvaluemapping').find('.js-conditions-row').find('[name="fieldname"]');
 		var result = true;
 		var failureMessage = app.vtranslate('JS_SAME_FIELDS_SELECTED_MORE_THAN_ONCE');
 		$.each(selectedFieldNames, function (i, ele) {
@@ -190,12 +194,12 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 		var thisInstance = this;
 		var conditionsContainer = $('#save_fieldvaluemapping');
 		var fieldListFunctionName = 'get' + tasktype + 'FieldList';
-		if (typeof thisInstance[fieldListFunctionName] != 'undefined') {
+		if (typeof thisInstance[fieldListFunctionName] !== "undefined") {
 			var fieldList = thisInstance[fieldListFunctionName].apply()
 		}
 
 		var values = [];
-		var conditions = $('.conditionRow', conditionsContainer);
+		var conditions = $('.js-conditions-row', conditionsContainer);
 		conditions.each(function (i, conditionDomElement) {
 			var rowElement = $(conditionDomElement);
 			var fieldSelectElement = $('[name="fieldname"]', rowElement);
@@ -225,7 +229,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 						var valuesArr = commaSeperatedValues.split(',');
 						var newvaluesArr = [];
 						for (i = 0; i < valuesArr.length; i++) {
-							if (typeof pickListValues[valuesArr[i]] != 'undefined') {
+							if (typeof pickListValues[valuesArr[i]] !== "undefined") {
 								newvaluesArr.push(pickListValues[valuesArr[i]]);
 							} else {
 								newvaluesArr.push(valuesArr[i]);
@@ -279,7 +283,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 				'enabled': true
 			}
 		});
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			$('#taskListContainer').html(data);
 			progressIndicatorElement.progressIndicator({mode: 'hide'});
 		});
@@ -309,7 +313,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 					'enabled': true
 				}
 			});
-			AppConnector.request(url).then(function (data) {
+			AppConnector.request(url).done(function (data) {
 				if (data.result == "ok") {
 					var params = {
 						title: app.vtranslate('JS_MESSAGE'),
@@ -330,22 +334,21 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 			var message = app.vtranslate('LBL_DELETE_CONFIRMATION');
 			Vtiger_Helper_Js.showConfirmationBox({
 				'message': message
-			}).then(
-				function () {
-					var currentElement = $(e.currentTarget);
-					var deleteUrl = currentElement.data('deleteurl');
-					AppConnector.request(deleteUrl).then(function (data) {
-						if (data.result == 'ok') {
-							thisInstance.getTaskList();
-							var params = {
-								title: app.vtranslate('JS_MESSAGE'),
-								text: app.vtranslate('JS_TASK_DELETED_SUCCESSFULLY'),
-								type: 'success'
-							};
-							Vtiger_Helper_Js.showPnotify(params);
-						}
-					});
+			}).done(function () {
+				var currentElement = $(e.currentTarget);
+				var deleteUrl = currentElement.data('deleteurl');
+				AppConnector.request(deleteUrl).done(function (data) {
+					if (data.result == 'ok') {
+						thisInstance.getTaskList();
+						var params = {
+							title: app.vtranslate('JS_MESSAGE'),
+							text: app.vtranslate('JS_TASK_DELETED_SUCCESSFULLY'),
+							type: 'success'
+						};
+						Vtiger_Helper_Js.showPnotify(params);
+					}
 				});
+			});
 		});
 	},
 	registerFillTaskFromEmailFieldEvent: function () {
@@ -419,17 +422,16 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 	},
 	registerAddFieldEvent: function () {
 		$('#addFieldBtn').on('click', function (e) {
-			var newAddFieldContainer = $('.basicAddFieldContainer').clone(true, true).removeClass('basicAddFieldContainer d-none').addClass('conditionRow');
+			var newAddFieldContainer = $('.js-add-basic-field-container').clone(true, true).removeClass('js-add-basic-field-container d-none').addClass('js-conditions-row');
 			$('select', newAddFieldContainer).addClass('select2');
 			$('#save_fieldvaluemapping').append(newAddFieldContainer);
 			//change in to chosen elements
 			App.Fields.Picklist.changeSelectElementView(newAddFieldContainer);
-			App.Fields.Picklist.showSelect2ElementView(newAddFieldContainer.find('.select2'));
 		});
 	},
 	registerDeleteConditionEvent: function () {
 		$('#saveTask').on('click', '.deleteCondition', function (e) {
-			$(e.currentTarget).closest('.conditionRow').remove();
+			$(e.currentTarget).closest('.js-conditions-row').remove();
 		})
 	},
 	/**
@@ -440,7 +442,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 		$('#saveTask').on('change', 'select[name="fieldname"]', function (e) {
 			var selectedElement = $(e.currentTarget);
 			if (selectedElement.val() != 'none') {
-				var conditionRow = selectedElement.closest('.conditionRow');
+				var conditionRow = selectedElement.closest('.js-conditions-row');
 				var moduleNameElement = conditionRow.find('[name="modulename"]');
 				if (moduleNameElement.length > 0) {
 					var selectedOptionFieldInfo = selectedElement.find('option:selected').data('fieldinfo');
@@ -482,14 +484,14 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 	},
 	loadFieldSpecificUi: function (fieldSelect) {
 		var selectedOption = fieldSelect.find('option:selected');
-		var row = fieldSelect.closest('div.conditionRow');
+		var row = fieldSelect.closest('div.js-conditions-row');
 		var fieldUiHolder = row.find('.fieldUiHolder');
 		var fieldInfo = selectedOption.data('fieldinfo');
 		var fieldValueMapping = this.getFieldValueMapping();
 		var selectField = '';
-		if (fieldValueMapping && typeof fieldValueMapping[fieldInfo.name] != 'undefined') {
+		if (fieldValueMapping && typeof fieldValueMapping[fieldInfo.name] !== "undefined") {
 			selectField = fieldValueMapping[fieldInfo.name];
-		} else if (fieldValueMapping && typeof fieldValueMapping[fieldSelect.val()] != 'undefined') {
+		} else if (fieldValueMapping && typeof fieldValueMapping[fieldSelect.val()] !== "undefined") {
 			selectField = fieldValueMapping[fieldSelect.val()];
 		}
 		if (selectField) {
@@ -515,7 +517,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 		fieldSpecificUi.find('[name="valuetype"]').removeAttr('data-validation-engine');
 		//If the workflowValueType is rawtext then only validation should happen
 		var workflowValueType = fieldSpecificUi.filter('[name="valuetype"]').val();
-		if (workflowValueType != 'rawtext' && typeof workflowValueType != 'undefined') {
+		if (workflowValueType != 'rawtext' && typeof workflowValueType !== "undefined") {
 			fieldSpecificUi.filter('[name="' + fieldName + '"]').removeAttr('data-validation-engine');
 			fieldSpecificUi.find('[name="' + fieldName + '"]').removeAttr('data-validation-engine');
 		}
@@ -526,7 +528,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 			App.Fields.Picklist.showSelect2ElementView(fieldSpecificUi, params)
 		} else if (fieldSpecificUi.is('select')) {
 			if (fieldSpecificUi.hasClass('chzn-select')) {
-				App.Fields.Picklist.changeSelectElementView(fieldSpecificUi)
+				App.Fields.Picklist.showChoosenElementView(fieldSpecificUi);
 			} else {
 				App.Fields.Picklist.showSelect2ElementView(fieldSpecificUi);
 			}
@@ -601,7 +603,7 @@ Settings_Workflows_Edit_Js("Settings_Workflows_Edit3_Js", {}, {
 					enabled: true
 				}
 			});
-			AppConnector.request(params).then(function (data) {
+			AppConnector.request(params).done(function (data) {
 				progressIndicatorElement.progressIndicator({'mode': 'hide'})
 				var createEntityContainer = $('#addCreateEntityContainer');
 				createEntityContainer.html(data);

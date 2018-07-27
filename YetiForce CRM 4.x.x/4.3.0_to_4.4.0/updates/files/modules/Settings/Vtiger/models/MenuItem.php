@@ -120,10 +120,9 @@ class Settings_Vtiger_MenuItem_Model extends \App\Base
 		if (isset(self::$transformedUrlMapping[$url])) {
 			$url = self::$transformedUrlMapping[$url];
 		}
-		if (!empty($this->menu)) {
+		if (!empty($this->menu) && $this->get('name') !== 'LBL_SHOP_YETIFORCE') {
 			$url .= '&block=' . $this->getMenu()->getId() . '&fieldid=' . $this->getId();
 		}
-
 		return $url;
 	}
 
@@ -224,7 +223,6 @@ class Settings_Vtiger_MenuItem_Model extends \App\Base
 
 			return $menuItem;
 		}
-
 		return false;
 	}
 
@@ -253,7 +251,6 @@ class Settings_Vtiger_MenuItem_Model extends \App\Base
 
 			return $menuItem;
 		}
-
 		return false;
 	}
 
@@ -344,7 +341,9 @@ class Settings_Vtiger_MenuItem_Model extends \App\Base
 	public function getModule()
 	{
 		$urlParams = vtlib\Functions::getQueryParams($this->getUrl());
-
+		if (!isset($urlParams['module'])) {
+			return false;
+		}
 		return $urlParams['module'];
 	}
 }

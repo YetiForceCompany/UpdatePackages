@@ -61,7 +61,6 @@ class Vtiger_Edit_View extends Vtiger_Index_View
 		} else {
 			$pageTitle = App\Language::translate('LBL_VIEW_CREATE', $moduleName);
 		}
-
 		return $pageTitle;
 	}
 
@@ -137,8 +136,6 @@ class Vtiger_Edit_View extends Vtiger_Index_View
 		$viewer->assign('BLOCK_LIST', $moduleModel->getBlocks());
 		$viewer->assign('CURRENTDATE', date('Y-n-j'));
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
-		$viewer->assign('APIADDRESS', Settings_ApiAddress_Module_Model::getInstance('Settings:ApiAddress')->getConfig());
-		$viewer->assign('APIADDRESS_ACTIVE', Settings_ApiAddress_Module_Model::isActive());
 		$viewer->assign('MAX_UPLOAD_LIMIT_MB', Vtiger_Util_Helper::getMaxUploadSize());
 		$viewer->assign('MAX_UPLOAD_LIMIT', \AppConfig::main('upload_maxsize'));
 		$viewer->view('EditView.tpl', $moduleName);
@@ -179,7 +176,6 @@ class Vtiger_Edit_View extends Vtiger_Index_View
 			$scriptInstances = $this->checkAndConvertJsScripts($fileNames);
 			$parentScript = array_merge($parentScript, $scriptInstances);
 		}
-
 		return $parentScript;
 	}
 }

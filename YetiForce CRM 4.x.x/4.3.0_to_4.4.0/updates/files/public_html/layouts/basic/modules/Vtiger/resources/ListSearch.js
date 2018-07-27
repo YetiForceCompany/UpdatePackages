@@ -1,12 +1,12 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 jQuery.Class("YetiForce_ListSearch_Js", {
 	getInstance: function (container, noEvents, reletedInstance, moduleName) {
-		if (typeof moduleName === 'undefined') {
+		if (typeof moduleName === "undefined") {
 			moduleName = app.getModuleName();
 		}
 		var moduleClassName = module + '_ListSearch_Js';
 		var basicClassName = 'YetiForce_ListSearch_Js';
-		if (typeof window[moduleClassName] != 'undefined') {
+		if (typeof window[moduleClassName] !== "undefined") {
 			var instance = new window[moduleClassName](container, noEvents, reletedInstance);
 		} else {
 			var instance = new window[basicClassName](container, noEvents, reletedInstance);
@@ -20,7 +20,7 @@ jQuery.Class("YetiForce_ListSearch_Js", {
 	reletedInstance: false,
 	viewName: false,
 	init: function (container, noEvents, reletedInstance) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('.bodyContents');
 		}
 		this.setContainer(container);
@@ -159,7 +159,7 @@ jQuery.Class("YetiForce_ListSearch_Js", {
 		params['search_value'] = alphabet
 		params['operator'] = 's';
 
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			jQuery('.paginationDiv').html(data);
 			var instance = thisInstance.getInstanceView();
 			if (instance && instance != undefined && jQuery.isFunction(instance.registerPageNavigationEvents)) {
@@ -268,7 +268,7 @@ jQuery.Class("YetiForce_ListSearch_Js", {
 		if (instance) {
 			var funcName = instance.reloadFunctionName;
 			if (jQuery.isFunction(instance[funcName])) {
-				instance[funcName](params).then(function () {
+				instance[funcName](params).done(function () {
 					thisInstance.resetPagination();
 					thisInstance.executeFunctions(instance);
 				});

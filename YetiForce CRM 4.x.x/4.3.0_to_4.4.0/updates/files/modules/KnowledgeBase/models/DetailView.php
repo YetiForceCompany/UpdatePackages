@@ -12,7 +12,6 @@ class KnowledgeBase_DetailView_Model extends Vtiger_DetailView_Model
 	public function getDetailViewLinks($linkParams)
 	{
 		$recordModel = $this->getRecord();
-		$recordId = $recordModel->get('id');
 		$moduleName = $recordModel->getModuleName();
 		$relatedLinkEntries = [
 			[
@@ -39,7 +38,6 @@ class KnowledgeBase_DetailView_Model extends Vtiger_DetailView_Model
 		foreach ($relatedLinks as $relatedLink) {
 			$linkModelList[$relatedLink->getType()][] = $relatedLink;
 		}
-
 		return $linkModelList;
 	}
 }

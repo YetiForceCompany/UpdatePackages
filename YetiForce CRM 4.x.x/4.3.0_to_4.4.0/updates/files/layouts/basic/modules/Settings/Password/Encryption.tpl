@@ -1,12 +1,18 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="verticalScroll">
+	<div class="tpl-Settings-Password-Encryption verticalScroll">
 		<div class="widget_header row">
 			<div class="col-12">
 				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $QUALIFIED_MODULE)}
 			</div>
 		</div>
 		<div class="encryptionContainer mt-3">
+			<div class="alert alert-info alert-dismissible fade show" role="alert">
+				{App\Language::translate('LBL_ENCRYPT_DESCRIPTION', $QUALIFIED_MODULE)}
+				<button type="button" class="close" data-dismiss="alert">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
 			{if !$ENCRYPT->isActive()}
 				<div class="alert alert-warning alert-dismissible fade show" role="alert">
 					{App\Language::translate('LBL_ENCRYPT_IS_NOT_ACTIVE', $QUALIFIED_MODULE)}
@@ -61,8 +67,10 @@
 						</div>
 					</div>
 				</div>
-				<div class="formActionsPanel">
-					<button type="submit" class="btn btn-xs btn-success"><span class="fas fa-check"></span>&nbsp;&nbsp;{App\Language::translate('LBL_SAVE')}</button>
+				<div class="c-form__action-panel">
+					<button type="submit" class="btn btn-xs btn-success">
+						<span class="fas fa-check"></span><strong>{App\Language::translate('LBL_SAVE')}</strong>
+					</button>
 				</div>
 			</form>
 		</div>

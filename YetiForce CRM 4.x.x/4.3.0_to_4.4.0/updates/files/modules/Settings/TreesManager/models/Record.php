@@ -5,6 +5,7 @@
  *
  * @copyright YetiForce Sp. z o.o
  * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 {
@@ -92,18 +93,19 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 				'linklabel' => 'LBL_EDIT',
 				'linkurl' => $this->getEditViewUrl(),
 				'linkicon' => 'fas fa-edit',
+				'linkclass' => 'btn btn-sm btn-info',
 			],
 			[
 				'linktype' => 'LISTVIEWRECORD',
 				'linklabel' => 'LBL_DELETE',
 				'linkurl' => "javascript:Settings_Vtiger_List_Js.triggerDelete(event,'" . $this->getDeleteUrl() . "');",
 				'linkicon' => 'fas fa-trash-alt',
+				'linkclass' => 'btn btn-sm btn-danger text-white',
 			],
 		];
 		foreach ($recordLinks as $recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 		}
-
 		return $links;
 	}
 
@@ -119,7 +121,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 		$label = $tree['text'];
 		$id = $tree['id'];
 		$treeID = 'T' . $id;
-		$icon = $tree['icon'] === 1 ? '' : $tree['icon'];
+		$icon = (int) $tree['icon'] === 1 ? '' : $tree['icon'];
 		if ($parenttrre != '') {
 			$parenttrre = $parenttrre . '::';
 		}
@@ -169,6 +171,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 		if (is_numeric($module)) {
 			$module = App\Module::getModuleName($module);
 		}
+		$treeValue = $treeValue ? explode(',', $treeValue) : [];
 		while ($row = $dataReader->read()) {
 			$treeID = (int) str_replace('T', '', $row['tree']);
 			$cut = strlen('::' . $row['tree']);
@@ -196,7 +199,7 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 			];
 			if ($category) {
 				$parameters['type'] = $category;
-				if ($treeValue && strpos($treeValue, ",{$row['tree']},") !== false) {
+				if ($treeValue && in_array($row['tree'], $treeValue)) {
 					$parameters[$category] = ['checked' => true];
 				}
 			}
@@ -228,7 +231,6 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 				$val = [];
 			}
 		}
-
 		return $val;
 	}
 
@@ -361,7 +363,6 @@ class Settings_TreesManager_Record_Model extends Settings_Vtiger_Record_Model
 
 			return $instance;
 		}
-
 		return null;
 	}
 

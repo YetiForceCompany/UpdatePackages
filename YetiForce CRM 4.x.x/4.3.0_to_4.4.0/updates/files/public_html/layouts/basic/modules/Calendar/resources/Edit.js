@@ -61,9 +61,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		var container = this.getForm();
 		var thisInstance = this;
 		container.find('.recurringType').on('change', function (e) {
-			var currentTarget = jQuery(e.currentTarget);
-			var recurringType = currentTarget.val();
-			thisInstance.changeRecurringTypesUIStyles(recurringType);
+			thisInstance.changeRecurringTypesUIStyles(jQuery(e.currentTarget).val());
 		});
 		container.find('.repeatUI [name="calendarEndType"]').on('change', function (e) {
 			var currentTarget = $(e.currentTarget);
@@ -161,7 +159,6 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 				end = start;
 				endDateElement.val(moment(end).format(dateFormat));
 				App.Fields.Date.register(container);
-				thisInstance.setVisibilityBtnSaveAndClose(container);
 			}
 			var timeStartElement = startDateElement.closest('.fieldValue').find('[name="time_start"]');
 			timeStartElement.trigger('changeTime');
@@ -173,45 +170,23 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		});
 
 		container.find('input[name="time_start"]').on('blur', function (e, data) {
-			if (typeof data == 'undefined') {
+			if (typeof data === "undefined") {
 				data = {};
 			}
 
-			if (typeof data.forceChange == 'undefined') {
+			if (typeof data.forceChange === "undefined") {
 				data.forceChange = false;
 			}
 			var element = jQuery(e.currentTarget);
 			var currentValue = element.val();
 			var prevValue = element.data('prevValue');
 			if (currentValue != prevValue || data.forceChange) {
-				var list = element.data('timepicker-list');
-				if (!list) {
-					//To generate the list
-					element.timepicker('show');
-					element.timepicker('hide');
-					list = element.data('timepicker-list');
-				}
 				e = jQuery.Event("keydown");
 				e.which = 13;
 				e.keyCode = 13;
 				element.trigger(e);
 			}
 		});
-	},
-	setVisibilityBtnSaveAndClose: function (container) {
-		var secondDate = container.find('input[name="due_date"]');
-		var secondDateFormat = secondDate.data('date-format');
-		var secondDateValue = secondDate.val();
-		var secondTime = container.find('input[name="time_end"]');
-		var secondTimeValue = secondTime.val();
-		var secondDateTimeValue = secondDateValue + ' ' + secondTimeValue;
-		var secondDateInstance = Vtiger_Helper_Js.getDateInstance(secondDateTimeValue, secondDateFormat);
-		var timeBetweenDates = secondDateInstance - new Date();
-		if (timeBetweenDates >= 0) {
-			container.find('.saveAndComplete').addClass('d-none');
-		} else {
-			container.find('.saveAndComplete').removeClass('d-none');
-		}
 	},
 	registerEndDateTimeChangeLogger: function (container) {
 		var thisInstance = this;
@@ -232,7 +207,6 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 			if (result != true) {
 				return;
 			}
-			thisInstance.setVisibilityBtnSaveAndClose(container);
 			jQuery('[name="userChangedEndDateTime"]').val('1');
 			dueDateElement.data('userChangedTime', true);
 		});
@@ -252,7 +226,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		} else if (endValue === 'until') {
 			var date = form.find('.calendarUntil').val();
 			date = app.getDateInDBInsertFormat(CONFIG.dateFormat, date);
-			rule += ';UNTIL=' + date.replace(/-/gi, '') + 'T000000';
+			rule += ';UNTIL=' + date.replace(/-/gi, '') + 'T235959';
 		}
 		if (freq === 'WEEKLY') {
 			var checkedElements = [];
@@ -357,7 +331,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 			dateStart: dateStart.val()
 		};
 		container.progressIndicator({});
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			container.progressIndicator({mode: 'hide'});
 			timeStart.val(data.result.time_start);
 			timeEnd.val(data.result.time_end);
@@ -391,14 +365,14 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 			}
 		});
 	},
-	registerSaveAndCloseBtn: function (container) {
-		this.setVisibilityBtnSaveAndClose(container);
-		container.find('.saveAndComplete').on('click', function () {
-			var invalidFields = container.data('jqv').InvalidFields;
-			if (invalidFields.length == 0) {
-				container.append('<input type=hidden name="saveAndClose" value="PLL_COMPLETED">');
+	registerMarkAsCompletedBtn: function (container) {
+		container.find('.js-btn--mark-as-completed').on('click', function () {
+			const self = $(this);
+			if (self.hasClass('active')) {
+				container.find('.js-completed').remove();
+			} else {
+				container.append('<input class="js-completed" type=hidden name="markAsCompleted" value="PLL_COMPLETED" data-js="remove">');
 			}
-			container.find('[type="submit"]').trigger('click');
 		});
 	},
 	registerBasicEvents: function (container) {
@@ -409,7 +383,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		this.registerActivityTypeChangeEvent(container);
 		this.registerEndDateTimeChangeLogger(container);
 		this.registerAutoFillHours(container);
-		this.registerSaveAndCloseBtn(container);
+		this.registerMarkAsCompletedBtn(container);
 	},
 	toggleTimesInputs: function (container) {
 		container.find(':checkbox').on('change', function () {
@@ -490,7 +464,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 					action: 'Invitees',
 					mode: 'find',
 					value: request.term
-				}).then(function (result) {
+				}).done(function (result) {
 					var reponseDataList = result.result;
 					if (reponseDataList.length <= 0) {
 						reponseDataList.push({
@@ -506,7 +480,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 				var selected = ui.item;
 
 				//To stop selection if no results is selected
-				if (typeof selected.type != 'undefined' && selected.type == "no results") {
+				if (typeof selected.type !== "undefined" && selected.type == "no results") {
 					return false;
 				}
 				var recordExist = true;
@@ -517,7 +491,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 				});
 				if (recordExist) {
 					var inviteRow = inviteesContent.find('.d-none .inviteRow').clone(true, true);
-					Vtiger_Index_Js.getEmailFromRecord(selected.id, selected.module).then(function (email) {
+					Vtiger_Index_Js.getEmailFromRecord(selected.id, selected.module).done(function (email) {
 						inviteRow.data('crmid', selected.id);
 						inviteRow.data('email', email);
 						inviteRow.find('.inviteName').data('content', selected.fullLabel + email).text(selected.label);

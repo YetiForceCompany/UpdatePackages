@@ -14,13 +14,17 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if ($this->validate || empty($value)) {
+		if (isset($this->validate[$value]) || empty($value)) {
 			return;
 		}
 		if (substr($value, 0, 1) !== 'T' || !is_numeric(substr($value, 1))) {
 			throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
 		}
-		$this->validate = true;
+		$maximumLength = $this->getFieldModel()->get('maximumlength');
+		if ($maximumLength && App\TextParser::getTextLength($value) > $maximumLength) {
+			throw new \App\Exceptions\Security('ERR_VALUE_IS_TOO_LONG||' . $this->getFieldModel()->getFieldName() . '||' . $value, 406);
+		}
+		$this->validate[$value] = true;
 	}
 
 	/**
@@ -28,13 +32,15 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 	 */
 	public function getDisplayValue($value, $record = false, $recordModel = false, $rawText = false, $length = false)
 	{
+		if (empty($value)) {
+			return '';
+		}
 		$fieldModel = $this->getFieldModel();
 		if ($rawText) {
 			$text = \App\Fields\Tree::getPicklistValue($fieldModel->getFieldParams(), $fieldModel->getModuleName())[$value];
 			if (is_int($length)) {
 				$text = \App\TextParser::textTruncate($text, $length);
 			}
-
 			return \App\Purifier::encodeHtml($text);
 		}
 		$value = \App\Fields\Tree::getPicklistValueImage($fieldModel->getFieldParams(), $fieldModel->getModuleName(), $value);
@@ -45,7 +51,6 @@ class Vtiger_Tree_UIType extends Vtiger_Base_UIType
 		if (isset($value['icon'])) {
 			return $value['icon'] . '' . \App\Purifier::encodeHtml($text);
 		}
-
 		return \App\Purifier::encodeHtml($text);
 	}
 

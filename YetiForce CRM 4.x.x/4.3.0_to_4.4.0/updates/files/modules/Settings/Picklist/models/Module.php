@@ -16,7 +16,6 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 		if (empty($fieldName) || !preg_match('/^[_a-zA-Z0-9]+$/', $fieldName)) {
 			throw new \App\Exceptions\AppException('Incorrect picklist name');
 		}
-
 		return 'vtiger_' . $fieldName;
 	}
 
@@ -37,7 +36,6 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 				$fields[$fieldName] = $field;
 			}
 		}
-
 		return $fields;
 	}
 
@@ -54,16 +52,17 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 	{
 		$db = App\Db::getInstance();
 		$pickListFieldName = $fieldModel->getName();
+		$primaryKey = App\Fields\Picklist::getPickListId($pickListFieldName);
 		$tableName = $this->getPickListTableName($pickListFieldName);
 		if ($db->isTableExists($tableName . '_seq')) {
 			$id = $db->getUniqueID($tableName);
 		} else {
-			$id = $db->getUniqueID($tableName, $pickListFieldName . 'id', false);
+			$id = $db->getUniqueID($tableName, $primaryKey, false);
 		}
 		$picklistValueId = $db->getUniqueID('vtiger_picklistvalues');
 		$sequence = (new \App\Db\Query())->from($tableName)->max('sortorderid');
 		$row = [
-			($pickListFieldName . 'id') => $id,
+			$primaryKey => $id,
 			$pickListFieldName => $newValue,
 			'sortorderid' => ++$sequence,
 			'presence' => 1,
@@ -137,7 +136,6 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 			]);
 			$eventHandler->trigger('PicklistAfterRename');
 		}
-
 		return !empty($result);
 	}
 
@@ -296,7 +294,6 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 		if ($moduleObject) {
 			$instance = self::getInstanceFromModuleObject($moduleObject);
 		}
-
 		return $instance;
 	}
 
@@ -314,7 +311,6 @@ class Settings_Picklist_Module_Model extends Vtiger_Module_Model
 		foreach ($objectProperties as $properName => $propertyValue) {
 			$moduleModel->$properName = $propertyValue;
 		}
-
 		return $moduleModel;
 	}
 

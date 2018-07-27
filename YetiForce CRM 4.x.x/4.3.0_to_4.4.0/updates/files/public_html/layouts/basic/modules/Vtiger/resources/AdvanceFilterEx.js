@@ -17,7 +17,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 	// comparators which do not have any field Specific UI.
 	comparatorsWithNoValueBoxMap: ['has changed', 'is empty', 'is not empty', 'is added'],
 	init: function (container) {
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = jQuery('#advanceFilterContainer');
 		}
 
@@ -43,7 +43,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 	 */
 	addNewCondition: function (conditionGroupElement) {
 		var basicElement = jQuery('.basic', conditionGroupElement);
-		var newRowElement = basicElement.find('.conditionRow').clone(true, true);
+		var newRowElement = basicElement.find('.js-conditions-row').clone(true, true);
 		jQuery('select', newRowElement).addClass('chzn-select');
 		var conditionList = jQuery('.conditionList', conditionGroupElement);
 		conditionList.append(newRowElement);
@@ -60,7 +60,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 	 * @return : select element which will represent the condition element
 	 */
 	loadConditions: function (fieldSelect) {
-		var row = fieldSelect.closest('div.conditionRow');
+		var row = fieldSelect.closest('div.js-conditions-row');
 		var conditionSelectElement = row.find('select[name="comparator"]');
 		var conditionSelected = conditionSelectElement.val();
 		var fieldSelected = fieldSelect.find('option:selected');
@@ -69,7 +69,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 		var fieldSpecificType = this.getFieldSpecificType(fieldSelected);
 		var conditionList = this.getConditionListFromType(fieldSpecificType);
 		//for none in field name
-		if (typeof conditionList == 'undefined') {
+		if (typeof conditionList === "undefined") {
 			conditionList = {};
 			conditionList['none'] = 'None';
 		}
@@ -116,7 +116,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 		conditionGroups.each(function (index, domElement) {
 			var groupElement = jQuery(domElement);
 
-			var conditions = jQuery('.conditionList .conditionRow', groupElement);
+			var conditions = jQuery('.conditionList .js-conditions-row', groupElement);
 			if (conditions.length <= 0) {
 				return true;
 			}
@@ -142,7 +142,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 							var valuesArr = commaSeperatedValues.split(',');
 							var newvaluesArr = [];
 							for (i = 0; i < valuesArr.length; i++) {
-								if (typeof pickListValues[valuesArr[i]] != 'undefined') {
+								if (typeof pickListValues[valuesArr[i]] !== "undefined") {
 									newvaluesArr.push(pickListValues[valuesArr[i]]);
 								} else {
 									newvaluesArr.push(valuesArr[i]);
@@ -219,7 +219,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 	},
 	getPopUp: function (container) {
 		var thisInstance = this;
-		if (typeof container == 'undefined') {
+		if (typeof container === "undefined") {
 			container = thisInstance.getFilterContainer();
 		}
 		container.on('click', '.getPopupUi', function (e) {
@@ -230,8 +230,8 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 			if (valueType == '') {
 				valueType = 'rawtext';
 			}
-			var conditionsContainer = fieldValueElement.closest('.conditionsContainer');
-			var conditionRow = fieldValueElement.closest('.conditionRow');
+			var conditionsContainer = fieldValueElement.closest('.js-conditions-container');
+			var conditionRow = fieldValueElement.closest('.js-conditions-row');
 
 			var clonedPopupUi = conditionsContainer.find('.popupUi').clone(true, true).removeClass('popupUi').addClass('clonedPopupUi');
 			clonedPopupUi.find('select').addClass('chzn-select');
@@ -253,7 +253,7 @@ Vtiger_AdvanceFilter_Js('Vtiger_AdvanceFilterEx_Js', {}, {
 				} else {
 					value = '';
 				}
-				var clonedTimeElement = '<input type="text" class="timepicker-default fieldValue col-md-4 form-control" value="' + value + '" data-input="true" >';
+				var clonedTimeElement = '<input type="text" class="clockPicker fieldValue col-md-4 form-control" value="' + value + '" data-input="true" >';
 				clonedPopupUi.find('.fieldValueContainer').prepend(clonedTimeElement);
 			} else if (fieldValueElement.hasClass('boolean')) {
 				clonedPopupUi.find('.textType').find('option[value="rawtext"]').attr('data-ui', 'input');

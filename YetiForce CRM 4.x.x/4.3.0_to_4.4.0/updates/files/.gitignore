@@ -25,18 +25,19 @@
 /cache/addressBook/mails_5.php
 /user_privileges/sharing_privileges_5.php
 /user_privileges/sharing_privileges_6.php
+/user_privileges/sharing_privileges_7.php
 /user_privileges/user_privileges_5.php
 /user_privileges/user_privileges_6.php
+/user_privileges/user_privileges_7.php
 
 # dependencies COMPOSER
-/vendor
-/public_html/vendor/*
+#/vendor
+#/public_html/vendor/*
 
 # dependencies YARN
 yarn-error.log
-/node_modules/
-/public_html/libraries/*
-!/public_html/libraries/js/
+#/node_modules/
+#/public_html/libraries/*
 
 # IDEs and editors
 /.buildpath
@@ -46,3 +47,6 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
+.babelrc
+build.js
+gulpfile.js

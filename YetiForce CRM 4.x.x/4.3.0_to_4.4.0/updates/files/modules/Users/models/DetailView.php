@@ -6,6 +6,7 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
+ * Contributor(s): YetiForce.com
  * *********************************************************************************** */
 
 class Users_DetailView_Model extends Vtiger_DetailView_Model
@@ -13,16 +14,17 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 	/**
 	 * Function to get the detail view links (links and widgets).
 	 *
-	 * @param <array> $linkParams - parameters which will be used to calicaulate the params
+	 * @param array $linkParams - parameters which will be used to calicaulate the params
 	 *
-	 * @return <array> - array of link models in the format as below
-	 *                 array('linktype'=>list of link models);
+	 * @return array - array of link models in the format as below
+	 *               array('linktype'=>list of link models);
 	 */
 	public function getDetailViewLinks($linkParams)
 	{
 		$currentUserModel = Users_Record_Model::getCurrentUserModel();
 		$recordModel = $this->getRecord();
 		$recordId = $recordModel->getId();
+		$linkModelList['DETAIL_VIEW_BASIC'] = [];
 
 		if (($currentUserModel->isAdminUser() === true || $currentUserModel->get('id') === $recordId) && $recordModel->get('status') === 'Active') {
 			$recordModel = $this->getRecord();
@@ -31,7 +33,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 				'linklabel' => 'LBL_CHANGE_PASSWORD',
 				'linkdata' => ['url' => 'index.php?module=Users&view=PasswordModal&mode=change&record=' . $recordId],
-				'linkclass' => 'btn-info showModal',
+				'linkclass' => 'btn-outline-info showModal',
 				'linkicon' => 'fas fa-key',
 				'showLabel' => true,
 			];
@@ -40,7 +42,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 					'linklabel' => 'BTN_RESET_PASSWORD',
 					'linkdata' => ['url' => 'index.php?module=Users&view=PasswordModal&mode=reset&record=' . $recordId],
-					'linkclass' => 'btn-info showModal',
+					'linkclass' => 'btn-outline-info showModal',
 					'linkicon' => 'fas fa-redo-alt',
 					'showLabel' => true,
 				];
@@ -49,7 +51,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 				'linklabel' => 'LBL_EDIT',
 				'linkurl' => $linkParams['VIEW'] === 'PreferenceDetail' ? $recordModel->getPreferenceEditViewUrl() : $recordModel->getEditViewUrl(),
-				'linkclass' => 'btn-success',
+				'linkclass' => 'btn-outline-success',
 				'linkicon' => 'fas fa-edit',
 				'showLabel' => true,
 			];
@@ -58,7 +60,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linklabel' => 'LBL_DELETE',
 				'linkurl' => 'javascript:Users_Detail_Js.triggerDeleteUser("' . $recordModel->getDeleteUrl() . '")',
 				'linkicon' => 'fas fa-trash-alt',
-				'linkclass' => 'btn-warning',
+				'linkclass' => 'btn-outline-danger',
 				'showLabel' => true,
 			];
 			foreach ($detailViewLinks as $detailViewLink) {
@@ -73,13 +75,23 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linktype' => 'DETAIL_VIEW_BASIC',
 				'linklabel' => 'LBL_CHANGE_ACCESS_KEY',
 				'linkurl' => "javascript:Users_Detail_Js.triggerChangeAccessKey('index.php?module = Users&action = SaveAjax&mode = changeAccessKey&record = $recordId')",
-				'linkicon' => '',
+				'linkicon' => 'fas fa-edit',
+				'showLabel' => true,
 			];
+			if (AppConfig::security('USER_AUTHY_MODE') !== 'TOTP_OFF') {
+				$detailViewActionLinks[] = [
+					'linktype' => 'DETAIL_VIEW_BASIC',
+					'linklabel' => 'LBL_2FA_TOTP_QR_CODE',
+					'linkdata' => ['url' => 'index.php?module=Users&view=TwoFactorAuthenticationModal&record=' . $recordId],
+					'linkclass' => 'showModal',
+					'linkicon' => 'fas fa-key',
+					'showLabel' => true,
+				];
+			}
 			foreach ($detailViewActionLinks as $detailViewLink) {
 				$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues($detailViewLink);
 			}
-
-			return $linkModelList;
 		}
+		return $linkModelList;
 	}
 }

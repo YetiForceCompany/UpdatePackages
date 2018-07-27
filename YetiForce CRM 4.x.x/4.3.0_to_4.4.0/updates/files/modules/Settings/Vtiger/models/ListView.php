@@ -122,7 +122,6 @@ class Settings_Vtiger_ListView_Model extends \App\Base
 		foreach ($basicLinks as $basicLink) {
 			$links['LISTVIEWBASIC'][] = Vtiger_Link_Model::getInstanceFromValues($basicLink);
 		}
-
 		return $links;
 	}
 
@@ -140,12 +139,11 @@ class Settings_Vtiger_ListView_Model extends \App\Base
 				'linktype' => 'LISTVIEWBASIC',
 				'linklabel' => 'LBL_ADD_RECORD',
 				'linkurl' => $moduleModel->getCreateRecordUrl(),
-				'linkclass' => 'btn-success addButton',
+				'linkclass' => 'btn-light addButton',
 				'linkicon' => 'fas fa-plus',
 				'showLabel' => 1,
 			];
 		}
-
 		return $basicLinks;
 	}
 

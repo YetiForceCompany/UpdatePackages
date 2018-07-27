@@ -4,6 +4,7 @@
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Sławomir Kłos <s.klos@yetiforce.com>
  */
 
@@ -122,6 +123,26 @@ class Colors
 	}
 
 	/**
+	 * Get normalized color or generate if empty.
+	 *
+	 * @param string $color
+	 * @param mixed  $value
+	 *
+	 * @return string
+	 */
+	public static function get($color, $value)
+	{
+		if (empty($color)) {
+			return static::getRandomColor($value, '#');
+		}
+		$color = ltrim($color, "#\t ");
+		if (empty($color)) {
+			return static::getRandomColor($value, '#');
+		}
+		return '#' . $color;
+	}
+
+	/**
 	 * Sanitize value for use in css class name.
 	 *
 	 * @param string $value
@@ -211,7 +232,6 @@ class Colors
 				$fieldList[$moduleField->get('name')] = $moduleField;
 			}
 		}
-
 		return $fieldList;
 	}
 
@@ -278,7 +298,6 @@ class Colors
 				'active' => $module['coloractive'],
 			];
 		}
-
 		return $modules;
 	}
 

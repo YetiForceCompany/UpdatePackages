@@ -43,7 +43,7 @@ Vtiger_List_Js("Vtiger_ListPreview_Js", {}, {
 				return;
 			var elem = $(e.currentTarget);
 			var recordUrl = elem.data('recordurl');
-			if (typeof recordUrl == 'undefined') {
+			if (typeof recordUrl === "undefined") {
 				return;
 			}
 			$('.listViewEntriesTable .listViewEntries').removeClass('active');
@@ -59,8 +59,8 @@ Vtiger_List_Js("Vtiger_ListPreview_Js", {}, {
 		var listPreview = container.find('.js-detail-preview');
 		var mainBody = container.closest('.mainBody');
 		var commActHeight = $('.commonActionsContainer').height();
-		app.showNewBottomTopScrollbar(container.find('.js-list-preview--scroll'));
-		app.showNewLeftScrollbar(this.list);
+		app.showNewScrollbarTopBottom(container.find('.js-list-preview--scroll'));
+		app.showNewScrollbarLeft(this.list);
 		$(window).on('resize', () => {
 			if (mainBody.scrollTop() >= (this.list.offset().top + commActHeight)) {
 				container.find('.gutter').css('left', listPreview.offset().left - 8);
@@ -119,9 +119,8 @@ Vtiger_List_Js("Vtiger_ListPreview_Js", {}, {
 		this.sideBlockRight = this.sideBlocks.last();
 		this.list = container.find('.js-list-preview');
 		this.rotatedText = container.find('.u-rotate-90');
-		this.infoUser = $('.infoUser');
-		this.footerH = $('.js-footer').outerHeight() + (this.infoUser.length ? this.infoUser.outerHeight() : 0);
-		this.headerH = $('.bodyHeader').outerHeight();
+		this.footerH = $('.js-footer').outerHeight();
+		this.headerH = $('.js-header').outerHeight();
 	},
 	getDefaultSplitSizes: function () {
 		let thWidth = ((this.listColumnFirstWidth + this.listColumnSecondWidth + 82) / $(window).width()) * 100;
@@ -312,7 +311,7 @@ Vtiger_List_Js("Vtiger_ListPreview_Js", {}, {
 					splitsArray.push(this.split);
 				}
 				var currentSplit = splitsArray[splitsArray.length - 1];
-				if (typeof currentSplit === 'undefined')
+				if (typeof currentSplit === "undefined")
 					return;
 				if (currentSplit.getSizes()[0] < this.windowMinWidth + 5) {
 					currentSplit.setSizes([this.windowMinWidth, this.windowMaxWidth]);
@@ -328,15 +327,15 @@ Vtiger_List_Js("Vtiger_ListPreview_Js", {}, {
 	registerPreviewEvent: function () {
 		const thisInstance = this;
 		const iframe = $(".listPreviewframe");
+		const container = this.getListViewContentContainer();
+		this.getDomParams(container);
+		this.toggleSplit(container);
+		if ($(window).width() > 993) {
+			this.registerListEvents(container);
+		}
 		iframe.on('load', () => {
-			const container = this.getListViewContentContainer();
 			this.frameProgress.progressIndicator({mode: "hide"});
 			iframe.height(iframe.contents().find(".bodyContents").height() - 20);
-			this.getDomParams(container);
-			this.toggleSplit(container);
-			if ($(window).width() > 993) {
-				this.registerListEvents(container);
-			}
 		});
 		$(".listViewEntriesTable .listViewEntries").first().trigger("click");
 	},

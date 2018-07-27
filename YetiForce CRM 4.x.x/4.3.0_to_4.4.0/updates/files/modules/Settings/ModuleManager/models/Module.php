@@ -11,11 +11,10 @@
 
 class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 {
-
 	/**
 	 * @var string[] Base module tools.
 	 */
-	public static $baseModuleTools = ['Import', 'Export', 'DuplicatesHandling', 'CreateCustomFilter',
+	public static $baseModuleTools = ['Import', 'Export', 'Merge', 'CreateCustomFilter',
 		'DuplicateRecord', 'MassEdit', 'MassArchived', 'MassActive', 'MassDelete', 'MassAddComment', 'MassTransferOwnership',
 		'ReadRecord', 'WorkflowTrigger', 'Dashboard', 'CreateDashboardFilter', 'QuickExportToExcel', 'ExportPdf', 'RecordMapping',
 		'RecordMappingList', 'FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'RemoveRelation', 'ReviewingUpdates'];
@@ -24,9 +23,8 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	 * @var array Base module tools exceptions.
 	 */
 	public static $baseModuleToolsExceptions = [
-		'Documents' => ['notAllowed' => ['Import', 'DuplicatesHandling']],
-		'Calendar' => ['notAllowed' => ['DuplicatesHandling']],
-		'Faq' => ['notAllowed' => ['Import', 'Export', 'DuplicatesHandling']],
+		'Documents' => ['notAllowed' => ['Import']],
+		'Faq' => ['notAllowed' => ['Import', 'Export']],
 		'Events' => ['notAllowed' => 'all'],
 		'PBXManager' => ['notAllowed' => 'all'],
 		'OSSMailView' => ['notAllowed' => 'all'],
@@ -55,7 +53,6 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 				}
 			}
 		}
-
 		return $exceptions;
 	}
 
@@ -63,7 +60,7 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	{
 		return ['ModTracker', 'Portal', 'Users', 'Integration',
 			'ConfigEditor', 'FieldFormulas', 'VtigerBackup', 'CronTasks', 'Import', 'Tooltip',
-			'Home',];
+			'Home', ];
 	}
 
 	/**
@@ -113,7 +110,7 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	 */
 	public static function checkModuleName($name)
 	{
-		return (bool) ($name === 'Settings' || preg_match('/[^A-Za-z]/i', $name));
+		return (bool) (strpos($name, 'Settings') !== false || preg_match('/[^A-Za-z]/i', $name));
 	}
 
 	/**
@@ -140,7 +137,6 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 			$nonVisibleModules = self::getNonVisibleModulesList();
 			$query->where(['and', ['presence' => 0], ['NOT IN', 'name', $nonVisibleModules]]);
 		}
-
 		return $query->count();
 	}
 
@@ -153,9 +149,9 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	{
 		$subQuery = (new \App\Db\Query())->select('tabid')->from('vtiger_field')->where(['uitype' => 4])->distinct('tabid');
 		$dataReader = (new \App\Db\Query())->select(['tabid', 'name'])
-				->from('vtiger_tab')
-				->where(['isentitytype' => 1, 'presence' => 0, 'tabid' => $subQuery])
-				->createCommand()->query();
+			->from('vtiger_tab')
+			->where(['isentitytype' => 1, 'presence' => 0, 'tabid' => $subQuery])
+			->createCommand()->query();
 		$moduleModels = [];
 		while ($row = $dataReader->read()) {
 			$moduleModels[$row['name']] = self::getInstanceFromArray($row);

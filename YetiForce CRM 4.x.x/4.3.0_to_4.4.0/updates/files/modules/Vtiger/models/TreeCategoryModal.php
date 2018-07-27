@@ -177,7 +177,6 @@ class Vtiger_TreeCategoryModal_Model extends \App\Base
 		$pagingModel->set('limit', 0);
 		$listViewModel->get('query_generator')->setField($this->getTreeField()['fieldname']);
 		$listEntries = $listViewModel->getListViewEntries($pagingModel);
-
 		return $listEntries;
 	}
 
@@ -211,7 +210,6 @@ class Vtiger_TreeCategoryModal_Model extends \App\Base
 				'icon' => 'fas fa-file',
 			];
 		}
-
 		return $tree;
 	}
 }

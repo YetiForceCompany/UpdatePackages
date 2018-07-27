@@ -11,7 +11,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 	widgetPostLoadEvent: 'Vtiget.Dashboard.PostLoad',
 	widgetPostRefereshEvent: 'Vtiger.Dashboard.PostRefresh',
 	getInstance: function getInstance(container, widgetClassName, moduleName) {
-		if (typeof moduleName === 'undefined') {
+		if (typeof moduleName === "undefined") {
 			moduleName = app.getModuleName();
 		}
 		const moduleClass = window[moduleName + "_" + widgetClassName + "_Widget_Js"];
@@ -19,11 +19,11 @@ jQuery.Class('Vtiger_Widget_Js', {
 		const yetiClass = window["YetiForce_" + widgetClassName + "_Widget_Js"];
 		const basicClass = YetiForce_Widget_Js;
 		let instance;
-		if (typeof moduleClass !== 'undefined') {
+		if (typeof moduleClass !== "undefined") {
 			instance = new moduleClass(container, false, widgetClassName);
-		} else if (typeof fallbackClass !== 'undefined') {
+		} else if (typeof fallbackClass !== "undefined") {
 			instance = new fallbackClass(container, false, widgetClassName);
-		} else if (typeof yetiClass !== 'undefined') {
+		} else if (typeof yetiClass !== "undefined") {
 			instance = new yetiClass(container, false, widgetClassName);
 		} else {
 			instance = new basicClass(container, false, widgetClassName);
@@ -37,7 +37,8 @@ jQuery.Class('Vtiger_Widget_Js', {
 	chartData: [],
 	paramCache: false,
 	init: function init(container, reload, widgetClassName) {
-		this.setContainer(jQuery(container));
+		container = $(container);
+		this.setContainer(container);
 		this.registerWidgetPostLoadEvent(container);
 		if (!reload) {
 			this.registerWidgetPostRefreshEvent(container);
@@ -51,8 +52,22 @@ jQuery.Class('Vtiger_Widget_Js', {
 		return this.getContainer().find('[name="typeChart"]').val();
 	},
 	isMultiFilter() {
-		if (typeof this.filterIds !== 'undefined') {
+		if (typeof this.filterIds !== "undefined") {
 			return this.filterIds.length > 1;
+		}
+		return false;
+	},
+	/**
+	 * Get widget data
+	 * @returns {*}
+	 */
+	getWidgetData() {
+		if (typeof this.widgetData !== 'undefined') {
+			return this.widgetData;
+		}
+		let widgetDataEl = this.getContainer().find('.widgetData');
+		if (widgetDataEl.length) {
+			return this.widgetData = JSON.parse(widgetDataEl.val());
 		}
 		return false;
 	},
@@ -81,9 +96,12 @@ jQuery.Class('Vtiger_Widget_Js', {
 				return meta.hidden !== true;
 			},
 			formatter: function datalabelsFormatter(value, context) {
+				if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+					return app.parseNumberToShow(value, 0);
+				}
 				if (
-					typeof context.chart.data.datasets[context.datasetIndex].dataFormatted !== 'undefined' &&
-					typeof context.chart.data.datasets[context.datasetIndex].dataFormatted[context.dataIndex] !== 'undefined'
+					typeof context.chart.data.datasets[context.datasetIndex].dataFormatted !== "undefined" &&
+					typeof context.chart.data.datasets[context.datasetIndex].dataFormatted[context.dataIndex] !== "undefined"
 				) {
 					// data presented in different format usually exists in alternative dataFormatted array
 					return context.chart.data.datasets[context.datasetIndex].dataFormatted[context.dataIndex];
@@ -100,11 +118,14 @@ jQuery.Class('Vtiger_Widget_Js', {
 		tooltips: {
 			label: function tooltipLabelCallback(tooltipItem, data) {
 				// get already formatted data if exists
-				if (typeof data.datasets[tooltipItem.datasetIndex].dataFormatted !== 'undefined' && data.datasets[tooltipItem.datasetIndex].dataFormatted[tooltipItem.index] !== 'undefined') {
+				if (typeof data.datasets[tooltipItem.datasetIndex].dataFormatted !== "undefined" && data.datasets[tooltipItem.datasetIndex].dataFormatted[tooltipItem.index] !== "undefined") {
 					return data.datasets[tooltipItem.datasetIndex].dataFormatted[tooltipItem.index];
 				}
 				// if there is no formatted data so try to format it
 				if (String(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]).length > 0 && !isNaN(Number(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]))) {
+					if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+						return app.parseNumberToShow(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], 0);
+					}
 					return app.parseNumberToShow(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
 				}
 				// return raw data at idex
@@ -113,11 +134,14 @@ jQuery.Class('Vtiger_Widget_Js', {
 			title: function tooltipTitleCallback(tooltipItems, data) {
 				const tooltipItem = tooltipItems[0];
 				// get already formatted title if exists
-				if (typeof data.datasets[tooltipItem.datasetIndex].titlesFormatted !== 'undefined' && data.datasets[tooltipItem.datasetIndex].titlesFormatted[tooltipItem.index] !== 'undefined') {
+				if (typeof data.datasets[tooltipItem.datasetIndex].titlesFormatted !== "undefined" && data.datasets[tooltipItem.datasetIndex].titlesFormatted[tooltipItem.index] !== "undefined") {
 					return data.datasets[tooltipItem.datasetIndex].titlesFormatted[tooltipItem.index];
 				}
 				// if there is no formatted title so try to format it
 				if (String(data.labels[tooltipItem.index]).length > 0 && !isNaN(Number(data.labels[tooltipItem.index]))) {
+					if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+						return app.parseNumberToShow(data.labels[tooltipItem.index], 0);
+					}
 					return app.parseNumberToShow(data.labels[tooltipItem.index]);
 				}
 				// return label at index
@@ -128,7 +152,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 		legend: {
 			onClick(e, legendItem) {
 				let type = this.chartInstance.config.type;
-				if (typeof Chart.defaults[type] !== 'undefined') {
+				if (typeof Chart.defaults[type] !== "undefined") {
 					return Chart.defaults[type].legend.onClick.apply(this.chartInstance, [e, legendItem]);
 				}
 				return Chart.defaults.global.legend.onClick.apply(this.chartInstance, [e, legendItem]);
@@ -136,7 +160,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 			generateLabels(chart) {
 				let type = chart.config.type;
 				let labels;
-				if (typeof Chart.defaults[type] !== 'undefined') {
+				if (typeof Chart.defaults[type] !== "undefined") {
 					labels = Chart.defaults[type].legend.labels.generateLabels(chart);
 				} else {
 					labels = Chart.defaults.global.legend.labels.generateLabels(chart);
@@ -171,10 +195,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 				let getDatasetsMeta = function (chart) {
 					const datasets = [];
 					const data = chart.data;
-					if (typeof data !== 'undefined' && typeof data.datasets !== 'undefined' && Array.isArray(data.datasets)) {
+					if (typeof data !== "undefined" && typeof data.datasets !== "undefined" && Array.isArray(data.datasets)) {
 						for (let i = 0, len = data.datasets.length; i < len; i++) {
 							const meta = chart.getDatasetMeta(i);
-							if (typeof meta.data !== 'undefined' && Array.isArray(meta.data)) {
+							if (typeof meta.data !== "undefined" && Array.isArray(meta.data)) {
 								datasets.push(meta);
 							}
 						}
@@ -191,22 +215,22 @@ jQuery.Class('Vtiger_Widget_Js', {
 						continue;
 					}
 					const metaData = meta.data;
-					if (typeof dataset._models === 'undefined') {
+					if (typeof dataset._models === "undefined") {
 						dataset._models = {};
 					}
-					if (typeof dataset.datalabels === 'undefined') {
+					if (typeof dataset.datalabels === "undefined") {
 						dataset.datalabels = {};
 					}
-					if (typeof dataset.datalabels.display === 'undefined') {
+					if (typeof dataset.datalabels.display === "undefined") {
 						dataset.datalabels.display = true;
 					}
 					for (let iItem = 0, lenItem = metaData.length; iItem < lenItem; iItem++) {
 						const dataItem = metaData[iItem];
-						if (typeof dataItem.$datalabels !== 'undefined' && typeof dataItem.$datalabels._model !== 'undefined') {
+						if (typeof dataItem.$datalabels !== "undefined" && typeof dataItem.$datalabels._model !== "undefined") {
 							let model = dataItem.$datalabels._model;
-							if (model !== null && typeof model !== 'undefined') {
+							if (model !== null && typeof model !== "undefined") {
 								dataset._models[iItem] = model;
-							} else if (dataset._models[iItem] !== null && typeof dataset._models[iItem] !== 'undefined') {
+							} else if (dataset._models[iItem] !== null && typeof dataset._models[iItem] !== "undefined") {
 								model = dataset._models[iItem];
 							} else {
 								return false;
@@ -232,10 +256,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 				let getDatasetsMeta = function (chart) {
 					const datasets = [];
 					const data = chart.data;
-					if (typeof data !== 'undefined' && typeof data.datasets !== 'undefined' && Array.isArray(data.datasets)) {
+					if (typeof data !== "undefined" && typeof data.datasets !== "undefined" && Array.isArray(data.datasets)) {
 						for (let i = 0, len = data.datasets.length; i < len; i++) {
 							const meta = chart.getDatasetMeta(i);
-							if (typeof meta.data !== 'undefined' && Array.isArray(meta.data)) {
+							if (typeof meta.data !== "undefined" && Array.isArray(meta.data)) {
 								datasets.push(meta);
 							}
 						}
@@ -252,22 +276,22 @@ jQuery.Class('Vtiger_Widget_Js', {
 						continue;
 					}
 					const metaData = meta.data;
-					if (typeof dataset._models === 'undefined') {
+					if (typeof dataset._models === "undefined") {
 						dataset._models = {};
 					}
-					if (typeof dataset.datalabels === 'undefined') {
+					if (typeof dataset.datalabels === "undefined") {
 						dataset.datalabels = {};
 					}
-					if (typeof dataset.datalabels.display === 'undefined') {
+					if (typeof dataset.datalabels.display === "undefined") {
 						dataset.datalabels.display = true;
 					}
 					for (let iItem = 0, lenItem = metaData.length; iItem < lenItem; iItem++) {
 						const dataItem = metaData[iItem];
-						if (typeof dataItem.$datalabels !== 'undefined' && typeof dataItem.$datalabels._model !== 'undefined') {
+						if (typeof dataItem.$datalabels !== "undefined" && typeof dataItem.$datalabels._model !== "undefined") {
 							let model = dataItem.$datalabels._model;
-							if (model !== null && typeof model !== 'undefined') {
+							if (model !== null && typeof model !== "undefined") {
 								dataset._models[iItem] = model;
-							} else if (dataset._models[iItem] !== null && typeof dataset._models[iItem] !== 'undefined') {
+							} else if (dataset._models[iItem] !== null && typeof dataset._models[iItem] !== "undefined") {
 								model = dataset._models[iItem];
 							} else {
 								return false;
@@ -291,14 +315,14 @@ jQuery.Class('Vtiger_Widget_Js', {
 			 */
 			fixXAxisLabels: function fixXAxisLabels(chart) {
 				let shortenXTicks = function shortenXTicks(data, options) {
-					if (typeof options.scales === 'undefined') {
+					if (typeof options.scales === "undefined") {
 						options.scales = {};
 					}
-					if (typeof options.scales.xAxes === 'undefined') {
+					if (typeof options.scales.xAxes === "undefined") {
 						options.scales.xAxes = [{}];
 					}
 					options.scales.xAxes.forEach((axis) => {
-						if (typeof axis.ticks === 'undefined') {
+						if (typeof axis.ticks === "undefined") {
 							axis.ticks = {};
 						}
 						axis.ticks.callback = function xAxisTickCallback(value, index, values) {
@@ -311,14 +335,14 @@ jQuery.Class('Vtiger_Widget_Js', {
 					return options;
 				};
 				let rotateXLabels90 = function rotateXLabels90(data, options) {
-					if (typeof options.scales === 'undefined') {
+					if (typeof options.scales === "undefined") {
 						options.scales = {};
 					}
-					if (typeof options.scales.xAxes === 'undefined') {
+					if (typeof options.scales.xAxes === "undefined") {
 						options.scales.xAxes = [{}];
 					}
 					options.scales.xAxes.forEach((axis) => {
-						if (typeof axis.ticks === 'undefined') {
+						if (typeof axis.ticks === "undefined") {
 							axis.ticks = {};
 						}
 						axis.ticks.minRotation = 90;
@@ -337,7 +361,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 								const label = metaDataItem._xScale.ticks[i];
 								const ctx = metaDataItem._xScale.ctx;
 								let categoryWidth = metaDataItem._xScale.width / dataset._meta[prop].data.length;
-								if (typeof metaDataItem._xScale.options.categoryPercentage !== 'undefined') {
+								if (typeof metaDataItem._xScale.options.categoryPercentage !== "undefined") {
 									// if it is bar chart there is category percentage option that we should use
 									categoryWidth *= metaDataItem._xScale.options.categoryPercentage;
 								}
@@ -378,14 +402,14 @@ jQuery.Class('Vtiger_Widget_Js', {
 			 */
 			fixYAxisLabels: function fixYAxisLabels(chart) {
 				let shortenYTicks = function shortenYTicks(data, options) {
-					if (typeof options.scales === 'undefined') {
+					if (typeof options.scales === "undefined") {
 						options.scales = {};
 					}
-					if (typeof options.scales.yAxes === 'undefined') {
+					if (typeof options.scales.yAxes === "undefined") {
 						options.scales.yAxes = [{}];
 					}
 					options.scales.yAxes.forEach((axis) => {
-						if (typeof axis.ticks === 'undefined') {
+						if (typeof axis.ticks === "undefined") {
 							axis.ticks = {};
 						}
 						axis.ticks.callback = function yAxisTickCallback(value, index, values) {
@@ -415,7 +439,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 										// recalculate positions for smooth animation (for all datasets)
 										chart.data.datasets.forEach((dataset, index) => {
 											dataset._meta[prop].data.forEach((metaDataItem, dataIndex) => {
-												if (typeof metaDataItem._xScale !== 'undefined') {
+												if (typeof metaDataItem._xScale !== "undefined") {
 													metaDataItem._view.x = metaDataItem._xScale.getPixelForValue(index, dataIndex);
 													metaDataItem._view.base = metaDataItem._xScale.getBasePixel();
 													metaDataItem._view.width = (metaDataItem._xScale.width / dataset._meta[prop].data.length) * metaDataItem._xScale.options.categoryPercentage * metaDataItem._xScale.options.barPercentage;
@@ -1146,12 +1170,12 @@ jQuery.Class('Vtiger_Widget_Js', {
 				}],
 			},
 		};
-		if (typeof options[chartSubType] !== 'undefined') {
+		if (typeof options[chartSubType] !== "undefined") {
 			return options[chartSubType];
 		}
 		// if divided and standard chart types are equal
 		const notStackedChartSubType = this.removeStackedFromName(chartSubType);
-		if (typeof options[notStackedChartSubType] !== 'undefined') {
+		if (typeof options[notStackedChartSubType] !== "undefined") {
 			return options[notStackedChartSubType];
 		}
 		app.errorLog(new Error(chartSubType + ' chart does not exists!'));
@@ -1194,13 +1218,13 @@ jQuery.Class('Vtiger_Widget_Js', {
 		return this;
 	},
 	isEmptyData: function isEmptyData() {
-		return this.getContainer().find('.noDataMsg').length > 0;
+		return this.getContainer().find('.widgetData').length === 0 || this.getContainer().find('.noDataMsg').length > 0;
 	},
 	getUserDateFormat: function getUserDateFormat() {
-		return jQuery('#userDateFormat').val();
+		return CONFIG.dateFormat;
 	},
 	getChartContainer: function getChartContainer(useCache) {
-		if (typeof useCache === 'undefined') {
+		if (typeof useCache === "undefined") {
 			useCache = false;
 		}
 		if (this.plotContainer === false || !useCache) {
@@ -1213,16 +1237,18 @@ jQuery.Class('Vtiger_Widget_Js', {
 		var recordsCountBtn = thisInstance.getContainer().find('.recordCount');
 		recordsCountBtn.on('click', function () {
 			var url = recordsCountBtn.data('url');
-			AppConnector.request(url).then(function (response) {
+			AppConnector.request(url).done(function (response) {
 				recordsCountBtn.find('.count').html(response.result.totalCount);
-				recordsCountBtn.find('span:not(.count)').addClass('d-none');
-				recordsCountBtn.find('a').removeClass('d-none');
+				recordsCountBtn.find('[data-fa-i2svg]').addClass('d-none')
+					.attr('aria-hidden', true);
+				recordsCountBtn.find('a').removeClass('d-none')
+					.attr('aria-hidden', false);
 			});
 		});
 	},
 	loadScrollbar: function loadScrollbar() {
 		const container = this.getChartContainer(false);
-		if (typeof container === 'undefined') { // if there is no data
+		if (typeof container === "undefined") { // if there is no data
 			return false;
 		}
 		const widget = $(container.closest('.dashboardWidget'));
@@ -1259,7 +1285,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 	generateData: function generateData() {
 		var thisInstance = this;
 		var jData = thisInstance.getContainer().find('.widgetData').val();
-		if (typeof jData === 'undefined') {
+		if (typeof jData === "undefined") {
 			return thisInstance.chartData = jData;
 		}
 		thisInstance.chartData = JSON.parse(jData);
@@ -1275,9 +1301,57 @@ jQuery.Class('Vtiger_Widget_Js', {
 			'of': widgetContentsContainer
 		});
 	},
+	/**
+	 * Print html content as image
+	 * @param {jQuery} element
+	 */
+	printHtml(element) {
+		let widget = element.closest('.dashboardWidget'),
+			title = widget.find('.dashboardTitle').prop('title'),
+			printContainer = widget.find('.js-print__container').get(0),
+			imgEl = $('<img style="width:100%">');
+		imgEl.get(0).onload = () => {
+			let width = $(printContainer).outerWidth();
+			let height = $(printContainer).outerHeight();
+			if (width < 600) {
+				width = 600;
+			}
+			if (height < 400) {
+				height = 400;
+			}
+			this.printImage(imgEl.get(0), title, width, height);
+		};
+		app.htmlToImage(printContainer, (imageBase64) => {
+			imgEl.get(0).src = imageBase64;
+		});
+	},
+	/**
+	 * Download html content as image
+	 * @param {jQuery} element
+	 */
+	downloadHtmlAsImage(element) {
+		let widget = element.closest('.dashboardWidget'),
+			title = widget.find('.dashboardTitle').prop('title');
+		app.htmlToImage(widget.find('.js-print__container').get(0), (imageBase64) => {
+			let anchor = document.createElement('a');
+			anchor.setAttribute('href', imageBase64);
+			anchor.setAttribute('download', title + '.png');
+			anchor.click();
+		});
+	},
+	/**
+	 * register print image fields (html2canvas)
+	 */
+	registerPrintAndDownload() {
+		$('.js-print--download', this.getContainer()).on('click', (e) => {
+			this.downloadHtmlAsImage($(e.target));
+		});
+		$('.js-print', this.getContainer()).on('click', (e) => {
+			this.printHtml($(e.target));
+		});
+	},
 	//Place holdet can be extended by child classes and can use this to handle the post load
 	postLoadWidget: function postLoadWidget() {
-		this.loadScrollbar();
 		if (!this.isEmptyData()) {
 			this.loadChart(this.options);
 		} else {
@@ -1287,13 +1361,13 @@ jQuery.Class('Vtiger_Widget_Js', {
 		this.registerFilter();
 		this.registerFilterChangeEvent();
 		this.restrictContentDrag();
-		app.showBtnSwitch(this.getContainer().find('.switchBtn'));
 		app.showPopoverElementView(this.getContainer().find('.js-popover-tooltip'));
 		this.registerWidgetSwitch();
 		this.registerChangeSorting();
 		this.registerLoadMore();
-		this.registerUserList();
 		this.registerHeaderButtons();
+		this.registerPrintAndDownload();
+		this.loadScrollbar();
 	},
 	postRefreshWidget: function postRefreshWidget() {
 		this.loadScrollbar();
@@ -1329,27 +1403,24 @@ jQuery.Class('Vtiger_Widget_Js', {
 			drefresh.data('url', url);
 		}
 	},
-	registerUserList: function registerUserList() {
-		var container = this.getContainer();
-		var header = container.find('.dashboardWidgetHeader');
-		var ownersFilter = header.find('.ownersFilter')
-		if (ownersFilter.length) {
-			var owners = container.find('.widgetOwners').val();
-			if (owners) {
-				var select = ownersFilter.find('select');
-				$.each(JSON.parse(owners), function (key, value) {
-					select.append($('<option>', {
-						value: key
-					}).text(value));
-				});
-			}
-		}
-	},
 	getChartImage() {
 		const base64Image = this.chartInstance.toBase64Image();
 		const image = new Image();
 		image.src = base64Image;
 		return image;
+	},
+	printImage(imgEl, title, width, height) {
+		const print = window.open('', 'PRINT', 'height=' + height + ',width=' + width);
+		print.document.write('<html><head><title>' + title + '</title>');
+		print.document.write('</head><body >');
+		print.document.write($('<div>').append(imgEl).html());
+		print.document.write('</body></html>');
+		print.document.close(); // necessary for IE >= 10
+		print.focus(); // necessary for IE >= 10
+		setTimeout(function () {
+			print.print();
+			print.close();
+		}, 1000);
 	},
 	registerHeaderButtons: function registerHeaderButtons() {
 		const container = this.getContainer();
@@ -1358,17 +1429,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 		const printWidget = header.find('.printWidget');
 		printWidget.on('click', (e) => {
 			const imgEl = this.getChartImage();
-			const print = window.open('', 'PRINT', 'height=400,width=600');
-			print.document.write('<html><head><title>' + header.find('.dashboardTitle').text() + '</title>');
-			print.document.write('</head><body >');
-			print.document.write($('<div>').append(imgEl).html());
-			print.document.write('</body></html>');
-			print.document.close(); // necessary for IE >= 10
-			print.focus(); // necessary for IE >= 10
-			setTimeout(function () {
-				print.print();
-				print.close();
-			}, 1000);
+			this.printImage(imgEl, header.find('.dashboardTitle').text(), 600, 400);
 		});
 		downloadWidget.on('click', (e) => {
 			const imgEl = $(this.getChartImage());
@@ -1392,13 +1453,13 @@ jQuery.Class('Vtiger_Widget_Js', {
 	},
 	registerWidgetSwitch: function registerWidgetSwitch() {
 		var thisInstance = this;
-		var switchButtons = this.getContainer().find('.dashboardWidgetHeader .js-calcuations-switch');
+		var switchButtons = this.getContainer().find('.dashboardWidgetHeader .js-switch--calculations');
 		thisInstance.setUrlSwitch(switchButtons);
-		switchButtons.on('switchChange.bootstrapSwitch', function (e, state) {
-			var currentElement = jQuery(e.currentTarget);
+		switchButtons.on('change', (e) => {
+			var currentElement = $(e.currentTarget);
 			var dashboardWidgetHeader = currentElement.closest('.dashboardWidgetHeader');
 			var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
-			thisInstance.setUrlSwitch(currentElement).then(function (data) {
+			thisInstance.setUrlSwitch(currentElement).done(function (data) {
 				if (data) {
 					drefresh.click();
 				}
@@ -1413,16 +1474,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 			var drefresh = dashboardWidgetHeader.find('a[name="drefresh"]');
 			var url = drefresh.data('url');
 			var urlparams = currentElement.data('urlparams');
-			if (urlparams != '') {
-				var onval = currentElement.data('on-val');
-				var offval = currentElement.data('off-val');
-				url = url.replace('&' + urlparams + '=' + onval, '');
-				url = url.replace('&' + urlparams + '=' + offval, '');
-				url += '&' + urlparams + '=';
-				if (currentElement.prop('checked'))
-					url += onval;
-				else
-					url += offval;
+			if (urlparams !== '') {
+				var switchUrl = currentElement.data('url-value');
+				url = url.replace('&' + urlparams + '=' + switchUrl, '');
+				url += '&' + urlparams + '=' + switchUrl;
 				drefresh.data('url', url);
 				aDeferred.resolve(true);
 			} else {
@@ -1439,141 +1494,159 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 * @returns {undefined}
 	 */
 	refreshWidget: function refreshWidget() {
-		var thisInstance = this;
-		var parent = this.getContainer();
-		var element = parent.find('a[name="drefresh"]');
-		var url = element.data('url');
-		var contentContainer = parent.find('.dashboardWidgetContent');
-		var params = url;
-		var widgetFilters = parent.find('.widgetFilter');
+		let thisInstance = this;
+		let parent = this.getContainer();
+		let element = parent.find('a[name="drefresh"]');
+		let url = element.data('url');
+		let contentContainer = parent.find('.dashboardWidgetContent');
+		let params = url;
+
+		let widgetFilters = parent.find('.widgetFilter');
 		if (widgetFilters.length > 0) {
 			params = {};
 			params.url = url;
 			params.data = {};
-			widgetFilters.each(function (index, domElement) {
-				var widgetFilter = jQuery(domElement);
-				var filterType = widgetFilter.attr('type');
-				var filterName = widgetFilter.attr('name');
-				if ('checkbox' == filterType) {
-					var filterValue = widgetFilter.is(':checked');
-					params.data[filterName] = filterValue;
+			widgetFilters.each((index, domElement) => {
+				let widgetFilter = $(domElement);
+				let filterName = widgetFilter.attr('name');
+				if ('checkbox' === widgetFilter.attr('type')) {
+					params.data[filterName] = widgetFilter.is(':checked');
 				} else {
-					var filterValue = widgetFilter.val();
-					params.data[filterName] = filterValue;
+					params.data[filterName] = widgetFilter.val();
 				}
 			});
 		}
-		var widgetFilterByField = parent.find('.widgetFilterByField');
-		if (widgetFilterByField.length) {
-			var searchParams = [];
-			widgetFilterByField.find('.listSearchContributor').each(function (index, domElement) {
-				var searchInfo = [];
-				var searchContributorElement = jQuery(domElement);
-				var fieldInfo = searchContributorElement.data('fieldinfo');
-				var fieldName = searchContributorElement.attr('name');
-				var searchValue = searchContributorElement.val();
-				if (typeof searchValue == "object") {
+
+		let additionalWidgetFilters = parent.find('.js-chartFilter__additional-filter-field');
+		if (additionalWidgetFilters.length > 0) {
+			params = {};
+			params.url = url;
+			params.data = {};
+			additionalWidgetFilters.each((index, domElement) => {
+				let widgetFilter = jQuery(domElement);
+				let filterName = widgetFilter.attr('name');
+				let arr = false;
+				if (filterName.substr(-2) === '[]') {
+					arr = true;
+					filterName = filterName.substr(0, filterName.length - 2);
+					if (!Array.isArray(params.data[filterName])) {
+						params.data[filterName] = [];
+					}
+				}
+				if ('checkbox' === widgetFilter.attr('type')) {
+					if (arr) {
+						params.data[filterName].push(widgetFilter.is(':checked'));
+					} else {
+						params.data[filterName] = widgetFilter.is(':checked');
+					}
+				} else {
+					if (arr) {
+						params.data[filterName].push(widgetFilter.val());
+					} else {
+						params.data[filterName] = widgetFilter.val();
+					}
+
+				}
+			});
+		}
+		let refreshContainer = parent.find('.dashboardWidgetContent');
+		let refreshContainerFooter = parent.find('.dashboardWidgetFooter');
+		refreshContainer.html('');
+		refreshContainerFooter.html('');
+		refreshContainer.progressIndicator();
+		if (this.paramCache && (additionalWidgetFilters.length || widgetFilters.length)) {
+			thisInstance.setFilterToCache(params.url, params.data);
+		}
+		AppConnector.request(params).done((data) => {
+			data = $(data);
+			let footer = data.filter('.widgetFooterContent');
+			refreshContainer.progressIndicator({
+				'mode': 'hide'
+			});
+			if (footer.length) {
+				footer = footer.clone(true, true);
+				refreshContainerFooter.html(footer);
+				data.each(function (n, e) {
+					if (jQuery(this).hasClass('widgetFooterContent')) {
+						data.splice(n, 1);
+					}
+				})
+			}
+			contentContainer.html(data).trigger(YetiForce_Widget_Js.widgetPostRefereshEvent);
+		}).fail(() => {
+			refreshContainer.progressIndicator({
+				'mode': 'hide'
+			});
+		});
+	},
+	registerFilter: function registerFilter() {
+		const container = this.getContainer();
+		const search = container.find('.listSearchContributor');
+		const refreshBtn = container.find('a[name="drefresh"]');
+		const originalUrl = refreshBtn.data('url');
+		const selects = container.find('.select2noactive');
+		search.css('width', '100%');
+		search.parent().addClass('w-100');
+		search.each((index, element) => {
+			const fieldInfo = $(element).data('fieldinfo');
+			$(element).attr('placeholder', fieldInfo.label).data('placeholder', fieldInfo.label);
+		});
+		App.Fields.Picklist.changeSelectElementView(selects, 'select2', {containerCssClass: 'form-control'});
+		App.Fields.Date.register(container);
+		App.Fields.Date.registerRange(container);
+		search.on('change apply.daterangepicker', (e) => {
+			const searchParams = [];
+			container.find('.listSearchContributor').each((index, domElement) => {
+				const searchInfo = [];
+				const searchContributorElement = $(domElement);
+				const fieldInfo = searchContributorElement.data('fieldinfo');
+				const fieldName = searchContributorElement.attr('name');
+				let searchValue = searchContributorElement.val();
+				if (typeof searchValue === "object") {
 					if (searchValue == null) {
 						searchValue = "";
 					} else {
-						searchValue = searchValue.join(',');
+						searchValue = searchValue.join('##');
 					}
 				}
 				searchValue = searchValue.trim();
 				if (searchValue.length <= 0) {
+					//continue
 					return true;
 				}
-				var searchOperator = 'a';
+				let searchOperator = 'a';
 				if (fieldInfo.hasOwnProperty("searchOperator")) {
 					searchOperator = fieldInfo.searchOperator;
 				} else if (jQuery.inArray(fieldInfo.type, ['modules', 'time', 'userCreator', 'owner', 'picklist', 'tree', 'boolean', 'fileLocationType', 'userRole', 'companySelect', 'multiReferenceValue']) >= 0) {
 					searchOperator = 'e';
-				} else if (fieldInfo.type == "date" || fieldInfo.type == "datetime") {
+				} else if (fieldInfo.type === "date" || fieldInfo.type === "datetime") {
 					searchOperator = 'bw';
-				} else if (fieldInfo.type == 'multipicklist' || fieldInfo.type == 'categoryMultipicklist') {
+				} else if (fieldInfo.type === 'multipicklist' || fieldInfo.type === 'categoryMultipicklist') {
 					searchOperator = 'c';
 				}
 				searchInfo.push(fieldName);
 				searchInfo.push(searchOperator);
 				searchInfo.push(searchValue);
-				if (fieldInfo.type == 'tree' || fieldInfo.type == 'categoryMultipicklist') {
-					var searchInSubcategories = parent.find('.searchInSubcategories[data-columnname="' + fieldName + '"]').prop('checked');
-					searchInfo.push(searchInSubcategories);
+				if (fieldInfo.type === 'tree' || fieldInfo.type === 'categoryMultipicklist') {
+					searchInfo.push($('.listViewHeaders .searchInSubcategories[data-columnname="' + fieldName + '"]').prop('checked'));
 				}
 				searchParams.push(searchInfo);
 			});
-			if (searchParams.length) {
-				params.data.search_params = new Array(searchParams);
-			}
-		}
+			let url = originalUrl + '&search_params=' + JSON.stringify(searchParams);
+			refreshBtn.data('url', url);
+			refreshBtn.trigger('click');
+		});
 
-		var filterData = this.getFilterData();
-		if (!jQuery.isEmptyObject(filterData)) {
-			if (typeof params == 'string') {
-				url = params;
-				params = {};
-				params.url = url;
-				params.data = {};
-			}
-			params.data = jQuery.extend(params.data, this.getFilterData());
-		}
-		var refreshContainer = parent.find('.dashboardWidgetContent');
-		var refreshContainerFooter = parent.find('.dashboardWidgetFooter');
-		refreshContainer.html('');
-		refreshContainerFooter.html('');
-		refreshContainer.progressIndicator();
-		if (this.paramCache && widgetFilters.length > 0) {
-			thisInstance.setFilterToCache(params.url, params.data);
-		}
-		AppConnector.request(params).then(function (data) {
-				var data = jQuery(data);
-				var footer = data.filter('.widgetFooterContent');
-				refreshContainer.progressIndicator({
-					'mode': 'hide'
-				});
-				if (footer.length) {
-					footer = footer.clone(true, true);
-					refreshContainerFooter.html(footer);
-					data.each(function (n, e) {
-						if (jQuery(this).hasClass('widgetFooterContent')) {
-							data.splice(n, 1);
-						}
-					})
-				}
-				contentContainer.html(data).trigger(YetiForce_Widget_Js.widgetPostRefereshEvent);
-			}, function () {
-				refreshContainer.progressIndicator({
-					'mode': 'hide'
-				});
-			}
-		);
-	},
-	registerFilter: function registerFilter() {
-		var thisInstance = this;
-		var container = this.getContainer();
-		var dateRangeElement = container.find('input.dateRangeField');
-		if (dateRangeElement.length <= 0) {
-			return;
-		}
-		dateRangeElement.addClass('dateRangeField').attr('data-date-format', thisInstance.getUserDateFormat());
-		App.Fields.Date.registerRange(dateRangeElement, {
-			opens: "auto"
-		});
-		dateRangeElement.on('apply.daterangepicker', function (ev, picker) {
-			container.find('a[name="drefresh"]').trigger('click');
-		});
 	},
 	registerFilterChangeEvent: function registerFilterChangeEvent() {
-		var container = this.getContainer();
-		container.on('change', '.widgetFilter', function (e) {
-			var widgetContainer = jQuery(e.currentTarget).closest('li');
-			widgetContainer.find('a[name="drefresh"]').trigger('click');
+		let container = this.getContainer();
+		container.on('change', '.widgetFilter', (e) => {
+			$(e.currentTarget).closest('li').find('a[name="drefresh"]').trigger('click');
 		});
 		if (container.find('.widgetFilterByField').length) {
 			App.Fields.Picklist.showSelect2ElementView(container.find('.select2noactive'));
-			this.getContainer().on('change', '.widgetFilterByField .form-control', function (e) {
-				var widgetContainer = jQuery(e.currentTarget).closest('li');
-				widgetContainer.find('a[name="drefresh"]').trigger('click');
+			this.getContainer().on('change', '.widgetFilterByField .form-control', (e) => {
+				$(e.currentTarget).closest('li').find('a[name="drefresh"]').trigger('click');
 			});
 		}
 	},
@@ -1594,11 +1667,11 @@ jQuery.Class('Vtiger_Widget_Js', {
 		const thisInstance = this;
 		let pointer = false;
 		$(thisInstance.chartInstance.canvas).on('click', function (e) {
-			if (typeof thisInstance.getDataFromEvent(e, ['links']).links !== 'undefined') {
+			if (typeof thisInstance.getDataFromEvent(e, ['links']).links !== "undefined") {
 				window.location.href = thisInstance.getDataFromEvent(e, ['links']).links;
 			}
 		}).on('mousemove', function (e) {
-			if (typeof thisInstance.getDataFromEvent(e, ['links']).links !== 'undefined') {
+			if (typeof thisInstance.getDataFromEvent(e, ['links']).links !== "undefined") {
 				if (!pointer) {
 					$(this).css('cursor', 'pointer');
 					pointer = true;
@@ -1636,7 +1709,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 				url += '&sortorder=' + parent.find('.changeRecordSort').data('sort');
 			}
 			contentContainer.progressIndicator();
-			AppConnector.request(url).then(function (data) {
+			AppConnector.request(url).done(function (data) {
 				contentContainer.progressIndicator({
 					'mode': 'hide'
 				});
@@ -1670,9 +1743,10 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 * @return {Chart} chartInstance
 	 */
 	loadChart: function loadChart() {
-		if (typeof this.chartData === 'undefined' || typeof this.getChartContainer() === 'undefined') {
+		if (typeof this.chartData === "undefined" || typeof this.getChartContainer() === "undefined") {
 			return false;
 		}
+		this.getWidgetData();// load widget data for label formatters
 		const type = this.getType();
 		let data = this.generateData();
 		data.datasets = this.loadDatasetOptions(data);
@@ -1715,9 +1789,9 @@ jQuery.Class('Vtiger_Widget_Js', {
 			label: chart.data.labels[dataIndex],
 			value: chart.data.datasets[0].data[dataIndex],
 		};
-		if (typeof additionalFields !== 'undefined' && Array.isArray(additionalFields)) {
+		if (typeof additionalFields !== "undefined" && Array.isArray(additionalFields)) {
 			additionalFields.forEach((fieldName) => {
-				if (typeof chart.data.datasets[datasetIndex][fieldName] !== 'undefined' && typeof chart.data.datasets[datasetIndex][fieldName][dataIndex] !== 'undefined') {
+				if (typeof chart.data.datasets[datasetIndex][fieldName] !== "undefined" && typeof chart.data.datasets[datasetIndex][fieldName][dataIndex] !== "undefined") {
 					eventData[fieldName] = chart.data.datasets[datasetIndex][fieldName][dataIndex];
 				}
 			});
@@ -1736,8 +1810,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 		this.formatTooltipLabels(chartData);
 		return this.mergeOptions(
 			this.getBasicOptions(chartData),
-			this.getDefaultBasicOptions(this.getSubType(), chartData),
-		);
+			this.getDefaultBasicOptions(this.getSubType(), chartData));
 	},
 	/**
 	 * Apply default dataset options (usually datalabels configuration)
@@ -1776,17 +1849,25 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 */
 	formatTooltipTitles: function formatTooltipTitles(data) {
 		data.datasets.forEach((dataset) => {
-			if (typeof dataset.titlesFormatted === 'undefined') {
+			if (typeof dataset.titlesFormatted === "undefined") {
 				dataset.titlesFormatted = [];
 				dataset.data.forEach((dataItem, index) => {
 					let defaultLabel = data.labels[index];
 					if (String(defaultLabel).length > 0 && !isNaN(Number(defaultLabel))) {
-						defaultLabel = app.parseNumberToShow(defaultLabel);
+						if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+							defaultLabel = app.parseNumberToShow(defaultLabel, 0);
+						} else {
+							defaultLabel = app.parseNumberToShow(defaultLabel);
+						}
 					}
-					if (typeof dataset.label !== 'undefined') {
+					if (typeof dataset.label !== "undefined") {
 						let label = dataset.label;
 						if (String(label).length > 0 && !isNaN(Number(label))) {
-							label = app.parseNumberToShow(label);
+							if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+								label = app.parseNumberToShow(label, 0);
+							} else {
+								label = app.parseNumberToShow(label);
+							}
 						}
 						defaultLabel += ' (' + label + ')';
 					}
@@ -1805,12 +1886,16 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 */
 	formatTooltipLabels: function formatTooltipTitles(data) {
 		data.datasets.forEach((dataset) => {
-			if (typeof dataset.dataFormatted === 'undefined') {
+			if (typeof dataset.dataFormatted === "undefined") {
 				dataset.dataFormatted = [];
 				dataset.data.forEach((dataItem, index) => {
 					let dataFormatted = dataItem;
 					if (String(dataItem).length > 0 && !isNaN(Number(dataItem))) {
-						dataFormatted = app.parseNumberToShow(dataItem);
+						if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
+							dataFormatted = app.parseNumberToShow(dataItem, 0);
+						} else {
+							dataFormatted = app.parseNumberToShow(dataItem);
+						}
 					}
 					dataset.dataFormatted.push(dataFormatted);
 				});
@@ -1824,7 +1909,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 * @return {Array}
 	 */
 	mergeOptionsArray: function mergeOptionsArray(to, fromArray) {
-		if (typeof to !== 'undefined') {
+		if (typeof to !== "undefined") {
 			return to;
 		}
 		to = [];
@@ -1832,11 +1917,11 @@ jQuery.Class('Vtiger_Widget_Js', {
 			if (Array.isArray(from) && !to.hasOwnProperty(key)) {
 				return this.mergeOptionsArray(to[index], from);
 			}
-			if (typeof from === 'object' && from !== null && (typeof to[index] === 'undefined' || (typeof to[index] === 'object' && to[index] !== null))) {
+			if (typeof from === 'object' && from !== null && (typeof to[index] === "undefined" || (typeof to[index] === 'object' && to[index] !== null))) {
 				return this.mergeOptionsObject(to[index], from);
 			}
 			return to[index];
-		}).filter((item) => typeof item !== 'undefined');
+		}).filter((item) => typeof item !== "undefined");
 		return result;
 	},
 	/**
@@ -1846,7 +1931,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 	 * @return {Object}      mixed properties
 	 */
 	mergeOptionsObject: function mergeOptionsObject(to, from) {
-		if (typeof to === 'undefined') {
+		if (typeof to === "undefined") {
 			to = {};
 		}
 		for (let key in from) {
@@ -2109,7 +2194,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 				for (var key in event.event) {
 					element += '<a class="" href="javascript:;"' +
 						' data-date="' + event.date + '"' + ' data-type="' + key + '" title="' + event.event[key].label + '">' +
-						'<span class="' + event.event[key].className + ((event.width <= 20) ? ' small-badge' : '') + ((event.width >= 24) ? ' big-badge' : '') + ' badge badge-secondary">' + event.event[key].count + '</span>' +
+						'<span class="' + event.event[key].className + ((event.width <= 20) ? ' small-badge' : '') + ((event.width >= 24) ? ' big-badge' : '') + ' badge badge-secondary u-font-size-95per">' + event.event[key].count + '</span>' +
 						'</a>\n';
 				}
 				element += '</div>';
@@ -2137,14 +2222,14 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 			};
 			Vtiger_Header_Js.getInstance().quickCreateModule('Calendar', params);
 		});
-		var switchBtn = container.find('.switchBtn');
-		app.showBtnSwitch(switchBtn);
-		switchBtn.on('switchChange.bootstrapSwitch', function (e, state) {
-			if (state)
+		var switchBtn = container.find('.js-switch--calendar');
+		switchBtn.on('change', (e) => {
+			const currentTarget = $(e.currentTarget);
+			if (typeof currentTarget.data('on-text') !== 'undefined')
 				container.find('.widgetFilterSwitch').val('current');
-			else
+			else if (typeof currentTarget.data('off-text') !== 'undefined')
 				container.find('.widgetFilterSwitch').val('history');
-			thisInstance.refreshWidget();
+			this.refreshWidget();
 		})
 	},
 	loadCalendarData: function (allEvents) {
@@ -2185,7 +2270,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 			};
 			thisInstance.setFilterToCache(url, paramCache);
 		}
-		AppConnector.request(params).then(function (events) {
+		AppConnector.request(params).done(function (events) {
 			var height = (thisInstance.getCalendarView().find('.fc-bg :first').height() - thisInstance.getCalendarView().find('.fc-day-number').height()) - 10;
 			var width = (thisInstance.getCalendarView().find('.fc-day-number').width() / 2) - 10;
 			for (var i in events.result) {
@@ -2253,6 +2338,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 		this.loadCalendarData(true);
 		this.registerChangeView();
 		this.registerFilterChangeEvent();
+		app.showPopoverElementView(this.getContainer().find('.js-popover-tooltip'));
 	},
 	refreshWidget: function () {
 		var thisInstance = this;
@@ -2283,7 +2369,7 @@ YetiForce_Widget_Js('YetiForce_CalendarActivities_Widget_Js', {}, {
 				return;
 			}
 			var url = jQuery(this).data('url');
-			if (typeof url != 'undefined') {
+			if (typeof url !== "undefined") {
 				var callbackFunction = function () {
 					thisInstance.modalView = false;
 				};
@@ -2335,7 +2421,7 @@ YetiForce_Widget_Js('YetiForce_Productssoldtorenew_Widget_Js', {}, {
 				return;
 			}
 			var url = jQuery(this).data('url');
-			if (typeof url != 'undefined') {
+			if (typeof url !== "undefined") {
 				var callbackFunction = function () {
 					thisInstance.modalView = false;
 				};
@@ -2547,13 +2633,13 @@ YetiForce_Widget_Js('YetiForce_History_Widget_Js', {}, {
 			params.data['page'] = loadMoreHandler.data('nextpage');
 			var refreshContainer = parent.find('.dashboardWidgetContent');
 			refreshContainer.progressIndicator();
-			AppConnector.request(params).then(function (data) {
+			AppConnector.request(params).done(function (data) {
 				refreshContainer.progressIndicator({
 					'mode': 'hide'
 				});
 				loadMoreHandler.replaceWith(data);
 				thisInstance.registerLoadMore();
-			}, function () {
+			}).fail(function () {
 				refreshContainer.progressIndicator({
 					'mode': 'hide'
 				});
@@ -2568,6 +2654,7 @@ YetiForce_Widget_Js('YetiForce_MiniList_Widget_Js', {}, {
 		this.restrictContentDrag();
 		this.registerFilterChangeEvent();
 		this.registerRecordsCount();
+		app.showPopoverElementView(this.getContainer().find('.js-popover-tooltip'));
 	},
 	postRefreshWidget: function () {
 		this.registerRecordsCount();
@@ -2607,7 +2694,7 @@ YetiForce_Widget_Js('YetiForce_Notebook_Widget_Js', {}, {
 		var params = url + '&content=true&mode=save&contents=' + encodeURIComponent(textarea.val());
 		var refreshContainer = this.container.find('.dashboardWidgetContent');
 		refreshContainer.progressIndicator();
-		AppConnector.request(params).then(function (data) {
+		AppConnector.request(params).done(function (data) {
 			refreshContainer.progressIndicator({
 				'mode': 'hide'
 			});

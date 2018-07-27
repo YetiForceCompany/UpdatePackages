@@ -223,7 +223,6 @@ class Module extends ModuleBasic
 			$instance = new self();
 			$instance->initialize($data);
 		}
-
 		return $instance;
 	}
 
@@ -237,7 +236,6 @@ class Module extends ModuleBasic
 		if ($modulename == 'Calendar') {
 			$modulename = 'Activity';
 		}
-
 		$instance = false;
 		$filepath = "modules/$modulename/$modulename.php";
 		if (Utils::checkFileAccessForInclusion($filepath, false)) {
@@ -247,7 +245,6 @@ class Module extends ModuleBasic
 				$instance = new $modulename();
 			}
 		}
-
 		return $instance;
 	}
 
@@ -268,7 +265,6 @@ class Module extends ModuleBasic
 				\App\Log::trace("Invoking moduleHandler for $eventType ...DONE", __METHOD__);
 			}
 		}
-
 		return $return;
 	}
 

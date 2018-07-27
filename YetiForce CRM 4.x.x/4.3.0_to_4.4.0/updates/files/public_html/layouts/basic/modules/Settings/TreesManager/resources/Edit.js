@@ -3,30 +3,30 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 	jstreeInstance: false,
 	jstreeLastID: 0,
 	registerEvents: function () {
-		var thisInstance = this;
-		var editContainer = $("#EditView");
+		const thisInstance = this,
+			editContainer = $("#EditView"),
+			jstreeInstance = thisInstance.createTree();
 		editContainer.validationEngine();
-		var jstreeInstance = thisInstance.createTree();
 		$('.addNewElementBtn').on('click', function (e) {
-			var newElement = $('input.addNewElement');
-			if (newElement.val() == '') {
-				var message = app.vtranslate('JS_FIELD_CAN_NOT_BE_EMPTY');
+			const newElement = $('input.addNewElement'),
+				ref = jstreeInstance.jstree(true);
+			if (newElement.val() === '') {
+				const message = app.vtranslate('JS_FIELD_CAN_NOT_BE_EMPTY');
 				newElement.validationEngine('showPrompt', message, 'error', 'bottomLeft', true);
 				return false;
 			}
-			thisInstance.jstreeLastID = thisInstance.jstreeLastID + 1;
-			var ref = jstreeInstance.jstree(true),
-				sel = ref.get_selected();
+			thisInstance.jstreeLastID += 1;
 			ref.create_node('#', {
 				id: thisInstance.jstreeLastID,
 				text: newElement.val(),
+				icon: false
 			}, 'last');
-			$('input.addNewElement').val('');
+			newElement.val('');
 		});
 		$('.saveTree').on('click', function (e) {
-			jstreeInstance.jstree('deselect_all', true)
-			var json = jstreeInstance.jstree("get_json");
-			var forSave = [];
+			jstreeInstance.jstree('deselect_all', true);
+			const json = jstreeInstance.jstree("get_json");
+			let forSave = [];
 			$.each(json, function (index, value) {
 				if (value.text == value.li_attr.text) {
 					value.text = value.li_attr.key;
@@ -91,7 +91,7 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 							action: function (data) {
 								var instanceTree = $.jstree.reference(data.reference);
 								var node = instanceTree.get_node(data.reference);
-								Settings_Vtiger_Index_Js.selectIcon().then(function (data) {
+								Settings_Vtiger_Index_Js.selectIcon().done(function (data) {
 									if (data['name'] == '-') {
 										thisInstance.jstreeInstance.jstree(true).set_icon(node.id, false);
 									} else {
@@ -118,7 +118,7 @@ jQuery.Class('Settings_TreesManager_Edit_Js', {}, {
 									}
 								});
 								if (status) {
-									thisInstance.deleteItemEvent(id, inst).then(function (e) {
+									thisInstance.deleteItemEvent(id, inst).done(function (e) {
 										if (e.length > 0) {
 											$.each(id, function (index, value) {
 												inst.delete_node(value);
