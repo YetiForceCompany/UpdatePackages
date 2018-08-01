@@ -545,6 +545,7 @@ class PackageImport extends PackageExport
 					}
 				}
 			} else {
+				Functions::recurseDelete('cache/updates');
 				$this->initImport($zipfile, $overwrite);
 				// Call module import function
 				$this->importModule();
