@@ -43,6 +43,8 @@ class Composer
 		'contributing.md',
 		'readme.md',
 		'SECURITY.md',
+		'jquery.js',
+		'adapters',
 		'docs',
 		'demo',
 		'examples',
@@ -86,6 +88,7 @@ class Composer
 	 */
 	public static function install(\Composer\Script\Event $event)
 	{
+		static::clear();
 		$event->getComposer();
 		if (isset($_SERVER['SENSIOLABS_EXECUTION_NAME'])) {
 			return true;
@@ -108,7 +111,6 @@ class Composer
 				}
 			}
 		}
-		static::clear();
 	}
 
 	/**
@@ -118,13 +120,21 @@ class Composer
 	{
 		$rootDir = realpath(__DIR__ . '/../../') . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR;
 		$objects = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($rootDir), \RecursiveIteratorIterator::SELF_FIRST);
+		$deleted = [];
 		foreach ($objects as $name => $object) {
 			if ($object->getFilename() === '.' || $object->getFilename() === '..') {
 				continue;
 			}
-			if ((\in_array(strtolower($object->getFilename()), self::$clearFiles)) && (is_dir($object->getFilename() || file_exists($object->getFilename())))) {
-				\vtlib\Functions::recurseDelete($object->getPathname(), true, true);
+			if ((\in_array(strtolower($object->getFilename()), self::$clearFiles)) && (is_dir($object->getPathname()) || file_exists($object->getPathname()))) {
+				$deleted[] = $object->getPathname();
 			}
+		}
+
+		array_unique($deleted);
+		arsort($deleted);
+		echo 'Cleaned files: ' . count($deleted) . PHP_EOL;
+		foreach($deleted as $delete){
+			\vtlib\Functions::recurseDelete($delete, true, true);
 		}
 		foreach (new \DirectoryIterator($rootDir) as $level1) {
 			if ($level1->isDir() && !$level1->isDot()) {
