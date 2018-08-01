@@ -129,17 +129,17 @@ class FileTarget extends \yii\log\FileTarget
 			$library = \Settings_ConfReport_Module_Model::getConfigurationLibrary();
 		} else if (method_exists('\Settings_ConfReport_Module_Model', 'getLibrary')){
 			$library = \Settings_ConfReport_Module_Model::getLibrary();
-		} else{
-			return '';
-		}
-		$library = \Settings_ConfReport_Module_Model::getConfigurationLibrary();
-		$directiveValues = \Settings_ConfReport_Module_Model::getStabilityConf(true);
-		$permissionsFiles = \Settings_ConfReport_Module_Model::getPermissionsFiles(true);
-		foreach ($library as $key => $value) {
-			if ($value['status'] === 'LBL_NO') {
-				$context['Libs'][] = $value['name'];
+		} 
+		if($library){
+			foreach ($library as $key => $value) {
+				if ($value['status'] === 'LBL_NO') {
+					$context['Libs'][] = $value['name'];
+				}
 			}
 		}
+		$directiveValues = \Settings_ConfReport_Module_Model::getStabilityConf(true);
+		$permissionsFiles = \Settings_ConfReport_Module_Model::getPermissionsFiles(true);
+		
 		foreach ($directiveValues as $key => $value) {
 			if (isset($value['status']) && $value['status']) {
 				$context['PHP'][$key] = $value['current'];
