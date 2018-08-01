@@ -2246,5 +2246,7 @@ return [
 	'public_html/layouts/basic/modules/Migration',
 	'public_html/layouts/resources/BaseList.js',
 	'public_html/layouts/resources/BaseList.min.js',
-	'public_html/libraries/.yarn-integrity'
+	'public_html/libraries/.yarn-integrity',
+	'modules/SMSNotifier/workflow/VTSMSTask.js',
+	'modules/SMSNotifier/workflow/VTSMSTask.min.js'
 ];

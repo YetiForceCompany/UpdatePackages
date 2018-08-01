@@ -13,6 +13,7 @@
  */
 class YetiForceUpdate
 {
+
 	/**
 	 * @var \vtlib\PackageImport
 	 */
@@ -1237,11 +1238,6 @@ class YetiForceUpdate
 	 * TOTP_OBLIGATORY - It is obligatory.
 	 */
 	'USER_AUTHY_MODE' => 'TOTP_OPTIONAL',
-	/**
-	 * Exceptions list of users (int[])
-	 * TOTP - Time-based One-time Password.
-	 */
-	'USER_AUTHY_TOTP_EXCEPTIONS' => [],
 "],
 					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_LIFETIME_SESSION', 'addingType' => 'before', 'value' => "	// Lifetime session (in seconds)
 	'MAX_LIFETIME_SESSION' => 21600,
