@@ -171,17 +171,19 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if ($this->checkFieldLableExists($label)) {
 			throw new Exception(\App\Language::translate('LBL_DUPLICATE_FIELD_EXISTS', 'Settings::LayoutEditor'), 513);
 		}
-		if ($this->checkFieldNameCharacters($name)) {
-			throw new Exception(\App\Language::translate('LBL_INVALIDCHARACTER', 'Settings::LayoutEditor'), 512);
-		}
-		if ($this->checkFieldNameExists($name)) {
-			throw new Exception(\App\Language::translate('LBL_DUPLICATE_FIELD_EXISTS', 'Settings::LayoutEditor'), 512);
-		}
-		if ($this->checkFieldNameIsAnException($name, $params['sourceModule'])) {
-			throw new Exception(\App\Language::translate('LBL_FIELD_NAME_IS_RESERVED', 'Settings::LayoutEditor'), 512);
-		}
-		if (strlen($name) > 30) {
-			throw new Exception(\App\Language::translate('LBL_EXCEEDED_MAXIMUM_NUMBER_CHARACTERS_FOR_FIELD_NAME', 'Settings::LayoutEditor'), 512);
+		if ($type === 0) {
+			if ($this->checkFieldNameCharacters($name)) {
+				throw new Exception(\App\Language::translate('LBL_INVALIDCHARACTER', 'Settings::LayoutEditor'), 512);
+			}
+			if ($this->checkFieldNameExists($name)) {
+				throw new Exception(\App\Language::translate('LBL_DUPLICATE_FIELD_EXISTS', 'Settings::LayoutEditor'), 512);
+			}
+			if ($this->checkFieldNameIsAnException($name, $params['sourceModule'])) {
+				throw new Exception(\App\Language::translate('LBL_FIELD_NAME_IS_RESERVED', 'Settings::LayoutEditor'), 512);
+			}
+			if (strlen($name) > 30) {
+				throw new Exception(\App\Language::translate('LBL_EXCEEDED_MAXIMUM_NUMBER_CHARACTERS_FOR_FIELD_NAME', 'Settings::LayoutEditor'), 512);
+			}
 		}
 		$supportedFieldTypes = $this->getAddSupportedFieldTypes();
 		if (!in_array($fieldType, $supportedFieldTypes)) {
@@ -211,7 +213,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			if (isset($focus->customFieldTable)) {
 				$tableName = $focus->customFieldTable[0];
 			} else {
-				$tableName = 'vtiger_' . strtolower($moduleName) . 'cf';
+				$tableName = $focus->table_name . 'cf';
 			}
 		}
 		if ($fieldType === 'Tree' || $fieldType === 'CategoryMultipicklist') {

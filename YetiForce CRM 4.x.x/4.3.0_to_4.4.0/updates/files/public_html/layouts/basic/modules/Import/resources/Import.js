@@ -12,7 +12,7 @@ if (typeof (ImportJs) === "undefined") {
 	/*
 	 * Namespaced javascript class for Import
 	 */
-	ImportJs = {
+	var ImportJs = {
 		toogleMergeConfiguration: function () {
 			var mergeChecked = jQuery('#auto_merge').is(':checked');
 			var duplicateMergeConfiguration = jQuery('#duplicates_merge_configuration');
@@ -63,10 +63,9 @@ if (typeof (ImportJs) === "undefined") {
 				return false;
 			return true;
 		},
-		registerImportClickEvent: function () {
-			jQuery('#importButton').on('click', function (e) {
-				var result = ImportJs.sanitizeAndSubmit();
-				return result;
+		registerImportClickEvent() {
+			$('#importButton').removeAttr('disabled').on('click', function (e) {
+				return ImportJs.sanitizeAndSubmit();
 			});
 		},
 		validateFilePath: function () {
@@ -128,8 +127,8 @@ if (typeof (ImportJs) === "undefined") {
 			return true;
 		},
 		validateMergeCriteria: function () {
-			$mergeChecked = jQuery('#auto_merge').is(':checked');
-			if ($mergeChecked) {
+			var mergeChecked = jQuery('#auto_merge').is(':checked');
+			if (mergeChecked) {
 				var selectedOptions = jQuery('#selected_merge_fields option');
 				if (selectedOptions.length == 0) {
 					var errorMessage = app.vtranslate('JS_PLEASE_SELECT_ONE_FIELD_FOR_MERGE');
@@ -148,7 +147,7 @@ if (typeof (ImportJs) === "undefined") {
 			var obj = jQuery(objName);
 			var arr = [];
 			if (typeof (obj) !== "undefined" && obj[0] != '') {
-				for (i = 0; i < obj[0].length; ++i) {
+				for (var i = 0; i < obj[0].length; ++i) {
 					arr.push(obj[0].options[i].value);
 				}
 			}
@@ -167,11 +166,11 @@ if (typeof (ImportJs) === "undefined") {
 			if (typeof (srcObj) === "undefined" || typeof (destObj) === "undefined")
 				return;
 
-			for (i = 0; i < srcObj[0].length; i++) {
+			for (var i = 0; i < srcObj[0].length; i++) {
 				if (srcObj[0].options[i].selected == true) {
 					var rowFound = false;
 					var existingObj = null;
-					for (j = 0; j < destObj[0].length; j++) {
+					for (var j = 0; j < destObj[0].length; j++) {
 						if (destObj[0].options[j].value == srcObj[0].options[i].value) {
 							rowFound = true;
 							existingObj = destObj[0].options[j];
@@ -198,7 +197,7 @@ if (typeof (ImportJs) === "undefined") {
 			if (obj == null || typeof (obj) === "undefined")
 				return;
 
-			for (i = obj[0].options.length - 1; i >= 0; i--) {
+			for (var i = obj[0].options.length - 1; i >= 0; i--) {
 				if (obj[0].options[i].selected == true) {
 					obj[0].options[i] = null;
 				}

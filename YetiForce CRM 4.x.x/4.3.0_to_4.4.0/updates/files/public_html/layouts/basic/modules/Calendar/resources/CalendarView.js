@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 jQuery.Class("Calendar_CalendarView_Js", {
 	currentInstance: false,
 	getInstanceByView: function () {
@@ -112,9 +113,9 @@ jQuery.Class("Calendar_CalendarView_Js", {
 				thisInstance.updateEvent(event, delta, revertFunc);
 			},
 			eventRender: function (event, element) {
-				if(event.vis === ''){
+				if (event.vis === '') {
 					var valueEventVis = '';
-				}else{
+				} else {
 					var valueEventVis = app.vtranslate('JS_' + event.vis);
 				}
 				app.showPopoverElementView(element.find('.fc-content'), {
@@ -464,10 +465,10 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		window.location.href = link + '&search_params=[[' + searchParams + ']]';
 	},
 	registerAddButton: function () {
-		var thisInstance = this;
-		jQuery('.calendarViewContainer .widget_header .addButton').on('click', function (e) {
+		const thisInstance = this;
+		$('.calendarViewContainer').closest('.mainContainer').find('.addButton').on('click', function (e) {
 			thisInstance.getCalendarCreateView().done(function (data) {
-				var headerInstance = new Vtiger_Header_Js();
+				const headerInstance = new Vtiger_Header_Js();
 				headerInstance.handleQuickCreateData(data, {
 					callbackFunction: function (data) {
 						thisInstance.addCalendarEvent(data.result);
@@ -490,14 +491,16 @@ jQuery.Class("Calendar_CalendarView_Js", {
 	},
 	createAddSwitch() {
 		const calendarview = this.getCalendarView();
-		let switchHistory, switchAllDays;
+		let switchHistory,
+			switchAllDays,
+			switchContainer = $(`<div class="js-calendar-switch-container"></div>`).insertAfter(calendarview.find('.fc-center'));
 		if (app.getMainParams('showType') == 'current' && app.moduleCacheGet('defaultShowType') != 'history') {
 			switchHistory = false;
 		} else {
 			switchHistory = true;
 		}
 		$(this.switchTpl(app.vtranslate('JS_TO_REALIZE'), app.vtranslate('JS_HISTORY'), switchHistory))
-			.prependTo(calendarview.find('.fc-toolbar .fc-right'))
+			.prependTo(switchContainer)
 			.on('change', 'input', (e) => {
 				const currentTarget = $(e.currentTarget);
 				if (typeof currentTarget.data('on-text') !== 'undefined') {
@@ -516,7 +519,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		}
 		if (app.getMainParams('hiddenDays', true) !== false) {
 			$(this.switchTpl(app.vtranslate('JS_WORK_DAYS'), app.vtranslate('JS_ALL'), switchAllDays))
-				.prependTo(calendarview.find('.fc-toolbar .fc-right'))
+				.prependTo(switchContainer)
 				.on('change', 'input', (e) => {
 					const currentTarget = $(e.currentTarget);
 					if (typeof currentTarget.data('on-text') !== 'undefined') {

@@ -131,6 +131,14 @@
 }
 
 //--- WIDTH ---//
+.u-w-10per {
+	width: 10%;
+}
+
+.u-w-30per {
+	width: 30%;
+}
+
 .u-w-37per {
 	width: 37% !important;
 }
@@ -157,12 +165,22 @@
 	width: 85px;
 }
 
+.u-w-90per {
+	width: 90%;
+}
+
 .u-min-w-650px {
 	min-width: 650px !important;
 }
 
 @include media-breakpoint-down(sm) {
 	.u-w-sm-down-100 {
+		width: 100%;
+	}
+}
+
+@include media-breakpoint-down(xs) {
+	.u-w-xs-down-100 {
 		width: 100%;
 	}
 }
@@ -258,6 +276,14 @@
 .u-remove-dropdown-icon {
 	.dropdown-toggle::after {
 		display: none;
+	}
+}
+
+@include media-breakpoint-down(lg) {
+	.u-remove-dropdown-icon-down-lg {
+		.dropdown-toggle::after {
+			display: none;
+		}
 	}
 }
 

@@ -1,4 +1,5 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+
 $.Class("Base_TreeModal_JS", {}, {
 	/**
 	 * Event for select row
@@ -69,15 +70,14 @@ $.Class("Base_TreeModal_JS", {}, {
 		}
 	},
 	registerSearchEvent: function () {
-		var thisInstance = this;
-		var valueSearch = $('#valueSearchTree');
-		var btnSearch = $('#btnSearchTree');
+		const thisInstance = this;
+		let valueSearch = this.container.find('#valueSearchTree');
 		valueSearch.on('keypress', function (e) {
 			if (e.which == 13) {
 				thisInstance.searchingInTree(valueSearch.val());
 			}
 		});
-		btnSearch.on('click', function () {
+		this.container.find('#btnSearchTree').on('click', function () {
 			thisInstance.searchingInTree(valueSearch.val());
 		});
 	},

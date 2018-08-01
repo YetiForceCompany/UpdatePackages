@@ -1,16 +1,17 @@
 <?php
+
 namespace Importers;
 
 /**
- * Class that imports base database
- * @package YetiForce.Install
+ * Class that imports base database.
+ *
  * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Base extends \App\Db\Importers\Base
 {
-
 	public $dbType = 'base';
 
 	public function scheme()
@@ -21,7 +22,7 @@ class Base extends \App\Db\Importers\Base
 					'id' => $this->primaryKeyUnsigned(10)->notNull(),
 					'calendarid' => $this->integer(10)->unsigned()->notNull(),
 					'principaluri' => $this->stringType(100),
-					'access' => $this->smallInteger(1)->notNull()->defaultValue(1),
+					'access' => $this->smallInteger(1)->notNull()->defaultValue(1)->comment('1 = owner, 2 = read, 3 = readwrite'),
 					'displayname' => $this->stringType(100),
 					'uri' => $this->stringType(200),
 					'description' => $this->text(),
@@ -31,16 +32,16 @@ class Base extends \App\Db\Importers\Base
 					'transparent' => $this->smallInteger(1)->notNull()->defaultValue(0),
 					'share_href' => $this->stringType(100),
 					'share_displayname' => $this->stringType(100),
-					'share_invitestatus' => $this->smallInteger(1)->notNull()->defaultValue(2),
+					'share_invitestatus' => $this->smallInteger(1)->notNull()->defaultValue(2)->comment('1 = noresponse, 2 = accepted, 3 = declined, 4 = invalid'),
 				],
 				'columns_mysql' => [
 					'principaluri' => $this->varbinary(100),
-					'access' => $this->tinyInteger(1)->notNull()->defaultValue(1),
+					'access' => $this->tinyInteger(1)->notNull()->defaultValue(1)->comment('1 = owner, 2 = read, 3 = readwrite'),
 					'uri' => $this->varbinary(200),
 					'calendarcolor' => $this->varbinary(10),
 					'transparent' => $this->tinyInteger(1)->notNull()->defaultValue(0),
 					'share_href' => $this->varbinary(100),
-					'share_invitestatus' => $this->tinyInteger(1)->notNull()->defaultValue(2),
+					'share_invitestatus' => $this->tinyInteger(1)->notNull()->defaultValue(2)->comment('1 = noresponse, 2 = accepted, 3 = declined, 4 = invalid'),
 				],
 				'index' => [
 					['principaluri', ['principaluri', 'uri'], true],
@@ -78,7 +79,9 @@ class Base extends \App\Db\Importers\Base
 					'no_of_currency_decimals' => $this->stringType(1),
 					'callduration' => $this->stringType(3),
 					'othereventduration' => $this->stringType(3),
-					'authy_methods' => $this->stringType(255)
+					'authy_methods' => $this->stringType(255),
+					'authy_secret_totp' => $this->stringType(),
+					'login_method' => $this->stringType(50)->defaultValue('PLL_PASSWORD'),
 				],
 				'index' => [
 					['email1', 'email1', true],
@@ -95,7 +98,7 @@ class Base extends \App\Db\Importers\Base
 			'u_#__github' => [
 				'columns' => [
 					'github_id' => $this->primaryKey(10)->notNull(),
-					'token' => $this->stringType(100), //
+					'token' => $this->stringType(100),
 					'username' => $this->stringType(32),
 				],
 				'engine' => 'InnoDB',
@@ -191,8 +194,8 @@ class Base extends \App\Db\Importers\Base
 					['presence', 'presence'],
 					['tabid_2', ['tabid', 'fieldname']],
 					['tabid_3', ['tabid', 'block']],
-					['field_sequence_idx', 'sequence'], //
-					['field_uitype_idx', 'uitype'], //
+					['field_sequence_idx', 'sequence'],
+					['field_uitype_idx', 'uitype'],
 				],
 				'primaryKeys' => [
 					['field_pk', 'fieldid']
@@ -202,14 +205,36 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_module_dashboard_widgets' => [
 				'columns' => [
-					'position' => $this->text()
+					'id' => $this->integer(10)->autoIncrement()->notNull(),
+					'linkid' => $this->integer(10)->notNull(),
+					'userid' => $this->integer(10),
+					'templateid' => $this->integer(10)->notNull(),
+					'filterid' => $this->stringType(100),
+					'title' => $this->stringType(100),
+					'data' => $this->text(),
+					'size' => $this->text(),
+					'limit' => $this->smallInteger(2),
+					'position' => $this->text(),
+					'isdefault' => $this->smallInteger(1)->defaultValue(0),
+					'active' => $this->smallInteger(1)->defaultValue(0),
+					'owners' => $this->stringType(100),
+					'module' => $this->integer(10)->defaultValue(0),
+					'cache' => $this->smallInteger(1)->defaultValue(0),
+					'date' => $this->stringType(20),
+					'dashboardid' => $this->integer(10),
+				],
+				'columns_mysql' => [
+					'limit' => $this->tinyInteger(2),
+					'isdefault' => $this->tinyInteger(1)->defaultValue(0),
+					'active' => $this->tinyInteger(1)->defaultValue(0),
+					'cache' => $this->tinyInteger(1)->defaultValue(0),
 				],
 				'index' => [
 					['vtiger_module_dashboard_widgets_ibfk_1', 'templateid'],
 					['userid', ['userid', 'active', 'module']],
-					['vtiger_module_dashboard_widgets_linkid_idx', 'linkid'], //
-					['vtiger_module_dashboard_widgets_dashboardid_idx', 'dashboardid'], //
-					['vtiger_module_dashboard_widgets_module_idx', 'module'], //
+					['vtiger_module_dashboard_widgets_linkid_idx', 'linkid'],
+					['vtiger_module_dashboard_widgets_dashboardid_idx', 'dashboardid'],
+					['vtiger_module_dashboard_widgets_module_idx', 'module'],
 				],
 				'primaryKeys' => [
 					['module_dashboard_widgets_pk', 'id']
@@ -222,7 +247,7 @@ class Base extends \App\Db\Importers\Base
 					['profile2field_profileid_tabid_fieldname_idx', ['profileid', 'tabid']],
 					['profile2field_tabid_profileid_idx', ['tabid', 'profileid']],
 					['profile2field_visible_profileid_idx', ['visible', 'profileid']],
-					['profile2field_readonly_idx', 'readonly'], //
+					['profile2field_readonly_idx', 'readonly'],
 				],
 				'primaryKeys' => [
 					['profile2field_pk', ['profileid', 'fieldid']]
@@ -477,6 +502,70 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_projectmilestone' => [
 				'columns' => [
 					'projectmilestone_status' => $this->stringType(255)->defaultValue(''),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__srecurringorders_inventory' => [
+				'columns' => [
+					'id' => $this->integer(10),
+					'seq' => $this->integer(10),
+					'name' => $this->integer(10)->defaultValue(0),
+					'qty' => $this->decimal('25,3')->defaultValue(0),
+					'discount' => $this->decimal('28,8')->defaultValue(0),
+					'discountparam' => $this->stringType(),
+					'marginp' => $this->decimal('28,8')->defaultValue(0),
+					'margin' => $this->decimal('28,8')->defaultValue(0),
+					'tax' => $this->decimal('28,8')->defaultValue(0),
+					'taxparam' => $this->stringType(),
+					'comment1' => $this->text(),
+					'price' => $this->decimal('28,8')->defaultValue(0),
+					'total' => $this->decimal('28,8')->defaultValue(0),
+					'net' => $this->decimal('28,8')->defaultValue(0),
+					'purchase' => $this->decimal('28,8')->defaultValue(0),
+					'gross' => $this->decimal('28,8')->defaultValue(0),
+					'discountmode' => $this->smallInteger(1)->defaultValue(0),
+					'taxmode' => $this->smallInteger(1)->defaultValue(0),
+					'currency' => $this->integer(),
+					'currencyparam' => $this->stringType(1024),
+					'qtyparam' => $this->smallInteger(1)->defaultValue(0),
+					'unit' => $this->stringType(),
+					'subunit' => $this->stringType(),
+				],
+				'index' => [
+					['id', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__ssingleorders_inventory' => [
+				'columns' => [
+					'id' => $this->integer(10),
+					'seq' => $this->integer(10),
+					'name' => $this->integer(10)->defaultValue(0),
+					'qty' => $this->decimal('25,3')->defaultValue(0),
+					'discount' => $this->decimal('28,8')->defaultValue(0),
+					'discountparam' => $this->stringType(),
+					'marginp' => $this->decimal('28,8')->defaultValue(0),
+					'margin' => $this->decimal('28,8')->defaultValue(0),
+					'tax' => $this->decimal('28,8')->defaultValue(0),
+					'taxparam' => $this->stringType(),
+					'comment1' => $this->text(),
+					'price' => $this->decimal('28,8')->defaultValue(0),
+					'total' => $this->decimal('28,8')->defaultValue(0),
+					'net' => $this->decimal('28,8')->defaultValue(0),
+					'purchase' => $this->decimal('28,8')->defaultValue(0),
+					'gross' => $this->decimal('28,8')->defaultValue(0),
+					'discountmode' => $this->smallInteger(1)->defaultValue(0),
+					'taxmode' => $this->smallInteger(1)->defaultValue(0),
+					'currency' => $this->integer(),
+					'currencyparam' => $this->stringType(1024),
+					'qtyparam' => $this->smallInteger(1)->defaultValue(0),
+					'unit' => $this->stringType(),
+					'subunit' => $this->stringType(),
+				],
+				'index' => [
+					['id', 'id'],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

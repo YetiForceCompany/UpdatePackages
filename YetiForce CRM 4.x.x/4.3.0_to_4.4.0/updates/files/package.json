@@ -24,13 +24,13 @@
 		"@fortawesome/fontawesome-free-regular": "^5.0.9",
 		"@fortawesome/fontawesome-free-solid": "^5.0.9",
 		"add": "^2.0.6",
-		"animate.css": "^3.6.1",
+		"animate.css": "^3.7.0",
 		"block-ui": "^2.70.1",
 		"blueimp-file-upload": "^9.21.0",
 		"bootbox": "^4.4.0",
-		"bootstrap": "^4.1.0",
+		"bootstrap": "^4.1.3",
 		"bootstrap-chosen": "^1.4.2",
-		"bootstrap-colorpicker": "^2.5.2",
+		"bootstrap-colorpicker": "^2.5.3",
 		"bootstrap-datepicker": "^1.7.1",
 		"bootstrap-daterangepicker": "^3.0.3",
 		"bootstrap-tabdrop": "https://github.com/jmschabdach/bootstrap-tabdrop",
@@ -50,7 +50,7 @@
 		"fontawesome-web": "^5.0.2",
 		"footable": "^2.0.6",
 		"fullcalendar": "3.9.0",
-		"gridster": "^0.5.6",
+		"gridstack": "^0.4.0",
 		"html2canvas": "^1.0.0-alpha.12",
 		"html5shiv": "^3.7.3",
 		"inputmask": "^4.0",
@@ -62,11 +62,12 @@
 		"jquery-outside-events": "^1.0.0",
 		"jquery-slimscroll": "^1.3.8",
 		"jquery-ui-dist": "^1.12.1",
+		"jquery-ui-touch-punch": "^0.2.3",
 		"jquery.class.js": "^1.0.0",
 		"jstorage": "^0.4.8",
 		"jstree": "^3.3.5",
 		"jstree-bootstrap-theme": "^1.0.1",
-		"leaflet": "^1.3.1",
+		"leaflet": "^1.3.3",
 		"leaflet.awesome-markers": "^2.0.4",
 		"leaflet.markercluster": "^1.3.0",
 		"moment": "^2.21.0",
@@ -78,7 +79,6 @@
 		"sass-material-colors": "^0.0.5",
 		"select2": "^4.0.6-rc.1",
 		"select2-theme-bootstrap4": "^0.2.0-beta.2",
-		"selectize": "^0.12.5",
 		"split.js": "^1.3.5",
 		"updated-jqplot": "^1.0.9-2"
 	},
@@ -86,19 +86,5 @@
 	"bugs": {
 		"url": "https://github.com/YetiForceCompany/YetiForceCRM/issues"
 	},
-	"homepage": "https://github.com/YetiForceCompany/YetiForceCRM#readme",
-	"devDependencies": {
-		"babel-core": "^6.26.3",
-		"babel-minify": "^0.4.3",
-		"babel-plugin-external-helpers": "^6.22.0",
-		"babel-plugin-transform-object-rest-spread": "^6.26.0",
-		"babel-preset-env": "^1.7.0",
-		"babel-preset-minify": "^0.4.3",
-		"findit": "^2.0.0",
-		"gulp": "^3.9.1",
-		"gulp-clean-css": "^3.9.4",
-		"gulp-rename": "^1.3.0",
-		"rollup": "^0.62.0",
-		"rollup-plugin-babel": "^3.0.7"
-	}
+	"homepage": "https://github.com/YetiForceCompany/YetiForceCRM#readme"
 }

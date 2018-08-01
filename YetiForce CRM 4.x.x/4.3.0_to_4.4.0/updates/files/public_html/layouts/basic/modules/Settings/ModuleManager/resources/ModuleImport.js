@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 jQuery.Class('Settings_Module_Import_Js', {}, {
 	/**
 	 * Function to get import module step1 params

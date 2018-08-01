@@ -10,24 +10,11 @@ class Gantt {
 	 */
 	constructor(container, projectData) {
 		this.container = $(container);
-		this.projectData = projectData;
-		this.statuses = this.projectData.statuses;
-		this.filter = {
-			status: {
-				'Project': this.statuses.Project.filter((status) => {
-					return !status.closing;
-				}).map(status => Object.assign(status)),
-				'ProjectMilestone': this.statuses.ProjectMilestone.filter((status) => {
-					return !status.closing;
-				}).map(status => Object.assign(status)),
-				'ProjectTask': this.statuses.ProjectTask.filter((status) => {
-					return !status.closing;
-				}).map(status => Object.assign(status)),
-			},
-		};
 		this.registerLanguage();
 		this.registerTemplates();
-		this.loadProject();
+		if (typeof projectData !== 'undefined') {
+			this.loadProject(projectData);
+		}
 	}
 
 	/**
@@ -78,20 +65,20 @@ class Gantt {
 			render(obj) {
 				return `<div class="ganttButtonBar noprint">
 				<div class="buttons">
-					<button class="js-gantt__expand-all-btn button textual icon " title="EXPAND_ALL"><span class="teamworkIcon">6</span></button>
-					<button class="js-gantt__collapse-all-btn button textual icon " title="COLLAPSE_ALL"><span class="teamworkIcon">5</span></button>
+					<button class="js-gantt__expand-all-btn button textual icon " title="${app.vtranslate('JS_GANTT_EXPAND_ALL')}"><span class="teamworkIcon">6</span></button>
+					<button class="js-gantt__collapse-all-btn button textual icon " title="${app.vtranslate('JS_GANTT_COLLAPSE_ALL')}"><span class="teamworkIcon">5</span></button>
 					<span class="ganttButtonSeparator"></span>
-					<button class="js-gantt__zoom-out-btn button textual icon " title="zoom out"><span class="teamworkIcon">)</span></button>
-					<button class="js-gantt__zoom-in-btn button textual icon " title="zoom in"><span class="teamworkIcon">(</span></button>
+					<button class="js-gantt__zoom-out-btn button textual icon " title="${app.vtranslate('JS_GANTT_ZOOM_OUT')}"><span class="teamworkIcon">)</span></button>
+					<button class="js-gantt__zoom-in-btn button textual icon " title="${app.vtranslate('JS_GANTT_ZOOM_IN')}"><span class="teamworkIcon">(</span></button>
 					<span class="ganttButtonSeparator"></span>
-					<button class="js-gantt__resize-0-btn button textual icon"><span class="teamworkIcon">F</span>
+					<button class="js-gantt__resize-0-btn button textual icon" title="${app.vtranslate('JS_GANTT_RESIZE_0')}"><span class="teamworkIcon">F</span>
 					</button>
-					<button class="js-gantt__resize-50-btn button textual icon"><span class="teamworkIcon">O</span>
+					<button class="js-gantt__resize-50-btn button textual icon" title="${app.vtranslate('JS_GANTT_RESIZE_50')}"><span class="teamworkIcon">O</span>
 					</button>
-					<button class="js-gantt__resize-100-btn button textual icon"><span class="teamworkIcon">R</span>
+					<button class="js-gantt__resize-100-btn button textual icon" title="${app.vtranslate('JS_GANTT_RESIZE_100')}"><span class="teamworkIcon">R</span>
 					</button>
 					<span class="ganttButtonSeparator"></span>
-					<button class="js-gantt__front-filter button textual icon"><span class="teamworkIcon">f</span></button>
+					<button class="js-gantt__front-filter button textual icon" title="${app.vtranslate('JS_GANTT_FILTER')}"><span class="teamworkIcon">f</span></button>
 				</div>
 			</div>`;
 			}
@@ -311,7 +298,10 @@ class Gantt {
 	/**
 	 * Load project
 	 */
-	loadProject() {
+	loadProject(projectData) {
+		this.projectData = projectData;
+		this.statuses = this.projectData.statuses;
+		this.filter = {status: this.projectData.activeStatuses};
 		this.gantt = new GanttMaster(this.ganttTemplateFunctions);
 		this.gantt.resourceUrl = '/libraries/jquery-gantt-editor/res/';
 		this.gantt.init(this.container);
@@ -320,6 +310,18 @@ class Gantt {
 			this.gantt.loadProject($.extend(true, {}, this.filterProjectData(this.projectData)));
 			this.registerEvents();
 		}
+	}
+
+	/**
+	 * Load project from ajax request
+	 * @param {object} params - request params such as module/action and projectId
+	 */
+	loadProjectFromAjax(params) {
+		const progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
+		AppConnector.request(params).done((response) => {
+			this.loadProject(response.result);
+			progressInstance.progressIndicator({mode: 'hide'});
+		});
 	}
 
 	/**

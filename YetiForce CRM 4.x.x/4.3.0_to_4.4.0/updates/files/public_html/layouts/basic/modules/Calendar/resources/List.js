@@ -7,6 +7,7 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  *************************************************************************************/
+
 Vtiger_List_Js("Calendar_List_Js", {
 	triggerImportAction: function (importUrl) {
 		var progressIndicatorElement = jQuery.progressIndicator();

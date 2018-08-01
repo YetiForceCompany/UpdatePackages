@@ -1,11 +1,11 @@
 <?php
 /**
- * Settings CronTasks Module Model class
+ * Settings CronTasks Module Model class.
+ *
  * @copyright YetiForce Sp. z o.o.
  * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Rafal Pospiech <r.pospiech@yetiforce.com>
  */
-
 class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model
 {
 	public $baseTable = 'vtiger_cron_task';
@@ -46,8 +46,7 @@ class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model
 		$caseSequence .= ' END';
 		$db->createCommand()->update('vtiger_cron_task', ['sequence' => new yii\db\Expression($caseSequence)])->execute();
 	}
-	
-	
+
 	public function hasCreatePermissions()
 	{
 		return false;
@@ -90,7 +89,7 @@ class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model
 		$totalDiff = $finalLastStart = $finalLastEnd = $finishedTasks = 0;
 		$timedout = false;
 		$lastCronStart = $this->getLastCronStart();
-		
+
 		$tasks = (new \App\Db\Query())
 			->from('vtiger_cron_task')
 			->where(['status', [

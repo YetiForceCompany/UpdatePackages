@@ -302,7 +302,6 @@ Vtiger_Edit_Js("Products_Edit_Js", {}, {
 				e.preventDefault();
 				thisInstance.getMoreCurrenciesUI().done(function () {
 					thisInstance.preSaveConfigOfForm(form);
-					InitialFormData = form.serialize();
 					form.submit();
 				});
 			} else if (multiCurrencyContent.length > 0) {
@@ -379,6 +378,13 @@ Vtiger_Edit_Js("Products_Edit_Js", {}, {
 			if (typeof editViewForm.data('submit') !== "undefined") {
 				return false;
 			} else {
+				document.progressLoader = $.progressIndicator({
+					'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
+					'position': 'html',
+					'blockInfo': {
+						'enabled': true
+					}
+				});
 				var module = $(e.currentTarget).find('[name="module"]').val();
 				if (editViewForm.validationEngine('validate')) {
 					//Once the form is submiting add data attribute to that form element
@@ -388,11 +394,13 @@ Vtiger_Edit_Js("Products_Edit_Js", {}, {
 					editViewForm.trigger(recordPreSaveEvent, {'value': 'edit'});
 					if (recordPreSaveEvent.isDefaultPrevented()) {
 						//If duplicate record validation fails, form should submit again
+						document.progressLoader.progressIndicator({'mode': 'hide'});
 						editViewForm.removeData('submit');
 						e.preventDefault();
 					}
 				} else {
 					//If validation fails, form should submit again
+					document.progressLoader.progressIndicator({'mode': 'hide'});
 					editViewForm.removeData('submit');
 					app.formAlignmentAfterValidation(editViewForm);
 				}

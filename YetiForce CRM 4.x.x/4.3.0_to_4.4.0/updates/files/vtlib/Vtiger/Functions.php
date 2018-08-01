@@ -176,6 +176,18 @@ class Functions
 	protected static $crmRecordIdMetadataCache = [];
 
 	/**
+	 * Clear cache meta data for records.
+	 *
+	 * @param int $id
+	 */
+	public static function clearCacheMetaDataRecord($id)
+	{
+		if (isset(static::$crmRecordIdMetadataCache[$id])) {
+			unset(static::$crmRecordIdMetadataCache[$id]);
+		}
+	}
+
+	/**
 	 * Function gets record metadata.
 	 *
 	 * @param int|array $mixedid
@@ -499,7 +511,7 @@ class Functions
 				$trace = str_replace(ROOT_DIRECTORY . DIRECTORY_SEPARATOR, '', $e->getTraceAsString());
 			}
 			if (is_object($e)) {
-				$response->setHeader('HTTP/1.1 ' . $e->getCode() . ' ' . $e->getMessage());
+				$response->setHeader('HTTP/1.1 ' . $e->getCode() . ' ' . str_ireplace(["\r\n", "\r", "\n"], [' ', ' ', ' '], $e->getMessage()));
 				$response->setError($e->getCode(), $e->getMessage(), $trace);
 			} else {
 				$response->setError('error', $message, $trace);

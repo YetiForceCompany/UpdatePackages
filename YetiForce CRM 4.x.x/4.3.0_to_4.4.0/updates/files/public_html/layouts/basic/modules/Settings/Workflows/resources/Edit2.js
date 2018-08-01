@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 Settings_Workflows_Edit_Js("Settings_Workflows_Edit2_Js", {}, {
 
 	step2Container: false,

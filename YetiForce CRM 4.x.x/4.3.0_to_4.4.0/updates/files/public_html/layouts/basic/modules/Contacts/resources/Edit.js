@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 Vtiger_Edit_Js("Contacts_Edit_Js", {}, {
 
 	/**

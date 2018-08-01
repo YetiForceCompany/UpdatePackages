@@ -6,6 +6,7 @@
  * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
+
 namespace Cron\Batch;
 
 /**
@@ -13,32 +14,35 @@ namespace Cron\Batch;
  */
 class MigrateImages
 {
-
 	/**
-	 * Time limit
+	 * Time limit.
 	 */
 	const TIME_LIMIT = 20;
 
 	/**
-	 * Module name
+	 * Module name.
+	 *
 	 * @var string
 	 */
 	private $moduleName;
 
 	/**
-	 * Uitypes
+	 * Uitypes.
+	 *
 	 * @var int[]
 	 */
 	private $uitypes;
 
 	/**
-	 * Modules
+	 * Modules.
+	 *
 	 * @var string[]
 	 */
 	public $modules;
 
 	/**
-	 * Tables
+	 * Tables.
+	 *
 	 * @var string[]
 	 */
 	public $tables = [];
@@ -46,8 +50,9 @@ class MigrateImages
 	public $break = false;
 
 	/**
-	 * Constructor
-	 * @param int $module
+	 * Constructor.
+	 *
+	 * @param int   $module
 	 * @param int[] $uitypes
 	 */
 	public function __construct(int $module = 0, array $uitypes = [])
@@ -59,7 +64,8 @@ class MigrateImages
 	}
 
 	/**
-	 * Preprocess
+	 * Preprocess.
+	 *
 	 * @return bool
 	 */
 	public function preProcess()
@@ -80,12 +86,12 @@ class MigrateImages
 	}
 
 	/**
-	 * Process
+	 * Process.
 	 */
 	public function process()
 	{
 		$modules = array_column(\vtlib\Functions::getAllModules(), 'name');
-		$fields = (new \App\Db\Query)->select(['tabid', 'uitype'])->from('vtiger_field')->where(['uitype' => $this->uitypes])->orderBy(['tabid' => SORT_ASC])->createCommand()->queryAllByGroup(2);
+		$fields = (new \App\Db\Query())->select(['tabid', 'uitype'])->from('vtiger_field')->where(['uitype' => $this->uitypes])->orderBy(['tabid' => SORT_ASC])->createCommand()->queryAllByGroup(2);
 		foreach ($fields as $tabId => $uitypes) {
 			try {
 				$migrateClassModel = new self($tabId, $uitypes);
@@ -98,14 +104,14 @@ class MigrateImages
 				unset($migrateClassModel);
 			} catch (\Throwable $ex) {
 				$this->break = true;
-				\App\Log::error("MIGRATE FILES:" . $ex->getMessage());
+				\App\Log::error('MIGRATE FILES:' . $ex->getMessage());
 			}
 		}
 		$this->clean();
 	}
 
 	/**
-	 * Process
+	 * Process.
 	 */
 	public function postProcess()
 	{
@@ -114,6 +120,7 @@ class MigrateImages
 
 	/**
 	 * Migration of picture fields.
+	 *
 	 * @return bool
 	 */
 	public function migrate()
@@ -135,9 +142,9 @@ class MigrateImages
 	}
 
 	/**
-	 * Migrate image field
+	 * Migrate image field.
+	 *
 	 * @param string $field
-	 * @return void
 	 */
 	private function migrateImage(string $field = null)
 	{
@@ -151,7 +158,7 @@ class MigrateImages
 		}
 		$field = reset($fields);
 		if (empty($fields) || count($fields) !== 1 || !isset($entityModel->tab_name_index[$field->getTableName()])) {
-			\App\Log::error("MIGRATE FILES ID:" . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
+			\App\Log::error('MIGRATE FILES ID:' . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
 			return;
 		}
 		$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
@@ -179,7 +186,7 @@ class MigrateImages
 	}
 
 	/**
-	 * Migrate MultiImage field
+	 * Migrate MultiImage field.
 	 */
 	private function migrateMultiImage()
 	{
@@ -217,10 +224,11 @@ class MigrateImages
 	}
 
 	/**
-	 * Update data
-	 * @param array $row
+	 * Update data.
+	 *
+	 * @param array               $row
 	 * @param \Vtiger_Field_Model $field
-	 * @param bool $isMulti
+	 * @param bool                $isMulti
 	 */
 	private function updateRow(array $row, \Vtiger_Field_Model $field, bool $isMulti = false)
 	{
@@ -241,7 +249,7 @@ class MigrateImages
 			$image['name'] = $file->getName();
 			$image['path'] = \App\Fields\File::getLocalPath($file->getPath());
 
-			$oldValue = (new \App\Db\Query)->select([$field->getColumnName()])->from($field->getTableName())->where([$field->get('primaryColumn') => $row['id']])->scalar();
+			$oldValue = (new \App\Db\Query())->select([$field->getColumnName()])->from($field->getTableName())->where([$field->get('primaryColumn') => $row['id']])->scalar();
 			$value = \App\Json::decode($oldValue);
 			if (!is_array($value)) {
 				$value = [];
@@ -267,7 +275,8 @@ class MigrateImages
 	}
 
 	/**
-	 * Drop tables
+	 * Drop tables.
+	 *
 	 * @param array $tables
 	 */
 	public function clean()
@@ -277,7 +286,7 @@ class MigrateImages
 			if ($table === 'u_#__attachments') {
 				$db->createCommand()->delete('u_#__attachments', ['status' => 0])->execute();
 			}
-			if (!(new \App\Db\Query)->from($table)->exists()) {
+			if (!(new \App\Db\Query())->from($table)->exists()) {
 				$db->createCommand()->dropTable($table)->execute();
 			} else {
 				\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");

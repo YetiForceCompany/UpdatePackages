@@ -112,7 +112,7 @@ header {
 	@extend .p-0;
 }
 
-.select2-search__field {
+.select2-search__field, .select2-search.select2-search--inline {
 	width: 100% !important;
 }
 
@@ -245,4 +245,29 @@ ul.ui-autocomplete {
 
 .leftPanel .ps-scrollbar-y-rail {
 	display: none !important;
+}
+
+//-------- font awesome --------//
+
+// overwrite bootstrap _reboot.scss
+.svg-inline--fa {
+	vertical-align: -0.125em !important;
+}
+
+//-------- gridstack --------//
+
+.tpl-DashBoardContents {
+	margin: 0 calculate-rem(4px);
+}
+
+.grid-stack > .grid-stack-item > .grid-stack-item-content {
+	left: 0.25rem !important;
+	right: 0.25rem !important;
+}
+
+@include media-breakpoint-down(xs) {
+	.ui-draggable-handle {
+		-ms-touch-action: manipulation !important;
+		touch-action: manipulation !important;
+	}
 }

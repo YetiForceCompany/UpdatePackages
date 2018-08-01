@@ -4,9 +4,9 @@
  * Basic Inventory Model Class.
  *
  * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
- * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Vtiger_InventoryField_Model extends App\Base
 {
@@ -48,7 +48,7 @@ class Vtiger_InventoryField_Model extends App\Base
 	 * @param bool  $returnInBlock Should the result be divided into blocks
 	 * @param array $ids
 	 *
-	 * @return array Inventory data
+	 * @return Vtiger_Basic_InventoryField[] Inventory data
 	 */
 	public function getFields($returnInBlock = false, $ids = [], $viewType = false)
 	{
@@ -281,13 +281,7 @@ class Vtiger_InventoryField_Model extends App\Base
 	 */
 	public function getAutoCompleteFieldsByModule($moduleName)
 	{
-		$fields = [];
-		foreach ($this->getAutoCompleteFields() as $row) {
-			if ($row['module'] == $moduleName) {
-				$fields[] = $row;
-			}
-		}
-		return $fields;
+		return $this->getAutoCompleteFields()[$moduleName] ?? [];
 	}
 
 	/**
@@ -562,13 +556,12 @@ class Vtiger_InventoryField_Model extends App\Base
 		if (\App\Cache::has('AutoCompleteFields', $this->get('module'))) {
 			return \App\Cache::get('AutoCompleteFields', $this->get('module'));
 		}
-		$dataReader = (new \App\Db\Query())->from($this->getTableName('autofield'))->createCommand()->query();
+		$invmap = (new \App\Db\Query())->from($this->getTableName('autofield'))->all();
 		$fields = [];
-		while ($row = $dataReader->read()) {
-			$fields[$row['tofield']] = $row;
+		foreach ($invmap as $row) {
+			$fields[$row['module']][$row['tofield']] = $row;
 		}
 		App\Cache::save('AutoCompleteFields', $this->get('module'), $fields);
-
 		return $fields;
 	}
 

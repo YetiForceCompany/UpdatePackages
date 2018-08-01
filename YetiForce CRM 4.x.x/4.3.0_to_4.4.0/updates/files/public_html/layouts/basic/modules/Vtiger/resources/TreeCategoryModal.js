@@ -1,4 +1,5 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+
 jQuery.Class("Vtiger_TreeCategory_Js", {}, {
 	modalContainer: false,
 	treeInstance: false,
@@ -45,7 +46,7 @@ jQuery.Class("Vtiger_TreeCategory_Js", {}, {
 					three_state: false,
 				},
 				plugins: plugins
-			}, this.tree.data('params')));
+			}, thisInstance.treeInstance.data('params')));
 		}
 	},
 	isActiveCategory: function () {

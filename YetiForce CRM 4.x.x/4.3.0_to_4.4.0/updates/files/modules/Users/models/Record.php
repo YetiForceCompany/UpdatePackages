@@ -177,6 +177,7 @@ class Users_Record_Model extends Vtiger_Record_Model
 			$this->validate();
 			$this->saveToDb();
 			$this->afterSaveToDb();
+			(new App\BatchMethod(['method' => '\App\PrivilegeUtil::recalculateSharingRulesByUser', 'params' => App\Json::encode([$this->getId()])]))->save();
 			$transaction->commit();
 		} catch (\Exception $e) {
 			$transaction->rollBack();
@@ -919,7 +920,6 @@ class Users_Record_Model extends Vtiger_Record_Model
 		$auth = $this->getAuthDetail();
 		if ($auth['ldap']['active'] === 'true') {
 			$authMethod = new Users_Ldap_Authmethod($this);
-
 			return $authMethod->process($auth['ldap'], $password);
 		}
 		return null;

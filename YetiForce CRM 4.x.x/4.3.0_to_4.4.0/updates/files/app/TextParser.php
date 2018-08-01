@@ -336,6 +336,18 @@ class TextParser
 	}
 
 	/**
+	 * Function checks if its TextParser type.
+	 *
+	 * @param string $text
+	 *
+	 * @return false|int
+	 */
+	public static function isVaribleToParse($text)
+	{
+		return preg_match('/^\$\((\w+) : ([,"\+\%\.\-\[\]\&\w\s\|]+)\)\$$/', $text);
+	}
+
+	/**
 	 * Text parse function.
 	 *
 	 * @return $this
@@ -360,6 +372,24 @@ class TextParser
 	}
 
 	/**
+	 * Text parse function.
+	 *
+	 * @return $this
+	 */
+	public function parseTranslations()
+	{
+		if (isset($this->language)) {
+			Language::setTemporaryLanguage($this->language);
+		}
+		$this->content = preg_replace_callback('/\$\(translate : ([,"\+\%\.\-\[\]\&\w\s\|]+)\)\$/u', function ($matches) {
+			list(, $params) = $matches;
+			return $this->translate($params);
+		}, $this->content);
+		Language::clearTemporaryLanguage();
+		return $this;
+	}
+
+	/**
 	 * Function parse date.
 	 *
 	 * @param string $param
@@ -373,25 +403,6 @@ class TextParser
 	}
 
 	/**
-	 * Text parse function.
-	 *
-	 * @return $this
-	 */
-	public function parseTranslations()
-	{
-		if (isset($this->language)) {
-			Language::setTemporaryLanguage($this->language);
-		}
-		$this->content = preg_replace_callback('/\$\(translate : ([\.\&\w\s\|]+)\)\$/', function ($matches) {
-			list(, $params) = $matches;
-
-			return $this->translate($params);
-		}, $this->content);
-		Language::clearTemporaryLanguage();
-		return $this;
-	}
-
-	/**
 	 * Parsing translations.
 	 *
 	 * @param string $params
@@ -400,6 +411,9 @@ class TextParser
 	 */
 	protected function translate($params)
 	{
+		if ($this->withoutTranslations) {
+			return "$(translate : $params)$";
+		}
 		if (strpos($params, '|') === false) {
 			return Language::translate($params);
 		}
@@ -497,6 +511,9 @@ class TextParser
 				return \AppConfig::main('PORTAL_URL');
 			case 'BaseTimeZone':
 				return Fields\DateTime::getTimeZone();
+			case 'UserTimeZone':
+				$userModel = \App\User::getCurrentUserModel();
+				return ($userModel && $userModel->getDetail('time_zone')) ? $userModel->getDetail('time_zone') : \AppConfig::main('default_timezone');
 		}
 		return $key;
 	}
@@ -541,6 +558,7 @@ class TextParser
 			case 'RecordLabel':
 				return $this->recordModel->getName();
 			case 'ChangesListChanges':
+				$value = '';
 				foreach ($this->recordModel->getPreviousValue() as $fieldName => $oldValue) {
 					$fieldModel = $this->recordModel->getModule()->getField($fieldName);
 					if (!$fieldModel) {
@@ -548,15 +566,16 @@ class TextParser
 					}
 					$oldValue = $this->getDisplayValueByField($fieldModel, $oldValue);
 					$currentValue = $this->getDisplayValueByField($fieldModel);
-					if ($this->withoutTranslations !== true) {
+					if ($this->withoutTranslations) {
+						$value .= "\$(translate : $this->moduleName|{$fieldModel->getFieldLabel()})\$ \$(translate : LBL_FROM)\$ $oldValue \$(translate : LBL_TO)\$ " . $currentValue . ($this->isHtml ? '<br />' : PHP_EOL);
+					} else {
 						$value .= Language::translate($fieldModel->getFieldLabel(), $this->moduleName, $this->language) . ' ';
 						$value .= Language::translate('LBL_FROM') . " $oldValue " . Language::translate('LBL_TO') . " $currentValue" . ($this->isHtml ? '<br />' : PHP_EOL);
-					} else {
-						$value .= "\$(translate : $this->moduleName|{$fieldModel->getFieldLabel()})\$ \$(translate : LBL_FROM)\$ $oldValue \$(translate : LBL_TO)\$ " . $currentValue . ($this->isHtml ? '<br />' : PHP_EOL);
 					}
 				}
 				return $value;
 			case 'ChangesListValues':
+				$value = '';
 				$changes = $this->recordModel->getPreviousValue();
 				if (empty($changes)) {
 					$changes = array_filter($this->recordModel->getData());
@@ -564,14 +583,14 @@ class TextParser
 				}
 				foreach ($changes as $fieldName => $oldValue) {
 					$fieldModel = $this->recordModel->getModule()->getField($fieldName);
-					if (!$fieldModel || $oldValue !== '') {
+					if (!$fieldModel) {
 						continue;
 					}
 					$currentValue = $this->getDisplayValueByField($fieldModel);
-					if ($this->withoutTranslations !== true) {
-						$value .= Language::translate($fieldModel->getFieldLabel(), $this->moduleName, $this->language) . ": $currentValue" . ($this->isHtml ? '<br />' : PHP_EOL);
-					} else {
+					if ($this->withoutTranslations) {
 						$value .= "\$(translate : $this->moduleName|{$fieldModel->getFieldLabel()})\$: $currentValue" . ($this->isHtml ? '<br />' : PHP_EOL);
+					} else {
+						$value .= Language::translate($fieldModel->getFieldLabel(), $this->moduleName, $this->language) . ": $currentValue" . ($this->isHtml ? '<br />' : PHP_EOL);
 					}
 				}
 				return $value;
@@ -720,7 +739,11 @@ class TextParser
 		$fields = $relationListView->getHeaders();
 		foreach ($fields as $fieldModel) {
 			if ($fieldModel->isViewable()) {
-				$headers .= '<th>' . \App\Language::translate($fieldModel->getFieldLabel(), $reletedModuleName) . '</th>';
+				if ($this->withoutTranslations) {
+					$headers .= "<th>$(translate : {$fieldModel->getFieldLabel()}|$reletedModuleName)$</th>";
+				} else {
+					$headers .= '<th>' . \App\Language::translate($fieldModel->getFieldLabel(), $reletedModuleName) . '</th>';
+				}
 			}
 		}
 		foreach ($relationListView->getEntries($pagingModel) as $reletedRecordModel) {
@@ -768,6 +791,7 @@ class TextParser
 		}
 		if ($columns) {
 			$listView->getQueryGenerator()->setFields(explode(',', $columns));
+			$listView->getQueryGenerator()->setField('id');
 		}
 		if ($conditions) {
 			$transformedSearchParams = $listView->getQueryGenerator()->parseBaseSearchParamsToCondition(Json::decode($conditions));
@@ -776,7 +800,11 @@ class TextParser
 		$rows = $headers = '';
 		$fields = $listView->getListViewHeaders();
 		foreach ($fields as $fieldModel) {
-			$headers .= '<th>' . \App\Language::translate($fieldModel->getFieldLabel(), $moduleName) . '</th>';
+			if ($this->withoutTranslations) {
+				$headers .= "<th>$(translate : {$fieldModel->getFieldLabel()}|$moduleName)$</th>";
+			} else {
+				$headers .= '<th>' . \App\Language::translate($fieldModel->getFieldLabel(), $moduleName) . '</th>';
+			}
 		}
 		foreach ($listView->getListViewEntries($pagingModel) as $reletedRecordModel) {
 			$rows .= '<tr>';
@@ -788,7 +816,7 @@ class TextParser
 			}
 			$rows .= '</tr>';
 		}
-		return empty($rows) ? '' : "<table><thead><tr>{$headers}</tr></thead><tbody>{$rows}</tbody></table>";
+		return empty($rows) ? '' : "<table class=\"recordsList\"><thead><tr>{$headers}</tr></thead><tbody>{$rows}</tbody></table>";
 	}
 
 	/**
@@ -818,10 +846,10 @@ class TextParser
 		if ($value === '') {
 			return '';
 		}
-		if ($this->withoutTranslations !== true) {
-			return $fieldModel->getUITypeModel()->getTextParserDisplayValue($value, $recordModel, $params);
+		if ($this->withoutTranslations) {
+			return $this->getDisplayValueByType($value, $recordModel, $fieldModel, $params);
 		}
-		return $this->getDisplayValueByType($value, $recordModel, $fieldModel, $params);
+		return $fieldModel->getUITypeModel()->getTextParserDisplayValue($value, $recordModel, $params);
 	}
 
 	/**
@@ -896,7 +924,7 @@ class TextParser
 				}
 				break;
 			default:
-				return $fieldModel->getTextParserDisplayValue($value, $recordModel, $params);
+				return $fieldModel->getUITypeModel()->getTextParserDisplayValue($value, $recordModel, $params);
 		}
 		return $value;
 	}
@@ -968,24 +996,28 @@ class TextParser
 		$params = explode('|', $params);
 		$parserName = array_shift($params);
 		$aparams = $params;
-		$moduleName = array_shift($params);
-
-		if (Module::getModuleId($moduleName)) {
-			$handlerClass = \Vtiger_Loader::getComponentClassName('TextParser', $parserName, $this->moduleName, false);
+		$moduleName = false;
+		if (!empty($params)) {
+			$moduleName = array_shift($params);
+			if (!Module::getModuleId($moduleName)) {
+				$moduleName = $this->moduleName;
+			}
+		}
+		if ($moduleName) {
+			$handlerClass = \Vtiger_Loader::getComponentClassName('TextParser', $parserName, $moduleName, false);
 			if (!$handlerClass) {
-				Log::error("Not found custom class: $parserName|{$this->moduleName}");
+				Log::error("Not found custom class: $parserName|{$moduleName}");
+				return '';
 			}
 			$instance = new $handlerClass($this, $params);
 		} else {
 			$className = "\App\TextParser\\$parserName";
 			if (!class_exists($className)) {
 				Log::error("Not found custom class $parserName");
-
 				return '';
 			}
 			$instance = new $className($this, $aparams);
 		}
-
 		if ($instance->isActive()) {
 			return $instance->process();
 		}
@@ -1028,7 +1060,6 @@ class TextParser
 			}
 		}
 		static::$recordVariable[$cacheKey] = $variables;
-
 		return $variables;
 	}
 
@@ -1234,18 +1265,6 @@ class TextParser
 			];
 		}
 		return $variables;
-	}
-
-	/**
-	 * Function checks if its TextParser type.
-	 *
-	 * @param string $text
-	 *
-	 * @return bool
-	 */
-	public static function isVaribleToParse($text)
-	{
-		return preg_match('/^\$\((\w+) : ([,"\+\-\[\]\&\w\s\|]+)\)\$$/', $text);
 	}
 
 	/**

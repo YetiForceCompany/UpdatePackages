@@ -1,0 +1,718 @@
+.TWGanttWorkSpace .ganttFullScreen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	margin: auto;
+	z-index: 1000;
+	background-color: #fff;
+}
+.TWGanttWorkSpace svg{
+	overflow: visible !important;
+}
+/* -------------------------------------- GRIDIFY -----------------------------------*/
+.TWGanttWorkSpace .gdfTable {
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0;
+	background-color: #fff;
+}
+.TWGanttWorkSpace .gdfTable td, .gdfTable th {
+	vertical-align: middle;
+	overflow: hidden;
+	text-overflow: clip;
+	white-space: nowrap;
+	font-size: 14px
+}
+.TWGanttWorkSpace .gdfCell {
+	overflow: hidden;
+	padding: 4px 2px;
+	border-bottom: 1px solid #eee;
+	border-right: 1px solid #eee;
+	font-family: arial, helvetica, sans-serif;
+}
+.TWGanttWorkSpace .gdfCell.noClip {
+	overflow: visible;
+}
+.TWGanttWorkSpace .gdfColHeader {
+	min-width: 5px;
+	height: 30px;
+	background-color: #eee;
+	border-bottom: 2px solid #bbb;
+	border-right: 1px solid #bbb !important;
+}
+.TWGanttWorkSpace .gdfColHeader:last-of-type {
+	border-right: none;
+}
+.TWGanttWorkSpace .gdfCell:last-of-type {
+	border-right: none;
+}
+.TWGanttWorkSpace .gdfCellInput {
+	border: 0 none;
+	font-size: 12px;
+	height: 20px;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	background-color: #d4fbe8;
+}
+.TWGanttWorkSpace .gdfCellWrap {
+	border: 0 none;
+	font-size: 12px;
+	height: 17px;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	overflow: hidden;
+
+	background-color: #ffcccc;
+}
+.TWGanttWorkSpace .gdfHResizing {
+	cursor: w-resize;
+}
+/* -------------------------------------- SPLITTER -----------------------------------*/
+.TWGanttWorkSpace .splitterContainer {
+	width: 100%;
+	height: 100%;
+}
+.TWGanttWorkSpace .splitBox1 {
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+.TWGanttWorkSpace .splitBox2 {
+	overflow-x: scroll;
+	overflow-y: auto;
+}
+.TWGanttWorkSpace .splitElement {
+	outline-style: none;
+	position: absolute;
+	height: 100%;
+	background-color: #f3f3f3;
+}
+.TWGanttWorkSpace .vSplitBar {
+	position: relative;
+	width: 5px;
+	cursor: ew-resize !important;
+	text-align: center;
+	color: white;
+	box-shadow: 0 0 3px rgba(0, 0, 0, .4);
+	background: rgba(170, 170, 170, .2) url("res/ganttSplitterGrip.png") no-repeat center center;
+	z-index: 5;
+}
+.TWGanttWorkSpace .unselectable .vSplitBar,
+.TWGanttWorkSpace .vSplitBar:hover {
+	background-color: rgba(170, 170, 170, .5);
+	box-shadow: 0 0 5px rgba(0, 0, 0, .5);
+
+}
+.TWGanttWorkSpace .vSplitBar .toLeft,
+.TWGanttWorkSpace .vSplitBar .toRight,
+.TWGanttWorkSpace .vSplitBar .toCenter {
+	font-family: icons, TeamworkRegular;
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	margin-top: 0;
+	background-color: rgba(47, 170, 201, 0.3);
+	z-index: 2;
+	font-size: 10px;
+	width: 15px;
+}
+.TWGanttWorkSpace .unselectable .vSplitBar .toLeft,
+.TWGanttWorkSpace .unselectable .vSplitBar .toCenter,
+.TWGanttWorkSpace .unselectable .vSplitBar .toRight,
+.TWGanttWorkSpace .vSplitBar:hover .toLeft,
+.TWGanttWorkSpace .vSplitBar:hover .toRight,
+.TWGanttWorkSpace .vSplitBar:hover .toCenter {
+	background-color: rgba(47, 170, 201, 1);
+	box-shadow: 0 0 1px rgba(0, 0, 0, .4);
+}
+.TWGanttWorkSpace .vSplitBar .toLeft {
+	left: -19px;
+	text-align: left;
+}
+.TWGanttWorkSpace .vSplitBar .toCenter {
+	left: -4px;
+	text-align: center;
+}
+.TWGanttWorkSpace .vSplitBar .toRight {
+	left: 10px;
+	text-align: right;
+}
+.TWGanttWorkSpace .ganttFixHead {
+	position: absolute;
+	z-index: 2;
+	top: 0;
+	height: 42px;
+}
+/* -------------------------------------- GANTT -----------------------------------*/
+
+.TWGanttWorkSpace .ganttTable {
+	table-layout: fixed;
+	background-color: #ffffff;
+}
+.TWGanttWorkSpace .ganttTable td, .TWGanttWorkSpace .ganttTable th {
+	overflow: hidden;
+	text-overflow: clip;
+	white-space: nowrap;
+}
+.TWGanttWorkSpace .ganttHead1, .TWGanttWorkSpace .ganttHead2 {
+	height: 20px;
+}
+.TWGanttWorkSpace .ganttHead1 th {
+	border-left: 1px solid #b0b0b0;
+	padding: 0;
+	margin: 0;
+	/*border-right: 1px solid #bbb;*/
+	border-bottom: 1px solid #bbb;
+	background: #EEEEEE;
+	white-space: pre-line;
+	word-break: break-all;
+}
+.TWGanttWorkSpace .ganttHead1 th,
+.TWGanttWorkSpace .ganttHead2 th {
+	white-space: nowrap;
+	overflow: hidden;
+}
+.TWGanttWorkSpace .ganttHead2 th {
+	padding: 0;
+	margin: 0;
+	border-left: 1px solid #b0b0b0;
+	/*border-right: 1px solid #bbb;*/
+	border-bottom: 2px solid #bbb;
+	background: #EEEEEE;
+}
+.TWGanttWorkSpace .ganttHead1 th.headSmall,
+.TWGanttWorkSpace .ganttHead2 th.headSmall {
+	font-size: 10px;
+}
+.TWGanttWorkSpace .ganttHead1 th.headLeft,
+.TWGanttWorkSpace .ganttHead2 th.headLeft {
+	text-align: left;
+}
+.TWGanttWorkSpace .ganttToday {
+	position: absolute;
+	top: 0;
+	width: 1px;
+	height: 100%;
+	border-left: 2px dotted #13AFA5;
+}
+.TWGanttWorkSpace .ganttTitle img {
+	max-width: 150px;
+}
+.TWGanttWorkSpace .ganttButtonBar {
+	position: relative;
+	z-index: 2;
+	/*background-color: #fff;*/
+	border-bottom: 1px solid #959595;
+	padding: 5px 0 5px 10px;
+}
+.TWGanttWorkSpace .dataTable .ganttButtonBar {
+	border-bottom: none;
+}
+.TWGanttWorkSpace .ganttButtonBar .buttons {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+	margin-top: 0;
+	height: 45px;
+}
+.TWGanttWorkSpace .dataTable .ganttButtonBar .buttons {
+	display: inline-block;
+	width: 100%;
+}
+.TWGanttWorkSpace .ganttButtonBar .buttons button {
+	vertical-align: middle;
+	margin: 0;
+	outline: none;
+}
+.TWGanttWorkSpace .ganttButtonBar .buttons .button.textual.icon {
+	height: 45px;
+}
+.TWGanttWorkSpace .button span.teamworkIcon {
+	text-indent: -10px;
+}
+.TWGanttWorkSpace .button.textual span.teamworkIcon {
+	font-size: 140%
+}
+.TWGanttWorkSpace #saveGanttButton {
+	margin-left: 20px;
+	padding: 5px 12px;
+	margin-bottom: 0;
+	vertical-align: middle;
+}
+.TWGanttWorkSpace .ganttButtonSeparator {
+	border-left: 1px solid #dadada;
+	margin: 0 10px;
+	font-size: 130%;
+	vertical-align: middle;
+}
+.TWGanttWorkSpace .ganttLines {
+	position: absolute;
+	width: 100%;
+	height: 1px;
+	border-top: 1px solid #eee;
+	z-index: 1;
+}
+.TWGanttWorkSpace .ganttLinks {
+	z-index: 10;
+}
+.TWGanttWorkSpace .ganttTable td.end {
+	border-right: 2px dotted #ddd;
+}
+.TWGanttWorkSpace .ganttHead2 th.holy {
+	background-color: rgba(236, 195, 176, 0.40);
+}
+.TWGanttWorkSpace .ganttBodyCell.holy {
+	background-color: rgba(255, 245, 230, 0.51);
+}
+/* -------------------------------------- TASK -----------------------------------*/
+
+.TWGanttWorkSpace .taskBoxDiv {
+	position: absolute;
+	height: 25px;
+	margin-top: 3px;
+	z-index: 100;
+}
+.TWGanttWorkSpace .taskBoxDiv .layout {
+	height: 100%;
+	color: #DB2727;
+	border-radius: 2px;
+	background: #eee; /* Old browsers */
+	border: 1px solid #bbb;
+}
+.TWGanttWorkSpace .taskBoxDiv .taskStatus {
+	left: 5px;
+	top: 10px;
+	position: absolute;
+	width: 10px;
+	height: 10px;
+}
+.TWGanttWorkSpace .taskBoxDiv .layout .milestone {
+	top: 0;
+	position: absolute;
+	width: 18px;
+	background: url(res/milestone.png) no-repeat;
+	height: 18px;
+	display: none;
+}
+.TWGanttWorkSpace .taskBoxDiv .layout .milestone.end {
+	right: 0;
+}
+.TWGanttWorkSpace .taskBoxDiv .layout .milestone.active {
+	display: block;
+}
+.TWGanttWorkSpace .taskBoxDiv.hasChild .layout {
+	border-top: 2px solid black;
+}
+.TWGanttWorkSpace .taskBoxDiv .taskProgress {
+	height: 5px;
+	position: absolute;
+}
+.TWGanttWorkSpace .taskBoxDiv .layout.extDep {
+	background-image: url(res/hasExternalDeps.png);
+}
+.TWGanttWorkSpace .taskLabel {
+	position: absolute;
+	height: 28px;
+	color: black;
+	text-align: right;
+	padding-right: 5px;
+	overflow: hidden;
+	left: -200px;
+	width: 195px;
+	white-space: nowrap;
+}
+.TWGanttWorkSpace .taskDepLine {
+	border: 1px solid #9999ff;
+	overflow: hidden;
+	position: absolute;
+}
+.TWGanttWorkSpace .taskEditRow, .emptyRow {
+	height: 30px;
+}
+.TWGanttWorkSpace .taskEditRow input, .columnWidthTest {
+	border: 0 none;
+	font-size: 14px;
+	height: 20px;
+	margin: 0;
+	padding: 0;
+	outline: 0;
+	width: 100%;
+	border-radius: 0;
+	vertical-align: text-bottom;
+}
+.TWGanttWorkSpace .taskEditRow input[type=checkbox] {
+	transform: scale(.7);
+	width: 15px;
+	height: 15px;
+}
+.TWGanttWorkSpace .columnWidthTest {
+	width: auto;
+}
+.TWGanttWorkSpace .taskEditRow input:focus {
+	font-weight: bold;
+}
+.TWGanttWorkSpace .taskEditRow input {
+	background-color: transparent;
+}
+.TWGanttWorkSpace .taskEditRow.rowSelected td {
+	background-color: rgb(234, 248, 255);
+}
+.TWGanttWorkSpace .isGanttList .taskEditRow:nth-child(odd), .TWGanttWorkSpace .assigEditRow:nth-child(odd) {
+	background-color: #ffffff;
+}
+.TWGanttWorkSpace .isGanttList .taskEditRow:nth-child(even), .TWGanttWorkSpace .assigEditRow:nth-child(even) {
+	background-color: #ffffff;
+}
+.TWGanttWorkSpace input[readonly] {
+	color: #c0c0c0;
+}
+.TWGanttWorkSpace .taskStatusBox {
+	position: absolute;
+	/*width:100px;*/
+	height: 26px;
+	border: 1px solid #a0a0a0;
+	background-color: #fff;
+	margin-top: -21px;
+	margin-left: -2px;
+	padding: 4px;
+	z-index: 100;
+}
+.TWGanttWorkSpace .taskStatus {
+	width: 15px;
+	height: 15px;
+	display: inline-block;
+	text-indent: 0;
+	position: relative;
+	box-shadow: none;
+	border-radius: 50%;
+	border: 0;
+	cursor: pointer;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_ACTIVE] {
+	background-color: #3BBF67;
+	color: #fff;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_DONE] {
+	background-color: #6EBEF4;
+	color: #000;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_FAILED] {
+	background-color: #763A96;
+	color: #fff;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_SUSPENDED] {
+	background-color: #F9C154;
+	color: #000;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_WAITING] {
+	background-color: rgb(247, 145, 54);
+	color: #000;
+}
+.TWGanttWorkSpace .taskStatus[status=STATUS_UNDEFINED] {
+	background-color: #dededf;
+	color: #000;
+}
+.TWGanttWorkSpace .taskStatus.selected {
+	border: #666 2px solid;
+}
+.TWGanttWorkSpace select.taskStatus {
+	width: auto;
+	height: auto;
+	border-radius: 2px;
+}
+.TWGanttWorkSpace .assigsTableWrapper {
+	position: relative;
+	height: 150px;
+	overflow: auto;
+	margin-top: -20px;
+}
+.TWGanttWorkSpace .unselectable {
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+.TWGanttWorkSpace .exp-controller {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	position: relative;
+	top: 2px;
+	margin-left: -18px;
+}
+.TWGanttWorkSpace .isParent .exp-controller {
+	background-image: url(res/toggle_collapse.png);
+}
+.TWGanttWorkSpace .isParent.collapsed .exp-controller {
+	cursor: pointer;
+	background-image: url(res/toggle-expand.png);
+}
+.TWGanttWorkSpace .ui-resizable-helper {
+	border: 1px dotted #00F;
+}
+.TWGanttWorkSpace .ui-resizable-e, .TWGanttWorkSpace .ui-resizable-w {
+	width: 5px;
+}
+.TWGanttWorkSpace .ui-draggable {
+	cursor: move !important;
+}
+/*--------------------------------------------------- SVG --------------------------------------------------*/
+.TWGanttWorkSpace .ganttSVGBox {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	background-color: transparent;
+	width: 100%;
+	overflow-y: hidden; /*IE11 bug*/
+}
+.TWGanttWorkSpace .taskBoxSVG {
+	overflow: visible;
+}
+.TWGanttWorkSpace .taskBoxSVG .taskLayout {
+	stroke-width: 0;
+	stroke: #999;
+}
+.TWGanttWorkSpace .taskLinkPathSVG {
+	stroke: rgba(47, 151, 198, 1);
+	/*stroke:#9999ff;*/
+	stroke-width: 2.5px;
+	fill: none;
+	cursor: pointer;
+}
+.TWGanttWorkSpace .taskDepsPathSVG {
+	stroke: #ffcf7b;
+	stroke-width: 1px;
+	fill: none;
+}
+.TWGanttWorkSpace .ganttLinesSVG {
+	fill: transparent;
+	stroke-width: 1;
+	stroke: #eee;
+}
+.TWGanttWorkSpace .isGanttList .ganttLinesSVG:nth-child(even) {
+	fill: transparent;
+	stroke-width: 1;
+	stroke: #fff;
+
+}
+.TWGanttWorkSpace .isGanttList .ganttLinesSVG:nth-child(odd) {
+	fill: transparent;
+	stroke-width: 1;
+	stroke: #eee;
+}
+.TWGanttWorkSpace .ganttLinesSVG.rowSelected {
+	fill: rgb(234, 248, 255) !important;
+	/*fill: rgba(255, 255, 153, 0.50) !important;*/
+}
+.TWGanttWorkSpace .ganttTodaySVG {
+	stroke-width: 2px;
+	stroke: #e06671;
+	stroke-linecap: "round";
+	stroke-dasharray: 2, 2;
+}
+.TWGanttWorkSpace .deSVG.deSVGdrag {
+	cursor: move;
+}
+.TWGanttWorkSpace .deSVG.deSVGhand {
+	cursor: ew-resize;
+}
+.TWGanttWorkSpace .linkHandleSVG {
+	display: none;
+	stroke: transparent;
+	stroke-width: 5;
+	fill: rgba(47, 151, 198, 0.7);
+	cursor: pointer;
+}
+.TWGanttWorkSpace .linkLineSVG {
+	stroke-width: 5px;
+	stroke: rgba(47, 151, 198, 0.7);
+	stroke-linecap: "round";
+	opacity: .5;
+}
+.TWGanttWorkSpace .linkOnProgress .deSVG.taskBoxSVG {
+	cursor: cell;
+}
+.TWGanttWorkSpace .taskBoxSVG.linkOver .taskLayout {
+	stroke-width: 1px;
+	stroke: rgba(47, 151, 198, 0.7);
+	opacity: 1;
+}
+.TWGanttWorkSpace .taskLabelSVG {
+	stroke: none;
+	fill: #00000000;
+	font-size: 12px;
+}
+.TWGanttWorkSpace .critical .taskLinkPathSVG {
+	stroke: red;
+}
+.TWGanttWorkSpace .taskBoxSVG.critical .taskLayout {
+	stroke: red;
+}
+.TWGanttWorkSpace .focused .taskLinkPathSVG {
+	stroke-width: 5px;
+	stroke: rgba(47, 151, 198, 0.7);
+}
+.TWGanttWorkSpace .taskBoxSVG.focused .taskLayout {
+	stroke-width: 3px;
+	stroke: rgba(47, 151, 198, 0.7);
+}
+.TWGanttWorkSpace .taskBoxSVG.critical .taskLayout {
+	stroke-width: 3px;
+	stroke: rgba(255, 0, 0, 0.7);
+}
+/*--------------------------------------------------- RESOURCE ADD  --------------------------------------------------*/
+.TWGanttWorkSpace .ganttAddResource {
+	position: absolute;
+	width: 660px;
+	height: 300px;
+	border: 1px solid red;
+	background-color: white;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+	top: 120px;
+	left: 70px;
+	z-index: 200;
+	padding: 10px;
+}
+.TWGanttWorkSpace .ganttAddResource tr.isCompany {
+	display: none;
+}
+.TWGanttWorkSpace .ganttAddResource.isCompany tr.isCompany {
+	display: table-row;
+}
+.TWGanttWorkSpace .ganttAddResource.isCompany tr.isPerson {
+	display: none;
+}
+.TWGanttWorkSpace .ganttAddResourceBG {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, .3);
+	z-index: 200;
+}
+/*---------------------------------#LOG_CHANGES_CONTAINER --------------------------------------------*/
+.TWGanttWorkSpace #LOG_CHANGES_CONTAINER {
+	display: none;
+	width: 300px;
+	top: -130px;
+	margin-left: -35px
+}
+.TWGanttWorkSpace .userProfile {
+	font-size: 16px;
+	vertical-align: middle;
+	text-align: right;
+	margin: 0 5px 0 0;
+	padding: 5px;
+	float: right;
+	position: relative;
+	z-index: 50;
+	line-height: 40px;
+	vertical-align: middle;
+	position: absolute;
+	right: 0;
+}
+.TWGanttWorkSpace .userLine {
+	max-width: 150px;
+	display: inline-block;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	margin: 0;
+	padding: 0;
+	vertical-align: middle;
+}
+.TWGanttWorkSpace .avatar {
+	vertical-align: middle;
+	padding: 1px;
+	width: 27px;
+	height: 27px;
+	border: 1px solid #dedede
+}
+/*--------------------------------------------------- Media queries  --------------------------------------------------*/
+
+/* Large screens */
+
+@media only screen and (max-width: 1260px) {
+
+	.TWGanttWorkSpace .ganttButtonBar .button span.teamworkIcon {
+		font-size: 130%;
+	}
+	.TWGanttWorkSpace .userLine {
+		display: none;
+	}
+
+}
+@media only screen and (min-width: 1261px) and (max-width: 1320px) {
+
+	.TWGanttWorkSpace .ganttButtonBar .button span.teamworkIcon {
+		font-size: 130%;
+	}
+	.TWGanttWorkSpace .button {
+		font-size: 100%;
+		padding: 3px 9px 6px;
+		margin-right: 5px;
+		margin-bottom: 5px
+	}
+	.TWGanttWorkSpace .userLine {
+		display: none;
+	}
+
+}
+@media only screen and (max-width: 1160px) {
+
+	.TWGanttWorkSpace .userProfile {
+		float: none;
+		position: absolute;
+		top: 0;
+		right: 10px;
+	}
+	.TWGanttWorkSpace .userProfile .teamworkIcon {
+		color: rgb(255, 255, 255);
+	}
+	.TWGanttWorkSpace .userProfile .ganttButtonSeparator, .TWGanttWorkSpace .userProfile .avatar {
+		border-color: rgb(127, 154, 170);
+	}
+
+}
+/* Ipad */
+
+@media only screen and  (min-width: 768px) and (max-width: 1024px) {
+	.TWGanttWorkSpace .ganttButtonSeparator {
+		margin-left: 2px;
+		padding-right: 6px;
+		font-size: 100%;
+	}
+	.TWGanttWorkSpace .button {
+		padding: 5px 6px 6px;
+	}
+}
+/* Mobile TODO */
+
+@media only screen and (max-width: 767px) {
+	.TWGanttWorkSpace .button {
+		font-size: 50%;
+	}
+}
+.TWGanttWorkSpace th.gdfColHeader {
+	padding: 0px !important;
+	vertical-align: middle !important;
+	text-align: center !important;
+}
+.TWGanttWorkSpace .gdfColHeader.max {
+	max-width: 35px !important;
+}
+.TWGanttWorkSpace .gdfColHeader.max2 {
+	max-width: 25px !important;
+}
+.TWGanttWorkSpace .gdfCell input[disabled] {
+	color: #222;
+}
+.TWGanttWorkSpace .gdfCell {
+	line-height: 1;
+}

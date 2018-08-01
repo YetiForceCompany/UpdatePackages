@@ -7,6 +7,7 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce Sp. z o.o.
  *************************************************************************************/
+
 Vtiger_Base_Validator_Js("Vtiger_Email_Validator_Js", {
 	/**
 	 *Function which invokes field validation
@@ -1288,6 +1289,31 @@ Vtiger_Base_Validator_Js("Vtiger_Textparser_Validator_Js", {
 		if (!regex.test(fieldValue)) {
 			var errorInfo = app.vtranslate('JS_INVALID_LENGTH');
 			this.setError(errorInfo);
+			return false;
+		}
+		return true;
+	}
+});
+Vtiger_Base_Validator_Js("Vtiger_YetiForceCompanyName_Validator_Js", {
+	invokeValidation: function (field, rules, i, options) {
+		var instance = new Vtiger_YetiForceCompanyName_Validator_Js();
+		instance.setElement(field);
+		var response = instance.validate();
+		if (response != true) {
+			return instance.getError();
+		}
+	}
+
+}, {
+	validate: function () {
+		let response = this._super();
+		if (response != true) {
+			return response;
+		}
+		const field = this.getElement();
+		const fieldValue = field.val();
+		if(fieldValue.toLowerCase().indexOf('yetiforce')>=0){
+			this.setError(app.vtranslate('JS_YETIFORCE_COMPANY_NAME_NOT_ALLOWED'));
 			return false;
 		}
 		return true;

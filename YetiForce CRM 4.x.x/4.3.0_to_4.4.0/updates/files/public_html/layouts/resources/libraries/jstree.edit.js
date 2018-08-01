@@ -16,27 +16,27 @@
 		return;
 	}
 	$.jstree.defaults.edit = {
-		createClass: ' fa-plus-circle',
-		deleteClass: ' fa-times-circle'
+		createClass: ' fas fa-plus-circle',
+		deleteClass: ' fas fa-times-circle'
 	};
 	var _i = document.createElement('I');
-	_i.className = 'jstree-edit [data-fa-i2svg] noAction';
+	_i.className = 'jstree-edit [data-fa-i2svg] noAction ';
 	_i.setAttribute('role', 'presentation');
 	$.jstree.plugins.edit = function (options, parent) {
 		this.bind = function () {
 			parent.bind.call(this);
 			this.element.on('select_node.jstree', $.proxy(function (obj, data) {
-				var modal = $(data.event.currentTarget).closest('#treePopupContainer');
-				var module = modal.find('#relatedModule').val();
-				if (data.event.target.className.indexOf("jstree-edit") !== -1) {
-					var obj = data.node;
-					if (obj.original.type == 'category') {
+				const modal = $(data.event.currentTarget).closest('#treePopupContainer');
+				const module = modal.find('#relatedModule').val();
+				if ($(data.event.target).hasClass("jstree-edit")) {
+					const obj = data.node;
+					if (obj.original.type === 'category') {
 						app.hideModalWindow();
-						var callbackFunction = function () {
+						const callbackFunction = function () {
 							$('.showModal[data-module="OutsourcedProducts"]').trigger('click');
 							Vtiger_Detail_Js.getInstance().loadWidgets();
-						}
-						var QuickCreateParams = {
+						};
+						const QuickCreateParams = {
 							callbackFunction: callbackFunction,
 							data: {
 								productname: obj.original.text,

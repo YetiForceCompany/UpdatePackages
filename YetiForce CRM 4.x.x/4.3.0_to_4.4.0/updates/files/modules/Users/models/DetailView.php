@@ -55,22 +55,22 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linkicon' => 'fas fa-edit',
 				'showLabel' => true,
 			];
-			$detailViewLinks[] = [
-				'linktype' => 'DETAIL_VIEW_ADDITIONAL',
-				'linklabel' => 'LBL_DELETE',
-				'linkurl' => 'javascript:Users_Detail_Js.triggerDeleteUser("' . $recordModel->getDeleteUrl() . '")',
-				'linkicon' => 'fas fa-trash-alt',
-				'linkclass' => 'btn-outline-danger',
-				'showLabel' => true,
-			];
+			if ($currentUserModel->getId() !== $recordId) {
+				$detailViewLinks[] = [
+					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
+					'linklabel' => 'LBL_DELETE',
+					'linkurl' => 'javascript:Users_Detail_Js.triggerDeleteUser("' . $recordModel->getDeleteUrl() . '")',
+					'linkicon' => 'fas fa-trash-alt',
+					'linkclass' => 'btn-outline-danger',
+					'showLabel' => true,
+				];
+			}
 			foreach ($detailViewLinks as $detailViewLink) {
 				$linkModelList['DETAIL_VIEW_ADDITIONAL'][] = Vtiger_Link_Model::getInstanceFromValues($detailViewLink);
 				$detailViewLink['linktype'] = 'DETAILVIEWPREFERENCE';
 				$linkModelList['DETAILVIEWPREFERENCE'][] = Vtiger_Link_Model::getInstanceFromValues($detailViewLink);
 			}
 			$detailViewActionLinks = [];
-			if ($currentUserModel->isAdminUser() && $currentUserModel->get('id') != $recordId) {
-			}
 			$detailViewActionLinks[] = [
 				'linktype' => 'DETAIL_VIEW_BASIC',
 				'linklabel' => 'LBL_CHANGE_ACCESS_KEY',
@@ -78,7 +78,7 @@ class Users_DetailView_Model extends Vtiger_DetailView_Model
 				'linkicon' => 'fas fa-edit',
 				'showLabel' => true,
 			];
-			if (AppConfig::security('USER_AUTHY_MODE') !== 'TOTP_OFF') {
+			if (\App\User::getUserModel($recordModel->getRealId())->getDetail('login_method') === 'PLL_PASSWORD_2FA' && AppConfig::security('USER_AUTHY_MODE') !== 'TOTP_OFF') {
 				$detailViewActionLinks[] = [
 					'linktype' => 'DETAIL_VIEW_BASIC',
 					'linklabel' => 'LBL_2FA_TOTP_QR_CODE',

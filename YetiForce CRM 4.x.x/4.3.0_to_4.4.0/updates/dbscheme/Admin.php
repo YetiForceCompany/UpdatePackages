@@ -1,16 +1,16 @@
 <?php
+
 namespace Importers;
 
 /**
- * Class that imports base database
- * @package YetiForce.Install
+ * Class that imports base database.
+ *
  * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Admin extends \App\Db\Importers\Base
 {
-
 	public $dbType = 'admin';
 
 	public function scheme()
@@ -46,7 +46,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__batchmethod' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(11)->notNull(),
+					'id' => $this->primaryKey()->unsigned(),
 					'method' => $this->stringType(50)->notNull(),
 					'params' => $this->text()->notNull(),
 					'created_time' => $this->date()->notNull(),
@@ -61,7 +61,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__address_finder' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(11)->notNull(),
+					'id' => $this->primaryKey()->unsigned(),
 					'name' => $this->stringType(),
 					'level1' => $this->stringType(100),
 					'level2' => $this->stringType(100),
@@ -74,7 +74,7 @@ class Admin extends \App\Db\Importers\Base
 					'source' => $this->stringType(10),
 				],
 				'index' => [
-					['source', 'source']
+					['source', 'source'],
 				],
 				'engine' => 'MyISAM',
 				'charset' => 'utf8'

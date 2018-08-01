@@ -1,0 +1,26 @@
+{
+  "name": "jstorage",
+  "version": "0.4.8",
+  "description": "jStorage is a cross-browser key-value store database to store data locally in the browser - jStorage supports all major browsers, both in desktop (yes - even Internet Explorer 6) and in mobile.",
+  "main": "jstorage.js",
+  "directories": {
+    "example": "example",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aibarra988/jstorage.git"
+  },
+  "keywords": [
+    "key"
+  ],
+  "author": "Andris Reinman <andris.reinman@gmail.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/aibarra988/jstorage/issues"
+  },
+  "homepage": "https://github.com/aibarra988/jstorage#readme"
+}

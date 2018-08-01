@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 Vtiger_RelatedList_Js("Campaigns_RelatedList_Js", {
 	/*
 	 * function to trigger send Email

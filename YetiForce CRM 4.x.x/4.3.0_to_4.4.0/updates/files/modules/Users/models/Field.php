@@ -79,6 +79,9 @@ class Users_Field_Model extends Vtiger_Field_Model
 			$this->get('uitype') === 106 || $this->get('uitype') === 98 || $this->get('uitype') === 101 || 'date_format' === $this->getFieldName() || 'email1' === $this->getFieldName()) {
 			return false;
 		}
+		if ($this->getFieldName() === 'login_method') {
+			return \App\User::getCurrentUserModel()->isAdmin();
+		}
 		return parent::isAjaxEditable();
 	}
 
@@ -152,10 +155,35 @@ class Users_Field_Model extends Vtiger_Field_Model
 		if (($this->get('uitype') === 115 && (!\App\User::getCurrentUserModel()->isAdmin() || \App\User::getCurrentUserId() === $this->get('rocordId')))) {
 			return false;
 		}
+		if ($this->getColumnName() === 'authy_secret_totp') {
+			return $this->get('rocordId') === \App\User::getCurrentUserId();
+		}
 		if (!$this->get('editable')) {
 			$this->set('editable', parent::isEditable());
 		}
 		return $this->get('editable');
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function isViewable()
+	{
+		if ($this->getColumnName() === 'authy_secret_totp') {
+			return $this->get('rocordId') === \App\User::getCurrentUserId();
+		}
+		return parent::isViewable();
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function isEditableReadOnly()
+	{
+		if ($this->getColumnName()==='login_method' && !\App\User::getCurrentUserModel()->isAdmin()) {
+			return true;
+		}
+		return parent::isEditableReadOnly();
 	}
 
 	/**

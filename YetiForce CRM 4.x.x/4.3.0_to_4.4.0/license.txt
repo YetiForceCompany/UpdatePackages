@@ -1,4 +1,5 @@
 YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
 
-1. IMPORTANT!!! 
-Zmodyfikowano blok zaawansawany w module 'Zamówienia okresowe'
+IMPORTANT !!!
+The upgrade package requires increasing the limits on the server because otherwise the update won't be correct.
+It's necessary to install "4.3.0_to_4.4.0_PreInstall" package first because otherwise the update 4.3.0_to_4.4.0" won't be possible

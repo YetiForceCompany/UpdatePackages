@@ -61,6 +61,16 @@
     "LBL_ENVIRONMENTAL_INFORMATION": "Informaci\u00f3n del entorno",
     "LBL_OPERATING_SYSTEM": "S.O.",
     "BTN_SERVER_SPEED_TEST": "Server speed test",
+    "LBL_SERVER_SPEED_TEST": "Server speed",
+    "LBL_READ_TEST": "Read",
+    "LBL_WRITE_TEST": "Write",
+    "LBL_CPU": "CPU",
+    "LBL_RAM": "RAM",
+    "LBL_DB": "Data base",
+    "LBL_PER_SECOND": "/s",
+    "LBL_CRM_VERSION": "CRM version",
+    "LBL_CRM_DATE": "Version release date",
+    "LBL_LOCALE": "Locale",
     "LBL_LIB_NAME": "Nombre de la librer\u00eda",
     "LBL_VULNERABILITY_NAME": "Vulnerabilidad",
     "LBL_VULNERABILITY_URL": "Info de la vulnerabilidad",
@@ -128,7 +138,8 @@
     "LBL_PUBLIC_DIR": "Ruta de directorio",
     "LBL_DENY_PUBLIC_DIR_STATUS": "\u00bfSe niega el acceso?",
     "LBL_DENY_PUBLIC_DIR_HELP_TEXT": "Se recomienda denegar el acceso a este directorio. Actualmente, el directorio es de acceso p\u00fablico y su contenido no est\u00e1 protegido.",
-    "LBL_AUTO_DETECT_LINE_ENDINGS_HELP_TEXT": "Se recomienda habilitar comprobaciones de codificaci\u00f3n al importar archivos."
+    "LBL_AUTO_DETECT_LINE_ENDINGS_HELP_TEXT": "Se recomienda habilitar comprobaciones de codificaci\u00f3n al importar archivos.",
+    "LBL_DOWNLOAD_CONFIG": "Download configuration"
   },
   "js": {
     "JS_SPEED_TEST_START": "Comprobando la velocidad..."

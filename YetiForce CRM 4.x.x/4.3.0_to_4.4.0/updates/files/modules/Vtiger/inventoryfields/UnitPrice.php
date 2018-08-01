@@ -18,11 +18,7 @@ class Vtiger_UnitPrice_InventoryField extends Vtiger_Basic_InventoryField
 	protected $maximumLength = '99999999999999999999';
 
 	/**
-	 * Getting value to display.
-	 *
-	 * @param type $value
-	 *
-	 * @return type
+	 * {@inheritdoc}
 	 */
 	public function getDisplayValue($value, $rawText = false)
 	{

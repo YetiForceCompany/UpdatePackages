@@ -1,16 +1,16 @@
 <?php
+
 namespace Importers;
 
 /**
- * Class that imports log database
- * @package YetiForce.Install
+ * Class that imports log database.
+ *
  * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Log extends \App\Db\Importers\Base
 {
-
 	public $dbType = 'log';
 
 	public function scheme()
@@ -40,7 +40,7 @@ class Log extends \App\Db\Importers\Base
 					'log_time' => $this->stringType(20)->notNull(),
 					'trace' => $this->text(),
 					'level' => $this->stringType(),
-					'duration' => $this->decimal('7,3')->notNull(), //
+					'duration' => $this->decimal('7,3')->notNull(),
 				],
 				'index' => [
 					['id', 'id'],
@@ -51,7 +51,7 @@ class Log extends \App\Db\Importers\Base
 			],
 			'l_#__settings_tracker_basic' => [
 				'columns' => [
-					'user_id' => $this->integer(10)->unsigned(), //
+					'user_id' => $this->integer(10)->unsigned(),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

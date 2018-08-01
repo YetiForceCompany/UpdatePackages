@@ -11,7 +11,7 @@
  *                                          '200', 'a100')
  */
 /*!
- * Bootstrap v4.1.1 (https://getbootstrap.com/)
+ * Bootstrap v4.1.3 (https://getbootstrap.com/)
  * Copyright 2011-2018 The Bootstrap Authors
  * Copyright 2011-2018 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
@@ -44,7 +44,7 @@
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
   --breakpoint-xxl: 1300px;
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
 *,
@@ -67,7 +67,7 @@ article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
@@ -186,8 +186,9 @@ img {
   vertical-align: middle;
   border-style: none; }
 
-svg:not(:root) {
-  overflow: hidden; }
+svg {
+  overflow: hidden;
+  vertical-align: middle; }
 
 table {
   border-collapse: collapse; }
@@ -369,7 +370,7 @@ small,
 .u-text-small-bold,
 .c-tab--small,
 .detailViewInfo .dropdown.tabdrop,
-.gridster > ul li.dashboardWidget .dashboardWidgetContent,
+.grid-stack .dashboardWidget .dashboardWidgetContent,
 .c-side-block {
   font-size: 80%;
   font-weight: 400; }
@@ -501,7 +502,7 @@ pre {
     padding-right: 0;
     padding-left: 0; }
 
-.col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12, .chatModal .modal-dialog, .o-label-container, .o-btn-container, .col,
+.col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12, .chatModal, .o-label-container, .o-btn-container, .col,
 .col-auto, .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12, .c-panel__label, .col-sm,
 .col-sm-auto, .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11, .col-md-12, .c-panel__body, .col-md,
 .col-md-auto, .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg,
@@ -568,7 +569,7 @@ pre {
   flex: 0 0 91.6666666667%;
   max-width: 91.6666666667%; }
 
-.col-12, .chatModal .modal-dialog, .o-label-container, .o-btn-container {
+.col-12, .chatModal, .o-label-container, .o-btn-container {
   flex: 0 0 100%;
   max-width: 100%; }
 
@@ -689,7 +690,7 @@ pre {
     flex: 0 0 58.3333333333%;
     max-width: 58.3333333333%; }
 
-  .col-sm-8, .chatModal .modal-dialog {
+  .col-sm-8, .chatModal {
     flex: 0 0 66.6666666667%;
     max-width: 66.6666666667%; }
 
@@ -947,7 +948,7 @@ pre {
     flex: 0 0 16.6666666667%;
     max-width: 16.6666666667%; }
 
-  .col-lg-3, .chatModal .modal-dialog {
+  .col-lg-3, .chatModal {
     flex: 0 0 25%;
     max-width: 25%; }
 
@@ -1347,7 +1348,6 @@ pre {
     margin-left: 91.6666666667%; } }
 .table, .c-detail-widget__table {
   width: 100%;
-  max-width: 100%;
   margin-bottom: 1rem;
   background-color: transparent; }
   .table th, .c-detail-widget__table th,
@@ -1568,6 +1568,7 @@ pre {
 .form-control {
   display: block;
   width: 100%;
+  height: calc(2.25rem + 2px);
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
   line-height: 1.5;
@@ -1596,8 +1597,6 @@ pre {
     background-color: #e9ecef;
     opacity: 1; }
 
-select.form-control:not([size]):not([multiple]) {
-  height: calc(2.25rem + 2px); }
 select.form-control:focus::-ms-value {
   color: #495057;
   background-color: #fff; }
@@ -1637,51 +1636,29 @@ select.form-control:focus::-ms-value {
   background-color: transparent;
   border: solid transparent;
   border-width: 1px 0; }
-  .form-control-plaintext.form-control-sm, .input-group-sm > .form-control-plaintext.form-control,
-  .input-group-sm > .input-group-prepend > .form-control-plaintext.input-group-text,
-  .input-group-sm > .input-group-append > .form-control-plaintext.input-group-text,
-  .input-group-sm > .input-group-prepend > .form-control-plaintext.btn,
-  .input-group-sm > .input-group-append > .form-control-plaintext.btn, .form-control-plaintext.form-control-lg, .input-group-lg > .form-control-plaintext.form-control,
-  .input-group-lg > .input-group-prepend > .form-control-plaintext.input-group-text,
-  .input-group-lg > .input-group-append > .form-control-plaintext.input-group-text,
-  .input-group-lg > .input-group-prepend > .form-control-plaintext.btn,
-  .input-group-lg > .input-group-append > .form-control-plaintext.btn {
+  .form-control-plaintext.form-control-sm, .form-control-plaintext.form-control-lg {
     padding-right: 0;
     padding-left: 0; }
 
-.form-control-sm, .input-group-sm > .form-control,
-.input-group-sm > .input-group-prepend > .input-group-text,
-.input-group-sm > .input-group-append > .input-group-text,
-.input-group-sm > .input-group-prepend > .btn,
-.input-group-sm > .input-group-append > .btn {
+.form-control-sm {
+  height: calc(1.8125rem + 2px);
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
   line-height: 1.5;
   border-radius: 0.2rem; }
 
-select.form-control-sm:not([size]):not([multiple]), .input-group-sm > select.form-control:not([size]):not([multiple]),
-.input-group-sm > .input-group-prepend > select.input-group-text:not([size]):not([multiple]),
-.input-group-sm > .input-group-append > select.input-group-text:not([size]):not([multiple]),
-.input-group-sm > .input-group-prepend > select.btn:not([size]):not([multiple]),
-.input-group-sm > .input-group-append > select.btn:not([size]):not([multiple]) {
-  height: calc(1.8125rem + 2px); }
-
-.form-control-lg, .input-group-lg > .form-control,
-.input-group-lg > .input-group-prepend > .input-group-text,
-.input-group-lg > .input-group-append > .input-group-text,
-.input-group-lg > .input-group-prepend > .btn,
-.input-group-lg > .input-group-append > .btn {
+.form-control-lg {
+  height: calc(2.875rem + 2px);
   padding: 0.5rem 1rem;
   font-size: 1.25rem;
   line-height: 1.5;
   border-radius: 0.3rem; }
 
-select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.form-control:not([size]):not([multiple]),
-.input-group-lg > .input-group-prepend > select.input-group-text:not([size]):not([multiple]),
-.input-group-lg > .input-group-append > select.input-group-text:not([size]):not([multiple]),
-.input-group-lg > .input-group-prepend > select.btn:not([size]):not([multiple]),
-.input-group-lg > .input-group-append > select.btn:not([size]):not([multiple]) {
-  height: calc(2.875rem + 2px); }
+select.form-control[size], select.form-control[multiple] {
+  height: auto; }
+
+textarea.form-control {
+  height: auto; }
 
 .form-group {
   margin-bottom: 1rem; }
@@ -1739,13 +1716,13 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
   z-index: 5;
   display: none;
   max-width: 100%;
-  padding: .5rem;
+  padding: 0.25rem 0.5rem;
   margin-top: .1rem;
-  font-size: .875rem;
-  line-height: 1;
+  font-size: 0.875rem;
+  line-height: 1.5;
   color: #fff;
-  background-color: rgba(40, 167, 69, 0.8);
-  border-radius: .2rem; }
+  background-color: rgba(40, 167, 69, 0.9);
+  border-radius: 0.25rem; }
 
 .was-validated .form-control:valid, .form-control.is-valid,
 .was-validated .custom-select:valid,
@@ -1792,7 +1769,7 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
 
 .was-validated .custom-file-input:valid ~ .custom-file-label, .custom-file-input.is-valid ~ .custom-file-label {
   border-color: #28a745; }
-  .was-validated .custom-file-input:valid ~ .custom-file-label::before, .custom-file-input.is-valid ~ .custom-file-label::before {
+  .was-validated .custom-file-input:valid ~ .custom-file-label::after, .custom-file-input.is-valid ~ .custom-file-label::after {
     border-color: inherit; }
 .was-validated .custom-file-input:valid ~ .valid-feedback,
 .was-validated .custom-file-input:valid ~ .valid-tooltip, .custom-file-input.is-valid ~ .valid-feedback,
@@ -1814,13 +1791,13 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
   z-index: 5;
   display: none;
   max-width: 100%;
-  padding: .5rem;
+  padding: 0.25rem 0.5rem;
   margin-top: .1rem;
-  font-size: .875rem;
-  line-height: 1;
+  font-size: 0.875rem;
+  line-height: 1.5;
   color: #fff;
-  background-color: rgba(220, 53, 69, 0.8);
-  border-radius: .2rem; }
+  background-color: rgba(220, 53, 69, 0.9);
+  border-radius: 0.25rem; }
 
 .was-validated .form-control:invalid, .form-control.is-invalid,
 .was-validated .custom-select:invalid,
@@ -1867,7 +1844,7 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
 
 .was-validated .custom-file-input:invalid ~ .custom-file-label, .custom-file-input.is-invalid ~ .custom-file-label {
   border-color: #dc3545; }
-  .was-validated .custom-file-input:invalid ~ .custom-file-label::before, .custom-file-input.is-invalid ~ .custom-file-label::before {
+  .was-validated .custom-file-input:invalid ~ .custom-file-label::after, .custom-file-input.is-invalid ~ .custom-file-label::after {
     border-color: inherit; }
 .was-validated .custom-file-input:invalid ~ .invalid-feedback,
 .was-validated .custom-file-input:invalid ~ .invalid-tooltip, .custom-file-input.is-invalid ~ .invalid-feedback,
@@ -1945,8 +1922,6 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
     opacity: 0.65; }
   .btn:not(:disabled):not(.disabled) {
     cursor: pointer; }
-  .btn:not(:disabled):not(.disabled):active, .btn:not(:disabled):not(.disabled).active {
-    background-image: none; }
 
 a.btn.disabled,
 fieldset:disabled a.btn {
@@ -2620,10 +2595,6 @@ input[type="button"].btn-block {
     flex: 1 1 auto;
     width: 1%;
     margin-bottom: 0; }
-    .input-group > .form-control:focus,
-    .input-group > .custom-select:focus,
-    .input-group > .custom-file:focus {
-      z-index: 3; }
     .input-group > .form-control + .form-control,
     .input-group > .form-control + .custom-select,
     .input-group > .form-control + .custom-file,
@@ -2634,6 +2605,12 @@ input[type="button"].btn-block {
     .input-group > .custom-file + .custom-select,
     .input-group > .custom-file + .custom-file {
       margin-left: -1px; }
+  .input-group > .form-control:focus,
+  .input-group > .custom-select:focus,
+  .input-group > .custom-file .custom-file-input:focus ~ .custom-file-label {
+    z-index: 3; }
+  .input-group > .custom-file .custom-file-input:focus {
+    z-index: 4; }
   .input-group > .form-control:not(:last-child),
   .input-group > .custom-select:not(:last-child) {
     border-top-right-radius: 0;
@@ -2692,6 +2669,28 @@ input[type="button"].btn-block {
   .input-group-text input[type="radio"],
   .input-group-text input[type="checkbox"] {
     margin-top: 0; }
+
+.input-group-lg > .form-control,
+.input-group-lg > .input-group-prepend > .input-group-text,
+.input-group-lg > .input-group-append > .input-group-text,
+.input-group-lg > .input-group-prepend > .btn,
+.input-group-lg > .input-group-append > .btn {
+  height: calc(2.875rem + 2px);
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  border-radius: 0.3rem; }
+
+.input-group-sm > .form-control,
+.input-group-sm > .input-group-prepend > .input-group-text,
+.input-group-sm > .input-group-append > .input-group-text,
+.input-group-sm > .input-group-prepend > .btn,
+.input-group-sm > .input-group-append > .btn {
+  height: calc(1.8125rem + 2px);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.2rem; }
 
 .input-group > .input-group-prepend > .btn,
 .input-group > .input-group-prepend > .input-group-text,
@@ -2804,7 +2803,7 @@ input[type="button"].btn-block {
   .custom-select:focus {
     border-color: #8bb8df;
     outline: 0;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), 0 0 5px rgba(139, 184, 223, 0.5); }
+    box-shadow: 0 0 0 0.2rem rgba(139, 184, 223, 0.5); }
     .custom-select:focus::-ms-value {
       color: #495057;
       background-color: #fff; }
@@ -2849,6 +2848,8 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
     .custom-file-input:focus ~ .custom-file-label::after {
       border-color: #8bb8df; }
+  .custom-file-input:disabled ~ .custom-file-label {
+    background-color: #e9ecef; }
   .custom-file-input:lang(en) ~ .custom-file-label::after {
     content: "Browse"; }
 
@@ -2888,6 +2889,12 @@ input[type="button"].btn-block {
   appearance: none; }
   .custom-range:focus {
     outline: none; }
+    .custom-range:focus::-webkit-slider-thumb {
+      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
+    .custom-range:focus::-moz-range-thumb {
+      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
+    .custom-range:focus::-ms-thumb {
+      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
   .custom-range::-moz-focus-outer {
     border: 0; }
   .custom-range::-webkit-slider-thumb {
@@ -2897,10 +2904,11 @@ input[type="button"].btn-block {
     background-color: #337ab7;
     border: 0;
     border-radius: 1rem;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     appearance: none; }
-    .custom-range::-webkit-slider-thumb:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-webkit-slider-thumb {
+        transition: none; } }
     .custom-range::-webkit-slider-thumb:active {
       background-color: #b3d0ea; }
   .custom-range::-webkit-slider-runnable-track {
@@ -2917,10 +2925,11 @@ input[type="button"].btn-block {
     background-color: #337ab7;
     border: 0;
     border-radius: 1rem;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     appearance: none; }
-    .custom-range::-moz-range-thumb:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-moz-range-thumb {
+        transition: none; } }
     .custom-range::-moz-range-thumb:active {
       background-color: #b3d0ea; }
   .custom-range::-moz-range-track {
@@ -2934,13 +2943,17 @@ input[type="button"].btn-block {
   .custom-range::-ms-thumb {
     width: 1rem;
     height: 1rem;
+    margin-top: 0;
+    margin-right: 0.2rem;
+    margin-left: 0.2rem;
     background-color: #337ab7;
     border: 0;
     border-radius: 1rem;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     appearance: none; }
-    .custom-range::-ms-thumb:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem rgba(51, 122, 183, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-ms-thumb {
+        transition: none; } }
     .custom-range::-ms-thumb:active {
       background-color: #b3d0ea; }
   .custom-range::-ms-track {
@@ -2958,6 +2971,16 @@ input[type="button"].btn-block {
     margin-right: 15px;
     background-color: #dee2e6;
     border-radius: 1rem; }
+
+.custom-control-label::before,
+.custom-file-label,
+.custom-select {
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+  @media screen and (prefers-reduced-motion: reduce) {
+    .custom-control-label::before,
+    .custom-file-label,
+    .custom-select {
+      transition: none; } }
 
 .nav {
   display: flex;
@@ -3983,12 +4006,12 @@ input[type="button"].btn-block {
   color: #000;
   text-shadow: 0 1px 0 #fff;
   opacity: .5; }
-  .close:hover, .close:focus {
-    color: #000;
-    text-decoration: none;
-    opacity: .75; }
   .close:not(:disabled):not(.disabled) {
     cursor: pointer; }
+    .close:not(:disabled):not(.disabled):hover, .close:not(:disabled):not(.disabled):focus {
+      color: #000;
+      text-decoration: none;
+      opacity: .75; }
 
 button.close {
   padding: 0;
@@ -3998,6 +4021,9 @@ button.close {
 
 .modal-open {
   overflow: hidden; }
+  .modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto; }
 
 .modal {
   position: fixed;
@@ -4009,9 +4035,6 @@ button.close {
   display: none;
   overflow: hidden;
   outline: 0; }
-  .modal-open .modal {
-    overflow-x: hidden;
-    overflow-y: auto; }
 
 .modal-dialog {
   position: relative;
@@ -4031,6 +4054,10 @@ button.close {
   display: flex;
   align-items: center;
   min-height: calc(100% - (0.5rem * 2)); }
+  .modal-dialog-centered::before {
+    display: block;
+    height: calc(100vh - (0.5rem * 2));
+    content: ""; }
 
 .modal-content {
   position: relative;
@@ -4103,6 +4130,8 @@ button.close {
 
   .modal-dialog-centered {
     min-height: calc(100% - (1.75rem * 2)); }
+    .modal-dialog-centered::before {
+      height: calc(100vh - (1.75rem * 2)); }
 
   .modal-sm {
     max-width: 300px; } }
@@ -4114,7 +4143,7 @@ button.close {
   z-index: 1070;
   display: block;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   font-style: normal;
   font-weight: 400;
   line-height: 1.5;
@@ -4199,7 +4228,7 @@ button.close {
   z-index: 1060;
   display: block;
   max-width: 276px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   font-style: normal;
   font-weight: 400;
   line-height: 1.5;
@@ -4336,17 +4365,19 @@ button.close {
   display: none;
   align-items: center;
   width: 100%;
-  transition: transform 0.6s ease;
   backface-visibility: hidden;
   perspective: 1000px; }
-  @media screen and (prefers-reduced-motion: reduce) {
-    .carousel-item {
-      transition: none; } }
 
 .carousel-item.active,
 .carousel-item-next,
 .carousel-item-prev {
-  display: block; }
+  display: block;
+  transition: transform 0.6s ease; }
+  @media screen and (prefers-reduced-motion: reduce) {
+    .carousel-item.active,
+    .carousel-item-next,
+    .carousel-item-prev {
+      transition: none; } }
 
 .carousel-item-next,
 .carousel-item-prev {
@@ -5631,7 +5662,7 @@ button.bg-dark:focus {
 .w-50 {
   width: 50% !important; }
 
-.w-75, .calendarViewContainer.js-sitebar--active {
+.w-75 {
   width: 75% !important; }
 
 .w-100, .collectiveGroupMembers {
@@ -5670,16 +5701,16 @@ button.bg-dark:focus {
 
 .mr-0,
 .mx-0,
-.gridster > ul li.dashboardWidget .dashboardWidgetContent .row {
+.grid-stack .dashboardWidget .dashboardWidgetContent .row {
   margin-right: 0 !important; }
 
-.mb-0, .daterangepicker .left, .daterangepicker .right, .daterangepicker .ranges li:last-child, .c-detail-widget__table, .c-detail-widget p, .listViewTopMenuDiv .listViewActionsDiv .paginationDiv .pagination,
+.mb-0, .daterangepicker .left, .daterangepicker .right, .daterangepicker .ranges li:last-child, .fc-view-container, .c-detail-widget__table, .c-detail-widget p, .listViewTopMenuDiv .listViewActionsDiv .paginationDiv .pagination,
 .my-0 {
   margin-bottom: 0 !important; }
 
 .ml-0,
 .mx-0,
-.gridster > ul li.dashboardWidget .dashboardWidgetContent .row {
+.grid-stack .dashboardWidget .dashboardWidgetContent .row {
   margin-left: 0 !important; }
 
 .m-1, .c-detail-widget {
@@ -5879,7 +5910,7 @@ button.bg-dark:focus {
 .py-3 {
   padding-top: 1rem !important; }
 
-.pr-3, .calendarViewContainer.js-sitebar--active,
+.pr-3,
 .px-3 {
   padding-right: 1rem !important; }
 
@@ -7705,125 +7736,65 @@ a.text-dark:hover, a.text-dark:focus {
         color: "#111"; }
     .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear {
       margin-top: 0.375rem; }
-  .select2-container--bootstrap .select2-selection--single.form-control-sm, .select2-container--bootstrap .input-group-sm > .select2-selection--single.form-control,
-  .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--single.input-group-text,
-  .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--single.input-group-text,
-  .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--single.btn,
-  .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--single.btn, .input-group-sm .select2-container--bootstrap .select2-selection--single, .form-group-sm .select2-container--bootstrap .select2-selection--single {
+  .select2-container--bootstrap .select2-selection--single.form-control-sm, .input-group-sm .select2-container--bootstrap .select2-selection--single, .form-group-sm .select2-container--bootstrap .select2-selection--single {
     border-radius: 0.2rem;
     font-size: 0.875rem;
     height: calc(1.8125rem + 2px);
     line-height: 1.5;
     padding: 0.25rem 1.25rem 0.25rem 0.5rem;
     /* 2 */ }
-    .select2-container--bootstrap .select2-selection--single.form-control-sm .select2-selection__arrow b, .select2-container--bootstrap .input-group-sm > .select2-selection--single.form-control .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--single.input-group-text .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--single.input-group-text .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--single.btn .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--single.btn .select2-selection__arrow b, .input-group-sm .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b, .form-group-sm .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b {
+    .select2-container--bootstrap .select2-selection--single.form-control-sm .select2-selection__arrow b, .input-group-sm .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b, .form-group-sm .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b {
       margin-left: -0.25rem; }
-  .select2-container--bootstrap .select2-selection--multiple.form-control-sm, .select2-container--bootstrap .input-group-sm > .select2-selection--multiple.form-control,
-  .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.input-group-text,
-  .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.input-group-text,
-  .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.btn,
-  .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.btn, .input-group-sm .select2-container--bootstrap .select2-selection--multiple, .form-group-sm .select2-container--bootstrap .select2-selection--multiple {
+  .select2-container--bootstrap .select2-selection--multiple.form-control-sm, .input-group-sm .select2-container--bootstrap .select2-selection--multiple, .form-group-sm .select2-container--bootstrap .select2-selection--multiple {
     border-radius: 0.2rem;
     min-height: calc(1.8125rem + 2px); }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-selection__choice, .select2-container--bootstrap .input-group-sm > .select2-selection--multiple.form-control .select2-selection__choice,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-selection__choice,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.input-group-text .select2-selection__choice,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.btn .select2-selection__choice,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.btn .select2-selection__choice, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-selection__choice, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice {
       font-size: 0.875rem;
       line-height: 1.5;
       margin: calc(0.25rem - 1px) 0 0 0.25rem;
       padding: 0 0.25rem; }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-search--inline .select2-search__field, .select2-container--bootstrap .input-group-sm > .select2-selection--multiple.form-control .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.input-group-text .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.btn .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.btn .select2-search--inline .select2-search__field, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-search--inline .select2-search__field, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field {
       padding: 0 0.5rem;
       font-size: 0.875rem;
       height: calc(1.8125rem + 2px);
       line-height: 1.5; }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-selection__clear, .select2-container--bootstrap .input-group-sm > .select2-selection--multiple.form-control .select2-selection__clear,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-selection__clear,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.input-group-text .select2-selection__clear,
-    .select2-container--bootstrap .input-group-sm > .input-group-prepend > .select2-selection--multiple.btn .select2-selection__clear,
-    .select2-container--bootstrap .input-group-sm > .input-group-append > .select2-selection--multiple.btn .select2-selection__clear, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-sm .select2-selection__clear, .input-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear, .form-group-sm .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear {
       margin-top: 0.25rem; }
-  .select2-container--bootstrap .select2-selection--single.form-control-lg, .select2-container--bootstrap .input-group-lg > .select2-selection--single.form-control,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.input-group-text,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.input-group-text,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.btn,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.btn, .input-group-lg .select2-container--bootstrap .select2-selection--single, .form-group-lg .select2-container--bootstrap .select2-selection--single {
+  .select2-container--bootstrap .select2-selection--single.form-control-lg, .input-group-lg .select2-container--bootstrap .select2-selection--single, .form-group-lg .select2-container--bootstrap .select2-selection--single {
     border-radius: 0.3rem;
     font-size: 1.25rem;
     height: calc(2.875rem + 2px);
     line-height: 1.5;
     padding: 0.5rem 1.9375rem 0.5rem 1rem;
     /* 1 */ }
-    .select2-container--bootstrap .select2-selection--single.form-control-lg .select2-selection__arrow, .select2-container--bootstrap .input-group-lg > .select2-selection--single.form-control .select2-selection__arrow,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.input-group-text .select2-selection__arrow,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.input-group-text .select2-selection__arrow,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.btn .select2-selection__arrow,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.btn .select2-selection__arrow, .input-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow, .form-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
+    .select2-container--bootstrap .select2-selection--single.form-control-lg .select2-selection__arrow, .input-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow, .form-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
       width: 0.3125rem; }
-      .select2-container--bootstrap .select2-selection--single.form-control-lg .select2-selection__arrow b, .select2-container--bootstrap .input-group-lg > .select2-selection--single.form-control .select2-selection__arrow b,
-      .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.input-group-text .select2-selection__arrow b,
-      .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.input-group-text .select2-selection__arrow b,
-      .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--single.btn .select2-selection__arrow b,
-      .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--single.btn .select2-selection__arrow b, .input-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b, .form-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b {
+      .select2-container--bootstrap .select2-selection--single.form-control-lg .select2-selection__arrow b, .input-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b, .form-group-lg .select2-container--bootstrap .select2-selection--single .select2-selection__arrow b {
         border-width: 0.3125rem 0.3125rem 0 0.3125rem;
         margin-left: -0.3125rem;
         margin-left: -0.5rem;
         margin-top: -0.15625rem; }
-  .select2-container--bootstrap .select2-selection--multiple.form-control-lg, .select2-container--bootstrap .input-group-lg > .select2-selection--multiple.form-control,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.input-group-text,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.input-group-text,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.btn,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.btn, .input-group-lg .select2-container--bootstrap .select2-selection--multiple, .form-group-lg .select2-container--bootstrap .select2-selection--multiple {
+  .select2-container--bootstrap .select2-selection--multiple.form-control-lg, .input-group-lg .select2-container--bootstrap .select2-selection--multiple, .form-group-lg .select2-container--bootstrap .select2-selection--multiple {
     min-height: calc(2.875rem + 2px);
     border-radius: 0.3rem; }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-selection__choice, .select2-container--bootstrap .input-group-lg > .select2-selection--multiple.form-control .select2-selection__choice,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-selection__choice,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.input-group-text .select2-selection__choice,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.btn .select2-selection__choice,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.btn .select2-selection__choice, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-selection__choice, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice {
       font-size: 1.25rem;
       line-height: 1.5;
       border-radius: 0.25rem;
       margin: calc(0.5rem - 1px) 0 0 0.5rem;
       padding: 0 0.5rem; }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-search--inline .select2-search__field, .select2-container--bootstrap .input-group-lg > .select2-selection--multiple.form-control .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.input-group-text .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.btn .select2-search--inline .select2-search__field,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.btn .select2-search--inline .select2-search__field, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-search--inline .select2-search__field, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-search--inline .select2-search__field {
       padding: 0 1rem;
       font-size: 1.25rem;
       height: calc(2.875rem + 2px);
       line-height: 1.5; }
-    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-selection__clear, .select2-container--bootstrap .input-group-lg > .select2-selection--multiple.form-control .select2-selection__clear,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.input-group-text .select2-selection__clear,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.input-group-text .select2-selection__clear,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection--multiple.btn .select2-selection__clear,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection--multiple.btn .select2-selection__clear, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear {
+    .select2-container--bootstrap .select2-selection--multiple.form-control-lg .select2-selection__clear, .input-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear, .form-group-lg .select2-container--bootstrap .select2-selection--multiple .select2-selection__clear {
       margin-top: 0.5rem; }
-  .select2-container--bootstrap .select2-selection.form-control-lg.select2-container--open .select2-selection--single, .select2-container--bootstrap .input-group-lg > .select2-selection.select2-container--open.form-control .select2-selection--single,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection.select2-container--open.input-group-text .select2-selection--single,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection.select2-container--open.input-group-text .select2-selection--single,
-  .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection.select2-container--open.btn .select2-selection--single,
-  .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection.select2-container--open.btn .select2-selection--single {
+  .select2-container--bootstrap .select2-selection.form-control-lg.select2-container--open .select2-selection--single {
     /**
      * Make the dropdown arrow point up while the dropdown is visible.
      */ }
-    .select2-container--bootstrap .select2-selection.form-control-lg.select2-container--open .select2-selection--single .select2-selection__arrow b, .select2-container--bootstrap .input-group-lg > .select2-selection.select2-container--open.form-control .select2-selection--single .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection.select2-container--open.input-group-text .select2-selection--single .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection.select2-container--open.input-group-text .select2-selection--single .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-lg > .input-group-prepend > .select2-selection.select2-container--open.btn .select2-selection--single .select2-selection__arrow b,
-    .select2-container--bootstrap .input-group-lg > .input-group-append > .select2-selection.select2-container--open.btn .select2-selection--single .select2-selection__arrow b {
+    .select2-container--bootstrap .select2-selection.form-control-lg.select2-container--open .select2-selection--single .select2-selection__arrow b {
       border-color: transparent transparent #6c757d transparent;
       border-width: 0 0.3125rem 0.3125rem 0.3125rem; }
   .input-group-lg .select2-container--bootstrap .select2-selection.select2-container--open .select2-selection--single {
@@ -8499,10 +8470,7 @@ hr {
     margin-bottom: 0; }
 
 .table-bordered {
-  border-radius: 1px;
-  margin-bottom: 0; }
-  .table-bordered th {
-    border-top: 1px solid #fff !important; }
+  border-radius: 1px; }
 
 .table th, .c-detail-widget__table th {
   background-color: #f5f5f5;
@@ -8630,7 +8598,7 @@ td.fieldValue input, td.fieldValue .input-group {
     -moz-box-shadow: 1px 1px 3px #ddd;
     box-shadow: 1px 1px 3px #ddd;
     border-radius: 2px;
-    background: #fff;
+    background: #f8f9fa;
     margin-bottom: 10px;
     padding: 10px 10px;
     -webkit-box-sizing: border-box;
@@ -9771,16 +9739,6 @@ span[name=existingImages] img {
   background: rgba(91, 234, 81, 0.54) !important;
   border-radius: 4px; }
 
-.inventoryItems .input-group {
-  max-width: 200px; }
-.inventoryItems .rowName .input-group {
-  max-width: 400px; }
-.inventoryItems td, .inventoryItems th {
-  border: 1px solid #ddd; }
-.inventoryItems tfoot td.hideTd {
-  border: 0;
-  background: #fafafb; }
-
 .inventorySummaryContainer .panel-body, .inventorySummaryContainer .panel-footer {
   padding: 0; }
 .inventorySummaryContainer .panel-body .form-group, .inventorySummaryContainer .panel-footer .form-group {
@@ -10193,9 +10151,6 @@ html, body, .o-base-container {
   .bodyContents {
     margin: 0 !important; }
 
-  #centerPanel {
-    width: 100% !important; }
-
   .col-md-3#headerLinks {
     padding: 5px 5px 0; }
 
@@ -10522,10 +10477,6 @@ html, body, .o-base-container {
 .quickCreateContent .eventsTable td {
   padding-left: 0;
   padding-right: 0; }
-
-.inventoryItems .colName {
-  width: 8% !important;
-  min-width: 420px !important; }
 
 .dateTimeField .date {
   margin-right: -2px; }
@@ -10862,6 +10813,9 @@ select.form-control {
   border-radius: 0 4px 4px 0; }
 .remindersContent .panel-body .btn.actionIcon {
   margin-top: -5px; }
+.remindersContent .tpl-remiders-bottom-buttons {
+  position: fixed;
+  bottom: 40px; }
 
 .dashboardWidgetContent {
   position: relative; }
@@ -11045,6 +10999,12 @@ select[readonly], select[disabled] {
   padding-left: 0 !important;
   padding-right: 0 !important; }
 
+.u-w-10per {
+  width: 10%; }
+
+.u-w-30per {
+  width: 30%; }
+
 .u-w-37per {
   width: 37% !important; }
 
@@ -11065,11 +11025,17 @@ select[readonly], select[disabled] {
 .u-w-85px {
   width: 85px; }
 
+.u-w-90per {
+  width: 90%; }
+
 .u-min-w-650px {
   min-width: 650px !important; }
 
 @media (max-width: 767.98px) {
   .u-w-sm-down-100 {
+    width: 100%; } }
+@media (max-width: 575.98px) {
+  .u-w-xs-down-100 {
     width: 100%; } }
 .u-h-600px {
   height: 600px !important; }
@@ -11125,9 +11091,15 @@ select[readonly], select[disabled] {
 .u-overflow-auto {
   overflow: auto !important; }
 
+@media (max-width: 575.98px) {
+  .u-overflow-scroll-xs-down {
+    overflow: scroll !important; } }
 .u-remove-dropdown-icon .dropdown-toggle::after, .c-header .dropdown-toggle::after {
   display: none; }
 
+@media (max-width: 1199.98px) {
+  .u-remove-dropdown-icon-down-lg .dropdown-toggle::after {
+    display: none; } }
 .u-w-30per {
   width: 30%; }
 
@@ -11493,7 +11465,7 @@ header .c-header__btn__container .select2-selection {
   padding: 6px !important;
   border-radius: 0.25rem; }
 
-.select2-search__field {
+.select2-search__field, .select2-search.select2-search--inline {
   width: 100% !important; }
 
 .customFilterMainSpan {
@@ -11545,11 +11517,25 @@ header .c-header__btn__container .select2-selection {
     width: 100% !important;
     left: 0; } }
 .jstree-proton {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important; }
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important; }
 
 .leftPanel .ps-scrollbar-y-rail {
   display: none !important; }
 
+.svg-inline--fa {
+  vertical-align: -0.125em !important; }
+
+.tpl-DashBoardContents {
+  margin: 0 0.25rem; }
+
+.grid-stack > .grid-stack-item > .grid-stack-item-content {
+  left: 0.25rem !important;
+  right: 0.25rem !important; }
+
+@media (max-width: 575.98px) {
+  .ui-draggable-handle {
+    -ms-touch-action: manipulation !important;
+    touch-action: manipulation !important; } }
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 label.btn.btn-outline-primary:not(.active) {
   background: #fff; }
@@ -13425,22 +13411,26 @@ label.btn.btn-outline-primary:not(.active) {
   .modalRightSiteBar .listViewEntriesTable thead > tr > th {
     padding: 2px; }
 
-.chatModal .modal-body {
-  padding: 5px 0; }
-.chatModal .modal-footer {
-  background: #fff; }
-.chatModal .chatItem {
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 3px;
-  padding: 2px 8px 2px 8px; }
-  .chatModal .chatItem.active {
-    background: #f9f9f9; }
-  .chatModal .chatItem .author {
-    padding-bottom: 3px; }
-    .chatModal .chatItem .author span {
-      vertical-align: top;
-      margin-left: 6px;
-      font-weight: bold; }
+.chatModal {
+  left: auto; }
+  .chatModal .modal-dialog {
+    height: 100%; }
+  .chatModal .modal-body {
+    padding: 5px 0; }
+  .chatModal .modal-footer {
+    background: #fff; }
+  .chatModal .chatItem {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 3px;
+    padding: 2px 8px 2px 8px; }
+    .chatModal .chatItem.active {
+      background: #f9f9f9; }
+    .chatModal .chatItem .author {
+      padding-bottom: 3px; }
+      .chatModal .chatItem .author span {
+        vertical-align: top;
+        margin-left: 6px;
+        font-weight: bold; }
 
 .dropdown-menu.historyList {
   left: auto;
@@ -13912,86 +13902,78 @@ label.btn.btn-outline-primary:not(.active) {
 .dashboard_notebookWidget_view .row {
   margin-bottom: 5px; }
 
-.gridster {
-  margin-left: 0;
+.grid-stack {
   width: 100%;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  word-wrap: break-word; }
-  .gridster > ul {
-    width: auto;
-    display: block;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    word-wrap: break-word;
-    min-height: 460px;
-    list-style: none;
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    margin-top: 0 !important; }
-    .gridster > ul li.dashboardWidget {
-      background: #fff;
-      border-radius: 1px;
+  word-wrap: break-word;
+  display: block;
+  min-height: 460px;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  margin-top: 0 !important; }
+  .grid-stack .dashboardWidget {
+    background: #fff;
+    border-radius: 1px;
+    border: 1px solid #ddd;
+    -webkit-box-shadow: 0 0 3px -1px #ddd;
+    -moz-box-shadow: 0 0 3px -1px #ddd;
+    box-shadow: 0 0 3px -1px #ddd; }
+    .grid-stack .dashboardWidget .dashboardWidgetHeader {
+      background-color: #f8f9fa;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f6f6', endColorstr='#f3f3f4', GradientType=0);
+      border-color: #f3f3f4 #f3f3f4 #cbcbcf;
+      text-shadow: 0 1px #fff;
+      border-top: 1px solid #fff;
+      border-bottom: 1px solid #ddd;
+      color: #444;
+      cursor: move;
+      padding: 7px 5px; }
+      .grid-stack .dashboardWidget .dashboardWidgetHeader table {
+        height: 28px; }
+    .grid-stack .dashboardWidget .widgetFooterContent .row:first-child {
+      position: relative;
+      background-color: #f5f5f5;
+      padding-top: 3px;
+      padding-bottom: 2px; }
+    .grid-stack .dashboardWidget .dashboardWidgetHeader .dashboardTitle {
+      text-align: left;
+      padding-left: 10px; }
+    .grid-stack .dashboardWidget .dashboardWidgetHeader .widgeticons {
+      opacity: 0.5;
+      padding-right: 6px; }
+    .grid-stack .dashboardWidget .dashboardWidgetHeader .box {
+      position: relative;
+      top: -2px; }
+    .grid-stack .dashboardWidget .filterContainer {
+      position: absolute;
       border: 1px solid #ddd;
-      -webkit-box-shadow: 0 0 3px -1px #ddd;
-      -moz-box-shadow: 0 0 3px -1px #ddd;
-      box-shadow: 0 0 3px -1px #ddd; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetHeader {
-        background-color: #f8f9fa;
-        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f6f6', endColorstr='#f3f3f4', GradientType=0);
-        border-color: #f3f3f4 #f3f3f4 #cbcbcf;
-        text-shadow: 0 1px #fff;
-        border-top: 1px solid #fff;
-        border-bottom: 1px solid #ddd;
-        color: #444;
-        cursor: move;
-        padding: 7px 5px; }
-        .gridster > ul li.dashboardWidget .dashboardWidgetHeader table {
-          height: 28px; }
-      .gridster > ul li.dashboardWidget .widgetFooterContent .row:first-child {
-        position: relative;
-        background-color: #f5f5f5;
-        padding-top: 3px;
-        padding-bottom: 2px; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetHeader .dashboardTitle {
-        text-align: left;
-        padding-left: 10px; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetHeader .widgeticons {
-        opacity: 0.5;
-        padding-right: 6px; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetHeader .box {
-        position: relative;
-        top: -2px; }
-      .gridster > ul li.dashboardWidget .filterContainer {
-        position: absolute;
-        border: 1px solid #ddd;
-        background: #fff;
-        margin-left: -7px;
-        margin-right: 3px;
-        margin-top: 4px;
-        padding: 8px 0;
-        border-radius: 0 0 5px 5px;
-        box-shadow: 0 5px 8px -5px #888; }
-        .gridster > ul li.dashboardWidget .filterContainer div span {
-          margin-top: 6px; }
-        .gridster > ul li.dashboardWidget .filterContainer .col-md-5 {
-          margin-top: 3px; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetContent:not(.dashboardWidgetCalendar) {
-        padding: 5px;
-        line-height: 20px; }
-      .gridster > ul li.dashboardWidget .dashboardWidgetContent .dashboard_notebookWidget_viewarea {
-        height: 200px; }
-      .gridster > ul li.dashboardWidget .widgeticons {
-        min-width: 50px;
-        height: 30px;
-        margin-right: 30px; }
-        .gridster > ul li.dashboardWidget .widgeticons a {
-          cursor: pointer;
-          text-decoration: none; }
-    .gridster > ul .widgetChartContainer {
-      height: 100% !important; }
+      background: #fff;
+      margin-left: -7px;
+      margin-right: 3px;
+      margin-top: 4px;
+      padding: 8px 0;
+      border-radius: 0 0 5px 5px;
+      box-shadow: 0 5px 8px -5px #888; }
+      .grid-stack .dashboardWidget .filterContainer div span {
+        margin-top: 6px; }
+      .grid-stack .dashboardWidget .filterContainer .col-md-5 {
+        margin-top: 3px; }
+    .grid-stack .dashboardWidget .dashboardWidgetContent:not(.dashboardWidgetCalendar) {
+      padding: 5px;
+      line-height: 20px; }
+    .grid-stack .dashboardWidget .dashboardWidgetContent .dashboard_notebookWidget_viewarea {
+      height: 200px; }
+    .grid-stack .dashboardWidget .widgeticons {
+      min-width: 50px;
+      height: 30px;
+      margin-right: 30px; }
+      .grid-stack .dashboardWidget .widgeticons a {
+        cursor: pointer;
+        text-decoration: none; }
+  .grid-stack .widgetChartContainer {
+    height: 100% !important; }
 
 .NotificationsItem .userImage {
   width: 22px; }
@@ -14036,12 +14018,30 @@ label.btn.btn-outline-primary:not(.active) {
     height: calc(100vh - 31px); }
   .user-info--active .c-form__action-panel {
     bottom: 1.9375rem; } }
+.inventoryItems .fieldValue {
+  position: relative; }
+.inventoryItems .input-group {
+  max-width: 100% !important; }
+.inventoryItems .rowName .input-group {
+  max-width: 400px; }
+.inventoryItems td, .inventoryItems th {
+  border: 1px solid #ddd; }
+.inventoryItems tfoot td.hideTd {
+  border: 0;
+  background: #fafafb; }
+.inventoryItems .subProductsContainer ul {
+  margin-bottom: 0; }
+
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .calendarViewContainer .widget_header {
   margin-right: -20px;
   margin-left: -25px; }
+@media (min-width: 992px) {
+  .calendarViewContainer.js-sitebar--active {
+    width: 75% !important;
+    padding-right: 1rem !important; } }
 
-@media (min-width: 993px) {
+@media (min-width: 992px) {
   .Calendar_Calendar .mainBody {
     overflow: hidden; } }
 .hideToggleSiteBarRightButton {
@@ -14066,6 +14066,20 @@ label.btn.btn-outline-primary:not(.active) {
   -o-transition: all 0.5s ease;
   transition: all 0.5s ease; }
 
+@media (min-width: 1080px) {
+  .js-calendar-switch-container {
+    margin-right: 0.75em;
+    float: right; } }
+@media (max-width: 1080px) {
+  .js-calendar-switch-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; }
+    .js-calendar-switch-container .btn-group {
+      margin-left: 0 !important;
+      margin-bottom: 0.5rem; }
+    .js-calendar-switch-container .btn-group:last-child {
+      margin-left: 0.5rem !important; } }
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .detailViewTable .fieldLabel.medium, .detailViewTable .fieldValue.medium {
   padding: 10px;
@@ -14237,11 +14251,6 @@ label.btn.btn-outline-primary:not(.active) {
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .paginationDiv .listViewBasicAction.dropdown-menu {
   width: 35%; }
-
-.listViewEntriesTable .picklistSearchField, .listViewEntriesTable .searchField {
-  min-width: 150px; }
-.listViewEntriesTable .boolenSearchField {
-  min-width: 90px; }
 
 .paginationDiv .pageInfo {
   border: 1px solid #ddd;

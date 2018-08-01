@@ -7,7 +7,6 @@
  * All Rights Reserved.
  *************************************************************************************/
 
-
 jQuery.Class('Vtiger_BasicSearch_Js', {}, {
 	//stores the module that need to be searched
 	searchModule: false,

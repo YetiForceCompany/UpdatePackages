@@ -1,0 +1,10 @@
+{
+  "name": "yetiforce/icalendar",
+  "description": "iCalendar for PHP",
+  "keywords": [
+	"iCal"
+  ],
+  "homepage": "https://github.com/YetiForceCompany/iCalendar",
+  "type": "library",
+  "license": "LGPL-2.0-or-later"
+}

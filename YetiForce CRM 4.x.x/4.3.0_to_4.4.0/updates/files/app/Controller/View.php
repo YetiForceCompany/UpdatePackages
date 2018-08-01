@@ -229,7 +229,6 @@ abstract class View extends Base
 			'~libraries/chosen-js/chosen.css',
 			'~libraries/bootstrap-chosen/bootstrap-chosen.css',
 			'~libraries/jquery-ui-dist/jquery-ui.css',
-			'~libraries/selectize/dist/css/selectize.bootstrap3.css',
 			'~libraries/select2/dist/css/select2.css',
 			'~libraries/simplebar/dist/simplebar.css',
 			'~libraries/perfect-scrollbar/css/perfect-scrollbar.css',
@@ -297,7 +296,6 @@ abstract class View extends Base
 			'~libraries/bootbox/bootbox.js',
 			'~libraries/microplugin/src/microplugin.js',
 			'~libraries/sifter/sifter.js',
-			'~libraries/selectize/dist/js/selectize.js',
 			'~libraries/jQuery-Validation-Engine/js/jquery.validationEngine.js',
 			'~libraries/moment/min/moment.min.js',
 			'~libraries/bootstrap-datepicker/dist/js/bootstrap-datepicker.js',
@@ -583,12 +581,13 @@ abstract class View extends Base
 					 'intervalForNotificationNumberCheck' => \AppConfig::performance('INTERVAL_FOR_NOTIFICATION_NUMBER_CHECK'),
 					 'fieldsReferencesDependent' => \AppConfig::security('FIELDS_REFERENCES_DEPENDENT'),
 					 'soundFilesPath' => \App\Layout::getPublicUrl('layouts/resources/sounds/'),
+					 'debug' => (bool) \AppConfig::debug('JS_DEBUG'),
 				 ] as $key => $value) {
 			\App\Config::setJsEnv($key, $value);
 		}
 		if (\App\Session::has('ShowAuthy2faModal')) {
 			\App\Config::setJsEnv('ShowAuthy2faModal', \App\Session::get('ShowAuthy2faModal'));
-			if (AppConfig::security('USER_AUTHY_MODE') === 'TOTP_OPTIONAL') {
+			if (\AppConfig::security('USER_AUTHY_MODE') === 'TOTP_OPTIONAL') {
 				\App\Session::delete('ShowAuthy2faModal');
 			}
 		}

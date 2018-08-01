@@ -189,7 +189,9 @@ class ModuleBasic
 	{
 		$moduleInstance = \Vtiger_Module_Model::getInstance($this->name);
 		$focus = \CRMEntity::getInstance($this->name);
-		$this->tableName = $focus->table_name;
+		if (isset($focus->table_name)) {
+			$this->tableName = $focus->table_name;
+		}
 		if ($this->isentitytype) {
 			$this->deleteFromCRMEntity();
 			Access::deleteTools($this);
@@ -233,11 +235,11 @@ class ModuleBasic
 	{
 		$this->basetable = $basetable;
 		$this->basetableid = $basetableid;
-
+		$db = \App\Db::getInstance();
 		// Initialize tablename and index column names
 		$lcasemodname = strtolower($this->name);
 		if (!$this->basetable) {
-			$this->basetable = "vtiger_$lcasemodname";
+			$this->basetable = 'u_' . $db->getConfig('base')['tablePrefix'] . $lcasemodname;
 		}
 		if (!$this->basetableid) {
 			$this->basetableid = $lcasemodname . 'id';

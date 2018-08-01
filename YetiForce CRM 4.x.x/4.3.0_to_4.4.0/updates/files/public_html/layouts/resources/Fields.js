@@ -17,7 +17,7 @@ App.Fields = {
 		 * @param {boolean} registerForAddon
 		 * @param {object} customParams
 		 */
-		register(parentElement, registerForAddon, customParams) {
+		register(parentElement, registerForAddon, customParams,clasName = 'dateField') {
 			if (typeof parentElement === "undefined") {
 				parentElement = $('body');
 			} else {
@@ -26,7 +26,7 @@ App.Fields = {
 			if (typeof registerForAddon === "undefined") {
 				registerForAddon = true;
 			}
-			let elements = $('.dateField', parentElement);
+			let elements = $('.'+ clasName, parentElement);
 			if (parentElement.hasClass('dateField')) {
 				elements = parentElement;
 			}
@@ -442,13 +442,9 @@ App.Fields = {
 			}
 			if (typeof view === "undefined") {
 				const select2Elements = $('select.select2', parent).toArray();
-				const selectizeElements = $('select.selectize', parent).toArray();
 				const choosenElements = $('.chzn-select', parent).toArray();
 				select2Elements.forEach((elem) => {
 					this.changeSelectElementView($(elem), 'select2', viewParams);
-				});
-				selectizeElements.forEach((elem) => {
-					this.changeSelectElementView($(elem), 'selectize', viewParams);
 				});
 				choosenElements.forEach((elem) => {
 					this.changeSelectElementView($(elem), 'choosen', viewParams);
@@ -460,8 +456,6 @@ App.Fields = {
 				switch (view) {
 					case 'select2':
 						return App.Fields.Picklist.showSelect2ElementView(parent, viewParams);
-					case 'selectize':
-						return App.Fields.Picklist.showSelectizeElementView(parent, viewParams);
 					case 'choosen':
 						return App.Fields.Picklist.showChoosenElementView(parent, viewParams);
 				}
@@ -472,6 +466,7 @@ App.Fields = {
 		 * Function which will show the select2 element for select boxes . This will use select2 library
 		 */
 		showSelect2ElementView: function (selectElement, params) {
+			let self = this;
 			selectElement = $(selectElement);
 			if (typeof params === "undefined") {
 				params = {};
@@ -663,8 +658,36 @@ App.Fields = {
 					}).on("select2:unselect", function (e) {
 					select.data('unselecting', true);
 				});
+
+				if (select.hasClass('js-select2-sortable')) {
+					self.registerSelect2Sortable(select, params.sortableCb);
+				}
 			})
+
 			return selectElement;
+		},
+		/**
+		 * Register select2 drag and drop sorting
+		 * @param {jQuery} select2 element
+		 * @param {function} callback function
+		 */
+		registerSelect2Sortable(select, cb = () =>{}) {
+			let ul = select.next('.select2-container').first('ul.select2-selection__rendered');
+			ul.sortable({
+				items: 'li:not(.select2-search__field)',
+				tolerance: 'pointer',
+				stop: function () {
+					$(ul.find('.select2-selection__choice').get().reverse()).each(function () {
+						let optionTitle = $(this).attr('title');
+						select.find('option').each(function() {
+							if ($(this).text() === optionTitle) {
+								select.prepend($(this));
+							}
+						});
+					});
+					cb(select);
+				}
+			});
 		},
 		/**
 		 * Replace select with choosen
@@ -751,33 +774,6 @@ App.Fields = {
 			}
 			return selectElement.css('display', 'block').removeClass("chzn-done").data("chosen", null).next().remove();
 		},
-
-		/**
-		 * Function which will show the selectize element for select boxes . This will use selectize library
-		 */
-		showSelectizeElementView: function (selectElement, params) {
-			if (typeof params === "undefined") {
-				params = {plugins: ['remove_button']};
-			}
-			selectElement.selectize(params);
-			return selectElement;
-		},
-		/**
-		 * Function to destroy the selectize element
-		 */
-		destroySelectizeElement: function (parent) {
-			if (typeof parent === "undefined") {
-				parent = $('body');
-			}
-			let selectElements = $('.selectized', parent);
-			//parent itself is the element
-			if (parent.is('select.selectized')) {
-				selectElements = parent;
-			}
-			selectElements.each(function () {
-				$(this)[0].selectize.destroy();
-			});
-		},
 	},
 	MultiImage: {
 		currentFileUploads: 0,
@@ -855,8 +851,8 @@ App.Fields = {
 			});
 		}
 	},
-	Gantt:{
-		register(container, data){
+	Gantt: {
+		register(container, data) {
 			return new GanttField(container, data);
 		}
 	}

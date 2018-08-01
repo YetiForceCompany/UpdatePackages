@@ -7,6 +7,7 @@
  * All Rights Reserved.
  * Contributor(s): YetiForce.com
  *************************************************************************************/
+
 $.Class("Vtiger_Edit_Js", {
 	//Event that will triggered when reference field is selected
 	referenceSelectionEvent: 'Vtiger.Reference.Selection',
@@ -143,7 +144,7 @@ $.Class("Vtiger_Edit_Js", {
 		container.find('.clearReferenceSelection').trigger('click');
 
 		fieldElement.val(id)
-		fieldDisplayElement.val(selectedName).attr('readonly', true);
+		fieldDisplayElement.val(app.decodeHTML(selectedName)).attr('readonly', true);
 		fieldElement.trigger(Vtiger_Edit_Js.referenceSelectionEvent, {
 			source_module: popupReferenceModule,
 			record: id,
@@ -221,9 +222,27 @@ $.Class("Vtiger_Edit_Js", {
 		}
 	},
 	treePopupRegisterEvent: function (container) {
-		var thisInstance = this;
 		container.on("click", '.js-tree-modal', function (e) {
-			thisInstance.openTreeModal($(e.target));
+			let element = $(e.target);
+			let parentElem = element.closest('.fieldValue');
+			let sourceFieldElement = $('input[class="sourceField"]', parentElem);
+			let fieldDisplayElement = $('input[name="' + sourceFieldElement.attr('name') + '_display"]', parentElem);
+			AppConnector.request({
+				module: $('input[name="module"]', element.closest('form')).val(),
+				view: 'TreeModal',
+				template: sourceFieldElement.data('treetemplate'),
+				fieldName: sourceFieldElement.attr('name'),
+				multiple: sourceFieldElement.data('multiple'),
+				value: sourceFieldElement.val()
+			}).done(function (requestData) {
+				app.modalEvents['treeModal'] = function (modal, instance) {
+					instance.setSelectEvent((responseData) => {
+						sourceFieldElement.val(responseData.id);
+						fieldDisplayElement.val(responseData.name).attr('readonly', true);
+					});
+				};
+				app.showModalWindow(requestData, {modalId: 'treeModal'});
+			});
 		});
 	},
 	/**
@@ -236,28 +255,6 @@ $.Class("Vtiger_Edit_Js", {
 			thisInstance.clearFieldValue($(e.currentTarget));
 			e.preventDefault();
 		})
-	},
-	openTreeModal: function (element) {
-		let parentElem = element.closest('.fieldValue');
-		let sourceFieldElement = $('input[class="sourceField"]', parentElem);
-		let fieldDisplayElement = $('input[name="' + sourceFieldElement.attr('name') + '_display"]', parentElem);
-		AppConnector.request({
-			module: $('input[name="module"]', element.closest('form')).val(),
-			view: 'TreeModal',
-			template: sourceFieldElement.data('treetemplate'),
-			fieldName: sourceFieldElement.attr('name'),
-			multiple: sourceFieldElement.data('multiple'),
-			value: sourceFieldElement.val()
-		}).done(function (requestData) {
-			app.showModalWindow(requestData, function (data) {
-				app.modalEvents[Window.lastModalId] = function (modal, instance) {
-					instance.setSelectEvent((responseData) => {
-						sourceFieldElement.val(responseData.id);
-						fieldDisplayElement.val(responseData.name).attr('readonly', true);
-					});
-				};
-			});
-		});
 	},
 	/**
 	 * Function which will handle the reference auto complete event registrations
@@ -323,7 +320,7 @@ $.Class("Vtiger_Edit_Js", {
 			this.showRecordsList(e);
 		});
 		let moduleList = container.find('.referenceModulesList');
-		App.Fields.Picklist.showSelect2ElementView(moduleList);
+		App.Fields.Picklist.showSelect2ElementView(container.find('.referenceModulesList:visible'));
 		moduleList.on('change', (e) => {
 			let element = $(e.currentTarget);
 			let parentElem = element.closest('.fieldValue');
@@ -511,10 +508,10 @@ $.Class("Vtiger_Edit_Js", {
 	referenceCreateHandler: function (container) {
 		var thisInstance = this;
 		var postQuickCreateSave = function (data) {
-			var params = {};
-			params.name = data.result._recordLabel;
-			params.id = data.result._recordId;
-			thisInstance.setReferenceFieldValue(container, params);
+			thisInstance.setReferenceFieldValue(container, {
+				name: data.result._recordLabel,
+				id: data.result._recordId
+			});
 		}
 		var params = {callbackFunction: postQuickCreateSave};
 		if (app.getViewName() === 'Edit' && !app.getRecordId()) {
@@ -754,16 +751,16 @@ $.Class("Vtiger_Edit_Js", {
 	 * @param strings which accepts value as either odd or even
 	 */
 	copyAddress: function (fromLabel, toLabel, relatedRecord, sourceModule) {
-		var status = false;
-		var thisInstance = this;
-		var formElement = this.getForm();
-		var addressMapping = this.addressFieldsMapping;
-		var BlockIds = this.addressFieldsMappingBlockID;
+		let status = false;
+		let thisInstance = this;
+		let formElement = this.getForm();
+		let addressMapping = this.addressFieldsMapping;
+		let BlockIds = this.addressFieldsMappingBlockID;
 
-		from = BlockIds[fromLabel];
+		let from = BlockIds[fromLabel];
 		if (relatedRecord === false || sourceModule === false)
 			from = BlockIds[fromLabel];
-		to = BlockIds[toLabel];
+		let to = BlockIds[toLabel];
 		for (var key in addressMapping) {
 			var nameElementFrom = addressMapping[key] + from;
 			var nameElementTo = addressMapping[key] + to;
@@ -808,11 +805,11 @@ $.Class("Vtiger_Edit_Js", {
 	copyAddressDetailsRef: function (data, container) {
 		var thisInstance = this;
 		thisInstance.getRecordDetails(data).done(function (data) {
-				var response = data['result'];
-				thisInstance.mapAddressDetails(response, container);
-			}).fail(function (error, err) {
+			var response = data['result'];
+			thisInstance.mapAddressDetails(response, container);
+		}).fail(function (error, err) {
 
-			});
+		});
 	},
 	mapAddressDetails: function (result, container) {
 		for (var key in result) {
@@ -974,7 +971,7 @@ $.Class("Vtiger_Edit_Js", {
 		sourcePickListElements.trigger('change');
 	},
 	registerLeavePageWithoutSubmit: function (form) {
-		InitialFormData = form.serialize();
+		let InitialFormData = form.serialize();
 		window.onbeforeunload = function (e) {
 			if (InitialFormData != form.serialize() && form.data('submit') != "true") {
 				return app.vtranslate("JS_CHANGES_WILL_BE_LOST");
@@ -1095,7 +1092,7 @@ $.Class("Vtiger_Edit_Js", {
 						} else {
 							response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
 						}
-					}).fail( function () {
+					}).fail(function () {
 						response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
 					});
 				},

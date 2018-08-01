@@ -8,7 +8,6 @@
  *************************************************************************************/
 
 //Search Advance Filter useful for adavance search
-
 Vtiger_AdvanceFilter_Js('Vtiger_SearchAdvanceFilter_Js', {}, {
 
 	/**

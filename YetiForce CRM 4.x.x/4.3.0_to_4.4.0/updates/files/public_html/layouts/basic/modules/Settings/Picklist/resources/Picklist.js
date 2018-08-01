@@ -6,6 +6,7 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  *************************************************************************************/
+
 var Settings_Picklist_Js = {
 
 	registerModuleChangeEvent: function () {

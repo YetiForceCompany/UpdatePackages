@@ -6,6 +6,7 @@
  * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
+
 namespace Cron\Batch;
 
 /**
@@ -13,9 +14,9 @@ namespace Cron\Batch;
  */
 class UpdateFields
 {
-
 	/**
-	 * Preprocess
+	 * Preprocess.
+	 *
 	 * @return bool
 	 */
 	public function preProcess()
@@ -24,7 +25,7 @@ class UpdateFields
 	}
 
 	/**
-	 * Process
+	 * Process.
 	 */
 	public function process()
 	{
@@ -42,7 +43,7 @@ class UpdateFields
 	}
 
 	/**
-	 * Process
+	 * Process.
 	 */
 	public function postProcess()
 	{
