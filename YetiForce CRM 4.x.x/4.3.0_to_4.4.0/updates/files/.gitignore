@@ -31,13 +31,13 @@
 /user_privileges/user_privileges_7.php
 
 # dependencies COMPOSER
-#/vendor
-#/public_html/vendor/*
+/vendor
+/public_html/vendor/*
 
 # dependencies YARN
 yarn-error.log
-#/node_modules/
-#/public_html/libraries/*
+/node_modules/
+/public_html/libraries/*
 
 # IDEs and editors
 /.buildpath
@@ -48,5 +48,3 @@ yarn-error.log
 .settings/
 *.sublime-workspace
 .babelrc
-build.js
-gulpfile.js

@@ -13413,8 +13413,6 @@ label.btn.btn-outline-primary:not(.active) {
 
 .chatModal {
   left: auto; }
-  .chatModal .modal-dialog {
-    height: 100%; }
   .chatModal .modal-body {
     padding: 5px 0; }
   .chatModal .modal-footer {
@@ -13750,6 +13748,9 @@ label.btn.btn-outline-primary:not(.active) {
       background: #f1f1f1; }
       .related .nav-pills .tabdrop .dropdown-toggle:hover {
         text-decoration: none; }
+    .related .nav-pills .tabdrop .c-badge--top-right {
+      position: inherit;
+      margin-left: 5px; }
     .related .nav-pills .tabdrop.show .dropdown-toggle, .related .nav-pills .tabdrop.active .dropdown-toggle {
       background: #404952;
       color: #fff; }
@@ -13877,7 +13878,10 @@ label.btn.btn-outline-primary:not(.active) {
   .modal-header,
   .modal-body,
   .modal-footer {
-    padding: 0.5rem !important; } }
+    padding: 0.5rem !important; }
+
+  .modal {
+    padding: 0 !important; } }
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .contentsDiv .gridster {
   padding: 0; }

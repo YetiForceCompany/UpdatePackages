@@ -152,14 +152,14 @@ class YetiForceUpdate
 	private function addRecords()
 	{
 		$db = \App\Db::getInstance();
-
-		$record = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
-		$record->set('name', 'Import Cron');
-		$record->set('assigned_user_id', \App\User::getCurrentUserId());
-		$record->set('email_template_type', 'PLL_MAIL');
-		$record->set('module_name', 'Accounts');
-		$record->set('subject', '$(translate : Other.Mailer|LBL_CRON_EMAIL_SUBJECT)$');
-		$record->set('content', '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
+		if (!(new \App\Db\Query())->from('u_yf_emailtemplates')->where(['sys_name' => 'ImportCron'])->exists()) {
+			$record = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
+			$record->set('name', 'Import Cron');
+			$record->set('assigned_user_id', \App\User::getCurrentUserId());
+			$record->set('email_template_type', 'PLL_MAIL');
+			$record->set('module_name', 'Accounts');
+			$record->set('subject', '$(translate : Other.Mailer|LBL_CRON_EMAIL_SUBJECT)$');
+			$record->set('content', '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
 	<tbody>
 		<tr>
 			<td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
@@ -219,13 +219,14 @@ class YetiForceUpdate
 		</tr>
 	</tbody>
 </table>');
-		$record->set('email_template_priority', 1);
-		$record->save();
-		$db->createCommand()
-			->update('u_yf_emailtemplates', [
-				'sys_name' => 'ImportCron',
-			], ['emailtemplatesid' => $record->getId()])
-			->execute();
+			$record->set('email_template_priority', 1);
+			$record->save();
+			$db->createCommand()
+				->update('u_yf_emailtemplates', [
+					'sys_name' => 'ImportCron',
+					], ['emailtemplatesid' => $record->getId()])
+				->execute();
+		}
 	}
 
 	/**
@@ -275,8 +276,8 @@ class YetiForceUpdate
 		if ($db->isTableExists('u_yf_srecurringorders_invfield')) {
 			$data = [];
 			foreach ([['name', 0, 30], ['qty', 3, 7], ['discount', 6, 7], ['marginp', 9, 10], ['margin', 10, 7], ['tax', 11, 7], ['comment1', 7, 0], ['price', 4, 7], ['total', 5, 7], ['net', 7, 7], ['purchase', 8, 7], ['gross', 12, 7], ['discountmode', 11, 1], ['taxmode', 12, 1], ['currency', 13, 1],
-						 ['unit', 1, 7],
-						 ['subunit', 2, 7]] as $inventoryData) {
+			['unit', 1, 7],
+			['subunit', 2, 7]] as $inventoryData) {
 				$data[] = ['u_yf_srecurringorders_invfield', ['colspan' => $inventoryData[2], 'sequence' => $inventoryData[1]], ['columnname' => $inventoryData[0]]];
 			}
 			\App\Db\Updater::batchUpdate($data);
@@ -418,27 +419,27 @@ class YetiForceUpdate
 
 		$data = [
 			['vtiger_settings_field', [
-				'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
-				'name' => 'LBL_ENCRYPTION',
-				'iconpath' => 'fas fa-key',
-				'description' => null,
-				'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption',
-				'sequence' => 4,
-				'active' => 0,
-				'pinned' => 0,
-				'admin_access' => null,
-			], ['name' => 'LBL_ENCRYPTION', 'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption']
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
+					'name' => 'LBL_ENCRYPTION',
+					'iconpath' => 'fas fa-key',
+					'description' => null,
+					'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption',
+					'sequence' => 4,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null,
+				], ['name' => 'LBL_ENCRYPTION', 'linkto' => 'index.php?module=Password&parent=Settings&view=Encryption']
 			],
 			['com_vtiger_workflow_tasktypes', [
-				'id' => $db->getUniqueId('com_vtiger_workflow_tasktypes'),
-				'tasktypename' => 'SumFieldFromDependent',
-				'label' => 'LBL_SUM_FIELD_FROM_DEPENDENT',
-				'classname' => 'SumFieldFromDependent',
-				'classpath' => 'modules/com_vtiger_workflow/tasks/SumFieldFromDependent.php',
-				'templatepath' => 'com_vtiger_workflow/taskforms/SumFieldFromDependent.tpl',
-				'modules' => '{"include":[],"exclude":[]}',
-				'sourcemodule' => ''
-			], ['tasktypename' => 'SumFieldFromDependent']
+					'id' => $db->getUniqueId('com_vtiger_workflow_tasktypes'),
+					'tasktypename' => 'SumFieldFromDependent',
+					'label' => 'LBL_SUM_FIELD_FROM_DEPENDENT',
+					'classname' => 'SumFieldFromDependent',
+					'classpath' => 'modules/com_vtiger_workflow/tasks/SumFieldFromDependent.php',
+					'templatepath' => 'com_vtiger_workflow/taskforms/SumFieldFromDependent.tpl',
+					'modules' => '{"include":[],"exclude":[]}',
+					'sourcemodule' => ''
+				], ['tasktypename' => 'SumFieldFromDependent']
 			],
 			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectMilestone'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectMilestone')]],
 			['vtiger_realization_process', ['module_id' => \App\Module::getModuleId('ProjectTask'), 'status_indicate_closing' => ''], ['module_id' => \App\Module::getModuleId('ProjectTask')]],
@@ -449,36 +450,36 @@ class YetiForceUpdate
 //					['label' => 'MEN_GDPR']
 //				];
 			['vtiger_settings_field', [
-				'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_About_YetiForce')->get('blockid'),
-				'name' => 'LBL_SHOP_YETIFORCE',
-				'iconpath' => 'fas fa-shopping-cart',
-				'description' => 'LBL_SHOP_YETIFORCE_DESCRIPTION',
-				'linkto' => 'https://yetiforce.shop/',
-				'sequence' => 5,
-				'active' => 0,
-				'pinned' => 0,
-				'admin_access' => null,
-			], ['name' => 'LBL_SHOP_YETIFORCE', 'linkto' => 'https://yetiforce.shop/']],
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_About_YetiForce')->get('blockid'),
+					'name' => 'LBL_SHOP_YETIFORCE',
+					'iconpath' => 'fas fa-shopping-cart',
+					'description' => 'LBL_SHOP_YETIFORCE_DESCRIPTION',
+					'linkto' => 'https://yetiforce.shop/',
+					'sequence' => 5,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null,
+				], ['name' => 'LBL_SHOP_YETIFORCE', 'linkto' => 'https://yetiforce.shop/']],
 			['vtiger_settings_field', [
-				'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
-				'name' => 'LBL_2FA_CONF',
-				'iconpath' => 'adminIcon-passwords-configuration',
-				'description' => 'LBL_2FA_DESCRIPTION',
-				'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index',
-				'sequence' => 5,
-				'active' => 0,
-				'pinned' => 0,
-				'admin_access' => null,
-			], ['name' => 'LBL_2FA_CONF', 'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index']],
+					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
+					'name' => 'LBL_2FA_CONF',
+					'iconpath' => 'adminIcon-passwords-configuration',
+					'description' => 'LBL_2FA_DESCRIPTION',
+					'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index',
+					'sequence' => 5,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null,
+				], ['name' => 'LBL_2FA_CONF', 'linkto' => 'index.php?module=TwoFactorAuthentication&parent=Settings&view=Index']],
 			['vtiger_eventhandlers', [
-				'event_name' => 'EntityAfterDelete',
-				'handler_class' => 'Vtiger_Workflow_Handler',
-				'is_active' => 1,
-				'include_modules' => '',
-				'exclude_modules' => '',
-				'priority' => 5,
-				'owner_id' => 0,
-			]],
+					'event_name' => 'EntityAfterDelete',
+					'handler_class' => 'Vtiger_Workflow_Handler',
+					'is_active' => 1,
+					'include_modules' => '',
+					'exclude_modules' => '',
+					'priority' => 5,
+					'owner_id' => 0,
+				]],
 		];
 		\App\Db\Updater::batchInsert($data);
 
@@ -748,15 +749,15 @@ class YetiForceUpdate
 			$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->scalar();
 			if ($id) {
 				$menu = ['yetiforce_menu', ['role' => 0,
-					'parentid' => $id,
-					'type' => $settingsModel->getMenuTypeKey('Module'),
-					'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => $id])->max('sequence') + 1,
-					'module' => $tabId,
-					'label' => '',
-					'newwindow' => 0,
-					'showicon' => 0,
-					'icon' => '',
-					'hotkey' => ''], ['label' => 'MEN_GDPR']];
+						'parentid' => $id,
+						'type' => $settingsModel->getMenuTypeKey('Module'),
+						'sequence' => (new \App\Db\Query())->from('yetiforce_menu')->where(['role' => 0, 'parentid' => $id])->max('sequence') + 1,
+						'module' => $tabId,
+						'label' => '',
+						'newwindow' => 0,
+						'showicon' => 0,
+						'icon' => '',
+						'hotkey' => ''], ['label' => 'MEN_GDPR']];
 				\App\Db\Updater::batchInsert([$menu]);
 			}
 
@@ -838,12 +839,12 @@ class YetiForceUpdate
 				continue;
 			}
 			$rows[] = ['vtiger_widgets', [
-				'tabid' => \App\Module::getModuleId($widget[1]),
-				'type' => $widget[2],
-				'label' => $widget[3],
-				'wcol' => $widget[4],
-				'sequence' => $widget[5],
-				'data' => $widget[6]
+					'tabid' => \App\Module::getModuleId($widget[1]),
+					'type' => $widget[2],
+					'label' => $widget[3],
+					'wcol' => $widget[4],
+					'sequence' => $widget[5],
+					'data' => $widget[6]
 			]];
 		}
 		\App\Db\Updater::batchInsert($rows);
@@ -936,7 +937,7 @@ class YetiForceUpdate
 		echo '</div><div class="modal-footer">';
 		echo '<a class="btn btn-success" href="index.php">' . \App\Language::translate('LBL_MAIN_PAGE') . '<a>';
 		echo '</div></div></div></div>';
-//		header('Location: ' . \AppConfig::main('site_URL'));
+		//		header('Location: ' . \AppConfig::main('site_URL'));
 		exit;
 	}
 
@@ -988,17 +989,17 @@ class YetiForceUpdate
 		$importer->renameTables([['dav_calendars', 'dav_calendars_3_1_']]);
 		$base = new \App\Db\Importers\Base();
 		$tables = ['dav_calendars' => [
-			'columns' => [
-				'id' => $base->primaryKeyUnsigned(10)->notNull(),
-				'synctoken' => $base->integer(10)->unsigned()->notNull()->defaultValue(1),
-				'components' => $base->stringType(21),
-			],
-			'columns_mysql' => [
-				'components' => $base->varbinary(21),
-			],
-			'engine' => 'InnoDB',
-			'charset' => 'utf8',
-			'collate' => 'utf8_unicode_ci'
+				'columns' => [
+					'id' => $base->primaryKeyUnsigned(10)->notNull(),
+					'synctoken' => $base->integer(10)->unsigned()->notNull()->defaultValue(1),
+					'components' => $base->stringType(21),
+				],
+				'columns_mysql' => [
+					'components' => $base->varbinary(21),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8',
+				'collate' => 'utf8_unicode_ci'
 		]];
 		$importer->refreshSchema();
 		foreach ($tables as $tableName => $data) {
@@ -1085,7 +1086,7 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleNamNo tab ide'];
+		//		$columnName = [0 => "tabid", 1 => "id", 2 => "column", 3 => "table", 4 => "generatedtype", 5 => "uitype", 6 => "name", 7 => "label", 8 => "readonly", 9 => "presence", 10 => "defaultvalue", 11 => "maximumlength", 12 => "sequence", 13 => "block", 14 => "displaytype", 15 => "typeofdata", 16 => "quickcreate", 17 => "quicksequence", 18 => "info_type", 19 => "masseditable", 20 => "helpinfo", 21 => "summaryfield", 22 => "fieldparams", 23 => 'header_field', 24 => "columntype", 25 => "blocklabel", 26 => "setpicklistvalues", 27 => "setrelatedmodules", 28 => 'moduleNamNo tab ide'];
 		$fields = [
 			[41, 2763, 'projectmilestone_status', 'vtiger_projectmilestone', 1, 15, 'projectmilestone_status', 'FL_STATUS', 1, 2, '', '255', 6, 101, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_PROJECT_MILESTONE_INFORMATION', ['PLL_OPEN', 'PLL_IN_PROGRESS', 'PLL_COMPLETED', 'PLL_DEFERRED', 'PLL_CANCELLED'], [], 'ProjectMilestone'],
 			[42, 1318, 'parentid', 'vtiger_projectmilestone', 1, 10, 'parentid', 'FL_PARENT_PROJECT_MILESTONE', 1, 2, '', 100, 13, 104, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '', null, 'int(10)', 'LBL_PROJECT_MILESTONE_INFORMATION', [], ['ProjectMilestone'], 'ProjectMilestone'],
@@ -1102,8 +1103,20 @@ class YetiForceUpdate
 			if (!$moduleId || $isExists) {
 				continue;
 			}
-			\App\Cache::delete('BlockInstance', $field[25]);
+			$cacheName = $field[25] . '|';
+			$cacheName1 = $cacheName . $moduleId;
+			\App\Cache::delete('BlockInstance', $cacheName);
+			\App\Cache::delete('BlockInstance', $cacheName1);
 			$blockInstance = \vtlib\Block::getInstance($field[25], $field[28]);
+			if (!$blockInstance && $field[28] === 'FCorectingInvoice') {
+				$module = \Vtiger_Module_Model::getInstance($field[28]);
+				$blockInstance = new \vtlib\Block();
+				$blockInstance->label = 'LBL_COMMENTS';
+				$module->addBlock($blockInstance);
+				\App\Cache::delete('BlockInstance', $cacheName);
+				\App\Cache::delete('BlockInstance', $cacheName1);
+				$blockInstance = \vtlib\Block::getInstance($field[25], $field[28]);
+			}
 			if (!$blockInstance && !($blockInstance = reset(Vtiger_Module_Model::getInstance($field[28])->getBlocks()))) {
 				\App\Log::error("No block found ({$field[25]}) to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
 				$this->log("[ERROR] No block found to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
@@ -1151,71 +1164,73 @@ class YetiForceUpdate
 	{
 		return [
 			['name' => 'config/config.inc.php', 'conditions' => [
-				['type' => 'remove', 'search' => 'more than 8MB memory needed for graphics'],
-				['type' => 'remove', 'search' => 'memory limit default value = 64M'],
-				['type' => 'remove', 'search' => "AppConfig::iniSet('memory_limit', '512M')"],
-				['type' => 'remove', 'search' => 'lifetime of session'],
-				['type' => 'remove', 'search' => "AppConfig::iniSet('session.gc_maxlifetime', '21600')"],
-			],
+					['type' => 'remove', 'search' => 'more than 8MB memory needed for graphics'],
+					['type' => 'remove', 'search' => 'memory limit default value = 64M'],
+					['type' => 'remove', 'search' => "AppConfig::iniSet('memory_limit', '512M')"],
+					['type' => 'remove', 'search' => 'lifetime of session'],
+					['type' => 'remove', 'search' => "AppConfig::iniSet('session.gc_maxlifetime', '21600')"],
+					['type' => 'remove', 'search' => 'Master currency name'],
+					['type' => 'remove', 'search' => 'currency_name']
+				],
 			],
 			['name' => 'config/modules/HelpDesk.php', 'conditions' => [
-				['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
-				['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
-			]
+					['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
+					['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
+				]
 			],
 			['name' => 'config/modules/SSalesProcesses.php', 'conditions' => [
-				['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
-				['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
-			]
+					['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
+					['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
+				]
 			],
 			['name' => 'config/performance.php', 'conditions' => [
-				['type' => 'remove', 'search' => 'Turn-off default sorting in ListView, could eat up time as data grows'],
-				['type' => 'remove', 'search' => 'LISTVIEW_DEFAULT_SORTING'],
-				['type' => 'remove', 'search' => 'LOAD_CUSTOM_LANGUAGE'],
-				['type' => 'remove', 'search' => 'View MultiImage as icon or names'],
-				['type' => 'remove', 'search' => 'ICON_MULTIIMAGE_VIEW'],
-				['type' => 'add', 'search' => 'CRON_MAX_ATACHMENTS_DELETE', 'checkInContents' => 'defaultDetailViewName', 'addingType' => 'after', 'value' => "	// Time to execute batch methods [min].
+					['type' => 'remove', 'search' => 'Turn-off default sorting in ListView, could eat up time as data grows'],
+					['type' => 'remove', 'search' => 'LISTVIEW_DEFAULT_SORTING'],
+					['type' => 'remove', 'search' => 'LOAD_CUSTOM_LANGUAGE'],
+					['type' => 'remove', 'search' => 'View MultiImage as icon or names'],
+					['type' => 'remove', 'search' => 'ICON_MULTIIMAGE_VIEW'],
+					['type' => 'add', 'search' => 'CRON_MAX_ATACHMENTS_DELETE', 'checkInContents' => 'defaultDetailViewName', 'addingType' => 'after', 'value' => "	// Time to execute batch methods [min].
 	'CRON_BATCH_METHODS_LIMIT' => 15,
 "],
-				['type' => 'update', 'search' => 'vendor/yetiforce/Session', 'replace' => ['vendor/yetiforce/Session', 'app/Session']],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHANGE_LOCALE', 'addingType' => 'before', 'value' => "	//Change the locale for sort the data
+					['type' => 'update', 'search' => 'vendor/yetiforce/Session', 'replace' => ['vendor/yetiforce/Session', 'app/Session']],
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHANGE_LOCALE', 'addingType' => 'before', 'value' => "	//Change the locale for sort the data
 	'CHANGE_LOCALE' => true,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'ACCESS_TO_INTERNET', 'addingType' => 'before', 'value' => "	//Can CRM have access to the Internet?
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'ACCESS_TO_INTERNET', 'addingType' => 'before', 'value' => "	//Can CRM have access to the Internet?
 	'ACCESS_TO_INTERNET' => true,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_MERGE_RECORDS', 'addingType' => 'before', 'value' => "	// Maximum number of merged records
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_MERGE_RECORDS', 'addingType' => 'before', 'value' => "	// Maximum number of merged records
 	'MAX_MERGE_RECORDS' => 4,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_ADDITIONAL_FILTERS_LIMIT', 'addingType' => 'before', 'value' => "	//Additional filters limit for ChartFilter's
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_ADDITIONAL_FILTERS_LIMIT', 'addingType' => 'before', 'value' => "	//Additional filters limit for ChartFilter's
 	'CHART_ADDITIONAL_FILTERS_LIMIT'=>6,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_MULTI_FILTER_STR_LEN', 'addingType' => 'before', 'value' => "	//Charts multi filter maximum db value length
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_MULTI_FILTER_STR_LEN', 'addingType' => 'before', 'value' => "	//Charts multi filter maximum db value length
 	'CHART_MULTI_FILTER_STR_LEN' => 50,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_MULTI_FILTER_LIMIT', 'addingType' => 'before', 'value' => "	//Charts multi filter limit
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'CHART_MULTI_FILTER_LIMIT', 'addingType' => 'before', 'value' => "	//Charts multi filter limit
 	'CHART_MULTI_FILTER_LIMIT' => 5,
 "]
-			]
+				]
 			],
 			['name' => 'config/modules/Accounts.php', 'conditions' => [
-				['type' => 'update', 'search' => 'Hide summary products services bookmark', 'replace' => ['Hide summary products services bookmark', 'Show summary products services bookmark']],
-				['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
-				['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
-				['type' => 'update', 'search' => 'Default module view. Values: List, ListPreview or DashBoard', 'checkInLine' => 'refresh menu files after you change this value', 'replace' => ['Default module view. Values: List, ListPreview or DashBoard', 'Default module view. Values: List, ListPreview or DashBoard, refresh menu files after you change this value']],
-			]
+					['type' => 'update', 'search' => 'Hide summary products services bookmark', 'replace' => ['Hide summary products services bookmark', 'Show summary products services bookmark']],
+					['type' => 'update', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'replace' => ['HIDE_SUMMARY_PRODUCTS_SERVICES', 'SHOW_SUMMARY_PRODUCTS_SERVICES']],
+					['type' => 'update', 'search' => "'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", 'replace' => ["'HIDE_SUMMARY_PRODUCTS_SERVICES' => false", "'SHOW_SUMMARY_PRODUCTS_SERVICES' => true"]],
+					['type' => 'update', 'search' => 'Default module view. Values: List, ListPreview or DashBoard', 'checkInLine' => 'refresh menu files after you change this value', 'replace' => ['Default module view. Values: List, ListPreview or DashBoard', 'Default module view. Values: List, ListPreview or DashBoard, refresh menu files after you change this value']],
+				]
 			],
 			['name' => 'config/search.php', 'conditions' => [
-				['type' => 'update', 'search' => 'Global search - Show operator', 'value' => '	// Global search - Show operator list.
+					['type' => 'update', 'search' => 'Global search - Show operator', 'value' => '	// Global search - Show operator list.
 '],
-				['type' => 'update', 'search' => "'GLOBAL_SEARCH_OPERATOR'", 'replace' => ["'GLOBAL_SEARCH_OPERATOR'", "'GLOBAL_SEARCH_OPERATOR_SELECT'"]],
-				['type' => 'add', 'search' => 'GLOBAL_SEARCH_OPERATOR', 'checkInContents' => 'GLOBAL_SEARCH_DEFAULT_OPERATOR', 'addingType' => 'after', 'value' => "	// Global search - Default search operator. (FulltextBegin,FulltextWord,Contain,Begin,End)
+					['type' => 'update', 'search' => "'GLOBAL_SEARCH_OPERATOR'", 'replace' => ["'GLOBAL_SEARCH_OPERATOR'", "'GLOBAL_SEARCH_OPERATOR_SELECT'"]],
+					['type' => 'add', 'search' => 'GLOBAL_SEARCH_OPERATOR', 'checkInContents' => 'GLOBAL_SEARCH_DEFAULT_OPERATOR', 'addingType' => 'after', 'value' => "	// Global search - Default search operator. (FulltextBegin,FulltextWord,Contain,Begin,End)
 	'GLOBAL_SEARCH_DEFAULT_OPERATOR' => 'FulltextBegin',
 "],
-			]
+				]
 			],
 			['name' => 'config/security.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'USER_AUTHY_MODE', 'addingType' => 'before', 'value' => "	/**
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'USER_AUTHY_MODE', 'addingType' => 'before', 'value' => "	/**
 	 * User authentication mode possible values:
 	 * TOTP_OFF - 2FA TOTP is checking off
 	 * TOTP_OPTIONAL - It is defined by the user
@@ -1228,21 +1243,21 @@ class YetiForceUpdate
 	 */
 	'USER_AUTHY_TOTP_EXCEPTIONS' => [],
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_LIFETIME_SESSION', 'addingType' => 'before', 'value' => "	// Lifetime session (in seconds)
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'MAX_LIFETIME_SESSION', 'addingType' => 'before', 'value' => "	// Lifetime session (in seconds)
 	'MAX_LIFETIME_SESSION' => 21600,
 "],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'PURIFIER_ALLOWED_DOMAINS', 'addingType' => 'before', 'value' => "	// List of allowed domains for fields with HTML support
+					['type' => 'add', 'search' => '];', 'checkInContents' => 'PURIFIER_ALLOWED_DOMAINS', 'addingType' => 'before', 'value' => "	// List of allowed domains for fields with HTML support
 	'PURIFIER_ALLOWED_DOMAINS' => [],
 "],
-			]
+				]
 			],
 			['name' => 'config/debug.php', 'conditions' => [
-				['type' => 'add', 'search' => 'SMARTY_ERROR_REPORTING', 'checkInContents' => 'JS_DEBUG', 'addingType' => 'after', 'value' => "	/* +***************************************************************
+					['type' => 'add', 'search' => 'SMARTY_ERROR_REPORTING', 'checkInContents' => 'JS_DEBUG', 'addingType' => 'after', 'value' => "	/* +***************************************************************
 	 * 	JavaScript
 	 * ************************************************************** */
 	'JS_DEBUG' => true,
 "],
-			]
+				]
 			],
 		];
 	}
