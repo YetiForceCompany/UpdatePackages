@@ -541,6 +541,7 @@ class PackageImport extends PackageExport
 					}
 				}
 			} else {
+				Functions::recurseDelete('cache/updates');
 				$this->initImport($zipfile, $overwrite);
 				// Call module import function
 				$this->importModule();
@@ -1022,6 +1023,8 @@ class PackageImport extends PackageExport
 		}
 		Functions::recurseDelete($dirName);
 		register_shutdown_function(function () {
+			$viewer = \Vtiger_Viewer::getInstance();
+			$viewer->clearAllCache();
 			Functions::recurseDelete('cache/templates_c');
 		});
 		\App\Module::createModuleMetaFile();
