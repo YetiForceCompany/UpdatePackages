@@ -545,10 +545,16 @@ class PackageImport extends PackageExport
 					}
 				}
 			} else {
-				Functions::recurseDelete('cache/updates');
-				$this->initImport($zipfile, $overwrite);
-				// Call module import function
-				$this->importModule();
+				if ((string) $this->_modulexml->type === 'update') {
+					Functions::recurseDelete('cache/updates');
+					$zip = \App\Zip::openFile($zipfile, ['checkFiles' => false]);
+					$zip->extract('cache/updates');
+					$this->importUpdate();
+				} else {
+					$this->initImport($zipfile, $overwrite);
+					// Call module import function
+					$this->importModule();
+				}
 			}
 		}
 	}
@@ -586,26 +592,21 @@ class PackageImport extends PackageExport
 		$moduleInstance->minversion = (!$vtigerMinVersion) ? false : $vtigerMinVersion;
 		$moduleInstance->maxversion = (!$vtigerMaxVersion) ? false : $vtigerMaxVersion;
 		$moduleInstance->type = $moduleType;
+		$moduleInstance->save();
+		$moduleInstance->initWebservice();
+		$this->moduleInstance = $moduleInstance;
 
-		if ($this->packageType != 'update') {
-			$moduleInstance->save();
-			$moduleInstance->initWebservice();
-			$this->moduleInstance = $moduleInstance;
-
-			$this->importTables($this->_modulexml);
-			$this->importBlocks($this->_modulexml, $moduleInstance);
-			$this->importInventory();
-			$this->importCustomViews($this->_modulexml, $moduleInstance);
-			$this->importSharingAccess($this->_modulexml, $moduleInstance);
-			$this->importEvents($this->_modulexml, $moduleInstance);
-			$this->importActions($this->_modulexml, $moduleInstance);
-			$this->importRelatedLists($this->_modulexml, $moduleInstance);
-			$this->importCustomLinks($this->_modulexml, $moduleInstance);
-			$this->importCronTasks($this->_modulexml);
-			Module::fireEvent($moduleInstance->name, Module::EVENT_MODULE_POSTINSTALL);
-		} else {
-			$this->importUpdate($this->_modulexml);
-		}
+		$this->importTables($this->_modulexml);
+		$this->importBlocks($this->_modulexml, $moduleInstance);
+		$this->importInventory();
+		$this->importCustomViews($this->_modulexml, $moduleInstance);
+		$this->importSharingAccess($this->_modulexml, $moduleInstance);
+		$this->importEvents($this->_modulexml, $moduleInstance);
+		$this->importActions($this->_modulexml, $moduleInstance);
+		$this->importRelatedLists($this->_modulexml, $moduleInstance);
+		$this->importCustomLinks($this->_modulexml, $moduleInstance);
+		$this->importCronTasks($this->_modulexml);
+		Module::fireEvent($moduleInstance->name, Module::EVENT_MODULE_POSTINSTALL);
 	}
 
 	/**
@@ -978,9 +979,9 @@ class PackageImport extends PackageExport
 		}
 	}
 
-	public function importUpdate($modulenode)
+	public function importUpdate()
 	{
-		$dirName = 'cache/updates';
+		$dirName = 'cache/updates/updates';
 		$result = false;
 		$adb = \PearDatabase::getInstance();
 		ob_start();
@@ -988,7 +989,7 @@ class PackageImport extends PackageExport
 			require_once $dirName . '/init.php';
 			$adb->query('SET FOREIGN_KEY_CHECKS = 0;');
 
-			$updateInstance = new \YetiForceUpdate($modulenode);
+			$updateInstance = new \YetiForceUpdate($this->_modulexml);
 			$updateInstance->package = $this;
 			$result = $updateInstance->preupdate();
 			file_put_contents('cache/logs/update.log', ob_get_clean(), FILE_APPEND);
@@ -1019,14 +1020,14 @@ class PackageImport extends PackageExport
 		}
 		$adb->insert('yetiforce_updates', [
 			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
-			'name' => $modulenode->label,
-			'from_version' => $modulenode->from_version,
-			'to_version' => $modulenode->to_version,
+			'name' => (string) $this->_modulexml->label,
+			'from_version' => (string) $this->_modulexml->from_version,
+			'to_version' => (string) $this->_modulexml->to_version,
 			'result' => $result,
 			'time' => date('Y-m-d H:i:s')
 		]);
 		if ($result) {
-			$adb->update('vtiger_version', ['current_version' => $modulenode->to_version]);
+			$adb->update('vtiger_version', ['current_version' => (string) $this->_modulexml->to_version]);
 		}
 		Functions::recurseDelete($dirName);
 		register_shutdown_function(function () {
