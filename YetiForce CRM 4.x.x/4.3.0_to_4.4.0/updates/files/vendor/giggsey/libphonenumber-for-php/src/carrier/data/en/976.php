@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   97680 => 'Unitel',
   976830 => 'G-Mobile',
   976831 => 'G-Mobile',
@@ -27,4 +27,4 @@ return [
   97697 => 'G-Mobile',
   97698 => 'G-Mobile',
   97699 => 'Mobicom',
-];
+);

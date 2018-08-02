@@ -9,23 +9,23 @@
  * file that was distributed with this source code.
  */
 
-return [
-	'year' => ':count il',
-	'y' => ':count il',
-	'month' => ':count ay',
-	'm' => ':count ay',
-	'week' => ':count həftə',
-	'w' => ':count həftə',
-	'day' => ':count gün',
-	'd' => ':count gün',
-	'hour' => ':count saat',
-	'h' => ':count saat',
-	'minute' => ':count dəqiqə',
-	'min' => ':count dəqiqə',
-	'second' => ':count saniyə',
-	's' => ':count saniyə',
-	'ago' => ':time əvvəl',
-	'from_now' => ':time sonra',
-	'after' => ':time sonra',
-	'before' => ':time əvvəl',
-];
+return array(
+    'year' => ':count il',
+    'y' => ':count il',
+    'month' => ':count ay',
+    'm' => ':count ay',
+    'week' => ':count həftə',
+    'w' => ':count həftə',
+    'day' => ':count gün',
+    'd' => ':count gün',
+    'hour' => ':count saat',
+    'h' => ':count saat',
+    'minute' => ':count dəqiqə',
+    'min' => ':count dəqiqə',
+    'second' => ':count saniyə',
+    's' => ':count saniyə',
+    'ago' => ':time əvvəl',
+    'from_now' => ':time sonra',
+    'after' => ':time sonra',
+    'before' => ':time əvvəl',
+);

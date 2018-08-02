@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   24033004 => 'Bioko',
   24033006 => 'Continental Region',
   24033014 => 'Bioko',
@@ -541,4 +541,4 @@ return [
   24035997 => 'Centro-Sur/Kié-Ntem/Wele-Nzás',
   24035998 => 'Litoral/Annobón',
   24035999 => 'Bioko',
-];
+);

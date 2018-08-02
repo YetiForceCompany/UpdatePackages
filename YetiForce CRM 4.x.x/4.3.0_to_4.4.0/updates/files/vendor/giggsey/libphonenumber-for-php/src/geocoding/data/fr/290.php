@@ -10,9 +10,9 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   29023 => 'Sainte-Hélène',
   29024 => 'Sainte-Hélène',
   29026 => 'Sainte-Hélène',
   29027 => 'Sainte-Hélène',
-];
+);

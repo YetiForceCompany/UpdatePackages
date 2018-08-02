@@ -11,7 +11,8 @@ namespace Sabre\Event;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class EventEmitter implements EventEmitterInterface
-{
-	use EventEmitterTrait;
+class EventEmitter implements EventEmitterInterface {
+
+    use EventEmitterTrait;
+
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   29931 => 'Nuuk',
   29932 => 'Nuuk',
   29933 => 'Nuuk',
@@ -36,4 +36,4 @@ return [
   29997 => 'Qaanaaq',
   29998 => 'Tasiilaq',
   29999 => 'Ittoqqortoormiit',
-];
+);

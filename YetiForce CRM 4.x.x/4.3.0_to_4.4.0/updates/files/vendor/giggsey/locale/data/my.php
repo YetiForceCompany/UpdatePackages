@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'အဆန်းရှင်းကျွန်း',
   'AD' => 'အန်ဒိုရာ',
   'AE' => 'ယူအေအီး',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'တောင်အာဖရိက',
   'ZM' => 'ဇမ်ဘီယာ',
   'ZW' => 'ဇင်ဘာဘွေ',
-];
+);

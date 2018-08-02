@@ -10,7 +10,7 @@
 namespace Recurr;
 
 /**
- * The base Recurr exception class.
+ * The base Recurr exception class
  */
 class Exception extends \Exception
 {

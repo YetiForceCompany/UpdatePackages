@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   35221 => 'Weicherdange',
   35222 => 'Luxembourg City',
   35223 => 'Mondorf-les-Bains/Bascharage/Noerdange/Remich',
@@ -224,4 +224,4 @@ return [
   35295 => 'Wiltz',
   35297 => 'Huldange',
   35299 => 'Troisvierges',
-];
+);

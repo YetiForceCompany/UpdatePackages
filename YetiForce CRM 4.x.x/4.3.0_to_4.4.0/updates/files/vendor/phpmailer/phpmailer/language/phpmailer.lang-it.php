@@ -1,10 +1,11 @@
 <?php
 /**
- * Italian PHPMailer language file: refer to English translation for definitive list.
- *
+ * Italian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Ilias Bartolini <brain79@inwind.it>
  * @author Stefano Sabatini <sabas88@gmail.com>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'SMTP Error: Impossibile autenticarsi.';
 $PHPMAILER_LANG['connect_host']         = 'SMTP Error: Impossibile connettersi all\'host SMTP.';
 $PHPMAILER_LANG['data_not_accepted']    = 'SMTP Error: Dati non accettati dal server.';

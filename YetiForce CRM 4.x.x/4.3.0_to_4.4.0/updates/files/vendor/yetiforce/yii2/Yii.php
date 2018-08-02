@@ -1,10 +1,10 @@
 <?php
 /**
  * @link http://www.yiiframework.com/
- *
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
+
 require __DIR__ . '/BaseYii.php';
 
 /**
@@ -14,7 +14,6 @@ require __DIR__ . '/BaseYii.php';
  * By writing your own Yii class, you can customize some functionalities of [[\yii\BaseYii]].
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- *
  * @since 2.0
  */
 class Yii extends \yii\BaseYii

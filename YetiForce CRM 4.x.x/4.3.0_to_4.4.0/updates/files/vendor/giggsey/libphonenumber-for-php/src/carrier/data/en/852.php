@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   8524600 => 'China Mobile',
   8524601 => 'China Mobile',
   8524602 => 'China Mobile',
@@ -337,4 +337,4 @@ return [
   852986 => 'SmarTone',
   852987 => 'HKT',
   852988 => 'HKT',
-];
+);

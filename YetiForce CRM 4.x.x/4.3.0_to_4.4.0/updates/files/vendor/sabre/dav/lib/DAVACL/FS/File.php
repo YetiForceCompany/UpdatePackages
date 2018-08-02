@@ -13,64 +13,68 @@ use Sabre\DAVACL\IACL;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class File extends BaseFile implements IACL
-{
-	use ACLTrait;
+class File extends BaseFile implements IACL {
 
-	/**
-	 * A list of ACL rules.
-	 *
-	 * @var array
-	 */
-	protected $acl;
+    use ACLTrait;
 
-	/**
-	 * Owner uri, or null for no owner.
-	 *
-	 * @var string|null
-	 */
-	protected $owner;
+    /**
+     * A list of ACL rules.
+     *
+     * @var array
+     */
+    protected $acl;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string      $path  on-disk path.
-	 * @param array       $acl   ACL rules.
-	 * @param string|null $owner principal owner string.
-	 */
-	public function __construct($path, array $acl, $owner = null)
-	{
-		parent::__construct($path);
-		$this->acl = $acl;
-		$this->owner = $owner;
-	}
+    /**
+     * Owner uri, or null for no owner.
+     *
+     * @var string|null
+     */
+    protected $owner;
 
-	/**
-	 * Returns the owner principal.
-	 *
-	 * This must be a url to a principal, or null if there's no owner
-	 *
-	 * @return string|null
-	 */
-	public function getOwner()
-	{
-		return $this->owner;
-	}
+    /**
+     * Constructor
+     *
+     * @param string $path on-disk path.
+     * @param array $acl ACL rules.
+     * @param string|null $owner principal owner string.
+     */
+    function __construct($path, array $acl, $owner = null) {
 
-	/**
-	 * Returns a list of ACE's for this node.
-	 *
-	 * Each ACE has the following properties:
-	 *   * 'privilege', a string such as {DAV:}read or {DAV:}write. These are
-	 *     currently the only supported privileges
-	 *   * 'principal', a url to the principal who owns the node
-	 *   * 'protected' (optional), indicating that this ACE is not allowed to
-	 *      be updated.
-	 *
-	 * @return array
-	 */
-	public function getACL()
-	{
-		return $this->acl;
-	}
+        parent::__construct($path);
+        $this->acl = $acl;
+        $this->owner = $owner;
+
+    }
+
+    /**
+     * Returns the owner principal
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+    function getOwner() {
+
+        return $this->owner;
+
+    }
+
+    /**
+     * Returns a list of ACE's for this node.
+     *
+     * Each ACE has the following properties:
+     *   * 'privilege', a string such as {DAV:}read or {DAV:}write. These are
+     *     currently the only supported privileges
+     *   * 'principal', a url to the principal who owns the node
+     *   * 'protected' (optional), indicating that this ACE is not allowed to
+     *      be updated.
+     *
+     * @return array
+     */
+    function getACL() {
+
+        return $this->acl;
+
+    }
+
 }

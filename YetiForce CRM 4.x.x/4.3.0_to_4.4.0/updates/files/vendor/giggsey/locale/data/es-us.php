@@ -9,8 +9,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BA' => 'Bosnia-Herzegovina',
   'IC' => 'Islas Canarias',
   'TA' => 'Tristán da Cunha',
-];
+);

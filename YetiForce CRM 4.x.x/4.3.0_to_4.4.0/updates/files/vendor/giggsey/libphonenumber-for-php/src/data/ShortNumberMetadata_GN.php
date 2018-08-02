@@ -10,76 +10,103 @@
  * Do not modify this file directly!
  */
 
-return [
-  'generalDesc' => [
-	'NationalNumberPattern' => '4\\d{4}',
-	'PossibleLength' => [
-	  0 => 5,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'tollFree' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'premiumRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'emergency' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'shortCode' => [
-	'NationalNumberPattern' => '40404',
-	'ExampleNumber' => '40404',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'standardRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'carrierSpecific' => [
-	'NationalNumberPattern' => '40404',
-	'ExampleNumber' => '40404',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'smsServices' => [
-	'NationalNumberPattern' => '40404',
-	'ExampleNumber' => '40404',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
+
+return array (
+  'generalDesc' => 
+  array (
+    'NationalNumberPattern' => '4\\d{4}',
+    'PossibleLength' => 
+    array (
+      0 => 5,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'tollFree' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'premiumRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'emergency' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'shortCode' => 
+  array (
+    'NationalNumberPattern' => '40404',
+    'ExampleNumber' => '40404',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'standardRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'carrierSpecific' => 
+  array (
+    'NationalNumberPattern' => '40404',
+    'ExampleNumber' => '40404',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'smsServices' => 
+  array (
+    'NationalNumberPattern' => '40404',
+    'ExampleNumber' => '40404',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
   'id' => 'GN',
   'countryCode' => 0,
   'internationalPrefix' => '',
   'sameMobileAndFixedLinePattern' => false,
-  'numberFormat' => [
-  ],
-  'intlNumberFormat' => [
-  ],
+  'numberFormat' => 
+  array (
+  ),
+  'intlNumberFormat' => 
+  array (
+  ),
   'mainCountryForCode' => false,
   'leadingZeroPossible' => false,
   'mobileNumberPortableRegion' => false,
-];
+);

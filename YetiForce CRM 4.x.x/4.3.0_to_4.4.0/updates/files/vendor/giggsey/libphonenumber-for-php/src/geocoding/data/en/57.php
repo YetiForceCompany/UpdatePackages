@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5712 => 'Bogotá',
   5713 => 'Bogotá',
   5714 => 'Bogotá',
@@ -179,4 +179,4 @@ return [
   57866 => 'Villavicencio',
   57886 => 'Neiva',
   57887 => 'Neiva',
-];
+);

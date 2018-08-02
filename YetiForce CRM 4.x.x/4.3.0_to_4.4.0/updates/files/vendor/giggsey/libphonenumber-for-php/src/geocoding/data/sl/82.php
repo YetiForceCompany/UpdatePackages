@@ -10,6 +10,6 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Seul',
-];
+);

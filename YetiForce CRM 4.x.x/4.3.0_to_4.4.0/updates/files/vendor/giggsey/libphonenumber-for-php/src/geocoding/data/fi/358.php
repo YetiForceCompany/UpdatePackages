@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   35813 => 'Pohjois-Karjala',
   35814 => 'Keski-Suomi',
   35815 => 'Mikkeli',
@@ -65,4 +65,4 @@ return [
   35896 => 'Helsinki',
   35897 => 'Helsinki',
   35898 => 'Helsinki',
-];
+);

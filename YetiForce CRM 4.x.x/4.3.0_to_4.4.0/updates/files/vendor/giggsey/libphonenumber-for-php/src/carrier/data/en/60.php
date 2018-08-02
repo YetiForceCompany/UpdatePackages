@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   60102 => 'DiGi',
   601030 => 'Celcom',
   601031 => 'Celcom',
@@ -354,4 +354,4 @@ return [
   601897 => 'U Mobile',
   601898 => 'U Mobile',
   6019 => 'Celcom',
-];
+);

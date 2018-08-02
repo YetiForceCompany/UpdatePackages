@@ -5,11 +5,11 @@
 $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
-return [
-	'SensioLabs\\Security' => [$vendorDir . '/sensiolabs/security-checker'],
-	'Requests' => [$vendorDir . '/rmccue/requests/library'],
-	'Milon\\Barcode' => [$vendorDir . '/milon/barcode/src'],
-	'HTMLPurifier' => [$vendorDir . '/ezyang/htmlpurifier/library'],
-	'Doctrine\\Common\\Collections\\' => [$vendorDir . '/doctrine/collections/lib'],
-	'' => [$vendorDir . '/kzykhys/php-csv-parser/src'],
-];
+return array(
+    'SensioLabs\\Security' => array($vendorDir . '/sensiolabs/security-checker'),
+    'Requests' => array($vendorDir . '/rmccue/requests/library'),
+    'Milon\\Barcode' => array($vendorDir . '/milon/barcode/src'),
+    'HTMLPurifier' => array($vendorDir . '/ezyang/htmlpurifier/library'),
+    'Doctrine\\Common\\Collections\\' => array($vendorDir . '/doctrine/collections/lib'),
+    '' => array($vendorDir . '/kzykhys/php-csv-parser/src'),
+);

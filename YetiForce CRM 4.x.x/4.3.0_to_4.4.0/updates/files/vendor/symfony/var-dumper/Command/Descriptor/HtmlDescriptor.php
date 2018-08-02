@@ -24,53 +24,53 @@ use Symfony\Component\VarDumper\Dumper\HtmlDumper;
  */
 class HtmlDescriptor implements DumpDescriptorInterface
 {
-	private $dumper;
-	private $initialized = false;
+    private $dumper;
+    private $initialized = false;
 
-	public function __construct(HtmlDumper $dumper)
-	{
-		$this->dumper = $dumper;
-	}
+    public function __construct(HtmlDumper $dumper)
+    {
+        $this->dumper = $dumper;
+    }
 
-	public function describe(OutputInterface $output, Data $data, array $context, int $clientId): void
-	{
-		if (!$this->initialized) {
-			$styles = file_get_contents(__DIR__ . '/../../Resources/css/htmlDescriptor.css');
-			$scripts = file_get_contents(__DIR__ . '/../../Resources/js/htmlDescriptor.js');
-			$output->writeln("<style>$styles</style><script>$scripts</script>");
-			$this->initialized = true;
-		}
+    public function describe(OutputInterface $output, Data $data, array $context, int $clientId): void
+    {
+        if (!$this->initialized) {
+            $styles = file_get_contents(__DIR__.'/../../Resources/css/htmlDescriptor.css');
+            $scripts = file_get_contents(__DIR__.'/../../Resources/js/htmlDescriptor.js');
+            $output->writeln("<style>$styles</style><script>$scripts</script>");
+            $this->initialized = true;
+        }
 
-		$title = '-';
-		if (isset($context['request'])) {
-			$request = $context['request'];
-			$controller = "<span class='dumped-tag'>{$this->dumper->dump($request['controller'], true, ['maxDepth' => 0])}</span>";
-			$title = sprintf('<code>%s</code> <a href="%s">%s</a>', $request['method'], $uri = $request['uri'], $uri);
-			$dedupIdentifier = $request['identifier'];
-		} elseif (isset($context['cli'])) {
-			$title = '<code>$ </code>' . $context['cli']['command_line'];
-			$dedupIdentifier = $context['cli']['identifier'];
-		} else {
-			$dedupIdentifier = uniqid('', true);
-		}
+        $title = '-';
+        if (isset($context['request'])) {
+            $request = $context['request'];
+            $controller = "<span class='dumped-tag'>{$this->dumper->dump($request['controller'], true, array('maxDepth' => 0))}</span>";
+            $title = sprintf('<code>%s</code> <a href="%s">%s</a>', $request['method'], $uri = $request['uri'], $uri);
+            $dedupIdentifier = $request['identifier'];
+        } elseif (isset($context['cli'])) {
+            $title = '<code>$ </code>'.$context['cli']['command_line'];
+            $dedupIdentifier = $context['cli']['identifier'];
+        } else {
+            $dedupIdentifier = uniqid('', true);
+        }
 
-		$sourceDescription = '';
-		if (isset($context['source'])) {
-			$source = $context['source'];
-			$projectDir = $source['project_dir'];
-			$sourceDescription = sprintf('%s on line %d', $source['name'], $source['line']);
-			if (isset($source['file_link'])) {
-				$sourceDescription = sprintf('<a href="%s">%s</a>', $source['file_link'], $sourceDescription);
-			}
-		}
+        $sourceDescription = '';
+        if (isset($context['source'])) {
+            $source = $context['source'];
+            $projectDir = $source['project_dir'];
+            $sourceDescription = sprintf('%s on line %d', $source['name'], $source['line']);
+            if (isset($source['file_link'])) {
+                $sourceDescription = sprintf('<a href="%s">%s</a>', $source['file_link'], $sourceDescription);
+            }
+        }
 
-		$isoDate = $this->extractDate($context, 'c');
-		$tags = array_filter([
-			'controller' => $controller ?? null,
-			'project dir' => $projectDir ?? null,
-		]);
+        $isoDate = $this->extractDate($context, 'c');
+        $tags = array_filter(array(
+            'controller' => $controller ?? null,
+            'project dir' => $projectDir ?? null,
+        ));
 
-		$output->writeln(<<<HTML
+        $output->writeln(<<<HTML
 <article data-dedup-id="$dedupIdentifier">
     <header>
         <div class="row">
@@ -89,31 +89,31 @@ class HtmlDescriptor implements DumpDescriptorInterface
     </section>
 </article>
 HTML
-		);
-	}
+        );
+    }
 
-	private function extractDate(array $context, string $format = 'r'): string
-	{
-		return date($format, $context['timestamp']);
-	}
+    private function extractDate(array $context, string $format = 'r'): string
+    {
+        return date($format, $context['timestamp']);
+    }
 
-	private function renderTags(array $tags): string
-	{
-		if (!$tags) {
-			return '';
-		}
+    private function renderTags(array $tags): string
+    {
+        if (!$tags) {
+            return '';
+        }
 
-		$renderedTags = '';
-		foreach ($tags as $key => $value) {
-			$renderedTags .= sprintf('<li><span class="badge">%s</span>%s</li>', $key, $value);
-		}
+        $renderedTags = '';
+        foreach ($tags as $key => $value) {
+            $renderedTags .= sprintf('<li><span class="badge">%s</span>%s</li>', $key, $value);
+        }
 
-		return <<<HTML
+        return <<<HTML
 <div class="row">
     <ul class="tags">
         $renderedTags
     </ul>
 </div>
 HTML;
-	}
+    }
 }

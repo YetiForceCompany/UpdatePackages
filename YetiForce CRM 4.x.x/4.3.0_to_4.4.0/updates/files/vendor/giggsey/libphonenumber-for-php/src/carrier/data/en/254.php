@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   25470 => 'Safaricom',
   25471 => 'Safaricom',
   25472 => 'Safaricom',
@@ -42,4 +42,4 @@ return [
   25477 => 'Telkom',
   25478 => 'Airtel',
   25479 => 'Safaricom',
-];
+);

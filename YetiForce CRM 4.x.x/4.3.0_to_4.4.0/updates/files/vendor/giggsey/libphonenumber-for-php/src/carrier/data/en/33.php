@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   336001 => 'Orange France',
   336002 => 'SFR',
   336003 => 'Bouygues',
@@ -69,4 +69,4 @@ return [
   33696 => 'Bouygues',
   33698 => 'Bouygues',
   33699 => 'Bouygues',
-];
+);

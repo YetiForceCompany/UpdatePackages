@@ -10,28 +10,28 @@ use Symfony\Component\Console\Exception\CommandNotFoundException;
  */
 interface CommandLoaderInterface
 {
-	/**
-	 * Loads a command.
-	 *
-	 * @param string $name
-	 *
-	 * @throws CommandNotFoundException
-	 *
-	 * @return Command
-	 */
-	public function get($name);
+    /**
+     * Loads a command.
+     *
+     * @param string $name
+     *
+     * @return Command
+     *
+     * @throws CommandNotFoundException
+     */
+    public function get($name);
 
-	/**
-	 * Checks if a command exists.
-	 *
-	 * @param string $name
-	 *
-	 * @return bool
-	 */
-	public function has($name);
+    /**
+     * Checks if a command exists.
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function has($name);
 
-	/**
-	 * @return string[] All registered command names
-	 */
-	public function getNames();
+    /**
+     * @return string[] All registered command names
+     */
+    public function getNames();
 }

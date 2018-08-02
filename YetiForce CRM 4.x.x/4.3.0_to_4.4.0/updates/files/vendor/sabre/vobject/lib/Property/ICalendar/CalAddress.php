@@ -3,7 +3,7 @@
 namespace Sabre\VObject\Property\ICalendar;
 
 use
-	Sabre\VObject\Property\Text;
+    Sabre\VObject\Property\Text;
 
 /**
  * CalAddress property.
@@ -14,46 +14,48 @@ use
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class CalAddress extends Text
-{
-	/**
-	 * In case this is a multi-value property. This string will be used as a
-	 * delimiter.
-	 *
-	 * @var string|null
-	 */
-	public $delimiter;
+class CalAddress extends Text {
 
-	/**
-	 * Returns the type of value.
-	 *
-	 * This corresponds to the VALUE= parameter. Every property also has a
-	 * 'default' valueType.
-	 *
-	 * @return string
-	 */
-	public function getValueType()
-	{
-		return 'CAL-ADDRESS';
-	}
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string|null
+     */
+    public $delimiter = null;
 
-	/**
-	 * This returns a normalized form of the value.
-	 *
-	 * This is primarily used right now to turn mixed-cased schemes in user
-	 * uris to lower-case.
-	 *
-	 * Evolution in particular tends to encode mailto: as MAILTO:.
-	 *
-	 * @return string
-	 */
-	public function getNormalizedValue()
-	{
-		$input = $this->getValue();
-		if (!strpos($input, ':')) {
-			return $input;
-		}
-		list($schema, $everythingElse) = explode(':', $input, 2);
-		return strtolower($schema) . ':' . $everythingElse;
-	}
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    function getValueType() {
+
+        return 'CAL-ADDRESS';
+
+    }
+
+    /**
+     * This returns a normalized form of the value.
+     *
+     * This is primarily used right now to turn mixed-cased schemes in user
+     * uris to lower-case.
+     *
+     * Evolution in particular tends to encode mailto: as MAILTO:.
+     *
+     * @return string
+     */
+    function getNormalizedValue() {
+
+        $input = $this->getValue();
+        if (!strpos($input, ':')) {
+            return $input;
+        }
+        list($schema, $everythingElse) = explode(':', $input, 2);
+        return strtolower($schema) . ':' . $everythingElse;
+
+    }
 }

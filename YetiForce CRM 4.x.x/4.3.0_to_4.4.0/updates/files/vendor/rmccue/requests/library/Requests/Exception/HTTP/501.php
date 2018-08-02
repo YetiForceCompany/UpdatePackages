@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 501 Not Implemented responses.
+ * Exception for 501 Not Implemented responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 501 Not Implemented responses.
+ * Exception for 501 Not Implemented responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_501 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_501 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 501;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

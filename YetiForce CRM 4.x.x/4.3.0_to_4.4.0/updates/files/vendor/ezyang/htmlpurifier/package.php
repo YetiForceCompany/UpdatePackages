@@ -5,31 +5,31 @@ set_time_limit(0);
 require_once 'PEAR/PackageFileManager2.php';
 require_once 'PEAR/PackageFileManager/File.php';
 PEAR::setErrorHandling(PEAR_ERROR_PRINT);
-$pkg = new PEAR_PackageFileManager2();
+$pkg = new PEAR_PackageFileManager2;
 
 $pkg->setOptions(
-	[
-		'baseinstalldir' => '/',
-		'packagefile' => 'package.xml',
-		'packagedirectory' => realpath(dirname(__FILE__) . '/library'),
-		'filelistgenerator' => 'file',
-		'include' => ['*'],
-		'dir_roles' => ['/' => 'php'], // hack to put *.ser files in the right place
-		'ignore' => [
-			'HTMLPurifier.standalone.php',
-			'HTMLPurifier.path.php',
-			'*.tar.gz',
-			'*.tgz',
-			'standalone/'
-		],
-	]
+    array(
+        'baseinstalldir' => '/',
+        'packagefile' => 'package.xml',
+        'packagedirectory' => realpath(dirname(__FILE__) . '/library'),
+        'filelistgenerator' => 'file',
+        'include' => array('*'),
+        'dir_roles' => array('/' => 'php'), // hack to put *.ser files in the right place
+        'ignore' => array(
+            'HTMLPurifier.standalone.php',
+            'HTMLPurifier.path.php',
+            '*.tar.gz',
+            '*.tgz',
+            'standalone/'
+        ),
+    )
 );
 
 $pkg->setPackage('HTMLPurifier');
 $pkg->setLicense('LGPL', 'http://www.gnu.org/licenses/lgpl.html');
 $pkg->setSummary('Standards-compliant HTML filter');
 $pkg->setDescription(
-	'HTML Purifier is an HTML filter that will remove all malicious code
+    'HTML Purifier is an HTML filter that will remove all malicious code
     (better known as XSS) with a thoroughly audited, secure yet permissive
     whitelist and will also make sure your documents are standards
     compliant.'

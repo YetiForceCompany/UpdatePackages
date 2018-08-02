@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   34844 => 'Vizcaya',
   34845 => 'Álava',
   34846 => 'Vizcaya',
@@ -32,4 +32,4 @@ return [
   34973 => 'Lérida',
   34981 => 'A Coruña',
   34988 => 'Orense',
-];
+);

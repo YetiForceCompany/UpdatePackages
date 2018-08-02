@@ -15,44 +15,49 @@ namespace Sabre\HTTP\Auth;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Basic extends AbstractAuth
-{
-	/**
-	 * This method returns a numeric array with a username and password as the
-	 * only elements.
-	 *
-	 * If no credentials were found, this method returns null.
-	 *
-	 * @return null|array
-	 */
-	public function getCredentials()
-	{
-		$auth = $this->request->getHeader('Authorization');
+class Basic extends AbstractAuth {
 
-		if (!$auth) {
-			return null;
-		}
+    /**
+     * This method returns a numeric array with a username and password as the
+     * only elements.
+     *
+     * If no credentials were found, this method returns null.
+     *
+     * @return null|array
+     */
+    function getCredentials() {
 
-		if (strtolower(substr($auth, 0, 6)) !== 'basic ') {
-			return null;
-		}
+        $auth = $this->request->getHeader('Authorization');
 
-		$credentials = explode(':', base64_decode(substr($auth, 6)), 2);
+        if (!$auth) {
+            return null;
+        }
 
-		if (2 !== count($credentials)) {
-			return null;
-		}
+        if (strtolower(substr($auth, 0, 6)) !== 'basic ') {
+            return null;
+        }
 
-		return $credentials;
-	}
+        $credentials = explode(':', base64_decode(substr($auth, 6)), 2);
 
-	/**
-	 * This method sends the needed HTTP header and statuscode (401) to force
-	 * the user to login.
-	 */
-	public function requireLogin()
-	{
-		$this->response->addHeader('WWW-Authenticate', 'Basic realm="' . $this->realm . '", charset="UTF-8"');
-		$this->response->setStatus(401);
-	}
+        if (2 !== count($credentials)) {
+            return null;
+        }
+
+        return $credentials;
+
+    }
+
+    /**
+     * This method sends the needed HTTP header and statuscode (401) to force
+     * the user to login.
+     *
+     * @return void
+     */
+    function requireLogin() {
+
+        $this->response->addHeader('WWW-Authenticate', 'Basic realm="' . $this->realm . '", charset="UTF-8"');
+        $this->response->setStatus(401);
+
+    }
+
 }

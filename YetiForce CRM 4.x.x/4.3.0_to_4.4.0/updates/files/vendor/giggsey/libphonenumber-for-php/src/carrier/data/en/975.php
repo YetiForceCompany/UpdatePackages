@@ -10,8 +10,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   97516 => 'B-Mobile of Bhutan Telecom',
   97517 => 'B-Mobile of Bhutan Telecom',
   97577 => 'TashiCell of Tashi InfoComm',
-];
+);

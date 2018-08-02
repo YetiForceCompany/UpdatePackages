@@ -10,36 +10,43 @@
  * Do not modify this file directly!
  */
 
-return [
+
+return array (
   'id' => '',
   'countryCode' => 358,
   'internationalPrefix' => '',
   'sameMobileAndFixedLinePattern' => false,
-  'numberFormat' => [
-	0 => [
-	  'pattern' => '(\\d{2})(\\d{3})(\\d{3,4})',
-	  'format' => '$1 $2 $3',
-	  'leadingDigitsPatterns' => [
-		0 => '[14]|2[09]|50|7[135]',
-	  ],
-	  'nationalPrefixFormattingRule' => '',
-	  'domesticCarrierCodeFormattingRule' => '',
-	  'nationalPrefixOptionalWhenFormatting' => false,
-	],
-	1 => [
-	  'pattern' => '(\\d)(\\d{3})(\\d{3,4})',
-	  'format' => '$1 $2',
-	  'leadingDigitsPatterns' => [
-		0 => '[25689][1-8]|3',
-	  ],
-	  'nationalPrefixFormattingRule' => '',
-	  'domesticCarrierCodeFormattingRule' => '',
-	  'nationalPrefixOptionalWhenFormatting' => false,
-	],
-  ],
-  'intlNumberFormat' => [
-  ],
+  'numberFormat' => 
+  array (
+    0 => 
+    array (
+      'pattern' => '(\\d{2})(\\d{3})(\\d{3,4})',
+      'format' => '$1 $2 $3',
+      'leadingDigitsPatterns' => 
+      array (
+        0 => '[14]|2[09]|50|7[135]',
+      ),
+      'nationalPrefixFormattingRule' => '',
+      'domesticCarrierCodeFormattingRule' => '',
+      'nationalPrefixOptionalWhenFormatting' => false,
+    ),
+    1 => 
+    array (
+      'pattern' => '(\\d)(\\d{3})(\\d{3,4})',
+      'format' => '$1 $2',
+      'leadingDigitsPatterns' => 
+      array (
+        0 => '[25689][1-8]|3',
+      ),
+      'nationalPrefixFormattingRule' => '',
+      'domesticCarrierCodeFormattingRule' => '',
+      'nationalPrefixOptionalWhenFormatting' => false,
+    ),
+  ),
+  'intlNumberFormat' => 
+  array (
+  ),
   'mainCountryForCode' => false,
   'leadingZeroPossible' => false,
   'mobileNumberPortableRegion' => false,
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   24380 => 'Supercell',
   24381 => 'Vodacom',
   24382 => 'Vodacom',
@@ -22,4 +22,4 @@ return [
   24397 => 'Zain',
   24398 => 'Zain',
   24399 => 'Zain',
-];
+);

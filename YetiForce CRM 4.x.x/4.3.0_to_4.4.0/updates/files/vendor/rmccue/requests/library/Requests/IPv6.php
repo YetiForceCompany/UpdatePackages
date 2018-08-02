@@ -1,18 +1,23 @@
 <?php
 /**
- * Class to validate and to work with IPv6 addresses.
+ * Class to validate and to work with IPv6 addresses
+ *
+ * @package Requests
+ * @subpackage Utilities
  */
 
 /**
- * Class to validate and to work with IPv6 addresses.
+ * Class to validate and to work with IPv6 addresses
  *
  * This was originally based on the PEAR class of the same name, but has been
  * entirely rewritten.
+ *
+ * @package Requests
+ * @subpackage Utilities
  */
-class Requests_IPv6
-{
+class Requests_IPv6 {
 	/**
-	 * Uncompresses an IPv6 address.
+	 * Uncompresses an IPv6 address
 	 *
 	 * RFC 4291 allows you to compress consecutive zero pieces in an address to
 	 * '::'. This method expects a valid IPv6 address and expands the '::' to
@@ -26,13 +31,10 @@ class Requests_IPv6
 	 * @author Josh Peck <jmp at joshpeck dot org>
 	 * @copyright 2003-2005 The PHP Group
 	 * @license http://www.opensource.org/licenses/bsd-license.php
-	 *
 	 * @param string $ip An IPv6 address
-	 *
 	 * @return string The uncompressed IPv6 address
 	 */
-	public static function uncompress($ip)
-	{
+	public static function uncompress($ip) {
 		if (substr_count($ip, '::') !== 1) {
 			return $ip;
 		}
@@ -49,12 +51,12 @@ class Requests_IPv6
 			$ip = '0:0:0:0:0:0:0:0';
 		}
 		// ::xxx
-		elseif ($c1 === -1) {
+		else if ($c1 === -1) {
 			$fill = str_repeat('0:', 7 - $c2);
 			$ip = str_replace('::', $fill, $ip);
 		}
 		// xxx::
-		elseif ($c2 === -1) {
+		else if ($c2 === -1) {
 			$fill = str_repeat(':0', 7 - $c1);
 			$ip = str_replace('::', $fill, $ip);
 		}
@@ -67,7 +69,7 @@ class Requests_IPv6
 	}
 
 	/**
-	 * Compresses an IPv6 address.
+	 * Compresses an IPv6 address
 	 *
 	 * RFC 4291 allows you to compress consecutive zero pieces in an address to
 	 * '::'. This method expects a valid IPv6 address and compresses consecutive
@@ -77,13 +79,10 @@ class Requests_IPv6
 	 *           0:0:0:0:0:0:0:1        ->  ::1
 	 *
 	 * @see uncompress()
-	 *
 	 * @param string $ip An IPv6 address
-	 *
 	 * @return string The compressed IPv6 address
 	 */
-	public static function compress($ip)
-	{
+	public static function compress($ip) {
 		// Prepare the IP to be compressed
 		$ip = self::uncompress($ip);
 		$ip_parts = self::split_v6_v4($ip);
@@ -107,13 +106,14 @@ class Requests_IPv6
 
 		if ($ip_parts[1] !== '') {
 			return implode(':', $ip_parts);
-		} else {
+		}
+		else {
 			return $ip_parts[0];
 		}
 	}
 
 	/**
-	 * Splits an IPv6 address into the IPv6 and IPv4 representation parts.
+	 * Splits an IPv6 address into the IPv6 and IPv4 representation parts
 	 *
 	 * RFC 4291 allows you to represent the last two parts of an IPv6 address
 	 * using the standard IPv4 representation
@@ -122,32 +122,29 @@ class Requests_IPv6
 	 *           0:0:0:0:0:FFFF:129.144.52.38
 	 *
 	 * @param string $ip An IPv6 address
-	 *
 	 * @return string[] [0] contains the IPv6 represented part, and [1] the IPv4 represented part
 	 */
-	protected static function split_v6_v4($ip)
-	{
+	protected static function split_v6_v4($ip) {
 		if (strpos($ip, '.') !== false) {
 			$pos = strrpos($ip, ':');
 			$ipv6_part = substr($ip, 0, $pos);
 			$ipv4_part = substr($ip, $pos + 1);
-			return [$ipv6_part, $ipv4_part];
-		} else {
-			return [$ip, ''];
+			return array($ipv6_part, $ipv4_part);
+		}
+		else {
+			return array($ip, '');
 		}
 	}
 
 	/**
-	 * Checks an IPv6 address.
+	 * Checks an IPv6 address
 	 *
 	 * Checks if the given IP is a valid IPv6 address
 	 *
 	 * @param string $ip An IPv6 address
-	 *
 	 * @return bool true if $ip is a valid IPv6 address
 	 */
-	public static function check_ipv6($ip)
-	{
+	public static function check_ipv6($ip) {
 		$ip = self::uncompress($ip);
 		list($ipv6, $ipv4) = self::split_v6_v4($ip);
 		$ipv6 = explode(':', $ipv6);
@@ -185,7 +182,8 @@ class Requests_IPv6
 				}
 			}
 			return true;
-		} else {
+		}
+		else {
 			return false;
 		}
 	}

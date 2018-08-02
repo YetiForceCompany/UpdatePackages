@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Emetab Andorra',
   'AE' => 'Emetab kibagenge nebo arabuk',
   'AF' => 'Emetab Afghanistan',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Emetab Afrika nebo Murot tai',
   'ZM' => 'Emetab Zambia',
   'ZW' => 'Emetab Zimbabwe',
-];
+);

@@ -1,7 +1,6 @@
 <?php
 /**
  * @link http://www.yiiframework.com/
- *
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
@@ -15,7 +14,6 @@ namespace yii\helpers;
  * To validate IP addresses use [[\yii\validators\IpValidator|IpValidator]].
  *
  * @author Dmytro Naumenko <d.naumenko.a@gmail.com>
- *
  * @since 2.0.14
  */
 class IpHelper extends BaseIpHelper

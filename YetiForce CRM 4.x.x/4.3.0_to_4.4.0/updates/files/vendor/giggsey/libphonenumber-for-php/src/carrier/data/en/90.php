@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   9050 => 'Turk Telekom',
   9051616 => 'Turkcell',
   9053 => 'Turkcell',
@@ -26,4 +26,4 @@ return [
   9054288 => 'KKTC Telsim',
   9055 => 'Turk Telekom',
   90561 => 'Turkcell',
-];
+);

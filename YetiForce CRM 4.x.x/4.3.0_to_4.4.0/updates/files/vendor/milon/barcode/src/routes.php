@@ -11,6 +11,7 @@
   |
  */
 
-Route::get('/barcodes', function () {
-	return 'barcodes';
+
+Route::get('/barcodes', function() {
+       return "barcodes";
 });

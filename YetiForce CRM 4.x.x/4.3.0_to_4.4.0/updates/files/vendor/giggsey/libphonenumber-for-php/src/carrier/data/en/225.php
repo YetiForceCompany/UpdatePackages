@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   22501 => 'Moov',
   22502 => 'Moov',
   22503 => 'Moov',
@@ -63,4 +63,4 @@ return [
   22587 => 'Orange',
   22588 => 'Orange',
   22589 => 'Orange',
-];
+);

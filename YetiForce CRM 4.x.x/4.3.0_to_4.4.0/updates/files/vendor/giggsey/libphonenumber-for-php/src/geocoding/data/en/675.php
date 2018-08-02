@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   6753 => 'NCD',
   67542 => 'Madang',
   67545 => 'Sepik',
@@ -20,4 +20,4 @@ return [
   67562 => 'Oro',
   67564 => 'MP/Gulf/Tabubil/Kiunga',
   6759 => 'Islands',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   963922 => 'Syriatel',
   96393 => 'Syriatel',
   96394 => 'MTN',
@@ -31,4 +31,4 @@ return [
   963969 => 'MTN',
   96398 => 'Syriatel',
   96399 => 'Syriatel',
-];
+);

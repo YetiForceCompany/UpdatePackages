@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   44113 => 'Leeds',
   44114 => 'Sheffield',
   44115 => 'Nottingham',
@@ -863,4 +863,4 @@ return [
   442898 => 'Belfast',
   44291 => 'Cardiff',
   44292 => 'Cardiff',
-];
+);

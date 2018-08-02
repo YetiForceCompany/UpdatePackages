@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   297290 => 'Digicel',
   29756 => 'SETAR',
   29759 => 'SETAR',
@@ -28,4 +28,4 @@ return [
   297996 => 'SETAR',
   297997 => 'SETAR',
   297998 => 'SETAR',
-];
+);

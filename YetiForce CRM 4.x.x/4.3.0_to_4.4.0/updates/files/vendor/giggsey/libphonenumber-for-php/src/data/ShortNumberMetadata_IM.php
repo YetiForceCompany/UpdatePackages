@@ -10,80 +10,107 @@
  * Do not modify this file directly!
  */
 
-return [
-  'generalDesc' => [
-	'NationalNumberPattern' => '[189]\\d\\d(?:\\d{2,3})?',
-	'PossibleLength' => [
-	  0 => 3,
-	  1 => 5,
-	  2 => 6,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'tollFree' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'premiumRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'emergency' => [
-	'NationalNumberPattern' => '999',
-	'ExampleNumber' => '999',
-	'PossibleLength' => [
-	  0 => 3,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'shortCode' => [
-	'NationalNumberPattern' => '1\\d{2}(?:\\d{3})?|8(?:6444|9887)|999',
-	'ExampleNumber' => '150',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'standardRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'carrierSpecific' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'smsServices' => [
-	'NationalNumberPattern' => '8(?:6444|9887)',
-	'ExampleNumber' => '86444',
-	'PossibleLength' => [
-	  0 => 5,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
+
+return array (
+  'generalDesc' => 
+  array (
+    'NationalNumberPattern' => '[189]\\d\\d(?:\\d{2,3})?',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+      1 => 5,
+      2 => 6,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'tollFree' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'premiumRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'emergency' => 
+  array (
+    'NationalNumberPattern' => '999',
+    'ExampleNumber' => '999',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'shortCode' => 
+  array (
+    'NationalNumberPattern' => '1\\d{2}(?:\\d{3})?|8(?:6444|9887)|999',
+    'ExampleNumber' => '150',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'standardRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'carrierSpecific' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'smsServices' => 
+  array (
+    'NationalNumberPattern' => '8(?:6444|9887)',
+    'ExampleNumber' => '86444',
+    'PossibleLength' => 
+    array (
+      0 => 5,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
   'id' => 'IM',
   'countryCode' => 0,
   'internationalPrefix' => '',
   'sameMobileAndFixedLinePattern' => false,
-  'numberFormat' => [
-  ],
-  'intlNumberFormat' => [
-  ],
+  'numberFormat' => 
+  array (
+  ),
+  'intlNumberFormat' => 
+  array (
+  ),
   'mainCountryForCode' => false,
   'leadingZeroPossible' => false,
   'mobileNumberPortableRegion' => false,
-];
+);

@@ -3,7 +3,7 @@
 namespace Sabre\DAV\Exception;
 
 /**
- * InvalidResourceType.
+ * InvalidResourceType
  *
  * This exception is thrown when the user tried to create a new collection, with
  * a special resourcetype value that was not recognized by the server.
@@ -14,17 +14,20 @@ namespace Sabre\DAV\Exception;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class InvalidResourceType extends Forbidden
-{
-	/**
-	 * This method allows the exception to include additional information into the WebDAV error response.
-	 *
-	 * @param \Sabre\DAV\Server $server
-	 * @param \DOMElement       $errorNode
-	 */
-	public function serialize(\Sabre\DAV\Server $server, \DOMElement $errorNode)
-	{
-		$error = $errorNode->ownerDocument->createElementNS('DAV:', 'd:valid-resourcetype');
-		$errorNode->appendChild($error);
-	}
+class InvalidResourceType extends Forbidden {
+
+    /**
+     * This method allows the exception to include additional information into the WebDAV error response
+     *
+     * @param \Sabre\DAV\Server $server
+     * @param \DOMElement $errorNode
+     * @return void
+     */
+    function serialize(\Sabre\DAV\Server $server, \DOMElement $errorNode) {
+
+        $error = $errorNode->ownerDocument->createElementNS('DAV:', 'd:valid-resourcetype');
+        $errorNode->appendChild($error);
+
+    }
+
 }

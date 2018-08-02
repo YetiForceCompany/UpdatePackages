@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   6866 => 'Ocean Link',
   6867 => 'ATHKL',
-];
+);

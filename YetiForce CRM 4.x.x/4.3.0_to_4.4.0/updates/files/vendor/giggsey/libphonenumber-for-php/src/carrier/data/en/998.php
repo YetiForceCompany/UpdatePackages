@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   99861 => 'MTS',
   99862 => 'MTS',
   99865 => 'MTS',
@@ -30,4 +30,4 @@ return [
   99893 => 'Ucell',
   99894 => 'Ucell',
   99897 => 'MTS',
-];
+);

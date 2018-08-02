@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Szöul',
   8231 => 'Kjonggi',
   8232 => 'Incshon',
@@ -28,4 +28,4 @@ return [
   8262 => 'Kvangdzsu',
   8263 => 'Észak-Csolla',
   8264 => 'Csedzsu',
-];
+);

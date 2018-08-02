@@ -10,6 +10,6 @@ namespace Sabre\Event;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class PromiseAlreadyResolvedException extends \LogicException
-{
+class PromiseAlreadyResolvedException extends \LogicException {
+
 }

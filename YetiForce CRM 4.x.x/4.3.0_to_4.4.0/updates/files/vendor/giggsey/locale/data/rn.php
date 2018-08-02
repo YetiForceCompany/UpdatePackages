@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Andora',
   'AE' => 'Leta Zunze Ubumwe z’Abarabu',
   'AF' => 'Afuganisitani',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Afurika y’Epfo',
   'ZM' => 'Zambiya',
   'ZW' => 'Zimbabwe',
-];
+);

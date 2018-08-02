@@ -9,10 +9,11 @@ namespace Sabre\Event;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Version
-{
-	/**
-	 * Full version number.
-	 */
-	const VERSION = '3.0.0';
+class Version {
+
+    /**
+     * Full version number
+     */
+    const VERSION = '3.0.0';
+
 }

@@ -13,44 +13,45 @@ use Recurr\Transformer\Constraint;
 
 class BetweenConstraint extends Constraint
 {
-	protected $stopsTransformer = false;
 
-	/** @var \DateTimeInterface */
-	protected $before;
+    protected $stopsTransformer = false;
 
-	/** @var \DateTimeInterface */
-	protected $after;
+    /** @var \DateTimeInterface */
+    protected $before;
 
-	/** @var bool */
-	protected $inc;
+    /** @var \DateTimeInterface */
+    protected $after;
 
-	/**
-	 * @param \DateTimeInterface $after
-	 * @param \DateTimeInterface $before
-	 * @param bool               $inc    Include date if it equals $after or $before.
-	 */
-	public function __construct(\DateTimeInterface $after, \DateTimeInterface $before, $inc = false)
-	{
-		$this->after  = $after;
-		$this->before = $before;
-		$this->inc    = $inc;
-	}
+    /** @var bool */
+    protected $inc;
 
-	/**
-	 * Passes if $date is between $after and $before.
-	 *
-	 * {@inheritdoc}
-	 */
-	public function test(\DateTimeInterface $date)
-	{
-		if ($date > $this->before) {
-			$this->stopsTransformer = true;
-		}
+    /**
+     * @param \DateTimeInterface $after
+     * @param \DateTimeInterface $before
+     * @param bool               $inc Include date if it equals $after or $before.
+     */
+    public function __construct(\DateTimeInterface $after, \DateTimeInterface $before, $inc = false)
+    {
+        $this->after  = $after;
+        $this->before = $before;
+        $this->inc    = $inc;
+    }
 
-		if ($this->inc) {
-			return $date >= $this->after && $date <= $this->before;
-		}
+    /**
+     * Passes if $date is between $after and $before
+     *
+     * {@inheritdoc}
+     */
+    public function test(\DateTimeInterface $date)
+    {
+        if ($date > $this->before) {
+            $this->stopsTransformer = true;
+        }
 
-		return $date > $this->after && $date < $this->before;
-	}
+        if ($this->inc) {
+            return $date >= $this->after && $date <= $this->before;
+        }
+
+        return $date > $this->after && $date < $this->before;
+    }
 }

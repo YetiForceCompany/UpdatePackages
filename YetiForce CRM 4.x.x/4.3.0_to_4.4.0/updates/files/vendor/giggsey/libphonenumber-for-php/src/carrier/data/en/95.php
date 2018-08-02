@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   959250 => 'Huawei',
   959251 => 'Huawei',
   959252 => 'Huawei',
@@ -53,4 +53,4 @@ return [
   95995 => 'Ooredoo',
   95996 => 'Ooredoo',
   95997 => 'Ooredoo',
-];
+);

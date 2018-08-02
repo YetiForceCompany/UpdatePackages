@@ -1,7 +1,6 @@
 <?php
 /**
  * @link http://www.yiiframework.com/
- *
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
@@ -21,7 +20,6 @@ use Yii;
  * on how to migrate your application to use [[BaseObject]] class to make your application compatible with PHP 7.2.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- *
  * @since 2.0
  * @deprecated since 2.0.13, the class name `Object` is invalid since PHP 7.2, use [[BaseObject]] instead.
  * @see https://wiki.php.net/rfc/object-typehint

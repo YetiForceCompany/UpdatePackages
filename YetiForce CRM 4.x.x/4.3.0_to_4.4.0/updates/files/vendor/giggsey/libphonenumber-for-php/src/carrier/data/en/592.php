@@ -10,6 +10,6 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5926 => 'Digicel Guyana',
-];
+);

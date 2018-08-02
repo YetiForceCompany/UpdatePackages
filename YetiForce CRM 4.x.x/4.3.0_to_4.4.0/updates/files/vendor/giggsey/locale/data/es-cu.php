@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Isla Ascensión',
   'BA' => 'Bosnia-Herzegovina',
   'CI' => 'Costa de Marfil',
@@ -19,4 +19,4 @@ return [
   'TL' => 'Timor Oriental',
   'UM' => 'Islas Ultramarinas de EE.UU.',
   'VI' => 'Islas Vírgenes de los Estados Unidos',
-];
+);

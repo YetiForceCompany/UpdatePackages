@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AI' => 'Anguila',
   'AM' => 'Arménia',
   'AX' => 'Alanda',
@@ -69,4 +69,4 @@ return [
   'YE' => 'Iémen',
   'YT' => 'Maiote',
   'ZW' => 'Zimbabué',
-];
+);

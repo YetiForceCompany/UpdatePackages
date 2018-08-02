@@ -9,6 +9,7 @@
  *
  * Changes to include_path are not necessary.
  */
+
 $__dir = dirname(__FILE__);
 
 require_once $__dir . '/HTMLPurifier.php';

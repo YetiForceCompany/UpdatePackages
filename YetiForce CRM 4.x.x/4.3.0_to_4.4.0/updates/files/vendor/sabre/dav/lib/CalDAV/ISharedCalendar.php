@@ -11,15 +11,16 @@ use Sabre\DAV\Sharing\ISharedNode;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface ISharedCalendar extends ISharedNode
-{
-	/**
-	 * Marks this calendar as published.
-	 *
-	 * Publishing a calendar should automatically create a read-only, public,
-	 * subscribable calendar.
-	 *
-	 * @param bool $value
-	 */
-	public function setPublishStatus($value);
+interface ISharedCalendar extends ISharedNode {
+
+    /**
+     * Marks this calendar as published.
+     *
+     * Publishing a calendar should automatically create a read-only, public,
+     * subscribable calendar.
+     *
+     * @param bool $value
+     * @return void
+     */
+    function setPublishStatus($value);
 }

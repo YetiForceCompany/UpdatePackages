@@ -3,7 +3,7 @@
 namespace Sabre\Uri;
 
 /**
- * Invalid Uri.
+ * Invalid Uri
  *
  * This is thrown when an attempt was made to use Sabre\Uri parse a uri that
  * it could not.
@@ -12,6 +12,6 @@ namespace Sabre\Uri;
  * @author Evert Pot (https://evertpot.com/)
  * @license http://sabre.io/license/
  */
-class InvalidUriException extends \Exception
-{
+class InvalidUriException extends \Exception {
+
 }

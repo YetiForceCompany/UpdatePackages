@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'af' => '',
   'agq' => '',
   'ak' => '',
@@ -276,4 +276,4 @@ return [
   'zh-hant-hk' => '',
   'zh-hant-mo' => '',
   'zu' => '',
-];
+);

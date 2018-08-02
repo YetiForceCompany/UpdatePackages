@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Eilean na Deasgabhalach',
   'AD' => 'Andorra',
   'AE' => 'Na h-Iomaratan Arabach Aonaichte',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'Afraga a Deas',
   'ZM' => 'Sàimbia',
   'ZW' => 'An t-Sìombab',
-];
+);

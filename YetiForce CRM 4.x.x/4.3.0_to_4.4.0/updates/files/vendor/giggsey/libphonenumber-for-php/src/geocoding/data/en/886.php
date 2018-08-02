@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   8862 => 'Taipei',
   8863 => 'Taoyuan/Hsinchu/Yilan/Hualien',
   88637 => 'Miaoli',
@@ -24,4 +24,4 @@ return [
   886826 => 'Wuqiu',
   886836 => 'Matsu',
   88689 => 'Taitung',
-];
+);

@@ -10,112 +10,153 @@
  * Do not modify this file directly!
  */
 
-return [
-  'generalDesc' => [
-	'NationalNumberPattern' => '[29]\\d{8}',
-	'PossibleLength' => [
-	  0 => 9,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'fixedLine' => [
-	'NationalNumberPattern' => '2\\d(?:[26-9]\\d|\\d[26-9])\\d{5}',
-	'ExampleNumber' => '222123456',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'mobile' => [
-	'NationalNumberPattern' => '9[1-49]\\d{7}',
-	'ExampleNumber' => '923123456',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'tollFree' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'premiumRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'sharedCost' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'personalNumber' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'voip' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'pager' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'uan' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'voicemail' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'noInternationalDialling' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
+
+return array (
+  'generalDesc' => 
+  array (
+    'NationalNumberPattern' => '[29]\\d{8}',
+    'PossibleLength' => 
+    array (
+      0 => 9,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'fixedLine' => 
+  array (
+    'NationalNumberPattern' => '2\\d(?:[26-9]\\d|\\d[26-9])\\d{5}',
+    'ExampleNumber' => '222123456',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'mobile' => 
+  array (
+    'NationalNumberPattern' => '9[1-49]\\d{7}',
+    'ExampleNumber' => '923123456',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'tollFree' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'premiumRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'sharedCost' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'personalNumber' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'voip' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'pager' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'uan' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'voicemail' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'noInternationalDialling' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
   'id' => 'AO',
   'countryCode' => 244,
   'internationalPrefix' => '00',
   'sameMobileAndFixedLinePattern' => false,
-  'numberFormat' => [
-	0 => [
-	  'pattern' => '(\\d{3})(\\d{3})(\\d{3})',
-	  'format' => '$1 $2 $3',
-	  'leadingDigitsPatterns' => [
-	  ],
-	  'nationalPrefixFormattingRule' => '',
-	  'domesticCarrierCodeFormattingRule' => '',
-	  'nationalPrefixOptionalWhenFormatting' => false,
-	],
-  ],
-  'intlNumberFormat' => [
-  ],
+  'numberFormat' => 
+  array (
+    0 => 
+    array (
+      'pattern' => '(\\d{3})(\\d{3})(\\d{3})',
+      'format' => '$1 $2 $3',
+      'leadingDigitsPatterns' => 
+      array (
+      ),
+      'nationalPrefixFormattingRule' => '',
+      'domesticCarrierCodeFormattingRule' => '',
+      'nationalPrefixOptionalWhenFormatting' => false,
+    ),
+  ),
+  'intlNumberFormat' => 
+  array (
+  ),
   'mainCountryForCode' => false,
   'leadingZeroPossible' => false,
   'mobileNumberPortableRegion' => false,
-];
+);

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'اندورا',
   'AG' => 'انتیگوا و باربودا',
   'AL' => 'البانیا',
@@ -101,4 +101,4 @@ return [
   'VE' => 'ونزویلا',
   'XK' => 'کوسوا',
   'ZW' => 'زیمبابوی',
-];
+);

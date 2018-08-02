@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   96871 => 'Omantel',
   96879 => 'Ooredoo',
   968901 => 'Omantel',
@@ -31,4 +31,4 @@ return [
   96897 => 'Ooredoo',
   96898 => 'Omantel',
   96899 => 'Omantel',
-];
+);

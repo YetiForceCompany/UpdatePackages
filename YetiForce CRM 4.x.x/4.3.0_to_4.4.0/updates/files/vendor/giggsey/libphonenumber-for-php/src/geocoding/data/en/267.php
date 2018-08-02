@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   267240 => 'Francistown',
   267241 => 'Francistown',
   267242 => 'Francistown',
@@ -86,4 +86,4 @@ return [
   267680 => 'Maun',
   267686 => 'Maun',
   267687 => 'Maun',
-];
+);

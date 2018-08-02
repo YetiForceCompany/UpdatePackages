@@ -12,6 +12,7 @@ namespace Recurr\Exception;
 use Recurr\Exception;
 
 /**
+ * @package Recurr\Exception
  * @author  Shaun Simmons <shaun@envysphere.com>
  */
 class InvalidArgument extends Exception

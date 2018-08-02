@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   52221 => 'Puebla',
   52222 => 'Puebla',
   52223 => 'Puebla',
@@ -411,4 +411,4 @@ return [
   52997 => 'Yucatan',
   52998 => 'Quintana Roo',
   52999 => 'Conkal/Merida, YUC',
-];
+);

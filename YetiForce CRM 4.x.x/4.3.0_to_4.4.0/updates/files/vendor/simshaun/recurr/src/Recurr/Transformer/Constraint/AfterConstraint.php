@@ -13,35 +13,36 @@ use Recurr\Transformer\Constraint;
 
 class AfterConstraint extends Constraint
 {
-	protected $stopsTransformer = false;
 
-	/** @var \DateTimeInterface */
-	protected $after;
+    protected $stopsTransformer = false;
 
-	/** @var bool */
-	protected $inc;
+    /** @var \DateTimeInterface */
+    protected $after;
 
-	/**
-	 * @param \DateTimeInterface $after
-	 * @param bool               $inc   Include date if it equals $after.
-	 */
-	public function __construct(\DateTimeInterface $after, $inc = false)
-	{
-		$this->after = $after;
-		$this->inc    = $inc;
-	}
+    /** @var bool */
+    protected $inc;
 
-	/**
-	 * Passes if $date is after $after.
-	 *
-	 * {@inheritdoc}
-	 */
-	public function test(\DateTimeInterface $date)
-	{
-		if ($this->inc) {
-			return $date >= $this->after;
-		}
+    /**
+     * @param \DateTimeInterface $after
+     * @param bool               $inc Include date if it equals $after.
+     */
+    public function __construct(\DateTimeInterface $after, $inc = false)
+    {
+        $this->after = $after;
+        $this->inc    = $inc;
+    }
 
-		return $date > $this->after;
-	}
+    /**
+     * Passes if $date is after $after
+     *
+     * {@inheritdoc}
+     */
+    public function test(\DateTimeInterface $date)
+    {
+        if ($this->inc) {
+            return $date >= $this->after;
+        }
+
+        return $date > $this->after;
+    }
 }

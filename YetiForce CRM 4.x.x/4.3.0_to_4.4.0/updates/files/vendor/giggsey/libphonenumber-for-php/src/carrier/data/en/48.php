@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   48450 => 'Play',
   4850 => 'Orange',
   4851 => 'Orange',
@@ -116,4 +116,4 @@ return [
   487286 => 'T-Mobile',
   487287 => 'T-Mobile',
   487288 => 'T-Mobile',
-];
+);

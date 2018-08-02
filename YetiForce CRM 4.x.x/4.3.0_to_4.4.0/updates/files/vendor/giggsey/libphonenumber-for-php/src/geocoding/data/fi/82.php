@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Soul',
   8241 => 'Etelä-Chungcheong',
   8243 => 'Pohjois-Chungcheong',
@@ -18,4 +18,4 @@ return [
   8255 => 'Etelä-Gyeongsang',
   8261 => 'Etelä-Jeolla',
   8263 => 'Pohjois-Jeolla',
-];
+);

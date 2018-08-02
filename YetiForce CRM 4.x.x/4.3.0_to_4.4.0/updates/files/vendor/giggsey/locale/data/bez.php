@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Huandola',
   'AE' => 'Hufalme dza Hihalabu',
   'AF' => 'Huafuganistani',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Huafrika iya Hukusini',
   'ZM' => 'Huzambia',
   'ZW' => 'Huzimbabwe',
-];
+);

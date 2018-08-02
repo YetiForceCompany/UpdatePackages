@@ -15,39 +15,43 @@ namespace Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Exception extends \Exception
-{
-	/**
-	 * Returns the HTTP statuscode for this exception.
-	 *
-	 * @return int
-	 */
-	public function getHTTPCode()
-	{
-		return 500;
-	}
+class Exception extends \Exception {
 
-	/**
-	 * This method allows the exception to include additional information into the WebDAV error response.
-	 *
-	 * @param Server      $server
-	 * @param \DOMElement $errorNode
-	 */
-	public function serialize(Server $server, \DOMElement $errorNode)
-	{
-	}
+    /**
+     * Returns the HTTP statuscode for this exception
+     *
+     * @return int
+     */
+    function getHTTPCode() {
 
-	/**
-	 * This method allows the exception to return any extra HTTP response headers.
-	 *
-	 * The headers must be returned as an array.
-	 *
-	 * @param Server $server
-	 *
-	 * @return array
-	 */
-	public function getHTTPHeaders(Server $server)
-	{
-		return [];
-	}
+        return 500;
+
+    }
+
+    /**
+     * This method allows the exception to include additional information into the WebDAV error response
+     *
+     * @param Server $server
+     * @param \DOMElement $errorNode
+     * @return void
+     */
+    function serialize(Server $server, \DOMElement $errorNode) {
+
+
+    }
+
+    /**
+     * This method allows the exception to return any extra HTTP response headers.
+     *
+     * The headers must be returned as an array.
+     *
+     * @param Server $server
+     * @return array
+     */
+    function getHTTPHeaders(Server $server) {
+
+        return [];
+
+    }
+
 }

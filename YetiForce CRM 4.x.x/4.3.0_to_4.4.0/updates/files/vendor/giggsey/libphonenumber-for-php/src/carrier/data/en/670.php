@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   67077 => 'Timor Telecom',
   67078 => 'Timor Telecom',
-];
+);

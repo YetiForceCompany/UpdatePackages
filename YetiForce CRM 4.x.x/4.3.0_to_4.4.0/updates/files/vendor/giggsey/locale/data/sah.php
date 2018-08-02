@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BR' => 'Бразилия',
   'CA' => 'Канаада',
   'CL' => 'Чиили',
@@ -31,4 +31,4 @@ return [
   'SD' => 'Судаан',
   'SE' => 'Швеция',
   'US' => 'Америка Холбоһуктаах Штааттара',
-];
+);

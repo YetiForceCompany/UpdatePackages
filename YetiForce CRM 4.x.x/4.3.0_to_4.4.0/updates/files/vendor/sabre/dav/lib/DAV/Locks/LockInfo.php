@@ -3,7 +3,7 @@
 namespace Sabre\DAV\Locks;
 
 /**
- * LockInfo class.
+ * LockInfo class
  *
  * An object of the LockInfo class holds all the information relevant to a
  * single lock.
@@ -12,69 +12,69 @@ namespace Sabre\DAV\Locks;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class LockInfo
-{
-	/**
-	 * A shared lock.
-	 */
-	const SHARED = 1;
+class LockInfo {
 
-	/**
-	 * An exclusive lock.
-	 */
-	const EXCLUSIVE = 2;
+    /**
+     * A shared lock
+     */
+    const SHARED = 1;
 
-	/**
-	 * A never expiring timeout.
-	 */
-	const TIMEOUT_INFINITE = -1;
+    /**
+     * An exclusive lock
+     */
+    const EXCLUSIVE = 2;
 
-	/**
-	 * The owner of the lock.
-	 *
-	 * @var string
-	 */
-	public $owner;
+    /**
+     * A never expiring timeout
+     */
+    const TIMEOUT_INFINITE = -1;
 
-	/**
-	 * The locktoken.
-	 *
-	 * @var string
-	 */
-	public $token;
+    /**
+     * The owner of the lock
+     *
+     * @var string
+     */
+    public $owner;
 
-	/**
-	 * How long till the lock is expiring.
-	 *
-	 * @var int
-	 */
-	public $timeout;
+    /**
+     * The locktoken
+     *
+     * @var string
+     */
+    public $token;
 
-	/**
-	 * UNIX Timestamp of when this lock was created.
-	 *
-	 * @var int
-	 */
-	public $created;
+    /**
+     * How long till the lock is expiring
+     *
+     * @var int
+     */
+    public $timeout;
 
-	/**
-	 * Exclusive or shared lock.
-	 *
-	 * @var int
-	 */
-	public $scope = self::EXCLUSIVE;
+    /**
+     * UNIX Timestamp of when this lock was created
+     *
+     * @var int
+     */
+    public $created;
 
-	/**
-	 * Depth of lock, can be 0 or Sabre\DAV\Server::DEPTH_INFINITY.
-	 */
-	public $depth = 0;
+    /**
+     * Exclusive or shared lock
+     *
+     * @var int
+     */
+    public $scope = self::EXCLUSIVE;
 
-	/**
-	 * The uri this lock locks.
-	 *
-	 * TODO: This value is not always set
-	 *
-	 * @var mixed
-	 */
-	public $uri;
+    /**
+     * Depth of lock, can be 0 or Sabre\DAV\Server::DEPTH_INFINITY
+     */
+    public $depth = 0;
+
+    /**
+     * The uri this lock locks
+     *
+     * TODO: This value is not always set
+     * @var mixed
+     */
+    public $uri;
+
 }

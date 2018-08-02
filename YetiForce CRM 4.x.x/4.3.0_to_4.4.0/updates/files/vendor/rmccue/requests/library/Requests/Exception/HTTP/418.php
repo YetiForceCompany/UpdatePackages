@@ -1,26 +1,27 @@
 <?php
 /**
- * Exception for 418 I'm A Teapot responses.
+ * Exception for 418 I'm A Teapot responses
  *
  * @see https://tools.ietf.org/html/rfc2324
+ * @package Requests
  */
 
 /**
- * Exception for 418 I'm A Teapot responses.
+ * Exception for 418 I'm A Teapot responses
  *
  * @see https://tools.ietf.org/html/rfc2324
+ * @package Requests
  */
-class Requests_Exception_HTTP_418 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_418 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 418;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

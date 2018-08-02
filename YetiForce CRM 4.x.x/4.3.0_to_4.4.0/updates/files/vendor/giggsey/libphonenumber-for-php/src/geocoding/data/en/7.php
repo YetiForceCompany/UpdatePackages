@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   7301 => 'Republic of Buryatia',
   7302 => 'Chita',
   733622 => 'Baikonur',
@@ -385,4 +385,4 @@ return [
   7877 => 'Republic of Adygeya',
   7878 => 'Karachayevo-Cherkessian Republic',
   7879 => 'Mineranye Vody',
-];
+);

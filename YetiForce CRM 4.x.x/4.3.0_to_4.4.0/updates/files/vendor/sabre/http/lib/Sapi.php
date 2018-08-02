@@ -3,7 +3,7 @@
 namespace Sabre\HTTP;
 
 /**
- * PHP SAPI.
+ * PHP SAPI
  *
  * This object is responsible for:
  * 1. Constructing a Request object based on the current HTTP request sent to
@@ -28,157 +28,175 @@ namespace Sabre\HTTP;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Sapi
-{
-	/**
-	 * This static method will create a new Request object, based on the
-	 * current PHP request.
-	 *
-	 * @return Request
-	 */
-	public static function getRequest()
-	{
-		$r = self::createFromServerArray($_SERVER);
-		$r->setBody(fopen('php://input', 'r'));
-		$r->setPostData($_POST);
-		return $r;
-	}
+class Sapi {
 
-	/**
-	 * Sends the HTTP response back to a HTTP client.
-	 *
-	 * This calls php's header() function and streams the body to php://output.
-	 *
-	 * @param ResponseInterface $response
-	 */
-	public static function sendResponse(ResponseInterface $response)
-	{
-		header('HTTP/' . $response->getHttpVersion() . ' ' . $response->getStatus() . ' ' . $response->getStatusText());
-		foreach ($response->getHeaders() as $key => $value) {
-			foreach ($value as $k => $v) {
-				if ($k === 0) {
-					header($key . ': ' . $v);
-				} else {
-					header($key . ': ' . $v, false);
-				}
-			}
-		}
+    /**
+     * This static method will create a new Request object, based on the
+     * current PHP request.
+     *
+     * @return Request
+     */
+    static function getRequest() {
 
-		$body = $response->getBody();
-		if (is_null($body)) {
-			return;
-		}
-		$contentLength = $response->getHeader('Content-Length');
-		if ($contentLength !== null) {
-			$output = fopen('php://output', 'wb');
-			if (is_resource($body) && get_resource_type($body) == 'stream') {
-				if (PHP_INT_SIZE !== 4) {
-					// use the dedicated function on 64 Bit systems
-					stream_copy_to_stream($body, $output, $contentLength);
-				} else {
-					// workaround for 32 Bit systems to avoid stream_copy_to_stream
-					while (!feof($body)) {
-						fwrite($output, fread($body, 8192));
-					}
-				}
-			} else {
-				fwrite($output, $body, $contentLength);
-			}
-		} else {
-			file_put_contents('php://output', $body);
-		}
+        $r = self::createFromServerArray($_SERVER);
+        $r->setBody(fopen('php://input', 'r'));
+        $r->setPostData($_POST);
+        return $r;
 
-		if (is_resource($body)) {
-			fclose($body);
-		}
-	}
+    }
 
-	/**
-	 * This static method will create a new Request object, based on a PHP
-	 * $_SERVER array.
-	 *
-	 * @param array $serverArray
-	 *
-	 * @return Request
-	 */
-	public static function createFromServerArray(array $serverArray)
-	{
-		$headers = [];
-		$method = null;
-		$url = null;
-		$httpVersion = '1.1';
+    /**
+     * Sends the HTTP response back to a HTTP client.
+     *
+     * This calls php's header() function and streams the body to php://output.
+     *
+     * @param ResponseInterface $response
+     * @return void
+     */
+    static function sendResponse(ResponseInterface $response) {
 
-		$protocol = 'http';
-		$hostName = 'localhost';
+        header('HTTP/' . $response->getHttpVersion() . ' ' . $response->getStatus() . ' ' . $response->getStatusText());
+        foreach ($response->getHeaders() as $key => $value) {
 
-		foreach ($serverArray as $key => $value) {
-			switch ($key) {
-				case 'SERVER_PROTOCOL':
-					if ($value === 'HTTP/1.0') {
-						$httpVersion = '1.0';
-					}
-					break;
-				case 'REQUEST_METHOD':
-					$method = $value;
-					break;
-				case 'REQUEST_URI':
-					$url = $value;
-					break;
-				// These sometimes show up without a HTTP_ prefix
-				case 'CONTENT_TYPE':
-					$headers['Content-Type'] = $value;
-					break;
-				case 'CONTENT_LENGTH':
-					$headers['Content-Length'] = $value;
-					break;
-				// mod_php on apache will put credentials in these variables.
-				// (fast)cgi does not usually do this, however.
-				case 'PHP_AUTH_USER':
-					if (isset($serverArray['PHP_AUTH_PW'])) {
-						$headers['Authorization'] = 'Basic ' . base64_encode($value . ':' . $serverArray['PHP_AUTH_PW']);
-					}
-					break;
-				// Similarly, mod_php may also screw around with digest auth.
-				case 'PHP_AUTH_DIGEST':
-					$headers['Authorization'] = 'Digest ' . $value;
-					break;
-				// Apache may prefix the HTTP_AUTHORIZATION header with
-				// REDIRECT_, if mod_rewrite was used.
-				case 'REDIRECT_HTTP_AUTHORIZATION':
-					$headers['Authorization'] = $value;
-					break;
-				case 'HTTP_HOST':
-					$hostName = $value;
-					$headers['Host'] = $value;
-					break;
-				case 'HTTPS':
-					if (!empty($value) && $value !== 'off') {
-						$protocol = 'https';
-					}
-					break;
-				default:
-					if (substr($key, 0, 5) === 'HTTP_') {
-						// It's a HTTP header
+            foreach ($value as $k => $v) {
+                if ($k === 0) {
+                    header($key . ': ' . $v);
+                } else {
+                    header($key . ': ' . $v, false);
+                }
+            }
 
-						// Normalizing it to be prettier
-						$header = strtolower(substr($key, 5));
+        }
 
-						// Transforming dashes into spaces, and uppercasing
-						// every first letter.
-						$header = ucwords(str_replace('_', ' ', $header));
+        $body = $response->getBody();
+        if (is_null($body)) return;
 
-						// Turning spaces into dashes.
-						$header = str_replace(' ', '-', $header);
-						$headers[$header] = $value;
-					}
-					break;
-			}
-		}
+        $contentLength = $response->getHeader('Content-Length');
+        if ($contentLength !== null) {
+            $output = fopen('php://output', 'wb');
+            if (is_resource($body) && get_resource_type($body) == 'stream') {
+                if (PHP_INT_SIZE !== 4){
+                    // use the dedicated function on 64 Bit systems
+                    stream_copy_to_stream($body, $output, $contentLength);
+                } else {
+                    // workaround for 32 Bit systems to avoid stream_copy_to_stream
+                    while (!feof($body)) {
+                        fwrite($output, fread($body, 8192));
+                    }
+                }
+            } else {
+                fwrite($output, $body, $contentLength);
+            }
+        } else {
+            file_put_contents('php://output', $body);
+        }
 
-		$r = new Request($method, $url, $headers);
-		$r->setHttpVersion($httpVersion);
-		$r->setRawServerData($serverArray);
-		$r->setAbsoluteUrl($protocol . '://' . $hostName . $url);
-		return $r;
-	}
+        if (is_resource($body)) {
+            fclose($body);
+        }
+
+    }
+
+    /**
+     * This static method will create a new Request object, based on a PHP
+     * $_SERVER array.
+     *
+     * @param array $serverArray
+     * @return Request
+     */
+    static function createFromServerArray(array $serverArray) {
+
+        $headers = [];
+        $method = null;
+        $url = null;
+        $httpVersion = '1.1';
+
+        $protocol = 'http';
+        $hostName = 'localhost';
+
+        foreach ($serverArray as $key => $value) {
+
+            switch ($key) {
+
+                case 'SERVER_PROTOCOL' :
+                    if ($value === 'HTTP/1.0') {
+                        $httpVersion = '1.0';
+                    }
+                    break;
+                case 'REQUEST_METHOD' :
+                    $method = $value;
+                    break;
+                case 'REQUEST_URI' :
+                    $url = $value;
+                    break;
+
+                // These sometimes show up without a HTTP_ prefix
+                case 'CONTENT_TYPE' :
+                    $headers['Content-Type'] = $value;
+                    break;
+                case 'CONTENT_LENGTH' :
+                    $headers['Content-Length'] = $value;
+                    break;
+
+                // mod_php on apache will put credentials in these variables.
+                // (fast)cgi does not usually do this, however.
+                case 'PHP_AUTH_USER' :
+                    if (isset($serverArray['PHP_AUTH_PW'])) {
+                        $headers['Authorization'] = 'Basic ' . base64_encode($value . ':' . $serverArray['PHP_AUTH_PW']);
+                    }
+                    break;
+
+                // Similarly, mod_php may also screw around with digest auth.
+                case 'PHP_AUTH_DIGEST' :
+                    $headers['Authorization'] = 'Digest ' . $value;
+                    break;
+
+                // Apache may prefix the HTTP_AUTHORIZATION header with
+                // REDIRECT_, if mod_rewrite was used.
+                case 'REDIRECT_HTTP_AUTHORIZATION' :
+                    $headers['Authorization'] = $value;
+                    break;
+
+                case 'HTTP_HOST' :
+                    $hostName = $value;
+                    $headers['Host'] = $value;
+                    break;
+
+                case 'HTTPS' :
+                    if (!empty($value) && $value !== 'off') {
+                        $protocol = 'https';
+                    }
+                    break;
+
+                default :
+                    if (substr($key, 0, 5) === 'HTTP_') {
+                        // It's a HTTP header
+
+                        // Normalizing it to be prettier
+                        $header = strtolower(substr($key, 5));
+
+                        // Transforming dashes into spaces, and uppercasing
+                        // every first letter.
+                        $header = ucwords(str_replace('_', ' ', $header));
+
+                        // Turning spaces into dashes.
+                        $header = str_replace(' ', '-', $header);
+                        $headers[$header] = $value;
+
+                    }
+                    break;
+
+
+            }
+
+        }
+
+        $r = new Request($method, $url, $headers);
+        $r->setHttpVersion($httpVersion);
+        $r->setRawServerData($serverArray);
+        $r->setAbsoluteUrl($protocol . '://' . $hostName . $url);
+        return $r;
+
+    }
+
 }

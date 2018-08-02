@@ -1,17 +1,22 @@
 <?php
 /**
- * SSL utilities for Requests.
+ * SSL utilities for Requests
+ *
+ * @package Requests
+ * @subpackage Utilities
  */
 
 /**
- * SSL utilities for Requests.
+ * SSL utilities for Requests
  *
  * Collection of utilities for working with and verifying SSL certificates.
+ *
+ * @package Requests
+ * @subpackage Utilities
  */
-class Requests_SSL
-{
+class Requests_SSL {
 	/**
-	 * Verify the certificate against common name and subject alternative names.
+	 * Verify the certificate against common name and subject alternative names
 	 *
 	 * Unfortunately, PHP doesn't check the certificate against the alternative
 	 * names, leading things like 'https://www.github.com/' to be invalid.
@@ -19,15 +24,12 @@ class Requests_SSL
 	 *
 	 * @see https://tools.ietf.org/html/rfc2818#section-3.1 RFC2818, Section 3.1
 	 *
-	 * @param string $host Host name to verify against
-	 * @param array  $cert Certificate data from openssl_x509_parse()
-	 *
 	 * @throws Requests_Exception On not obtaining a match for the host (`fsockopen.ssl.no_match`)
-	 *
+	 * @param string $host Host name to verify against
+	 * @param array $cert Certificate data from openssl_x509_parse()
 	 * @return bool
 	 */
-	public static function verify_certificate($host, $cert)
-	{
+	public static function verify_certificate($host, $cert) {
 		// Calculate the valid wildcard match if the host is not an IP address
 		$parts = explode('.', $host);
 		if (ip2long($host) === false) {
@@ -71,7 +73,7 @@ class Requests_SSL
 	}
 
 	/**
-	 * Verify that a reference name is valid.
+	 * Verify that a reference name is valid
 	 *
 	 * Verifies a dNSName for HTTPS usage, (almost) as per Firefox's rules:
 	 * - Wildcards can only occur in a name with more than 3 components
@@ -84,11 +86,9 @@ class Requests_SSL
 	 * the third rule.
 	 *
 	 * @param string $reference Reference dNSName
-	 *
-	 * @return bool Is the name valid?
+	 * @return boolean Is the name valid?
 	 */
-	public static function verify_reference_name($reference)
-	{
+	public static function verify_reference_name($reference) {
 		$parts = explode('.', $reference);
 
 		// Check the first part of the name
@@ -118,15 +118,13 @@ class Requests_SSL
 	}
 
 	/**
-	 * Match a hostname against a dNSName reference.
+	 * Match a hostname against a dNSName reference
 	 *
-	 * @param string $host      Requested host
+	 * @param string $host Requested host
 	 * @param string $reference dNSName to match against
-	 *
-	 * @return bool Does the domain match?
+	 * @return boolean Does the domain match?
 	 */
-	public static function match_domain($host, $reference)
-	{
+	public static function match_domain($host, $reference) {
 		// Check if the reference is blacklisted first
 		if (self::verify_reference_name($reference) !== true) {
 			return false;

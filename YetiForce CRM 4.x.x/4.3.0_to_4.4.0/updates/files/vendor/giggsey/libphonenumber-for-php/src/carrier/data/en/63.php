@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   63905 => 'Globe',
   63906 => 'Globe',
   63907 => 'Smart',
@@ -58,4 +58,4 @@ return [
   63995 => 'Globe',
   63998 => 'Smart',
   63999 => 'Smart',
-];
+);

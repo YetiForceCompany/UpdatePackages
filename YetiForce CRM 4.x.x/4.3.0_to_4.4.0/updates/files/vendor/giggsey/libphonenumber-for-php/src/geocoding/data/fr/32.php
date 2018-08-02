@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3212 => 'Tongres',
   3215 => 'Malines',
   3216 => 'Louvain',
@@ -24,4 +24,4 @@ return [
   3258 => 'Furnes',
   3259 => 'Ostende',
   329 => 'Gand',
-];
+);

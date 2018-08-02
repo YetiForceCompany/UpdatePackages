@@ -5,7 +5,7 @@ namespace Sabre\DAV\Exception;
 use Sabre\DAV;
 
 /**
- * NotFound.
+ * NotFound
  *
  * This Exception is thrown when a Node couldn't be found. It returns HTTP error code 404
  *
@@ -13,15 +13,17 @@ use Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class NotFound extends DAV\Exception
-{
-	/**
-	 * Returns the HTTP statuscode for this exception.
-	 *
-	 * @return int
-	 */
-	public function getHTTPCode()
-	{
-		return 404;
-	}
+class NotFound extends DAV\Exception {
+
+    /**
+     * Returns the HTTP statuscode for this exception
+     *
+     * @return int
+     */
+    function getHTTPCode() {
+
+        return 404;
+
+    }
+
 }

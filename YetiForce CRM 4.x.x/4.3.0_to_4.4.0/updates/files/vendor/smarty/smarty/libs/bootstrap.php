@@ -8,8 +8,10 @@
  * file that was distributed with this source code.
  */
 
-// Load and register Smarty Autoloader
+/*
+ * Load and register Smarty Autoloader
+ */
 if (!class_exists('Smarty_Autoloader')) {
-	require __DIR__ . '/Autoloader.php';
+    require __DIR__ . '/Autoloader.php';
 }
 Smarty_Autoloader::register();

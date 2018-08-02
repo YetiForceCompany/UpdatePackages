@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   68572 => 'Digicel',
   68575 => 'Bluesky',
   68576 => 'Bluesky',
@@ -20,4 +20,4 @@ return [
   68585 => 'Digicel',
   68586 => 'Digicel',
   68587 => 'Digicel',
-];
+);

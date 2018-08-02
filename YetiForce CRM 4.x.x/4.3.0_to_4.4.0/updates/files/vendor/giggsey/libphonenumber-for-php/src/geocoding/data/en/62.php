@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   6221 => 'Greater Jakarta',
   6222 => 'Bandung/Cimahi',
   62231 => 'Cirebon',
@@ -320,4 +320,4 @@ return [
   62984 => 'Nabire',
   62985 => 'Nabire',
   62986 => 'Manokwari',
-];
+);

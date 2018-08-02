@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Undura',
   'AE' => 'Tigeldunin Yedduklen Taɛrabin',
   'AF' => 'Afɣanistan',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Tafriqt Wadda',
   'ZM' => 'Zambya',
   'ZW' => 'Zimbabwi',
-];
+);

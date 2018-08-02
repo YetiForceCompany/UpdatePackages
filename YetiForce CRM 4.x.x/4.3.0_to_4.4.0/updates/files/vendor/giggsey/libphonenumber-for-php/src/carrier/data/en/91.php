@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   916000 => 'Reliance Jio',
   916001 => 'Reliance Jio',
   916002 => 'Reliance Jio',
@@ -3822,4 +3822,4 @@ return [
   919996 => 'Airtel',
   919997 => 'Airtel',
   919999 => 'Vodafone',
-];
+);

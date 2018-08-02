@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   90212 => 'Istanbul (Avrupa)',
   90213 => 'Istanbul (Avrupa)',
   90222 => 'Eskisehir',
@@ -85,4 +85,4 @@ return [
   90485 => 'Siirt',
   90486 => 'Şırnak',
   90487 => 'Şırnak',
-];
+);

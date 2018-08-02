@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   352621 => 'POST',
   352628 => 'POST',
   352651 => 'POST',
@@ -21,4 +21,4 @@ return [
   352678 => 'JOIN',
   352691 => 'Tango',
   352698 => 'Tango',
-];
+);

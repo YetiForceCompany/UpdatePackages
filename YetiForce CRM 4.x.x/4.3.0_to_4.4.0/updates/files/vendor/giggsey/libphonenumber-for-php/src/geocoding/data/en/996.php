@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   996312 => 'Bishkek, Chuy region',
   9963131 => 'Belovodskoe, Chuy region',
   9963132 => 'Kant, Chuy region',
@@ -63,4 +63,4 @@ return [
   9963946 => 'Kyzyl-Suu, Issyk-Ko region',
   9963947 => 'Bokombaevo/Kadji-Say, Issyk-Ko region',
   9963948 => 'Ak-Suu, Issyk-Ko region',
-];
+);

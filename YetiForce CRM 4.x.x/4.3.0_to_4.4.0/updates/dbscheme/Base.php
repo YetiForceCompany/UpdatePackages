@@ -1,4 +1,5 @@
 <?php
+
 namespace Importers;
 
 /**
@@ -11,7 +12,6 @@ namespace Importers;
  */
 class Base extends \App\Db\Importers\Base
 {
-
 	public $dbType = 'base';
 
 	public function scheme()

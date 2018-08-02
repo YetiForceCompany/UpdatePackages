@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   86130 => 'China Unicom',
   86131 => 'China Unicom',
   86132 => 'China Unicom',
@@ -76,4 +76,4 @@ return [
   86189 => 'China Telecom',
   86198 => 'China Telecom',
   86199 => 'China Telecom',
-];
+);

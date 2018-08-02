@@ -2,493 +2,490 @@
 
 /**
  * Defines allowed CSS attributes and what their values are.
- *
  * @see HTMLPurifier_HTMLDefinition
  */
 class HTMLPurifier_CSSDefinition extends HTMLPurifier_Definition
 {
-	public $type = 'CSS';
 
-	/**
-	 * Assoc array of attribute name to definition object.
-	 *
-	 * @type HTMLPurifier_AttrDef[]
-	 */
-	public $info = [];
+    public $type = 'CSS';
 
-	/**
-	 * Constructs the info array.  The meat of this class.
-	 *
-	 * @param HTMLPurifier_Config $config
-	 */
-	protected function doSetup($config)
-	{
-		$this->info['text-align'] = new HTMLPurifier_AttrDef_Enum(
-			['left', 'right', 'center', 'justify'],
-			false
-		);
+    /**
+     * Assoc array of attribute name to definition object.
+     * @type HTMLPurifier_AttrDef[]
+     */
+    public $info = array();
 
-		$border_style =
-			$this->info['border-bottom-style'] =
-			$this->info['border-right-style'] =
-			$this->info['border-left-style'] =
-			$this->info['border-top-style'] = new HTMLPurifier_AttrDef_Enum(
-				[
-					'none',
-					'hidden',
-					'dotted',
-					'dashed',
-					'solid',
-					'double',
-					'groove',
-					'ridge',
-					'inset',
-					'outset'
-				],
-				false
-			);
+    /**
+     * Constructs the info array.  The meat of this class.
+     * @param HTMLPurifier_Config $config
+     */
+    protected function doSetup($config)
+    {
+        $this->info['text-align'] = new HTMLPurifier_AttrDef_Enum(
+            array('left', 'right', 'center', 'justify'),
+            false
+        );
 
-		$this->info['border-style'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_style);
+        $border_style =
+            $this->info['border-bottom-style'] =
+            $this->info['border-right-style'] =
+            $this->info['border-left-style'] =
+            $this->info['border-top-style'] = new HTMLPurifier_AttrDef_Enum(
+                array(
+                    'none',
+                    'hidden',
+                    'dotted',
+                    'dashed',
+                    'solid',
+                    'double',
+                    'groove',
+                    'ridge',
+                    'inset',
+                    'outset'
+                ),
+                false
+            );
 
-		$this->info['clear'] = new HTMLPurifier_AttrDef_Enum(
-			['none', 'left', 'right', 'both'],
-			false
-		);
-		$this->info['float'] = new HTMLPurifier_AttrDef_Enum(
-			['none', 'left', 'right'],
-			false
-		);
-		$this->info['font-style'] = new HTMLPurifier_AttrDef_Enum(
-			['normal', 'italic', 'oblique'],
-			false
-		);
-		$this->info['font-variant'] = new HTMLPurifier_AttrDef_Enum(
-			['normal', 'small-caps'],
-			false
-		);
+        $this->info['border-style'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_style);
 
-		$uri_or_none = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(['none']),
-				new HTMLPurifier_AttrDef_CSS_URI()
-			]
-		);
+        $this->info['clear'] = new HTMLPurifier_AttrDef_Enum(
+            array('none', 'left', 'right', 'both'),
+            false
+        );
+        $this->info['float'] = new HTMLPurifier_AttrDef_Enum(
+            array('none', 'left', 'right'),
+            false
+        );
+        $this->info['font-style'] = new HTMLPurifier_AttrDef_Enum(
+            array('normal', 'italic', 'oblique'),
+            false
+        );
+        $this->info['font-variant'] = new HTMLPurifier_AttrDef_Enum(
+            array('normal', 'small-caps'),
+            false
+        );
 
-		$this->info['list-style-position'] = new HTMLPurifier_AttrDef_Enum(
-			['inside', 'outside'],
-			false
-		);
-		$this->info['list-style-type'] = new HTMLPurifier_AttrDef_Enum(
-			[
-				'disc',
-				'circle',
-				'square',
-				'decimal',
-				'lower-roman',
-				'upper-roman',
-				'lower-alpha',
-				'upper-alpha',
-				'none'
-			],
-			false
-		);
-		$this->info['list-style-image'] = $uri_or_none;
+        $uri_or_none = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(array('none')),
+                new HTMLPurifier_AttrDef_CSS_URI()
+            )
+        );
 
-		$this->info['list-style'] = new HTMLPurifier_AttrDef_CSS_ListStyle($config);
+        $this->info['list-style-position'] = new HTMLPurifier_AttrDef_Enum(
+            array('inside', 'outside'),
+            false
+        );
+        $this->info['list-style-type'] = new HTMLPurifier_AttrDef_Enum(
+            array(
+                'disc',
+                'circle',
+                'square',
+                'decimal',
+                'lower-roman',
+                'upper-roman',
+                'lower-alpha',
+                'upper-alpha',
+                'none'
+            ),
+            false
+        );
+        $this->info['list-style-image'] = $uri_or_none;
 
-		$this->info['text-transform'] = new HTMLPurifier_AttrDef_Enum(
-			['capitalize', 'uppercase', 'lowercase', 'none'],
-			false
-		);
-		$this->info['color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['list-style'] = new HTMLPurifier_AttrDef_CSS_ListStyle($config);
 
-		$this->info['background-image'] = $uri_or_none;
-		$this->info['background-repeat'] = new HTMLPurifier_AttrDef_Enum(
-			['repeat', 'repeat-x', 'repeat-y', 'no-repeat']
-		);
-		$this->info['background-attachment'] = new HTMLPurifier_AttrDef_Enum(
-			['scroll', 'fixed']
-		);
-		$this->info['background-position'] = new HTMLPurifier_AttrDef_CSS_BackgroundPosition();
+        $this->info['text-transform'] = new HTMLPurifier_AttrDef_Enum(
+            array('capitalize', 'uppercase', 'lowercase', 'none'),
+            false
+        );
+        $this->info['color'] = new HTMLPurifier_AttrDef_CSS_Color();
 
-		$border_color =
-			$this->info['border-top-color'] =
-			$this->info['border-bottom-color'] =
-			$this->info['border-left-color'] =
-			$this->info['border-right-color'] =
-			$this->info['background-color'] = new HTMLPurifier_AttrDef_CSS_Composite(
-				[
-					new HTMLPurifier_AttrDef_Enum(['transparent']),
-					new HTMLPurifier_AttrDef_CSS_Color()
-				]
-			);
+        $this->info['background-image'] = $uri_or_none;
+        $this->info['background-repeat'] = new HTMLPurifier_AttrDef_Enum(
+            array('repeat', 'repeat-x', 'repeat-y', 'no-repeat')
+        );
+        $this->info['background-attachment'] = new HTMLPurifier_AttrDef_Enum(
+            array('scroll', 'fixed')
+        );
+        $this->info['background-position'] = new HTMLPurifier_AttrDef_CSS_BackgroundPosition();
 
-		$this->info['background'] = new HTMLPurifier_AttrDef_CSS_Background($config);
+        $border_color =
+            $this->info['border-top-color'] =
+            $this->info['border-bottom-color'] =
+            $this->info['border-left-color'] =
+            $this->info['border-right-color'] =
+            $this->info['background-color'] = new HTMLPurifier_AttrDef_CSS_Composite(
+                array(
+                    new HTMLPurifier_AttrDef_Enum(array('transparent')),
+                    new HTMLPurifier_AttrDef_CSS_Color()
+                )
+            );
 
-		$this->info['border-color'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_color);
+        $this->info['background'] = new HTMLPurifier_AttrDef_CSS_Background($config);
 
-		$border_width =
-			$this->info['border-top-width'] =
-			$this->info['border-bottom-width'] =
-			$this->info['border-left-width'] =
-			$this->info['border-right-width'] = new HTMLPurifier_AttrDef_CSS_Composite(
-				[
-					new HTMLPurifier_AttrDef_Enum(['thin', 'medium', 'thick']),
-					new HTMLPurifier_AttrDef_CSS_Length('0') //disallow negative
-				]
-			);
+        $this->info['border-color'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_color);
 
-		$this->info['border-width'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_width);
+        $border_width =
+            $this->info['border-top-width'] =
+            $this->info['border-bottom-width'] =
+            $this->info['border-left-width'] =
+            $this->info['border-right-width'] = new HTMLPurifier_AttrDef_CSS_Composite(
+                array(
+                    new HTMLPurifier_AttrDef_Enum(array('thin', 'medium', 'thick')),
+                    new HTMLPurifier_AttrDef_CSS_Length('0') //disallow negative
+                )
+            );
 
-		$this->info['letter-spacing'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(['normal']),
-				new HTMLPurifier_AttrDef_CSS_Length()
-			]
-		);
+        $this->info['border-width'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_width);
 
-		$this->info['word-spacing'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(['normal']),
-				new HTMLPurifier_AttrDef_CSS_Length()
-			]
-		);
+        $this->info['letter-spacing'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(array('normal')),
+                new HTMLPurifier_AttrDef_CSS_Length()
+            )
+        );
 
-		$this->info['font-size'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(
-					[
-						'xx-small',
-						'x-small',
-						'small',
-						'medium',
-						'large',
-						'x-large',
-						'xx-large',
-						'larger',
-						'smaller'
-					]
-				),
-				new HTMLPurifier_AttrDef_CSS_Percentage(),
-				new HTMLPurifier_AttrDef_CSS_Length()
-			]
-		);
+        $this->info['word-spacing'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(array('normal')),
+                new HTMLPurifier_AttrDef_CSS_Length()
+            )
+        );
 
-		$this->info['line-height'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(['normal']),
-				new HTMLPurifier_AttrDef_CSS_Number(true), // no negatives
-				new HTMLPurifier_AttrDef_CSS_Length('0'),
-				new HTMLPurifier_AttrDef_CSS_Percentage(true)
-			]
-		);
+        $this->info['font-size'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(
+                    array(
+                        'xx-small',
+                        'x-small',
+                        'small',
+                        'medium',
+                        'large',
+                        'x-large',
+                        'xx-large',
+                        'larger',
+                        'smaller'
+                    )
+                ),
+                new HTMLPurifier_AttrDef_CSS_Percentage(),
+                new HTMLPurifier_AttrDef_CSS_Length()
+            )
+        );
 
-		$margin =
-			$this->info['margin-top'] =
-			$this->info['margin-bottom'] =
-			$this->info['margin-left'] =
-			$this->info['margin-right'] = new HTMLPurifier_AttrDef_CSS_Composite(
-				[
-					new HTMLPurifier_AttrDef_CSS_Length(),
-					new HTMLPurifier_AttrDef_CSS_Percentage(),
-					new HTMLPurifier_AttrDef_Enum(['auto'])
-				]
-			);
+        $this->info['line-height'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(array('normal')),
+                new HTMLPurifier_AttrDef_CSS_Number(true), // no negatives
+                new HTMLPurifier_AttrDef_CSS_Length('0'),
+                new HTMLPurifier_AttrDef_CSS_Percentage(true)
+            )
+        );
 
-		$this->info['margin'] = new HTMLPurifier_AttrDef_CSS_Multiple($margin);
+        $margin =
+            $this->info['margin-top'] =
+            $this->info['margin-bottom'] =
+            $this->info['margin-left'] =
+            $this->info['margin-right'] = new HTMLPurifier_AttrDef_CSS_Composite(
+                array(
+                    new HTMLPurifier_AttrDef_CSS_Length(),
+                    new HTMLPurifier_AttrDef_CSS_Percentage(),
+                    new HTMLPurifier_AttrDef_Enum(array('auto'))
+                )
+            );
 
-		// non-negative
-		$padding =
-			$this->info['padding-top'] =
-			$this->info['padding-bottom'] =
-			$this->info['padding-left'] =
-			$this->info['padding-right'] = new HTMLPurifier_AttrDef_CSS_Composite(
-				[
-					new HTMLPurifier_AttrDef_CSS_Length('0'),
-					new HTMLPurifier_AttrDef_CSS_Percentage(true)
-				]
-			);
+        $this->info['margin'] = new HTMLPurifier_AttrDef_CSS_Multiple($margin);
 
-		$this->info['padding'] = new HTMLPurifier_AttrDef_CSS_Multiple($padding);
+        // non-negative
+        $padding =
+            $this->info['padding-top'] =
+            $this->info['padding-bottom'] =
+            $this->info['padding-left'] =
+            $this->info['padding-right'] = new HTMLPurifier_AttrDef_CSS_Composite(
+                array(
+                    new HTMLPurifier_AttrDef_CSS_Length('0'),
+                    new HTMLPurifier_AttrDef_CSS_Percentage(true)
+                )
+            );
 
-		$this->info['text-indent'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_CSS_Length(),
-				new HTMLPurifier_AttrDef_CSS_Percentage()
-			]
-		);
+        $this->info['padding'] = new HTMLPurifier_AttrDef_CSS_Multiple($padding);
 
-		$trusted_wh = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_CSS_Length('0'),
-				new HTMLPurifier_AttrDef_CSS_Percentage(true),
-				new HTMLPurifier_AttrDef_Enum(['auto'])
-			]
-		);
-		$max = $config->get('CSS.MaxImgLength');
+        $this->info['text-indent'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_CSS_Length(),
+                new HTMLPurifier_AttrDef_CSS_Percentage()
+            )
+        );
 
-		$this->info['min-width'] =
-		$this->info['max-width'] =
-		$this->info['min-height'] =
-		$this->info['max-height'] =
-		$this->info['width'] =
-		$this->info['height'] =
-			$max === null ?
-				$trusted_wh :
-				new HTMLPurifier_AttrDef_Switch(
-					'img',
-					// For img tags:
-					new HTMLPurifier_AttrDef_CSS_Composite(
-						[
-							new HTMLPurifier_AttrDef_CSS_Length('0', $max),
-							new HTMLPurifier_AttrDef_Enum(['auto'])
-						]
-					),
-					// For everyone else:
-					$trusted_wh
-				);
+        $trusted_wh = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_CSS_Length('0'),
+                new HTMLPurifier_AttrDef_CSS_Percentage(true),
+                new HTMLPurifier_AttrDef_Enum(array('auto'))
+            )
+        );
+        $max = $config->get('CSS.MaxImgLength');
 
-		$this->info['text-decoration'] = new HTMLPurifier_AttrDef_CSS_TextDecoration();
+        $this->info['min-width'] =
+        $this->info['max-width'] =
+        $this->info['min-height'] =
+        $this->info['max-height'] =
+        $this->info['width'] =
+        $this->info['height'] =
+            $max === null ?
+                $trusted_wh :
+                new HTMLPurifier_AttrDef_Switch(
+                    'img',
+                    // For img tags:
+                    new HTMLPurifier_AttrDef_CSS_Composite(
+                        array(
+                            new HTMLPurifier_AttrDef_CSS_Length('0', $max),
+                            new HTMLPurifier_AttrDef_Enum(array('auto'))
+                        )
+                    ),
+                    // For everyone else:
+                    $trusted_wh
+                );
 
-		$this->info['font-family'] = new HTMLPurifier_AttrDef_CSS_FontFamily();
+        $this->info['text-decoration'] = new HTMLPurifier_AttrDef_CSS_TextDecoration();
 
-		// this could use specialized code
-		$this->info['font-weight'] = new HTMLPurifier_AttrDef_Enum(
-			[
-				'normal',
-				'bold',
-				'bolder',
-				'lighter',
-				'100',
-				'200',
-				'300',
-				'400',
-				'500',
-				'600',
-				'700',
-				'800',
-				'900'
-			],
-			false
-		);
+        $this->info['font-family'] = new HTMLPurifier_AttrDef_CSS_FontFamily();
 
-		// MUST be called after other font properties, as it references
-		// a CSSDefinition object
-		$this->info['font'] = new HTMLPurifier_AttrDef_CSS_Font($config);
+        // this could use specialized code
+        $this->info['font-weight'] = new HTMLPurifier_AttrDef_Enum(
+            array(
+                'normal',
+                'bold',
+                'bolder',
+                'lighter',
+                '100',
+                '200',
+                '300',
+                '400',
+                '500',
+                '600',
+                '700',
+                '800',
+                '900'
+            ),
+            false
+        );
 
-		// same here
-		$this->info['border'] =
-		$this->info['border-bottom'] =
-		$this->info['border-top'] =
-		$this->info['border-left'] =
-		$this->info['border-right'] = new HTMLPurifier_AttrDef_CSS_Border($config);
+        // MUST be called after other font properties, as it references
+        // a CSSDefinition object
+        $this->info['font'] = new HTMLPurifier_AttrDef_CSS_Font($config);
 
-		$this->info['border-collapse'] = new HTMLPurifier_AttrDef_Enum(
-			['collapse', 'separate']
-		);
+        // same here
+        $this->info['border'] =
+        $this->info['border-bottom'] =
+        $this->info['border-top'] =
+        $this->info['border-left'] =
+        $this->info['border-right'] = new HTMLPurifier_AttrDef_CSS_Border($config);
 
-		$this->info['caption-side'] = new HTMLPurifier_AttrDef_Enum(
-			['top', 'bottom']
-		);
+        $this->info['border-collapse'] = new HTMLPurifier_AttrDef_Enum(
+            array('collapse', 'separate')
+        );
 
-		$this->info['table-layout'] = new HTMLPurifier_AttrDef_Enum(
-			['auto', 'fixed']
-		);
+        $this->info['caption-side'] = new HTMLPurifier_AttrDef_Enum(
+            array('top', 'bottom')
+        );
 
-		$this->info['vertical-align'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Enum(
-					[
-						'baseline',
-						'sub',
-						'super',
-						'top',
-						'text-top',
-						'middle',
-						'bottom',
-						'text-bottom'
-					]
-				),
-				new HTMLPurifier_AttrDef_CSS_Length(),
-				new HTMLPurifier_AttrDef_CSS_Percentage()
-			]
-		);
+        $this->info['table-layout'] = new HTMLPurifier_AttrDef_Enum(
+            array('auto', 'fixed')
+        );
 
-		$this->info['border-spacing'] = new HTMLPurifier_AttrDef_CSS_Multiple(new HTMLPurifier_AttrDef_CSS_Length(), 2);
+        $this->info['vertical-align'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Enum(
+                    array(
+                        'baseline',
+                        'sub',
+                        'super',
+                        'top',
+                        'text-top',
+                        'middle',
+                        'bottom',
+                        'text-bottom'
+                    )
+                ),
+                new HTMLPurifier_AttrDef_CSS_Length(),
+                new HTMLPurifier_AttrDef_CSS_Percentage()
+            )
+        );
 
-		// These CSS properties don't work on many browsers, but we live
-		// in THE FUTURE!
-		$this->info['white-space'] = new HTMLPurifier_AttrDef_Enum(
-			['nowrap', 'normal', 'pre', 'pre-wrap', 'pre-line']
-		);
+        $this->info['border-spacing'] = new HTMLPurifier_AttrDef_CSS_Multiple(new HTMLPurifier_AttrDef_CSS_Length(), 2);
 
-		if ($config->get('CSS.Proprietary')) {
-			$this->doSetupProprietary($config);
-		}
+        // These CSS properties don't work on many browsers, but we live
+        // in THE FUTURE!
+        $this->info['white-space'] = new HTMLPurifier_AttrDef_Enum(
+            array('nowrap', 'normal', 'pre', 'pre-wrap', 'pre-line')
+        );
 
-		if ($config->get('CSS.AllowTricky')) {
-			$this->doSetupTricky($config);
-		}
+        if ($config->get('CSS.Proprietary')) {
+            $this->doSetupProprietary($config);
+        }
 
-		if ($config->get('CSS.Trusted')) {
-			$this->doSetupTrusted($config);
-		}
+        if ($config->get('CSS.AllowTricky')) {
+            $this->doSetupTricky($config);
+        }
 
-		$allow_important = $config->get('CSS.AllowImportant');
-		// wrap all attr-defs with decorator that handles !important
-		foreach ($this->info as $k => $v) {
-			$this->info[$k] = new HTMLPurifier_AttrDef_CSS_ImportantDecorator($v, $allow_important);
-		}
+        if ($config->get('CSS.Trusted')) {
+            $this->doSetupTrusted($config);
+        }
 
-		$this->setupConfigStuff($config);
-	}
+        $allow_important = $config->get('CSS.AllowImportant');
+        // wrap all attr-defs with decorator that handles !important
+        foreach ($this->info as $k => $v) {
+            $this->info[$k] = new HTMLPurifier_AttrDef_CSS_ImportantDecorator($v, $allow_important);
+        }
 
-	/**
-	 * @param HTMLPurifier_Config $config
-	 */
-	protected function doSetupProprietary($config)
-	{
-		// Internet Explorer only scrollbar colors
-		$this->info['scrollbar-arrow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
-		$this->info['scrollbar-base-color'] = new HTMLPurifier_AttrDef_CSS_Color();
-		$this->info['scrollbar-darkshadow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
-		$this->info['scrollbar-face-color'] = new HTMLPurifier_AttrDef_CSS_Color();
-		$this->info['scrollbar-highlight-color'] = new HTMLPurifier_AttrDef_CSS_Color();
-		$this->info['scrollbar-shadow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->setupConfigStuff($config);
+    }
 
-		// vendor specific prefixes of opacity
-		$this->info['-moz-opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
-		$this->info['-khtml-opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
+    /**
+     * @param HTMLPurifier_Config $config
+     */
+    protected function doSetupProprietary($config)
+    {
+        // Internet Explorer only scrollbar colors
+        $this->info['scrollbar-arrow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['scrollbar-base-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['scrollbar-darkshadow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['scrollbar-face-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['scrollbar-highlight-color'] = new HTMLPurifier_AttrDef_CSS_Color();
+        $this->info['scrollbar-shadow-color'] = new HTMLPurifier_AttrDef_CSS_Color();
 
-		// only opacity, for now
-		$this->info['filter'] = new HTMLPurifier_AttrDef_CSS_Filter();
+        // vendor specific prefixes of opacity
+        $this->info['-moz-opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
+        $this->info['-khtml-opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
 
-		// more CSS3
-		$this->info['page-break-after'] =
-		$this->info['page-break-before'] = new HTMLPurifier_AttrDef_Enum(
-			[
-				'auto',
-				'always',
-				'avoid',
-				'left',
-				'right'
-			]
-		);
-		$this->info['page-break-inside'] = new HTMLPurifier_AttrDef_Enum(['auto', 'avoid']);
+        // only opacity, for now
+        $this->info['filter'] = new HTMLPurifier_AttrDef_CSS_Filter();
 
-		$border_radius = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_CSS_Percentage(true), // disallow negative
-				new HTMLPurifier_AttrDef_CSS_Length('0') // disallow negative
-			]);
+        // more CSS3
+        $this->info['page-break-after'] =
+        $this->info['page-break-before'] = new HTMLPurifier_AttrDef_Enum(
+            array(
+                'auto',
+                'always',
+                'avoid',
+                'left',
+                'right'
+            )
+        );
+        $this->info['page-break-inside'] = new HTMLPurifier_AttrDef_Enum(array('auto', 'avoid'));
 
-		$this->info['border-top-left-radius'] =
-		$this->info['border-top-right-radius'] =
-		$this->info['border-bottom-right-radius'] =
-		$this->info['border-bottom-left-radius'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_radius, 2);
-		// TODO: support SLASH syntax
-		$this->info['border-radius'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_radius, 4);
-	}
+        $border_radius = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_CSS_Percentage(true), // disallow negative
+                new HTMLPurifier_AttrDef_CSS_Length('0') // disallow negative
+            ));
 
-	/**
-	 * @param HTMLPurifier_Config $config
-	 */
-	protected function doSetupTricky($config)
-	{
-		$this->info['display'] = new HTMLPurifier_AttrDef_Enum(
-			[
-				'inline',
-				'block',
-				'list-item',
-				'run-in',
-				'compact',
-				'marker',
-				'table',
-				'inline-block',
-				'inline-table',
-				'table-row-group',
-				'table-header-group',
-				'table-footer-group',
-				'table-row',
-				'table-column-group',
-				'table-column',
-				'table-cell',
-				'table-caption',
-				'none'
-			]
-		);
-		$this->info['visibility'] = new HTMLPurifier_AttrDef_Enum(
-			['visible', 'hidden', 'collapse']
-		);
-		$this->info['overflow'] = new HTMLPurifier_AttrDef_Enum(['visible', 'hidden', 'auto', 'scroll']);
-		$this->info['opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
-	}
+        $this->info['border-top-left-radius'] =
+        $this->info['border-top-right-radius'] =
+        $this->info['border-bottom-right-radius'] =
+        $this->info['border-bottom-left-radius'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_radius, 2);
+        // TODO: support SLASH syntax
+        $this->info['border-radius'] = new HTMLPurifier_AttrDef_CSS_Multiple($border_radius, 4);
 
-	/**
-	 * @param HTMLPurifier_Config $config
-	 */
-	protected function doSetupTrusted($config)
-	{
-		$this->info['position'] = new HTMLPurifier_AttrDef_Enum(
-			['static', 'relative', 'absolute', 'fixed']
-		);
-		$this->info['top'] =
-		$this->info['left'] =
-		$this->info['right'] =
-		$this->info['bottom'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_CSS_Length(),
-				new HTMLPurifier_AttrDef_CSS_Percentage(),
-				new HTMLPurifier_AttrDef_Enum(['auto']),
-			]
-		);
-		$this->info['z-index'] = new HTMLPurifier_AttrDef_CSS_Composite(
-			[
-				new HTMLPurifier_AttrDef_Integer(),
-				new HTMLPurifier_AttrDef_Enum(['auto']),
-			]
-		);
-	}
+    }
 
-	/**
-	 * Performs extra config-based processing. Based off of
-	 * HTMLPurifier_HTMLDefinition.
-	 *
-	 * @param HTMLPurifier_Config $config
-	 *
-	 * @todo Refactor duplicate elements into common class (probably using
-	 *       composition, not inheritance).
-	 */
-	protected function setupConfigStuff($config)
-	{
-		// setup allowed elements
-		$support = '(for information on implementing this, see the ' .
-			'support forums) ';
-		$allowed_properties = $config->get('CSS.AllowedProperties');
-		if ($allowed_properties !== null) {
-			foreach ($this->info as $name => $d) {
-				if (!isset($allowed_properties[$name])) {
-					unset($this->info[$name]);
-				}
-				unset($allowed_properties[$name]);
-			}
-			// emit errors
-			foreach ($allowed_properties as $name => $d) {
-				// :TODO: Is this htmlspecialchars() call really necessary?
-				$name = htmlspecialchars($name);
-				trigger_error("Style attribute '$name' is not supported $support", E_USER_WARNING);
-			}
-		}
+    /**
+     * @param HTMLPurifier_Config $config
+     */
+    protected function doSetupTricky($config)
+    {
+        $this->info['display'] = new HTMLPurifier_AttrDef_Enum(
+            array(
+                'inline',
+                'block',
+                'list-item',
+                'run-in',
+                'compact',
+                'marker',
+                'table',
+                'inline-block',
+                'inline-table',
+                'table-row-group',
+                'table-header-group',
+                'table-footer-group',
+                'table-row',
+                'table-column-group',
+                'table-column',
+                'table-cell',
+                'table-caption',
+                'none'
+            )
+        );
+        $this->info['visibility'] = new HTMLPurifier_AttrDef_Enum(
+            array('visible', 'hidden', 'collapse')
+        );
+        $this->info['overflow'] = new HTMLPurifier_AttrDef_Enum(array('visible', 'hidden', 'auto', 'scroll'));
+        $this->info['opacity'] = new HTMLPurifier_AttrDef_CSS_AlphaValue();
+    }
 
-		$forbidden_properties = $config->get('CSS.ForbiddenProperties');
-		if ($forbidden_properties !== null) {
-			foreach ($this->info as $name => $d) {
-				if (isset($forbidden_properties[$name])) {
-					unset($this->info[$name]);
-				}
-			}
-		}
-	}
+    /**
+     * @param HTMLPurifier_Config $config
+     */
+    protected function doSetupTrusted($config)
+    {
+        $this->info['position'] = new HTMLPurifier_AttrDef_Enum(
+            array('static', 'relative', 'absolute', 'fixed')
+        );
+        $this->info['top'] =
+        $this->info['left'] =
+        $this->info['right'] =
+        $this->info['bottom'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_CSS_Length(),
+                new HTMLPurifier_AttrDef_CSS_Percentage(),
+                new HTMLPurifier_AttrDef_Enum(array('auto')),
+            )
+        );
+        $this->info['z-index'] = new HTMLPurifier_AttrDef_CSS_Composite(
+            array(
+                new HTMLPurifier_AttrDef_Integer(),
+                new HTMLPurifier_AttrDef_Enum(array('auto')),
+            )
+        );
+    }
+
+    /**
+     * Performs extra config-based processing. Based off of
+     * HTMLPurifier_HTMLDefinition.
+     * @param HTMLPurifier_Config $config
+     * @todo Refactor duplicate elements into common class (probably using
+     *       composition, not inheritance).
+     */
+    protected function setupConfigStuff($config)
+    {
+        // setup allowed elements
+        $support = "(for information on implementing this, see the " .
+            "support forums) ";
+        $allowed_properties = $config->get('CSS.AllowedProperties');
+        if ($allowed_properties !== null) {
+            foreach ($this->info as $name => $d) {
+                if (!isset($allowed_properties[$name])) {
+                    unset($this->info[$name]);
+                }
+                unset($allowed_properties[$name]);
+            }
+            // emit errors
+            foreach ($allowed_properties as $name => $d) {
+                // :TODO: Is this htmlspecialchars() call really necessary?
+                $name = htmlspecialchars($name);
+                trigger_error("Style attribute '$name' is not supported $support", E_USER_WARNING);
+            }
+        }
+
+        $forbidden_properties = $config->get('CSS.ForbiddenProperties');
+        if ($forbidden_properties !== null) {
+            foreach ($this->info as $name => $d) {
+                if (isset($forbidden_properties[$name])) {
+                    unset($this->info[$name]);
+                }
+            }
+        }
+    }
 }
 
 // vim: et sw=4 sts=4

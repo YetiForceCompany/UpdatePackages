@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2243024 => 'Fria',
   2243031 => 'Boké',
   2243032 => 'Kamsar',
@@ -32,4 +32,4 @@ return [
   2243094 => 'Macenta',
   2243097 => 'Guéckédou',
   2243098 => 'Kissidougou',
-];
+);

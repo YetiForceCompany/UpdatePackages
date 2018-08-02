@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   62199 => 'Esia',
   6221317 => 'Esia',
   62213430 => 'Esia',
@@ -700,4 +700,4 @@ return [
   62967902 => 'Esia',
   62967903 => 'Esia',
   62967904 => 'Esia',
-];
+);

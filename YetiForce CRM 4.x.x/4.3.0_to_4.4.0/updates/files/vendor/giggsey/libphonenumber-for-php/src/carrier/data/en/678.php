@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   67850 => 'Digicel',
   67851 => 'Digicel',
   67852 => 'Digicel',
@@ -32,4 +32,4 @@ return [
   67874 => 'SMILE',
   67875 => 'SMILE',
   67876 => 'SMILE',
-];
+);

@@ -18,17 +18,17 @@ use DebugBar\DataCollector\RequestDataCollector;
 use DebugBar\DataCollector\TimeDataCollector;
 
 /**
- * Debug bar subclass which adds all included collectors.
+ * Debug bar subclass which adds all included collectors
  */
 class StandardDebugBar extends DebugBar
 {
-	public function __construct()
-	{
-		$this->addCollector(new PhpInfoCollector());
-		$this->addCollector(new MessagesCollector());
-		$this->addCollector(new RequestDataCollector());
-		$this->addCollector(new TimeDataCollector());
-		$this->addCollector(new MemoryCollector());
-		$this->addCollector(new ExceptionsCollector());
-	}
+    public function __construct()
+    {
+        $this->addCollector(new PhpInfoCollector());
+        $this->addCollector(new MessagesCollector());
+        $this->addCollector(new RequestDataCollector());
+        $this->addCollector(new TimeDataCollector());
+        $this->addCollector(new MemoryCollector());
+        $this->addCollector(new ExceptionsCollector());
+    }
 }

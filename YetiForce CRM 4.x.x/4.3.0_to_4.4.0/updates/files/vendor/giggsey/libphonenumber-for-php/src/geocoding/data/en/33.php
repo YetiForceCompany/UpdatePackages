@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3313005 => 'Coignières',
   3313006 => 'Poissy',
   3313007 => 'Plaisir',
@@ -5587,4 +5587,4 @@ return [
   3359677 => 'Ducos',
   3359678 => 'Basse-Pointe',
   3359679 => 'Fort de France',
-];
+);

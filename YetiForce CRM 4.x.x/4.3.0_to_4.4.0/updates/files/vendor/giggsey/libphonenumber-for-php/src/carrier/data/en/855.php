@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   85510 => 'Smart',
   85512 => 'Cellcard',
   85514 => 'Cellcard',
@@ -33,4 +33,4 @@ return [
   85595 => 'Cellcard',
   85596 => 'Smart',
   85598 => 'Smart',
-];
+);

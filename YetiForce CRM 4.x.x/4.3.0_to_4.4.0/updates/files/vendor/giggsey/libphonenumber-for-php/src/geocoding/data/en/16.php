@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   1601 => 'Mississippi',
   1601200 => 'Jackson, MS',
   1601225 => 'Gloster, MS',
@@ -3891,4 +3891,4 @@ return [
   1682622 => 'Mansfield, TX',
   1682647 => 'Fort Worth, TX',
   1682885 => 'Fort Worth, TX',
-];
+);

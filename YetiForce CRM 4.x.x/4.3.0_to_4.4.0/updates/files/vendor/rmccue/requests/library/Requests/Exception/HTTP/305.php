@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 305 Use Proxy responses.
+ * Exception for 305 Use Proxy responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 305 Use Proxy responses.
+ * Exception for 305 Use Proxy responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_305 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_305 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 305;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

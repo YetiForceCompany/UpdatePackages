@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   951422 => 'Yangon',
   951423 => 'Yangon',
   951424 => 'Yangon',
@@ -111,4 +111,4 @@ return [
   958630 => 'Thabeikkyin',
   958635 => 'Sintkuu',
   958639 => 'Letpanhla',
-];
+);

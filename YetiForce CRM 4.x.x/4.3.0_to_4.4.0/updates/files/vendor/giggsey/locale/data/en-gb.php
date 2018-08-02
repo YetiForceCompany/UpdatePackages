@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BL' => 'St Barthélemy',
   'KN' => 'St Kitts & Nevis',
   'LC' => 'St Lucia',
@@ -19,4 +19,4 @@ return [
   'UM' => 'US Outlying Islands',
   'VC' => 'St Vincent & Grenadines',
   'VI' => 'US Virgin Islands',
-];
+);

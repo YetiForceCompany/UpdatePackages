@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   642409 => 'Scott Base',
   643 => 'South Island',
   64320 => 'Gore/Edendale',
@@ -118,4 +118,4 @@ return [
   6499 => 'Auckland',
   64990 => 'Warkworth',
   64998 => 'Whangarei',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3851 => 'Zagreb',
   38520 => 'Dubrovnik-Neretva',
   38521 => 'Split-Dalmatia',
@@ -31,4 +31,4 @@ return [
   38551 => 'Primorsko-goranska',
   38552 => 'Istra',
   38553 => 'Lika-Senj',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Seul',
   8241 => 'Chungcheong do Sul',
   8243 => 'Chungcheong do Norte',
@@ -19,4 +19,4 @@ return [
   8255 => 'Gyeongsang do Sul',
   8261 => 'Jeolla do Sul',
   8263 => 'Jeolla do Norte',
-];
+);

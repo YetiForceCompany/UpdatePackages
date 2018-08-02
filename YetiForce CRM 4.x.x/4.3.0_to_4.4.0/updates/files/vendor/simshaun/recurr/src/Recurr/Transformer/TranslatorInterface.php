@@ -4,5 +4,5 @@ namespace Recurr\Transformer;
 
 interface TranslatorInterface
 {
-	public function trans($string);
+    public function trans($string);
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   64204 => 'Skinny',
   6421 => 'Vodafone',
   6422 => '2degrees',
@@ -19,4 +19,4 @@ return [
   6427 => 'Telecom',
   6428 => 'Vodafone',
   6429 => 'TelstraClear',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   1401 => 'Rhode Island',
   1401222 => 'Providence, RI',
   1401232 => 'Smithfield, RI',
@@ -4218,4 +4218,4 @@ return [
   1484875 => 'Exton, PA',
   1484884 => 'Bethlehem, PA',
   1484895 => 'Bethlehem, PA',
-];
+);

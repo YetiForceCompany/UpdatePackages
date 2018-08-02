@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   67615 => 'U-Call',
   67616 => 'U-Call',
   67617 => 'U-Call',
@@ -36,4 +36,4 @@ return [
   67676 => 'U-Call',
   67677 => 'U-Call',
   67678 => 'U-Call',
-];
+);

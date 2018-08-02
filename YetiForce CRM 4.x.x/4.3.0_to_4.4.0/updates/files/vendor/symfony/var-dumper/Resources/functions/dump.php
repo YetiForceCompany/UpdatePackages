@@ -12,34 +12,34 @@
 use Symfony\Component\VarDumper\VarDumper;
 
 if (!function_exists('dump')) {
-	/**
-	 * @author Nicolas Grekas <p@tchwork.com>
-	 */
-	function dump($var, ...$moreVars)
-	{
-		VarDumper::dump($var);
+    /**
+     * @author Nicolas Grekas <p@tchwork.com>
+     */
+    function dump($var, ...$moreVars)
+    {
+        VarDumper::dump($var);
 
-		foreach ($moreVars as $var) {
-			VarDumper::dump($var);
-		}
+        foreach ($moreVars as $var) {
+            VarDumper::dump($var);
+        }
 
-		if (1 < func_num_args()) {
-			return func_get_args();
-		}
+        if (1 < func_num_args()) {
+            return func_get_args();
+        }
 
-		return $var;
-	}
+        return $var;
+    }
 }
 
 if (!function_exists('dd')) {
-	function dd($var, ...$moreVars)
-	{
-		VarDumper::dump($var);
+    function dd($var, ...$moreVars)
+    {
+        VarDumper::dump($var);
 
-		foreach ($moreVars as $var) {
-			VarDumper::dump($var);
-		}
+        foreach ($moreVars as $var) {
+            VarDumper::dump($var);
+        }
 
-		exit(1);
-	}
+        exit(1);
+    }
 }

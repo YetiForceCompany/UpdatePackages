@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   6661 => 'AIS',
   6664 => 'Penguin SIM',
   6665 => 'AIS',
@@ -45,4 +45,4 @@ return [
   66901 => 'AIS',
   66909 => 'True Move',
   6691 => 'DTAC',
-];
+);

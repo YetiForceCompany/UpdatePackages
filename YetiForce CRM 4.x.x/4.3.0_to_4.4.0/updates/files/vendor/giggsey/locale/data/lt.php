@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Dangun Žengimo sala',
   'AD' => 'Andora',
   'AE' => 'Jungtiniai Arabų Emyratai',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'Pietų Afrika',
   'ZM' => 'Zambija',
   'ZW' => 'Zimbabvė',
-];
+);

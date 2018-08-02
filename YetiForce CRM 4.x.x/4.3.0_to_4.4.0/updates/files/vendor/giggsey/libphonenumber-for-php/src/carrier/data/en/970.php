@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   97056 => 'Wataniya',
   97059 => 'Palestine Cellular Communications',
-];
+);

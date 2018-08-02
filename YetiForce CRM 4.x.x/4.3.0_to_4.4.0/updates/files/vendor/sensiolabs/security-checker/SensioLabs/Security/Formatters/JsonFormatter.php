@@ -15,19 +15,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class JsonFormatter implements FormatterInterface
 {
-	/**
-	 * Displays a security report as json.
-	 *
-	 * @param OutputInterface $output
-	 * @param string          $lockFilePath    The file path to the checked lock file
-	 * @param array           $vulnerabilities An array of vulnerabilities
-	 */
-	public function displayResults(OutputInterface $output, $lockFilePath, array $vulnerabilities)
-	{
-		if (defined('JSON_PRETTY_PRINT')) {
-			$output->write(json_encode($vulnerabilities, JSON_PRETTY_PRINT));
-		} else {
-			$output->write(json_encode($vulnerabilities));
-		}
-	}
+    /**
+     * Displays a security report as json.
+     *
+     * @param OutputInterface $output
+     * @param string          $lockFilePath    The file path to the checked lock file
+     * @param array           $vulnerabilities An array of vulnerabilities
+     */
+    public function displayResults(OutputInterface $output, $lockFilePath, array $vulnerabilities)
+    {
+        if (defined('JSON_PRETTY_PRINT')) {
+            $output->write(json_encode($vulnerabilities, JSON_PRETTY_PRINT));
+        } else {
+            $output->write(json_encode($vulnerabilities));
+        }
+    }
 }

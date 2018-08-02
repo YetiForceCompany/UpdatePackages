@@ -12,30 +12,33 @@ namespace Sabre\VObject\Property;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Unknown extends Text
-{
-	/**
-	 * Returns the value, in the format it should be encoded for json.
-	 *
-	 * This method must always return an array.
-	 *
-	 * @return array
-	 */
-	public function getJsonValue()
-	{
-		return [$this->getRawMimeDirValue()];
-	}
+class Unknown extends Text {
 
-	/**
-	 * Returns the type of value.
-	 *
-	 * This corresponds to the VALUE= parameter. Every property also has a
-	 * 'default' valueType.
-	 *
-	 * @return string
-	 */
-	public function getValueType()
-	{
-		return 'UNKNOWN';
-	}
+    /**
+     * Returns the value, in the format it should be encoded for json.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    function getJsonValue() {
+
+        return [$this->getRawMimeDirValue()];
+
+    }
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    function getValueType() {
+
+        return 'UNKNOWN';
+
+    }
+
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   57300 => 'Tigo',
   57301 => 'Tigo',
   57302 => 'Tigo',
@@ -33,4 +33,4 @@ return [
   57323 => 'Claro',
   57350 => 'Avantel',
   57351 => 'Avantel',
-];
+);

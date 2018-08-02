@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   431 => 'Vienna',
   432142 => 'Gattendorf',
   432143 => 'Kittsee',
@@ -1031,4 +1031,4 @@ return [
   437954 => 'St. Georgen am Walde',
   437955 => 'Königswiesen',
   437956 => 'Unterweissenbach',
-];
+);

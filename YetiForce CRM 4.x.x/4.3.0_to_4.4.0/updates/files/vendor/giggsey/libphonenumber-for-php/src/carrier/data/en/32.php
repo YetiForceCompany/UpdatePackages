@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   32456 => 'JIM Mobile',
   32460 => 'Proximus',
   324618 => 'N.M.B.S.',
@@ -51,4 +51,4 @@ return [
   32488 => 'Telenet',
   32489 => 'Telenet',
   3249 => 'Orange',
-];
+);

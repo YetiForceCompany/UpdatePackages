@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   25729 => 'Leo',
   25731 => 'Viettel',
   25761 => 'Viettel',
@@ -23,4 +23,4 @@ return [
   25777 => 'Onatel',
   25778 => 'Smart Mobile',
   25779 => 'Leo',
-];
+);

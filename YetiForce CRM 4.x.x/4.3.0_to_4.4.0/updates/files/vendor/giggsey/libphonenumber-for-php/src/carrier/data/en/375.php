@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   37525 => 'life:)',
   375291 => 'Velcom',
   375292 => 'MTS',
@@ -23,4 +23,4 @@ return [
   375299 => 'Velcom',
   37533 => 'MTS',
   37544 => 'Velcom',
-];
+);

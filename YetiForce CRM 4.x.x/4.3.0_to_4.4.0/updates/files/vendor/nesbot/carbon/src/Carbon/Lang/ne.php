@@ -9,23 +9,23 @@
  * file that was distributed with this source code.
  */
 
-return [
-	'year' => ':count वर्ष',
-	'y' => ':count वर्ष',
-	'month' => ':count महिना',
-	'm' => ':count महिना',
-	'week' => ':count हप्ता',
-	'w' => ':count हप्ता',
-	'day' => ':count दिन',
-	'd' => ':count दिन',
-	'hour' => ':count घण्टा',
-	'h' => ':count घण्टा',
-	'minute' => ':count मिनेट',
-	'min' => ':count मिनेट',
-	'second' => ':count सेकेण्ड',
-	's' => ':count सेकेण्ड',
-	'ago' => ':time पहिले',
-	'from_now' => ':time देखि',
-	'after' => ':time पछि',
-	'before' => ':time अघि',
-];
+return array(
+    'year' => ':count वर्ष',
+    'y' => ':count वर्ष',
+    'month' => ':count महिना',
+    'm' => ':count महिना',
+    'week' => ':count हप्ता',
+    'w' => ':count हप्ता',
+    'day' => ':count दिन',
+    'd' => ':count दिन',
+    'hour' => ':count घण्टा',
+    'h' => ':count घण्टा',
+    'minute' => ':count मिनेट',
+    'min' => ':count मिनेट',
+    'second' => ':count सेकेण्ड',
+    's' => ':count सेकेण्ड',
+    'ago' => ':time पहिले',
+    'from_now' => ':time देखि',
+    'after' => ':time पछि',
+    'before' => ':time अघि',
+);

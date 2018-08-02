@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   22780 => 'Orange',
   22788 => 'Airtel',
   22789 => 'Airtel',
@@ -23,4 +23,4 @@ return [
   22797 => 'Airtel',
   22798 => 'Airtel',
   22799 => 'Airtel',
-];
+);

@@ -22,319 +22,322 @@ namespace Doctrine\Common\Collections;
 use Closure;
 
 /**
- * Lazy collection that is backed by a concrete collection.
+ * Lazy collection that is backed by a concrete collection
  *
  * @author Michaël Gallego <mic.gallego@gmail.com>
- *
  * @since  1.2
  */
 abstract class AbstractLazyCollection implements Collection
 {
-	/**
-	 * The backed collection to use.
-	 *
-	 * @var Collection
-	 */
-	protected $collection;
+    /**
+     * The backed collection to use
+     *
+     * @var Collection
+     */
+    protected $collection;
 
-	/**
-	 * @var bool
-	 */
-	protected $initialized = false;
+    /**
+     * @var bool
+     */
+    protected $initialized = false;
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function count()
-	{
-		$this->initialize();
-		return $this->collection->count();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function count()
+    {
+        $this->initialize();
+        return $this->collection->count();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function add($element)
-	{
-		$this->initialize();
-		return $this->collection->add($element);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function add($element)
+    {
+        $this->initialize();
+        return $this->collection->add($element);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function clear()
-	{
-		$this->initialize();
-		$this->collection->clear();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function clear()
+    {
+        $this->initialize();
+        $this->collection->clear();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function contains($element)
-	{
-		$this->initialize();
-		return $this->collection->contains($element);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function contains($element)
+    {
+        $this->initialize();
+        return $this->collection->contains($element);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function isEmpty()
-	{
-		$this->initialize();
-		return $this->collection->isEmpty();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function isEmpty()
+    {
+        $this->initialize();
+        return $this->collection->isEmpty();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function remove($key)
-	{
-		$this->initialize();
-		return $this->collection->remove($key);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function remove($key)
+    {
+        $this->initialize();
+        return $this->collection->remove($key);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function removeElement($element)
-	{
-		$this->initialize();
-		return $this->collection->removeElement($element);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function removeElement($element)
+    {
+        $this->initialize();
+        return $this->collection->removeElement($element);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function containsKey($key)
-	{
-		$this->initialize();
-		return $this->collection->containsKey($key);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function containsKey($key)
+    {
+        $this->initialize();
+        return $this->collection->containsKey($key);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function get($key)
-	{
-		$this->initialize();
-		return $this->collection->get($key);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function get($key)
+    {
+        $this->initialize();
+        return $this->collection->get($key);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getKeys()
-	{
-		$this->initialize();
-		return $this->collection->getKeys();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function getKeys()
+    {
+        $this->initialize();
+        return $this->collection->getKeys();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getValues()
-	{
-		$this->initialize();
-		return $this->collection->getValues();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function getValues()
+    {
+        $this->initialize();
+        return $this->collection->getValues();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function set($key, $value)
-	{
-		$this->initialize();
-		$this->collection->set($key, $value);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function set($key, $value)
+    {
+        $this->initialize();
+        $this->collection->set($key, $value);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function toArray()
-	{
-		$this->initialize();
-		return $this->collection->toArray();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function toArray()
+    {
+        $this->initialize();
+        return $this->collection->toArray();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function first()
-	{
-		$this->initialize();
-		return $this->collection->first();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function first()
+    {
+        $this->initialize();
+        return $this->collection->first();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function last()
-	{
-		$this->initialize();
-		return $this->collection->last();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function last()
+    {
+        $this->initialize();
+        return $this->collection->last();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function key()
-	{
-		$this->initialize();
-		return $this->collection->key();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function key()
+    {
+        $this->initialize();
+        return $this->collection->key();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function current()
-	{
-		$this->initialize();
-		return $this->collection->current();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function current()
+    {
+        $this->initialize();
+        return $this->collection->current();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function next()
-	{
-		$this->initialize();
-		return $this->collection->next();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function next()
+    {
+        $this->initialize();
+        return $this->collection->next();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function exists(Closure $p)
-	{
-		$this->initialize();
-		return $this->collection->exists($p);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function exists(Closure $p)
+    {
+        $this->initialize();
+        return $this->collection->exists($p);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function filter(Closure $p)
-	{
-		$this->initialize();
-		return $this->collection->filter($p);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function filter(Closure $p)
+    {
+        $this->initialize();
+        return $this->collection->filter($p);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function forAll(Closure $p)
-	{
-		$this->initialize();
-		return $this->collection->forAll($p);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function forAll(Closure $p)
+    {
+        $this->initialize();
+        return $this->collection->forAll($p);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function map(Closure $func)
-	{
-		$this->initialize();
-		return $this->collection->map($func);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function map(Closure $func)
+    {
+        $this->initialize();
+        return $this->collection->map($func);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function partition(Closure $p)
-	{
-		$this->initialize();
-		return $this->collection->partition($p);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function partition(Closure $p)
+    {
+        $this->initialize();
+        return $this->collection->partition($p);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function indexOf($element)
-	{
-		$this->initialize();
-		return $this->collection->indexOf($element);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function indexOf($element)
+    {
+        $this->initialize();
+        return $this->collection->indexOf($element);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function slice($offset, $length = null)
-	{
-		$this->initialize();
-		return $this->collection->slice($offset, $length);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function slice($offset, $length = null)
+    {
+        $this->initialize();
+        return $this->collection->slice($offset, $length);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getIterator()
-	{
-		$this->initialize();
-		return $this->collection->getIterator();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function getIterator()
+    {
+        $this->initialize();
+        return $this->collection->getIterator();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function offsetExists($offset)
-	{
-		$this->initialize();
-		return $this->collection->offsetExists($offset);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetExists($offset)
+    {
+        $this->initialize();
+        return $this->collection->offsetExists($offset);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function offsetGet($offset)
-	{
-		$this->initialize();
-		return $this->collection->offsetGet($offset);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetGet($offset)
+    {
+        $this->initialize();
+        return $this->collection->offsetGet($offset);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function offsetSet($offset, $value)
-	{
-		$this->initialize();
-		$this->collection->offsetSet($offset, $value);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->initialize();
+        $this->collection->offsetSet($offset, $value);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function offsetUnset($offset)
-	{
-		$this->initialize();
-		$this->collection->offsetUnset($offset);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetUnset($offset)
+    {
+        $this->initialize();
+        $this->collection->offsetUnset($offset);
+    }
 
-	/**
-	 * Is the lazy collection already initialized?
-	 *
-	 * @return bool
-	 */
-	public function isInitialized()
-	{
-		return $this->initialized;
-	}
+    /**
+     * Is the lazy collection already initialized?
+     *
+     * @return bool
+     */
+    public function isInitialized()
+    {
+        return $this->initialized;
+    }
 
-	/**
-	 * Initialize the collection.
-	 */
-	protected function initialize()
-	{
-		if (!$this->initialized) {
-			$this->doInitialize();
-			$this->initialized = true;
-		}
-	}
+    /**
+     * Initialize the collection
+     *
+     * @return void
+     */
+    protected function initialize()
+    {
+        if ( ! $this->initialized) {
+            $this->doInitialize();
+            $this->initialized = true;
+        }
+    }
 
-	/**
-	 * Do the initialization logic.
-	 */
-	abstract protected function doInitialize();
+    /**
+     * Do the initialization logic
+     *
+     * @return void
+     */
+    abstract protected function doInitialize();
 }

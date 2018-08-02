@@ -56,36 +56,37 @@ use Sabre\Xml\Reader;
  *
  * @param Reader $reader
  * @param string $namespace
- *
  * @return array
  */
-function keyValue(Reader $reader, $namespace = null)
-{
-	// If there's no children, we don't do anything.
-	if ($reader->isEmptyElement) {
-		$reader->next();
-		return [];
-	}
+function keyValue(Reader $reader, $namespace = null) {
 
-	$values = [];
+    // If there's no children, we don't do anything.
+    if ($reader->isEmptyElement) {
+        $reader->next();
+        return [];
+    }
 
-	$reader->read();
-	do {
-		if ($reader->nodeType === Reader::ELEMENT) {
-			if ($namespace !== null && $reader->namespaceURI === $namespace) {
-				$values[$reader->localName] = $reader->parseCurrentElement()['value'];
-			} else {
-				$clark = $reader->getClark();
-				$values[$clark] = $reader->parseCurrentElement()['value'];
-			}
-		} else {
-			$reader->read();
-		}
-	} while ($reader->nodeType !== Reader::END_ELEMENT);
+    $values = [];
 
-	$reader->read();
+    $reader->read();
+    do {
 
-	return $values;
+        if ($reader->nodeType === Reader::ELEMENT) {
+            if ($namespace !== null && $reader->namespaceURI === $namespace) {
+                $values[$reader->localName] = $reader->parseCurrentElement()['value'];
+            } else {
+                $clark = $reader->getClark();
+                $values[$clark] = $reader->parseCurrentElement()['value'];
+            }
+        } else {
+            $reader->read();
+        }
+    } while ($reader->nodeType !== Reader::END_ELEMENT);
+
+    $reader->read();
+
+    return $values;
+
 }
 
 /**
@@ -134,33 +135,35 @@ function keyValue(Reader $reader, $namespace = null)
  *
  * @param Reader $reader
  * @param string $namespace
- *
  * @return string[]
  */
-function enum(Reader $reader, $namespace = null)
-{
-	// If there's no children, we don't do anything.
-	if ($reader->isEmptyElement) {
-		$reader->next();
-		return [];
-	}
-	$reader->read();
-	$currentDepth = $reader->depth;
+function enum(Reader $reader, $namespace = null) {
 
-	$values = [];
-	do {
-		if ($reader->nodeType !== Reader::ELEMENT) {
-			continue;
-		}
-		if (!is_null($namespace) && $namespace === $reader->namespaceURI) {
-			$values[] = $reader->localName;
-		} else {
-			$values[] = $reader->getClark();
-		}
-	} while ($reader->depth >= $currentDepth && $reader->next());
+    // If there's no children, we don't do anything.
+    if ($reader->isEmptyElement) {
+        $reader->next();
+        return [];
+    }
+    $reader->read();
+    $currentDepth = $reader->depth;
 
-	$reader->next();
-	return $values;
+    $values = [];
+    do {
+
+        if ($reader->nodeType !== Reader::ELEMENT) {
+            continue;
+        }
+        if (!is_null($namespace) && $namespace === $reader->namespaceURI) {
+            $values[] = $reader->localName;
+        } else {
+            $values[] = $reader->getClark();
+        }
+
+    } while ($reader->depth >= $currentDepth && $reader->next());
+
+    $reader->next();
+    return $values;
+
 }
 
 /**
@@ -173,44 +176,46 @@ function enum(Reader $reader, $namespace = null)
  * @param Reader $reader
  * @param string $className
  * @param string $namespace
- *
  * @return object
  */
-function valueObject(Reader $reader, $className, $namespace)
-{
-	$valueObject = new $className();
-	if ($reader->isEmptyElement) {
-		$reader->next();
-		return $valueObject;
-	}
+function valueObject(Reader $reader, $className, $namespace) {
 
-	$defaultProperties = get_class_vars($className);
+    $valueObject = new $className();
+    if ($reader->isEmptyElement) {
+        $reader->next();
+        return $valueObject;
+    }
 
-	$reader->read();
-	do {
-		if ($reader->nodeType === Reader::ELEMENT && $reader->namespaceURI == $namespace) {
-			if (property_exists($valueObject, $reader->localName)) {
-				if (is_array($defaultProperties[$reader->localName])) {
-					$valueObject->{$reader->localName}[] = $reader->parseCurrentElement()['value'];
-				} else {
-					$valueObject->{$reader->localName} = $reader->parseCurrentElement()['value'];
-				}
-			} else {
-				// Ignore property
-				$reader->next();
-			}
-		} else {
-			$reader->read();
-		}
-	} while ($reader->nodeType !== Reader::END_ELEMENT);
+    $defaultProperties = get_class_vars($className);
 
-	$reader->read();
-	return $valueObject;
+    $reader->read();
+    do {
+
+        if ($reader->nodeType === Reader::ELEMENT && $reader->namespaceURI == $namespace) {
+
+            if (property_exists($valueObject, $reader->localName)) {
+                if (is_array($defaultProperties[$reader->localName])) {
+                    $valueObject->{$reader->localName}[] = $reader->parseCurrentElement()['value'];
+                } else {
+                    $valueObject->{$reader->localName} = $reader->parseCurrentElement()['value'];
+                }
+            } else {
+                // Ignore property
+                $reader->next();
+            }
+        } else {
+            $reader->read();
+        }
+    } while ($reader->nodeType !== Reader::END_ELEMENT);
+
+    $reader->read();
+    return $valueObject;
+
 }
 
 /**
  * This deserializer helps you deserialize xml structures that look like
- * this:.
+ * this:
  *
  * <collection>
  *    <item>...</item>
@@ -231,21 +236,23 @@ function valueObject(Reader $reader, $className, $namespace)
  *
  * @param Reader $reader
  * @param string $childElementName Element name in clark-notation
- *
  * @return array
  */
-function repeatingElements(Reader $reader, $childElementName)
-{
-	if ($childElementName[0] !== '{') {
-		$childElementName = '{}' . $childElementName;
-	}
-	$result = [];
+function repeatingElements(Reader $reader, $childElementName) {
 
-	foreach ($reader->parseGetElements() as $element) {
-		if ($element['name'] === $childElementName) {
-			$result[] = $element['value'];
-		}
-	}
+    if ($childElementName[0] !== '{') {
+        $childElementName = '{}' . $childElementName;
+    }
+    $result = [];
 
-	return $result;
+    foreach ($reader->parseGetElements() as $element) {
+
+        if ($element['name'] === $childElementName) {
+            $result[] = $element['value'];
+        }
+
+    }
+
+    return $result;
+
 }

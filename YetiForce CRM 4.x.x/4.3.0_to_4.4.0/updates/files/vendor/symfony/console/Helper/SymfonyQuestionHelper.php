@@ -25,68 +25,72 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class SymfonyQuestionHelper extends QuestionHelper
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function writePrompt(OutputInterface $output, Question $question)
-	{
-		$text = OutputFormatter::escapeTrailingBackslash($question->getQuestion());
-		$default = $question->getDefault();
+    /**
+     * {@inheritdoc}
+     */
+    protected function writePrompt(OutputInterface $output, Question $question)
+    {
+        $text = OutputFormatter::escapeTrailingBackslash($question->getQuestion());
+        $default = $question->getDefault();
 
-		switch (true) {
-			case null === $default:
-				$text = sprintf(' <info>%s</info>:', $text);
+        switch (true) {
+            case null === $default:
+                $text = sprintf(' <info>%s</info>:', $text);
 
-				break;
-			case $question instanceof ConfirmationQuestion:
-				$text = sprintf(' <info>%s (yes/no)</info> [<comment>%s</comment>]:', $text, $default ? 'yes' : 'no');
+                break;
 
-				break;
-			case $question instanceof ChoiceQuestion && $question->isMultiselect():
-				$choices = $question->getChoices();
-				$default = explode(',', $default);
+            case $question instanceof ConfirmationQuestion:
+                $text = sprintf(' <info>%s (yes/no)</info> [<comment>%s</comment>]:', $text, $default ? 'yes' : 'no');
 
-				foreach ($default as $key => $value) {
-					$default[$key] = $choices[trim($value)];
-				}
+                break;
 
-				$text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape(implode(', ', $default)));
+            case $question instanceof ChoiceQuestion && $question->isMultiselect():
+                $choices = $question->getChoices();
+                $default = explode(',', $default);
 
-				break;
-			case $question instanceof ChoiceQuestion:
-				$choices = $question->getChoices();
-				$text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape($choices[$default]));
+                foreach ($default as $key => $value) {
+                    $default[$key] = $choices[trim($value)];
+                }
 
-				break;
-			default:
-				$text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape($default));
-		}
+                $text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape(implode(', ', $default)));
 
-		$output->writeln($text);
+                break;
 
-		if ($question instanceof ChoiceQuestion) {
-			$width = max(array_map('strlen', array_keys($question->getChoices())));
+            case $question instanceof ChoiceQuestion:
+                $choices = $question->getChoices();
+                $text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape($choices[$default]));
 
-			foreach ($question->getChoices() as $key => $value) {
-				$output->writeln(sprintf("  [<comment>%-${width}s</comment>] %s", $key, $value));
-			}
-		}
+                break;
 
-		$output->write(' > ');
-	}
+            default:
+                $text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, OutputFormatter::escape($default));
+        }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function writeError(OutputInterface $output, \Exception $error)
-	{
-		if ($output instanceof SymfonyStyle) {
-			$output->newLine();
-			$output->error($error->getMessage());
+        $output->writeln($text);
 
-			return;
-		}
+        if ($question instanceof ChoiceQuestion) {
+            $width = max(array_map('strlen', array_keys($question->getChoices())));
 
-		parent::writeError($output, $error);
-	}
+            foreach ($question->getChoices() as $key => $value) {
+                $output->writeln(sprintf("  [<comment>%-${width}s</comment>] %s", $key, $value));
+            }
+        }
+
+        $output->write(' > ');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function writeError(OutputInterface $output, \Exception $error)
+    {
+        if ($output instanceof SymfonyStyle) {
+            $output->newLine();
+            $output->error($error->getMessage());
+
+            return;
+        }
+
+        parent::writeError($output, $error);
+    }
 }

@@ -12,17 +12,19 @@ use Sabre\DAV\MkCol;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface CreatePrincipalSupport extends BackendInterface
-{
-	/**
-	 * Creates a new principal.
-	 *
-	 * This method receives a full path for the new principal. The mkCol object
-	 * contains any additional webdav properties specified during the creation
-	 * of the principal.
-	 *
-	 * @param string $path
-	 * @param MkCol  $mkCol
-	 */
-	public function createPrincipal($path, MkCol $mkCol);
+interface CreatePrincipalSupport extends BackendInterface {
+
+    /**
+     * Creates a new principal.
+     *
+     * This method receives a full path for the new principal. The mkCol object
+     * contains any additional webdav properties specified during the creation
+     * of the principal.
+     *
+     * @param string $path
+     * @param MkCol $mkCol
+     * @return void
+     */
+    function createPrincipal($path, MkCol $mkCol);
+
 }

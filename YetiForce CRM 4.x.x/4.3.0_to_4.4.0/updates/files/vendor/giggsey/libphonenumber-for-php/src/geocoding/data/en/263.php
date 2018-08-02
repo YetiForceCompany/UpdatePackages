@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   26313 => 'Victoria Falls',
   26314 => 'Rutenga',
   26315 => 'Binga',
@@ -177,4 +177,4 @@ return [
   2639497 => 'Nkulumane',
   263952 => 'Luveve',
   263956 => 'Luveve',
-];
+);

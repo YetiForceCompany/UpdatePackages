@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3567210 => 'GO Mobile',
   35677 => 'Melita Mobile',
   35679 => 'GO Mobile',
@@ -25,4 +25,4 @@ return [
   3569889 => 'GO Mobile',
   3569897 => 'Vodafone',
   35699 => 'Vodafone',
-];
+);

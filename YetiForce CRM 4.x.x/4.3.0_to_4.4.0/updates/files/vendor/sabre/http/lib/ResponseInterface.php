@@ -9,36 +9,37 @@ namespace Sabre\HTTP;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface ResponseInterface extends MessageInterface
-{
-	/**
-	 * Returns the current HTTP status code.
-	 *
-	 * @return int
-	 */
-	public function getStatus();
+interface ResponseInterface extends MessageInterface {
 
-	/**
-	 * Returns the human-readable status string.
-	 *
-	 * In the case of a 200, this may for example be 'OK'.
-	 *
-	 * @return string
-	 */
-	public function getStatusText();
+    /**
+     * Returns the current HTTP status code.
+     *
+     * @return int
+     */
+    function getStatus();
 
-	/**
-	 * Sets the HTTP status code.
-	 *
-	 * This can be either the full HTTP status code with human readable string,
-	 * for example: "403 I can't let you do that, Dave".
-	 *
-	 * Or just the code, in which case the appropriate default message will be
-	 * added.
-	 *
-	 * @param string|int $status
-	 *
-	 * @throws \InvalidArgumentException
-	 */
-	public function setStatus($status);
+    /**
+     * Returns the human-readable status string.
+     *
+     * In the case of a 200, this may for example be 'OK'.
+     *
+     * @return string
+     */
+    function getStatusText();
+
+    /**
+     * Sets the HTTP status code.
+     *
+     * This can be either the full HTTP status code with human readable string,
+     * for example: "403 I can't let you do that, Dave".
+     *
+     * Or just the code, in which case the appropriate default message will be
+     * added.
+     *
+     * @param string|int $status
+     * @throws \InvalidArgumentException
+     * @return void
+     */
+    function setStatus($status);
+
 }

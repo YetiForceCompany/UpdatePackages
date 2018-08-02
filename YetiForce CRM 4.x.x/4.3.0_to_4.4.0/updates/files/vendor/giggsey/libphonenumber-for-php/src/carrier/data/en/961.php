@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   961788 => 'Touch',
   9617890 => 'Touch',
   9617891 => 'Touch',
@@ -29,4 +29,4 @@ return [
   961817 => 'Touch',
   961818 => 'Touch',
   961819 => 'Touch',
-];
+);

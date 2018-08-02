@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   8802 => 'Dhaka',
   88030208 => 'Banskhali, Chittagong',
   88030228 => 'Fatikchari, Chittagong',
@@ -696,4 +696,4 @@ return [
   88098248 => 'Islampur',
   880982756 => 'Sarishabari, Jamalpur',
   88098278 => 'Sarishabari',
-];
+);

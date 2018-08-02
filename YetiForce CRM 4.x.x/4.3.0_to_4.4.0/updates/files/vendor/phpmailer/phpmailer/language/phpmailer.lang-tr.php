@@ -1,13 +1,14 @@
 <?php
 /**
- * Turkish PHPMailer language file: refer to English translation for definitive list.
- *
+ * Turkish PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Elçin Özel
  * @author Can Yılmaz
  * @author Mehmet Benlioğlu
  * @author @yasinaydin
  * @author Ogün Karakuş
  */
+
 $PHPMAILER_LANG['authenticate']         = 'SMTP Hatası: Oturum açılamadı.';
 $PHPMAILER_LANG['connect_host']         = 'SMTP Hatası: SMTP sunucusuna bağlanılamadı.';
 $PHPMAILER_LANG['data_not_accepted']    = 'SMTP Hatası: Veri kabul edilmedi.';

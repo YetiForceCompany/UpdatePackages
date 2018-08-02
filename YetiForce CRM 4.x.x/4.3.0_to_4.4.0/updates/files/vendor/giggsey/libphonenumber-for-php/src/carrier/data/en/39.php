@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3932 => 'Wind',
   3933 => 'TIM',
   3934 => 'Vodafone',
@@ -20,4 +20,4 @@ return [
   39377 => 'Vodafone',
   3938 => 'Wind',
   3939 => '3 Italia',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   84120 => 'MobiFone',
   84121 => 'MobiFone',
   84122 => 'MobiFone',
@@ -55,4 +55,4 @@ return [
   84997 => 'G-Mobile',
   84998 => 'Indochina Telecom',
   84999 => 'Indochina Telecom',
-];
+);

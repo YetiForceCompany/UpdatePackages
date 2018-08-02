@@ -9,10 +9,11 @@ namespace Sabre\VObject;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Version
-{
-	/**
-	 * Full version number.
-	 */
-	const VERSION = '4.1.6';
+class Version {
+
+    /**
+     * Full version number.
+     */
+    const VERSION = '4.1.6';
+
 }

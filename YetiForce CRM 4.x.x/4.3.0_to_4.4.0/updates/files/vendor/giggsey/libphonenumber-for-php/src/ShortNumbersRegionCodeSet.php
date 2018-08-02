@@ -10,13 +10,13 @@
  * Do not modify this file directly!
  */
 
+
 namespace libphonenumber;
+class ShortNumbersRegionCodeSet {
 
-class ShortNumbersRegionCodeSet
-{
-	// A set of all region codes for which data is available.
+  // A set of all region codes for which data is available.
 
-	public static $shortNumbersRegionCodeSet = [
+   public static $shortNumbersRegionCodeSet = array (
   0 => 'AC',
   1 => 'AD',
   2 => 'AE',
@@ -257,5 +257,6 @@ class ShortNumbersRegionCodeSet
   237 => 'ZA',
   238 => 'ZM',
   239 => 'ZW',
-];
+);
+
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   25562 => 'Viettel',
   25563 => 'MTC',
   25564 => 'Cootel',
@@ -26,4 +26,4 @@ return [
   25577 => 'Zantel',
   25578 => 'Airtel',
   25579 => 'Benson Informatics',
-];
+);

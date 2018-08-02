@@ -18,11 +18,11 @@ namespace Symfony\Component\Translation\Loader;
  */
 class PhpFileLoader extends FileLoader
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function loadResource($resource)
-	{
-		return require $resource;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    protected function loadResource($resource)
+    {
+        return require $resource;
+    }
 }

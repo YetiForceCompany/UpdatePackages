@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   45201 => 'TDC',
   45202 => 'TDC',
   45203 => 'TDC',
@@ -596,4 +596,4 @@ return [
   459340 => 'Justfone',
   45935 => 'Telenor',
   45939 => '3',
-];
+);

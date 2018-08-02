@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 404 Not Found responses.
+ * Exception for 404 Not Found responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 404 Not Found responses.
+ * Exception for 404 Not Found responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_404 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_404 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 404;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

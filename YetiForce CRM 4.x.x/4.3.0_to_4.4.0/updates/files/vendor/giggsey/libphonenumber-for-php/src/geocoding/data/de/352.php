@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   35221 => 'Weicherdingen',
   35222 => 'Luxemburg',
   35223 => 'Bad Mondorf',
@@ -224,4 +224,4 @@ return [
   35295 => 'Wiltz',
   35297 => 'Huldingen',
   35299 => 'Ulflingen',
-];
+);

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'CA' => 'Uŋčíyapi Makȟóčhe',
   'CN' => 'Pȟečhókaŋhaŋska Makȟóčhe',
   'DE' => 'Iyášiča Makȟóčhe',
@@ -17,4 +17,4 @@ return [
   'JP' => 'Kisúŋla Makȟóčhe',
   'MX' => 'Spayóla Makȟóčhe',
   'US' => 'Mílahaŋska Tȟamákȟočhe',
-];
+);

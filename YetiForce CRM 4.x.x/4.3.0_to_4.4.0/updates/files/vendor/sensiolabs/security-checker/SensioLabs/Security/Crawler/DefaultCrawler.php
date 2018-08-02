@@ -16,34 +16,34 @@ namespace SensioLabs\Security\Crawler;
  */
 class DefaultCrawler implements CrawlerInterface
 {
-	private $crawler;
+    private $crawler;
 
-	public function __construct()
-	{
-		$this->crawler = ('stream' === getenv('SENSIOLABS_SECURITY_CHECKER_TRANSPORT') || !function_exists('curl_init')) ? new FileGetContentsCrawler() : new CurlCrawler();
-	}
+    public function __construct()
+    {
+        $this->crawler = ('stream' === getenv('SENSIOLABS_SECURITY_CHECKER_TRANSPORT') || !function_exists('curl_init')) ? new FileGetContentsCrawler() : new CurlCrawler();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function check($lock)
-	{
-		return $this->crawler->check($lock);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function check($lock)
+    {
+        return $this->crawler->check($lock);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function setTimeout($timeout)
-	{
-		$this->crawler->setTimeout($timeout);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function setTimeout($timeout)
+    {
+        $this->crawler->setTimeout($timeout);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function setEndPoint($endPoint)
-	{
-		$this->crawler->setEndPoint($endPoint);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function setEndPoint($endPoint)
+    {
+        $this->crawler->setEndPoint($endPoint);
+    }
 }

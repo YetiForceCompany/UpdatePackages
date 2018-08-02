@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 410 Gone responses.
+ * Exception for 410 Gone responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 410 Gone responses.
+ * Exception for 410 Gone responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_410 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_410 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 410;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

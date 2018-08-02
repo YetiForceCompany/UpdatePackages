@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   67773 => 'Solomon Telekom',
   67774 => 'Solomon Telekom',
   67775 => 'Solomon Telekom',
@@ -39,4 +39,4 @@ return [
   67797 => 'Smile',
   67798 => 'Smile',
   67799 => 'Smile',
-];
+);

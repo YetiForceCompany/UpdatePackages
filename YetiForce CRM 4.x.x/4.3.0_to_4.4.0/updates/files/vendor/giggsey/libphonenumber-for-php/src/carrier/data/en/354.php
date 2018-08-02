@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   354385 => 'Síminn',
   354388 => 'IMC',
   354389 => 'IMC',
@@ -64,4 +64,4 @@ return [
   354882 => 'Síminn',
   354888 => 'Síminn',
   35489 => 'Síminn',
-];
+);

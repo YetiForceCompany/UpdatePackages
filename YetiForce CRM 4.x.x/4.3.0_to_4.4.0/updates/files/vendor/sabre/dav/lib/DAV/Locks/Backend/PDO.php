@@ -14,161 +14,167 @@ use Sabre\DAV\Locks\LockInfo;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class PDO extends AbstractBackend
-{
-	/**
-	 * The PDO tablename this backend uses.
-	 *
-	 * @var string
-	 */
-	public $tableName = 'locks';
+class PDO extends AbstractBackend {
 
-	/**
-	 * The PDO connection object.
-	 *
-	 * @var pdo
-	 */
-	protected $pdo;
+    /**
+     * The PDO tablename this backend uses.
+     *
+     * @var string
+     */
+    public $tableName = 'locks';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param \PDO $pdo
-	 */
-	public function __construct(\PDO $pdo)
-	{
-		$this->pdo = $pdo;
-	}
+    /**
+     * The PDO connection object
+     *
+     * @var pdo
+     */
+    protected $pdo;
 
-	/**
-	 * Returns a list of Sabre\DAV\Locks\LockInfo objects.
-	 *
-	 * This method should return all the locks for a particular uri, including
-	 * locks that might be set on a parent uri.
-	 *
-	 * If returnChildLocks is set to true, this method should also look for
-	 * any locks in the subtree of the uri for locks.
-	 *
-	 * @param string $uri
-	 * @param bool   $returnChildLocks
-	 *
-	 * @return array
-	 */
-	public function getLocks($uri, $returnChildLocks)
-	{
-		// NOTE: the following 10 lines or so could be easily replaced by
-		// pure sql. MySQL's non-standard string concatenation prevents us
-		// from doing this though.
-		$query = 'SELECT owner, token, timeout, created, scope, depth, uri FROM ' . $this->tableName . ' WHERE (created > (? - timeout)) AND ((uri = ?)';
-		$params = [time(), $uri];
+    /**
+     * Constructor
+     *
+     * @param \PDO $pdo
+     */
+    function __construct(\PDO $pdo) {
 
-		// We need to check locks for every part in the uri.
-		$uriParts = explode('/', $uri);
+        $this->pdo = $pdo;
 
-		// We already covered the last part of the uri
-		array_pop($uriParts);
+    }
 
-		$currentPath = '';
+    /**
+     * Returns a list of Sabre\DAV\Locks\LockInfo objects
+     *
+     * This method should return all the locks for a particular uri, including
+     * locks that might be set on a parent uri.
+     *
+     * If returnChildLocks is set to true, this method should also look for
+     * any locks in the subtree of the uri for locks.
+     *
+     * @param string $uri
+     * @param bool $returnChildLocks
+     * @return array
+     */
+    function getLocks($uri, $returnChildLocks) {
 
-		foreach ($uriParts as $part) {
-			if ($currentPath) {
-				$currentPath .= '/';
-			}
-			$currentPath .= $part;
+        // NOTE: the following 10 lines or so could be easily replaced by
+        // pure sql. MySQL's non-standard string concatenation prevents us
+        // from doing this though.
+        $query = 'SELECT owner, token, timeout, created, scope, depth, uri FROM ' . $this->tableName . ' WHERE (created > (? - timeout)) AND ((uri = ?)';
+        $params = [time(),$uri];
 
-			$query .= ' OR (depth!=0 AND uri = ?)';
-			$params[] = $currentPath;
-		}
+        // We need to check locks for every part in the uri.
+        $uriParts = explode('/', $uri);
 
-		if ($returnChildLocks) {
-			$query .= ' OR (uri LIKE ?)';
-			$params[] = $uri . '/%';
-		}
-		$query .= ')';
+        // We already covered the last part of the uri
+        array_pop($uriParts);
 
-		$stmt = $this->pdo->prepare($query);
-		$stmt->execute($params);
-		$result = $stmt->fetchAll();
+        $currentPath = '';
 
-		$lockList = [];
-		foreach ($result as $row) {
-			$lockInfo = new LockInfo();
-			$lockInfo->owner = $row['owner'];
-			$lockInfo->token = $row['token'];
-			$lockInfo->timeout = $row['timeout'];
-			$lockInfo->created = $row['created'];
-			$lockInfo->scope = $row['scope'];
-			$lockInfo->depth = $row['depth'];
-			$lockInfo->uri = $row['uri'];
-			$lockList[] = $lockInfo;
-		}
+        foreach ($uriParts as $part) {
 
-		return $lockList;
-	}
+            if ($currentPath) $currentPath .= '/';
+            $currentPath .= $part;
 
-	/**
-	 * Locks a uri.
-	 *
-	 * @param string   $uri
-	 * @param LockInfo $lockInfo
-	 *
-	 * @return bool
-	 */
-	public function lock($uri, LockInfo $lockInfo)
-	{
-		// We're making the lock timeout 30 minutes
-		$lockInfo->timeout = 30 * 60;
-		$lockInfo->created = time();
-		$lockInfo->uri = $uri;
+            $query .= ' OR (depth!=0 AND uri = ?)';
+            $params[] = $currentPath;
 
-		$locks = $this->getLocks($uri, false);
-		$exists = false;
-		foreach ($locks as $lock) {
-			if ($lock->token == $lockInfo->token) {
-				$exists = true;
-			}
-		}
+        }
 
-		if ($exists) {
-			$stmt = $this->pdo->prepare('UPDATE ' . $this->tableName . ' SET owner = ?, timeout = ?, scope = ?, depth = ?, uri = ?, created = ? WHERE token = ?');
-			$stmt->execute([
-				$lockInfo->owner,
-				$lockInfo->timeout,
-				$lockInfo->scope,
-				$lockInfo->depth,
-				$uri,
-				$lockInfo->created,
-				$lockInfo->token
-			]);
-		} else {
-			$stmt = $this->pdo->prepare('INSERT INTO ' . $this->tableName . ' (owner,timeout,scope,depth,uri,created,token) VALUES (?,?,?,?,?,?,?)');
-			$stmt->execute([
-				$lockInfo->owner,
-				$lockInfo->timeout,
-				$lockInfo->scope,
-				$lockInfo->depth,
-				$uri,
-				$lockInfo->created,
-				$lockInfo->token
-			]);
-		}
+        if ($returnChildLocks) {
 
-		return true;
-	}
+            $query .= ' OR (uri LIKE ?)';
+            $params[] = $uri . '/%';
 
-	/**
-	 * Removes a lock from a uri.
-	 *
-	 * @param string   $uri
-	 * @param LockInfo $lockInfo
-	 *
-	 * @return bool
-	 */
-	public function unlock($uri, LockInfo $lockInfo)
-	{
-		$stmt = $this->pdo->prepare('DELETE FROM ' . $this->tableName . ' WHERE uri = ? AND token = ?');
-		$stmt->execute([$uri, $lockInfo->token]);
+        }
+        $query .= ')';
 
-		return $stmt->rowCount() === 1;
-	}
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetchAll();
+
+        $lockList = [];
+        foreach ($result as $row) {
+
+            $lockInfo = new LockInfo();
+            $lockInfo->owner = $row['owner'];
+            $lockInfo->token = $row['token'];
+            $lockInfo->timeout = $row['timeout'];
+            $lockInfo->created = $row['created'];
+            $lockInfo->scope = $row['scope'];
+            $lockInfo->depth = $row['depth'];
+            $lockInfo->uri = $row['uri'];
+            $lockList[] = $lockInfo;
+
+        }
+
+        return $lockList;
+
+    }
+
+    /**
+     * Locks a uri
+     *
+     * @param string $uri
+     * @param LockInfo $lockInfo
+     * @return bool
+     */
+    function lock($uri, LockInfo $lockInfo) {
+
+        // We're making the lock timeout 30 minutes
+        $lockInfo->timeout = 30 * 60;
+        $lockInfo->created = time();
+        $lockInfo->uri = $uri;
+
+        $locks = $this->getLocks($uri, false);
+        $exists = false;
+        foreach ($locks as $lock) {
+            if ($lock->token == $lockInfo->token) $exists = true;
+        }
+
+        if ($exists) {
+            $stmt = $this->pdo->prepare('UPDATE ' . $this->tableName . ' SET owner = ?, timeout = ?, scope = ?, depth = ?, uri = ?, created = ? WHERE token = ?');
+            $stmt->execute([
+                $lockInfo->owner,
+                $lockInfo->timeout,
+                $lockInfo->scope,
+                $lockInfo->depth,
+                $uri,
+                $lockInfo->created,
+                $lockInfo->token
+            ]);
+        } else {
+            $stmt = $this->pdo->prepare('INSERT INTO ' . $this->tableName . ' (owner,timeout,scope,depth,uri,created,token) VALUES (?,?,?,?,?,?,?)');
+            $stmt->execute([
+                $lockInfo->owner,
+                $lockInfo->timeout,
+                $lockInfo->scope,
+                $lockInfo->depth,
+                $uri,
+                $lockInfo->created,
+                $lockInfo->token
+            ]);
+        }
+
+        return true;
+
+    }
+
+
+
+    /**
+     * Removes a lock from a uri
+     *
+     * @param string $uri
+     * @param LockInfo $lockInfo
+     * @return bool
+     */
+    function unlock($uri, LockInfo $lockInfo) {
+
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->tableName . ' WHERE uri = ? AND token = ?');
+        $stmt->execute([$uri, $lockInfo->token]);
+
+        return $stmt->rowCount() === 1;
+
+    }
+
 }

@@ -10,8 +10,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2356 => 'Airtel',
   23577 => 'Sotel',
   2359 => 'Millicom',
-];
+);

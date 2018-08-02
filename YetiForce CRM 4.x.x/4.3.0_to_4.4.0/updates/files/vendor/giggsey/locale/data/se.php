@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Ascension',
   'AD' => 'Andorra',
   'AE' => 'Ovttastuvvan Arábaemiráhtat',
@@ -259,4 +259,4 @@ return [
   'ZA' => 'Mátta-Afrihká',
   'ZM' => 'Zambia',
   'ZW' => 'Zimbabwe',
-];
+);

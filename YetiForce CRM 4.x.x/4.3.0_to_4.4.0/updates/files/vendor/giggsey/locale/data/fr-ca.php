@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'île de l’Ascension',
   'AX' => 'îles d’Åland',
   'BN' => 'Brunei',
@@ -37,4 +37,4 @@ return [
   'VC' => 'Saint-Vincent-et-les Grenadines',
   'VG' => 'îles Vierges britanniques',
   'VI' => 'îles Vierges américaines',
-];
+);

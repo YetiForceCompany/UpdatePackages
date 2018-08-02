@@ -15,37 +15,42 @@ namespace Sabre\HTTP\Auth;
  * @author François Kooman (fkooman@tuxed.net)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Bearer extends AbstractAuth
-{
-	/**
-	 * This method returns a string with an access token.
-	 *
-	 * If no token was found, this method returns null.
-	 *
-	 * @return null|string
-	 */
-	public function getToken()
-	{
-		$auth = $this->request->getHeader('Authorization');
+class Bearer extends AbstractAuth {
 
-		if (!$auth) {
-			return null;
-		}
+    /**
+     * This method returns a string with an access token.
+     *
+     * If no token was found, this method returns null.
+     *
+     * @return null|string
+     */
+    function getToken() {
 
-		if (strtolower(substr($auth, 0, 7)) !== 'bearer ') {
-			return null;
-		}
+        $auth = $this->request->getHeader('Authorization');
 
-		return substr($auth, 7);
-	}
+        if (!$auth) {
+            return null;
+        }
 
-	/**
-	 * This method sends the needed HTTP header and statuscode (401) to force
-	 * authentication.
-	 */
-	public function requireLogin()
-	{
-		$this->response->addHeader('WWW-Authenticate', 'Bearer realm="' . $this->realm . '"');
-		$this->response->setStatus(401);
-	}
+        if (strtolower(substr($auth, 0, 7)) !== 'bearer ') {
+            return null;
+        }
+
+        return substr($auth, 7);
+
+    }
+
+    /**
+     * This method sends the needed HTTP header and statuscode (401) to force
+     * authentication.
+     *
+     * @return void
+     */
+    function requireLogin() {
+
+        $this->response->addHeader('WWW-Authenticate', 'Bearer realm="' . $this->realm . '"');
+        $this->response->setStatus(401);
+
+    }
+
 }

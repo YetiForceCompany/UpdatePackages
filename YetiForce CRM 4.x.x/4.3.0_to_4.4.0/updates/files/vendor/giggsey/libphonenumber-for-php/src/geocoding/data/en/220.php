@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   22042 => 'Banjul',
   22043 => 'Bundung/Serekunda',
   220441 => 'Sanyang',
@@ -53,4 +53,4 @@ return [
   2205735 => 'Farafenni',
   2205738 => 'Ngensanjal',
   2205748 => 'Kaur',
-];
+);

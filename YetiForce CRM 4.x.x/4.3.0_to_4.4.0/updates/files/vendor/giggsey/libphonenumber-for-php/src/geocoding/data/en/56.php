@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5622 => 'Santiago, Metropolitan Region',
   5623 => 'Santiago, Metropolitan Region',
   5632 => 'Valparaíso',
@@ -36,4 +36,4 @@ return [
   5672 => 'Rancagua, O\'Higgins',
   5673 => 'Linares, Maule',
   5675 => 'Curicó, Maule',
-];
+);

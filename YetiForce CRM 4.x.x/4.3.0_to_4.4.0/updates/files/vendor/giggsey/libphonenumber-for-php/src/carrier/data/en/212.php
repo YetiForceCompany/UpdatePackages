@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   212600 => 'Inwi',
   212601 => 'Inwi',
   212602 => 'Inwi',
@@ -119,4 +119,4 @@ return [
   212770 => 'Méditel',
   212771 => 'Méditel',
   212777 => 'Méditel',
-];
+);

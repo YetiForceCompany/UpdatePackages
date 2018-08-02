@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   25224 => 'Telesom',
   25228 => 'Nationlink',
   25235 => 'AirSom',
@@ -38,4 +38,4 @@ return [
   25297 => 'STG',
   25298 => 'STG',
   25299 => 'STG',
-];
+);

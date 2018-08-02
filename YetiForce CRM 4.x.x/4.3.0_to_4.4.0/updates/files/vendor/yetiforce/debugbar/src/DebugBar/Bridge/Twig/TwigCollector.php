@@ -15,7 +15,7 @@ use DebugBar\DataCollector\DataCollector;
 use DebugBar\DataCollector\Renderable;
 
 /**
- * Collects data about rendered templates.
+ * Collects data about rendered templates
  *
  * http://twig.sensiolabs.org/
  *
@@ -29,59 +29,59 @@ use DebugBar\DataCollector\Renderable;
  */
 class TwigCollector extends DataCollector implements Renderable, AssetProvider
 {
-	public function __construct(TraceableTwigEnvironment $twig)
-	{
-		$this->twig = $twig;
-	}
+    public function __construct(TraceableTwigEnvironment $twig)
+    {
+        $this->twig = $twig;
+    }
 
-	public function collect()
-	{
-		$templates = [];
-		$accuRenderTime = 0;
+    public function collect()
+    {
+        $templates = array();
+        $accuRenderTime = 0;
 
-		foreach ($this->twig->getRenderedTemplates() as $tpl) {
-			$accuRenderTime += $tpl['render_time'];
-			$templates[] = [
-				'name' => $tpl['name'],
-				'render_time' => $tpl['render_time'],
-				'render_time_str' => $this->formatDuration($tpl['render_time'])
-			];
-		}
+        foreach ($this->twig->getRenderedTemplates() as $tpl) {
+            $accuRenderTime += $tpl['render_time'];
+            $templates[] = array(
+                'name' => $tpl['name'],
+                'render_time' => $tpl['render_time'],
+                'render_time_str' => $this->formatDuration($tpl['render_time'])
+            );
+        }
 
-		return [
-			'nb_templates' => count($templates),
-			'templates' => $templates,
-			'accumulated_render_time' => $accuRenderTime,
-			'accumulated_render_time_str' => $this->formatDuration($accuRenderTime)
-		];
-	}
+        return array(
+            'nb_templates' => count($templates),
+            'templates' => $templates,
+            'accumulated_render_time' => $accuRenderTime,
+            'accumulated_render_time_str' => $this->formatDuration($accuRenderTime)
+        );
+    }
 
-	public function getName()
-	{
-		return 'twig';
-	}
+    public function getName()
+    {
+        return 'twig';
+    }
 
-	public function getWidgets()
-	{
-		return [
-			'twig' => [
-				'icon' => 'leaf',
-				'widget' => 'PhpDebugBar.Widgets.TemplatesWidget',
-				'map' => 'twig',
-				'default' => json_encode(['templates' => []]),
-			],
-			'twig:badge' => [
-				'map' => 'twig.nb_templates',
-				'default' => 0
-			]
-		];
-	}
+    public function getWidgets()
+    {
+        return array(
+            'twig' => array(
+                'icon' => 'leaf',
+                'widget' => 'PhpDebugBar.Widgets.TemplatesWidget',
+                'map' => 'twig',
+                'default' => json_encode(array('templates' => array())),
+            ),
+            'twig:badge' => array(
+                'map' => 'twig.nb_templates',
+                'default' => 0
+            )
+        );
+    }
 
-	public function getAssets()
-	{
-		return [
-			'css' => 'widgets/templates/widget.css',
-			'js' => 'widgets/templates/widget.js'
-		];
-	}
+    public function getAssets()
+    {
+        return array(
+            'css' => 'widgets/templates/widget.css',
+            'js' => 'widgets/templates/widget.js'
+        );
+    }
 }

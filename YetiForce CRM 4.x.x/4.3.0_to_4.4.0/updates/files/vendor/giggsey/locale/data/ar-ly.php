@@ -9,8 +9,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'EA' => 'سبتة ومليلية',
   'MS' => 'مونتيسيرات',
   'UY' => 'أوروغواي',
-];
+);

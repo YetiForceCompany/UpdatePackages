@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   38630 => 'A1',
   38631 => 'Telekom Slovenije',
   38640 => 'A1',
@@ -30,4 +30,4 @@ return [
   386699 => 'HoT',
   38670 => 'Telemach',
   38671 => 'Telekom Slovenije',
-];
+);

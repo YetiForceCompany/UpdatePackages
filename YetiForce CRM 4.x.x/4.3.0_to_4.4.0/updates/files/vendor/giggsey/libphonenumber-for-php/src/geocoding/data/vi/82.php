@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   8241 => 'Chungcheong Nam',
   8243 => 'Chungcheong Bắc',
   8244 => 'Sejong (thành phố)',
@@ -19,4 +19,4 @@ return [
   8261 => 'Jeolla Nam',
   8263 => 'Jeolla Bắc',
   8264 => 'Jeju (tỉnh)',
-];
+);

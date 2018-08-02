@@ -13,6 +13,6 @@ namespace Sabre\DAV\Locks\Backend;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-abstract class AbstractBackend implements BackendInterface
-{
+abstract class AbstractBackend implements BackendInterface {
+
 }

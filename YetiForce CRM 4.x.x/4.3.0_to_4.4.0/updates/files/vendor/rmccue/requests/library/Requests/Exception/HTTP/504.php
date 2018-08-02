@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 504 Gateway Timeout responses.
+ * Exception for 504 Gateway Timeout responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 504 Gateway Timeout responses.
+ * Exception for 504 Gateway Timeout responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_504 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_504 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 504;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

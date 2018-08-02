@@ -22,25 +22,29 @@ namespace Sabre\VObject\Property;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class FlatText extends Text
-{
-	/**
-	 * Field separator.
-	 *
-	 * @var string
-	 */
-	public $delimiter = ',';
+class FlatText extends Text {
 
-	/**
-	 * Sets the value as a quoted-printable encoded string.
-	 *
-	 * Overriding this so we're not splitting on a ; delimiter.
-	 *
-	 * @param string $val
-	 */
-	public function setQuotedPrintableValue($val)
-	{
-		$val = quoted_printable_decode($val);
-		$this->setValue($val);
-	}
+    /**
+     * Field separator.
+     *
+     * @var string
+     */
+    public $delimiter = ',';
+
+    /**
+     * Sets the value as a quoted-printable encoded string.
+     *
+     * Overriding this so we're not splitting on a ; delimiter.
+     *
+     * @param string $val
+     *
+     * @return void
+     */
+    function setQuotedPrintableValue($val) {
+
+        $val = quoted_printable_decode($val);
+        $this->setValue($val);
+
+    }
+
 }

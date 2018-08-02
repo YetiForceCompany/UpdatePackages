@@ -16,44 +16,45 @@ use Sabre\HTTP\ResponseInterface;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class MapGetToPropFind extends DAV\ServerPlugin
-{
-	/**
-	 * reference to server class.
-	 *
-	 * @var DAV\Server
-	 */
-	protected $server;
+class MapGetToPropFind extends DAV\ServerPlugin {
 
-	/**
-	 * Initializes the plugin and subscribes to events.
-	 *
-	 * @param DAV\Server $server
-	 */
-	public function initialize(DAV\Server $server)
-	{
-		$this->server = $server;
-		$this->server->on('method:GET', [$this, 'httpGet'], 90);
-	}
+    /**
+     * reference to server class
+     *
+     * @var DAV\Server
+     */
+    protected $server;
 
-	/**
-	 * This method intercepts GET requests to non-files, and changes it into an HTTP PROPFIND request.
-	 *
-	 * @param RequestInterface  $request
-	 * @param ResponseInterface $response
-	 *
-	 * @return bool
-	 */
-	public function httpGet(RequestInterface $request, ResponseInterface $response)
-	{
-		$node = $this->server->tree->getNodeForPath($request->getPath());
-		if ($node instanceof DAV\IFile) {
-			return;
-		}
-		$subRequest = clone $request;
-		$subRequest->setMethod('PROPFIND');
+    /**
+     * Initializes the plugin and subscribes to events
+     *
+     * @param DAV\Server $server
+     * @return void
+     */
+    function initialize(DAV\Server $server) {
 
-		$this->server->invokeMethod($subRequest, $response);
-		return false;
-	}
+        $this->server = $server;
+        $this->server->on('method:GET', [$this, 'httpGet'], 90);
+    }
+
+    /**
+     * This method intercepts GET requests to non-files, and changes it into an HTTP PROPFIND request
+     *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return bool
+     */
+    function httpGet(RequestInterface $request, ResponseInterface $response) {
+
+        $node = $this->server->tree->getNodeForPath($request->getPath());
+        if ($node instanceof DAV\IFile) return;
+
+        $subRequest = clone $request;
+        $subRequest->setMethod('PROPFIND');
+
+        $this->server->invokeMethod($subRequest, $response);
+        return false;
+
+    }
+
 }

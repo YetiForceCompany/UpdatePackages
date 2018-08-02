@@ -26,73 +26,73 @@ use Symfony\Component\DependencyInjection\TypedReference;
  */
 class AddConsoleCommandPass implements CompilerPassInterface
 {
-	private $commandLoaderServiceId;
-	private $commandTag;
+    private $commandLoaderServiceId;
+    private $commandTag;
 
-	public function __construct(string $commandLoaderServiceId = 'console.command_loader', string $commandTag = 'console.command')
-	{
-		$this->commandLoaderServiceId = $commandLoaderServiceId;
-		$this->commandTag = $commandTag;
-	}
+    public function __construct(string $commandLoaderServiceId = 'console.command_loader', string $commandTag = 'console.command')
+    {
+        $this->commandLoaderServiceId = $commandLoaderServiceId;
+        $this->commandTag = $commandTag;
+    }
 
-	public function process(ContainerBuilder $container)
-	{
-		$commandServices = $container->findTaggedServiceIds($this->commandTag, true);
-		$lazyCommandMap = [];
-		$lazyCommandRefs = [];
-		$serviceIds = [];
+    public function process(ContainerBuilder $container)
+    {
+        $commandServices = $container->findTaggedServiceIds($this->commandTag, true);
+        $lazyCommandMap = array();
+        $lazyCommandRefs = array();
+        $serviceIds = array();
 
-		foreach ($commandServices as $id => $tags) {
-			$definition = $container->getDefinition($id);
-			$class = $container->getParameterBag()->resolveValue($definition->getClass());
+        foreach ($commandServices as $id => $tags) {
+            $definition = $container->getDefinition($id);
+            $class = $container->getParameterBag()->resolveValue($definition->getClass());
 
-			if (isset($tags[0]['command'])) {
-				$commandName = $tags[0]['command'];
-			} else {
-				if (!$r = $container->getReflectionClass($class)) {
-					throw new InvalidArgumentException(sprintf('Class "%s" used for service "%s" cannot be found.', $class, $id));
-				}
-				if (!$r->isSubclassOf(Command::class)) {
-					throw new InvalidArgumentException(sprintf('The service "%s" tagged "%s" must be a subclass of "%s".', $id, $this->commandTag, Command::class));
-				}
-				$commandName = $class::getDefaultName();
-			}
+            if (isset($tags[0]['command'])) {
+                $commandName = $tags[0]['command'];
+            } else {
+                if (!$r = $container->getReflectionClass($class)) {
+                    throw new InvalidArgumentException(sprintf('Class "%s" used for service "%s" cannot be found.', $class, $id));
+                }
+                if (!$r->isSubclassOf(Command::class)) {
+                    throw new InvalidArgumentException(sprintf('The service "%s" tagged "%s" must be a subclass of "%s".', $id, $this->commandTag, Command::class));
+                }
+                $commandName = $class::getDefaultName();
+            }
 
-			if (null === $commandName) {
-				if (!$definition->isPublic() || $definition->isPrivate()) {
-					$commandId = 'console.command.public_alias.' . $id;
-					$container->setAlias($commandId, $id)->setPublic(true);
-					$id = $commandId;
-				}
-				$serviceIds[] = $id;
+            if (null === $commandName) {
+                if (!$definition->isPublic() || $definition->isPrivate()) {
+                    $commandId = 'console.command.public_alias.'.$id;
+                    $container->setAlias($commandId, $id)->setPublic(true);
+                    $id = $commandId;
+                }
+                $serviceIds[] = $id;
 
-				continue;
-			}
+                continue;
+            }
 
-			unset($tags[0]);
-			$lazyCommandMap[$commandName] = $id;
-			$lazyCommandRefs[$id] = new TypedReference($id, $class);
-			$aliases = [];
+            unset($tags[0]);
+            $lazyCommandMap[$commandName] = $id;
+            $lazyCommandRefs[$id] = new TypedReference($id, $class);
+            $aliases = array();
 
-			foreach ($tags as $tag) {
-				if (isset($tag['command'])) {
-					$aliases[] = $tag['command'];
-					$lazyCommandMap[$tag['command']] = $id;
-				}
-			}
+            foreach ($tags as $tag) {
+                if (isset($tag['command'])) {
+                    $aliases[] = $tag['command'];
+                    $lazyCommandMap[$tag['command']] = $id;
+                }
+            }
 
-			$definition->addMethodCall('setName', [$commandName]);
+            $definition->addMethodCall('setName', array($commandName));
 
-			if ($aliases) {
-				$definition->addMethodCall('setAliases', [$aliases]);
-			}
-		}
+            if ($aliases) {
+                $definition->addMethodCall('setAliases', array($aliases));
+            }
+        }
 
-		$container
-			->register($this->commandLoaderServiceId, ContainerCommandLoader::class)
-			->setPublic(true)
-			->setArguments([ServiceLocatorTagPass::register($container, $lazyCommandRefs), $lazyCommandMap]);
+        $container
+            ->register($this->commandLoaderServiceId, ContainerCommandLoader::class)
+            ->setPublic(true)
+            ->setArguments(array(ServiceLocatorTagPass::register($container, $lazyCommandRefs), $lazyCommandMap));
 
-		$container->setParameter('console.command.ids', $serviceIds);
-	}
+        $container->setParameter('console.command.ids', $serviceIds);
+    }
 }

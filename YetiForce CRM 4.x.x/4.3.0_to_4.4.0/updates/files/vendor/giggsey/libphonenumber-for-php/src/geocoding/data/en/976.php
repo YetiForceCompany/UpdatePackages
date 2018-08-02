@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   97611 => 'Ulaanbaatar',
   976121 => 'Baganuur',
   976122 => 'Bagakhangai',
@@ -679,4 +679,4 @@ return [
   97625953 => 'Khuld, Dundgovi',
   97625954 => 'Tsagaandelger, Dundgovi',
   97625955 => 'Erdenedalai, Dundgovi',
-];
+);

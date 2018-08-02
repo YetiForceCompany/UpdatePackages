@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3592 => 'Sofia',
   359301 => 'Smolyan',
   3593019 => 'Pisanitsa',
@@ -2096,4 +2096,4 @@ return [
   3599784 => 'Kiselevo',
   3599785 => 'Vasilovtsi, Mont.',
   3599787 => 'Smirnenski, Mont.',
-];
+);

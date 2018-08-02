@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'CG' => 'Kongo',
   'CV' => 'Kabo Verde',
   'CZ' => 'Češka Republika',
@@ -20,4 +20,4 @@ return [
   'RE' => 'Reunion',
   'UM' => 'Manja udaljena ostrva SAD',
   'VC' => 'Sveti Vinsent i Grenadini',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   59891 => 'Antel',
   598920 => 'Antel',
   598921 => 'Antel',
@@ -22,4 +22,4 @@ return [
   59897 => 'Claro',
   59898 => 'Antel',
   59899 => 'Antel',
-];
+);

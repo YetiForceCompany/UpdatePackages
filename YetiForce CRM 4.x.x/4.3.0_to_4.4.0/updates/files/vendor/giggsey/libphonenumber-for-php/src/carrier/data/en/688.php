@@ -10,8 +10,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   68870 => 'Tuvalu Telecom',
   68871 => 'Tuvalu Telecom',
   68890 => 'Tuvalu Telecom',
-];
+);

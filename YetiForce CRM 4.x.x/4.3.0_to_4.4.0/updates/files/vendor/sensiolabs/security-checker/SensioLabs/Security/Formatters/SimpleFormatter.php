@@ -11,58 +11,58 @@
 
 namespace SensioLabs\Security\Formatters;
 
-use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\FormatterHelper;
 
 class SimpleFormatter implements FormatterInterface
 {
-	public function __construct(FormatterHelper $formatter)
-	{
-		$this->formatter = $formatter;
-	}
+    public function __construct(FormatterHelper $formatter)
+    {
+        $this->formatter = $formatter;
+    }
 
-	/**
-	 * Displays a security report as simple plain text.
-	 *
-	 * @param OutputInterface $output
-	 * @param string          $lockFilePath    The file path to the checked lock file
-	 * @param array           $vulnerabilities An array of vulnerabilities
-	 */
-	public function displayResults(OutputInterface $output, $lockFilePath, array $vulnerabilities)
-	{
-		$output->writeln(sprintf('Security Check Report: <comment>%s</>', realpath($lockFilePath)));
+    /**
+     * Displays a security report as simple plain text.
+     *
+     * @param OutputInterface $output
+     * @param string          $lockFilePath    The file path to the checked lock file
+     * @param array           $vulnerabilities An array of vulnerabilities
+     */
+    public function displayResults(OutputInterface $output, $lockFilePath, array $vulnerabilities)
+    {
+        $output->writeln(sprintf('Security Check Report: <comment>%s</>', realpath($lockFilePath)));
 
-		if ($count = count($vulnerabilities)) {
-			$status = 'CRITICAL';
-			$style = 'error';
-		} else {
-			$status = 'OK';
-			$style = 'info';
-		}
+        if ($count = count($vulnerabilities)) {
+            $status = 'CRITICAL';
+            $style = 'error';
+        } else {
+            $status = 'OK';
+            $style = 'info';
+        }
 
-		$output->writeln(sprintf('<%s>[%s] %d %s known vulnerabilities</>', $style, $status, $count, 1 === $count ? 'package has' : 'packages have'));
+        $output->writeln(sprintf('<%s>[%s] %d %s known vulnerabilities</>', $style, $status, $count, 1 === $count ? 'package has' : 'packages have'));
 
-		if (0 !== $count) {
-			$output->write("\n");
+        if (0 !== $count) {
+            $output->write("\n");
 
-			foreach ($vulnerabilities as $dependency => $issues) {
-				$dependencyFullName = $dependency . ' (' . $issues['version'] . ')';
-				$output->writeln('<info>' . $dependencyFullName . "\n" . str_repeat('-', strlen($dependencyFullName)) . "</>\n");
+            foreach ($vulnerabilities as $dependency => $issues) {
+                $dependencyFullName = $dependency.' ('.$issues['version'].')';
+                $output->writeln('<info>'.$dependencyFullName."\n".str_repeat('-', strlen($dependencyFullName))."</>\n");
 
-				foreach ($issues['advisories'] as $issue => $details) {
-					$output->write(' * ');
-					if ($details['cve']) {
-						$output->write('<comment>' . $details['cve'] . ': </comment>');
-					}
-					$output->writeln($details['title']);
+                foreach ($issues['advisories'] as $issue => $details) {
+                    $output->write(' * ');
+                    if ($details['cve']) {
+                        $output->write('<comment>'.$details['cve'].': </comment>');
+                    }
+                    $output->writeln($details['title']);
 
-					if ('' !== $details['link']) {
-						$output->writeln('   ' . $details['link']);
-					}
+                    if ('' !== $details['link']) {
+                        $output->writeln('   '.$details['link']);
+                    }
 
-					$output->writeln('');
-				}
-			}
-		}
-	}
+                    $output->writeln('');
+                }
+            }
+        }
+    }
 }

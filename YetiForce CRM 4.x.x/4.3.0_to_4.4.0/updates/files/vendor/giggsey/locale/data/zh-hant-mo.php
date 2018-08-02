@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AE' => '阿拉伯聯合酋長國',
   'AG' => '安提瓜和巴布達',
   'AW' => '阿魯巴',
@@ -96,4 +96,4 @@ return [
   'YT' => '馬約特',
   'ZM' => '贊比亞',
   'ZW' => '津巴布韋',
-];
+);

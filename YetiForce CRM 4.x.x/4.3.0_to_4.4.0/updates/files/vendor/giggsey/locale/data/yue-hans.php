@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => '阿森松岛',
   'AD' => '安道尔',
   'AE' => '阿拉伯联合大公国',
@@ -196,4 +196,4 @@ return [
   'YE' => '叶门',
   'YT' => '马约特',
   'ZM' => '尚比亚',
-];
+);

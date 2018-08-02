@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BR' => 'Brazil',
   'CN' => 'China',
   'DE' => 'Germany',
@@ -22,4 +22,4 @@ return [
   'KE' => 'Keeniyaa',
   'RU' => 'Russia',
   'US' => 'United States',
-];
+);

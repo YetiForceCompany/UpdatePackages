@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   99620 => 'Aktel',
   99622 => 'Sky mobile',
   99650 => 'Nur Telecom',
@@ -24,4 +24,4 @@ return [
   99677 => 'Sky mobile',
   996996 => 'Sky mobile',
   996999 => 'Sky mobile',
-];
+);

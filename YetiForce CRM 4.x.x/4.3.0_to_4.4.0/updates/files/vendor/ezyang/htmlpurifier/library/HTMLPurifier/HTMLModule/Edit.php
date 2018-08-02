@@ -6,50 +6,50 @@
  */
 class HTMLPurifier_HTMLModule_Edit extends HTMLPurifier_HTMLModule
 {
-	/**
-	 * @type string
-	 */
-	public $name = 'Edit';
 
-	/**
-	 * @param HTMLPurifier_Config $config
-	 */
-	public function setup($config)
-	{
-		$contents = 'Chameleon: #PCDATA | Inline ! #PCDATA | Flow';
-		$attr = [
-			'cite' => 'URI',
-			// 'datetime' => 'Datetime', // not implemented
-		];
-		$this->addElement('del', 'Inline', $contents, 'Common', $attr);
-		$this->addElement('ins', 'Inline', $contents, 'Common', $attr);
-	}
+    /**
+     * @type string
+     */
+    public $name = 'Edit';
 
-	// HTML 4.01 specifies that ins/del must not contain block
-	// elements when used in an inline context, chameleon is
-	// a complicated workaround to acheive this effect
+    /**
+     * @param HTMLPurifier_Config $config
+     */
+    public function setup($config)
+    {
+        $contents = 'Chameleon: #PCDATA | Inline ! #PCDATA | Flow';
+        $attr = array(
+            'cite' => 'URI',
+            // 'datetime' => 'Datetime', // not implemented
+        );
+        $this->addElement('del', 'Inline', $contents, 'Common', $attr);
+        $this->addElement('ins', 'Inline', $contents, 'Common', $attr);
+    }
 
-	// Inline context ! Block context (exclamation mark is
-	// separator, see getChildDef for parsing)
+    // HTML 4.01 specifies that ins/del must not contain block
+    // elements when used in an inline context, chameleon is
+    // a complicated workaround to acheive this effect
 
-	/**
-	 * @type bool
-	 */
-	public $defines_child_def = true;
+    // Inline context ! Block context (exclamation mark is
+    // separator, see getChildDef for parsing)
 
-	/**
-	 * @param HTMLPurifier_ElementDef $def
-	 *
-	 * @return HTMLPurifier_ChildDef_Chameleon
-	 */
-	public function getChildDef($def)
-	{
-		if ($def->content_model_type != 'chameleon') {
-			return false;
-		}
-		$value = explode('!', $def->content_model);
-		return new HTMLPurifier_ChildDef_Chameleon($value[0], $value[1]);
-	}
+    /**
+     * @type bool
+     */
+    public $defines_child_def = true;
+
+    /**
+     * @param HTMLPurifier_ElementDef $def
+     * @return HTMLPurifier_ChildDef_Chameleon
+     */
+    public function getChildDef($def)
+    {
+        if ($def->content_model_type != 'chameleon') {
+            return false;
+        }
+        $value = explode('!', $def->content_model);
+        return new HTMLPurifier_ChildDef_Chameleon($value[0], $value[1]);
+    }
 }
 
 // vim: et sw=4 sts=4

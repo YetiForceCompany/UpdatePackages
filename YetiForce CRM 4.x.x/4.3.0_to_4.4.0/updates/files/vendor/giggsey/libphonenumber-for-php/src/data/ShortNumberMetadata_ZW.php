@@ -10,83 +10,110 @@
  * Do not modify this file directly!
  */
 
-return [
-  'generalDesc' => [
-	'NationalNumberPattern' => '[139]\\d\\d(?:\\d{2})?',
-	'PossibleLength' => [
-	  0 => 3,
-	  1 => 5,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'tollFree' => [
-	'NationalNumberPattern' => '9(?:5[023]|61)',
-	'ExampleNumber' => '961',
-	'PossibleLength' => [
-	  0 => 3,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'premiumRate' => [
-	'NationalNumberPattern' => '3\\d{4}',
-	'ExampleNumber' => '30123',
-	'PossibleLength' => [
-	  0 => 5,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'emergency' => [
-	'NationalNumberPattern' => '(?:112|99[3-59])',
-	'ExampleNumber' => '999',
-	'PossibleLength' => [
-	  0 => 3,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'shortCode' => [
-	'NationalNumberPattern' => '11[2469]|3\\d{4}|9(?:5[023]|6[0-25]|9[3-59])',
-	'ExampleNumber' => '999',
-	'PossibleLength' => [
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'standardRate' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'carrierSpecific' => [
-	'NationalNumberPattern' => '(?:114|9(?:5[023]|6[0-25]))',
-	'ExampleNumber' => '114',
-	'PossibleLength' => [
-	  0 => 3,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
-  'smsServices' => [
-	'PossibleLength' => [
-	  0 => -1,
-	],
-	'PossibleLengthLocalOnly' => [
-	],
-  ],
+
+return array (
+  'generalDesc' => 
+  array (
+    'NationalNumberPattern' => '[139]\\d\\d(?:\\d{2})?',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+      1 => 5,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'tollFree' => 
+  array (
+    'NationalNumberPattern' => '9(?:5[023]|61)',
+    'ExampleNumber' => '961',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'premiumRate' => 
+  array (
+    'NationalNumberPattern' => '3\\d{4}',
+    'ExampleNumber' => '30123',
+    'PossibleLength' => 
+    array (
+      0 => 5,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'emergency' => 
+  array (
+    'NationalNumberPattern' => '(?:112|99[3-59])',
+    'ExampleNumber' => '999',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'shortCode' => 
+  array (
+    'NationalNumberPattern' => '11[2469]|3\\d{4}|9(?:5[023]|6[0-25]|9[3-59])',
+    'ExampleNumber' => '999',
+    'PossibleLength' => 
+    array (
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'standardRate' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'carrierSpecific' => 
+  array (
+    'NationalNumberPattern' => '(?:114|9(?:5[023]|6[0-25]))',
+    'ExampleNumber' => '114',
+    'PossibleLength' => 
+    array (
+      0 => 3,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
+  'smsServices' => 
+  array (
+    'PossibleLength' => 
+    array (
+      0 => -1,
+    ),
+    'PossibleLengthLocalOnly' => 
+    array (
+    ),
+  ),
   'id' => 'ZW',
   'countryCode' => 0,
   'internationalPrefix' => '',
   'sameMobileAndFixedLinePattern' => false,
-  'numberFormat' => [
-  ],
-  'intlNumberFormat' => [
-  ],
+  'numberFormat' => 
+  array (
+  ),
+  'intlNumberFormat' => 
+  array (
+  ),
   'mainCountryForCode' => false,
   'leadingZeroPossible' => false,
   'mobileNumberPortableRegion' => false,
-];
+);

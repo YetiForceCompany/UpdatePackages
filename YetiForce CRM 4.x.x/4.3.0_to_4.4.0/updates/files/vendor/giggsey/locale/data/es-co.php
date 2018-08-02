@@ -9,9 +9,9 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Isla Ascensión',
   'CI' => 'Costa de Marfil',
   'GG' => 'Guernesey',
   'IC' => 'Islas Canarias',
-];
+);

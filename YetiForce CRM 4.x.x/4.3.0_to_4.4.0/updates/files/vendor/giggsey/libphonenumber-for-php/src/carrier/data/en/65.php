@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   65810 => 'M1',
   65811 => 'StarHub',
   65812 => 'SingTel',
@@ -588,4 +588,4 @@ return [
   659888 => 'SingTel',
   659889 => 'M1',
   65989 => 'SingTel',
-];
+);

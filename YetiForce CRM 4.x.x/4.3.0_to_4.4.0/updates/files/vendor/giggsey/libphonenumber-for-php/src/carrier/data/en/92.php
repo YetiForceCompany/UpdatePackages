@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   92300 => 'Mobilink',
   92301 => 'Mobilink',
   92302 => 'Mobilink',
@@ -32,4 +32,4 @@ return [
   92336 => 'Ufone',
   92337 => 'Ufone',
   9234 => 'Telenor',
-];
+);

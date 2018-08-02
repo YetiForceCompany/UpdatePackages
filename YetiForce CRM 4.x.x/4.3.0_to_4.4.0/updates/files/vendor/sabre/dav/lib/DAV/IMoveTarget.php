@@ -17,28 +17,28 @@ namespace Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface IMoveTarget extends ICollection
-{
-	/**
-	 * Moves a node into this collection.
-	 *
-	 * It is up to the implementors to:
-	 *   1. Create the new resource.
-	 *   2. Remove the old resource.
-	 *   3. Transfer any properties or other data.
-	 *
-	 * Generally you should make very sure that your collection can easily move
-	 * the move.
-	 *
-	 * If you don't, just return false, which will trigger sabre/dav to handle
-	 * the move itself. If you return true from this function, the assumption
-	 * is that the move was successful.
-	 *
-	 * @param string $targetName New local file/collection name.
-	 * @param string $sourcePath Full path to source node
-	 * @param INode  $sourceNode Source node itself
-	 *
-	 * @return bool
-	 */
-	public function moveInto($targetName, $sourcePath, INode $sourceNode);
+interface IMoveTarget extends ICollection {
+
+    /**
+     * Moves a node into this collection.
+     *
+     * It is up to the implementors to:
+     *   1. Create the new resource.
+     *   2. Remove the old resource.
+     *   3. Transfer any properties or other data.
+     *
+     * Generally you should make very sure that your collection can easily move
+     * the move.
+     *
+     * If you don't, just return false, which will trigger sabre/dav to handle
+     * the move itself. If you return true from this function, the assumption
+     * is that the move was successful.
+     *
+     * @param string $targetName New local file/collection name.
+     * @param string $sourcePath Full path to source node
+     * @param INode $sourceNode Source node itself
+     * @return bool
+     */
+    function moveInto($targetName, $sourcePath, INode $sourceNode);
+
 }

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Aŋdóra',
   'AE' => 'Yunaitɛ Arabhi Ɛmire',
   'AF' => 'Afigándesitaŋ',
@@ -233,4 +233,4 @@ return [
   'ZA' => 'Afirika Kɔi Leŋŋɛ Lɔ',
   'ZM' => 'Zambiya',
   'ZW' => 'Zimbabhuwe',
-];
+);

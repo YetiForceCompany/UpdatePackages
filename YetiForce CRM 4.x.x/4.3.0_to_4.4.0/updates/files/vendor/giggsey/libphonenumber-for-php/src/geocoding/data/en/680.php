@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   680255 => 'Sonsorol State and Hatohobei State',
   680277 => 'Angaur State',
   680345 => 'Peleliu State',
@@ -26,4 +26,4 @@ return [
   680824 => 'Ngaraard State',
   680855 => 'Ngarchelong State',
   680876 => 'Kayangel State',
-];
+);

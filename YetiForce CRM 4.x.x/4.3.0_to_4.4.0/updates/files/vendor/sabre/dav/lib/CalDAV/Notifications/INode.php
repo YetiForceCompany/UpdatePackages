@@ -18,22 +18,23 @@ use Sabre\CalDAV\Xml\Notification\NotificationInterface;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface INode
-{
-	/**
-	 * This method must return an xml element, using the
-	 * Sabre\CalDAV\Xml\Notification\NotificationInterface classes.
-	 *
-	 * @return NotificationInterface
-	 */
-	public function getNotificationType();
+interface INode {
 
-	/**
-	 * Returns the etag for the notification.
-	 *
-	 * The etag must be surrounded by literal double-quotes.
-	 *
-	 * @return string
-	 */
-	public function getETag();
+    /**
+     * This method must return an xml element, using the
+     * Sabre\CalDAV\Xml\Notification\NotificationInterface classes.
+     *
+     * @return NotificationInterface
+     */
+    function getNotificationType();
+
+    /**
+     * Returns the etag for the notification.
+     *
+     * The etag must be surrounded by literal double-quotes.
+     *
+     * @return string
+     */
+    function getETag();
+
 }

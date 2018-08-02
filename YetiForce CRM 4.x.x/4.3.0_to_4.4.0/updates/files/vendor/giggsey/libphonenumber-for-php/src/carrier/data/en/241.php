@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   24104 => 'Airtel',
   24105 => 'Moov',
   24106 => 'Libertis',
@@ -32,4 +32,4 @@ return [
   2417 => 'Airtel',
   24195 => 'Libertis',
   24197 => 'Libertis',
-];
+);

@@ -10,8 +10,8 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   9655 => 'فيفا',
   9656 => 'الوطنية',
   9659 => 'زين',
-];
+);

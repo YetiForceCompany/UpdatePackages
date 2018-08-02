@@ -20,76 +20,82 @@ use Sabre\DAVACL;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Collection extends DAV\Collection implements ICollection, DAVACL\IACL
-{
-	use DAVACL\ACLTrait;
+class Collection extends DAV\Collection implements ICollection, DAVACL\IACL {
 
-	/**
-	 * The notification backend.
-	 *
-	 * @var CalDAV\Backend\NotificationSupport
-	 */
-	protected $caldavBackend;
+    use DAVACL\ACLTrait;
 
-	/**
-	 * Principal uri.
-	 *
-	 * @var string
-	 */
-	protected $principalUri;
+    /**
+     * The notification backend
+     *
+     * @var CalDAV\Backend\NotificationSupport
+     */
+    protected $caldavBackend;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param CalDAV\Backend\NotificationSupport $caldavBackend
-	 * @param string                             $principalUri
-	 */
-	public function __construct(CalDAV\Backend\NotificationSupport $caldavBackend, $principalUri)
-	{
-		$this->caldavBackend = $caldavBackend;
-		$this->principalUri = $principalUri;
-	}
+    /**
+     * Principal uri
+     *
+     * @var string
+     */
+    protected $principalUri;
 
-	/**
-	 * Returns all notifications for a principal.
-	 *
-	 * @return array
-	 */
-	public function getChildren()
-	{
-		$children = [];
-		$notifications = $this->caldavBackend->getNotificationsForPrincipal($this->principalUri);
+    /**
+     * Constructor
+     *
+     * @param CalDAV\Backend\NotificationSupport $caldavBackend
+     * @param string $principalUri
+     */
+    function __construct(CalDAV\Backend\NotificationSupport $caldavBackend, $principalUri) {
 
-		foreach ($notifications as $notification) {
-			$children[] = new Node(
-				$this->caldavBackend,
-				$this->principalUri,
-				$notification
-			);
-		}
+        $this->caldavBackend = $caldavBackend;
+        $this->principalUri = $principalUri;
 
-		return $children;
-	}
+    }
 
-	/**
-	 * Returns the name of this object.
-	 *
-	 * @return string
-	 */
-	public function getName()
-	{
-		return 'notifications';
-	}
+    /**
+     * Returns all notifications for a principal
+     *
+     * @return array
+     */
+    function getChildren() {
 
-	/**
-	 * Returns the owner principal.
-	 *
-	 * This must be a url to a principal, or null if there's no owner
-	 *
-	 * @return string|null
-	 */
-	public function getOwner()
-	{
-		return $this->principalUri;
-	}
+        $children = [];
+        $notifications = $this->caldavBackend->getNotificationsForPrincipal($this->principalUri);
+
+        foreach ($notifications as $notification) {
+
+            $children[] = new Node(
+                $this->caldavBackend,
+                $this->principalUri,
+                $notification
+            );
+        }
+
+        return $children;
+
+    }
+
+    /**
+     * Returns the name of this object
+     *
+     * @return string
+     */
+    function getName() {
+
+        return 'notifications';
+
+    }
+
+    /**
+     * Returns the owner principal
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+    function getOwner() {
+
+        return $this->principalUri;
+
+    }
+
 }

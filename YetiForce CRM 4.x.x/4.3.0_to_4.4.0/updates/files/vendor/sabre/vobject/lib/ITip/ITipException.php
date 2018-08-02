@@ -11,6 +11,5 @@ use Exception;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class ITipException extends Exception
-{
+class ITipException extends Exception {
 }

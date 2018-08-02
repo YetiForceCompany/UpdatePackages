@@ -1,10 +1,11 @@
 <?php
 /**
- * Ukrainian PHPMailer language file: refer to English translation for definitive list.
- *
+ * Ukrainian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Yuriy Rudyy <yrudyy@prs.net.ua>
  * @fixed by Boris Yurchenko <boris@yurchenko.pp.ua>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'Помилка SMTP: помилка авторизації.';
 $PHPMAILER_LANG['connect_host']         = 'Помилка SMTP: не вдається під\'єднатися до серверу SMTP.';
 $PHPMAILER_LANG['data_not_accepted']    = 'Помилка SMTP: дані не прийняті.';

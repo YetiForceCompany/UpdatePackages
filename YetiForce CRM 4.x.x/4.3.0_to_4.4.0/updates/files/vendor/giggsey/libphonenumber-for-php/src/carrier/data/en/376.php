@@ -10,6 +10,6 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3763 => 'Mobiland',
-];
+);

@@ -16,30 +16,30 @@ namespace Symfony\Component\Console\Output;
  */
 class BufferedOutput extends Output
 {
-	private $buffer = '';
+    private $buffer = '';
 
-	/**
-	 * Empties buffer and returns its content.
-	 *
-	 * @return string
-	 */
-	public function fetch()
-	{
-		$content = $this->buffer;
-		$this->buffer = '';
+    /**
+     * Empties buffer and returns its content.
+     *
+     * @return string
+     */
+    public function fetch()
+    {
+        $content = $this->buffer;
+        $this->buffer = '';
 
-		return $content;
-	}
+        return $content;
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function doWrite($message, $newline)
-	{
-		$this->buffer .= $message;
+    /**
+     * {@inheritdoc}
+     */
+    protected function doWrite($message, $newline)
+    {
+        $this->buffer .= $message;
 
-		if ($newline) {
-			$this->buffer .= PHP_EOL;
-		}
-	}
+        if ($newline) {
+            $this->buffer .= PHP_EOL;
+        }
+    }
 }

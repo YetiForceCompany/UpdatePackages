@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BN' => 'Brunei',
   'BW' => 'Botswana',
   'BY' => 'Weissrussland',
@@ -18,4 +18,4 @@ return [
   'SB' => 'Salomon-Inseln',
   'TL' => 'Osttimor',
   'ZW' => 'Zimbabwe',
-];
+);

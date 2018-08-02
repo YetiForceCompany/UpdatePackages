@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Île de l’Ascension',
   'AD' => 'Andorre',
   'AE' => 'Émirats arabes unis',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'Afrique du Sud',
   'ZM' => 'Zambie',
   'ZW' => 'Zimbabwe',
-];
+);

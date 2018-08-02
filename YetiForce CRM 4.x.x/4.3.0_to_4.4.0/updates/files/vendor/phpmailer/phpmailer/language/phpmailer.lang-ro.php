@@ -1,9 +1,10 @@
 <?php
 /**
- * Romanian PHPMailer language file: refer to English translation for definitive list.
- *
+ * Romanian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Alex Florea <alecz.fia@gmail.com>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'Eroare SMTP: Autentificarea a eșuat.';
 $PHPMAILER_LANG['connect_host']         = 'Eroare SMTP: Conectarea la serverul SMTP a eșuat.';
 $PHPMAILER_LANG['data_not_accepted']    = 'Eroare SMTP: Datele nu au fost acceptate.';

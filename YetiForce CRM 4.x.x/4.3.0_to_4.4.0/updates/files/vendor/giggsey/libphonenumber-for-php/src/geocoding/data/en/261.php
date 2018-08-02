@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2612022 => 'Antananarivo',
   2612042 => 'Ambatolampy',
   2612044 => 'Antsirabe',
@@ -33,4 +33,4 @@ return [
   2612092 => 'Taolañaro',
   2612094 => 'Toliary',
   2612095 => 'Morondava',
-];
+);

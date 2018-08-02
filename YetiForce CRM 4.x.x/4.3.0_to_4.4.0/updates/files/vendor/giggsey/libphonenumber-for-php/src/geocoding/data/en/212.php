@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   212520 => 'Casablanca',
   212521 => 'Casablanca/Central Morocco',
   2125220 => 'Casablanca',
@@ -79,4 +79,4 @@ return [
   2125397 => 'Tétouan',
   2125398 => 'Al Hoceima/Chefchaouen',
   2125399 => 'Al Hoceima/Larache/Tangier',
-];
+);

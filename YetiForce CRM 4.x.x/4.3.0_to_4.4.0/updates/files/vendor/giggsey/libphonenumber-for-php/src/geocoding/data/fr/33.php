@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   3332820 => 'Dunkerque',
   3332824 => 'Dunkerque',
   3332825 => 'Dunkerque',
@@ -34,4 +34,4 @@ return [
   3355697 => 'Mérignac',
   3355729 => 'Mérignac',
   3355792 => 'Mérignac',
-];
+);

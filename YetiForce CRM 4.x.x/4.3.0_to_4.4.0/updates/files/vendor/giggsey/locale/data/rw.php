@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'RW' => 'U Rwanda',
   'TO' => 'Tonga',
-];
+);

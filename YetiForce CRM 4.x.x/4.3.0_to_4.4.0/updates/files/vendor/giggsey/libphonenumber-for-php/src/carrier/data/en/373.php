@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   373562 => 'IDC',
   37360 => 'Orange',
   373610 => 'Orange',
@@ -43,4 +43,4 @@ return [
   373787 => 'Moldcell',
   373788 => 'Moldcell',
   37379 => 'Moldcell',
-];
+);

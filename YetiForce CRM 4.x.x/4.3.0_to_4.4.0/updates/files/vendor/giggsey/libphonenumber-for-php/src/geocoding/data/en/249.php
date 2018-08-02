@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   24911 => 'Omdurman',
   24921 => 'Atbara',
   249183 => 'Khartoum',
@@ -22,4 +22,4 @@ return [
   249616 => 'Shetnzi',
   24971 => 'Kosti',
   24981 => 'Al-Ubayyid',
-];
+);

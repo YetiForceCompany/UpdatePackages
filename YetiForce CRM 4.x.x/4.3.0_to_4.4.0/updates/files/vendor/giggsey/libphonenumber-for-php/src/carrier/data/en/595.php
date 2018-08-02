@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   595951 => 'VOX',
   595961 => 'VOX',
   595962 => 'VOX',
@@ -32,4 +32,4 @@ return [
   595993 => 'Claro',
   595994 => 'Claro',
   595995 => 'Claro',
-];
+);

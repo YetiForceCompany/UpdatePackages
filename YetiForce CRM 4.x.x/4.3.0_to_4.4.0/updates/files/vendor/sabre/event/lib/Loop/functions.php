@@ -6,11 +6,13 @@ namespace Sabre\Event\Loop;
  * Executes a function after x seconds.
  *
  * @param callable $cb
- * @param float    $timeout timeout in seconds
+ * @param float $timeout timeout in seconds
+ * @return void
  */
-function setTimeout(callable $cb, $timeout)
-{
-	instance()->setTimeout($cb, $timeout);
+function setTimeout(callable $cb, $timeout) {
+
+    instance()->setTimeout($cb, $timeout);
+
 }
 
 /**
@@ -20,34 +22,39 @@ function setTimeout(callable $cb, $timeout)
  * clearInterval.
  *
  * @param callable $cb
- * @param float    $timeout
- *
+ * @param float $timeout
  * @return array
  */
-function setInterval(callable $cb, $timeout)
-{
-	return instance()->setInterval($cb, $timeout);
+function setInterval(callable $cb, $timeout) {
+
+    return instance()->setInterval($cb, $timeout);
+
 }
 
 /**
  * Stops a running internval.
  *
  * @param array $intervalId
+ * @return void
  */
-function clearInterval($intervalId)
-{
-	instance()->clearInterval($intervalId);
+function clearInterval($intervalId) {
+
+    instance()->clearInterval($intervalId);
+
 }
 
 /**
  * Runs a function immediately at the next iteration of the loop.
  *
  * @param callable $cb
+ * @return void
  */
-function nextTick(callable $cb)
-{
-	instance()->nextTick($cb);
+function nextTick(callable $cb) {
+
+    instance()->nextTick($cb);
+
 }
+
 
 /**
  * Adds a read stream.
@@ -60,10 +67,12 @@ function nextTick(callable $cb)
  *
  * @param resource $stream
  * @param callable $cb
+ * @return void
  */
-function addReadStream($stream, callable $cb)
-{
-	instance()->addReadStream($stream, $cb);
+function addReadStream($stream, callable $cb) {
+
+    instance()->addReadStream($stream, $cb);
+
 }
 
 /**
@@ -77,41 +86,51 @@ function addReadStream($stream, callable $cb)
  *
  * @param resource $stream
  * @param callable $cb
+ * @return void
  */
-function addWriteStream($stream, callable $cb)
-{
-	instance()->addWriteStream($stream, $cb);
+function addWriteStream($stream, callable $cb) {
+
+    instance()->addWriteStream($stream, $cb);
+
 }
 
 /**
  * Stop watching a stream for reads.
  *
  * @param resource $stream
+ * @return void
  */
-function removeReadStream($stream)
-{
-	instance()->removeReadStream($stream);
+function removeReadStream($stream) {
+
+    instance()->removeReadStream($stream);
+
 }
 
 /**
  * Stop watching a stream for writes.
  *
  * @param resource $stream
+ * @return void
  */
-function removeWriteStream($stream)
-{
-	instance()->removeWriteStream($stream);
+function removeWriteStream($stream) {
+
+    instance()->removeWriteStream($stream);
+
 }
+
 
 /**
  * Runs the loop.
  *
  * This function will run continiously, until there's no more events to
  * handle.
+ *
+ * @return void
  */
-function run()
-{
-	instance()->run();
+function run() {
+
+    instance()->run();
+
 }
 
 /**
@@ -127,20 +146,23 @@ function run()
  * loop after the tick.
  *
  * @param bool $block
- *
  * @return bool
  */
-function tick($block = false)
-{
-	return instance()->tick($block);
+function tick($block = false) {
+
+    return instance()->tick($block);
+
 }
 
 /**
- * Stops a running eventloop.
+ * Stops a running eventloop
+ *
+ * @return void
  */
-function stop()
-{
-	instance()->stop();
+function stop() {
+
+    instance()->stop();
+
 }
 
 /**
@@ -148,13 +170,14 @@ function stop()
  *
  * @param Loop $newLoop
  */
-function instance(Loop $newLoop = null)
-{
-	static $loop;
-	if ($newLoop) {
-		$loop = $newLoop;
-	} elseif (!$loop) {
-		$loop = new Loop();
-	}
-	return $loop;
+function instance(Loop $newLoop = null) {
+
+    static $loop;
+    if ($newLoop) {
+        $loop = $newLoop;
+    } elseif (!$loop) {
+        $loop = new Loop();
+    }
+    return $loop;
+
 }

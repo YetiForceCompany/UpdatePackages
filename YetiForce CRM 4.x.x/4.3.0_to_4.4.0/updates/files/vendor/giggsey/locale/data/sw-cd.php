@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AF' => 'Afuganistani',
   'AZ' => 'Azabajani',
   'BJ' => 'Benini',
@@ -38,4 +38,4 @@ return [
   'TD' => 'Chadi',
   'TL' => 'Timori ya Mashariki',
   'VN' => 'Vietnamu',
-];
+);

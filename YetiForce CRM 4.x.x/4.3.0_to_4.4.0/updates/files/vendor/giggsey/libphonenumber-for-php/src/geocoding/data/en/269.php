@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   269760 => 'Domoni',
   269761 => 'Mutsamudu',
   269762 => 'Mohéli',
@@ -27,4 +27,4 @@ return [
   269777 => 'Mbéni',
   269778 => 'Mitsamiouli',
   269779 => 'Foumbouni',
-];
+);

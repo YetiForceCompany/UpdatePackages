@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   389701 => 'T-Mobile',
   389702 => 'T-Mobile',
   389703 => 'T-Mobile',
@@ -77,4 +77,4 @@ return [
   389789 => 'Vip',
   389792 => 'Lycamobile',
   389793 => 'Lycamobile',
-];
+);

@@ -10,10 +10,10 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   96274 => 'Mirsal',
   96275 => 'Friendi',
   96277 => 'Orange',
   96278 => 'Umniah',
   96279 => 'Zain JO',
-];
+);

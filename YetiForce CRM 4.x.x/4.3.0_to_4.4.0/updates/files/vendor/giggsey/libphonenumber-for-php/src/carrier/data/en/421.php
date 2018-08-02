@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   421901 => 'Telekom',
   421902 => 'Telekom',
   421903 => 'Telekom',
@@ -35,4 +35,4 @@ return [
   421948 => 'O2',
   421949 => 'O2',
   421950 => '4ka of SWAN',
-];
+);

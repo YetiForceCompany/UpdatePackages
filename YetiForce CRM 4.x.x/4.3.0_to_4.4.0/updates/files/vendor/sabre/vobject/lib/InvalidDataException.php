@@ -10,6 +10,5 @@ namespace Sabre\VObject;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class InvalidDataException extends \Exception
-{
+class InvalidDataException extends \Exception {
 }

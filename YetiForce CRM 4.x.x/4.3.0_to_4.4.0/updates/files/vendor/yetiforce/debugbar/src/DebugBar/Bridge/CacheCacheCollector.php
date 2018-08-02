@@ -15,7 +15,7 @@ use CacheCache\LoggingBackend;
 use Monolog\Logger;
 
 /**
- * Collects CacheCache operations.
+ * Collects CacheCache operations
  *
  * http://maximebf.github.io/CacheCache/
  *
@@ -29,48 +29,47 @@ use Monolog\Logger;
  */
 class CacheCacheCollector extends MonologCollector
 {
-	protected $logger;
+    protected $logger;
 
-	/**
-	 * CacheCacheCollector constructor.
-	 *
-	 * @param Cache|null  $cache
-	 * @param Logger|null $logger
-	 * @param bool        $level
-	 * @param bool        $bubble
-	 */
-	public function __construct(Cache $cache = null, Logger $logger = null, $level = Logger::DEBUG, $bubble = true)
-	{
-		parent::__construct(null, $level, $bubble);
+    /**
+     * CacheCacheCollector constructor.
+     * @param Cache|null $cache
+     * @param Logger|null $logger
+     * @param bool $level
+     * @param bool $bubble
+     */
+    public function __construct(Cache $cache = null, Logger $logger = null, $level = Logger::DEBUG, $bubble = true)
+    {
+        parent::__construct(null, $level, $bubble);
 
-		if ($logger === null) {
-			$logger = new Logger('Cache');
-		}
-		$this->logger = $logger;
+        if ($logger === null) {
+            $logger = new Logger('Cache');
+        }
+        $this->logger = $logger;
 
-		if ($cache !== null) {
-			$this->addCache($cache);
-		}
-	}
+        if ($cache !== null) {
+            $this->addCache($cache);
+        }
+    }
 
-	/**
-	 * @param Cache $cache
-	 */
-	public function addCache(Cache $cache)
-	{
-		$backend = $cache->getBackend();
-		if (!($backend instanceof LoggingBackend)) {
-			$backend = new LoggingBackend($backend, $this->logger);
-		}
-		$cache->setBackend($backend);
-		$this->addLogger($backend->getLogger());
-	}
+    /**
+     * @param Cache $cache
+     */
+    public function addCache(Cache $cache)
+    {
+        $backend = $cache->getBackend();
+        if (!($backend instanceof LoggingBackend)) {
+            $backend = new LoggingBackend($backend, $this->logger);
+        }
+        $cache->setBackend($backend);
+        $this->addLogger($backend->getLogger());
+    }
 
-	/**
-	 * @return string
-	 */
-	public function getName()
-	{
-		return 'cache';
-	}
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return 'cache';
+    }
 }

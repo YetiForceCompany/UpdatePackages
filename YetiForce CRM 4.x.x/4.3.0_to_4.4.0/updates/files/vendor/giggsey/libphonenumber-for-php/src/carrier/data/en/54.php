@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   549113 => 'Personal',
   549114 => 'Personal',
   549115 => 'Personal',
@@ -95,4 +95,4 @@ return [
   549387 => 'Personal',
   549388 => 'Personal',
   549389 => 'Personal',
-];
+);

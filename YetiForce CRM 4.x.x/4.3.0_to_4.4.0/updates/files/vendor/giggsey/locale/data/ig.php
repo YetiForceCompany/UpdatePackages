@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BJ' => 'Binin',
   'BM' => 'Bemuda',
   'CN' => 'Chaina',
@@ -18,4 +18,4 @@ return [
   'LY' => 'Libyia',
   'MV' => 'Maldivesa',
   'NG' => 'Naịjịrịa',
-];
+);

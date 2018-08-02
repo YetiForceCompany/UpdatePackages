@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BY' => 'Bjelorusija',
   'CG' => 'Kongo',
   'CV' => 'Kabo Verde',
@@ -23,4 +23,4 @@ return [
   'VC' => 'Sveti Vinsent i Grenadini',
   'VG' => 'Britanska Djevičanska Ostrva',
   'VI' => 'Američka Djevičanska Ostrva',
-];
+);

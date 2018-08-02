@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AU' => 'Nūhōlani',
   'CA' => 'Kanakā',
   'CN' => 'Kina',
@@ -30,4 +30,4 @@ return [
   'PH' => 'ʻĀina Pilipino',
   'RU' => 'Lūkia',
   'US' => 'ʻAmelika Hui Pū ʻIa',
-];
+);

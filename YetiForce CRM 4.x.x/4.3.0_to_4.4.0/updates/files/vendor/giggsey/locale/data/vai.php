@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'ꗻꗡ ꕒꕡꕌ ꗏ ꔳꘋꗣ',
   'AD' => 'ꕉꖆꕟ',
   'AE' => 'ꖳꕯꔤꗳ ꕉꕟꔬ ꗡꕆꔓꔻ',
@@ -261,4 +261,4 @@ return [
   'ZA' => 'ꕉꔱꔸꕪ ꗛꔤ ꔒꘋꗣ ꗏ ꕸꖃꔀ',
   'ZM' => 'ꕤꔭꕩ',
   'ZW' => 'ꔽꕓꖜꔃ',
-];
+);

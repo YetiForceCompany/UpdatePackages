@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   35121 => 'Lisboa',
   35122 => 'Porto',
   351231 => 'Mealhada',
@@ -62,4 +62,4 @@ return [
   351292 => 'Horta',
   351295 => 'Angra do Heroísmo',
   351296 => 'Ponta Delgada',
-];
+);

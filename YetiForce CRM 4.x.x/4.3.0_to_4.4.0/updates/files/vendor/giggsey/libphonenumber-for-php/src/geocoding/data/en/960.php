@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   960300 => 'Malé/Hulhulé/Aarah',
   960301 => 'Malé/Hulhulé/Aarah',
   960302 => 'Malé Region',
@@ -44,4 +44,4 @@ return [
   960686 => 'Gnaviyani',
   960688 => 'Addu',
   960689 => 'Addu',
-];
+);

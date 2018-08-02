@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   35191 => 'Vodafone',
   3519200 => 'Lycamobile',
   3519201 => 'Lycamobile',
@@ -45,4 +45,4 @@ return [
   3519294 => 'NOS',
   35193 => 'NOS',
   35196 => 'MEO',
-];
+);

@@ -171,7 +171,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		if ($this->checkFieldLableExists($label)) {
 			throw new Exception(\App\Language::translate('LBL_DUPLICATE_FIELD_EXISTS', 'Settings::LayoutEditor'), 513);
 		}
-		if($type === 0) {
+		if ($type === 0) {
 			if ($this->checkFieldNameCharacters($name)) {
 				throw new Exception(\App\Language::translate('LBL_INVALIDCHARACTER', 'Settings::LayoutEditor'), 512);
 			}

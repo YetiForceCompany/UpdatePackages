@@ -12,43 +12,47 @@ namespace Sabre\HTTP;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class ClientHttpException extends \Exception implements HttpException
-{
-	/**
-	 * Response object.
-	 *
-	 * @var ResponseInterface
-	 */
-	protected $response;
+class ClientHttpException extends \Exception implements HttpException {
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ResponseInterface $response
-	 */
-	public function __construct(ResponseInterface $response)
-	{
-		$this->response = $response;
-		parent::__construct($response->getStatusText(), $response->getStatus());
-	}
+    /**
+     * Response object
+     *
+     * @var ResponseInterface
+     */
+    protected $response;
 
-	/**
-	 * The http status code for the error.
-	 *
-	 * @return int
-	 */
-	public function getHttpStatus()
-	{
-		return $this->response->getStatus();
-	}
+    /**
+     * Constructor
+     *
+     * @param ResponseInterface $response
+     */
+    function __construct(ResponseInterface $response) {
 
-	/**
-	 * Returns the full response object.
-	 *
-	 * @return ResponseInterface
-	 */
-	public function getResponse()
-	{
-		return $this->response;
-	}
+        $this->response = $response;
+        parent::__construct($response->getStatusText(), $response->getStatus());
+
+    }
+
+    /**
+     * The http status code for the error.
+     *
+     * @return int
+     */
+    function getHttpStatus() {
+
+        return $this->response->getStatus();
+
+    }
+
+    /**
+     * Returns the full response object.
+     *
+     * @return ResponseInterface
+     */
+    function getResponse() {
+
+        return $this->response;
+
+    }
+
 }

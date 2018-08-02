@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5993181 => 'Eutel',
   5993184 => 'Eutel',
   5993185 => 'Eutel',
@@ -46,4 +46,4 @@ return [
   599967 => 'Digicel',
   599968 => 'Digicel',
   599969 => 'Digicel',
-];
+);

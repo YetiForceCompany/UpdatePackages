@@ -17,6 +17,7 @@
  *      This file requires that the include path contains the HTML Purifier
  *      library directory; this is not auto-set.
  */
+
 require 'HTMLPurifier.php';
 require 'HTMLPurifier/Arborize.php';
 require 'HTMLPurifier/AttrCollections.php';

@@ -5,7 +5,7 @@ namespace Sabre\DAV\Exception;
 use Sabre\DAV;
 
 /**
- * ServiceUnavailable.
+ * ServiceUnavailable
  *
  * This exception is thrown in case the service
  * is currently not available (e.g. down for maintenance).
@@ -14,15 +14,17 @@ use Sabre\DAV;
  * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class ServiceUnavailable extends DAV\Exception
-{
-	/**
-	 * Returns the HTTP statuscode for this exception.
-	 *
-	 * @return int
-	 */
-	public function getHTTPCode()
-	{
-		return 503;
-	}
+class ServiceUnavailable extends DAV\Exception {
+
+    /**
+     * Returns the HTTP statuscode for this exception
+     *
+     * @return int
+     */
+    function getHTTPCode() {
+
+        return 503;
+
+    }
+
 }

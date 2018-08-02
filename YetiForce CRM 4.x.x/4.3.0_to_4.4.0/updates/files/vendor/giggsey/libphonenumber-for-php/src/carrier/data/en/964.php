@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   9647400 => 'Itisaluna',
   9647401 => 'Itisaluna',
   9647435 => 'Kalimat',
@@ -24,4 +24,4 @@ return [
   96477 => 'Asiacell',
   96478 => 'Zain',
   96479 => 'Zain',
-];
+);

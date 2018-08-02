@@ -1,20 +1,20 @@
 <?php
 
-class Requests_Exception_Transport_cURL extends Requests_Exception_Transport
-{
+class Requests_Exception_Transport_cURL extends Requests_Exception_Transport {
+
 	const EASY = 'cURLEasy';
 	const MULTI = 'cURLMulti';
 	const SHARE = 'cURLShare';
 
 	/**
-	 * cURL error code.
+	 * cURL error code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = -1;
 
 	/**
-	 * Which type of cURL error.
+	 * Which type of cURL error
 	 *
 	 * EASY|MULTI|SHARE
 	 *
@@ -23,14 +23,13 @@ class Requests_Exception_Transport_cURL extends Requests_Exception_Transport
 	protected $type = 'Unknown';
 
 	/**
-	 * Clear text error message.
+	 * Clear text error message
 	 *
 	 * @var string
 	 */
 	protected $reason = 'Unknown';
 
-	public function __construct($message, $type, $data = null, $code = 0)
-	{
+	public function __construct($message, $type, $data = null, $code = 0) {
 		if ($type !== null) {
 			$this->type = $type;
 		}
@@ -48,10 +47,10 @@ class Requests_Exception_Transport_cURL extends Requests_Exception_Transport
 	}
 
 	/**
-	 * Get the error message.
+	 * Get the error message
 	 */
-	public function getReason()
-	{
+	public function getReason() {
 		return $this->reason;
 	}
+
 }

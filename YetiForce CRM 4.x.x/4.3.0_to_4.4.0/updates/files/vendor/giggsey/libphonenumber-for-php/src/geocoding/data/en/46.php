@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   4611 => 'Norrköping',
   46120 => 'Åtvidaberg',
   46121 => 'Söderköping',
@@ -275,4 +275,4 @@ return [
   46978 => 'Pajala',
   46980 => 'Kiruna',
   46981 => 'Vittangi',
-];
+);

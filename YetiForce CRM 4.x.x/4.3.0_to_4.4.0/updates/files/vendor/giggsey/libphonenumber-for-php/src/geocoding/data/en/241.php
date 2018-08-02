@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2410140 => 'Kango',
   24101420 => 'Ntoum',
   24101424 => 'Cocobeach',
@@ -41,4 +41,4 @@ return [
   2410193 => 'Booué',
   2410196 => 'Bitam',
   2410198 => 'Oyem',
-];
+);

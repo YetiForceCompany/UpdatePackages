@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   61400 => 'Telstra',
   61401 => 'Optus',
   61402 => 'Optus',
@@ -95,4 +95,4 @@ return [
   61497 => 'Telstra',
   61498 => 'Telstra',
   61499 => 'Telstra',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   96650 => 'Al Jawal (STC)',
   96653 => 'Al Jawal (STC)',
   96654 => 'Mobily',
@@ -25,4 +25,4 @@ return [
   966578 => 'Lebara',
   96658 => 'Zain',
   96659 => 'Zain',
-];
+);

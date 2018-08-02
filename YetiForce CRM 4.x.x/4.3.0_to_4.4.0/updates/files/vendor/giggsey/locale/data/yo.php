@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Orílẹ́ède Ààndórà',
   'AE' => 'Orílẹ́ède Ẹmirate ti Awọn Arabu',
   'AF' => 'Orílẹ́ède Àfùgànístánì',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Orílẹ́ède Ariwa Afirika',
   'ZM' => 'Orílẹ́ède ṣamibia',
   'ZW' => 'Orílẹ́ède ṣimibabe',
-];
+);

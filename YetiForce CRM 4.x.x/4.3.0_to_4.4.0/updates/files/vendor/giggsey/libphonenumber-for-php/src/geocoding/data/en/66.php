@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   662 => 'Bangkok/Nonthaburi/Pathum Thani/Samut Prakan',
   6632 => 'Phetchaburi/Prachuap Khiri Khan/Ratchaburi',
   6633 => 'Chachoengsao/Chon Buri/Rayong',
@@ -34,4 +34,4 @@ return [
   6675 => 'Krabi/Nakhon Si Thammarat/Trang',
   6676 => 'Phang Nga/Phuket',
   6677 => 'Chumphon/Ranong/Surat Thani',
-];
+);

@@ -13,7 +13,6 @@
  */
 class YetiForceUpdate
 {
-
 	/**
 	 * @var \vtlib\PackageImport
 	 */
@@ -60,13 +59,17 @@ class YetiForceUpdate
 	public function preupdate()
 	{
 		$start = microtime(true);
+		if (version_compare(PHP_VERSION, '7.1', '<') || version_compare(PHP_VERSION, '7.2', '>')) {
+			$this->package->_errorText = 'Required PHP version for the update package is PHP 7.1.x. The update is not possible in case of any other version.';
+			return false;
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		if (!method_exists('\App\Module', 'initFromDb')) {
 			$this->package->_errorText = '"4.3.0_to_4.4.0_PreInstall" not installed. The upgrade is not possible.';
 			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return false;
 		}
-		$minTime = 500;
+		$minTime = 600;
 		if (ini_get('max_execution_time') < $minTime || ini_get('max_input_time') < $minTime) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:';
@@ -234,7 +237,7 @@ class YetiForceUpdate
 				->update('u_yf_emailtemplates', [
 					'sys_name' => 'ImportCron',
 					], ['emailtemplatesid' => $record->getId()])
-				->execute();
+					->execute();
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -717,7 +720,7 @@ class YetiForceUpdate
 		foreach ($modules as $moduleName) {
 			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
 				$importInstance = new \vtlib\PackageImport();
-				$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $moduleName . '.xml');
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
 				$importInstance->importModule();
 				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
 				$this->postInstalModule($moduleName);

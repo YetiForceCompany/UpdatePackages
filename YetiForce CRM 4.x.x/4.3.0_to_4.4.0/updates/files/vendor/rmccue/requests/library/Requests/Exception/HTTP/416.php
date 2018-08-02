@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 416 Requested Range Not Satisfiable responses.
+ * Exception for 416 Requested Range Not Satisfiable responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 416 Requested Range Not Satisfiable responses.
+ * Exception for 416 Requested Range Not Satisfiable responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_416 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_416 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 416;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

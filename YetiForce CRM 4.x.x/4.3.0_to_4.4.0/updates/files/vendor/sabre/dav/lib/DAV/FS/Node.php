@@ -6,7 +6,7 @@ use Sabre\DAV;
 use Sabre\HTTP\URLUtil;
 
 /**
- * Base node-class.
+ * Base node-class
  *
  * The node class implements the method used by both the File and the Directory classes
  *
@@ -14,59 +14,67 @@ use Sabre\HTTP\URLUtil;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-abstract class Node implements DAV\INode
-{
-	/**
-	 * The path to the current node.
-	 *
-	 * @var string
-	 */
-	protected $path;
+abstract class Node implements DAV\INode {
 
-	/**
-	 * Sets up the node, expects a full path name.
-	 *
-	 * @param string $path
-	 */
-	public function __construct($path)
-	{
-		$this->path = $path;
-	}
+    /**
+     * The path to the current node
+     *
+     * @var string
+     */
+    protected $path;
 
-	/**
-	 * Returns the name of the node.
-	 *
-	 * @return string
-	 */
-	public function getName()
-	{
-		list(, $name) = URLUtil::splitPath($this->path);
-		return $name;
-	}
+    /**
+     * Sets up the node, expects a full path name
+     *
+     * @param string $path
+     */
+    function __construct($path) {
 
-	/**
-	 * Renames the node.
-	 *
-	 * @param string $name The new name
-	 */
-	public function setName($name)
-	{
-		list($parentPath) = URLUtil::splitPath($this->path);
-		list(, $newName) = URLUtil::splitPath($name);
+        $this->path = $path;
 
-		$newPath = $parentPath . '/' . $newName;
-		rename($this->path, $newPath);
+    }
 
-		$this->path = $newPath;
-	}
 
-	/**
-	 * Returns the last modification time, as a unix timestamp.
-	 *
-	 * @return int
-	 */
-	public function getLastModified()
-	{
-		return filemtime($this->path);
-	}
+
+    /**
+     * Returns the name of the node
+     *
+     * @return string
+     */
+    function getName() {
+
+        list(, $name) = URLUtil::splitPath($this->path);
+        return $name;
+
+    }
+
+    /**
+     * Renames the node
+     *
+     * @param string $name The new name
+     * @return void
+     */
+    function setName($name) {
+
+        list($parentPath, ) = URLUtil::splitPath($this->path);
+        list(, $newName) = URLUtil::splitPath($name);
+
+        $newPath = $parentPath . '/' . $newName;
+        rename($this->path, $newPath);
+
+        $this->path = $newPath;
+
+    }
+
+    /**
+     * Returns the last modification time, as a unix timestamp
+     *
+     * @return int
+     */
+    function getLastModified() {
+
+        return filemtime($this->path);
+
+    }
+
 }

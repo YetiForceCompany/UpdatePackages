@@ -17,352 +17,378 @@ use Sabre\Xml;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Parameter extends Node
-{
-	/**
-	 * Parameter name.
-	 *
-	 * @var string
-	 */
-	public $name;
+class Parameter extends Node {
 
-	/**
-	 * vCard 2.1 allows parameters to be encoded without a name.
-	 *
-	 * We can deduce the parameter name based on it's value.
-	 *
-	 * @var bool
-	 */
-	public $noName = false;
+    /**
+     * Parameter name.
+     *
+     * @var string
+     */
+    public $name;
 
-	/**
-	 * Parameter value.
-	 *
-	 * @var string
-	 */
-	protected $value;
+    /**
+     * vCard 2.1 allows parameters to be encoded without a name.
+     *
+     * We can deduce the parameter name based on it's value.
+     *
+     * @var bool
+     */
+    public $noName = false;
 
-	/**
-	 * Sets up the object.
-	 *
-	 * It's recommended to use the create:: factory method instead.
-	 *
-	 * @param string $name
-	 * @param string $value
-	 */
-	public function __construct(Document $root, $name, $value = null)
-	{
-		$this->name = strtoupper($name);
-		$this->root = $root;
-		if (is_null($name)) {
-			$this->noName = true;
-			$this->name = static::guessParameterNameByValue($value);
-		}
+    /**
+     * Parameter value.
+     *
+     * @var string
+     */
+    protected $value;
 
-		// If guessParameterNameByValue() returns an empty string
-		// above, we're actually dealing with a parameter that has no value.
-		// In that case we have to move the value to the name.
-		if ($this->name === '') {
-			$this->noName = false;
-			$this->name = strtoupper($value);
-		} else {
-			$this->setValue($value);
-		}
-	}
+    /**
+     * Sets up the object.
+     *
+     * It's recommended to use the create:: factory method instead.
+     *
+     * @param string $name
+     * @param string $value
+     */
+    function __construct(Document $root, $name, $value = null) {
 
-	/**
-	 * Try to guess property name by value, can be used for vCard 2.1 nameless parameters.
-	 *
-	 * Figuring out what the name should have been. Note that a ton of
-	 * these are rather silly in 2014 and would probably rarely be
-	 * used, but we like to be complete.
-	 *
-	 * @param string $value
-	 *
-	 * @return string
-	 */
-	public static function guessParameterNameByValue($value)
-	{
-		switch (strtoupper($value)) {
-			// Encodings
-			case '7-BIT':
-			case 'QUOTED-PRINTABLE':
-			case 'BASE64':
-				$name = 'ENCODING';
-				break;
-			// Common types
-			case 'WORK':
-			case 'HOME':
-			case 'PREF':
+        $this->name = strtoupper($name);
+        $this->root = $root;
+        if (is_null($name)) {
+            $this->noName = true;
+            $this->name = static::guessParameterNameByValue($value);
+        }
 
-			// Delivery Label Type
-			case 'DOM':
-			case 'INTL':
-			case 'POSTAL':
-			case 'PARCEL':
+        // If guessParameterNameByValue() returns an empty string
+        // above, we're actually dealing with a parameter that has no value.
+        // In that case we have to move the value to the name.
+        if ($this->name === '') {
+            $this->noName = false;
+            $this->name = strtoupper($value);
+        } else {
+            $this->setValue($value);
+        }
 
-			// Telephone types
-			case 'VOICE':
-			case 'FAX':
-			case 'MSG':
-			case 'CELL':
-			case 'PAGER':
-			case 'BBS':
-			case 'MODEM':
-			case 'CAR':
-			case 'ISDN':
-			case 'VIDEO':
+    }
 
-			// EMAIL types (lol)
-			case 'AOL':
-			case 'APPLELINK':
-			case 'ATTMAIL':
-			case 'CIS':
-			case 'EWORLD':
-			case 'INTERNET':
-			case 'IBMMAIL':
-			case 'MCIMAIL':
-			case 'POWERSHARE':
-			case 'PRODIGY':
-			case 'TLX':
-			case 'X400':
+    /**
+     * Try to guess property name by value, can be used for vCard 2.1 nameless parameters.
+     *
+     * Figuring out what the name should have been. Note that a ton of
+     * these are rather silly in 2014 and would probably rarely be
+     * used, but we like to be complete.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    static function guessParameterNameByValue($value) {
+        switch (strtoupper($value)) {
 
-			// Photo / Logo format types
-			case 'GIF':
-			case 'CGM':
-			case 'WMF':
-			case 'BMP':
-			case 'DIB':
-			case 'PICT':
-			case 'TIFF':
-			case 'PDF':
-			case 'PS':
-			case 'JPEG':
-			case 'MPEG':
-			case 'MPEG2':
-			case 'AVI':
-			case 'QTIME':
+            // Encodings
+            case '7-BIT' :
+            case 'QUOTED-PRINTABLE' :
+            case 'BASE64' :
+                $name = 'ENCODING';
+                break;
 
-			// Sound Digital Audio Type
-			case 'WAVE':
-			case 'PCM':
-			case 'AIFF':
+            // Common types
+            case 'WORK' :
+            case 'HOME' :
+            case 'PREF' :
 
-			// Key types
-			case 'X509':
-			case 'PGP':
-				$name = 'TYPE';
-				break;
-			// Value types
-			case 'INLINE':
-			case 'URL':
-			case 'CONTENT-ID':
-			case 'CID':
-				$name = 'VALUE';
-				break;
-			default:
-				$name = '';
-		}
+            // Delivery Label Type
+            case 'DOM' :
+            case 'INTL' :
+            case 'POSTAL' :
+            case 'PARCEL' :
 
-		return $name;
-	}
+            // Telephone types
+            case 'VOICE' :
+            case 'FAX' :
+            case 'MSG' :
+            case 'CELL' :
+            case 'PAGER' :
+            case 'BBS' :
+            case 'MODEM' :
+            case 'CAR' :
+            case 'ISDN' :
+            case 'VIDEO' :
 
-	/**
-	 * Updates the current value.
-	 *
-	 * This may be either a single, or multiple strings in an array.
-	 *
-	 * @param string|array $value
-	 */
-	public function setValue($value)
-	{
-		$this->value = $value;
-	}
+            // EMAIL types (lol)
+            case 'AOL' :
+            case 'APPLELINK' :
+            case 'ATTMAIL' :
+            case 'CIS' :
+            case 'EWORLD' :
+            case 'INTERNET' :
+            case 'IBMMAIL' :
+            case 'MCIMAIL' :
+            case 'POWERSHARE' :
+            case 'PRODIGY' :
+            case 'TLX' :
+            case 'X400' :
 
-	/**
-	 * Returns the current value.
-	 *
-	 * This method will always return a string, or null. If there were multiple
-	 * values, it will automatically concatenate them (separated by comma).
-	 *
-	 * @return string|null
-	 */
-	public function getValue()
-	{
-		if (is_array($this->value)) {
-			return implode(',', $this->value);
-		} else {
-			return $this->value;
-		}
-	}
+            // Photo / Logo format types
+            case 'GIF' :
+            case 'CGM' :
+            case 'WMF' :
+            case 'BMP' :
+            case 'DIB' :
+            case 'PICT' :
+            case 'TIFF' :
+            case 'PDF' :
+            case 'PS' :
+            case 'JPEG' :
+            case 'MPEG' :
+            case 'MPEG2' :
+            case 'AVI' :
+            case 'QTIME' :
 
-	/**
-	 * Sets multiple values for this parameter.
-	 *
-	 * @param array $value
-	 */
-	public function setParts(array $value)
-	{
-		$this->value = $value;
-	}
+            // Sound Digital Audio Type
+            case 'WAVE' :
+            case 'PCM' :
+            case 'AIFF' :
 
-	/**
-	 * Returns all values for this parameter.
-	 *
-	 * If there were no values, an empty array will be returned.
-	 *
-	 * @return array
-	 */
-	public function getParts()
-	{
-		if (is_array($this->value)) {
-			return $this->value;
-		} elseif (is_null($this->value)) {
-			return [];
-		} else {
-			return [$this->value];
-		}
-	}
+            // Key types
+            case 'X509' :
+            case 'PGP' :
+                $name = 'TYPE';
+                break;
 
-	/**
-	 * Adds a value to this parameter.
-	 *
-	 * If the argument is specified as an array, all items will be added to the
-	 * parameter value list.
-	 *
-	 * @param string|array $part
-	 */
-	public function addValue($part)
-	{
-		if (is_null($this->value)) {
-			$this->value = $part;
-		} else {
-			$this->value = array_merge((array) $this->value, (array) $part);
-		}
-	}
+            // Value types
+            case 'INLINE' :
+            case 'URL' :
+            case 'CONTENT-ID' :
+            case 'CID' :
+                $name = 'VALUE';
+                break;
 
-	/**
-	 * Checks if this parameter contains the specified value.
-	 *
-	 * This is a case-insensitive match. It makes sense to call this for for
-	 * instance the TYPE parameter, to see if it contains a keyword such as
-	 * 'WORK' or 'FAX'.
-	 *
-	 * @param string $value
-	 *
-	 * @return bool
-	 */
-	public function has($value)
-	{
-		return in_array(
-			strtolower($value),
-			array_map('strtolower', (array) $this->value)
-		);
-	}
+            default:
+                $name = '';
+        }
 
-	/**
-	 * Turns the object back into a serialized blob.
-	 *
-	 * @return string
-	 */
-	public function serialize()
-	{
-		$value = $this->getParts();
+        return $name;
+    }
 
-		if (count($value) === 0) {
-			return $this->name . '=';
-		}
+    /**
+     * Updates the current value.
+     *
+     * This may be either a single, or multiple strings in an array.
+     *
+     * @param string|array $value
+     *
+     * @return void
+     */
+    function setValue($value) {
 
-		if ($this->root->getDocumentType() === Document::VCARD21 && $this->noName) {
-			return implode(';', $value);
-		}
+        $this->value = $value;
 
-		return $this->name . '=' . array_reduce(
-			$value,
-			function ($out, $item) {
-				if (!is_null($out)) {
-					$out .= ',';
-				}
+    }
 
-				// If there's no special characters in the string, we'll use the simple
-				// format.
-				//
-				// The list of special characters is defined as:
-				//
-				// Any character except CONTROL, DQUOTE, ";", ":", ","
-				//
-				// by the iCalendar spec:
-				// https://tools.ietf.org/html/rfc5545#section-3.1
-				//
-				// And we add ^ to that because of:
-				// https://tools.ietf.org/html/rfc6868
-				//
-				// But we've found that iCal (7.0, shipped with OSX 10.9)
-				// severaly trips on + characters not being quoted, so we
-				// added + as well.
-				if (!preg_match('#(?: [\n":;\^,\+] )#x', $item)) {
-					return $out . $item;
-				} else {
-					// Enclosing in double-quotes, and using RFC6868 for encoding any
-					// special characters
-					$out .= '"' . strtr(
-						$item,
-						[
-							'^'  => '^^',
-							"\n" => '^n',
-							'"'  => '^\'',
-						]
-					) . '"';
-					return $out;
-				}
-			}
-		);
-	}
+    /**
+     * Returns the current value.
+     *
+     * This method will always return a string, or null. If there were multiple
+     * values, it will automatically concatenate them (separated by comma).
+     *
+     * @return string|null
+     */
+    function getValue() {
 
-	/**
-	 * This method returns an array, with the representation as it should be
-	 * encoded in JSON. This is used to create jCard or jCal documents.
-	 *
-	 * @return array
-	 */
-	public function jsonSerialize()
-	{
-		return $this->value;
-	}
+        if (is_array($this->value)) {
+            return implode(',', $this->value);
+        } else {
+            return $this->value;
+        }
 
-	/**
-	 * This method serializes the data into XML. This is used to create xCard or
-	 * xCal documents.
-	 *
-	 * @param Xml\Writer $writer XML writer.
-	 */
-	public function xmlSerialize(Xml\Writer $writer)
-	{
-		foreach (explode(',', $this->value) as $value) {
-			$writer->writeElement('text', $value);
-		}
-	}
+    }
 
-	/**
-	 * Called when this object is being cast to a string.
-	 *
-	 * @return string
-	 */
-	public function __toString()
-	{
-		return (string) $this->getValue();
-	}
+    /**
+     * Sets multiple values for this parameter.
+     *
+     * @param array $value
+     *
+     * @return void
+     */
+    function setParts(array $value) {
 
-	/**
-	 * Returns the iterator for this object.
-	 *
-	 * @return ElementList
-	 */
-	public function getIterator()
-	{
-		if (!is_null($this->iterator)) {
-			return $this->iterator;
-		}
-		return $this->iterator = new ArrayIterator((array) $this->value);
-	}
+        $this->value = $value;
+
+    }
+
+    /**
+     * Returns all values for this parameter.
+     *
+     * If there were no values, an empty array will be returned.
+     *
+     * @return array
+     */
+    function getParts() {
+
+        if (is_array($this->value)) {
+            return $this->value;
+        } elseif (is_null($this->value)) {
+            return [];
+        } else {
+            return [$this->value];
+        }
+
+    }
+
+    /**
+     * Adds a value to this parameter.
+     *
+     * If the argument is specified as an array, all items will be added to the
+     * parameter value list.
+     *
+     * @param string|array $part
+     *
+     * @return void
+     */
+    function addValue($part) {
+
+        if (is_null($this->value)) {
+            $this->value = $part;
+        } else {
+            $this->value = array_merge((array)$this->value, (array)$part);
+        }
+
+    }
+
+    /**
+     * Checks if this parameter contains the specified value.
+     *
+     * This is a case-insensitive match. It makes sense to call this for for
+     * instance the TYPE parameter, to see if it contains a keyword such as
+     * 'WORK' or 'FAX'.
+     *
+     * @param string $value
+     *
+     * @return bool
+     */
+    function has($value) {
+
+        return in_array(
+            strtolower($value),
+            array_map('strtolower', (array)$this->value)
+        );
+
+    }
+
+    /**
+     * Turns the object back into a serialized blob.
+     *
+     * @return string
+     */
+    function serialize() {
+
+        $value = $this->getParts();
+
+        if (count($value) === 0) {
+            return $this->name . '=';
+        }
+
+        if ($this->root->getDocumentType() === Document::VCARD21 && $this->noName) {
+
+            return implode(';', $value);
+
+        }
+
+        return $this->name . '=' . array_reduce(
+            $value,
+            function($out, $item) {
+
+                if (!is_null($out)) $out .= ',';
+
+                // If there's no special characters in the string, we'll use the simple
+                // format.
+                //
+                // The list of special characters is defined as:
+                //
+                // Any character except CONTROL, DQUOTE, ";", ":", ","
+                //
+                // by the iCalendar spec:
+                // https://tools.ietf.org/html/rfc5545#section-3.1
+                //
+                // And we add ^ to that because of:
+                // https://tools.ietf.org/html/rfc6868
+                //
+                // But we've found that iCal (7.0, shipped with OSX 10.9)
+                // severaly trips on + characters not being quoted, so we
+                // added + as well.
+                if (!preg_match('#(?: [\n":;\^,\+] )#x', $item)) {
+                    return $out . $item;
+                } else {
+                    // Enclosing in double-quotes, and using RFC6868 for encoding any
+                    // special characters
+                    $out .= '"' . strtr(
+                        $item,
+                        [
+                            '^'  => '^^',
+                            "\n" => '^n',
+                            '"'  => '^\'',
+                        ]
+                    ) . '"';
+                    return $out;
+                }
+
+            }
+        );
+
+    }
+
+    /**
+     * This method returns an array, with the representation as it should be
+     * encoded in JSON. This is used to create jCard or jCal documents.
+     *
+     * @return array
+     */
+    function jsonSerialize() {
+
+        return $this->value;
+
+    }
+
+    /**
+     * This method serializes the data into XML. This is used to create xCard or
+     * xCal documents.
+     *
+     * @param Xml\Writer $writer  XML writer.
+     *
+     * @return void
+     */
+    function xmlSerialize(Xml\Writer $writer) {
+
+        foreach (explode(',', $this->value) as $value) {
+            $writer->writeElement('text', $value);
+        }
+
+    }
+
+    /**
+     * Called when this object is being cast to a string.
+     *
+     * @return string
+     */
+    function __toString() {
+
+        return (string)$this->getValue();
+
+    }
+
+    /**
+     * Returns the iterator for this object.
+     *
+     * @return ElementList
+     */
+    function getIterator() {
+
+        if (!is_null($this->iterator))
+            return $this->iterator;
+
+        return $this->iterator = new ArrayIterator((array)$this->value);
+
+    }
+
 }

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Motu ʻAsenisini',
   'AD' => 'ʻAnitola',
   'AE' => 'ʻAlepea Fakatahataha',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'ʻAfilika tonga',
   'ZM' => 'Semipia',
   'ZW' => 'Simipapuei',
-];
+);

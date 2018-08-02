@@ -15,30 +15,30 @@ namespace Sonata\GoogleAuthenticator;
 
 interface GoogleAuthenticatorInterface
 {
-	/**
-	 * @param string $secret
-	 * @param string $code
-	 */
-	public function checkCode($secret, $code): bool;
+    /**
+     * @param string $secret
+     * @param string $code
+     */
+    public function checkCode($secret, $code): bool;
 
-	/**
-	 * NEXT_MAJOR: add the interface typehint to $time and remove deprecation.
-	 *
-	 * @param string                                   $secret
-	 * @param float|string|int|null|\DateTimeInterface $time
-	 */
-	public function getCode($secret, /* \DateTimeInterface */$time = null): string;
+    /**
+     * NEXT_MAJOR: add the interface typehint to $time and remove deprecation.
+     *
+     * @param string                                   $secret
+     * @param float|string|int|null|\DateTimeInterface $time
+     */
+    public function getCode($secret, /* \DateTimeInterface */$time = null): string;
 
-	/**
-	 * NEXT_MAJOR: Remove this method.
-	 *
-	 * @param string $user
-	 * @param string $hostname
-	 * @param string $secret
-	 *
-	 * @deprecated deprecated as of 2.1 and will be removed in 3.0. Use Sonata\GoogleAuthenticator\GoogleQrUrl::generate() instead.
-	 */
-	public function getUrl($user, $hostname, $secret): string;
+    /**
+     * NEXT_MAJOR: Remove this method.
+     *
+     * @param string $user
+     * @param string $hostname
+     * @param string $secret
+     *
+     * @deprecated deprecated as of 2.1 and will be removed in 3.0. Use Sonata\GoogleAuthenticator\GoogleQrUrl::generate() instead.
+     */
+    public function getUrl($user, $hostname, $secret): string;
 
-	public function generateSecret(): string;
+    public function generateSecret(): string;
 }

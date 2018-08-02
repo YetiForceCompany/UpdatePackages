@@ -1,9 +1,10 @@
 <?php
 /**
- * Chinese PHPMailer language file: refer to English translation for definitive list.
- *
+ * Chinese PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author LiuXin <http://www.80x86.cn/blog/>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'SMTP 错误：身份验证失败。';
 $PHPMAILER_LANG['connect_host']         = 'SMTP 错误: 不能连接SMTP主机。';
 $PHPMAILER_LANG['data_not_accepted']    = 'SMTP 错误: 数据不可接受。';

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   4212 => 'Bratislava',
   42131 => 'Dunajská Streda',
   42132 => 'Trenčín',
@@ -36,4 +36,4 @@ return [
   42156 => 'Michalovce',
   42157 => 'Humenné',
   42158 => 'Rožňava',
-];
+);

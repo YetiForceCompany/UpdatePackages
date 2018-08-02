@@ -1,12 +1,13 @@
 <?php
 /**
- * Brazilian Portuguese PHPMailer language file: refer to English translation for definitive list.
- *
+ * Brazilian Portuguese PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Paulo Henrique Garcia <paulo@controllerweb.com.br>
  * @author Lucas Guimarães <lucas@lucasguimaraes.com>
  * @author Phelipe Alves <phelipealvesdesouza@gmail.com>
  * @author Fabio Beneditto <fabiobeneditto@gmail.com>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'Erro de SMTP: Não foi possível autenticar.';
 $PHPMAILER_LANG['connect_host']         = 'Erro de SMTP: Não foi possível conectar ao servidor SMTP.';
 $PHPMAILER_LANG['data_not_accepted']    = 'Erro de SMTP: Dados rejeitados.';

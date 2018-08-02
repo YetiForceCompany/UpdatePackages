@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 406 Not Acceptable responses.
+ * Exception for 406 Not Acceptable responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 406 Not Acceptable responses.
+ * Exception for 406 Not Acceptable responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_406 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_406 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 406;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

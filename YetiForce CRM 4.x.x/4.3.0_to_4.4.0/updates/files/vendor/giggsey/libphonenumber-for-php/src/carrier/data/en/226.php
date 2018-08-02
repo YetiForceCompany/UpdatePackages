@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   22651 => 'Telmob',
   22652 => 'Telmob',
   22654 => 'Orange',
@@ -38,4 +38,4 @@ return [
   22677 => 'Airtel',
   22678 => 'Telecel Faso',
   22679 => 'Telecel Faso',
-];
+);

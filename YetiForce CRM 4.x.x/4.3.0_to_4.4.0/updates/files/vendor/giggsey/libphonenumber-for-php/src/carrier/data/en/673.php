@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   6732 => 'DSTCom',
   67371 => 'DSTCom',
   67381 => 'B-Mobile',
@@ -19,4 +19,4 @@ return [
   67387 => 'DSTCom',
   67388 => 'DSTCom',
   67389 => 'DSTCom',
-];
+);

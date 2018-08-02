@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => '首尔市',
   8231 => '京畿道',
   8232 => '仁川市',
@@ -28,4 +28,4 @@ return [
   8262 => '光州市',
   8263 => '全罗北道',
   8264 => '济州道',
-];
+);

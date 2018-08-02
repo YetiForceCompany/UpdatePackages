@@ -1,26 +1,27 @@
 <?php
 /**
- * Exception for 429 Too Many Requests responses.
+ * Exception for 429 Too Many Requests responses
  *
  * @see https://tools.ietf.org/html/draft-nottingham-http-new-status-04
+ * @package Requests
  */
 
 /**
- * Exception for 429 Too Many Requests responses.
+ * Exception for 429 Too Many Requests responses
  *
  * @see https://tools.ietf.org/html/draft-nottingham-http-new-status-04
+ * @package Requests
  */
-class Requests_Exception_HTTP_429 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_429 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 429;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

@@ -25,57 +25,60 @@ use Sabre\Xml\XmlDeserializable;
  * @author Evert Pot (http://www.rooftopsolutions.nl/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class CalendarData implements XmlDeserializable
-{
-	/**
-	 * The deserialize method is called during xml parsing.
-	 *
-	 * This method is called statically, this is because in theory this method
-	 * may be used as a type of constructor, or factory method.
-	 *
-	 * Often you want to return an instance of the current class, but you are
-	 * free to return other data as well.
-	 *
-	 * You are responsible for advancing the reader to the next element. Not
-	 * doing anything will result in a never-ending loop.
-	 *
-	 * If you just want to skip parsing for this element altogether, you can
-	 * just call $reader->next();
-	 *
-	 * $reader->parseInnerTree() will parse the entire sub-tree, and advance to
-	 * the next element.
-	 *
-	 * @param Reader $reader
-	 *
-	 * @return mixed
-	 */
-	public static function xmlDeserialize(Reader $reader)
-	{
-		$result = [
-			'contentType' => $reader->getAttribute('content-type') ?: 'text/calendar',
-			'version'     => $reader->getAttribute('version') ?: '2.0',
-		];
+class CalendarData implements XmlDeserializable {
 
-		$elems = (array) $reader->parseInnerTree();
-		foreach ($elems as $elem) {
-			switch ($elem['name']) {
-				case '{' . Plugin::NS_CALDAV . '}expand':
+    /**
+     * The deserialize method is called during xml parsing.
+     *
+     * This method is called statically, this is because in theory this method
+     * may be used as a type of constructor, or factory method.
+     *
+     * Often you want to return an instance of the current class, but you are
+     * free to return other data as well.
+     *
+     * You are responsible for advancing the reader to the next element. Not
+     * doing anything will result in a never-ending loop.
+     *
+     * If you just want to skip parsing for this element altogether, you can
+     * just call $reader->next();
+     *
+     * $reader->parseInnerTree() will parse the entire sub-tree, and advance to
+     * the next element.
+     *
+     * @param Reader $reader
+     * @return mixed
+     */
+    static function xmlDeserialize(Reader $reader) {
 
-					$result['expand'] = [
-						'start' => isset($elem['attributes']['start']) ? DateTimeParser::parseDateTime($elem['attributes']['start']) : null,
-						'end'   => isset($elem['attributes']['end']) ? DateTimeParser::parseDateTime($elem['attributes']['end']) : null,
-					];
+        $result = [
+            'contentType' => $reader->getAttribute('content-type') ?: 'text/calendar',
+            'version'     => $reader->getAttribute('version') ?: '2.0',
+        ];
 
-					if (!$result['expand']['start'] || !$result['expand']['end']) {
-						throw new BadRequest('The "start" and "end" attributes are required when expanding calendar-data');
-					}
-					if ($result['expand']['end'] <= $result['expand']['start']) {
-						throw new BadRequest('The end-date must be larger than the start-date when expanding calendar-data');
-					}
-					break;
-			}
-		}
+        $elems = (array)$reader->parseInnerTree();
+        foreach ($elems as $elem) {
 
-		return $result;
-	}
+            switch ($elem['name']) {
+                case '{' . Plugin::NS_CALDAV . '}expand' :
+
+                    $result['expand'] = [
+                        'start' => isset($elem['attributes']['start']) ? DateTimeParser::parseDateTime($elem['attributes']['start']) : null,
+                        'end'   => isset($elem['attributes']['end']) ? DateTimeParser::parseDateTime($elem['attributes']['end']) : null,
+                    ];
+
+                    if (!$result['expand']['start'] || !$result['expand']['end']) {
+                        throw new BadRequest('The "start" and "end" attributes are required when expanding calendar-data');
+                    }
+                    if ($result['expand']['end'] <= $result['expand']['start']) {
+                        throw new BadRequest('The end-date must be larger than the start-date when expanding calendar-data');
+                    }
+                    break;
+            }
+
+        }
+
+        return $result;
+
+    }
+
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   507111 => 'Digicel',
   507161 => 'Cable & Wireless',
   507218 => 'Telefónica Móviles',
@@ -79,4 +79,4 @@ return [
   507811 => 'Mobilphone',
   507872 => 'Cable & Wireless',
   507873 => 'Cable & Wireless',
-];
+);

@@ -26,10 +26,10 @@ namespace Doctrine\Common\Collections\Expr;
  */
 interface Expression
 {
-	/**
-	 * @param ExpressionVisitor $visitor
-	 *
-	 * @return mixed
-	 */
-	public function visit(ExpressionVisitor $visitor);
+    /**
+     * @param ExpressionVisitor $visitor
+     *
+     * @return mixed
+     */
+    public function visit(ExpressionVisitor $visitor);
 }

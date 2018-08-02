@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   37250 => 'EMT',
   372519 => 'EMT',
   37252 => 'EMT',
@@ -27,4 +27,4 @@ return [
   372577 => 'Elisa',
   37258 => 'Tele 2',
   372590 => 'EMT',
-];
+);

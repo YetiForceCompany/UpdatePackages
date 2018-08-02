@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   31610 => 'KPN',
   31611 => 'Vodafone Libertel B.V.',
   31612 => 'KPN',
@@ -62,4 +62,4 @@ return [
   31685 => 'Lycamobile',
   31686 => 'Lycamobile',
   31687 => 'Lycamobile',
-];
+);

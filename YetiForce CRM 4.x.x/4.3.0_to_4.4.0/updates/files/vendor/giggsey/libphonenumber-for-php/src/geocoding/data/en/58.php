@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   58212 => 'Caracas/Miranda/Vargas',
   58234 => 'Miranda',
   58235 => 'Anzoátegui/Bolívar/Guárico',
@@ -66,4 +66,4 @@ return [
   58293 => 'Sucre',
   58294 => 'Sucre',
   58295 => 'Nueva Esparta',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   34600 => 'Vodafone',
   346010 => 'Vodafone',
   346011 => 'Vodafone',
@@ -355,4 +355,4 @@ return [
   347446 => 'PTV',
   347477 => 'Orange',
   347478 => 'Orange',
-];
+);

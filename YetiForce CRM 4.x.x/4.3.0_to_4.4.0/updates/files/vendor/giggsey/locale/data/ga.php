@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Oileán na Deascabhála',
   'AD' => 'Andóra',
   'AE' => 'Aontas na nÉimíríochtaí Arabacha',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'an Afraic Theas',
   'ZM' => 'an tSaimbia',
   'ZW' => 'an tSiombáib',
-];
+);

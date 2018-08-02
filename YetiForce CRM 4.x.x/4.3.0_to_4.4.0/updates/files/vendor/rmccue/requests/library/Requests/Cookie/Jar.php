@@ -1,39 +1,41 @@
 <?php
 /**
- * Cookie holder object.
+ * Cookie holder object
+ *
+ * @package Requests
+ * @subpackage Cookies
  */
 
 /**
- * Cookie holder object.
+ * Cookie holder object
+ *
+ * @package Requests
+ * @subpackage Cookies
  */
-class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate
-{
+class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate {
 	/**
-	 * Actual item data.
+	 * Actual item data
 	 *
 	 * @var array
 	 */
-	protected $cookies = [];
+	protected $cookies = array();
 
 	/**
-	 * Create a new jar.
+	 * Create a new jar
 	 *
 	 * @param array $cookies Existing cookie values
 	 */
-	public function __construct($cookies = [])
-	{
+	public function __construct($cookies = array()) {
 		$this->cookies = $cookies;
 	}
 
 	/**
-	 * Normalise cookie data into a Requests_Cookie.
+	 * Normalise cookie data into a Requests_Cookie
 	 *
 	 * @param string|Requests_Cookie $cookie
-	 *
 	 * @return Requests_Cookie
 	 */
-	public function normalize_cookie($cookie, $key = null)
-	{
+	public function normalize_cookie($cookie, $key = null) {
 		if ($cookie instanceof Requests_Cookie) {
 			return $cookie;
 		}
@@ -42,40 +44,33 @@ class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate
 	}
 
 	/**
-	 * Normalise cookie data into a Requests_Cookie.
+	 * Normalise cookie data into a Requests_Cookie
 	 *
 	 * @codeCoverageIgnore
-	 *
 	 * @deprecated Use {@see Requests_Cookie_Jar::normalize_cookie}
-	 *
 	 * @return Requests_Cookie
 	 */
-	public function normalizeCookie($cookie, $key = null)
-	{
+	public function normalizeCookie($cookie, $key = null) {
 		return $this->normalize_cookie($cookie, $key);
 	}
 
 	/**
-	 * Check if the given item exists.
+	 * Check if the given item exists
 	 *
 	 * @param string $key Item key
-	 *
-	 * @return bool Does the item exist?
+	 * @return boolean Does the item exist?
 	 */
-	public function offsetExists($key)
-	{
+	public function offsetExists($key) {
 		return isset($this->cookies[$key]);
 	}
 
 	/**
-	 * Get the value for the item.
+	 * Get the value for the item
 	 *
 	 * @param string $key Item key
-	 *
 	 * @return string Item value
 	 */
-	public function offsetGet($key)
-	{
+	public function offsetGet($key) {
 		if (!isset($this->cookies[$key])) {
 			return null;
 		}
@@ -84,16 +79,14 @@ class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate
 	}
 
 	/**
-	 * Set the given item.
-	 *
-	 *
-	 * @param string $key   Item name
-	 * @param string $value Item value
+	 * Set the given item
 	 *
 	 * @throws Requests_Exception On attempting to use dictionary as list (`invalidset`)
+	 *
+	 * @param string $key Item name
+	 * @param string $value Item value
 	 */
-	public function offsetSet($key, $value)
-	{
+	public function offsetSet($key, $value) {
 		if ($key === null) {
 			throw new Requests_Exception('Object is a dictionary, not a list', 'invalidset');
 		}
@@ -102,55 +95,51 @@ class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate
 	}
 
 	/**
-	 * Unset the given header.
+	 * Unset the given header
 	 *
 	 * @param string $key
 	 */
-	public function offsetUnset($key)
-	{
+	public function offsetUnset($key) {
 		unset($this->cookies[$key]);
 	}
 
 	/**
-	 * Get an iterator for the data.
+	 * Get an iterator for the data
 	 *
 	 * @return ArrayIterator
 	 */
-	public function getIterator()
-	{
+	public function getIterator() {
 		return new ArrayIterator($this->cookies);
 	}
 
 	/**
-	 * Register the cookie handler with the request's hooking system.
+	 * Register the cookie handler with the request's hooking system
 	 *
 	 * @param Requests_Hooker $hooks Hooking system
 	 */
-	public function register(Requests_Hooker $hooks)
-	{
-		$hooks->register('requests.before_request', [$this, 'before_request']);
-		$hooks->register('requests.before_redirect_check', [$this, 'before_redirect_check']);
+	public function register(Requests_Hooker $hooks) {
+		$hooks->register('requests.before_request', array($this, 'before_request'));
+		$hooks->register('requests.before_redirect_check', array($this, 'before_redirect_check'));
 	}
 
 	/**
-	 * Add Cookie header to a request if we have any.
+	 * Add Cookie header to a request if we have any
 	 *
 	 * As per RFC 6265, cookies are separated by '; '
 	 *
 	 * @param string $url
-	 * @param array  $headers
-	 * @param array  $data
+	 * @param array $headers
+	 * @param array $data
 	 * @param string $type
-	 * @param array  $options
+	 * @param array $options
 	 */
-	public function before_request($url, &$headers, &$data, &$type, &$options)
-	{
+	public function before_request($url, &$headers, &$data, &$type, &$options) {
 		if (!$url instanceof Requests_IRI) {
 			$url = new Requests_IRI($url);
 		}
 
 		if (!empty($this->cookies)) {
-			$cookies = [];
+			$cookies = array();
 			foreach ($this->cookies as $key => $cookie) {
 				$cookie = $this->normalize_cookie($cookie, $key);
 
@@ -169,12 +158,11 @@ class Requests_Cookie_Jar implements ArrayAccess, IteratorAggregate
 	}
 
 	/**
-	 * Parse all cookies from a response and attach them to the response.
+	 * Parse all cookies from a response and attach them to the response
 	 *
-	 * @var Requests_Response
+	 * @var Requests_Response $response
 	 */
-	public function before_redirect_check(Requests_Response &$return)
-	{
+	public function before_redirect_check(Requests_Response &$return) {
 		$url = $return->url;
 		if (!$url instanceof Requests_IRI) {
 			$url = new Requests_IRI($url);

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'አሴንሽን ደሴት',
   'AD' => 'አንዶራ',
   'AE' => 'ሕቡራት ኢማራት ዓረብ',
@@ -263,4 +263,4 @@ return [
   'ZA' => 'ደቡብ አፍሪካ',
   'ZM' => 'ዛምቢያ',
   'ZW' => 'ዚምቧቤ',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   474000 => 'NetCom',
   474001 => 'NetCom',
   474010 => 'NetCom',
@@ -236,4 +236,4 @@ return [
   47995 => 'Telenor',
   47996 => 'Telenor',
   47997 => 'Telenor',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5623230 => 'Entel',
   5623231 => 'Entel',
   5623232 => 'Entel',
@@ -537,4 +537,4 @@ return [
   5699997 => 'Entel',
   5699998 => 'Entel',
   5699999 => 'Entel',
-];
+);

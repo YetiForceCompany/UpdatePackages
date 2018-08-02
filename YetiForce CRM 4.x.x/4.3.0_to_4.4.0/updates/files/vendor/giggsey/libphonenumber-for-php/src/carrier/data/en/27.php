@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   27603 => 'MTN',
   27604 => 'MTN',
   27605 => 'MTN',
@@ -84,4 +84,4 @@ return [
   2782 => 'Vodacom',
   2783 => 'MTN',
   2784 => 'Cell C',
-];
+);

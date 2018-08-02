@@ -13,22 +13,22 @@ namespace Sabre\DAV\Browser;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface HtmlOutput
-{
-	/**
-	 * Generate html representation for this value.
-	 *
-	 * The html output is 100% trusted, and no effort is being made to sanitize
-	 * it. It's up to the implementor to sanitize user provided values.
-	 *
-	 * The output must be in UTF-8.
-	 *
-	 * The baseUri parameter is a url to the root of the application, and can
-	 * be used to construct local links.
-	 *
-	 * @param HtmlOutputHelper $html
-	 *
-	 * @return string
-	 */
-	public function toHtml(HtmlOutputHelper $html);
+interface HtmlOutput {
+
+    /**
+     * Generate html representation for this value.
+     *
+     * The html output is 100% trusted, and no effort is being made to sanitize
+     * it. It's up to the implementor to sanitize user provided values.
+     *
+     * The output must be in UTF-8.
+     *
+     * The baseUri parameter is a url to the root of the application, and can
+     * be used to construct local links.
+     *
+     * @param HtmlOutputHelper $html
+     * @return string
+     */
+    function toHtml(HtmlOutputHelper $html);
+
 }

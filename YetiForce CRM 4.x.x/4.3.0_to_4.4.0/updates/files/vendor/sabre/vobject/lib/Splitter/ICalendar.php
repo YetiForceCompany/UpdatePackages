@@ -19,88 +19,95 @@ use Sabre\VObject\Component\VCalendar;
  * @author Armin Hackmann
  * @license http://sabre.io/license/ Modified BSD License
  */
-class ICalendar implements SplitterInterface
-{
-	/**
-	 * Timezones.
-	 *
-	 * @var array
-	 */
-	protected $vtimezones = [];
+class ICalendar implements SplitterInterface {
 
-	/**
-	 * iCalendar objects.
-	 *
-	 * @var array
-	 */
-	protected $objects = [];
+    /**
+     * Timezones.
+     *
+     * @var array
+     */
+    protected $vtimezones = [];
 
-	/**
-	 * Constructor.
-	 *
-	 * The splitter should receive an readable file stream as it's input.
-	 *
-	 * @param resource $input
-	 * @param int      $options Parser options, see the OPTIONS constants.
-	 */
-	public function __construct($input, $options = 0)
-	{
-		$data = VObject\Reader::read($input, $options);
+    /**
+     * iCalendar objects.
+     *
+     * @var array
+     */
+    protected $objects = [];
 
-		if (!$data instanceof VObject\Component\VCalendar) {
-			throw new VObject\ParseException('Supplied input could not be parsed as VCALENDAR.');
-		}
+    /**
+     * Constructor.
+     *
+     * The splitter should receive an readable file stream as it's input.
+     *
+     * @param resource $input
+     * @param int $options Parser options, see the OPTIONS constants.
+     */
+    function __construct($input, $options = 0) {
 
-		foreach ($data->children() as $component) {
-			if (!$component instanceof VObject\Component) {
-				continue;
-			}
+        $data = VObject\Reader::read($input, $options);
 
-			// Get all timezones
-			if ($component->name === 'VTIMEZONE') {
-				$this->vtimezones[(string) $component->TZID] = $component;
-				continue;
-			}
+        if (!$data instanceof VObject\Component\VCalendar) {
+            throw new VObject\ParseException('Supplied input could not be parsed as VCALENDAR.');
+        }
 
-			// Get component UID for recurring Events search
-			if (!$component->UID) {
-				$component->UID = sha1(microtime()) . '-vobjectimport';
-			}
-			$uid = (string) $component->UID;
+        foreach ($data->children() as $component) {
+            if (!$component instanceof VObject\Component) {
+                continue;
+            }
 
-			// Take care of recurring events
-			if (!array_key_exists($uid, $this->objects)) {
-				$this->objects[$uid] = new VCalendar();
-			}
+            // Get all timezones
+            if ($component->name === 'VTIMEZONE') {
+                $this->vtimezones[(string)$component->TZID] = $component;
+                continue;
+            }
 
-			$this->objects[$uid]->add(clone $component);
-		}
-	}
+            // Get component UID for recurring Events search
+            if (!$component->UID) {
+                $component->UID = sha1(microtime()) . '-vobjectimport';
+            }
+            $uid = (string)$component->UID;
 
-	/**
-	 * Every time getNext() is called, a new object will be parsed, until we
-	 * hit the end of the stream.
-	 *
-	 * When the end is reached, null will be returned.
-	 *
-	 * @return Sabre\VObject\Component|null
-	 */
-	public function getNext()
-	{
-		if ($object = array_shift($this->objects)) {
-			// create our baseobject
-			$object->version = '2.0';
-			$object->prodid = '-//Sabre//Sabre VObject ' . VObject\Version::VERSION . '//EN';
-			$object->calscale = 'GREGORIAN';
+            // Take care of recurring events
+            if (!array_key_exists($uid, $this->objects)) {
+                $this->objects[$uid] = new VCalendar();
+            }
 
-			// add vtimezone information to obj (if we have it)
-			foreach ($this->vtimezones as $vtimezone) {
-				$object->add($vtimezone);
-			}
+            $this->objects[$uid]->add(clone $component);
+        }
 
-			return $object;
-		} else {
-			return;
-		}
-	}
+    }
+
+    /**
+     * Every time getNext() is called, a new object will be parsed, until we
+     * hit the end of the stream.
+     *
+     * When the end is reached, null will be returned.
+     *
+     * @return Sabre\VObject\Component|null
+     */
+    function getNext() {
+
+        if ($object = array_shift($this->objects)) {
+
+            // create our baseobject
+            $object->version = '2.0';
+            $object->prodid = '-//Sabre//Sabre VObject ' . VObject\Version::VERSION . '//EN';
+            $object->calscale = 'GREGORIAN';
+
+            // add vtimezone information to obj (if we have it)
+            foreach ($this->vtimezones as $vtimezone) {
+                $object->add($vtimezone);
+            }
+
+            return $object;
+
+        } else {
+
+            return;
+
+        }
+
+    }
+
 }

@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 306 Switch Proxy responses.
+ * Exception for 306 Switch Proxy responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 306 Switch Proxy responses.
+ * Exception for 306 Switch Proxy responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_306 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_306 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 306;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

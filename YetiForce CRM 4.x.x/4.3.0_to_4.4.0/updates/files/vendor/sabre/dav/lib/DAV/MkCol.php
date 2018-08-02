@@ -20,50 +20,53 @@ namespace Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class MkCol extends PropPatch
-{
-	/**
-	 * A list of resource-types in clark-notation.
-	 *
-	 * @var array
-	 */
-	protected $resourceType;
+class MkCol extends PropPatch {
 
-	/**
-	 * Creates the MKCOL object.
-	 *
-	 * @param string[] $resourceType List of resourcetype values.
-	 * @param array    $mutations    List of new properties values.
-	 */
-	public function __construct(array $resourceType, array $mutations)
-	{
-		$this->resourceType = $resourceType;
-		parent::__construct($mutations);
-	}
+    /**
+     * A list of resource-types in clark-notation.
+     *
+     * @var array
+     */
+    protected $resourceType;
 
-	/**
-	 * Returns the resourcetype of the new collection.
-	 *
-	 * @return string[]
-	 */
-	public function getResourceType()
-	{
-		return $this->resourceType;
-	}
+    /**
+     * Creates the MKCOL object.
+     *
+     * @param string[] $resourceType List of resourcetype values.
+     * @param array $mutations List of new properties values.
+     */
+    function __construct(array $resourceType, array $mutations) {
 
-	/**
-	 * Returns true or false if the MKCOL operation has at least the specified
-	 * resource type.
-	 *
-	 * If the resourcetype is specified as an array, all resourcetypes are
-	 * checked.
-	 *
-	 * @param string|string[] $resourceType
-	 *
-	 * @return bool
-	 */
-	public function hasResourceType($resourceType)
-	{
-		return count(array_diff((array) $resourceType, $this->resourceType)) === 0;
-	}
+        $this->resourceType = $resourceType;
+        parent::__construct($mutations);
+
+    }
+
+    /**
+     * Returns the resourcetype of the new collection.
+     *
+     * @return string[]
+     */
+    function getResourceType() {
+
+        return $this->resourceType;
+
+    }
+
+    /**
+     * Returns true or false if the MKCOL operation has at least the specified
+     * resource type.
+     *
+     * If the resourcetype is specified as an array, all resourcetypes are
+     * checked.
+     *
+     * @param string|string[] $resourceType
+     * @return bool
+     */
+    function hasResourceType($resourceType) {
+
+        return count(array_diff((array)$resourceType, $this->resourceType)) === 0;
+
+    }
+
 }

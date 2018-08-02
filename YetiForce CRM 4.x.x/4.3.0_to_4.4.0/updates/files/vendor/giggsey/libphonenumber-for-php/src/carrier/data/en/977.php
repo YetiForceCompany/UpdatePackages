@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   977960 => 'STM Telecom',
   977961 => 'Smart Telecom',
   977962 => 'Smart Telecom',
@@ -25,4 +25,4 @@ return [
   977985 => 'Nepal Telecom',
   977986 => 'Nepal Telecom',
   977988 => 'Smart Telecom',
-];
+);

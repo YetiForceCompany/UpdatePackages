@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2262049 => 'Kaya',
   2262052 => 'Dédougou',
   2262053 => 'Boromo/Djibasso/Nouna',
@@ -41,4 +41,4 @@ return [
   2262547 => 'Ouagadougou',
   2262548 => 'Ouagadougou',
   2262549 => 'Ouagadougou',
-];
+);

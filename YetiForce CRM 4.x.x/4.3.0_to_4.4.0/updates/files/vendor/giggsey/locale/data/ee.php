@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Ascension ƒudomekpo nutome',
   'AD' => 'Andorra nutome',
   'AE' => 'United Arab Emirates nutome',
@@ -257,4 +257,4 @@ return [
   'ZA' => 'Anyiehe Africa nutome',
   'ZM' => 'Zambia nutome',
   'ZW' => 'Zimbabwe nutome',
-];
+);

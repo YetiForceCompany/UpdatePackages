@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   423650 => 'Soracom',
   423651 => 'Cubic',
   423652 => 'Cubic',
@@ -27,4 +27,4 @@ return [
   42377 => 'Swisscom',
   42378 => 'Salt',
   42379 => 'Telecom Liechtenstein',
-];
+);

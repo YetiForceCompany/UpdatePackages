@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2232079 => 'Sotelma',
   223217 => 'Sotelma',
   22350 => 'Atel',
@@ -29,4 +29,4 @@ return [
   22397 => 'Sotelma',
   22398 => 'Sotelma',
   22399 => 'Sotelma',
-];
+);

@@ -5,5 +5,5 @@
  * This file contains aliases for MIME types.
  */
 return [
-	'text/xml' => 'application/xml',
+    'text/xml' => 'application/xml',
 ];

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2471 => 'Georgetown',
   2472 => 'U.S. Base',
   2473 => 'Travellers Hill',
@@ -20,4 +20,4 @@ return [
   2477 => 'Georgetown',
   2478 => 'Georgetown',
   2479 => 'Georgetown',
-];
+);

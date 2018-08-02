@@ -1,15 +1,18 @@
 <?php
 /**
- * Case-insensitive dictionary, suitable for HTTP headers.
+ * Case-insensitive dictionary, suitable for HTTP headers
+ *
+ * @package Requests
  */
 
 /**
- * Case-insensitive dictionary, suitable for HTTP headers.
+ * Case-insensitive dictionary, suitable for HTTP headers
+ *
+ * @package Requests
  */
-class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictionary
-{
+class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictionary {
 	/**
-	 * Get the given header.
+	 * Get the given header
 	 *
 	 * Unlike {@see self::getValues()}, this returns a string. If there are
 	 * multiple values, it concatenates them with a comma as per RFC2616.
@@ -18,11 +21,9 @@ class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictiona
 	 * Set-Cookie headers.
 	 *
 	 * @param string $key
-	 *
 	 * @return string Header value
 	 */
-	public function offsetGet($key)
-	{
+	public function offsetGet($key) {
 		$key = strtolower($key);
 		if (!isset($this->data[$key])) {
 			return null;
@@ -32,16 +33,14 @@ class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictiona
 	}
 
 	/**
-	 * Set the given item.
-	 *
-	 *
-	 * @param string $key   Item name
-	 * @param string $value Item value
+	 * Set the given item
 	 *
 	 * @throws Requests_Exception On attempting to use dictionary as list (`invalidset`)
+	 *
+	 * @param string $key Item name
+	 * @param string $value Item value
 	 */
-	public function offsetSet($key, $value)
-	{
+	public function offsetSet($key, $value) {
 		if ($key === null) {
 			throw new Requests_Exception('Object is a dictionary, not a list', 'invalidset');
 		}
@@ -49,21 +48,19 @@ class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictiona
 		$key = strtolower($key);
 
 		if (!isset($this->data[$key])) {
-			$this->data[$key] = [];
+			$this->data[$key] = array();
 		}
 
 		$this->data[$key][] = $value;
 	}
 
 	/**
-	 * Get all values for a given header.
+	 * Get all values for a given header
 	 *
 	 * @param string $key
-	 *
 	 * @return array Header values
 	 */
-	public function getValues($key)
-	{
+	public function getValues($key) {
 		$key = strtolower($key);
 		if (!isset($this->data[$key])) {
 			return null;
@@ -73,17 +70,15 @@ class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictiona
 	}
 
 	/**
-	 * Flattens a value into a string.
+	 * Flattens a value into a string
 	 *
 	 * Converts an array into a string by imploding values with a comma, as per
 	 * RFC2616's rules for folding headers.
 	 *
 	 * @param string|array $value Value to flatten
-	 *
 	 * @return string Flattened value
 	 */
-	public function flatten($value)
-	{
+	public function flatten($value) {
 		if (is_array($value)) {
 			$value = implode(',', $value);
 		}
@@ -92,14 +87,12 @@ class Requests_Response_Headers extends Requests_Utility_CaseInsensitiveDictiona
 	}
 
 	/**
-	 * Get an iterator for the data.
+	 * Get an iterator for the data
 	 *
 	 * Converts the internal
-	 *
 	 * @return ArrayIterator
 	 */
-	public function getIterator()
-	{
-		return new Requests_Utility_FilteredIterator($this->data, [$this, 'flatten']);
+	public function getIterator() {
+		return new Requests_Utility_FilteredIterator($this->data, array($this, 'flatten'));
 	}
 }

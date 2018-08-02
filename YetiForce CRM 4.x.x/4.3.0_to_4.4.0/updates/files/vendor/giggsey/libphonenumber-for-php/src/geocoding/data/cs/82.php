@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Soul',
   8231 => 'Gjŏnggi',
   8232 => 'Inčchon',
@@ -27,4 +27,4 @@ return [
   8262 => 'Kwangdžu',
   8263 => 'Severní Čolla',
   8264 => 'Čedžu',
-];
+);

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Uandora',
   'AF' => 'Ufugustani',
   'AL' => 'Ualbania',
@@ -147,4 +147,4 @@ return [
   'ZA' => 'Afrika du Sulu',
   'ZM' => 'Uzambia',
   'ZW' => 'Uzimbabwe',
-];
+);

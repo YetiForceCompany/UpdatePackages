@@ -10,13 +10,13 @@
  * Do not modify this file directly!
  */
 
+
 namespace libphonenumber;
+class AlternateFormatsCountryCodeSet {
 
-class AlternateFormatsCountryCodeSet
-{
-	// A set of all country codes for which data is available.
+  // A set of all country codes for which data is available.
 
-	public static $alternateFormatsCountryCodeSet = [
+   public static $alternateFormatsCountryCodeSet = array (
   0 => 7,
   1 => 27,
   2 => 30,
@@ -64,5 +64,6 @@ class AlternateFormatsCountryCodeSet
   44 => 971,
   45 => 972,
   46 => 995,
-];
+);
+
 }

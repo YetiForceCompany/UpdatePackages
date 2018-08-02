@@ -23,57 +23,57 @@ use Symfony\Component\Console\Output\StreamOutput;
  */
 class CommandTester
 {
-	use TesterTrait;
+    use TesterTrait;
 
-	private $command;
-	private $input;
-	private $statusCode;
+    private $command;
+    private $input;
+    private $statusCode;
 
-	public function __construct(Command $command)
-	{
-		$this->command = $command;
-	}
+    public function __construct(Command $command)
+    {
+        $this->command = $command;
+    }
 
-	/**
-	 * Executes the command.
-	 *
-	 * Available execution options:
-	 *
-	 *  * interactive: Sets the input interactive flag
-	 *  * decorated:   Sets the output decorated flag
-	 *  * verbosity:   Sets the output verbosity flag
-	 *
-	 * @param array $input   An array of command arguments and options
-	 * @param array $options An array of execution options
-	 *
-	 * @return int The command exit code
-	 */
-	public function execute(array $input, array $options = [])
-	{
-		// set the command name automatically if the application requires
-		// this argument and no command name was passed
-		if (!isset($input['command'])
-			&& (null !== $application = $this->command->getApplication())
-			&& $application->getDefinition()->hasArgument('command')
-		) {
-			$input = array_merge(['command' => $this->command->getName()], $input);
-		}
+    /**
+     * Executes the command.
+     *
+     * Available execution options:
+     *
+     *  * interactive: Sets the input interactive flag
+     *  * decorated:   Sets the output decorated flag
+     *  * verbosity:   Sets the output verbosity flag
+     *
+     * @param array $input   An array of command arguments and options
+     * @param array $options An array of execution options
+     *
+     * @return int The command exit code
+     */
+    public function execute(array $input, array $options = array())
+    {
+        // set the command name automatically if the application requires
+        // this argument and no command name was passed
+        if (!isset($input['command'])
+            && (null !== $application = $this->command->getApplication())
+            && $application->getDefinition()->hasArgument('command')
+        ) {
+            $input = array_merge(array('command' => $this->command->getName()), $input);
+        }
 
-		$this->input = new ArrayInput($input);
-		if ($this->inputs) {
-			$this->input->setStream(self::createStream($this->inputs));
-		}
+        $this->input = new ArrayInput($input);
+        if ($this->inputs) {
+            $this->input->setStream(self::createStream($this->inputs));
+        }
 
-		if (isset($options['interactive'])) {
-			$this->input->setInteractive($options['interactive']);
-		}
+        if (isset($options['interactive'])) {
+            $this->input->setInteractive($options['interactive']);
+        }
 
-		$this->output = new StreamOutput(fopen('php://memory', 'w', false));
-		$this->output->setDecorated($options['decorated'] ?? false);
-		if (isset($options['verbosity'])) {
-			$this->output->setVerbosity($options['verbosity']);
-		}
+        $this->output = new StreamOutput(fopen('php://memory', 'w', false));
+        $this->output->setDecorated(isset($options['decorated']) ? $options['decorated'] : false);
+        if (isset($options['verbosity'])) {
+            $this->output->setVerbosity($options['verbosity']);
+        }
 
-		return $this->statusCode = $this->command->run($this->input, $this->output);
-	}
+        return $this->statusCode = $this->command->run($this->input, $this->output);
+    }
 }

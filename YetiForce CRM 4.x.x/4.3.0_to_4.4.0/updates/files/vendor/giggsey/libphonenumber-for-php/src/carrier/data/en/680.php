@@ -10,11 +10,11 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   68077 => 'PalauCel',
   680880 => 'PalauTel',
   680881 => 'PalauTel',
   680882 => 'PalauTel',
   680883 => 'PalauTel',
   680884 => 'PalauTel',
-];
+);

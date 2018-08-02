@@ -10,11 +10,11 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   25882 => 'mcel',
   25883 => 'mcel',
   25884 => 'Vodacom',
   25885 => 'Vodacom',
   25886 => 'Movitel',
   25887 => 'Movitel',
-];
+);

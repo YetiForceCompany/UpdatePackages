@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'BR' => 'ꀠꑭ',
   'CN' => 'ꍏꇩ',
   'DE' => 'ꄓꇩ',
@@ -20,4 +20,4 @@ return [
   'JP' => 'ꏝꀪ',
   'RU' => 'ꊉꇆꌦ',
   'US' => 'ꂰꇩ',
-];
+);

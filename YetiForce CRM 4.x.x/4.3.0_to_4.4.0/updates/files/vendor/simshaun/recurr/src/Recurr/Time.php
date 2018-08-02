@@ -16,23 +16,24 @@ namespace Recurr;
 /**
  * Class Time is a storage container for a time of day.
  *
+ * @package Recurr
  * @author  Shaun Simmons <shaun@envysphere.com>
  */
 class Time
 {
-	/** @var int */
-	public $hour;
+    /** @var int */
+    public $hour;
 
-	/** @var int */
-	public $minute;
+    /** @var int */
+    public $minute;
 
-	/** @var int */
-	public $second;
+    /** @var int */
+    public $second;
 
-	public function __construct($hour, $minute, $second)
-	{
-		$this->hour   = $hour;
-		$this->minute = $minute;
-		$this->second = $second;
-	}
+    public function __construct($hour, $minute, $second)
+    {
+        $this->hour   = $hour;
+        $this->minute = $minute;
+        $this->second = $second;
+    }
 }

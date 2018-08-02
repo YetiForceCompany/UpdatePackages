@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   355211 => 'Koplik',
   355212 => 'Pukë',
   355213 => 'Bajram Curri',
@@ -181,4 +181,4 @@ return [
   355893 => 'Ksamil, Sarandë',
   355894 => 'Livadhja/Dhivër, Sarandë',
   355895 => 'Finiq/Mesopotam/Vergo, Delvinë',
-];
+);

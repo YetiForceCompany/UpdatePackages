@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Automatically generated timezone file.
+ * Automatically generated timezone file
  *
  * Last update: 2016-08-24T17:35:38-04:00
  * Source: http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml

@@ -5,36 +5,36 @@
  */
 class HTMLPurifier_Injector_DisplayLinkURI extends HTMLPurifier_Injector
 {
-	/**
-	 * @type string
-	 */
-	public $name = 'DisplayLinkURI';
+    /**
+     * @type string
+     */
+    public $name = 'DisplayLinkURI';
 
-	/**
-	 * @type array
-	 */
-	public $needed = ['a'];
+    /**
+     * @type array
+     */
+    public $needed = array('a');
 
-	/**
-	 * @param $token
-	 */
-	public function handleElement(&$token)
-	{
-	}
+    /**
+     * @param $token
+     */
+    public function handleElement(&$token)
+    {
+    }
 
-	/**
-	 * @param HTMLPurifier_Token $token
-	 */
-	public function handleEnd(&$token)
-	{
-		if (isset($token->start->attr['href'])) {
-			$url = $token->start->attr['href'];
-			unset($token->start->attr['href']);
-			$token = [$token, new HTMLPurifier_Token_Text(" ($url)")];
-		} else {
-			// nothing to display
-		}
-	}
+    /**
+     * @param HTMLPurifier_Token $token
+     */
+    public function handleEnd(&$token)
+    {
+        if (isset($token->start->attr['href'])) {
+            $url = $token->start->attr['href'];
+            unset($token->start->attr['href']);
+            $token = array($token, new HTMLPurifier_Token_Text(" ($url)"));
+        } else {
+            // nothing to display
+        }
+    }
 }
 
 // vim: et sw=4 sts=4

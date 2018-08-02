@@ -5,7 +5,7 @@ namespace Sabre\CardDAV;
 use Sabre\DAVACL;
 
 /**
- * AddressBook rootnode.
+ * AddressBook rootnode
  *
  * This object lists a collection of users, which can contain addressbooks.
  *
@@ -13,65 +13,68 @@ use Sabre\DAVACL;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class AddressBookRoot extends DAVACL\AbstractPrincipalCollection
-{
-	/**
-	 * Principal Backend.
-	 *
-	 * @var DAVACL\PrincipalBackend\BackendInterface
-	 */
-	protected $principalBackend;
+class AddressBookRoot extends DAVACL\AbstractPrincipalCollection {
 
-	/**
-	 * CardDAV backend.
-	 *
-	 * @var Backend\BackendInterface
-	 */
-	protected $carddavBackend;
+    /**
+     * Principal Backend
+     *
+     * @var DAVACL\PrincipalBackend\BackendInterface
+     */
+    protected $principalBackend;
 
-	/**
-	 * Constructor.
-	 *
-	 * This constructor needs both a principal and a carddav backend.
-	 *
-	 * By default this class will show a list of addressbook collections for
-	 * principals in the 'principals' collection. If your main principals are
-	 * actually located in a different path, use the $principalPrefix argument
-	 * to override this.
-	 *
-	 * @param DAVACL\PrincipalBackend\BackendInterface $principalBackend
-	 * @param Backend\BackendInterface                 $carddavBackend
-	 * @param string                                   $principalPrefix
-	 */
-	public function __construct(DAVACL\PrincipalBackend\BackendInterface $principalBackend, Backend\BackendInterface $carddavBackend, $principalPrefix = 'principals')
-	{
-		$this->carddavBackend = $carddavBackend;
-		parent::__construct($principalBackend, $principalPrefix);
-	}
+    /**
+     * CardDAV backend
+     *
+     * @var Backend\BackendInterface
+     */
+    protected $carddavBackend;
 
-	/**
-	 * Returns the name of the node.
-	 *
-	 * @return string
-	 */
-	public function getName()
-	{
-		return Plugin::ADDRESSBOOK_ROOT;
-	}
+    /**
+     * Constructor
+     *
+     * This constructor needs both a principal and a carddav backend.
+     *
+     * By default this class will show a list of addressbook collections for
+     * principals in the 'principals' collection. If your main principals are
+     * actually located in a different path, use the $principalPrefix argument
+     * to override this.
+     *
+     * @param DAVACL\PrincipalBackend\BackendInterface $principalBackend
+     * @param Backend\BackendInterface $carddavBackend
+     * @param string $principalPrefix
+     */
+    function __construct(DAVACL\PrincipalBackend\BackendInterface $principalBackend, Backend\BackendInterface $carddavBackend, $principalPrefix = 'principals') {
 
-	/**
-	 * This method returns a node for a principal.
-	 *
-	 * The passed array contains principal information, and is guaranteed to
-	 * at least contain a uri item. Other properties may or may not be
-	 * supplied by the authentication backend.
-	 *
-	 * @param array $principal
-	 *
-	 * @return \Sabre\DAV\INode
-	 */
-	public function getChildForPrincipal(array $principal)
-	{
-		return new AddressBookHome($this->carddavBackend, $principal['uri']);
-	}
+        $this->carddavBackend = $carddavBackend;
+        parent::__construct($principalBackend, $principalPrefix);
+
+    }
+
+    /**
+     * Returns the name of the node
+     *
+     * @return string
+     */
+    function getName() {
+
+        return Plugin::ADDRESSBOOK_ROOT;
+
+    }
+
+    /**
+     * This method returns a node for a principal.
+     *
+     * The passed array contains principal information, and is guaranteed to
+     * at least contain a uri item. Other properties may or may not be
+     * supplied by the authentication backend.
+     *
+     * @param array $principal
+     * @return \Sabre\DAV\INode
+     */
+    function getChildForPrincipal(array $principal) {
+
+        return new AddressBookHome($this->carddavBackend, $principal['uri']);
+
+    }
+
 }

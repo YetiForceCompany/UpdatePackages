@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   472 => 'Oslo',
   4731 => 'Buskerud',
   4732 => 'Buskerud',
@@ -42,4 +42,4 @@ return [
   4776 => 'Nordland',
   4777 => 'Troms',
   4778 => 'Finnmark',
-];
+);

@@ -17,21 +17,23 @@ use Illuminate\Support\Testing\Fakes\MailFake;
  */
 class Mail extends Facade
 {
-	/**
-	 * Replace the bound instance with a fake.
-	 */
-	public static function fake()
-	{
-		static::swap(new MailFake());
-	}
+    /**
+     * Replace the bound instance with a fake.
+     *
+     * @return void
+     */
+    public static function fake()
+    {
+        static::swap(new MailFake);
+    }
 
-	/**
-	 * Get the registered name of the component.
-	 *
-	 * @return string
-	 */
-	protected static function getFacadeAccessor()
-	{
-		return 'mailer';
-	}
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor()
+    {
+        return 'mailer';
+    }
 }

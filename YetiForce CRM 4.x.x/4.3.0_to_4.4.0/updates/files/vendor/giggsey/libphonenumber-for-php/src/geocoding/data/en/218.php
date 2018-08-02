@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   21821 => 'Tripoli',
   21823 => 'Zawia',
   21824 => 'Sabratha',
@@ -30,4 +30,4 @@ return [
   21863 => 'Benina',
   21867 => 'Elmareg',
   21871 => 'Sebha',
-];
+);

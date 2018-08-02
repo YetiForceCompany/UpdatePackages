@@ -5,7 +5,7 @@ namespace Sabre\DAV\Exception;
 use Sabre\DAV;
 
 /**
- * NotAuthenticated.
+ * NotAuthenticated
  *
  * This exception is thrown when the client did not provide valid
  * authentication credentials.
@@ -14,15 +14,17 @@ use Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class NotAuthenticated extends DAV\Exception
-{
-	/**
-	 * Returns the HTTP statuscode for this exception.
-	 *
-	 * @return int
-	 */
-	public function getHTTPCode()
-	{
-		return 401;
-	}
+class NotAuthenticated extends DAV\Exception {
+
+    /**
+     * Returns the HTTP statuscode for this exception
+     *
+     * @return int
+     */
+    function getHTTPCode() {
+
+        return 401;
+
+    }
+
 }

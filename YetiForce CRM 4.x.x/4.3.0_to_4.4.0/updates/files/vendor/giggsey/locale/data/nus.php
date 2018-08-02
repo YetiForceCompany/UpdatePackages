@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Andora',
   'AF' => 'Abganithtan',
   'AG' => 'Antiguaa kɛnɛ Barbuda',
@@ -61,4 +61,4 @@ return [
   'SD' => 'Sudan',
   'TD' => 'Ca̱d',
   'VG' => 'Burutic dhuɔ̱ɔ̱l be̱rgin',
-];
+);

@@ -20,82 +20,85 @@ use Sabre\Xml;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Uri implements Xml\Element
-{
-	/**
-	 * Uri element value.
-	 *
-	 * @var string
-	 */
-	protected $value;
+class Uri implements Xml\Element {
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string $value
-	 */
-	public function __construct($value)
-	{
-		$this->value = $value;
-	}
+    /**
+     * Uri element value.
+     *
+     * @var string
+     */
+    protected $value;
 
-	/**
-	 * The xmlSerialize metod is called during xml writing.
-	 *
-	 * Use the $writer argument to write its own xml serialization.
-	 *
-	 * An important note: do _not_ create a parent element. Any element
-	 * implementing XmlSerializble should only ever write what's considered
-	 * its 'inner xml'.
-	 *
-	 * The parent of the current element is responsible for writing a
-	 * containing element.
-	 *
-	 * This allows serializers to be re-used for different element names.
-	 *
-	 * If you are opening new elements, you must also close them again.
-	 *
-	 * @param Writer $writer
-	 */
-	public function xmlSerialize(Xml\Writer $writer)
-	{
-		$writer->text(
-			\Sabre\Uri\resolve(
-				$writer->contextUri,
-				$this->value
-			)
-		);
-	}
+    /**
+     * Constructor
+     *
+     * @param string $value
+     */
+    function __construct($value)
+    {
+        $this->value = $value;
+    }
 
-	/**
-	 * This method is called during xml parsing.
-	 *
-	 * This method is called statically, this is because in theory this method
-	 * may be used as a type of constructor, or factory method.
-	 *
-	 * Often you want to return an instance of the current class, but you are
-	 * free to return other data as well.
-	 *
-	 * Important note 2: You are responsible for advancing the reader to the
-	 * next element. Not doing anything will result in a never-ending loop.
-	 *
-	 * If you just want to skip parsing for this element altogether, you can
-	 * just call $reader->next();
-	 *
-	 * $reader->parseSubTree() will parse the entire sub-tree, and advance to
-	 * the next element.
-	 *
-	 * @param Xml\Reader $reader
-	 *
-	 * @return mixed
-	 */
-	public static function xmlDeserialize(Xml\Reader $reader)
-	{
-		return new self(
-			\Sabre\Uri\resolve(
-				$reader->contextUri,
-				$reader->readText()
-			)
-		);
-	}
+    /**
+     * The xmlSerialize metod is called during xml writing.
+     *
+     * Use the $writer argument to write its own xml serialization.
+     *
+     * An important note: do _not_ create a parent element. Any element
+     * implementing XmlSerializble should only ever write what's considered
+     * its 'inner xml'.
+     *
+     * The parent of the current element is responsible for writing a
+     * containing element.
+     *
+     * This allows serializers to be re-used for different element names.
+     *
+     * If you are opening new elements, you must also close them again.
+     *
+     * @param Writer $writer
+     * @return void
+     */
+    function xmlSerialize(Xml\Writer $writer) {
+
+        $writer->text(
+            \Sabre\Uri\resolve(
+                $writer->contextUri,
+                $this->value
+            )
+        );
+
+    }
+
+    /**
+     * This method is called during xml parsing.
+     *
+     * This method is called statically, this is because in theory this method
+     * may be used as a type of constructor, or factory method.
+     *
+     * Often you want to return an instance of the current class, but you are
+     * free to return other data as well.
+     *
+     * Important note 2: You are responsible for advancing the reader to the
+     * next element. Not doing anything will result in a never-ending loop.
+     *
+     * If you just want to skip parsing for this element altogether, you can
+     * just call $reader->next();
+     *
+     * $reader->parseSubTree() will parse the entire sub-tree, and advance to
+     * the next element.
+     *
+     * @param Xml\Reader $reader
+     * @return mixed
+     */
+    static function xmlDeserialize(Xml\Reader $reader) {
+
+        return new self(
+            \Sabre\Uri\resolve(
+                $reader->contextUri,
+                $reader->readText()
+            )
+        );
+
+    }
+
 }

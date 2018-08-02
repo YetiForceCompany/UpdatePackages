@@ -20,26 +20,26 @@ use Symfony\Component\Translation\MessageCatalogue;
  */
 class IniFileDumper extends FileDumper
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = [])
-	{
-		$output = '';
+    /**
+     * {@inheritdoc}
+     */
+    public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = array())
+    {
+        $output = '';
 
-		foreach ($messages->all($domain) as $source => $target) {
-			$escapeTarget = str_replace('"', '\"', $target);
-			$output .= $source . '="' . $escapeTarget . "\"\n";
-		}
+        foreach ($messages->all($domain) as $source => $target) {
+            $escapeTarget = str_replace('"', '\"', $target);
+            $output .= $source.'="'.$escapeTarget."\"\n";
+        }
 
-		return $output;
-	}
+        return $output;
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function getExtension()
-	{
-		return 'ini';
-	}
+    /**
+     * {@inheritdoc}
+     */
+    protected function getExtension()
+    {
+        return 'ini';
+    }
 }

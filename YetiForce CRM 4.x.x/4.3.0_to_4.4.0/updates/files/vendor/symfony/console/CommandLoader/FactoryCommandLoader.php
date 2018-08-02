@@ -20,43 +20,43 @@ use Symfony\Component\Console\Exception\CommandNotFoundException;
  */
 class FactoryCommandLoader implements CommandLoaderInterface
 {
-	private $factories;
+    private $factories;
 
-	/**
-	 * @param callable[] $factories Indexed by command names
-	 */
-	public function __construct(array $factories)
-	{
-		$this->factories = $factories;
-	}
+    /**
+     * @param callable[] $factories Indexed by command names
+     */
+    public function __construct(array $factories)
+    {
+        $this->factories = $factories;
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function has($name)
-	{
-		return isset($this->factories[$name]);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function has($name)
+    {
+        return isset($this->factories[$name]);
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function get($name)
-	{
-		if (!isset($this->factories[$name])) {
-			throw new CommandNotFoundException(sprintf('Command "%s" does not exist.', $name));
-		}
+    /**
+     * {@inheritdoc}
+     */
+    public function get($name)
+    {
+        if (!isset($this->factories[$name])) {
+            throw new CommandNotFoundException(sprintf('Command "%s" does not exist.', $name));
+        }
 
-		$factory = $this->factories[$name];
+        $factory = $this->factories[$name];
 
-		return $factory();
-	}
+        return $factory();
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getNames()
-	{
-		return array_keys($this->factories);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function getNames()
+    {
+        return array_keys($this->factories);
+    }
 }

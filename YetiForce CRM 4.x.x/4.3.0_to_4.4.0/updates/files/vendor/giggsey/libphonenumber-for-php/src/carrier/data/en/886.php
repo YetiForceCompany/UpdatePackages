@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   886900 => 'FarEasTone',
   8869006 => 'Chunghwa Telecom',
   8869007 => 'Chunghwa Telecom',
@@ -170,4 +170,4 @@ return [
   886987 => 'Taiwan Mobile',
   886988 => 'Chunghwa Telecom',
   886989 => 'FarEasTone',
-];
+);

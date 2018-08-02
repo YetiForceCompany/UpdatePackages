@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2392220 => 'Santo Amaro',
   2392221 => 'Água Grande',
   2392222 => 'Água Grande',
@@ -30,4 +30,4 @@ return [
   2392272 => 'Madalena',
   239228 => 'Água Grande',
   239229 => 'Água Grande',
-];
+);

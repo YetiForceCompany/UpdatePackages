@@ -18,11 +18,11 @@ namespace Symfony\Component\Translation\Loader;
  */
 class IniFileLoader extends FileLoader
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	protected function loadResource($resource)
-	{
-		return parse_ini_file($resource, true);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    protected function loadResource($resource)
+    {
+        return parse_ini_file($resource, true);
+    }
 }

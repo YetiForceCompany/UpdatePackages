@@ -1,10 +1,11 @@
 <?php
 /**
- * Persian/Farsi PHPMailer language file: refer to English translation for definitive list.
- *
+ * Persian/Farsi PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Ali Jazayeri <jaza.ali@gmail.com>
  * @author Mohammad Hossein Mojtahedi <mhm5000@gmail.com>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'خطای SMTP: احراز هویت با شکست مواجه شد.';
 $PHPMAILER_LANG['connect_host']         = 'خطای SMTP: اتصال به سرور SMTP برقرار نشد.';
 $PHPMAILER_LANG['data_not_accepted']    = 'خطای SMTP: داده‌ها نا‌درست هستند.';

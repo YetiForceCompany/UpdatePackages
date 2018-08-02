@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   506500 => 'OMV',
   506501 => 'OMV',
   506570 => 'OMV',
@@ -47,4 +47,4 @@ return [
   50683 => 'Kolbi ICE',
   50688 => 'Kolbi ICE',
   50689 => 'Kolbi ICE',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   30685185 => 'Cyta',
   3068519 => 'Cyta',
   30685500 => 'Cyta',
@@ -89,4 +89,4 @@ return [
   306997 => 'Wind',
   306998 => 'Wind',
   306999 => 'Wind',
-];
+);

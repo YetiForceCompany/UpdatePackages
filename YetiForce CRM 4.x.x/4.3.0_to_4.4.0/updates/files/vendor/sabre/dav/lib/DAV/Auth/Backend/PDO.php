@@ -9,46 +9,49 @@ namespace Sabre\DAV\Auth\Backend;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class PDO extends AbstractDigest
-{
-	/**
-	 * Reference to PDO connection.
-	 *
-	 * @var PDO
-	 */
-	protected $pdo;
+class PDO extends AbstractDigest {
 
-	/**
-	 * PDO table name we'll be using.
-	 *
-	 * @var string
-	 */
-	public $tableName = 'users';
+    /**
+     * Reference to PDO connection
+     *
+     * @var PDO
+     */
+    protected $pdo;
 
-	/**
-	 * Creates the backend object.
-	 *
-	 * If the filename argument is passed in, it will parse out the specified file fist.
-	 *
-	 * @param \PDO $pdo
-	 */
-	public function __construct(\PDO $pdo)
-	{
-		$this->pdo = $pdo;
-	}
+    /**
+     * PDO table name we'll be using
+     *
+     * @var string
+     */
+    public $tableName = 'users';
 
-	/**
-	 * Returns the digest hash for a user.
-	 *
-	 * @param string $realm
-	 * @param string $username
-	 *
-	 * @return string|null
-	 */
-	public function getDigestHash($realm, $username)
-	{
-		$stmt = $this->pdo->prepare('SELECT digesta1 FROM ' . $this->tableName . ' WHERE username = ?');
-		$stmt->execute([$username]);
-		return $stmt->fetchColumn() ?: null;
-	}
+
+    /**
+     * Creates the backend object.
+     *
+     * If the filename argument is passed in, it will parse out the specified file fist.
+     *
+     * @param \PDO $pdo
+     */
+    function __construct(\PDO $pdo) {
+
+        $this->pdo = $pdo;
+
+    }
+
+    /**
+     * Returns the digest hash for a user.
+     *
+     * @param string $realm
+     * @param string $username
+     * @return string|null
+     */
+    function getDigestHash($realm, $username) {
+
+        $stmt = $this->pdo->prepare('SELECT digesta1 FROM ' . $this->tableName . ' WHERE username = ?');
+        $stmt->execute([$username]);
+        return $stmt->fetchColumn() ?: null;
+
+    }
+
 }

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   822 => 'Seul',
   8232 => 'İncheon',
   8241 => 'Güney Chungcheong',
@@ -20,4 +20,4 @@ return [
   8255 => 'Güney Gyeongsang',
   8261 => 'Güney Jeolla',
   8263 => 'Kuzey Jeolla',
-];
+);

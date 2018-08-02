@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   5042209 => 'Res. Centro América, Tegucigalpa',
   5042211 => 'El Picacho',
   5042224 => 'Cerro Grande',
@@ -75,4 +75,4 @@ return [
   5042653 => 'Nueva Ocotepeque',
   5042654 => 'Santa Cruz',
   5042780 => 'Choluteca',
-];
+);

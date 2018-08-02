@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   9890 => 'Irancell',
   9891 => 'IR-MCI',
   9892 => 'Rightel',
@@ -34,4 +34,4 @@ return [
   9899914 => 'Azartel',
   9899998 => 'SamanTel',
   9899999 => 'SamanTel',
-];
+);

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   1801 => 'Utah',
   1801213 => 'Salt Lake City, UT',
   1801221 => 'Orem, UT',
@@ -4414,4 +4414,4 @@ return [
   1873 => 'Quebec',
   1876957 => 'Negril',
   1878 => 'Pennsylvania',
-];
+);

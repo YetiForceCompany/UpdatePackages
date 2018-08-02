@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   995514 => 'Geocell',
   99554444 => 'MagtiCom',
   995550 => 'MagtiCom',
@@ -36,4 +36,4 @@ return [
   995598 => 'MagtiCom',
   995599 => 'MagtiCom',
   995790 => 'MagtiCom',
-];
+);

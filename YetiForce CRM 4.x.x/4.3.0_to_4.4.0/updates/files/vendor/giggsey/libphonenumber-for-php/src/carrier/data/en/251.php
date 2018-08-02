@@ -10,6 +10,6 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   2519 => 'Ethio Telecom',
-];
+);

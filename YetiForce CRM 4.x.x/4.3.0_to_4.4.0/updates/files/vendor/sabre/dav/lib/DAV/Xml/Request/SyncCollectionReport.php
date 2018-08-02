@@ -18,101 +18,105 @@ use Sabre\Xml\XmlDeserializable;
  * @author Evert Pot (http://www.rooftopsolutions.nl/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class SyncCollectionReport implements XmlDeserializable
-{
-	/**
-	 * The sync-token the client supplied for the report.
-	 *
-	 * @var string|null
-	 */
-	public $syncToken;
+class SyncCollectionReport implements XmlDeserializable {
 
-	/**
-	 * The 'depth' of the sync the client is interested in.
-	 *
-	 * @var int
-	 */
-	public $syncLevel;
+    /**
+     * The sync-token the client supplied for the report.
+     *
+     * @var string|null
+     */
+    public $syncToken;
 
-	/**
-	 * Maximum amount of items returned.
-	 *
-	 * @var int|null
-	 */
-	public $limit;
+    /**
+     * The 'depth' of the sync the client is interested in.
+     *
+     * @var int
+     */
+    public $syncLevel;
 
-	/**
-	 * The list of properties that are being requested for every change.
-	 *
-	 * @var null|array
-	 */
-	public $properties;
+    /**
+     * Maximum amount of items returned.
+     *
+     * @var int|null
+     */
+    public $limit;
 
-	/**
-	 * The deserialize method is called during xml parsing.
-	 *
-	 * This method is called statically, this is because in theory this method
-	 * may be used as a type of constructor, or factory method.
-	 *
-	 * Often you want to return an instance of the current class, but you are
-	 * free to return other data as well.
-	 *
-	 * You are responsible for advancing the reader to the next element. Not
-	 * doing anything will result in a never-ending loop.
-	 *
-	 * If you just want to skip parsing for this element altogether, you can
-	 * just call $reader->next();
-	 *
-	 * $reader->parseInnerTree() will parse the entire sub-tree, and advance to
-	 * the next element.
-	 *
-	 * @param Reader $reader
-	 *
-	 * @return mixed
-	 */
-	public static function xmlDeserialize(Reader $reader)
-	{
-		$self = new self();
+    /**
+     * The list of properties that are being requested for every change.
+     *
+     * @var null|array
+     */
+    public $properties;
 
-		$reader->pushContext();
+    /**
+     * The deserialize method is called during xml parsing.
+     *
+     * This method is called statically, this is because in theory this method
+     * may be used as a type of constructor, or factory method.
+     *
+     * Often you want to return an instance of the current class, but you are
+     * free to return other data as well.
+     *
+     * You are responsible for advancing the reader to the next element. Not
+     * doing anything will result in a never-ending loop.
+     *
+     * If you just want to skip parsing for this element altogether, you can
+     * just call $reader->next();
+     *
+     * $reader->parseInnerTree() will parse the entire sub-tree, and advance to
+     * the next element.
+     *
+     * @param Reader $reader
+     * @return mixed
+     */
+    static function xmlDeserialize(Reader $reader) {
 
-		$reader->elementMap['{DAV:}prop'] = 'Sabre\Xml\Element\Elements';
-		$elems = KeyValue::xmlDeserialize($reader);
+        $self = new self();
 
-		$reader->popContext();
+        $reader->pushContext();
 
-		$required = [
-			'{DAV:}sync-token',
-			'{DAV:}prop',
-			];
+        $reader->elementMap['{DAV:}prop'] = 'Sabre\Xml\Element\Elements';
+        $elems = KeyValue::xmlDeserialize($reader);
 
-		foreach ($required as $elem) {
-			if (!array_key_exists($elem, $elems)) {
-				throw new BadRequest('The ' . $elem . ' element in the {DAV:}sync-collection report is required');
-			}
-		}
+        $reader->popContext();
 
-		$self->properties = $elems['{DAV:}prop'];
-		$self->syncToken = $elems['{DAV:}sync-token'];
+        $required = [
+            '{DAV:}sync-token',
+            '{DAV:}prop',
+            ];
 
-		if (isset($elems['{DAV:}limit'])) {
-			$nresults = null;
-			foreach ($elems['{DAV:}limit'] as $child) {
-				if ($child['name'] === '{DAV:}nresults') {
-					$nresults = (int) $child['value'];
-				}
-			}
-			$self->limit = $nresults;
-		}
+        foreach ($required as $elem) {
+            if (!array_key_exists($elem, $elems)) {
+                throw new BadRequest('The ' . $elem . ' element in the {DAV:}sync-collection report is required');
+            }
+        }
 
-		if (isset($elems['{DAV:}sync-level'])) {
-			$value = $elems['{DAV:}sync-level'];
-			if ($value === 'infinity') {
-				$value = \Sabre\DAV\Server::DEPTH_INFINITY;
-			}
-			$self->syncLevel = $value;
-		}
 
-		return $self;
-	}
+        $self->properties = $elems['{DAV:}prop'];
+        $self->syncToken = $elems['{DAV:}sync-token'];
+
+        if (isset($elems['{DAV:}limit'])) {
+            $nresults = null;
+            foreach ($elems['{DAV:}limit'] as $child) {
+                if ($child['name'] === '{DAV:}nresults') {
+                    $nresults = (int)$child['value'];
+                }
+            }
+            $self->limit = $nresults;
+        }
+
+        if (isset($elems['{DAV:}sync-level'])) {
+
+            $value = $elems['{DAV:}sync-level'];
+            if ($value === 'infinity') {
+                $value = \Sabre\DAV\Server::DEPTH_INFINITY;
+            }
+            $self->syncLevel = $value;
+
+        }
+
+        return $self;
+
+    }
+
 }

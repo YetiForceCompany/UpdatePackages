@@ -1,9 +1,10 @@
 <?php
 /**
- * Bulgarian PHPMailer language file: refer to English translation for definitive list.
- *
+ * Bulgarian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Mikhail Kyosev <mialygk@gmail.com>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'SMTP грешка: Не може да се удостовери пред сървъра.';
 $PHPMAILER_LANG['connect_host']         = 'SMTP грешка: Не може да се свърже с SMTP хоста.';
 $PHPMAILER_LANG['data_not_accepted']    = 'SMTP грешка: данните не са приети.';

@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   68987 => 'Vini',
   68989 => 'Vodafone',
-];
+);

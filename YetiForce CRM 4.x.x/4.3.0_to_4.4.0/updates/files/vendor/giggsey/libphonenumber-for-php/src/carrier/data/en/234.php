@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   234173 => 'Starcomms',
   234174 => 'Starcomms',
   2341804 => 'Starcomms',
@@ -254,4 +254,4 @@ return [
   234909 => '9mobile',
   234980 => 'Starcomms',
   234987 => 'Starcomms',
-];
+);

@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Andola',
   'AE' => 'Wutwa wa shiyalabu',
   'AF' => 'Afuganisitani',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Afilika Kusini',
   'ZM' => 'Sambiya',
   'ZW' => 'Simbabwe',
-];
+);

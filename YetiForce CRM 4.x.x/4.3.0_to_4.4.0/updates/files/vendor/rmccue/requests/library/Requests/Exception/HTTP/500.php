@@ -1,22 +1,25 @@
 <?php
 /**
- * Exception for 500 Internal Server Error responses.
+ * Exception for 500 Internal Server Error responses
+ *
+ * @package Requests
  */
 
 /**
- * Exception for 500 Internal Server Error responses.
+ * Exception for 500 Internal Server Error responses
+ *
+ * @package Requests
  */
-class Requests_Exception_HTTP_500 extends Requests_Exception_HTTP
-{
+class Requests_Exception_HTTP_500 extends Requests_Exception_HTTP {
 	/**
-	 * HTTP status code.
+	 * HTTP status code
 	 *
-	 * @var int
+	 * @var integer
 	 */
 	protected $code = 500;
 
 	/**
-	 * Reason phrase.
+	 * Reason phrase
 	 *
 	 * @var string
 	 */

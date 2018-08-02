@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   38160 => 'VIP',
   38161 => 'VIP',
   38162 => 'Telenor',
@@ -22,4 +22,4 @@ return [
   381678 => 'Vectone Mobile',
   38168 => 'VIP',
   38169 => 'Telenor',
-];
+);

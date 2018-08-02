@@ -1,9 +1,10 @@
 <?php
 /**
- * Faroese PHPMailer language file: refer to English translation for definitive list.
- *
+ * Faroese PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Dávur Sørensen <http://www.profo-webdesign.dk>
  */
+
 $PHPMAILER_LANG['authenticate']         = 'SMTP feilur: Kundi ikki góðkenna.';
 $PHPMAILER_LANG['connect_host']         = 'SMTP feilur: Kundi ikki knýta samband við SMTP vert.';
 $PHPMAILER_LANG['data_not_accepted']    = 'SMTP feilur: Data ikki góðkent.';

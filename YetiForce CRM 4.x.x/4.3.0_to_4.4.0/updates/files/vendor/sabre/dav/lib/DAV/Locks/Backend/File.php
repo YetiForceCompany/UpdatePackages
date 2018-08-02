@@ -17,162 +17,169 @@ use Sabre\DAV\Locks\LockInfo;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class File extends AbstractBackend
-{
-	/**
-	 * The storage file.
-	 *
-	 * @var string
-	 */
-	private $locksFile;
+class File extends AbstractBackend {
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string $locksFile path to file
-	 */
-	public function __construct($locksFile)
-	{
-		$this->locksFile = $locksFile;
-	}
+    /**
+     * The storage file
+     *
+     * @var string
+     */
+    private $locksFile;
 
-	/**
-	 * Returns a list of Sabre\DAV\Locks\LockInfo objects.
-	 *
-	 * This method should return all the locks for a particular uri, including
-	 * locks that might be set on a parent uri.
-	 *
-	 * If returnChildLocks is set to true, this method should also look for
-	 * any locks in the subtree of the uri for locks.
-	 *
-	 * @param string $uri
-	 * @param bool   $returnChildLocks
-	 *
-	 * @return array
-	 */
-	public function getLocks($uri, $returnChildLocks)
-	{
-		$newLocks = [];
+    /**
+     * Constructor
+     *
+     * @param string $locksFile path to file
+     */
+    function __construct($locksFile) {
 
-		$locks = $this->getData();
+        $this->locksFile = $locksFile;
 
-		foreach ($locks as $lock) {
-			if ($lock->uri === $uri ||
-				//deep locks on parents
-				($lock->depth != 0 && strpos($uri, $lock->uri . '/') === 0) ||
+    }
 
-				// locks on children
-				($returnChildLocks && (strpos($lock->uri, $uri . '/') === 0))) {
-				$newLocks[] = $lock;
-			}
-		}
+    /**
+     * Returns a list of Sabre\DAV\Locks\LockInfo objects
+     *
+     * This method should return all the locks for a particular uri, including
+     * locks that might be set on a parent uri.
+     *
+     * If returnChildLocks is set to true, this method should also look for
+     * any locks in the subtree of the uri for locks.
+     *
+     * @param string $uri
+     * @param bool $returnChildLocks
+     * @return array
+     */
+    function getLocks($uri, $returnChildLocks) {
 
-		// Checking if we can remove any of these locks
-		foreach ($newLocks as $k => $lock) {
-			if (time() > $lock->timeout + $lock->created) {
-				unset($newLocks[$k]);
-			}
-		}
-		return $newLocks;
-	}
+        $newLocks = [];
 
-	/**
-	 * Locks a uri.
-	 *
-	 * @param string   $uri
-	 * @param LockInfo $lockInfo
-	 *
-	 * @return bool
-	 */
-	public function lock($uri, LockInfo $lockInfo)
-	{
-		// We're making the lock timeout 30 minutes
-		$lockInfo->timeout = 1800;
-		$lockInfo->created = time();
-		$lockInfo->uri = $uri;
+        $locks = $this->getData();
 
-		$locks = $this->getData();
+        foreach ($locks as $lock) {
 
-		foreach ($locks as $k => $lock) {
-			if (
-				($lock->token == $lockInfo->token) ||
-				(time() > $lock->timeout + $lock->created)
-			) {
-				unset($locks[$k]);
-			}
-		}
-		$locks[] = $lockInfo;
-		$this->putData($locks);
-		return true;
-	}
+            if ($lock->uri === $uri ||
+                //deep locks on parents
+                ($lock->depth != 0 && strpos($uri, $lock->uri . '/') === 0) ||
 
-	/**
-	 * Removes a lock from a uri.
-	 *
-	 * @param string   $uri
-	 * @param LockInfo $lockInfo
-	 *
-	 * @return bool
-	 */
-	public function unlock($uri, LockInfo $lockInfo)
-	{
-		$locks = $this->getData();
-		foreach ($locks as $k => $lock) {
-			if ($lock->token == $lockInfo->token) {
-				unset($locks[$k]);
-				$this->putData($locks);
-				return true;
-			}
-		}
-		return false;
-	}
+                // locks on children
+                ($returnChildLocks && (strpos($lock->uri, $uri . '/') === 0))) {
 
-	/**
-	 * Loads the lockdata from the filesystem.
-	 *
-	 * @return array
-	 */
-	protected function getData()
-	{
-		if (!file_exists($this->locksFile)) {
-			return [];
-		}
-		// opening up the file, and creating a shared lock
-		$handle = fopen($this->locksFile, 'r');
-		flock($handle, LOCK_SH);
+                $newLocks[] = $lock;
 
-		// Reading data until the eof
-		$data = stream_get_contents($handle);
+            }
 
-		// We're all good
-		flock($handle, LOCK_UN);
-		fclose($handle);
+        }
 
-		// Unserializing and checking if the resource file contains data for this file
-		$data = unserialize($data);
-		if (!$data) {
-			return [];
-		}
-		return $data;
-	}
+        // Checking if we can remove any of these locks
+        foreach ($newLocks as $k => $lock) {
+            if (time() > $lock->timeout + $lock->created) unset($newLocks[$k]);
+        }
+        return $newLocks;
 
-	/**
-	 * Saves the lockdata.
-	 *
-	 * @param array $newData
-	 */
-	protected function putData(array $newData)
-	{
-		// opening up the file, and creating an exclusive lock
-		$handle = fopen($this->locksFile, 'a+');
-		flock($handle, LOCK_EX);
+    }
 
-		// We can only truncate and rewind once the lock is acquired.
-		ftruncate($handle, 0);
-		rewind($handle);
+    /**
+     * Locks a uri
+     *
+     * @param string $uri
+     * @param LockInfo $lockInfo
+     * @return bool
+     */
+    function lock($uri, LockInfo $lockInfo) {
 
-		fwrite($handle, serialize($newData));
-		flock($handle, LOCK_UN);
-		fclose($handle);
-	}
+        // We're making the lock timeout 30 minutes
+        $lockInfo->timeout = 1800;
+        $lockInfo->created = time();
+        $lockInfo->uri = $uri;
+
+        $locks = $this->getData();
+
+        foreach ($locks as $k => $lock) {
+            if (
+                ($lock->token == $lockInfo->token) ||
+                (time() > $lock->timeout + $lock->created)
+            ) {
+                unset($locks[$k]);
+            }
+        }
+        $locks[] = $lockInfo;
+        $this->putData($locks);
+        return true;
+
+    }
+
+    /**
+     * Removes a lock from a uri
+     *
+     * @param string $uri
+     * @param LockInfo $lockInfo
+     * @return bool
+     */
+    function unlock($uri, LockInfo $lockInfo) {
+
+        $locks = $this->getData();
+        foreach ($locks as $k => $lock) {
+
+            if ($lock->token == $lockInfo->token) {
+
+                unset($locks[$k]);
+                $this->putData($locks);
+                return true;
+
+            }
+        }
+        return false;
+
+    }
+
+    /**
+     * Loads the lockdata from the filesystem.
+     *
+     * @return array
+     */
+    protected function getData() {
+
+        if (!file_exists($this->locksFile)) return [];
+
+        // opening up the file, and creating a shared lock
+        $handle = fopen($this->locksFile, 'r');
+        flock($handle, LOCK_SH);
+
+        // Reading data until the eof
+        $data = stream_get_contents($handle);
+
+        // We're all good
+        flock($handle, LOCK_UN);
+        fclose($handle);
+
+        // Unserializing and checking if the resource file contains data for this file
+        $data = unserialize($data);
+        if (!$data) return [];
+        return $data;
+
+    }
+
+    /**
+     * Saves the lockdata
+     *
+     * @param array $newData
+     * @return void
+     */
+    protected function putData(array $newData) {
+
+        // opening up the file, and creating an exclusive lock
+        $handle = fopen($this->locksFile, 'a+');
+        flock($handle, LOCK_EX);
+
+        // We can only truncate and rewind once the lock is acquired.
+        ftruncate($handle, 0);
+        rewind($handle);
+
+        fwrite($handle, serialize($newData));
+        flock($handle, LOCK_UN);
+        fclose($handle);
+
+    }
+
 }

@@ -18,95 +18,104 @@ use Sabre\DAVACL;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Node extends DAV\File implements INode, DAVACL\IACL
-{
-	use DAVACL\ACLTrait;
+class Node extends DAV\File implements INode, DAVACL\IACL {
 
-	/**
-	 * The notification backend.
-	 *
-	 * @var CalDAV\Backend\NotificationSupport
-	 */
-	protected $caldavBackend;
+    use DAVACL\ACLTrait;
 
-	/**
-	 * The actual notification.
-	 *
-	 * @var NotificationInterface
-	 */
-	protected $notification;
+    /**
+     * The notification backend
+     *
+     * @var CalDAV\Backend\NotificationSupport
+     */
+    protected $caldavBackend;
 
-	/**
-	 * Owner principal of the notification.
-	 *
-	 * @var string
-	 */
-	protected $principalUri;
+    /**
+     * The actual notification
+     *
+     * @var NotificationInterface
+     */
+    protected $notification;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param CalDAV\Backend\NotificationSupport $caldavBackend
-	 * @param string                             $principalUri
-	 * @param NotificationInterface              $notification
-	 */
-	public function __construct(CalDAV\Backend\NotificationSupport $caldavBackend, $principalUri, NotificationInterface $notification)
-	{
-		$this->caldavBackend = $caldavBackend;
-		$this->principalUri = $principalUri;
-		$this->notification = $notification;
-	}
+    /**
+     * Owner principal of the notification
+     *
+     * @var string
+     */
+    protected $principalUri;
 
-	/**
-	 * Returns the path name for this notification.
-	 *
-	 * @return string
-	 */
-	public function getName()
-	{
-		return $this->notification->getId() . '.xml';
-	}
+    /**
+     * Constructor
+     *
+     * @param CalDAV\Backend\NotificationSupport $caldavBackend
+     * @param string $principalUri
+     * @param NotificationInterface $notification
+     */
+    function __construct(CalDAV\Backend\NotificationSupport $caldavBackend, $principalUri, NotificationInterface $notification) {
 
-	/**
-	 * Returns the etag for the notification.
-	 *
-	 * The etag must be surrounded by litteral double-quotes.
-	 *
-	 * @return string
-	 */
-	public function getETag()
-	{
-		return $this->notification->getETag();
-	}
+        $this->caldavBackend = $caldavBackend;
+        $this->principalUri = $principalUri;
+        $this->notification = $notification;
 
-	/**
-	 * This method must return an xml element, using the
-	 * Sabre\CalDAV\Xml\Notification\NotificationInterface classes.
-	 *
-	 * @return NotificationInterface
-	 */
-	public function getNotificationType()
-	{
-		return $this->notification;
-	}
+    }
 
-	/**
-	 * Deletes this notification.
-	 */
-	public function delete()
-	{
-		$this->caldavBackend->deleteNotification($this->getOwner(), $this->notification);
-	}
+    /**
+     * Returns the path name for this notification
+     *
+     * @return string
+     */
+    function getName() {
 
-	/**
-	 * Returns the owner principal.
-	 *
-	 * This must be a url to a principal, or null if there's no owner
-	 *
-	 * @return string|null
-	 */
-	public function getOwner()
-	{
-		return $this->principalUri;
-	}
+        return $this->notification->getId() . '.xml';
+
+    }
+
+    /**
+     * Returns the etag for the notification.
+     *
+     * The etag must be surrounded by litteral double-quotes.
+     *
+     * @return string
+     */
+    function getETag() {
+
+        return $this->notification->getETag();
+
+    }
+
+    /**
+     * This method must return an xml element, using the
+     * Sabre\CalDAV\Xml\Notification\NotificationInterface classes.
+     *
+     * @return NotificationInterface
+     */
+    function getNotificationType() {
+
+        return $this->notification;
+
+    }
+
+    /**
+     * Deletes this notification
+     *
+     * @return void
+     */
+    function delete() {
+
+        $this->caldavBackend->deleteNotification($this->getOwner(), $this->notification);
+
+    }
+
+    /**
+     * Returns the owner principal
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+    function getOwner() {
+
+        return $this->principalUri;
+
+    }
+
 }

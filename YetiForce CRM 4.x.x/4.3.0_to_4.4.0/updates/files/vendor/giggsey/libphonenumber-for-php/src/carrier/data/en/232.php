@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   23221 => 'Sierratel',
   23225 => 'Sierratel',
   23230 => 'Africell',
@@ -31,4 +31,4 @@ return [
   23280 => 'Africell',
   23288 => 'Africell',
   23299 => 'Africell',
-];
+);

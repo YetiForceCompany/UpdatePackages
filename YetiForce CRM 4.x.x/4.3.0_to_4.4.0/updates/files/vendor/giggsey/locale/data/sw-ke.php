@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AQ' => 'Antaktika',
   'AZ' => 'Azabajani',
   'CI' => 'Ivorikosti',
@@ -36,4 +36,4 @@ return [
   'ST' => 'Sao Tome na Prinsipe',
   'TD' => 'Chadi',
   'VN' => 'Vietnamu',
-];
+);

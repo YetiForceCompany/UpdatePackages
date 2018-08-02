@@ -10,10 +10,10 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   4175 => 'Swisscom',
   4176 => 'Sunrise',
   4177 => 'Tele4u',
   4178 => 'Salt',
   4179 => 'Swisscom',
-];
+);

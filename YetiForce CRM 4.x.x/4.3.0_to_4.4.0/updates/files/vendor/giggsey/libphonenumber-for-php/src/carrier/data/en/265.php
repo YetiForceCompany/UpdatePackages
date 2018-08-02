@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   26588 => 'TNM',
   26599 => 'Airtel',
-];
+);

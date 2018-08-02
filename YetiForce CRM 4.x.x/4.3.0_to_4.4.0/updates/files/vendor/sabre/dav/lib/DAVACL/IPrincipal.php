@@ -5,7 +5,7 @@ namespace Sabre\DAVACL;
 use Sabre\DAV;
 
 /**
- * IPrincipal interface.
+ * IPrincipal interface
  *
  * Implement this interface to define your own principals
  *
@@ -13,63 +13,65 @@ use Sabre\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface IPrincipal extends DAV\INode
-{
-	/**
-	 * Returns a list of alternative urls for a principal.
-	 *
-	 * This can for example be an email address, or ldap url.
-	 *
-	 * @return array
-	 */
-	public function getAlternateUriSet();
+interface IPrincipal extends DAV\INode {
 
-	/**
-	 * Returns the full principal url.
-	 *
-	 * @return string
-	 */
-	public function getPrincipalUrl();
+    /**
+     * Returns a list of alternative urls for a principal
+     *
+     * This can for example be an email address, or ldap url.
+     *
+     * @return array
+     */
+    function getAlternateUriSet();
 
-	/**
-	 * Returns the list of group members.
-	 *
-	 * If this principal is a group, this function should return
-	 * all member principal uri's for the group.
-	 *
-	 * @return array
-	 */
-	public function getGroupMemberSet();
+    /**
+     * Returns the full principal url
+     *
+     * @return string
+     */
+    function getPrincipalUrl();
 
-	/**
-	 * Returns the list of groups this principal is member of.
-	 *
-	 * If this principal is a member of a (list of) groups, this function
-	 * should return a list of principal uri's for it's members.
-	 *
-	 * @return array
-	 */
-	public function getGroupMembership();
+    /**
+     * Returns the list of group members
+     *
+     * If this principal is a group, this function should return
+     * all member principal uri's for the group.
+     *
+     * @return array
+     */
+    function getGroupMemberSet();
 
-	/**
-	 * Sets a list of group members.
-	 *
-	 * If this principal is a group, this method sets all the group members.
-	 * The list of members is always overwritten, never appended to.
-	 *
-	 * This method should throw an exception if the members could not be set.
-	 *
-	 * @param array $principals
-	 */
-	public function setGroupMemberSet(array $principals);
+    /**
+     * Returns the list of groups this principal is member of
+     *
+     * If this principal is a member of a (list of) groups, this function
+     * should return a list of principal uri's for it's members.
+     *
+     * @return array
+     */
+    function getGroupMembership();
 
-	/**
-	 * Returns the displayname.
-	 *
-	 * This should be a human readable name for the principal.
-	 * If none is available, return the nodename.
-	 *
-	 * @return string
-	 */
-	public function getDisplayName();
+    /**
+     * Sets a list of group members
+     *
+     * If this principal is a group, this method sets all the group members.
+     * The list of members is always overwritten, never appended to.
+     *
+     * This method should throw an exception if the members could not be set.
+     *
+     * @param array $principals
+     * @return void
+     */
+    function setGroupMemberSet(array $principals);
+
+    /**
+     * Returns the displayname
+     *
+     * This should be a human readable name for the principal.
+     * If none is available, return the nodename.
+     *
+     * @return string
+     */
+    function getDisplayName();
+
 }

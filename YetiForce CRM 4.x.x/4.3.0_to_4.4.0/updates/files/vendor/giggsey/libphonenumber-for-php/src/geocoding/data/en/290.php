@@ -10,11 +10,11 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   29022 => 'Jamestown',
   29023 => 'St. Helena',
   29024 => 'St. Helena',
   29026 => 'St. Helena',
   29027 => 'St. Helena',
   2908 => 'Tristan da Cunha',
-];
+);

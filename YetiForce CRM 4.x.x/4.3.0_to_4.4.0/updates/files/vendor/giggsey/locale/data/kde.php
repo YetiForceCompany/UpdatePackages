@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AD' => 'Andola',
   'AE' => 'Dimiliki dya Vakulungwa va Chalabu',
   'AF' => 'Afuganistani',
@@ -234,4 +234,4 @@ return [
   'ZA' => 'Afilika Kusini',
   'ZM' => 'Zambia',
   'ZW' => 'Zimbabwe',
-];
+);

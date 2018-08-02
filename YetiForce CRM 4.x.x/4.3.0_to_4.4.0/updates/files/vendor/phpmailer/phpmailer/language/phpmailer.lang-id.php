@@ -1,10 +1,11 @@
 <?php
 /**
- * Indonesian PHPMailer language file: refer to English translation for definitive list.
- *
+ * Indonesian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
  * @author Cecep Prawiro <cecep.prawiro@gmail.com>
  * @author @januridp
  */
+
 $PHPMAILER_LANG['authenticate']         = 'Kesalahan SMTP: Tidak dapat mengotentikasi.';
 $PHPMAILER_LANG['connect_host']         = 'Kesalahan SMTP: Tidak dapat terhubung ke host SMTP.';
 $PHPMAILER_LANG['data_not_accepted']    = 'Kesalahan SMTP: Data tidak diterima peladen.';

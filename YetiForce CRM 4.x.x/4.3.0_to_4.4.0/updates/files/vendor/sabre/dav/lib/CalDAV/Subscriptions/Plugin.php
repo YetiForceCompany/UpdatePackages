@@ -17,95 +17,104 @@ use Sabre\DAV\ServerPlugin;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Plugin extends ServerPlugin
-{
-	/**
-	 * This initializes the plugin.
-	 *
-	 * This function is called by Sabre\DAV\Server, after
-	 * addPlugin is called.
-	 *
-	 * This method should set up the required event subscriptions.
-	 *
-	 * @param Server $server
-	 */
-	public function initialize(Server $server)
-	{
-		$server->resourceTypeMapping['Sabre\\CalDAV\\Subscriptions\\ISubscription'] =
-			'{http://calendarserver.org/ns/}subscribed';
+class Plugin extends ServerPlugin {
 
-		$server->xml->elementMap['{http://calendarserver.org/ns/}source'] =
-			'Sabre\\DAV\\Xml\\Property\\Href';
+    /**
+     * This initializes the plugin.
+     *
+     * This function is called by Sabre\DAV\Server, after
+     * addPlugin is called.
+     *
+     * This method should set up the required event subscriptions.
+     *
+     * @param Server $server
+     * @return void
+     */
+    function initialize(Server $server) {
 
-		$server->on('propFind', [$this, 'propFind'], 150);
-	}
+        $server->resourceTypeMapping['Sabre\\CalDAV\\Subscriptions\\ISubscription'] =
+            '{http://calendarserver.org/ns/}subscribed';
 
-	/**
-	 * This method should return a list of server-features.
-	 *
-	 * This is for example 'versioning' and is added to the DAV: header
-	 * in an OPTIONS response.
-	 *
-	 * @return array
-	 */
-	public function getFeatures()
-	{
-		return ['calendarserver-subscribed'];
-	}
+        $server->xml->elementMap['{http://calendarserver.org/ns/}source'] =
+            'Sabre\\DAV\\Xml\\Property\\Href';
 
-	/**
-	 * Triggered after properties have been fetched.
-	 *
-	 * @param PropFind $propFind
-	 * @param INode    $node
-	 */
-	public function propFind(PropFind $propFind, INode $node)
-	{
-		// There's a bunch of properties that must appear as a self-closing
-		// xml-element. This event handler ensures that this will be the case.
-		$props = [
-			'{http://calendarserver.org/ns/}subscribed-strip-alarms',
-			'{http://calendarserver.org/ns/}subscribed-strip-attachments',
-			'{http://calendarserver.org/ns/}subscribed-strip-todos',
-		];
+        $server->on('propFind', [$this, 'propFind'], 150);
 
-		foreach ($props as $prop) {
-			if ($propFind->getStatus($prop) === 200) {
-				$propFind->set($prop, '', 200);
-			}
-		}
-	}
+    }
 
-	/**
-	 * Returns a plugin name.
-	 *
-	 * Using this name other plugins will be able to access other plugins
-	 * using \Sabre\DAV\Server::getPlugin
-	 *
-	 * @return string
-	 */
-	public function getPluginName()
-	{
-		return 'subscriptions';
-	}
+    /**
+     * This method should return a list of server-features.
+     *
+     * This is for example 'versioning' and is added to the DAV: header
+     * in an OPTIONS response.
+     *
+     * @return array
+     */
+    function getFeatures() {
 
-	/**
-	 * Returns a bunch of meta-data about the plugin.
-	 *
-	 * Providing this information is optional, and is mainly displayed by the
-	 * Browser plugin.
-	 *
-	 * The description key in the returned array may contain html and will not
-	 * be sanitized.
-	 *
-	 * @return array
-	 */
-	public function getPluginInfo()
-	{
-		return [
-			'name'        => $this->getPluginName(),
-			'description' => 'This plugin allows users to store iCalendar subscriptions in their calendar-home.',
-			'link'        => null,
-		];
-	}
+        return ['calendarserver-subscribed'];
+
+    }
+
+    /**
+     * Triggered after properties have been fetched.
+     *
+     * @param PropFind $propFind
+     * @param INode $node
+     * @return void
+     */
+    function propFind(PropFind $propFind, INode $node) {
+
+        // There's a bunch of properties that must appear as a self-closing
+        // xml-element. This event handler ensures that this will be the case.
+        $props = [
+            '{http://calendarserver.org/ns/}subscribed-strip-alarms',
+            '{http://calendarserver.org/ns/}subscribed-strip-attachments',
+            '{http://calendarserver.org/ns/}subscribed-strip-todos',
+        ];
+
+        foreach ($props as $prop) {
+
+            if ($propFind->getStatus($prop) === 200) {
+                $propFind->set($prop, '', 200);
+            }
+
+        }
+
+    }
+
+    /**
+     * Returns a plugin name.
+     *
+     * Using this name other plugins will be able to access other plugins
+     * using \Sabre\DAV\Server::getPlugin
+     *
+     * @return string
+     */
+    function getPluginName() {
+
+        return 'subscriptions';
+
+    }
+
+    /**
+     * Returns a bunch of meta-data about the plugin.
+     *
+     * Providing this information is optional, and is mainly displayed by the
+     * Browser plugin.
+     *
+     * The description key in the returned array may contain html and will not
+     * be sanitized.
+     *
+     * @return array
+     */
+    function getPluginInfo() {
+
+        return [
+            'name'        => $this->getPluginName(),
+            'description' => 'This plugin allows users to store iCalendar subscriptions in their calendar-home.',
+            'link'        => null,
+        ];
+
+    }
 }

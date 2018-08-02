@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   4121 => 'Lausanne',
   4122 => 'Geneva',
   4124 => 'Yverdon/Aigle',
@@ -31,4 +31,4 @@ return [
   4171 => 'St. Gallen',
   4181 => 'Chur',
   4191 => 'Bellinzona',
-];
+);

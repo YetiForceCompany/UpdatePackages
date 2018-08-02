@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'AC' => 'Himmelfártsinsla',
   'AD' => 'Andorra',
   'AE' => 'Vereinigti Arabiše Emirat',
@@ -258,4 +258,4 @@ return [
   'ZA' => 'Südafrika',
   'ZM' => 'Sambia',
   'ZW' => 'Simbabwe',
-];
+);

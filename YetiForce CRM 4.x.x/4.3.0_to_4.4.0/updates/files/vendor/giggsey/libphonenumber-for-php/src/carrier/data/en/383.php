@@ -10,7 +10,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   38343 => 'IPKO',
   383432 => 'D3 Mobile',
   383433 => 'D3 Mobile',
@@ -33,4 +33,4 @@ return [
   3834714 => 'mts d.o.o.',
   3834715 => 'mts d.o.o.',
   38349 => 'IPKO',
-];
+);

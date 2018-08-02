@@ -9,7 +9,7 @@
  * Do not modify this file directly!
  */
 
-return [
+return array (
   'GB' => 'Rywvaneth Unys',
   'IM' => 'Ellan Vannin',
-];
+);

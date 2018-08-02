@@ -24,68 +24,68 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class ErrorListener implements EventSubscriberInterface
 {
-	private $logger;
+    private $logger;
 
-	public function __construct(LoggerInterface $logger = null)
-	{
-		$this->logger = $logger;
-	}
+    public function __construct(LoggerInterface $logger = null)
+    {
+        $this->logger = $logger;
+    }
 
-	public function onConsoleError(ConsoleErrorEvent $event)
-	{
-		if (null === $this->logger) {
-			return;
-		}
+    public function onConsoleError(ConsoleErrorEvent $event)
+    {
+        if (null === $this->logger) {
+            return;
+        }
 
-		$error = $event->getError();
+        $error = $event->getError();
 
-		if (!$inputString = $this->getInputString($event)) {
-			return $this->logger->error('An error occurred while using the console. Message: "{message}"', ['exception' => $error, 'message' => $error->getMessage()]);
-		}
+        if (!$inputString = $this->getInputString($event)) {
+            return $this->logger->error('An error occurred while using the console. Message: "{message}"', array('exception' => $error, 'message' => $error->getMessage()));
+        }
 
-		$this->logger->error('Error thrown while running command "{command}". Message: "{message}"', ['exception' => $error, 'command' => $inputString, 'message' => $error->getMessage()]);
-	}
+        $this->logger->error('Error thrown while running command "{command}". Message: "{message}"', array('exception' => $error, 'command' => $inputString, 'message' => $error->getMessage()));
+    }
 
-	public function onConsoleTerminate(ConsoleTerminateEvent $event)
-	{
-		if (null === $this->logger) {
-			return;
-		}
+    public function onConsoleTerminate(ConsoleTerminateEvent $event)
+    {
+        if (null === $this->logger) {
+            return;
+        }
 
-		$exitCode = $event->getExitCode();
+        $exitCode = $event->getExitCode();
 
-		if (0 === $exitCode) {
-			return;
-		}
+        if (0 === $exitCode) {
+            return;
+        }
 
-		if (!$inputString = $this->getInputString($event)) {
-			return $this->logger->debug('The console exited with code "{code}"', ['code' => $exitCode]);
-		}
+        if (!$inputString = $this->getInputString($event)) {
+            return $this->logger->debug('The console exited with code "{code}"', array('code' => $exitCode));
+        }
 
-		$this->logger->debug('Command "{command}" exited with code "{code}"', ['command' => $inputString, 'code' => $exitCode]);
-	}
+        $this->logger->debug('Command "{command}" exited with code "{code}"', array('command' => $inputString, 'code' => $exitCode));
+    }
 
-	public static function getSubscribedEvents()
-	{
-		return [
-			ConsoleEvents::ERROR => ['onConsoleError', -128],
-			ConsoleEvents::TERMINATE => ['onConsoleTerminate', -128],
-		];
-	}
+    public static function getSubscribedEvents()
+    {
+        return array(
+            ConsoleEvents::ERROR => array('onConsoleError', -128),
+            ConsoleEvents::TERMINATE => array('onConsoleTerminate', -128),
+        );
+    }
 
-	private static function getInputString(ConsoleEvent $event)
-	{
-		$commandName = $event->getCommand() ? $event->getCommand()->getName() : null;
-		$input = $event->getInput();
+    private static function getInputString(ConsoleEvent $event)
+    {
+        $commandName = $event->getCommand() ? $event->getCommand()->getName() : null;
+        $input = $event->getInput();
 
-		if (method_exists($input, '__toString')) {
-			if ($commandName) {
-				return str_replace(["'$commandName'", "\"$commandName\""], $commandName, (string) $input);
-			}
+        if (method_exists($input, '__toString')) {
+            if ($commandName) {
+                return str_replace(array("'$commandName'", "\"$commandName\""), $commandName, (string) $input);
+            }
 
-			return (string) $input;
-		}
+            return (string) $input;
+        }
 
-		return $commandName;
-	}
+        return $commandName;
+    }
 }
