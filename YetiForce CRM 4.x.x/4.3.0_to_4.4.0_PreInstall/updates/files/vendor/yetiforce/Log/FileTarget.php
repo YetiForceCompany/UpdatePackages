@@ -137,6 +137,8 @@ class FileTarget extends \yii\log\FileTarget
 				}
 			}
 		}
+		return $context; // DODANO NA POTRZEBY PACZKI AKTUALIZACYJNEJ
+		
 		$directiveValues = \Settings_ConfReport_Module_Model::getStabilityConf(true);
 		$permissionsFiles = \Settings_ConfReport_Module_Model::getPermissionsFiles(true);
 		
