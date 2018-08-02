@@ -1,1 +1,16 @@
 YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+
+Required PHP version for the update package is PHP 7.1.x. The update is not possible in case of any other version.
+Before you begin the update please check the latest server configuration requirements.
+https://gitdeveloper.yetiforce.com/index.php?parent=Settings&module=ConfReport&view=Index&block=14&fieldid=65
+
+System update description 
+Before updating the system we should always create a full backup copy (files + database).
+We enable error logging and only then can we begin the installation procedure. 
+
+System update consists of 3 parts:
+1. Install package: 4.3.0_to_4.4.0_PreInstall.zip
+2. Install package: 4.3.0_to_4.4.0.zip
+3. Launch CRON that will reload some time consuming elements. It will make the update process shorter.
+
+In case any errors appear during the update please copy the cache/logs directory and send it to github@yetiforce.com
