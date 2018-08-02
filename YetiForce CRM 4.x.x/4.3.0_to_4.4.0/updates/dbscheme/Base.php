@@ -1,5 +1,4 @@
 <?php
-
 namespace Importers;
 
 /**
@@ -12,6 +11,7 @@ namespace Importers;
  */
 class Base extends \App\Db\Importers\Base
 {
+
 	public $dbType = 'base';
 
 	public function scheme()
@@ -81,7 +81,7 @@ class Base extends \App\Db\Importers\Base
 					'othereventduration' => $this->stringType(3),
 					'authy_methods' => $this->stringType(255),
 					'authy_secret_totp' => $this->stringType(),
-					'login_method' => $this->stringType(50)->defaultValue('PLL_PASSWORD'),
+					'login_method' => $this->stringType(255)->defaultValue('PLL_PASSWORD'),
 				],
 				'index' => [
 					['email1', 'email1', true],

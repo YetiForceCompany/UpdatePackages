@@ -2,4 +2,6 @@ YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
 
 IMPORTANT !!!
 The upgrade package requires increasing the limits on the server because otherwise the update won't be correct.
-It's necessary to install "4.3.0_to_4.4.0_PreInstall" package first because otherwise the update 4.3.0_to_4.4.0" won't be possible
+It's necessary to install "4.3.0_to_4.4.0_PreInstall" package first because otherwise the update 4.3.0_to_4.4.0" won't be possible.
+
+Before the update please disable all cron tasks. After the update verify that the "Batch processes for servicing long-lasting actions" cron task has finished successfully. Without positive verification the application is not suitable for use.

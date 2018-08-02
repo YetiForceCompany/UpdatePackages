@@ -59,8 +59,11 @@ class YetiForceUpdate
 	 */
 	public function preupdate()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		if (!method_exists('\App\Module', 'initFromDb')) {
 			$this->package->_errorText = '"4.3.0_to_4.4.0_PreInstall" not installed. The upgrade is not possible.';
+			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return false;
 		}
 		$minTime = 500;
@@ -73,8 +76,10 @@ class YetiForceUpdate
 			if (ini_get('max_input_time') < $minTime) {
 				$this->package->_errorText .= PHP_EOL . 'max_input_time = ' . ini_get('max_input_time') . ' < ' . $minTime;
 			}
+			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return false;
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}
 
@@ -97,6 +102,7 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$loger = new \yii\helpers\VarDumper();
 		$db = \App\Db::getInstance();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		$db->createCommand()->update('vtiger_cron_task', ['status' => 0])->execute();
@@ -152,6 +158,8 @@ class YetiForceUpdate
 
 	private function addRecords()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
 		if (!(new \App\Db\Query())->from('u_yf_emailtemplates')->where(['sys_name' => 'ImportCron'])->exists()) {
 			$record = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
@@ -228,6 +236,7 @@ class YetiForceUpdate
 					], ['emailtemplatesid' => $record->getId()])
 				->execute();
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -562,6 +571,8 @@ class YetiForceUpdate
 
 	private function setTrees($trees)
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = PearDatabase::getInstance();
 		foreach ($trees as $tree) {
 			$skipCheckData = false;
@@ -598,6 +609,7 @@ class YetiForceUpdate
 				]);
 			}
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -612,7 +624,8 @@ class YetiForceUpdate
 			['type' => 'remove', 'name' => 'NotificationPreview'],
 			['type' => 'add', 'name' => 'RecordConventer', 'tabsData' => []],
 			['type' => 'add', 'name' => 'CreateDashboardFilter', 'permission' => 0, 'tabsData' => [\App\Module::getModuleId('Dashboard')]],
-			['type' => 'add', 'name' => 'CreateDashboardChartFilter', 'permission' => 0, 'tabsData' => [\App\Module::getModuleId('Dashboard')]]
+			['type' => 'add', 'name' => 'CreateDashboardChartFilter', 'permission' => 0, 'tabsData' => [\App\Module::getModuleId('Dashboard')]],
+			['type' => 'add', 'name' => 'ModTracker', 'permission' => 0, 'tabsData' => []]
 		];
 		$db = \App\Db::getInstance();
 		foreach ($actions as $action) {
@@ -637,7 +650,7 @@ class YetiForceUpdate
 			if (!empty($action['tabsData'])) {
 				$tabsData = $action['tabsData'];
 			} else {
-				$tabsData = array_keys(\vtlib\Functions::getAllModules(true, ['SMSNotifier', 'ModComments', 'PBXManager', 'Events']));
+				$tabsData = array_keys(\vtlib\Functions::getAllModules(true, false));
 			}
 			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
 			while ($profileId = $dataReader->readColumn(0)) {
@@ -673,6 +686,7 @@ class YetiForceUpdate
 	private function addLanguages()
 	{
 		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
 		$langs = [
 			['name' => 'Turkish', 'prefix' => 'tr_tr', 'label' => 'Turkish', 'lastupdated' => date('Y-m-d H:i:s'), 'sequence' => null, 'isdefault' => 0, 'active' => 1],
@@ -721,6 +735,8 @@ class YetiForceUpdate
 	 */
 	public function postInstalModule(string $moduleName)
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | $moduleName | " . date('Y-m-d H:i:s'));
 		\App\Cache::clear();
 		\App\Module::initFromDb();
 		$tabId = \App\Module::getModuleId($moduleName);
@@ -768,6 +784,7 @@ class YetiForceUpdate
 			$fieldModel = Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
 			$fieldModel->setRelatedModules([$moduleName]);
 		}
+		$this->log(__METHOD__ . " | $moduleName | " . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -834,6 +851,8 @@ class YetiForceUpdate
 	 */
 	public function widgets(string $moduleName)
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | $moduleName | " . date('Y-m-d H:i:s'));
 		$rows = [];
 		foreach ($this->getWidgetToSummary($moduleName) as $widget) {
 			if (empty($widget)) {
@@ -849,6 +868,7 @@ class YetiForceUpdate
 			]];
 		}
 		\App\Db\Updater::batchInsert($rows);
+		$this->log(__METHOD__ . " | $moduleName | " . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -856,9 +876,9 @@ class YetiForceUpdate
 	 */
 	public function workflowTask()
 	{
-		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$tasks = [
 			['moduleName' => 'HelpDesk', 'summary' => 'Notify Contact On Ticket Change', 'changes' => ['methodName' => 'helpDeskChangeNotifyContacts']],
 			['moduleName' => 'HelpDesk', 'summary' => 'Notify contacts about closing of ticket.', 'changes' => ['methodName' => 'helpDeskClosedNotifyContacts']],
@@ -896,38 +916,41 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$dbCommand = \App\Db::getInstance()->createCommand();
-		$dbCommand->insert('yetiforce_updates', [
-			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
-			'name' => $this->modulenode->label,
-			'from_version' => $this->modulenode->from_version,
-			'to_version' => $this->modulenode->to_version,
-			'result' => true,
-			'time' => date('Y-m-d H:i:s')
-		]);
-		$dbCommand->update('vtiger_version', ['current_version' => $this->modulenode->to_version]);
-		\vtlib\Functions::recurseDelete('cache/updates');
-		\vtlib\Functions::recurseDelete('cache/templates_c');
-		\App\Session::set('UserAuthMethod', 'PASSWORD');
-		$userIds = (new \App\Db\Query())->select(['id'])->from('vtiger_users')->where(['deleted' => 0])->column();
-		foreach ($userIds as $id) {
-			\App\UserPrivilegesFile::createUserPrivilegesfile($id);
-			\App\UserPrivilegesFile::createUserSharingPrivilegesfile($id);
-		}
-		if (method_exists('\vtlib\Deprecated', 'createModuleMetaFile')) {
-			\vtlib\Deprecated::createModuleMetaFile();
-		} else {
-			\App\Module::createModuleMetaFile();
-		}
+		try {
+			$dbCommand = \App\Db::getInstance()->createCommand();
+			$dbCommand->insert('yetiforce_updates', [
+				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+				'name' => $this->modulenode->label,
+				'from_version' => $this->modulenode->from_version,
+				'to_version' => $this->modulenode->to_version,
+				'result' => true,
+				'time' => date('Y-m-d H:i:s')
+			])->execute();
+			$dbCommand->update('vtiger_version', ['current_version' => $this->modulenode->to_version])->execute();
+			\vtlib\Functions::recurseDelete('cache/updates');
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+			\App\Session::set('UserAuthMethod', 'PASSWORD');
+			$userIds = (new \App\Db\Query())->select(['id'])->from('vtiger_users')->where(['deleted' => 0])->column();
+			foreach ($userIds as $id) {
+				\App\UserPrivilegesFile::createUserPrivilegesfile($id);
+				\App\UserPrivilegesFile::createUserSharingPrivilegesfile($id);
+			}
+			if (method_exists('\vtlib\Deprecated', 'createModuleMetaFile')) {
+				\vtlib\Deprecated::createModuleMetaFile();
+			} else {
+				\App\Module::createModuleMetaFile();
+			}
 
-		if (function_exists('opcache_reset')) {
-			opcache_reset();
+			if (function_exists('opcache_reset')) {
+				opcache_reset();
+			}
+			\App\Cache::clear();
+
+			$menuRecordModel = new \Settings_Menu_Record_Model();
+			$menuRecordModel->refreshMenuFiles();
+		} catch (\Throwable $ex) {
+			file_put_contents('cache/logs/update.log', $ex->getMessage() . ' ' . $ex->getTraceAsString(), FILE_APPEND);
 		}
-		\App\Cache::clear();
-
-		$menuRecordModel = new \Settings_Menu_Record_Model();
-		$menuRecordModel->refreshMenuFiles();
-
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
 		ob_end_clean();
@@ -1093,7 +1116,7 @@ class YetiForceUpdate
 			[42, 1318, 'parentid', 'vtiger_projectmilestone', 1, 10, 'parentid', 'FL_PARENT_PROJECT_MILESTONE', 1, 2, '', 100, 13, 104, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '', null, 'int(10)', 'LBL_PROJECT_MILESTONE_INFORMATION', [], ['ProjectMilestone'], 'ProjectMilestone'],
 			[29, 2764, 'authy_methods', 'vtiger_users', 1, 16, 'authy_methods', 'FL_AUTHY_METHODS', 1, 2, '', null, 3, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', ['-', 'PLL_AUTHY_TOTP'], [], 'Users'],
 			[29, 2765, 'authy_secret_totp', 'vtiger_users', 1, 358, 'authy_secret_totp', 'FL_AUTHY_SECRET_TOTP', 1, 2, '', null, 4, 83, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'string(255)', 'LBL_USER_ADV_OPTIONS', [], [], 'Users'],
-			[29, 2766, 'login_method', 'vtiger_users', 1, 16, 'login_method', 'FL_LOGIN_METHOD', 1, 2, 'PLL_PASSWORD', null, 16, 83, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'varchar(50)', 'LBL_CALENDAR_SETTINGS', ['PLL_PASSWORD', 'PLL_LDAP', 'PLL_PASSWORD_2FA'], [], 'Users'],
+			[29, 2766, 'login_method', 'vtiger_users', 1, 16, 'login_method', 'FL_LOGIN_METHOD', 1, 2, 'PLL_PASSWORD', null, 16, 83, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'varchar(50)', 'LBL_USER_ADV_OPTIONS', ['PLL_PASSWORD', 'PLL_LDAP', 'PLL_PASSWORD_2FA'], [], 'Users'],
 			[107, 2767, 'externalcomment', 'u_yf_fcorectinginvoice', 1, 21, 'externalcomment', 'FL_EXTERNAL_COMMENT', 1, 2, '', null, 0, 436, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMMENTS', [], [], 'FCorectingInvoice'],
 			[107, 2768, 'internalcomment', 'u_yf_fcorectinginvoice', 1, 21, 'internalcomment', 'FL_INTERNAL_COMMENT', 1, 2, '', null, 0, 436, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMMENTS', [], [], 'FCorectingInvoice'],
 		];
@@ -1104,21 +1127,23 @@ class YetiForceUpdate
 			if (!$moduleId || $isExists) {
 				continue;
 			}
+
+			$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => $field[25], 'tabid' => $moduleId])->scalar();
 			$cacheName = $field[25] . '|';
 			$cacheName1 = $cacheName . $moduleId;
+			$cacheName2 = $blockId . '|';
 			\App\Cache::delete('BlockInstance', $cacheName);
 			\App\Cache::delete('BlockInstance', $cacheName1);
-			$blockInstance = \vtlib\Block::getInstance($field[25], $field[28]);
-			if (!$blockInstance && $field[28] === 'FCorectingInvoice') {
+			\App\Cache::delete('BlockInstance', $cacheName2);
+			if (!$blockId && ($field[28] === 'FCorectingInvoice' || $field[28] === 'Users')) {
 				$module = \Vtiger_Module_Model::getInstance($field[28]);
 				$blockInstance = new \vtlib\Block();
-				$blockInstance->label = 'LBL_COMMENTS';
+				$blockInstance->label = $field[25];
 				$module->addBlock($blockInstance);
-				\App\Cache::delete('BlockInstance', $cacheName);
-				\App\Cache::delete('BlockInstance', $cacheName1);
-				$blockInstance = \vtlib\Block::getInstance($field[25], $field[28]);
+				$blockId = $blockInstance->id;
 			}
-			if (!$blockInstance && !($blockInstance = reset(Vtiger_Module_Model::getInstance($field[28])->getBlocks()))) {
+
+			if ((!$blockId || !($blockInstance = \vtlib\Block::getInstance($blockId))) && !($blockInstance = reset(Vtiger_Module_Model::getInstance($field[28])->getBlocks()))) {
 				\App\Log::error("No block found ({$field[25]}) to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
 				$this->log("[ERROR] No block found to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
 				continue;
