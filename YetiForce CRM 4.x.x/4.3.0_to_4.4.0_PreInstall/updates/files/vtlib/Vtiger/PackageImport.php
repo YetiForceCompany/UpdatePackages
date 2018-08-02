@@ -547,7 +547,7 @@ class PackageImport extends PackageExport
 			} else {
 				if ((string) $this->_modulexml->type === 'update') {
 					Functions::recurseDelete('cache/updates');
-					$zip = \App\Zip::openFile($zipfile, ['checkFiles' => false]);
+					$zip = new \App\Zip($zipfile, ['checkFiles' => false]);
 					$zip->extract('cache/updates');
 					$this->importUpdate();
 				} else {
