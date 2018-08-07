@@ -182,7 +182,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_field' => [
 				'columns' => [
-					'maximumlength' => $this->stringType(30)
+					'maximumlength' => $this->stringType(30)->null()
 				],
 				'index' => [
 					['field_tabid_idx', 'tabid'],
