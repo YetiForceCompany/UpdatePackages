@@ -713,6 +713,12 @@ $phoneFieldAdvancedVerification = true;'],
 		$fieldModel = Settings_Picklist_Field_Model::getInstance('lin_status', $moduleModel);
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array_keys($roleRecordList);
+		$tableName = 'vtiger_' . $fieldModel->getName();
+		$db = \App\Db::getInstance();
+		if ($db->isTableExists($tableName)) {
+			$id = $db->getUniqueId($tableName, $fieldModel->getName() . 'id', false);
+			$db->createCommand()->update("{$tableName}_seq", ['id' => --$id])->execute();
+		}
 		foreach ($values as $newValue) {
 			$moduleModel->addPickListValues($fieldModel, $newValue, $rolesSelected);
 		}
