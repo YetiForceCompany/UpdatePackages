@@ -70,11 +70,6 @@ class YetiForceUpdate
 				\App\Log::error('MIGRATE FILES:' . $ex->getMessage());
 			}
 		}
-		if ($db->isTableExists('vtiger_seattachmentsrel')) {
-			$db->createCommand()->dropTable('vtiger_seattachmentsrel')->execute();
-		} else {
-			\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");
-		}
 	}
 	
 	/**
@@ -183,8 +178,6 @@ class YetiForceUpdate
 					if ($field->getModuleName() === 'Users') {
 						$dbCommand->delete('vtiger_salesmanattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
 						\App\UserPrivilegesFile::createUserPrivilegesfile($row['id']);
-					} else {
-						$dbCommand->delete('vtiger_seattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
 					}
 				}
 			}
