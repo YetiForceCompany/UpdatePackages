@@ -13,6 +13,7 @@
  */
 class YetiForceUpdate
 {
+
 	/**
 	 * @var \vtlib\PackageImport
 	 */
@@ -108,7 +109,6 @@ class YetiForceUpdate
 		$loger = new \yii\helpers\VarDumper();
 		$db = \App\Db::getInstance();
 		$db->createCommand()->checkIntegrity(false)->execute();
-		$db->createCommand()->update('vtiger_cron_task', ['status' => 0])->execute();
 		try {
 			$this->importer = new \App\Db\Importer();
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
@@ -120,7 +120,7 @@ class YetiForceUpdate
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 			$this->importer->dropTable(['s_#__handler_updater', 'vtiger_selectquery_seq', 'vtiger_selectquery', 'vtiger_selectcolumn', 'vtiger_report', 'vtiger_reportdatefilter',
-				'vtiger_reportfilters', 'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary', 'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping', 'vtiger_apiaddress', 'u_yf_attachments', 'vtiger_salesmanattachmentsrel']);
+				'vtiger_reportfilters', 'vtiger_reportfolder', 'vtiger_reportgroupbycolumn', 'vtiger_reportmodules', 'vtiger_reportsharing', 'vtiger_reportsortcol', 'vtiger_reportsummary', 'vtiger_reporttype', 'vtiger_scheduled_reports', 'vtiger_schedulereports', 'vtiger_relcriteria', 'vtiger_relcriteria_grouping', 'vtiger_apiaddress']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -142,9 +142,10 @@ class YetiForceUpdate
 		$this->actionMapp();
 		$this->updateSecondData();
 		$this->updateConfigurationFiles();
-		$db->createCommand()->update('vtiger_cron_task', ['status' => 1], ['name' => 'LBL_BATCH_PROCESSES'])->execute();
-		$menuRecordModel = new \Settings_Menu_Record_Model();
-		$menuRecordModel->refreshMenuFiles();
+		\App\Cache::clear();
+		$this->updateFields();
+		$this->updateAttachments();
+		$this->migrateImages();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -237,7 +238,7 @@ class YetiForceUpdate
 				->update('u_yf_emailtemplates', [
 					'sys_name' => 'ImportCron',
 					], ['emailtemplatesid' => $record->getId()])
-					->execute();
+				->execute();
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -1377,5 +1378,449 @@ class YetiForceUpdate
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Update maximumlength
+	 */
+	public function updateFields()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$dataReader = (new \App\Db\Query())->from('vtiger_field')->where(['not', ['columnname' => ['crmactivity', 'total_units', 'used_units', 'reasontoedit', 'uid', 'totalduration', 'billduration']]])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($row['fieldid']);
+			if (($fieldModel->getFieldName() === 'is_admin' && $fieldModel->getTableName() === 'vtiger_users') ||
+				($fieldModel->getFieldName() === 'rel_mod' && $fieldModel->getTableName() === 'vtiger_ossmailview') ||
+				($fieldModel->getFieldName() === 'paymentscurrency' && $fieldModel->getTableName() === 'vtiger_paymentsin') ||
+				($fieldModel->getFieldName() === 'paymentscurrency' && $fieldModel->getTableName() === 'vtiger_paymentsout')
+			) {
+				continue;
+			}
+			try {
+				$data = $fieldModel->getDBColumnType(false);
+				$maxValues = $this->getRangeValues($fieldModel->getFieldDataType(), $data);
+				$dbCommand->update('vtiger_field', ['maximumlength' => $maxValues], ['fieldid' => $row['fieldid']])->execute();
+			} catch (\App\Exceptions\AppException $ex) {
+				echo 'ERROR update maximumlength: ' . $row['fieldid'] . ' - ' . $fieldModel->getFieldName() . ' - ' . $fieldModel->getTableName() . ' - ' . $fieldModel->getFieldDataType() . ' Message:' . $ex->getMessage() . PHP_EOL;
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Function to get range of values.
+	 *
+	 * @throws \App\Exceptions\AppException
+	 *
+	 * @return string
+	 */
+	public function getRangeValues($type, $data)
+	{
+		if ('sharedOwner' === $type) {
+			return '65535';
+		}
+		$allowedTypes = $this->getAllowedColumnTypes($type);
+		if ($allowedTypes === null) {
+			return $allowedTypes;
+		}
+		if (!in_array($data['type'], $allowedTypes)) {
+			throw new \App\Exceptions\AppException('ERR_NOT_ALLOWED_TYPE');
+		}
+		if (strpos($data['dbType'], 'tinyint') !== false) {
+			$data['type'] = 'tinyint';
+		}
+		switch ($data['type']) {
+			case 'binary':
+			case 'string':
+				return $data['size'];
+			case 'integer':
+				if ($data['unsigned']) {
+					return '4294967295';
+				} else {
+					return '-2147483648,2147483647';
+				}
+				break;
+			case 'smallint':
+				if ($data['unsigned']) {
+					return '65535';
+				} else {
+					return '-32768,32767';
+				}
+				break;
+			case 'tinyint':
+				if ($data['unsigned']) {
+					return '255';
+				} else {
+					return '-128,127';
+				}
+				break;
+			case 'decimal':
+				return pow(10, $data['size'] - $data['scale']) - 1;
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Returns allowed types of columns in database.
+	 * @param string $type
+	 * @return array|null
+	 */
+	public function getAllowedColumnTypes($type)
+	{
+		$types = [];
+		switch ($type) {
+			case 'boolean':
+				$types = ['tinyint', 'smallint'];
+				break;
+			case 'categoryMultipicklist':
+				$types = ['text'];
+				break;
+			case 'currency':
+				$types = ['decimal'];
+				break;
+			case 'currencyList':
+				$types = ['integer', 'smallint'];
+				break;
+			case 'date':
+			case 'datetime':
+			case 'time':
+			case 'rangeTime':
+			case 'reminder':
+				$types = null;
+				break;
+			case 'double':
+			case 'totalTime':
+				$types = ['decimal'];
+				break;
+			case 'integer':
+				$types = ['bigint', 'integer', 'smallint', 'tinyint'];
+				break;
+			case 'inventoryLimit':
+				$types = ['integer'];
+				break;
+			case 'image':
+			case 'multiImage':
+				$types = ['text'];
+				break;
+			case 'multiReferenceValue':
+				$types = ['text'];
+				break;
+			case 'multipicklist':
+				$types = ['text'];
+				break;
+			case 'owner':
+				$types = ['integer', 'smallint'];
+				break;
+			case 'percentage':
+				$types = ['decimal'];
+				break;
+			case 'recurrence':
+				$types = ['text'];
+				break;
+			case 'reference':
+			case 'referenceExtend':
+			case 'referenceLink':
+			case 'referenceProcess':
+			case 'referenceSubProcess':
+			case 'userCreator':
+				$types = ['bigint', 'integer', 'smallint'];
+				break;
+			case 'text':
+				$types = ['text'];
+				break;
+			case 'userReference':
+				$types = ['integer', 'smallint'];
+				break;
+			default:
+				$types = ['string', 'text', 'binary'];
+		}
+		return $types;
+	}
+
+	public function updateAttachments()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
+		$query = (new \App\Db\Query())->select(['attachmentsid', 'path'])->from('vtiger_attachments')->where(['not like', 'path', 'storage%', false]);
+		$dataReader = $query->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$path = $row['path'];
+			if (substr(str_replace('\\', '/', $path), 0, 7) !== 'storage') {
+				$path .= 'X';
+				$db->createCommand()->update('vtiger_attachments', ['path' => substr($path, strpos($path, 'storage'), -1)], ['attachmentsid' => $row['attachmentsid']])->execute();
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function migrateImages()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$imageInstanec = new MigrateImages();
+		$imageInstanec->preProcess();
+		$imageInstanec->update();
+		$imageInstanec->clean();
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+}
+
+class MigrateImages
+{
+
+	public $modules = [];
+	public $tables = ['u_#__attachments', 'vtiger_salesmanattachmentsrel'];
+	public $moduleName = '';
+	public $uitypes = [69, 311];
+
+	/**
+	 * Preprocess.
+	 *
+	 * @return bool
+	 */
+	public function preProcess()
+	{
+		$db = \App\Db::getInstance();
+		foreach ($this->tables as $key => $table) {
+			if (!$db->isTableExists($table)) {
+				unset($this->tables[$key]);
+			}
+		}
+	}
+
+	/**
+	 * Update.
+	 */
+	public function update()
+	{
+		$db = \App\Db::getInstance();
+		$modules = array_column(\vtlib\Functions::getAllModules(), 'name');
+		$fields = (new \App\Db\Query())->select(['tabid', 'uitype'])->from('vtiger_field')->where(['uitype' => $this->uitypes])->orderBy(['tabid' => SORT_ASC])->createCommand()->queryAllByGroup(2);
+		foreach ($fields as $tabId => $uitypes) {
+			try {
+				if ($tabId) {
+					$this->moduleName = \App\Module::getModuleName($tabId);
+					$this->modules = $modules;
+					if (in_array(69, $uitypes)) {
+						$this->migrateImage();
+					}
+					if (in_array(311, $uitypes)) {
+						$this->migrateMultiImage();
+					}
+				}
+			} catch (\Throwable $ex) {
+				\App\Log::error('MIGRATE FILES:' . $ex->getMessage() . $ex->getTraceAsString());
+			}
+		}
+	}
+
+	/**
+	 * Migrate image field.
+	 *
+	 * @param string $field
+	 */
+	private function migrateImage(string $field = null)
+	{
+		$queryGenerator = new \App\QueryGenerator($this->moduleName);
+		$entityModel = $queryGenerator->getEntityModel();
+		if ($field) {
+			$field = $queryGenerator->getModuleModel()->getField($field);
+			$fields = $field ? [$field] : [];
+		} else {
+			$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(69);
+		}
+		$field = reset($fields);
+		if (empty($fields) || count($fields) !== 1 || !isset($entityModel->tab_name_index[$field->getTableName()])) {
+			\App\Log::error('MIGRATE FILES ID:' . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
+			return;
+		}
+		$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
+		$queryGenerator->permissions = false;
+		$queryGenerator->setStateCondition('All');
+		$queryGenerator->setFields(['id', $field->getName()]);
+		$queryGenerator->setCustomColumn(['vtiger_attachments.*']);
+		if ($field->getModuleName() === 'Users') {
+			$relTable = 'vtiger_salesmanattachmentsrel';
+			if (!in_array($relTable, $this->tables)) {
+				return;
+			}
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.smid"]);
+		} else {
+			$relTable = 'vtiger_seattachmentsrel';
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.crmid"]);
+		}
+		$queryGenerator->addJoin(['INNER JOIN', 'vtiger_attachments', "$relTable.attachmentsid = vtiger_attachments.attachmentsid"]);
+		$dataReader = $queryGenerator->createQuery()->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$this->updateRow($row, $field);
+		}
+		$dataReader->close();
+	}
+
+	/**
+	 * Migrate MultiImage field.
+	 */
+	private function migrateMultiImage()
+	{
+		$queryGenerator = new \App\QueryGenerator($this->moduleName);
+		$entityModel = $queryGenerator->getEntityModel();
+		$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(311);
+		foreach ($fields as $field) {
+			if (empty($field) || !isset($entityModel->tab_name_index[$field->getTableName()])) {
+				\App\Log::error("MIGRATE FILES ID:{$field->getName()}|{$this->moduleName} - Incorrect data");
+				continue;
+			}
+			if ($field->getModuleName() === 'Contacts' || $field->getModuleName() === 'Products') {
+				$this->migrateImage($field->getName());
+				continue;
+			}
+			if (!in_array('u_#__attachments', $this->tables)) {
+				continue;
+			}
+			$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
+			$queryGenerator->permissions = false;
+			$queryGenerator->setStateCondition('All');
+			$queryGenerator->setFields(['id', $field->getName()]);
+			$queryGenerator->setCustomColumn(['attachmentsid' => 'u_#__attachments.attachmentid', 'path' => 'u_#__attachments.path', 'name' => 'u_#__attachments.name']);
+			$queryGenerator->addJoin(['INNER JOIN', 'u_#__attachments', $queryGenerator->getColumnName('id') . '=u_#__attachments.crmid']);
+			$queryGenerator->addNativeCondition(['and', ['u_#__attachments.fieldid' => $field->getId()], ['u_#__attachments.status' => 1]]);
+			$dataReader = $queryGenerator->createQuery()->createCommand()->query();
+			while ($row = $dataReader->read()) {
+				$this->updateRow($row, $field, true);
+			}
+		}
+	}
+
+	/**
+	 * Update data.
+	 *
+	 * @param array               $row
+	 * @param \Vtiger_Field_Model $field
+	 * @param bool                $isMulti
+	 */
+	private function updateRow(array $row, \Vtiger_Field_Model $field, bool $isMulti = false)
+	{
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		if (substr(str_replace('\\', '/', $row['path']), 0, 7) !== 'storage') {
+			$path = $row['path'] . 'X';
+			$row['path'] = substr($path, strpos($path, 'storage'), -1);
+		}
+		$path = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $row['path'];
+		$file = \App\Fields\File::loadFromInfo([
+				'path' => $path . DIRECTORY_SEPARATOR . $row['attachmentsid'],
+				'name' => $row['name'],
+		]);
+		if (!file_exists($file->getPath())) {
+			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - No file");
+			return;
+		}
+		if ($file->validate()) {
+			$image = [];
+			$image['key'] = hash('sha1', $file->getContents()) . $this->generatePassword(10);
+			$image['size'] = \vtlib\Functions::showBytes($file->getSize());
+			$image['name'] = $file->getName();
+			$image['path'] = $this->getLocalPath($file->getPath());
+
+			$oldValue = (new \App\Db\Query())->select([$field->getColumnName()])->from($field->getTableName())->where([$field->get('primaryColumn') => $row['id']])->scalar();
+			$value = \App\Json::decode($oldValue);
+			if (!is_array($value)) {
+				$value = [];
+			}
+			$value[] = $image;
+			if ($dbCommand->update($field->getTableName(), [$field->getColumnName() => \App\Json::encode($value)], [$field->get('primaryColumn') => $row['id']])->execute()) {
+				if ($isMulti) {
+					$dbCommand->delete('u_#__attachments', ['and', ['attachmentid' => $id], ['fieldid' => $field->getId()]])->execute();
+				} else {
+					$dbCommand->delete('vtiger_crmentity', ['and', ['crmid' => $row['attachmentsid']], ['not in', 'setype', $this->modules]])->execute();
+					$dbCommand->delete('vtiger_attachments', ['attachmentsid' => $row['attachmentsid']])->execute();
+					if ($field->getModuleName() === 'Users') {
+						$dbCommand->delete('vtiger_salesmanattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
+					}
+				}
+			}
+		} else {
+			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - " . $row['path']);
+		}
+	}
+
+	/**
+	 * Generate random password.
+	 *
+	 * @param int $length
+	 *
+	 * @return string
+	 */
+	private function generatePassword($length = 10, $type = 'lbd')
+	{
+		$chars = [];
+		if (strpos($type, 'l') !== false) {
+			$chars[] = 'abcdefghjkmnpqrstuvwxyz';
+		}
+		if (strpos($type, 'b') !== false) {
+			$chars[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+		}
+		if (strpos($type, 'd') !== false) {
+			$chars[] = '0123456789';
+		}
+		if (strpos($type, 's') !== false) {
+			$chars[] = '!"#$%&\'()*+,-./:;<=>?@[\]^_{|}';
+		}
+		$password = $allChars = '';
+		foreach ($chars as $char) {
+			$allChars .= $char;
+			$password .= $char[array_rand(str_split($char))];
+		}
+		$allChars = str_split($allChars);
+		$missing = $length - count($chars);
+		for ($i = 0; $i < $missing; ++$i) {
+			$password .= $allChars[array_rand($allChars)];
+		}
+		return str_shuffle($password);
+	}
+
+	/**
+	 * Get crm pathname.
+	 *
+	 * @param string $path Absolute pathname
+	 *
+	 * @return string Local pathname
+	 */
+	public function getLocalPath($path)
+	{
+		if (strpos($path, ROOT_DIRECTORY) === 0) {
+			$index = strlen(ROOT_DIRECTORY) + 1;
+			if (strrpos(ROOT_DIRECTORY, '/') === strlen(ROOT_DIRECTORY) - 1 || strrpos(ROOT_DIRECTORY, '\\') === strlen(ROOT_DIRECTORY) - 1) {
+				$index -= 1;
+			}
+			$path = substr($path, $index);
+		}
+		return $path;
+	}
+
+	/**
+	 * Drop tables.
+	 *
+	 * @param array $tables
+	 */
+	public function clean()
+	{
+		$db = \App\Db::getInstance();
+		foreach ($this->tables as $table) {
+			if (!$db->isTableExists($table)) {
+				continue;
+			}
+			if ($table === 'u_#__attachments') {
+				$db->createCommand()->delete('u_#__attachments', ['status' => 0])->execute();
+			}
+			if (!(new \App\Db\Query())->from($table)->exists()) {
+				$db->createCommand()->dropTable($table)->execute();
+			} else {
+				\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");
+			}
+		}
 	}
 }

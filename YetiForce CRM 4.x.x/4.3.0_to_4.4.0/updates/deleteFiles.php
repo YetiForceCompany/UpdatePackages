@@ -1,5 +1,4 @@
 <?php
-
 return [
 	'vtlib/thirdparty/Dzip.inc.php',
 	'vtlib/thirdparty/dZip.inc.php',
@@ -783,5 +782,6 @@ return [
 	'public_html/layouts/resources/BaseList.js',
 	'public_html/layouts/resources/BaseList.min.js',
 	'modules/SMSNotifier/workflow/VTSMSTask.js',
-	'modules/SMSNotifier/workflow/VTSMSTask.min.js'
+	'modules/SMSNotifier/workflow/VTSMSTask.min.js',
+	'modules/Users/authMethods'
 ];

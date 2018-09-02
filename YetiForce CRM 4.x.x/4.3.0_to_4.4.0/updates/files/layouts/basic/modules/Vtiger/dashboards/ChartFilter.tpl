@@ -16,45 +16,46 @@
 							<span aria-hidden="true">&times;</span>
 						</button>
 					</div>
+					<form class="validateForm u-word-break" method="post" action="javascript:;">
 						<div class="modal-body">
 							<div class="container-fluid pt-3">
-								<form class="validateForm u-word-break" method="post" action="javascript:;">
-									<input type="hidden" name="module" value="{$MODULE}"/>
-									<input type="hidden" name="action" value="MassSave"/>
-									<input type="hidden" id="widgetStep" value=""/>
-									<div class="form-group row">
-										<div class="{$COL_LBL}"><label>{\App\Language::translate('LBL_WIDGET_NAME','Home')}</label></div>
-										<div class="{$COL_CTRL}"><input type="text" class="form-control" name="widgetTitle" value=""></div>
+								<input type="hidden" name="module" value="{$MODULE}"/>
+								<input type="hidden" name="action" value="MassSave"/>
+								<input type="hidden" id="widgetStep" value=""/>
+								<div class="form-group row">
+									<div class="{$COL_LBL}"><label>{\App\Language::translate('LBL_WIDGET_NAME','Home')}</label></div>
+									<div class="{$COL_CTRL}"><input type="text" class="form-control" name="widgetTitle" value=""></div>
+								</div>
+								<div class="form-group row">
+									<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_SELECT_CHART','Home')}</label></div>
+									<div class="{$COL_CTRL}">
+										<select class="form-control select2" name="chartType">
+											{foreach from=$CHART_TYPES item=TYPE key=VALUE}
+												<option value="{$VALUE}">{\App\Language::translate($TYPE, $MODULE)}</option>
+											{/foreach}
+										</select>
 									</div>
+								</div>
+								<div class="step1">
 									<div class="form-group row">
-										<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_SELECT_CHART','Home')}</label></div>
+										<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_SELECT_MODULE')}</label></div>
 										<div class="{$COL_CTRL}">
-											<select class="form-control select2" name="chartType">
-												{foreach from=$CHART_TYPES item=TYPE key=VALUE}
-													<option value="{$VALUE}">{\App\Language::translate($TYPE, $MODULE)}</option>
+											<select class="form-control" name="module">
+												<option></option>
+												{foreach from=$MODULES item=MODULE_MODEL key=MODULE_NAME}
+													<option value="{$MODULE_MODEL['name']}">{\App\Language::translate($MODULE_MODEL['name'], $MODULE_MODEL['name'])}</option>
 												{/foreach}
 											</select>
 										</div>
 									</div>
-									<div class="step1">
-										<div class="form-group row">
-											<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_SELECT_MODULE')}</label></div>
-											<div class="{$COL_CTRL}">
-												<select class="form-control" name="module">
-													<option></option>
-													{foreach from=$MODULES item=MODULE_MODEL key=MODULE_NAME}
-														<option value="{$MODULE_MODEL['name']}">{\App\Language::translate($MODULE_MODEL['name'], $MODULE_MODEL['name'])}</option>
-													{/foreach}
-												</select>
-											</div>
-										</div>
-									</div>
-									<div class="step2"></div>
-									<div class="step3"></div>
-								</form>
+								</div>
+								<div class="step2"></div>
+								<div class="step3"></div>
+
 							</div>
 						</div>
 						{include file=\App\Layout::getTemplatePath('Modals/Footer.tpl', $MODULE) BTN_SUCCESS='LBL_SAVE' BTN_DANGER='LBL_CANCEL'}
+					</form>
 				</div>
 			</div>
 		</div>
@@ -107,22 +108,22 @@
 			</div>
 		</div>
 		{if $VALUE_TYPE!=='count'}
-		<div class="step3 form-group row">
-			<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_VALUE_FIELD','Home')}</label></div>
-			<div class="{$COL_CTRL}">
-				<select class="form-control saveParam valueField" name="valueField" size="2" data-validation-engine="validate[ required]">
-					{foreach from=$MODULE_FIELDS item=FIELDS key=BLOCK_NAME}
-						<optgroup label="{\App\Language::translate($BLOCK_NAME,$SELECTED_MODULE)}">
-							{foreach from=$FIELDS item=FIELD key=FIELD_NAME}
-								{if in_array($FIELD->getFieldDataType(),['currency', 'double', 'percentage', 'integer'])}
-									<option value="{$FIELD_NAME}" data-field-type="{$FIELD->getFieldDataType()}">{\App\Language::translate($FIELD->getFieldLabel(),$SELECTED_MODULE)}</option>
-								{/if}
-							{/foreach}
-						</optgroup>
-					{/foreach}
-				</select>
+			<div class="step3 form-group row">
+				<div class="{$COL_LBL}"><label><span class="redColor">*</span>{\App\Language::translate('LBL_VALUE_FIELD','Home')}</label></div>
+				<div class="{$COL_CTRL}">
+					<select class="form-control saveParam valueField" name="valueField" size="2" data-validation-engine="validate[ required]">
+						{foreach from=$MODULE_FIELDS item=FIELDS key=BLOCK_NAME}
+							<optgroup label="{\App\Language::translate($BLOCK_NAME,$SELECTED_MODULE)}">
+								{foreach from=$FIELDS item=FIELD key=FIELD_NAME}
+									{if in_array($FIELD->getFieldDataType(),['currency', 'double', 'percentage', 'integer'])}
+										<option value="{$FIELD_NAME}" data-field-type="{$FIELD->getFieldDataType()}">{\App\Language::translate($FIELD->getFieldLabel(),$SELECTED_MODULE)}</option>
+									{/if}
+								{/foreach}
+							</optgroup>
+						{/foreach}
+					</select>
+				</div>
 			</div>
-		</div>
 		{/if}
 	{elseif $WIZARD_STEP eq 'step4'}
 		{if $CHART_TYPE == 'Funnel'  && in_array($GROUP_FIELD_MODEL->getFieldDataType(),['currency', 'double', 'percentage', 'integer'])}
