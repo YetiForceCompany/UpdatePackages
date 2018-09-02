@@ -158,7 +158,7 @@ class YetiForceUpdate
 		}
 		if ($file->validate()) {
 			$image = [];
-			$image['key'] = $file->generateHash();
+			$image['key'] = $file->generateHash(true);
 			$image['size'] = \vtlib\Functions::showBytes($file->getSize());
 			$image['name'] = $file->getName();
 			$image['path'] = \App\Fields\File::getLocalPath($file->getPath());
