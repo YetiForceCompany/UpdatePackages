@@ -79,6 +79,21 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__picklist_close_state' => [
+				'columns' => [
+					'valueid' => $this->integer()->notNull(),
+					'fieldid' => $this->integer()->notNull(),
+					'value' => $this->stringType()->notNull(),
+				],
+				'primaryKeys' => [
+					['valueid_pk', 'valueid']
+				],
+				'index' => [
+					['fieldid', 'fieldid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'u_#__social_media_config' => [
 				'columns' => [
 					'id' => $this->bigPrimaryKey(),
@@ -309,6 +324,7 @@ class Base extends \App\Db\Importers\Base
 		];
 		$this->foreignKey = [
 			['fk_1_a_#__record_converter', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__picklist_close_state', 'u_#__picklist_close_state', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }

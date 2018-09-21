@@ -23,7 +23,7 @@
 					</button>
 				</div>
 				<form class="form-horizontal" id="CustomView" name="CustomView" method="post" action="index.php">
-					{if $RECORD_ID}
+					{if !empty($RECORD_ID)}
 						<input type="hidden" name="record" id="record" value="{$RECORD_ID}"/>
 					{/if}
 					<input type="hidden" name="module" value="{$MODULE}"/>
@@ -63,9 +63,7 @@
 									<div class="columnsSelectDiv col-md-12">
 										{assign var=MANDATORY_FIELDS value=[]}
 										<div class="">
-											<select data-placeholder="{\App\Language::translate('LBL_ADD_MORE_COLUMNS',$MODULE)}"
-													multiple class="columnsSelect form-control js-select2-sortable"
-													id="viewColumnsSelect">
+											<select data-placeholder="{\App\Language::translate('LBL_ADD_MORE_COLUMNS',$MODULE)}" multiple class="select2 form-control js-select2-sortable" id="viewColumnsSelect">
 												{foreach key=BLOCK_LABEL item=BLOCK_FIELDS from=$RECORD_STRUCTURE}
 													<optgroup label='{\App\Language::translate($BLOCK_LABEL, $SOURCE_MODULE)}'>
 														{foreach key=FIELD_NAME item=FIELD_MODEL from=$BLOCK_FIELDS}

@@ -273,6 +273,10 @@ class YetiForceUpdate
 		$subQuery = (new \App\Db\Query())->select(['vtiger_crmentity.setype'])
 			->from('vtiger_crmentity')->where(['vtiger_crmentity.crmid' => new \yii\db\Expression('vtiger_crmentityrel.relcrmid')]);
 		$dbCommand->update('vtiger_crmentityrel', ['relmodule' => $subQuery])->execute();
+
+		$subQuery = (new \App\Db\Query())->select(['emailtemplatesid'])->from('u_#__emailtemplates')
+			->where(['sys_name' => 'ActivityReminderNotificationEvents']);
+		$dbCommand->delete('vtiger_crmentity', ['crmid' => $subQuery ])->execute();
 	}
 
 	private function imageFix()
@@ -493,10 +497,19 @@ class YetiForceUpdate
 		$dbCommand->update('vtiger_blocks', ['tabid' => $calendarTabId], ['blockid' => [$blockId, $blockIdReminder]])->execute();
 		$field = [
 			'activitytype' => ['displaytype' => 1, 'quickcreate' => 0, 'quickcreatesequence' => 5, 'typeofdata' => 'V~M'],
-			'reapeat' => ['displaytype' => 1, 'block' => $blockId],
-			'recurrence' => ['displaytype' => 1, 'block' => $blockId],
+			'reapeat' => ['displaytype' => 1, 'block' => $blockId, 'presence' => 0],
+			'recurrence' => ['displaytype' => 1, 'block' => $blockId, 'presence' => 0],
 			'reminder_time' => ['displaytype' => 1, 'block' => $blockIdReminder],
-			'visibility' => ['displaytype' => 1]
+			'visibility' => ['displaytype' => 1, 'presence' => 0, 'defaultvalue' => 'Private'],
+			'linkextend' => ['presence' => 0],
+			'followup' => ['presence' => 0],
+			'state' => ['presence' => 0],
+			'allday' => ['presence' => 0],
+			'was_read' => ['presence' => 0],
+			'closedtime' => ['presence' => 0],
+			'shownerid' => ['presence' => 0],
+			'smcreatorid' => ['presence' => 0],
+			'created_user_id' => ['presence' => 0],
 		];
 		foreach ($field as $name => $set) {
 			$dbCommand->update('vtiger_field', $set, ['fieldname' => $name, 'tabid' => 9])->execute();
@@ -524,6 +537,7 @@ class YetiForceUpdate
 		foreach ($values as $newValue) {
 			$moduleModel->addPickListValues($fieldModel, $newValue, $rolesSelected);
 		}
+		$dbCommand->update($tableName, ['presence' => 0], ['activitytype' => 'Task'])->execute();
 		$this->removeWorkflowTask();
 		// remove
 		$moduleName = 'Events';
@@ -533,6 +547,10 @@ class YetiForceUpdate
 			\vtlib\Filter::deleteForModule($moduleInstance);
 			\vtlib\Block::deleteForModule($moduleInstance);
 			$dbCommand->update('vtiger_crmentity', ['setype' => 'Calendar'], ['setype' => 'Events'])->execute();
+			$dataReader = (new \App\Db\Query())->select(['columnname', 'tablename'])->from('vtiger_field')->where(['uitype' => 301])->createCommand()->query();
+			while($row = $dataReader->read()) {
+				$dbCommand->update($row['tablename'], [$row['columnname'] => 'Calendar'], [$row['columnname'] => 'Events'])->execute();
+			}
 			$moduleInstance->deleteIcons();
 			$moduleInstance->unsetAllRelatedList();
 			\vtlib\Language::deleteForModule($moduleInstance);
@@ -599,7 +617,7 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('LocationRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('IncidentRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('AuditRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
-
+			['vtiger_blocks', ['tabid' => \App\Module::getModuleId('Calendar'), 'blocklabel' => 'LBL_CUSTOM_INFORMATION']],
 		];
 		\App\Db\Updater::batchDelete($data);
 		$data = [
