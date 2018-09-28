@@ -23,6 +23,10 @@ class Base extends \App\Db\Importers\Base
 					'id_twitter' => $this->stringType(32),
 					'message' => $this->text(),
 					'created' => $this->dateTime(),
+					'twitter_name' => $this->stringType(50),
+					'reply' => $this->integer(11),
+					'retweet' => $this->integer(11),
+					'favorite' => $this->integer(11)
 				],
 				'index' => [
 					['twitter_login', 'twitter_login'],
@@ -111,10 +115,14 @@ class Base extends \App\Db\Importers\Base
 			'u_#__social_media_twitter' => [
 				'columns' => [
 					'id' => $this->bigPrimaryKey(),
-					'twitter_login' => $this->stringType(20)->notNull(),
+					'twitter_login' => $this->stringType(15)->notNull(),
 					'id_twitter' => $this->stringType(32),
 					'message' => $this->text(),
 					'created' => $this->dateTime(),
+					'twitter_name' => $this->stringType(50),
+					'reply' => $this->integer(11),
+					'retweet' => $this->integer(11),
+					'favorite' => $this->integer(11),
 				],
 				'index' => [
 					['twitter_login', 'twitter_login'],
@@ -321,10 +329,39 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__users_pinned' => [
+				'columns' => [
+					'id' => $this->primaryKey(),
+					'owner_id' => $this->integer(11)->notNull(),
+					'fav_element_id' => $this->integer(11)->notNull(),
+				],
+				'index' => [
+					['u_yf_users_pinned', 'owner_id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'l_#__social_media_logs' => [
+				'columns' => [
+					'id' => $this->bigPrimaryKey(),
+					'date' => $this->dateTime()->notNull(),
+					'type' => $this->stringType(16)->notNull(),
+					'name' => $this->stringType(16)->notNull(),
+					'message' => $this->text()->notNull(),
+				],
+				'index' => [
+					['date', 'date'],
+					['type', 'type'],
+					['name', 'name'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['fk_1_a_#__record_converter', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
 			['fk_1_u_#__picklist_close_state', 'u_#__picklist_close_state', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
+			['u_#__users_pinned_fk_1', 'u_#__users_pinned', 'owner_id', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }
