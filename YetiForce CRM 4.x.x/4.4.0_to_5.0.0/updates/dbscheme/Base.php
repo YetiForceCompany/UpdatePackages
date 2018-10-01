@@ -19,7 +19,7 @@ class Base extends \App\Db\Importers\Base
 			'b_#__social_media_twitter' => [
 				'columns' => [
 					'id' => $this->bigPrimaryKey(),
-					'twitter_login' => $this->stringType(20)->notNull(),
+					'twitter_login' => $this->stringType(15)->notNull(),
 					'id_twitter' => $this->stringType(32),
 					'message' => $this->text(),
 					'created' => $this->dateTime(),
@@ -360,8 +360,8 @@ class Base extends \App\Db\Importers\Base
 		];
 		$this->foreignKey = [
 			['fk_1_a_#__record_converter', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_u_#__picklist_close_state', 'u_#__picklist_close_state', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
-			['u_#__users_pinned_fk_1', 'u_#__users_pinned', 'owner_id', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
+			['fk_1_u_#__picklist_close_state', 'u_#__picklist_close_state', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['u_#__users_pinned_fk_1', 'u_#__users_pinned', 'owner_id', 'vtiger_users', 'id', 'CASCADE', null],
 		];
 	}
 }

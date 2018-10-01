@@ -180,7 +180,7 @@ var App = {},
 				html: true,
 				template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
 				container: 'body',
-				delay: {"show": 300, "hide": 100},
+				delay: {"show": 300, "hide": 100}
 			};
 			selectElement.each(function (index, domElement) {
 				let element = $(domElement);
@@ -206,6 +206,11 @@ var App = {},
 				element.popover(elementParams);
 				if (elementParams.trigger === 'manual' || typeof elementParams.trigger === 'undefined') {
 					app.registerPopoverManualTrigger(element);
+				}
+				if (elementParams.callbackShown) {
+					element.on('shown.bs.popover', function () {
+						elementParams.callbackShown();
+					})
 				}
 			});
 			return selectElement;
@@ -397,6 +402,11 @@ var App = {},
 		 * This api assumes that we are using block ui plugin and uses unblock api to unblock it
 		 */
 		hideModalWindow: function (callback, id) {
+			if (window.parent !== window) {
+				this.childFrame = true;
+				window.parent.app.hideModalWindow(callback, id);
+				return;
+			}
 			let container;
 			if (callback && typeof callback === 'object') {
 				container = callback;
@@ -1400,15 +1410,23 @@ var App = {},
 			}
 			return $(window).height() * percantage / 100;
 		},
-		setCalendarHeight() {
-			const container = $('.js-base-container');
-			const paddingTop = 15;
+		setCalendarHeight(container) {
+			if (typeof container === 'undefined') {
+				container = $('.js-base-container');
+			}
+			let paddingTop = 15;
+			if ('CalendarExtended' === CONFIG.view) {
+				paddingTop = 5;
+			}
+			if (container.hasClass('quickCreateContainer')) {
+				paddingTop = 65;
+			}
 			if ($(window).width() > 993) {
-				let calendarH = $(window).height() - container.find('.o-calendar-container').offset().top - $('.js-footer').height() - paddingTop;
+				let calendarH = $(window).height() - container.find('.js-calendar__container').offset().top - $('.js-footer').height() - paddingTop;
 				new ResizeSensor(container.find('.contentsDiv'), () => {
-					calendarH = $(window).height() - container.find('.o-calendar-container').offset().top - $('.js-footer').height() - paddingTop;
-					$('#calendarview').fullCalendar('option', 'height', calendarH);
-					$('#calendarview').height(calendarH + 10); // without this line calendar scroll stops working
+					calendarH = $(window).height() - container.find('.js-calendar__container').offset().top - $('.js-footer').height() - paddingTop;
+					$('.js-calendar__container').fullCalendar('option', 'height', calendarH);
+					$('.js-calendar__container').height(calendarH + 10); // without this line calendar scroll stops working
 				});
 				return calendarH;
 			} else if ($(window).width() < 993) {
@@ -1422,6 +1440,18 @@ var App = {},
 			}).done(function (response) {
 				$('.historyList').html(`<a class="item dropdown-item" href="#" role="listitem">${app.vtranslate('JS_NO_RECORDS')}</a>`);
 			});
+		},
+
+		/**
+		 * Open url in top window
+		 * @param string url
+		 */
+		openUrl(url) {
+			if (window.location !== window.top.location) {
+				window.top.location.href = url;
+			} else {
+				window.location.href = url;
+			}
 		},
 		showConfirmation: function (data, element) {
 			var params = {};
@@ -1443,7 +1473,7 @@ var App = {},
 			Vtiger_Helper_Js.showConfirmationBox(params).done(function () {
 				if (params.type == 'href') {
 					AppConnector.request(params.url).done(function (data) {
-						window.location.href = data.result;
+						app.openUrl(data.result);
 					});
 				} else if (params.type == 'reloadTab') {
 					AppConnector.request(params.url).done(function (data) {

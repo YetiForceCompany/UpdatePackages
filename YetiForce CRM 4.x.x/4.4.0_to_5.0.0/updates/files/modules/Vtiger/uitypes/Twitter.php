@@ -19,7 +19,7 @@ class Vtiger_Twitter_UIType extends Vtiger_Base_UIType
 	 */
 	public function validate($value, $isUserFormat = false)
 	{
-		if ($this->validate || empty($value)) {
+		if ($this->validate[$value] || empty($value)) {
 			return;
 		}
 		if (!preg_match('/^[a-zA-Z0-9_]{1,' . static::MAX_LENGTH . '}$/', $value)) {
@@ -33,6 +33,9 @@ class Vtiger_Twitter_UIType extends Vtiger_Base_UIType
 	 */
 	public function getDisplayValue($value, $record = false, $recordModel = false, $rawText = false, $length = false)
 	{
+		if (empty($value)) {
+			return '';
+		}
 		$twitter = parent::getDisplayValue($value, $record, $recordModel, $rawText, $length);
 		if ($rawText) {
 			return $twitter;

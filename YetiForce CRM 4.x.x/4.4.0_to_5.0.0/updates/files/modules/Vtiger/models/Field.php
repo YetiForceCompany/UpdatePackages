@@ -17,6 +17,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	protected $fieldType;
 	protected $fieldDataTypeShort;
 	protected $uitype_instance;
+	public $picklistValues;
 	/**
 	 * @var Vtiger_Base_UIType Vtiger_Base_UIType or UI Type specific model instance
 	 */
@@ -458,35 +459,33 @@ class Vtiger_Field_Model extends vtlib\Field
 	 */
 	public function getPicklistValues($skipCheckingRole = false)
 	{
-		$fieldDataType = $this->getFieldDataType();
-		if ($this->getName() === 'hdnTaxType') {
-			return null;
-		}
-		if ($fieldDataType === 'picklist' || $fieldDataType === 'multipicklist') {
-			if ($this->isRoleBased() && !$skipCheckingRole) {
-				$userModel = Users_Record_Model::getCurrentUserModel();
-				$picklistValues = \App\Fields\Picklist::getRoleBasedPicklistValues($this->getName(), $userModel->get('roleid'));
-			} else {
-				$picklistValues = App\Fields\Picklist::getValuesName($this->getName());
-			}
-			$fieldPickListValues = [];
-			foreach ($picklistValues as $value) {
-				$fieldPickListValues[$value] = \App\Language::translate($value, $this->getModuleName());
-			}
-			// Protection against deleting a value that does not exist on the list
-			if ($fieldDataType === 'picklist') {
-				$fieldValue = $this->get('fieldvalue');
-				if (!empty($fieldValue) && !isset($fieldPickListValues[$fieldValue])) {
-					$fieldPickListValues[$fieldValue] = \App\Purifier::decodeHtml($this->get('fieldvalue'));
-					$this->set('isEditableReadOnly', true);
+		if (!isset($this->picklistValues)) {
+			$fieldDataType = $this->getFieldDataType();
+			if ($fieldDataType === 'picklist' || $fieldDataType === 'multipicklist') {
+				if ($this->isRoleBased() && !$skipCheckingRole) {
+					$userModel = Users_Record_Model::getCurrentUserModel();
+					$picklistValues = \App\Fields\Picklist::getRoleBasedPicklistValues($this->getName(), $userModel->get('roleid'));
+				} else {
+					$picklistValues = App\Fields\Picklist::getValuesName($this->getName());
 				}
+				$fieldPickListValues = [];
+				foreach ($picklistValues as $value) {
+					$fieldPickListValues[$value] = \App\Language::translate($value, $this->getModuleName());
+				}
+				// Protection against deleting a value that does not exist on the list
+				if ($fieldDataType === 'picklist') {
+					$fieldValue = $this->get('fieldvalue');
+					if (!empty($fieldValue) && !isset($fieldPickListValues[$fieldValue])) {
+						$fieldPickListValues[$fieldValue] = \App\Purifier::decodeHtml($this->get('fieldvalue'));
+						$this->set('isEditableReadOnly', true);
+					}
+				}
+				$this->picklistValues = $fieldPickListValues;
+			} elseif (method_exists($this->getUITypeModel(), 'getPicklistValues')) {
+				$this->picklistValues = $this->getUITypeModel()->getPicklistValues();
 			}
-
-			return $fieldPickListValues;
-		} elseif (method_exists($this->getUITypeModel(), 'getPicklistValues')) {
-			return $this->getUITypeModel()->getPicklistValues();
 		}
-		return null;
+		return $this->picklistValues;
 	}
 
 	/**
@@ -923,26 +922,24 @@ class Vtiger_Field_Model extends vtlib\Field
 	 */
 	public static function getAllForModule(vtlib\ModuleBasic $moduleModel)
 	{
-		$fieldModelList = Vtiger_Cache::get('ModuleFields', $moduleModel->id);
-		if (!$fieldModelList) {
-			$fieldObjects = parent::getAllForModule($moduleModel);
-
-			$fieldModelList = [];
-			//if module dont have any fields
-			if (!is_array($fieldObjects)) {
-				$fieldObjects = [];
-			}
-
-			foreach ($fieldObjects as &$fieldObject) {
-				$fieldModelObject = self::getInstanceFromFieldObject($fieldObject);
-				$block = $fieldModelObject->get('block') ? $fieldModelObject->get('block')->id : 0;
-				$fieldModelList[$block][] = $fieldModelObject;
-				Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getId(), $fieldModelObject);
-				Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getName(), $fieldModelObject);
-			}
-
-			Vtiger_Cache::set('ModuleFields', $moduleModel->id, $fieldModelList);
+		if (\App\Cache::has('ModuleFields', $moduleModel->id)) {
+			return \App\Cache::get('ModuleFields', $moduleModel->id);
 		}
+		$fieldModelList = [];
+		$fieldObjects = parent::getAllForModule($moduleModel);
+		$fieldModelList = [];
+		//if module dont have any fields
+		if (!is_array($fieldObjects)) {
+			$fieldObjects = [];
+		}
+		foreach ($fieldObjects as &$fieldObject) {
+			$fieldModelObject = self::getInstanceFromFieldObject($fieldObject);
+			$block = $fieldModelObject->get('block') ? $fieldModelObject->get('block')->id : 0;
+			$fieldModelList[$block][] = $fieldModelObject;
+			Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getId(), $fieldModelObject);
+			Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getName(), $fieldModelObject);
+		}
+		\App\Cache::save('ModuleFields', $moduleModel->id, $fieldModelList);
 		return $fieldModelList;
 	}
 

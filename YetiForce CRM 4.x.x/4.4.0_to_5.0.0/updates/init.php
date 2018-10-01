@@ -40,11 +40,6 @@ class YetiForceUpdate
 	 */
 	private $importer;
 
-
-	public $modules = [];
-	public $moduleName = '';
-	public $uitypes = [69, 311];
-
 	/**
 	 * Constructor
 	 * @param object $modulenode
@@ -143,8 +138,10 @@ class YetiForceUpdate
 
 	private function attachmentsFix()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
-		$query = (new \App\Db\Query())->select(['attachmentsid', 'path'])->from('vtiger_attachments');
+		$query = (new \App\Db\Query())->select(['attachmentsid', 'path'])->from('vtiger_attachments')->where(['not like', 'path', 'storage%', false]);
 		$dataReader = $query->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			$path = $row['path'];
@@ -153,118 +150,13 @@ class YetiForceUpdate
 				$db->createCommand()->update('vtiger_attachments', ['path' => substr($path, strpos($path, 'storage'), -1)], ['attachmentsid' => $row['attachmentsid']])->execute();
 			}
 		}
-	}
-
-	/**
-	 * Migrate image field.
-	 *
-	 * @param string $field
-	 */
-	private function migrateImage(string $field = null)
-	{
-		$queryGenerator = new \App\QueryGenerator($this->moduleName);
-		$entityModel = $queryGenerator->getEntityModel();
-		if ($field) {
-			$field = $queryGenerator->getModuleModel()->getField($field);
-			$fields = $field ? [$field] : [];
-		} else {
-			$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(69);
-		}
-		$field = reset($fields);
-		if (empty($fields) || count($fields) !== 1 || !isset($entityModel->tab_name_index[$field->getTableName()])) {
-			\App\Log::error('MIGRATE FILES ID:' . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
-			return;
-		}
-		$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
-		$queryGenerator->permissions = false;
-		$queryGenerator->setStateCondition('All');
-		$queryGenerator->setFields(['id', $field->getName()]);
-		$queryGenerator->setCustomColumn(['vtiger_attachments.*']);
-		if ($field->getModuleName() !== 'Users') {
-			$relTable = 'vtiger_seattachmentsrel';
-			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.crmid"]);
-			$queryGenerator->addJoin(['INNER JOIN', 'vtiger_attachments', "$relTable.attachmentsid = vtiger_attachments.attachmentsid"]);
-			$dataReader = $queryGenerator->createQuery()->createCommand()->query();
-			while ($row = $dataReader->read()) {
-				$this->updateRow($row, $field);
-			}
-			$dataReader->close();
-		}
-	}
-
-	/**
-	 * Migrate MultiImage field.
-	 */
-	private function migrateMultiImage()
-	{
-		$queryGenerator = new \App\QueryGenerator($this->moduleName);
-		$entityModel = $queryGenerator->getEntityModel();
-		$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(311);
-		foreach ($fields as $field) {
-			if (empty($field) || !isset($entityModel->tab_name_index[$field->getTableName()])) {
-				\App\Log::error("MIGRATE FILES ID:{$field->getName()}|{$this->moduleName} - Incorrect data");
-				continue;
-			}
-			if ($field->getModuleName() === 'Contacts' || $field->getModuleName() === 'Products') {
-				$this->migrateImage($field->getName());
-				continue;
-			}
-		}
-	}
-
-	/**
-	 * Update data.
-	 *
-	 * @param array               $row
-	 * @param \Vtiger_Field_Model $field
-	 * @param bool                $isMulti
-	 */
-	private function updateRow(array $row, \Vtiger_Field_Model $field, bool $isMulti = false)
-	{
-		$dbCommand = \App\Db::getInstance()->createCommand();
-		$path = strpos($row['path'], ROOT_DIRECTORY) === 0 ? $row['path'] : ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $row['path'];
-		$file = \App\Fields\File::loadFromInfo([
-			'path' => $path . DIRECTORY_SEPARATOR . $row['attachmentsid'],
-			'name' => $row['name'],
-		]);
-		if (!file_exists($file->getPath())) {
-			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - No file");
-			return;
-		}
-		if ($file->validate()) {
-			$image = [];
-			$image['key'] = $file->generateHash(true);
-			$image['size'] = \vtlib\Functions::showBytes($file->getSize());
-			$image['name'] = $file->getName();
-			$image['path'] = \App\Fields\File::getLocalPath($file->getPath());
-
-			$oldValue = (new \App\Db\Query())->select([$field->getColumnName()])->from($field->getTableName())->where([$field->get('primaryColumn') => $row['id']])->scalar();
-			$value = \App\Json::decode($oldValue);
-			if (!is_array($value)) {
-				$value = [];
-			}
-			$value[] = $image;
-			if ($dbCommand->update($field->getTableName(), [$field->getColumnName() => \App\Json::encode($value)], [$field->get('primaryColumn') => $row['id']])->execute()) {
-				if ($isMulti) {
-					$dbCommand->delete('u_#__attachments', ['and', ['attachmentid' => $id], ['fieldid' => $field->getId()]])->execute();
-				} else {
-					$dbCommand->delete('vtiger_crmentity', ['and', ['crmid' => $row['attachmentsid']], ['not in', 'setype', $this->modules]])->execute();
-					$dbCommand->delete('vtiger_attachments', ['attachmentsid' => $row['attachmentsid']])->execute();
-					if ($field->getModuleName() === 'Users') {
-						$dbCommand->delete('vtiger_salesmanattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
-						\App\UserPrivilegesFile::createUserPrivilegesfile($row['id']);
-					}
-				}
-			}
-		} else {
-			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - " . $file->validateError);
-		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function updateRecords()
 	{
 		$dbCommand = App\Db::getInstance()->createCommand();
-		$dbCommand->update('vtiger_ossmails_logs', ['status' => '2'], ['status' => '1'])->execute();
+		//$dbCommand->update('vtiger_ossmails_logs', ['status' => '2'], ['status' => '1'])->execute(); // ?
 
 		$subQuery = (new \App\Db\Query())->select(['vtiger_crmentity.setype'])
 			->from('vtiger_crmentity')->where(['vtiger_crmentity.crmid' => new \yii\db\Expression('vtiger_crmentityrel.crmid')]);
@@ -276,26 +168,7 @@ class YetiForceUpdate
 
 		$subQuery = (new \App\Db\Query())->select(['emailtemplatesid'])->from('u_#__emailtemplates')
 			->where(['sys_name' => 'ActivityReminderNotificationEvents']);
-		$dbCommand->delete('vtiger_crmentity', ['crmid' => $subQuery ])->execute();
-	}
-
-	private function imageFix()
-	{
-		$db = \App\Db::getInstance();
-		$modules = array_column(\vtlib\Functions::getAllModules(), 'name');
-		$fields = (new \App\Db\Query())->select(['tabid', 'uitype'])->from('vtiger_field')->where(['uitype' => $this->uitypes])->orderBy(['tabid' => SORT_ASC])->createCommand()->queryAllByGroup(2);
-		foreach ($fields as $tabId => $uitypes) {
-			try {
-				if ($tabId) {
-					$this->moduleName = \App\Module::getModuleName($tabId);
-					$this->modules = $modules;
-					$this->migrateImage();
-					$this->migrateMultiImage();
-				}
-			} catch (\Throwable $ex) {
-				\App\Log::error('MIGRATE FILES:' . $ex->getMessage());
-			}
-		}
+		$dbCommand->delete('vtiger_crmentity', ['crmid' => $subQuery])->execute();
 	}
 
 	private function addRelations()
@@ -357,9 +230,9 @@ class YetiForceUpdate
 			$customViewModel->setModule($moduleName);
 			$customViewModel->set('columnslist', $selectedColumnsList);
 			$customViewModel->save();
-			App\Db::getInstance()->createCommand()->delete('vtiger_user_module_preferences',
+			\App\Db::getInstance()->createCommand()->delete('vtiger_user_module_preferences',
 				['userid' => 'Users:' . \App\User::getCurrentUserId(), 'tabid' => App\Module::getModuleId($moduleName)])
-				->execute();
+				->execute(); // ?
 		}
 	}
 
@@ -368,9 +241,7 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$query = (new \App\Db\Query())->select(['header_field', 'fieldid', 'fieldname', 'tabid'])->from('vtiger_field')->where([
-			'and', [
-				'NOT', ['header_field' => null]
-			], ['<>', 'header_field', ''], ['<>', 'header_field', '0']
+			'and', ['NOT', ['header_field' => null]], ['<>', 'header_field', ''], ['<>', 'header_field', '0']
 		]);
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$dataReader = $query->createCommand()->query();
@@ -423,30 +294,17 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$fields = [
-			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 1, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition']
+			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 1, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
+			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 1, 2, '', NULL, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments']
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
 			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
 			if (!$moduleId || $isExists) {
+				$this->log("[INFO] Skip adding field. Module: {$moduleId}-{$field[28]}; field name: {$field[2]}, field exists: {$isExists}");
 				continue;
 			}
-
 			$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => $field[25], 'tabid' => $moduleId])->scalar();
-			$cacheName = $field[25] . '|';
-			$cacheName1 = $cacheName . $moduleId;
-			$cacheName2 = $blockId . '|';
-			\App\Cache::delete('BlockInstance', $cacheName);
-			\App\Cache::delete('BlockInstance', $cacheName1);
-			\App\Cache::delete('BlockInstance', $cacheName2);
-			if (!$blockId) {
-				$module = \Vtiger_Module_Model::getInstance($field[28]);
-				$blockInstance = new \vtlib\Block();
-				$blockInstance->label = $field[25];
-				$module->addBlock($blockInstance);
-				$blockId = $blockInstance->id;
-			}
-
 			if ((!$blockId || !($blockInstance = \vtlib\Block::getInstance($blockId))) && !($blockInstance = reset(Vtiger_Module_Model::getInstance($field[28])->getBlocks()))) {
 				\App\Log::error("No block found ({$field[25]}) to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
 				$this->log("[ERROR] No block found to create a field, you will need to create a field manually. Module: {$field[28]}, field name: {$field[6]}, field label: {$field[7]}");
@@ -481,17 +339,24 @@ class YetiForceUpdate
 				$fieldInstance->setRelatedModules($field[27]);
 			}
 		}
-
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	/**
+	 * Remove Events module
+	 * @throws \yii\db\Exception
+	 */
 	public function removeEventsModule()
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$eventTabId = \App\Module::getModuleId('Events');
+		if (!$eventTabId) {
+			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+			return;
+		}
 		$dbCommand = \App\Db::getInstance()->createCommand();
-		$eventTabId = App\Module::getModuleId('Events');
-		$calendarTabId = App\Module::getModuleId('Calendar');
+		$calendarTabId = \App\Module::getModuleId('Calendar');
 		$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => 'LBL_RECURRENCE_INFORMATION', 'tabid' => $eventTabId])->scalar();
 		$blockIdReminder = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => 'LBL_REMINDER_INFORMATION'])->scalar();
 		$dbCommand->update('vtiger_blocks', ['tabid' => $calendarTabId], ['blockid' => [$blockId, $blockIdReminder]])->execute();
@@ -548,7 +413,7 @@ class YetiForceUpdate
 			\vtlib\Block::deleteForModule($moduleInstance);
 			$dbCommand->update('vtiger_crmentity', ['setype' => 'Calendar'], ['setype' => 'Events'])->execute();
 			$dataReader = (new \App\Db\Query())->select(['columnname', 'tablename'])->from('vtiger_field')->where(['uitype' => 301])->createCommand()->query();
-			while($row = $dataReader->read()) {
+			while ($row = $dataReader->read()) {
 				$dbCommand->update($row['tablename'], [$row['columnname'] => 'Calendar'], [$row['columnname'] => 'Events'])->execute();
 			}
 			$moduleInstance->deleteIcons();
@@ -573,15 +438,21 @@ class YetiForceUpdate
 			$dbCommand->delete('vtiger_links', ['like', 'linkurl', "module={$moduleName}&"])->execute();
 			$dbCommand->delete('vtiger_profile2utility', ['tabid' => $eventTabId])->execute();
 		}
-
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	/**
+	 * Remove workflow tasks
+	 * @todo remove all tasks by Events module
+	 */
 	private function removeWorkflowTask()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
+		$workflowId = (new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['summary' => 'Workflow for Calendar Todos when Send Notification is True', 'module_name' => 'Calendar'])->scalar();
 		$tasks = [
-			['moduleName' => 'Events', 'summary' => 'Notify Contact On Ticket Change', 'changes' => ['workflow_id' => 14, 'workflowId' => 14]]
+			['moduleName' => 'Events', 'summary' => 'Notify Contact On Ticket Change', 'changes' => ['workflow_id' => $workflowId, 'workflowId' => $workflowId]]
 		];
 		foreach ($tasks as $taskData) {
 			if (empty($taskData)) {
@@ -603,6 +474,7 @@ class YetiForceUpdate
 				}
 			}
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	public function updateData()
@@ -744,53 +616,74 @@ class YetiForceUpdate
 	private function getConfigurations()
 	{
 		return [
-			['name' => 'config/config.inc.php', 'conditions' => [
-				['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
+			['name' => 'config/config.inc.php', 'conditions' =>
+				[
+					['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
+				],
 			],
-			],
-			['name' => 'config/modules/Calendar.php', 'conditions' => [
-				['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, Standard
-	'CALENDAR_VIEW' => 'Standard',
+			['name' => 'config/modules/Calendar.php', 'conditions' =>
+				[
+					['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
+					['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
+					['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
+					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, Standard
+	'CALENDAR_VIEW' => 'Extended',
 "]
-			]
+				]
 			],
-			['name' => 'config/modules/Users.php', 'conditions' => [
-				['type' => 'add', 'search' => "];", 'checkInContents' => 'SHOW_ROLE_NAME', 'addingType' => 'before', 'value' => "	// Show role name
+			['name' => 'config/modules/Users.php', 'conditions' =>
+				[
+					['type' => 'add', 'search' => "];", 'checkInContents' => 'SHOW_ROLE_NAME', 'addingType' => 'before', 'value' => "	// Show role name
 	'SHOW_ROLE_NAME' => true,
 "],
-			]
+				]
 			],
-			['name' => 'config/performance.php', 'conditions' => [
-				['type' => 'add', 'search' => "];", 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
+			['name' => 'config/performance.php', 'conditions' =>
+				[
+					['type' => 'add', 'search' => "];", 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
 	'INVENTORY_EDIT_VIEW_LAYOUT' => true,
 "],
+				],
 			],
-			],
-			['name' => 'config/modules/OSSMail.php', 'conditions' => [
-				['type' => 'add', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'if (isset($site_URL)) {', 'addingType' => 'before', 'value' => 'if (isset($site_URL)) {
-'],
-				['type' => 'add', 'search' => '$config[\'imap_open_add_connection_type\']', 'checkInContents' => '}
-$config[\'imap_open_add_connection_type\']', 'addingType' => 'before', 'value' => '}
-'],
-				['type' => 'add', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'if (isset($site_URL)) {', 'addingType' => 'before', 'value' => 'if (isset($site_URL)) {
-'],
-				['type' => 'add', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'if (isset($dbconfig)) {', 'addingType' => 'before', 'value' => 'if (isset($dbconfig)) {
-	'],
-				['type' => 'add', 'search' => '$config[\'db_prefix\']', 'checkInContents' => 'defined(\'RCUBE_INSTALL_PATH\')', 'addingType' => 'before', 'value' => '}
-if (!defined(\'RCUBE_INSTALL_PATH\')) {
-	define(\'RCUBE_INSTALL_PATH\', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . \'public_html\' . DIRECTORY_SEPARATOR . \'modules\' . DIRECTORY_SEPARATOR . \'OSSMail\' . DIRECTORY_SEPARATOR . \'roundcube\'));
+			['name' => 'config/modules/OSSMail.php', 'conditions' =>
+				[
+					['type' => 'update', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'isset($dbconfig)', 'value' => "if (isset(\$dbconfig)) {
+	\$config['db_dsnw'] = 'mysql://' . \$dbconfig['db_username'] . ':' . \$dbconfig['db_password'] . '@' . \$dbconfig['db_server'] . ':' . \$dbconfig['db_port'] . '/' . \$dbconfig['db_name'];
 }
-']
+"],
+					['type' => 'add', 'search' => '$config[\'db_prefix\']', 'checkInContents' => 'defined(\'RCUBE_INSTALL_PATH\')', 'addingType' => 'before', 'value' => "if (!defined('RCUBE_INSTALL_PATH')) {
+	define('RCUBE_INSTALL_PATH', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'public_html' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'OSSMail' . DIRECTORY_SEPARATOR . 'roundcube'));
+}
+"],
+					['type' => 'update', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'isset($site_URL)', 'value' => "if (isset(\$site_URL)) {
+	\$config['site_URL'] = \$config['public_URL'] = \$site_URL;
+	\$config['public_URL'] .= strpos(\$_SERVER['SCRIPT_NAME'], 'public_html/modules/OSSMail') === false ? '' : 'public_html/';
+}
+"],
+					['type' => 'remove', 'search' => '$config[\'public_URL\']', 'checkInContents' => 'isset($site_URL)']
+				],
 			],
+			['name' => 'config/modules/OpenStreetMap.php', 'conditions' =>
+				[
+					['type' => 'update', 'search' => 'seaching', 'replace' => ['seaching', 'searching']],
+					['type' => 'add', 'search' => "];", 'checkInContents' => 'ROUTE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to calculate of route
+	'ROUTE_CONNECTOR' => 'Yours'
+"],
+					['type' => 'add', 'search' => "];", 'checkInContents' => 'COORDINATE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
+	'COORDINATE_CONNECTOR' => 'OpenStreetMap',
+"],
+				]
 			],
 		];
 	}
+
 	/**
 	 * Configuration files.
 	 */
 	private function updateConfigurationFiles()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$rootDirectory = ROOT_DIRECTORY . DIRECTORY_SEPARATOR;
 		foreach ($this->getConfigurations() as $config) {
 			if (!$config) {
@@ -828,6 +721,9 @@ if (!defined(\'RCUBE_INSTALL_PATH\')) {
 									unset($addContent[$index]);
 									break;
 								case 'remove':
+									if (isset($condition['checkInContents']) && strpos($baseContent, $condition['checkInContents']) !== false) {
+										break;
+									}
 									if (!empty($condition['before'])) {
 										if (strpos($configContentClone[$key - 1], $condition['before']) !== false) {
 											unset($configContent[$key]);
@@ -853,6 +749,8 @@ if (!defined(\'RCUBE_INSTALL_PATH\')) {
 								case 'update':
 									if (isset($condition['checkInLine']) && (strpos($condition['checkInLine'], $configContent[$key]) !== false)) {
 										break;
+									} elseif (isset($condition['checkInContents']) && strpos($baseContent, $condition['checkInContents']) !== false) {
+										break;
 									}
 									if (isset($condition['replace'])) {
 										$configContent[$key] = str_replace($condition['replace'][0], $condition['replace'][1], $configContent[$key]);
@@ -874,7 +772,9 @@ if (!defined(\'RCUBE_INSTALL_PATH\')) {
 				file_put_contents($fileName, $content);
 			}
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
+
 	/**
 	 * Cron data.
 	 */
@@ -894,9 +794,282 @@ if (!defined(\'RCUBE_INSTALL_PATH\')) {
 	 */
 	public function postupdate()
 	{
+		return true;
+	}
+
+	/**
+	 * Migrate image field.
+	 */
+	public function imageFix()
+	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		try {
+			$imageInstance = new MigrateImages();
+			$imageInstance->preProcess();
+			$imageInstance->update();
+			$imageInstance->clean();
+		} catch (\Throwable $ex) {
+			$this->log('MIGRATE imageFix: ' . $ex->getMessage() . '|' . $ex->getTraceAsString());
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-		return true;
+	}
+}
+
+/**
+ * Class MigrateImages
+ */
+class MigrateImages
+{
+
+	public $modules = [];
+	public $tables = ['u_#__attachments', 'vtiger_salesmanattachmentsrel'];
+	public $moduleName = '';
+	public $uitypes = [69, 311];
+
+	/**
+	 * Preprocess.
+	 *
+	 * @return bool
+	 */
+	public function preProcess()
+	{
+		$db = \App\Db::getInstance();
+		foreach ($this->tables as $key => $table) {
+			if (!$db->isTableExists($table)) {
+				unset($this->tables[$key]);
+			}
+		}
+	}
+
+	/**
+	 * Update.
+	 */
+	public function update()
+	{
+		$modules = array_column(\vtlib\Functions::getAllModules(), 'name');
+		$fields = (new \App\Db\Query())->select(['tabid', 'uitype'])->from('vtiger_field')->where(['uitype' => $this->uitypes])->orderBy(['tabid' => SORT_ASC])->createCommand()->queryAllByGroup(2);
+		foreach ($fields as $tabId => $uitypes) {
+			try {
+				if ($tabId) {
+					$this->moduleName = \App\Module::getModuleName($tabId);
+					$this->modules = $modules;
+					if (in_array(69, $uitypes)) {
+						$this->migrateImage();
+					}
+					if (in_array(311, $uitypes)) {
+						$this->migrateMultiImage();
+					}
+				}
+			} catch (\Throwable $ex) {
+				\App\Log::error('MIGRATE FILES:' . $ex->getMessage() . $ex->getTraceAsString());
+			}
+		}
+	}
+
+	/**
+	 * Migrate image field.
+	 *
+	 * @param string $field
+	 */
+	private function migrateImage(string $field = null)
+	{
+		$queryGenerator = new \App\QueryGenerator($this->moduleName);
+		$entityModel = $queryGenerator->getEntityModel();
+		if ($field) {
+			$field = $queryGenerator->getModuleModel()->getField($field);
+			$fields = $field ? [$field] : [];
+		} else {
+			$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(69);
+		}
+		$field = reset($fields);
+		if (empty($fields) || count($fields) !== 1 || !isset($entityModel->tab_name_index[$field->getTableName()])) {
+			\App\Log::error('MIGRATE FILES ID:' . implode(',', array_keys($fields)) . "|{$this->moduleName} - Incorrect data");
+			return;
+		}
+		$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
+		$queryGenerator->permissions = false;
+		$queryGenerator->setStateCondition('All');
+		$queryGenerator->setFields(['id', $field->getName()]);
+		$queryGenerator->setCustomColumn(['vtiger_attachments.*']);
+		if ($field->getModuleName() === 'Users') {
+			$relTable = 'vtiger_salesmanattachmentsrel';
+			if (!in_array($relTable, $this->tables)) {
+				return;
+			}
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.smid"]);
+		} else {
+			$relTable = 'vtiger_seattachmentsrel';
+			$queryGenerator->addJoin(['INNER JOIN', $relTable, $queryGenerator->getColumnName('id') . "=$relTable.crmid"]);
+		}
+		$queryGenerator->addJoin(['INNER JOIN', 'vtiger_attachments', "$relTable.attachmentsid = vtiger_attachments.attachmentsid"]);
+		$dataReader = $queryGenerator->createQuery()->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$this->updateRow($row, $field);
+		}
+		$dataReader->close();
+	}
+
+	/**
+	 * Migrate MultiImage field.
+	 */
+	private function migrateMultiImage()
+	{
+		$queryGenerator = new \App\QueryGenerator($this->moduleName);
+		$entityModel = $queryGenerator->getEntityModel();
+		$fields = $queryGenerator->getModuleModel()->getFieldsByUiType(311);
+		foreach ($fields as $field) {
+			if (empty($field) || !isset($entityModel->tab_name_index[$field->getTableName()])) {
+				\App\Log::error("MIGRATE FILES ID:{$field->getName()}|{$this->moduleName} - Incorrect data");
+				continue;
+			}
+			if ($field->getModuleName() === 'Contacts' || $field->getModuleName() === 'Products') {
+				$this->migrateImage($field->getName());
+				continue;
+			}
+			if (!in_array('u_#__attachments', $this->tables)) {
+				continue;
+			}
+			$field->set('primaryColumn', $entityModel->tab_name_index[$field->getTableName()]);
+			$queryGenerator->permissions = false;
+			$queryGenerator->setStateCondition('All');
+			$queryGenerator->setFields(['id', $field->getName()]);
+			$queryGenerator->setCustomColumn(['attachmentsid' => 'u_#__attachments.attachmentid', 'path' => 'u_#__attachments.path', 'name' => 'u_#__attachments.name']);
+			$queryGenerator->addJoin(['INNER JOIN', 'u_#__attachments', $queryGenerator->getColumnName('id') . '=u_#__attachments.crmid']);
+			$queryGenerator->addNativeCondition(['and', ['u_#__attachments.fieldid' => $field->getId()], ['u_#__attachments.status' => 1]]);
+			$dataReader = $queryGenerator->createQuery()->createCommand()->query();
+			while ($row = $dataReader->read()) {
+				$this->updateRow($row, $field, true);
+			}
+		}
+	}
+
+	/**
+	 * Update data.
+	 *
+	 * @param array               $row
+	 * @param \Vtiger_Field_Model $field
+	 * @param bool                $isMulti
+	 */
+	private function updateRow(array $row, \Vtiger_Field_Model $field, bool $isMulti = false)
+	{
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		if (substr(str_replace('\\', '/', $row['path']), 0, 7) !== 'storage') {
+			$path = $row['path'] . 'X';
+			$row['path'] = substr($path, strpos($path, 'storage'), -1);
+		}
+		$path = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $row['path'];
+		$file = \App\Fields\File::loadFromInfo([
+			'path' => $path . DIRECTORY_SEPARATOR . $row['attachmentsid'],
+			'name' => $row['name'],
+		]);
+		if (!file_exists($file->getPath())) {
+			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - No file");
+			return;
+		}
+		if ($file->validate()) {
+			$image = [];
+			$image['key'] = hash('sha1', $file->getContents()) . $this->generatePassword(10);
+			$image['size'] = \vtlib\Functions::showBytes($file->getSize());
+			$image['name'] = $file->getName();
+			$image['path'] = $this->getLocalPath($file->getPath());
+
+			$oldValue = (new \App\Db\Query())->select([$field->getColumnName()])->from($field->getTableName())->where([$field->get('primaryColumn') => $row['id']])->scalar();
+			$value = \App\Json::decode($oldValue);
+			if (!is_array($value)) {
+				$value = [];
+			}
+			$value[] = $image;
+			if ($dbCommand->update($field->getTableName(), [$field->getColumnName() => \App\Json::encode($value)], [$field->get('primaryColumn') => $row['id']])->execute()) {
+				if ($isMulti) {
+					$dbCommand->delete('u_#__attachments', ['and', ['attachmentid' => $row['attachmentsid']], ['fieldid' => $field->getId()]])->execute();
+				} else {
+					$dbCommand->delete('vtiger_crmentity', ['and', ['crmid' => $row['attachmentsid']], ['not in', 'setype', $this->modules]])->execute();
+					$dbCommand->delete('vtiger_attachments', ['attachmentsid' => $row['attachmentsid']])->execute();
+					if ($field->getModuleName() === 'Users') {
+						$dbCommand->delete('vtiger_salesmanattachmentsrel', ['attachmentsid' => $row['attachmentsid']])->execute();
+					}
+				}
+			}
+		} else {
+			\App\Log::error("MIGRATE FILES ID:{$row['id']}|{$row['attachmentsid']} - " . $row['path']);
+		}
+	}
+
+	/**
+	 * Generate random password.
+	 *
+	 * @param int $length
+	 *
+	 * @return string
+	 */
+	private function generatePassword($length = 10, $type = 'lbd')
+	{
+		$chars = [];
+		if (strpos($type, 'l') !== false) {
+			$chars[] = 'abcdefghjkmnpqrstuvwxyz';
+		}
+		if (strpos($type, 'b') !== false) {
+			$chars[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+		}
+		if (strpos($type, 'd') !== false) {
+			$chars[] = '0123456789';
+		}
+		if (strpos($type, 's') !== false) {
+			$chars[] = '!"#$%&\'()*+,-./:;<=>?@[\]^_{|}';
+		}
+		$password = $allChars = '';
+		foreach ($chars as $char) {
+			$allChars .= $char;
+			$password .= $char[array_rand(str_split($char))];
+		}
+		$allChars = str_split($allChars);
+		$missing = $length - count($chars);
+		for ($i = 0; $i < $missing; ++$i) {
+			$password .= $allChars[array_rand($allChars)];
+		}
+		return str_shuffle($password);
+	}
+
+	/**
+	 * Get crm pathname.
+	 *
+	 * @param string $path Absolute pathname
+	 *
+	 * @return string Local pathname
+	 */
+	public function getLocalPath($path)
+	{
+		if (strpos($path, ROOT_DIRECTORY) === 0) {
+			$index = strlen(ROOT_DIRECTORY) + 1;
+			if (strrpos(ROOT_DIRECTORY, '/') === strlen(ROOT_DIRECTORY) - 1 || strrpos(ROOT_DIRECTORY, '\\') === strlen(ROOT_DIRECTORY) - 1) {
+				$index -= 1;
+			}
+			$path = substr($path, $index);
+		}
+		return $path;
+	}
+
+	/**
+	 * Drop tables.
+	 *
+	 * @param array $tables
+	 */
+	public function clean()
+	{
+		$db = \App\Db::getInstance();
+		foreach ($this->tables as $table) {
+			if (!$db->isTableExists($table)) {
+				continue;
+			}
+			if ($table === 'u_#__attachments') {
+				$db->createCommand()->delete('u_#__attachments', ['status' => 0])->execute();
+			}
+			if (!(new \App\Db\Query())->from($table)->exists()) {
+				$db->createCommand()->dropTable($table)->execute();
+			} else {
+				\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");
+			}
+		}
 	}
 }

@@ -8,17 +8,17 @@
  *************************************************************************************/
 'use strict';
 
-jQuery.Class("Calendar_CalendarView_Js", {
-	currentInstance: false,
-	getInstanceByView: function () {
-		var view = jQuery('#currentView').val();
-		var jsFileName = view + 'View';
-		var moduleClassName = view + "_" + jsFileName + "_Js";
+jQuery.Class("Calendar_Calendar_Js", {
+	getInstanceByView: function (view) {
+		if (typeof view === 'undefined') {
+			view = $('#currentView').val();
+		}
+		var moduleClassName = "Calendar_" + view + "_Js";
 		var instance;
 		if (typeof window[moduleClassName] !== "undefined") {
 			instance = new window[moduleClassName]();
 		} else {
-			instance = new Calendar_CalendarView_Js();
+			instance = new Calendar_Calendar_Js();
 		}
 		return instance;
 	},
@@ -37,6 +37,16 @@ jQuery.Class("Calendar_CalendarView_Js", {
 }, {
 	calendarView: false,
 	calendarCreateView: false,
+	container: false,
+	getContainer: function () {
+		if (!this.container) {
+			this.container = $('.js-base-container');
+		}
+		return this.container;
+	},
+	setContainer: function (container) {
+		this.container = container;
+	},
 	renderCalendar: function () {
 		var thisInstance = this;
 		var eventLimit = app.getMainParams('eventLimit');
@@ -97,7 +107,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 			selectable: true,
 			selectHelper: true,
 			hiddenDays: hiddenDays,
-			height: app.setCalendarHeight(),
+			height: app.setCalendarHeight(this.getContainer()),
 			views: {
 				basic: {
 					eventLimit: false,
@@ -125,18 +135,18 @@ jQuery.Class("Calendar_CalendarView_Js", {
 					placement: 'auto',
 					template: '<div class="popover calendarPopover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
 					content: '<div><span class="far fa-clock"></span> <label>' + app.vtranslate('JS_START_DATE') + '</label>: ' + event.start_display + '</div>' +
-					'<div><span class="far fa-clock"></span> <label>' + app.vtranslate('JS_END_DATE') + '</label>: ' + event.end_display + '</div>' +
-					(event.lok ? '<div><span class="fas fa-globe"></span> <label>' + app.vtranslate('JS_LOCATION') + '</label>: ' + event.lok + '</div>' : '') +
-					(event.pri ? '<div><span class="fas fa-exclamation-circle"></span> <label>' + app.vtranslate('JS_PRIORITY') + '</label>: <span class="picklistCT_Calendar_taskpriority_' + event.pri + '">' + app.vtranslate('JS_' + event.pri) + '</span></div>' : '') +
-					'<div><span class="fas fa-question-circle"></span> <label>' + app.vtranslate('JS_STATUS') + '</label>:  <span class="picklistCT_Calendar_activitystatus_' + event.sta + '">' + app.vtranslate('JS_' + event.sta) + '</span></div>' +
-					(event.accname ? '<div><span class="userIcon-Accounts" aria-hidden="true"></span> <label>' + app.vtranslate('JS_ACCOUNTS') + '</label>: <span class="modCT_Accounts">' + event.accname + '</span></div>' : '') +
-					(event.linkexl ? '<div><span class="userIcon-' + event.linkexm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION_EXTEND') + '</label>: <a class="modCT_' + event.linkexm + '" target="_blank" href="index.php?module=' + event.linkexm + '&view=Detail&record=' + event.linkextend + '">' + event.linkexl + '</a></div>' : '') +
-					(event.linkl ? '<div><span class="userIcon-' + event.linkm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION') + '</label>: <a class="modCT_' + event.linkm + '" target="_blank" href="index.php?module=' + event.linkm + '&view=Detail&record=' + event.link + '">' + event.linkl + '</span></a></div>' : '') +
-					(event.procl ? '<div><span class="userIcon-' + event.procm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_PROCESS') + '</label>: <a class="modCT_' + event.procm + '"target="_blank" href="index.php?module=' + event.procm + '&view=Detail&record=' + event.process + '">' + event.procl + '</a></div>' : '') +
-					(event.subprocl ? '<div><span class="userIcon-' + event.subprocm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_SUB_PROCESS') + '</label>: <a class="modCT_' + event.subprocm + '" target="_blank" href="index.php?module=' + event.subprocm + '&view=Detail&record=' + event.subprocess + '">' + event.subprocl + '</a></div>' : '') +
-					(event.state ? '<div><span class="far fa-star"></span> <label>' + app.vtranslate('JS_STATE') + '</label>:  <span class="picklistCT_Calendar_state_' + event.state + '">' + app.vtranslate(event.state) + '</span></div>' : '') +
-					'<div><span class="fas fa-eye"></span> <label>' + app.vtranslate('JS_VISIBILITY') + '</label>:  <span class="picklistCT_Calendar_visibility_' + event.vis + '">' + valueEventVis + '</div>' +
-					(event.smownerid ? '<div><span class="fas fa-user"></span> <label>' + app.vtranslate('JS_ASSIGNED_TO') + '</label>: ' + event.smownerid + '</div>' : '')
+						'<div><span class="far fa-clock"></span> <label>' + app.vtranslate('JS_END_DATE') + '</label>: ' + event.end_display + '</div>' +
+						(event.lok ? '<div><span class="fas fa-globe"></span> <label>' + app.vtranslate('JS_LOCATION') + '</label>: ' + event.lok + '</div>' : '') +
+						(event.pri ? '<div><span class="fas fa-exclamation-circle"></span> <label>' + app.vtranslate('JS_PRIORITY') + '</label>: <span class="picklistCT_Calendar_taskpriority_' + event.pri + '">' + app.vtranslate('JS_' + event.pri) + '</span></div>' : '') +
+						'<div><span class="fas fa-question-circle"></span> <label>' + app.vtranslate('JS_STATUS') + '</label>:  <span class="picklistCT_Calendar_activitystatus_' + event.sta + '">' + app.vtranslate('JS_' + event.sta) + '</span></div>' +
+						(event.accname ? '<div><span class="userIcon-Accounts" aria-hidden="true"></span> <label>' + app.vtranslate('JS_ACCOUNTS') + '</label>: <span class="modCT_Accounts">' + event.accname + '</span></div>' : '') +
+						(event.linkexl ? '<div><span class="userIcon-' + event.linkexm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION_EXTEND') + '</label>: <a class="modCT_' + event.linkexm + '" target="_blank" href="index.php?module=' + event.linkexm + '&view=Detail&record=' + event.linkextend + '">' + event.linkexl + '</a></div>' : '') +
+						(event.linkl ? '<div><span class="userIcon-' + event.linkm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION') + '</label>: <a class="modCT_' + event.linkm + '" target="_blank" href="index.php?module=' + event.linkm + '&view=Detail&record=' + event.link + '">' + event.linkl + '</span></a></div>' : '') +
+						(event.procl ? '<div><span class="userIcon-' + event.procm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_PROCESS') + '</label>: <a class="modCT_' + event.procm + '"target="_blank" href="index.php?module=' + event.procm + '&view=Detail&record=' + event.process + '">' + event.procl + '</a></div>' : '') +
+						(event.subprocl ? '<div><span class="userIcon-' + event.subprocm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_SUB_PROCESS') + '</label>: <a class="modCT_' + event.subprocm + '" target="_blank" href="index.php?module=' + event.subprocm + '&view=Detail&record=' + event.subprocess + '">' + event.subprocl + '</a></div>' : '') +
+						(event.state ? '<div><span class="far fa-star"></span> <label>' + app.vtranslate('JS_STATE') + '</label>:  <span class="picklistCT_Calendar_state_' + event.state + '">' + app.vtranslate(event.state) + '</span></div>' : '') +
+						'<div><span class="fas fa-eye"></span> <label>' + app.vtranslate('JS_VISIBILITY') + '</label>:  <span class="picklistCT_Calendar_visibility_' + event.vis + '">' + valueEventVis + '</div>' +
+						(event.smownerid ? '<div><span class="fas fa-user"></span> <label>' + app.vtranslate('JS_ASSIGNED_TO') + '</label>: ' + event.smownerid + '</div>' : '')
 				});
 				if (event.rendering === 'background') {
 					element.append(`<span class="${event.icon} mr-1"></span>${event.title}`)
@@ -431,7 +441,7 @@ jQuery.Class("Calendar_CalendarView_Js", {
 	},
 	getCalendarView: function () {
 		if (this.calendarView == false) {
-			this.calendarView = jQuery('#calendarview');
+			this.calendarView = jQuery('.js-calendar__container');
 		}
 		return this.calendarView;
 	},
@@ -481,12 +491,12 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		});
 	},
 	switchTpl(on, off, state) {
-		return `<div class="btn-group btn-group-toggle js-switch" data-toggle="buttons">
-					<label class="btn btn-outline-primary js-switch--label-on ${state ? '' : 'active'}">
+		return `<div class="btn-group btn-group-toggle js-switch c-calendar-switch" data-toggle="buttons">
+					<label class="btn btn-outline-primary c-calendar-switch__button js-switch--label-on ${state ? '' : 'active'}">
 						<input type="radio" name="options" data-on-text="${on}" autocomplete="off" ${state ? '' : 'checked'}>
 						${on}
 					</label>
-					<label class="btn btn-outline-primary ${state ? 'active' : ''}">
+					<label class="btn btn-outline-primary c-calendar-switch__button ${state ? 'active' : ''}">
 						<input type="radio" name="options" data-off-text="${off}" autocomplete="off" ${state ? 'checked' : ''}>
 						${off}
 					</label>
@@ -631,12 +641,5 @@ jQuery.Class("Calendar_CalendarView_Js", {
 		this.registerLoadCalendarData();
 		this.registerButtonSelectAll();
 		this.registerChangeView();
-	}
-});
-jQuery(document).ready(function () {
-	if ($('#currentView').val() !== 'CalendarExtended') {
-		let instance = Calendar_CalendarView_Js.getInstanceByView();
-		instance.registerEvents();
-		Calendar_CalendarView_Js.currentInstance = instance;
 	}
 });
