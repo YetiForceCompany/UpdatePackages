@@ -103,6 +103,7 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
+		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
 		$db->createCommand()->checkIntegrity(false)->execute();
@@ -134,6 +135,7 @@ class YetiForceUpdate
 		$this->imageFix();
 		$this->attachmentsFix();
 		$this->updateConfigurationFiles();
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function attachmentsFix()
@@ -626,7 +628,7 @@ class YetiForceUpdate
 					['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
 					['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
 					['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
-					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, Standard
+					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, ''
 	'CALENDAR_VIEW' => 'Extended',
 "]
 				]
@@ -660,7 +662,7 @@ class YetiForceUpdate
 	\$config['public_URL'] .= strpos(\$_SERVER['SCRIPT_NAME'], 'public_html/modules/OSSMail') === false ? '' : 'public_html/';
 }
 "],
-					['type' => 'remove', 'search' => '$config[\'public_URL\']', 'checkInContents' => 'isset($site_URL)']
+					['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)']
 				],
 			],
 			['name' => 'config/modules/OpenStreetMap.php', 'conditions' =>
