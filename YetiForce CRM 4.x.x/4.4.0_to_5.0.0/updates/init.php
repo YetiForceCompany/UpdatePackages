@@ -158,7 +158,6 @@ class YetiForceUpdate
 	private function updateRecords()
 	{
 		$dbCommand = App\Db::getInstance()->createCommand();
-		//$dbCommand->update('vtiger_ossmails_logs', ['status' => '2'], ['status' => '1'])->execute(); // ?
 
 		$subQuery = (new \App\Db\Query())->select(['vtiger_crmentity.setype'])
 			->from('vtiger_crmentity')->where(['vtiger_crmentity.crmid' => new \yii\db\Expression('vtiger_crmentityrel.crmid')]);
@@ -234,7 +233,7 @@ class YetiForceUpdate
 			$customViewModel->save();
 			\App\Db::getInstance()->createCommand()->delete('vtiger_user_module_preferences',
 				['userid' => 'Users:' . \App\User::getCurrentUserId(), 'tabid' => App\Module::getModuleId($moduleName)])
-				->execute(); // ?
+				->execute();
 		}
 	}
 
