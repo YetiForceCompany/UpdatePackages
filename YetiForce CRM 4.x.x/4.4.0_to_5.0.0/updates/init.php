@@ -627,7 +627,7 @@ class YetiForceUpdate
 					['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
 					['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
 					['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
-					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, ''
+					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
 	'CALENDAR_VIEW' => 'Extended',
 "]
 				]

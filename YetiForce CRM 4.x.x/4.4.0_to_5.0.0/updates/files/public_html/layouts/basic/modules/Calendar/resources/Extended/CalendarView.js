@@ -143,8 +143,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 						vis: calendarDetails.visibility.value,
 						sta: calendarDetails.activitystatus.value,
 						className: 'ownerCBg_' + calendarDetails.assigned_user_id.value + ' picklistCBr_Calendar_activitytype_' + calendarDetails.activitytype.value,
-						start_display: calendarDetails.date_start.display_value + ' ' + calendarDetails.time_start.display_value,
-						end_display: calendarDetails.due_date.display_value + ' ' + calendarDetails.time_end.display_value,
+						start_display: calendarDetails.date_start.display_value,
+						end_display: calendarDetails.due_date.display_value,
 						smownerid: calendarDetails.assigned_user_id.display_value,
 						pri: calendarDetails.taskpriority.value,
 						lok: calendarDetails.location.display_value
@@ -199,7 +199,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		this.createAddSwitch();
 	},
 	addHeaderButtons() {
-		if (this.calendar.find('.js-calendar__view-btn').length) {
+		if (this.calendarContainer.find('.js-calendar__view-btn').length) {
 			return;
 		}
 		let buttonsContainer = this.calendarContainer.prev('.js-calendar__header-buttons'),
@@ -218,6 +218,9 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			let sideBar = thisInstance.getSidebarView();
 			sideBar.find('.js-qcForm').html(data);
 			thisInstance.showRightPanelForm();
+			app.showNewScrollbar(sideBar.find('.js-calendar__form__wrapper'), {
+				suppressScrollX: true
+			});
 			sideBar.find('.js-activity-state .summaryCloseEdit').on('click', function () {
 				thisInstance.getCalendarCreateView();
 			});
@@ -227,8 +230,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		});
 	},
 	createAddSwitch() {
-		const calendarview = this.getCalendarView(),
-			thisInstance = this;
+		const calendarview = this.getCalendarView();
 		if ($('.js-calendar-switch-container').length) {
 			return;
 		}
@@ -262,21 +264,26 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 						app.moduleCacheSet('defaultSwitchingDays', 'all');
 					}
 					calendarview.fullCalendar('option', 'hiddenDays', hiddenDays);
-					thisInstance.subDateRow = false;
-					if (thisInstance.getCalendarView().fullCalendar('getView').type !== 'year') {
+					this.subDateRow = false;
+					if (calendarview.fullCalendar('getView').type !== 'year') {
 						this.loadCalendarData();
+						calendarview.fullCalendar('option', 'height', app.setCalendarHeight());
 					} else {
-						thisInstance.registerViewRenderEvents(thisInstance.getCalendarView().fullCalendar('getView'), false);
+						this.registerViewRenderEvents(calendarview.fullCalendar('getView'), false);
 					}
 				});
 		}
 	},
 	eventRender: function (event, element) {
+		if (event.id === undefined) {
+			return;
+		}
 		const self = this;
 		let valueEventVis = '';
 		if (event.vis !== '') {
 			valueEventVis = app.vtranslate('JS_' + event.vis);
 		}
+		$(document).find('.calendarPopover.show').hide();
 		app.showPopoverElementView(element.find('.fc-content'), {
 			title: event.title + '<a href="javascript:void(0);" class="float-right mx-1 js-edit-element" data-js="click"><span class="fas fa-edit float-right"></span></a>' + '<a href="index.php?module=' + event.module + '&view=Detail&record=' + event.id + '" class="float-right mx-1"><span class="fas fa-th-list"></span></a>',
 			container: 'body',
@@ -362,7 +369,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			subDateListUnit = 'month';
 		} else if ('week' === dateListUnit) {
 			subDateListUnit = 'week';
-		} else if ('day' === dateListUnit || 'agendaDay' === dateListUnit) {
+		} else if ('basicDay' === dateListUnit || 'agendaDay' === dateListUnit) {
 			subDateListUnit = 'day';
 		}
 		if ('year' === subDateListUnit) {
@@ -496,8 +503,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		thisInstance.loadCalendarEditView(id, params).done((data) => {
 			progressInstance.progressIndicator({mode: 'hide'});
 			let sideBar = thisInstance.getSidebarView();
-			thisInstance.showRightPanelForm();
 			sideBar.find('.js-qcForm').html(data);
+			thisInstance.showRightPanelForm();
 			let rightFormCreate = $(document).find('form[name="QuickCreate"]'),
 				editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(sideBar.find('[name="module"]').val()),
 				headerInstance = new Vtiger_Header_Js(),
@@ -664,7 +671,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		for (let day = 0; day < daysToShow; ++day) {
 			let active = '';
 			if (app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all') {
-				if (prevDays.day() === 0 || prevDays.day() === 6) {
+				if ($.inArray(prevDays.day(), app.getMainParams('hiddenDays', true)) !== -1) {
 					prevDays = moment(prevDays).add(1, 'days');
 					daysToShow++;
 					continue;
@@ -798,7 +805,11 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			if (calendarRightPanel.hasClass('hideSiteBar')) {
 				sitebarButton.trigger('click');
 			}
-		})
+		});
+		app.showNewScrollbar(calendarRightPanel.find('.js-calendar__form__wrapper'), {
+			suppressScrollX: true
+		});
+		app.showPopoverElementView(calendarRightPanel.find('.js-popover-tooltip'));
 	},
 	loadCalendarCreateView() {
 		let aDeferred = $.Deferred();
@@ -848,8 +859,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		let progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
 		this.loadCalendarCreateView().done((data) => {
 			progressInstance.progressIndicator({mode: 'hide'});
-			thisInstance.showRightPanelForm();
 			qcForm.html(data);
+			thisInstance.showRightPanelForm();
 			let rightFormCreate = $(document).find('form[name="QuickCreate"]'),
 				moduleName = sideBar.find('[name="module"]').val(),
 				editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(moduleName),
@@ -910,11 +921,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 	registerAddForm() {
 		const thisInstance = this;
 		let sideBar = thisInstance.getSidebarView();
-		thisInstance.getCalendarCreateView().done(function () {
-			app.showNewScrollbar($('.js-calendar__form__wrapper'), {
-				suppressScrollX: true
-			});
-		});
+		thisInstance.getCalendarCreateView();
 		AppConnector.request('index.php?module=Calendar&view=RightPanelExtended&mode=getUsersList').done(
 			function (data) {
 				if (data) {

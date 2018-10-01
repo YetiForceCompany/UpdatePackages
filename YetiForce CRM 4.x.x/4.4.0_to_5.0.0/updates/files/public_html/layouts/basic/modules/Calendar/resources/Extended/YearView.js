@@ -79,9 +79,11 @@ var YearView = View.extend({
 	appendWeekButton() {
 		$('.fc-row.fc-week.fc-widget-content').each(function () {
 			let date = $(this).find('.fc-day-top').first().data('date');
-			$(this).prepend(`<div class="js-show-week fc-year__show-week-btn" data-date="${date}" data-js="click"><span class="fas fa-angle-double-right"></span></div>`);
+			let actualWeek = moment(date).format('WW');
+			$(this).prepend(`<div class="js-show-week js-popover-tooltip fc-year__show-week-btn" data-toggle="popover" data-date="${date}" data-content="${app.vtranslate('JS_WEEK')} ${actualWeek}" role="tooltip" data-js="click | popover">${actualWeek}</div>`);
 		});
 		this.getCalendarView().find(".js-show-week").on('click', (e) => {
+			$(e.currentTarget).popover('hide');
 			let date = moment($(e.currentTarget).data('date')).format(CONFIG.dateFormat.toUpperCase());
 			this.getCalendarView().fullCalendar('changeView', 'agendaWeek', date);
 			$(".js-sub-record .active").click();
@@ -134,9 +136,16 @@ var YearView = View.extend({
 							element.append(`<span class="${event.icon} mr-1"></span>${event.title}`);
 							return element;
 						}
+						event.countShow = '99+';
+						if (event.count < 100) {
+							event.countShow = event.count;
+						}
 						element = `<div class="js-show-day cell-calendar u-cursor-pointer d-flex" data-date="${event.date}" data-js="click">
-							<a class="fc-year__show-day-btn mx-auto" href="#" data-date="${event.date}">
-								<span class="far fa-calendar-check"></span>
+							<a class="fc-year__show-day-btn mx-auto" href="#" data-date="${event.date}" title="${event.count}">
+								  <span class="fa-layers fa-fw">
+									<span class="fas fa-calendar fa-lg"></span>
+									<span class="fc-year__show-day-btn__text fa-layers-text fa-inverse u-font-weight-700" data-fa-transform="shrink-6 down-4">${event.countShow}</span>
+								  </span>	
 							</a>
 						</div>`;
 						return element;
@@ -167,6 +176,7 @@ var YearView = View.extend({
 				}), events);
 			});
 			self.appendWeekButton();
+			app.showPopoverElementView();
 			progressInstance.progressIndicator({mode: 'hide'});
 		});
 	},
