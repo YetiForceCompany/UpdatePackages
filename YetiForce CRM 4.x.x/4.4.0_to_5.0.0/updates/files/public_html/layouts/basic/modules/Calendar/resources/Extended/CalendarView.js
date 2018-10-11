@@ -1,11 +1,18 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
+window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends Calendar_Calendar_Js {
 
-Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
-	isRegisterUsersChangeRegistered: false,
-	datesRowView: false,
-	sidebarView: {length: 0},
-	calendarContainer: false,
+	constructor(container) {
+		super(container);
+		this.datesRowView = false;
+		this.sidebarView = {
+			length: 0
+		};
+		this.calendarContainer = false;
+		this.addCommonMethodsToYearView();
+		this.calendar = this.getCalendarView();
+	}
+
 	/**
 	 * Function extends FC.views.year with current class methods
 	 */
@@ -24,156 +31,110 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			registerFilterTabChange: self.registerFilterTabChange,
 			sidebarView: self.sidebarView,
 			registerAfterSubmitForm: self.registerAfterSubmitForm,
-			getActiveFilters: self.getActiveFilters
+			registerViewRenderEvents: self.registerViewRenderEvents,
+			appendSubDateRow: self.appendSubDateRow,
+			refreshDatesRowView: self.refreshDatesRowView,
+			generateYearList: self.generateYearList,
+			getDatesRowView: self.getDatesRowView,
+			updateCountTaskCalendar: self.updateCountTaskCalendar,
+			registerDatesChange: self.registerDatesChange,
+			addHeaderButtons: self.addHeaderButtons,
+			getActiveFilters: self.getActiveFilters,
 		});
-	},
+	}
+
 	/**
 	 * Render calendar
 	 */
 	renderCalendar(readonly = false) {
-		const self = this;
-		this.calendar = self.getCalendarView();
-		let eventLimit = app.getMainParams('eventLimit'),
-			weekView = app.getMainParams('weekView'),
-			dayView = app.getMainParams('dayView'),
-			userDefaultActivityView = app.getMainParams('activity_view'),
-			defaultView = app.moduleCacheGet('defaultView'),
-			userDefaultTimeFormat = app.getMainParams('time_format'),
-			convertedFirstDay = CONFIG.firstDayOfWeekNo,
-			defaultFirstHour = app.getMainParams('start_hour') + ':00',
-			hiddenDays = [];
-		if (eventLimit == 'true') {
-			eventLimit = true;
-		} else if (eventLimit == 'false') {
-			eventLimit = false;
-		} else {
-			eventLimit = parseInt(eventLimit) + 1;
-		}
-		if (userDefaultActivityView === 'Today') {
-			userDefaultActivityView = dayView;
-		} else if (userDefaultActivityView === 'This Week') {
-			userDefaultActivityView = weekView;
-		} else {
-			userDefaultActivityView = 'month';
-		}
-		if (defaultView != null) {
-			userDefaultActivityView = defaultView;
-		}
-		self.getDatesRowView().find('.js-sub-date-list').data('type', userDefaultActivityView);
-		if (userDefaultTimeFormat == 24) {
-			userDefaultTimeFormat = 'H:mm';
-		} else {
-			userDefaultTimeFormat = 'h:mmt';
-		}
-		if (app.getMainParams('switchingDays') === 'workDays') {
-			hiddenDays = app.getMainParams('hiddenDays', true);
-		}
-		this.addCommonMethodsToYearView();
-		let options = {
-			header: {
-				left: 'year,month,' + weekView + ',' + dayView,
-				center: 'prevYear,prev,title,next,nextYear',
-				right: 'today'
-			},
-			timeFormat: userDefaultTimeFormat,
-			axisFormat: userDefaultTimeFormat,
-			scrollTime: defaultFirstHour,
-			firstDay: convertedFirstDay,
-			defaultView: userDefaultActivityView,
-			editable: !readonly,
-			slotMinutes: 15,
-			defaultEventMinutes: 0,
-			forceEventDuration: true,
-			defaultTimedEventDuration: '01:00:00',
-			eventLimit: eventLimit,
-			eventLimitText: app.vtranslate('JS_MORE'),
-			selectable: true,
-			selectHelper: true,
-			hiddenDays: hiddenDays,
-			height: app.setCalendarHeight(this.getContainer()),
-			views: {
-				basic: {
-					eventLimit: false,
+		let self = this,
+			basicOptions = this.setCalendarBasicOptions(),
+			options = {
+				header: {
+					left: 'year,month,' + app.getMainParams('weekView') + ',' + app.getMainParams('dayView'),
+					center: 'prevYear,prev,title,next,nextYear',
+					right: 'today'
 				},
-				year: {
-					eventLimit: 10,
-					eventLimitText: app.vtranslate('JS_COUNT_RECORDS'),
-					titleFormat: 'YYYY',
-					select: function (start, end) {
-
+				editable: !readonly,
+				height: self.setCalendarHeight(),
+				views: {
+					basic: {
+						eventLimit: false,
+					},
+					year: {
+						eventLimit: 10,
+						eventLimitText: app.vtranslate('JS_COUNT_RECORDS'),
+						titleFormat: 'YYYY',
+						select: function (start, end) {
+						},
+						loadView: function () {
+							self.getCalendarView().fullCalendar('getCalendar').view.render();
+						}
+					},
+					month: {
+						titleFormat: 'YYYY MMMM',
+						loadView: function () {
+							self.loadCalendarData();
+						}
+					},
+					week: {
+						titleFormat: 'YYYY MMM D',
+						loadView: function () {
+							self.loadCalendarData();
+						}
+					},
+					day: {
+						titleFormat: 'YYYY MMM D',
+						loadView: function () {
+							self.loadCalendarData();
+						}
+					},
+					basicDay: {
+						type: 'agendaDay',
+						loadView: function () {
+							self.loadCalendarData();
+						}
 					}
 				},
-				month: {
-					titleFormat: 'YYYY MMMM'
+				select: function (start, end) {
+					self.selectDays(start, end);
+					self.getCalendarView().fullCalendar('unselect');
 				},
-				week: {
-					titleFormat: 'YYYY MMM D'
+				eventRender: function (event, element) {
+					self.eventRenderer(event, element);
 				},
-				day: {
-					titleFormat: 'YYYY MMM D'
+				viewRender: function (view, element) {
+					if (view.type !== 'year') {
+						self.loadCalendarData(view);
+					}
 				},
-				basicDay: {
-					type: 'agendaDay'
+				addCalendarEvent(calendarDetails) {
+					let calendar = self.getCalendarView(),
+						startDate = calendar.fullCalendar('moment', calendarDetails.date_start.value + ' ' + calendarDetails.time_start.value),
+						endDate = calendar.fullCalendar('moment', calendarDetails.due_date.value + ' ' + calendarDetails.time_end.value),
+						eventObject = {
+							id: calendarDetails._recordId,
+							title: calendarDetails.subject.display_value,
+							start: startDate.format(),
+							end: endDate.format(),
+							module: 'Calendar',
+							url: 'index.php?module=Calendar&view=Detail&record=' + calendarDetails._recordId,
+							activitytype: calendarDetails.activitytype.value,
+							allDay: calendarDetails.allday.value == 'on',
+							state: calendarDetails.state.value,
+							vis: calendarDetails.visibility.value,
+							sta: calendarDetails.activitystatus.value,
+							className: 'ownerCBg_' + calendarDetails.assigned_user_id.value + ' picklistCBr_Calendar_activitytype_' + calendarDetails.activitytype.value,
+							start_display: calendarDetails.date_start.display_value,
+							end_display: calendarDetails.due_date.display_value,
+							smownerid: calendarDetails.assigned_user_id.display_value,
+							pri: calendarDetails.taskpriority.value,
+							lok: calendarDetails.location.display_value
+						};
+					self.getCalendarView().fullCalendar('renderEvent', eventObject);
 				}
-			},
-			select: function (start, end) {
-				self.selectDays(start, end);
-				self.getCalendarView().fullCalendar('unselect');
-			},
-			eventRender: function (event, element) {
-				self.eventRender(event, element);
-			},
-			viewRender: function (view, element) {
-				self.registerViewRenderEvents(view, false);
-			},
-			addCalendarEvent(calendarDetails) {
-				let calendar = self.getCalendarView(),
-					startDate = calendar.fullCalendar('moment', calendarDetails.date_start.value + ' ' + calendarDetails.time_start.value),
-					endDate = calendar.fullCalendar('moment', calendarDetails.due_date.value + ' ' + calendarDetails.time_end.value),
-					eventObject = {
-						id: calendarDetails._recordId,
-						title: calendarDetails.subject.display_value,
-						start: startDate.format(),
-						end: endDate.format(),
-						module: 'Calendar',
-						url: 'index.php?module=Calendar&view=Detail&record=' + calendarDetails._recordId,
-						activitytype: calendarDetails.activitytype.value,
-						allDay: calendarDetails.allday.value == 'on',
-						state: calendarDetails.state.value,
-						vis: calendarDetails.visibility.value,
-						sta: calendarDetails.activitystatus.value,
-						className: 'ownerCBg_' + calendarDetails.assigned_user_id.value + ' picklistCBr_Calendar_activitytype_' + calendarDetails.activitytype.value,
-						start_display: calendarDetails.date_start.display_value,
-						end_display: calendarDetails.due_date.display_value,
-						smownerid: calendarDetails.assigned_user_id.display_value,
-						pri: calendarDetails.taskpriority.value,
-						lok: calendarDetails.location.display_value
-					};
-				self.getCalendarView().fullCalendar('renderEvent', eventObject);
-			},
-			monthNames: [app.vtranslate('JS_JANUARY'), app.vtranslate('JS_FEBRUARY'), app.vtranslate('JS_MARCH'),
-				app.vtranslate('JS_APRIL'), app.vtranslate('JS_MAY'), app.vtranslate('JS_JUNE'), app.vtranslate('JS_JULY'),
-				app.vtranslate('JS_AUGUST'), app.vtranslate('JS_SEPTEMBER'), app.vtranslate('JS_OCTOBER'),
-				app.vtranslate('JS_NOVEMBER'), app.vtranslate('JS_DECEMBER')],
-			monthNamesShort: [app.vtranslate('JS_JAN'), app.vtranslate('JS_FEB'), app.vtranslate('JS_MAR'),
-				app.vtranslate('JS_APR'), app.vtranslate('JS_MAY'), app.vtranslate('JS_JUN'), app.vtranslate('JS_JUL'),
-				app.vtranslate('JS_AUG'), app.vtranslate('JS_SEP'), app.vtranslate('JS_OCT'), app.vtranslate('JS_NOV'),
-				app.vtranslate('JS_DEC')],
-			dayNames: [app.vtranslate('JS_SUNDAY'), app.vtranslate('JS_MONDAY'), app.vtranslate('JS_TUESDAY'),
-				app.vtranslate('JS_WEDNESDAY'), app.vtranslate('JS_THURSDAY'), app.vtranslate('JS_FRIDAY'),
-				app.vtranslate('JS_SATURDAY')],
-			dayNamesShort: [app.vtranslate('JS_SUN'), app.vtranslate('JS_MON'), app.vtranslate('JS_TUE'),
-				app.vtranslate('JS_WED'), app.vtranslate('JS_THU'), app.vtranslate('JS_FRI'),
-				app.vtranslate('JS_SAT')],
-			buttonText: {
-				today: app.vtranslate('JS_TODAY'),
-				year: app.vtranslate('JS_YEAR'),
-				month: app.vtranslate('JS_MONTH'),
-				week: app.vtranslate('JS_WEEK'),
-				day: app.vtranslate('JS_DAY')
-			},
-			allDayText: app.vtranslate('JS_ALL_DAY'),
-		};
+			};
+		options = $.extend(basicOptions, options);
 		if (!readonly) {
 			options.eventDrop = function (event, delta, revertFunc) {
 				self.updateEvent(event, delta, revertFunc);
@@ -186,18 +147,16 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				let link = new URL($(this)[0].href),
 					url = 'index.php?module=Calendar&view=ActivityState&record=' +
 						link.searchParams.get("record");
+				self.openRightPanel();
 				self.showStatusUpdate(url);
 			};
 		}
-		if (app.moduleCacheGet('start') != null) {
-			let s = moment(app.moduleCacheGet('start')).valueOf(),
-				e = moment(app.moduleCacheGet('end')).valueOf();
-			options.defaultDate = moment(moment(s + ((e - s) / 2)).format('YYYY-MM-DD'));
-		}
-		this.calendar.fullCalendar('destroy');
 		this.calendar.fullCalendar(options);
-		this.createAddSwitch();
-	},
+	}
+
+	registerChangeView() {
+	}
+
 	addHeaderButtons() {
 		if (this.calendarContainer.find('.js-calendar__view-btn').length) {
 			return;
@@ -209,102 +168,110 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		this.calendarContainer.find('.fc-center').after(filters);
 		this.registerClearFilterButton();
 		this.registerFilterTabChange();
-	},
+	}
+
 	showStatusUpdate(params) {
 		const thisInstance = this,
 			progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
 		AppConnector.request(params).done((data) => {
 			progressInstance.progressIndicator({mode: 'hide'});
 			let sideBar = thisInstance.getSidebarView();
-			sideBar.find('.js-qcForm').html(data);
+			sideBar.find('.js-qc-form').html(data);
 			thisInstance.showRightPanelForm();
 			app.showNewScrollbar(sideBar.find('.js-calendar__form__wrapper'), {
 				suppressScrollX: true
 			});
-			sideBar.find('.js-activity-state .summaryCloseEdit').on('click', function () {
+			sideBar.find('.js-activity-state .js-summary-close-edit').on('click', function () {
 				thisInstance.getCalendarCreateView();
 			});
 			sideBar.find('.js-activity-state .editRecord').on('click', function () {
 				thisInstance.getCalendarEditView($(this).data('id'));
 			});
 		});
-	},
-	createAddSwitch() {
-		const calendarview = this.getCalendarView();
-		if ($('.js-calendar-switch-container').length) {
-			return;
-		}
-		let switchAllDays = !(app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all'),
-			switchContainer = $(`<div class="js-calendar-switch-container"></div>`).prependTo($('.formsContainer')),
-			switchHistory = !(app.getMainParams('showType') === 'current' && app.moduleCacheGet('defaultShowType') !== 'history');
+	}
 
-		$(this.switchTpl(app.vtranslate('JS_TO_REALIZE'), app.vtranslate('JS_HISTORY'), switchHistory)).prependTo(switchContainer)
-			.on('change', 'input', (e) => {
-				const currentTarget = $(e.currentTarget);
-				if (typeof currentTarget.data('on-text') !== 'undefined') {
-					app.setMainParams('showType', 'current');
-					app.moduleCacheSet('defaultShowType', 'current');
-				} else if (typeof currentTarget.data('off-text') !== 'undefined') {
-					app.setMainParams('showType', 'history');
-					app.moduleCacheSet('defaultShowType', 'history');
-				}
-				this.loadCalendarData();
-			});
-		if (app.getMainParams('hiddenDays', true) !== false) {
-			$(this.switchTpl(app.vtranslate('JS_WORK_DAYS'), app.vtranslate('JS_ALL'), switchAllDays)).prependTo(switchContainer)
-				.on('change', 'input', (e) => {
-					const currentTarget = $(e.currentTarget);
-					let hiddenDays = [];
-					if (typeof currentTarget.data('on-text') !== 'undefined') {
-						app.setMainParams('switchingDays', 'workDays');
-						app.moduleCacheSet('defaultSwitchingDays', 'workDays');
-						hiddenDays = app.getMainParams('hiddenDays', true);
-					} else if (typeof currentTarget.data('off-text') !== 'undefined') {
-						app.setMainParams('switchingDays', 'all');
-						app.moduleCacheSet('defaultSwitchingDays', 'all');
-					}
-					calendarview.fullCalendar('option', 'hiddenDays', hiddenDays);
-					this.subDateRow = false;
-					if (calendarview.fullCalendar('getView').type !== 'year') {
-						this.loadCalendarData();
-						calendarview.fullCalendar('option', 'height', app.setCalendarHeight());
-					} else {
-						this.registerViewRenderEvents(calendarview.fullCalendar('getView'), false);
-					}
-				});
+	registerSwitchEvents() {
+		const calendarView = this.getCalendarView();
+		let isWorkDays = (app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all'),
+			switchShowTypeVal = (app.getMainParams('showType') === 'current' && app.moduleCacheGet('defaultShowType') !== 'history'),
+			switchContainer = $('.js-calendar__tab--filters'),
+			switchShowType = switchContainer.find('.js-switch--showType'),
+			switchSwitchingDays = switchContainer.find('.js-switch--switchingDays');
+
+		if (!switchShowTypeVal) {
+			switchShowType.find('.js-switch--label-off').button('toggle');
 		}
-	},
-	eventRender: function (event, element) {
+		switchShowType.on('change', 'input', (e) => {
+			const currentTarget = $(e.currentTarget);
+			if (typeof currentTarget.data('on-text') !== 'undefined') {
+				app.setMainParams('showType', 'current');
+				app.moduleCacheSet('defaultShowType', 'current');
+			} else if (typeof currentTarget.data('off-text') !== 'undefined') {
+				app.setMainParams('showType', 'history');
+				app.moduleCacheSet('defaultShowType', 'history');
+			}
+			calendarView.fullCalendar('getCalendar').view.options.loadView();
+		});
+		if (switchSwitchingDays.length) {
+			if (!isWorkDays) {
+				switchSwitchingDays.find('.js-switch--label-off').button('toggle');
+			}
+			switchSwitchingDays.on('change', 'input', (e) => {
+				const currentTarget = $(e.currentTarget);
+				let hiddenDays = [];
+				if (typeof currentTarget.data('on-text') !== 'undefined') {
+					app.setMainParams('switchingDays', 'workDays');
+					app.moduleCacheSet('defaultSwitchingDays', 'workDays');
+					hiddenDays = app.getMainParams('hiddenDays', true);
+				} else if (typeof currentTarget.data('off-text') !== 'undefined') {
+					app.setMainParams('switchingDays', 'all');
+					app.moduleCacheSet('defaultSwitchingDays', 'all');
+				}
+				calendarView.fullCalendar('option', 'hiddenDays', hiddenDays);
+				calendarView.fullCalendar('option', 'height', this.setCalendarHeight());
+				if (calendarView.fullCalendar('getView').type === 'year') {
+					this.registerViewRenderEvents(calendarView.fullCalendar('getView'));
+				}
+			});
+		}
+	}
+
+	eventRenderer(event, element) {
 		if (event.id === undefined) {
 			return;
 		}
 		const self = this;
-		let valueEventVis = '';
+		let editableButton = '',
+			valueEventVis = '';
+		if (self.getCalendarView().fullCalendar('getCalendar').view.options.editable) {
+			editableButton = '<a href="javascript:void(0);" class="float-right mx-1 js-edit-element" data-js="click"><span class="fas fa-edit float-right"></span></a>';
+		}
 		if (event.vis !== '') {
 			valueEventVis = app.vtranslate('JS_' + event.vis);
 		}
-		$(document).find('.calendarPopover.show').hide();
+		$(document).find('.js-calendar-popover.show').hide();
 		app.showPopoverElementView(element.find('.fc-content'), {
-			title: event.title + '<a href="javascript:void(0);" class="float-right mx-1 js-edit-element" data-js="click"><span class="fas fa-edit float-right"></span></a>' + '<a href="index.php?module=' + event.module + '&view=Detail&record=' + event.id + '" class="float-right mx-1"><span class="fas fa-th-list"></span></a>',
+			title: event.title + editableButton + '<a href="index.php?module=' + event.module + '&view=Detail&record=' + event.id + '" class="float-right mx-1"><span class="fas fa-th-list"></span></a>',
 			container: 'body',
 			html: true,
 			placement: 'auto',
 			callbackShown: function () {
 				$('.js-calendar-popover' + event.id).find('.js-edit-element').on('click', function () {
+					self.openRightPanel();
 					self.getCalendarEditView(event.id);
 				});
 			},
-			template: '<div class="popover calendarPopover js-calendar-popover' + event.id + '" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+			template: '<div class="popover calendarPopover js-calendar-popover' + event.id + '" role="tooltip" data-js="hide"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
 			content: '<div><span class="fas fa-clock"></span> <label>' + app.vtranslate('JS_START_DATE') + '</label>: ' + event.start_display + '</div>' +
 				'<div><span class="fas fa-clock"></span> <label>' + app.vtranslate('JS_END_DATE') + '</label>: ' + event.end_display + '</div>' +
 				(event.lok ? '<div><span class="fas fa-globe"></span> <label>' + app.vtranslate('JS_LOCATION') + '</label>: ' + event.lok + '</div>' : '') +
 				(event.pri ? '<div><span class="fas fa-exclamation-circle"></span> <label>' + app.vtranslate('JS_PRIORITY') + '</label>: <span class="picklistCT_Calendar_taskpriority_' + event.pri + '">' + app.vtranslate('JS_' + event.pri) + '</span></div>' : '') +
 				'<div><span class="fas fa-question-circle"></span> <label>' + app.vtranslate('JS_STATUS') + '</label>:  <span class="picklistCT_Calendar_activitystatus_' + event.sta + '">' + app.vtranslate('JS_' + event.sta) + '</span></div>' +
 				(event.accname ? '<div><span class="userIcon-Accounts" aria-hidden="true"></span> <label>' + app.vtranslate('JS_ACCOUNTS') + '</label>: <span class="modCT_Accounts">' + event.accname + '</span></div>' : '') +
-				(event.linkexl ? '<div><span class="userIcon-' + event.linkexm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION_EXTEND') + '</label>: <a class="modCT_' + event.linkexm + '" target="_blank" href="index.php?module=' + event.linkexm + '&view=Detail&record=' + event.linkextend + '">' + event.linkexl + '</a></div>' : '') +
-				(event.linkl ? '<div><span class="userIcon-' + event.linkm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION') + '</label>: <a class="modCT_' + event.linkm + '" target="_blank" href="index.php?module=' + event.linkm + '&view=Detail&record=' + event.link + '">' + event.linkl + '</span></a></div>' : '') +
-				(event.procl ? '<div><span class="userIcon-' + event.procm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_PROCESS') + '</label>: <a class="modCT_' + event.procm + '"target="_blank" href="index.php?module=' + event.procm + '&view=Detail&record=' + event.process + '">' + event.procl + '</a></div>' : '') +
-				(event.subprocl ? '<div><span class="userIcon-' + event.subprocm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_SUB_PROCESS') + '</label>: <a class="modCT_' + event.subprocm + '" target="_blank" href="index.php?module=' + event.subprocm + '&view=Detail&record=' + event.subprocess + '">' + event.subprocl + '</a></div>' : '') +
+				(event.linkexl ? '<div><span class="userIcon-' + event.linkexm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION_EXTEND') + '</label>: <a class="modCT_' + event.linkexm + '" href="index.php?module=' + event.linkexm + '&view=Detail&record=' + event.linkextend + '">' + event.linkexl + '</a></div>' : '') +
+				(event.linkl ? '<div><span class="userIcon-' + event.linkm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_RELATION') + '</label>: <a class="modCT_' + event.linkm + '" href="index.php?module=' + event.linkm + '&view=Detail&record=' + event.link + '">' + event.linkl + '</span></a></div>' : '') +
+				(event.procl ? '<div><span class="userIcon-' + event.procm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_PROCESS') + '</label>: <a class="modCT_' + event.procm + '" href="index.php?module=' + event.procm + '&view=Detail&record=' + event.process + '">' + event.procl + '</a></div>' : '') +
+				(event.subprocl ? '<div><span class="userIcon-' + event.subprocm + '" aria-hidden="true"></span> <label>' + app.vtranslate('JS_SUB_PROCESS') + '</label>: <a class="modCT_' + event.subprocm + '" href="index.php?module=' + event.subprocm + '&view=Detail&record=' + event.subprocess + '">' + event.subprocl + '</a></div>' : '') +
 				(event.state ? '<div><span class="fas fa-star"></span> <label>' + app.vtranslate('JS_STATE') + '</label>:  <span class="picklistCT_Calendar_state_' + event.state + '">' + app.vtranslate(event.state) + '</span></div>' : '') +
 				'<div><span class="fas fa-eye"></span> <label>' + app.vtranslate('JS_VISIBILITY') + '</label>:  <span class="picklistCT_Calendar_visibility_' + event.vis + '">' + valueEventVis + '</div>' +
 				(event.smownerid ? '<div><span class="fas fa-user"></span> <label>' + app.vtranslate('JS_ASSIGNED_TO') + '</label>: ' + event.smownerid + '</div>' : '')
@@ -312,11 +279,13 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		if (event.rendering === 'background') {
 			element.append(`<span class="${event.icon} mr-1"></span>${event.title}`)
 		}
-	},
+	}
+
 	getDatesRowView() {
 		this.datesRowView = $('.js-dates-row');
 		return this.datesRowView;
-	},
+	}
+
 	/**
 	 * Appends subdate row to calendar header and register its scroll
 	 * @param toolbar
@@ -337,19 +306,20 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				});
 			}
 		}
-	},
+	}
+
 	/**
 	 * Function toggles next year/month and general arrows on view render
 	 * @param view
 	 * @param element
 	 */
-	registerViewRenderEvents(view, noCounting) {
+	registerViewRenderEvents(view) {
 		this.calendarContainer = this.getCalendarView();
 		let toolbar = this.calendarContainer.find('.fc-toolbar.fc-header-toolbar'),
 			nextPrevButtons = toolbar.find('.fc-prev-button, .fc-next-button'),
 			yearButtons = toolbar.find('.fc-prevYear-button, .fc-nextYear-button');
 		this.appendSubDateRow(toolbar);
-		this.refreshDatesRowView(view, noCounting);
+		this.refreshDatesRowView(view);
 		this.addHeaderButtons();
 		if (view.type === 'year') {
 			nextPrevButtons.hide();
@@ -358,65 +328,56 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			nextPrevButtons.show();
 			yearButtons.hide();
 		}
-	},
-	refreshDatesRowView(calendarView, noCounting) {
+	}
+
+	/**
+	 * Date bar with counts
+	 * @param object calendarView
+	 */
+	refreshDatesRowView(calendarView) {
 		const self = this;
-		let dateListUnit = calendarView.type,
-			subDateListUnit = 'week';
-		if ('year' === dateListUnit) {
-			subDateListUnit = 'year';
-		} else if ('month' === dateListUnit) {
-			subDateListUnit = 'month';
-		} else if ('week' === dateListUnit) {
-			subDateListUnit = 'week';
-		} else if ('basicDay' === dateListUnit || 'agendaDay' === dateListUnit) {
-			subDateListUnit = 'day';
+		switch (calendarView.type) {
+			case 'year':
+				self.generateYearList(calendarView.intervalStart, calendarView.intervalEnd);
+				break;
+			case 'month':
+				self.generateSubMonthList(calendarView.intervalStart, calendarView.intervalEnd);
+				break;
+			case 'week':
+			case 'agendaWeek':
+				self.generateSubWeekList(calendarView.start, calendarView.end);
+				break;
+			default:
+				self.generateSubDaysList(calendarView.start, calendarView.end);
 		}
-		if ('year' === subDateListUnit) {
-			self.generateYearList(calendarView.intervalStart, calendarView.intervalEnd);
-		} else if ('month' === subDateListUnit) {
-			self.generateSubMonthList(calendarView.intervalStart, calendarView.intervalEnd);
-		} else if ('week' === subDateListUnit) {
-			self.generateSubWeekList(calendarView.start, calendarView.end);
-		} else if ('day' === subDateListUnit) {
-			self.generateSubDaysList(calendarView.start, calendarView.end);
-		}
-		if (!noCounting) {
-			self.updateCountTaskCalendar();
-		}
+		self.updateCountTaskCalendar();
 		self.registerDatesChange();
-	},
+	}
+
 	registerDatesChange() {
-		const thisInstance = this;
-		let datesView = thisInstance.getDatesRowView().find('.js-date-record'),
-			subDatesView = thisInstance.getDatesRowView().find('.js-sub-record');
-		datesView.on('click', function () {
-			datesView.removeClass('date-active');
-			$(this).addClass('date-active');
-			thisInstance.getCalendarView().fullCalendar('gotoDate', moment($(this).data('date') + '-01-01', "YYYY-MM-DD"));
-			thisInstance.loadCalendarData();
+		this.getDatesRowView().find('.js-sub-record').on('click', (e) => {
+			let currentTarget = $(e.currentTarget);
+			currentTarget.addClass('active');
+			this.getCalendarView().fullCalendar('gotoDate', moment(currentTarget.data('date'), "YYYY-MM-DD"));
 		});
-		subDatesView.on('click', function () {
-			datesView.removeClass('active');
-			$(this).addClass('active');
-			thisInstance.getCalendarView().fullCalendar('gotoDate', moment($(this).data('date'), "YYYY-MM-DD"));
-			thisInstance.loadCalendarData();
-		});
-	},
+	}
+
 	getCurrentCvId() {
 		return $(".js-calendar__extended-filter-tab .active").parent('.js-filter-tab').data('cvid');
-	},
+	}
+
 	registerFilterTabChange() {
 		const thisInstance = this;
 		this.getCalendarView().find(".js-calendar__extended-filter-tab").on('shown.bs.tab', function () {
-			thisInstance.loadCalendarData();
+			thisInstance.getCalendarView().fullCalendar('getCalendar').view.options.loadView();
 		});
-	},
+	}
+
 	getSelectedUsersCalendar() {
-		const self = this;
-		let selectedUsers = self.getSidebarView().find('.js-inputUserOwnerId:checked'),
-			selectedUsersAjax = self.getSidebarView().find('.js-inputUserOwnerIdAjax'),
-			selectedRolesAjax = self.getSidebarView().find('.js-inputRoleOwnerIdAjax'),
+		const sidebar = this.getSidebarView();
+		let selectedUsers = sidebar.find('.js-input-user-owner-id:checked'),
+			selectedUsersAjax = sidebar.find('.js-input-user-owner-id-ajax'),
+			selectedRolesAjax = sidebar.find('.js-input-role-owner-id-ajax'),
 			users = [];
 		if (selectedUsers.length > 0) {
 			selectedUsers.each(function () {
@@ -426,13 +387,15 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			users = selectedUsersAjax.val().concat(selectedRolesAjax.val());
 		}
 		return users;
-	},
+	}
+
 	getSidebarView() {
 		if (!this.sidebarView.length) {
 			this.sidebarView = $('#rightPanel');
 		}
 		return this.sidebarView;
-	},
+	}
+
 	updateCountTaskCalendar() {
 		let datesView = this.getDatesRowView(),
 			subDatesElements = datesView.find('.js-sub-record'),
@@ -467,7 +430,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				$(this).find('.js-count-events').removeClass('hide').html(events.result[key]);
 			});
 		});
-	},
+	}
+
 	/**
 	 * Load calendar edit view
 	 * @param int id
@@ -490,7 +454,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			app.errorLog(error);
 		});
 		return aDeferred.promise();
-	},
+	}
+
 	/**
 	 * EditView
 	 * @param int id
@@ -503,7 +468,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		thisInstance.loadCalendarEditView(id, params).done((data) => {
 			progressInstance.progressIndicator({mode: 'hide'});
 			let sideBar = thisInstance.getSidebarView();
-			sideBar.find('.js-qcForm').html(data);
+			sideBar.find('.js-qc-form').html(data);
 			thisInstance.showRightPanelForm();
 			let rightFormCreate = $(document).find('form[name="QuickCreate"]'),
 				editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(sideBar.find('[name="module"]').val()),
@@ -513,7 +478,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			rightFormCreate.validationEngine(app.validationEngineOptions);
 			headerInstance.registerHelpInfo(rightFormCreate);
 			App.Fields.Picklist.showSelect2ElementView(sideBar.find('select'));
-			sideBar.find('.summaryCloseEdit').on('click', function () {
+			sideBar.find('.js-summary-close-edit').on('click', function () {
 				thisInstance.getCalendarCreateView();
 			});
 			params.callbackFunction = thisInstance.registerAfterSubmitForm(thisInstance, data);
@@ -525,70 +490,73 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 					toolbar: 'Min'
 				});
 			});
-			aDeferred.resolve(sideBar.find('.js-qcForm'));
+			aDeferred.resolve(sideBar.find('.js-qc-form'));
 		}).fail((error) => {
 			progressInstance.progressIndicator({mode: 'hide'});
 			app.errorLog(error);
 		});
 		return aDeferred.promise();
-	},
-	loadCalendarData() {
-		const self = this,
-			view = self.getCalendarView().fullCalendar('getView');
+	}
+
+	loadCalendarData(view = this.getCalendarView().fullCalendar('getView')) {
+		const self = this;
 		let user = [],
 			filters = this.getActiveFilters(),
 			formatDate = CONFIG.dateFormat.toUpperCase(),
-			cvid = self.getCurrentCvId();
-		self.getCalendarView().fullCalendar('removeEvents');
-		if (view.type !== 'year') {
-			let progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
-			user = self.getSelectedUsersCalendar();
-			if (0 === user.length) {
-				user = [app.getMainParams('userId')];
-			}
-			self.clearFilterButton(user, filters, cvid);
-			if (view.type === 'agendaDay') {
-				self.selectDays(view.start, view.end);
-				view.end = view.end.add(1, 'day');
-			}
-			AppConnector.request({
-				module: 'Calendar',
-				action: 'Calendar',
-				mode: 'getEvents',
-				start: view.start.format(formatDate),
-				end: view.end.format(formatDate),
-				user: user,
-				time: app.getMainParams('showType'),
-				filters: filters,
-				cvid: cvid
-			}).done((events) => {
-				self.getCalendarView().fullCalendar('removeEvents');
-				self.getCalendarView().fullCalendar('addEventSource', events.result);
-				progressInstance.progressIndicator({mode: 'hide'});
-			});
+			cvid = self.getCurrentCvId(),
+			calendarInstance = this.getCalendarView();
+		calendarInstance.fullCalendar('removeEvents');
+		let progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
+		user = self.getSelectedUsersCalendar();
+		if (0 === user.length) {
+			user = [app.getMainParams('userId')];
 		}
-		self.registerViewRenderEvents(self.getCalendarView().fullCalendar('getView'), false);
-	},
+		self.clearFilterButton(user, filters, cvid);
+		if (view.type === 'agendaDay') {
+			self.selectDays(view.start, view.end);
+			view.end = view.end.add(1, 'day');
+		}
+		AppConnector.request({
+			module: 'Calendar',
+			action: 'Calendar',
+			mode: 'getEvents',
+			start: view.start.format(formatDate),
+			end: view.end.format(formatDate),
+			user: user,
+			time: app.getMainParams('showType'),
+			filters: filters,
+			cvid: cvid
+		}).done((events) => {
+			calendarInstance.fullCalendar('removeEvents');
+			calendarInstance.fullCalendar('addEventSource', events.result);
+			progressInstance.progressIndicator({mode: 'hide'});
+		});
+		self.registerViewRenderEvents(view);
+	}
+
 	clearFilterButton(user, filters, cvid) {
 		let currentUser = parseInt(app.getMainParams('userId')),
 			time = app.getMainParams('showType'),
 			statement = ((user.length === 0 || (user.length === 1 && parseInt(user) === currentUser)) && filters.length === 0 && cvid === undefined && time === 'current');
 		$(".js-calendar__clear-filters").toggleClass('d-none', statement);
+	}
 
-	},
 	registerClearFilterButton() {
-		const sidebar = this.getSidebarView();
-		let clearBtn = this.getCalendarView().find('.js-calendar__clear-filters');
+		const sidebar = this.getSidebarView(),
+			calendarView = this.getCalendarView();
+		let clearBtn = calendarView.find('.js-calendar__clear-filters');
 		app.showPopoverElementView(clearBtn);
 		clearBtn.on('click', () => {
 			$(".js-calendar__extended-filter-tab a").removeClass('active');
-			$(".js-calendar-switch-container .js-switch").eq(1).find('.js-switch--label-on').click();
+			app.setMainParams('showType', 'current');
+			app.moduleCacheSet('defaultShowType', 'current');
 			sidebar.find("input:checkbox").prop('checked', false);
-			sidebar.find("option:selected").prop('selected', false).trigger('change');
-			sidebar.find(".js-inputUserOwnerId[value=" + app.getMainParams('userId') + "]").prop('checked', true);
-			this.loadCalendarData();
+			sidebar.find("option:selected").prop('selected', false);
+			sidebar.find(".js-input-user-owner-id[value=" + app.getMainParams('userId') + "]").prop('checked', true);
+			calendarView.fullCalendar('getCalendar').view.options.loadView();
 		});
-	},
+	}
+
 	generateYearList(dateStart, dateEnd) {
 		const thisInstance = this,
 			datesView = thisInstance.getDatesRowView();
@@ -604,7 +572,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				active = '';
 			}
 			html +=
-				`<div class="js-sub-record sub-record col-4 nav-item" data-date="${prevYear.format('YYYY')}" data-type="years" data-js="click|class:date-active">
+				`<div class="js-sub-record sub-record col-4 nav-item" data-date="${prevYear.format('YYYY')}" data-type="years" data-js="click | class: active">
 					<div class="sub-record-content nav-link ${active}">
 						<div class="sub-date-name">
 							${prevYear.format('YYYY')}
@@ -615,7 +583,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			prevYear = moment(prevYear).add(1, 'year');
 		}
 		datesView.find('.js-sub-date-list').html(html);
-	},
+	}
+
 	generateSubMonthList(dateStart, dateEnd) {
 		let datesView = this.getDatesRowView(),
 			activeMonth = parseInt(moment(dateStart).locale('en').format('M')) - 1,
@@ -628,7 +597,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				active = '';
 			}
 			html +=
-				`<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="months" data-date="${moment(dateStart).month(month).format('YYYY-MM')}">
+				`<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="months" data-date="${moment(dateStart).month(month).format('YYYY-MM')}" data-js="click | class: active">
 					<div class="sub-record-content nav-link ${active}">
 						<div class="sub-date-name">${app.vtranslate('JS_' + moment().month(month).format('MMM').toUpperCase()).toUpperCase()}
 							<div class="js-count-events count badge c-badge--md ml-1" data-js="html">0</div>
@@ -637,7 +606,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				</div>`;
 		}
 		datesView.find('.js-sub-date-list').html(html);
-	},
+	}
+
 	generateSubWeekList(dateStart, dateEnd) {
 		let datesView = this.getDatesRowView(),
 			prevWeeks = moment(dateStart).subtract(5, 'weeks'),
@@ -649,7 +619,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			if (prevWeeks.format('WW') === actualWeek) {
 				active = ' active';
 			}
-			html += '<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="weeks" data-date="' + prevWeeks.format('YYYY-MM-DD') + '">' +
+			html += '<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="weeks" data-date="' + prevWeeks.format('YYYY-MM-DD') + '" data-js="click | class: active">' +
 				'<div class="sub-record-content nav-link' + active + '">' +
 				'<div class="sub-date-name">' + app.vtranslate('JS_WEEK_SHORT') + ' ' + prevWeeks.format('WW') +
 				'<div class="js-count-events count badge c-badge--md ml-1" data-js="html">0</div>' +
@@ -659,7 +629,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			prevWeeks = moment(prevWeeks).add(1, 'weeks');
 		}
 		datesView.find('.js-sub-date-list').html(html);
-	},
+	}
+
 	generateSubDaysList(dateStart, dateEnd) {
 		const thisInstance = this;
 		let datesView = thisInstance.getDatesRowView(),
@@ -680,7 +651,7 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			if (prevDays.format('DDD') === actualDay) {
 				active = ' active';
 			}
-			html += '<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="days" data-date="' + prevDays.format('YYYY-MM-DD') + '">' +
+			html += '<div class="js-sub-record sub-record nav-item col-1 px-0" data-type="days" data-date="' + prevDays.format('YYYY-MM-DD') + '" data-js="click | class: active">' +
 				'<div class="sub-record-content nav-link' + active + '">' +
 				'<div class="sub-date-name">' + app.vtranslate('JS_DAY_SHORT') + ' ' + prevDays.format('DD') +
 				'<div class="js-count-events count badge c-badge--md ml-1" data-js="html">0</div>' +
@@ -690,7 +661,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			prevDays = moment(prevDays).add(1, 'days');
 		}
 		datesView.find('.js-sub-date-list').html(html);
-	},
+	}
+
 	selectDays(startDate, endDate) {
 		const thisInstance = this;
 		let start_hour = $('#start_hour').val(),
@@ -737,25 +709,15 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			data.find('[name="time_start"]').val(moment(startDate).format(defaultTimeFormat));
 			data.find('[name="time_end"]').val(moment(endDate).format(defaultTimeFormat));
 		});
-	},
-	registerUsersChange() {
-		const self = this,
-			sidebar = self.getSidebarView();
-		if (self.isRegisterUsersChangeRegistered) {
-			sidebar.off('change', '.js-inputUserOwnerId');
-			sidebar.off('change', '.js-inputUserOwnerIdAjax');
-		}
-		self.isRegisterUsersChangeRegistered = true;
-		sidebar.find('.js-inputUserOwnerIdAjax, .js-inputUserOwnerId').on('change', () => {
-			const calendarInstance = self.getCalendarView().fullCalendar('getCalendar');
-			if (calendarInstance.view.type !== 'year') {
-				self.loadCalendarData();
-			} else {
-				calendarInstance.view.render();
-			}
+	}
+
+	registerUsersChange(formContainer) {
+		formContainer.find('.js-input-user-owner-id-ajax, .js-input-user-owner-id').on('change', () => {
+			this.getCalendarView().fullCalendar('getCalendar').view.options.loadView();
 		});
-		self.registerPinUser();
-	},
+		this.registerPinUser();
+	}
+
 	/**
 	 * Register actions to do after save record
 	 * @param instance
@@ -763,25 +725,31 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 	 * @returns {function}
 	 */
 	registerAfterSubmitForm(self, data) {
+		const calendarView = this.getCalendarView();
 		let returnFunction = function (data) {
 			if (data.success) {
-				let textToShow = '';
-				if (self.getCalendarView().fullCalendar('clientEvents', data.result._recordId)[0]) {
-					self.updateCalendarEvent(data.result._recordId, data.result);
-					textToShow = app.vtranslate('JS_SAVE_NOTIFY_OK');
-				} else {
-					const calendarInstance = self.getCalendarView().fullCalendar('getCalendar');
-					if (calendarInstance.view.type !== 'year') {
-						calendarInstance.view.options.addCalendarEvent(data.result);
+				let textToShow = app.vtranslate('JS_SAVE_NOTIFY_SUCCESS'),
+					recordActivityStatus = data.result.activitystatus.value,
+					historyStatus = app.getMainParams('activityStateLabels', true).history,
+					inHistoryStatus = $.inArray(recordActivityStatus, historyStatus),
+					showType = app.getMainParams('showType');
+				if ((-1 !== inHistoryStatus && 'history' === showType) || (-1 === inHistoryStatus && 'history' !== showType)) {
+					if (calendarView.fullCalendar('clientEvents', data.result._recordId)[0]) {
+						self.updateCalendarEvent(data.result._recordId, data.result);
 					} else {
-						calendarInstance.view.render();
+						const calendarInstance = calendarView.fullCalendar('getCalendar');
+						if (calendarInstance.view.type !== 'year') {
+							calendarInstance.view.options.addCalendarEvent(data.result);
+						} else {
+							calendarInstance.view.render();
+						}
+						if (data.result.followup.value !== undefined) {
+							calendarView.fullCalendar('removeEvents', data.result.followup.value);
+						}
 					}
-					if (data.result.followup.value !== undefined) {
-						self.getCalendarView().fullCalendar('removeEvents', data.result.followup.value);
-					}
-					textToShow = app.vtranslate('JS_TASK_IS_SUCCESSFULLY_ADDED_TO_YOUR_CALENDAR');
 				}
-				self.getSidebarView().find('.js-qcForm').html('');
+				self.refreshDatesRowView(calendarView.fullCalendar('getView'));
+				self.getSidebarView().find('.js-qc-form').html('');
 				self.getCalendarCreateView();
 				Vtiger_Helper_Js.showPnotify({
 					text: textToShow,
@@ -791,26 +759,35 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			}
 		};
 		return returnFunction;
-	},
-	showRightPanelForm() {
-		let calendarRightPanel = $('.js-calendarRightPanel'),
-			sitebarButton = $('.js-toggleSiteBarRightButton');
+	}
+
+	openRightPanel() {
+		let calendarRightPanel = $('.js-calendar-right-panel');
 		if (calendarRightPanel.hasClass('hideSiteBar')) {
-			sitebarButton.trigger('click');
+			calendarRightPanel.find('.js-toggle-site-bar-right-button').trigger('click');
 		}
-		if (!$('.js-rightPanelEvent').hasClass('active')) {
-			$('.js-rightPanelEventLink').trigger('click');
+	}
+
+	showRightPanelForm() {
+		let calendarRightPanel = $('.js-calendar-right-panel');
+		if (!calendarRightPanel.find('.js-right-panel-event').hasClass('active')) {
+			calendarRightPanel.find('.js-right-panel-event-link').trigger('click');
 		}
-		$('.js-show-sitebar').on('click', () => {
-			if (calendarRightPanel.hasClass('hideSiteBar')) {
-				sitebarButton.trigger('click');
-			}
-		});
 		app.showNewScrollbar(calendarRightPanel.find('.js-calendar__form__wrapper'), {
 			suppressScrollX: true
 		});
 		app.showPopoverElementView(calendarRightPanel.find('.js-popover-tooltip'));
-	},
+	}
+
+	registerSiteBarEvents() {
+		let calendarRightPanel = $('.js-calendar-right-panel');
+		calendarRightPanel.find('.js-show-sitebar').on('click', () => {
+			if (calendarRightPanel.hasClass('hideSiteBar')) {
+				calendarRightPanel.find('.js-toggle-site-bar-right-button').trigger('click');
+			}
+		});
+	}
+
 	loadCalendarCreateView() {
 		let aDeferred = $.Deferred();
 		AppConnector.request({
@@ -823,7 +800,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			app.errorLog(error);
 		});
 		return aDeferred.promise();
-	},
+	}
+
 	updateCalendarEvent(calendarEventId, eventData) {
 		const calendar = this.getCalendarView();
 		let recordToUpdate = calendar.fullCalendar('clientEvents', calendarEventId)[0],
@@ -846,11 +824,12 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		recordToUpdate.pri = calendarDetails.taskpriority.value;
 		recordToUpdate.lok = calendarDetails.location.display_value;
 		calendar.fullCalendar('updateEvent', recordToUpdate);
-	},
+	}
+
 	getCalendarCreateView() {
 		const thisInstance = this;
 		let sideBar = thisInstance.getSidebarView(),
-			qcForm = sideBar.find('.js-qcForm'),
+			qcForm = sideBar.find('.js-qc-form'),
 			aDeferred = $.Deferred();
 		if (qcForm.find('form').length > 0 && qcForm.find('input[name=record]').length === 0) {
 			aDeferred.resolve(qcForm);
@@ -885,9 +864,10 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			app.errorLog(error);
 		});
 		return aDeferred.promise();
-	},
+	}
+
 	registerPinUser() {
-		$('.js-pinUser').off('click').on('click', function () {
+		$('.js-pin-user').off('click').on('click', function () {
 			const thisInstance = $(this);
 			AppConnector.request({
 				'module': app.getModuleName(),
@@ -905,19 +885,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				}
 			});
 		});
-	},
-	/**
-	 * Overwriting the parent function
-	 */
-	registerAddButton() {
-	},
-	/**
-	 * Register load calendar data
-	 */
-	registerLoadCalendarData() {
-		this.loadCalendarData();
-		this.registerFilterTabChange();
-	},
+	}
+
 	registerAddForm() {
 		const thisInstance = this;
 		let sideBar = thisInstance.getSidebarView();
@@ -925,9 +894,9 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		AppConnector.request('index.php?module=Calendar&view=RightPanelExtended&mode=getUsersList').done(
 			function (data) {
 				if (data) {
-					let formContainer = sideBar.find('.js-usersForm');
+					let formContainer = sideBar.find('.js-users-form');
 					formContainer.html(data);
-					thisInstance.registerUsersChange();
+					thisInstance.registerUsersChange(formContainer);
 					App.Fields.Picklist.showSelect2ElementView(formContainer.find('select'));
 					app.showNewScrollbar(formContainer, {
 						suppressScrollX: true
@@ -938,9 +907,9 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		AppConnector.request('index.php?module=Calendar&view=RightPanelExtended&mode=getGroupsList').done(
 			function (data) {
 				if (data) {
-					let formContainer = sideBar.find('.js-groupForm');
+					let formContainer = sideBar.find('.js-group-form');
 					formContainer.html(data);
-					thisInstance.registerUsersChange();
+					thisInstance.registerUsersChange(formContainer);
 					App.Fields.Picklist.showSelect2ElementView(formContainer.find('select'));
 					formContainer.addClass('u-min-h-30per');
 					app.showNewScrollbar(formContainer, {
@@ -949,7 +918,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				}
 			}
 		);
-	},
+	}
+
 	/**
 	 * Find element on list (user, group)
 	 * @param {jQuery.Event} e
@@ -966,7 +936,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 				item.addClass('d-none');
 			}
 		});
-	},
+	}
+
 	/**
 	 * Register filter for users and groups
 	 */
@@ -975,7 +946,8 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 		this.getSidebarView().find('a[data-toggle="tab"]').one('shown.bs.tab', function (e) {
 			$(".js-filter__search").on('keyup', self.findElementOnList.bind(self));
 		});
-	},
+	}
+
 	/**
 	 * Get active filters
 	 * @returns {Array}
@@ -995,14 +967,16 @@ Calendar_Calendar_Js('Calendar_CalendarExtended_Js', {}, {
 			filters.push({name: name, value: value});
 		});
 		return filters;
-	},
+	}
+
 	/**
 	 * Register events
 	 */
 	registerEvents() {
-		this._super();
+		super.registerEvents();
 		this.registerAddForm();
+		this.registerSiteBarEvents();
 		this.registerFilterForm();
 		ElementQueries.listen();
 	}
-});
+}

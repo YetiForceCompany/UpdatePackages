@@ -402,7 +402,7 @@ class Vtiger_Relation_Model extends \App\Base
 	 */
 	public function getDependentsList()
 	{
-		$fieldModel = $this->getRelationField(true);
+		$fieldModel = $this->getRelationField();
 		$queryGenerator = $this->getQueryGenerator();
 		$queryGenerator->addNativeCondition([
 			$fieldModel->getTableName() . '.' . $fieldModel->getColumnName() => $this->get('parentRecord')->getId(),
@@ -1048,7 +1048,7 @@ class Vtiger_Relation_Model extends \App\Base
 			$relatedModel = $this->getRelationModuleModel();
 			$relatedModelFields = $relatedModel->getFields();
 
-			foreach ($relatedModelFields as $fieldName => $fieldModel) {
+			foreach ($relatedModelFields as $fieldModel) {
 				if ($fieldModel->isViewable()) {
 					$fields[] = $fieldModel;
 				}

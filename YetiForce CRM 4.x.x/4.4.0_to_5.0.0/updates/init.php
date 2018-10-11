@@ -1,19 +1,19 @@
 <?php
 /**
- * YetiForceUpdate Class
+ * YetiForceUpdate Class.
+ *
  * @package   YetiForce.UpdatePackages
+ *
  * @copyright YetiForce Sp. z o.o.
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
 /**
- * YetiForceUpdate Class
+ * YetiForceUpdate Class.
  */
 class YetiForceUpdate
 {
-
-
 	/**
 	 * @var string
 	 */
@@ -29,27 +29,29 @@ class YetiForceUpdate
 	public $modulenode;
 
 	/**
-	 * Fields to delete
+	 * Fields to delete.
+	 *
 	 * @var string[]
 	 */
 	public $filesToDelete = [];
 
 	/**
-	 * DbImporter
+	 * DbImporter.
+	 *
 	 * @var DbImporter
 	 */
 	private $importer;
 
 	/**
-	 * Constructor
+	 * Constructor.
+	 *
 	 * @param object $modulenode
 	 */
 	public function __construct($modulenode)
 	{
 		$this->modulenode = $modulenode;
-		$this->filesToDelete = require_once('deleteFiles.php');
+		$this->filesToDelete = require_once 'deleteFiles.php';
 	}
-
 
 	/**
 	 * Logs.
@@ -64,7 +66,7 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Preupdate
+	 * Preupdate.
 	 */
 	public function preupdate()
 	{
@@ -85,6 +87,33 @@ class YetiForceUpdate
 		return true;
 	}
 
+	private function migrateCvColumnList()
+	{
+		$db = App\Db::getInstance();
+		$tableSchema = $db->getTableSchema('vtiger_cvcolumnlist', true);
+		if ($tableSchema->getColumn('field_name') && $tableSchema->getColumn('module_name') && $tableSchema->getColumn('source_field_name')) {
+			return;
+		}
+		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'field_name', 'string(50)')->execute();
+		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'module_name', 'string(25)')->execute();
+		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'source_field_name', 'string(50)')->execute();
+		$dataReader = (new \App\Db\Query())->from('vtiger_cvcolumnlist')
+			->innerJoin('vtiger_customview', 'vtiger_customview.cvid = vtiger_cvcolumnlist.cvid')->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			[$tableName, $columnName, $fieldName, $moduleFieldLabel, $fieldTypeOfData] = explode(':', $row['columnname']);
+			if ((new \App\Db\Query())->from('vtiger_field')->where(['fieldname' => $fieldName, 'tabid' => App\Module::getModuleId($row['entitytype'])])->exists()) {
+				$db->createCommand()->update('vtiger_cvcolumnlist', ['field_name' => $fieldName, 'module_name' => $row['entitytype']], ['cvid' => $row['cvid'], 'columnindex' => $row['columnindex']])
+					->execute();
+			} else {
+				$db->createCommand()->delete('vtiger_cvcolumnlist', ['cvid' => $row['cvid'], 'columnindex' => $row['columnindex']])
+					->execute();
+			}
+		}
+		if ($tableSchema->getColumn('columnname')) {
+			$db->createCommand()->dropColumn('vtiger_cvcolumnlist', 'columnname')->execute();
+		}
+	}
+
 	private function removeForeignKey()
 	{
 		$data = ['a_#__record_converter_fk_tab' => 'a_#__record_converter'];
@@ -99,13 +128,15 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Update
+	 * Update.
 	 */
 	public function update()
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
+		$this->addFilter();
+		$this->migrateCvColumnList();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		try {
 			$this->importer = new \App\Db\Importer();
@@ -129,7 +160,6 @@ class YetiForceUpdate
 		$this->updateCron();
 		$this->addFields();
 		$this->updateHeaderField();
-		$this->addFilter();
 		$this->addRelations();
 		$this->updateRecords();
 		$this->imageFix();
@@ -200,7 +230,11 @@ class YetiForceUpdate
 		$selectedColumnsList = [];
 		foreach ($fields as $fieldName) {
 			$fieldModel = $moduleModel->getField($fieldName);
-			$selectedColumnsList [] = $fieldModel->getCustomViewColumnName();
+			if (method_exists($fieldModel, 'getCustomViewSelectColumnName')) {
+				$selectedColumnsList[] = $fieldModel->getCustomViewSelectColumnName();
+			} else {
+				$selectedColumnsList[] = $fieldModel->getCustomViewColumnName();
+			}
 		}
 		$customViewData['columnslist'] = $selectedColumnsList;
 		$statusFieldModel = $moduleModel->getField('internal_tickets_status');
@@ -231,8 +265,10 @@ class YetiForceUpdate
 			$customViewModel->setModule($moduleName);
 			$customViewModel->set('columnslist', $selectedColumnsList);
 			$customViewModel->save();
-			\App\Db::getInstance()->createCommand()->delete('vtiger_user_module_preferences',
-				['userid' => 'Users:' . \App\User::getCurrentUserId(), 'tabid' => App\Module::getModuleId($moduleName)])
+			\App\Db::getInstance()->createCommand()->delete(
+				'vtiger_user_module_preferences',
+				['userid' => 'Users:' . \App\User::getCurrentUserId(), 'tabid' => App\Module::getModuleId($moduleName)]
+			)
 				->execute();
 		}
 	}
@@ -295,8 +331,8 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$fields = [
-			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 1, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
-			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 1, 2, '', NULL, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments']
+			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 1, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
+			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 1, 2, '', null, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments']
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -344,7 +380,8 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Remove Events module
+	 * Remove Events module.
+	 *
 	 * @throws \yii\db\Exception
 	 */
 	public function removeEventsModule()
@@ -443,7 +480,8 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Remove workflow tasks
+	 * Remove workflow tasks.
+	 *
 	 * @todo remove all tasks by Events module
 	 */
 	private function removeWorkflowTask()
@@ -501,6 +539,7 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => null], ['fieldname' => 'to_id', 'tabid' => \App\Module::getModuleId('OSSMailView')]],
 			['vtiger_field', ['uitype' => 312], ['fieldname' => 'authy_secret_totp', 'tabid' => \App\Module::getModuleId('Users')]],
 			['vtiger_field', ['fieldlabel' => 'Due Date & Time'], ['fieldname' => 'due_date', 'tabid' => \App\Module::getModuleId('Calendar')]],
+			['vtiger_field', ['typeofdata' => 'V~O'], ['fieldname' => 'salesprocessid', 'tabid' => \App\Module::getModuleId('SQuoteEnquiries')]],
 		];
 		\App\Db\Updater::batchUpdate($data);
 		$tables = ['u_yf_social_media_config'];
@@ -604,6 +643,11 @@ class YetiForceUpdate
 				'admin_access' => null,
 			], ['name' => 'LBL_LOGS']
 			],
+			['u_yf_chat_rooms', [
+				'room_id' => 0,
+				'name' => 'LBL_GENERAL',
+			], ['name' => 'LBL_GENERAL']
+			],
 		];
 		\App\Db\Updater::batchInsert($data);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -617,63 +661,71 @@ class YetiForceUpdate
 	private function getConfigurations()
 	{
 		return [
-			['name' => 'config/config.inc.php', 'conditions' =>
-				[
-					['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
-				],
+			['name' => 'config/config.inc.php', 'conditions' => [
+				['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
 			],
-			['name' => 'config/modules/Calendar.php', 'conditions' =>
-				[
-					['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
-					['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
-					['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
-					['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
+			],
+			['name' => 'config/modules/Calendar.php', 'conditions' => [
+				['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
+				['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
+				['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
 	'CALENDAR_VIEW' => 'Extended',
-"]
-				]
+"],
+				['type' => 'add', 'search' => 'return [', 'checkInContents' => '\'WEEK_COUNT\'', 'addingType' => 'after', 'value' => "	// Shows number of the week in the year view
+	// true - show, false - hide
+	'WEEK_COUNT' => true, //Boolean"]
+			]
 			],
-			['name' => 'config/modules/Users.php', 'conditions' =>
-				[
-					['type' => 'add', 'search' => "];", 'checkInContents' => 'SHOW_ROLE_NAME', 'addingType' => 'before', 'value' => "	// Show role name
+			['name' => 'config/modules/Users.php', 'conditions' => [
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'SHOW_ROLE_NAME', 'addingType' => 'before', 'value' => "	// Show role name
 	'SHOW_ROLE_NAME' => true,
 "],
-				]
+			]
 			],
-			['name' => 'config/performance.php', 'conditions' =>
-				[
-					['type' => 'add', 'search' => "];", 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
+			['name' => 'config/modules/Chat.php', 'conditions' => [
+				['type' => 'update', 'search' => 'REFRESH_TIME', 'replace' => [AppConfig::module('Chat', 'REFRESH_TIME'), AppConfig::module('Chat', 'REFRESH_TIME') * 1000]],
+			]
+			],
+			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'COORDINATE_CONNECTOR\'', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
+	'COORDINATE_CONNECTOR' => 'OpenStreetMap',"],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'ROUTE_CONNECTOR\'', 'addingType' => 'before', 'value' => "// Name of connector to calculate of route
+	'ROUTE_CONNECTOR' => 'Yours',"]
+			]
+			],
+			['name' => 'config/performance.php', 'conditions' => [
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
 	'INVENTORY_EDIT_VIEW_LAYOUT' => true,
 "],
-				],
 			],
-			['name' => 'config/modules/OSSMail.php', 'conditions' =>
-				[
-					['type' => 'update', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'isset($dbconfig)', 'value' => "if (isset(\$dbconfig)) {
+			],
+			['name' => 'config/modules/OSSMail.php', 'conditions' => [
+				['type' => 'update', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'isset($dbconfig)', 'value' => "if (isset(\$dbconfig)) {
 	\$config['db_dsnw'] = 'mysql://' . \$dbconfig['db_username'] . ':' . \$dbconfig['db_password'] . '@' . \$dbconfig['db_server'] . ':' . \$dbconfig['db_port'] . '/' . \$dbconfig['db_name'];
 }
 "],
-					['type' => 'add', 'search' => '$config[\'db_prefix\']', 'checkInContents' => 'defined(\'RCUBE_INSTALL_PATH\')', 'addingType' => 'before', 'value' => "if (!defined('RCUBE_INSTALL_PATH')) {
+				['type' => 'add', 'search' => '$config[\'db_prefix\']', 'checkInContents' => 'defined(\'RCUBE_INSTALL_PATH\')', 'addingType' => 'before', 'value' => "if (!defined('RCUBE_INSTALL_PATH')) {
 	define('RCUBE_INSTALL_PATH', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'public_html' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'OSSMail' . DIRECTORY_SEPARATOR . 'roundcube'));
 }
 "],
-					['type' => 'update', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'isset($site_URL)', 'value' => "if (isset(\$site_URL)) {
+				['type' => 'update', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'isset($site_URL)', 'value' => "if (isset(\$site_URL)) {
 	\$config['site_URL'] = \$config['public_URL'] = \$site_URL;
 	\$config['public_URL'] .= strpos(\$_SERVER['SCRIPT_NAME'], 'public_html/modules/OSSMail') === false ? '' : 'public_html/';
 }
 "],
-					['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)']
-				],
+				['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)']
 			],
-			['name' => 'config/modules/OpenStreetMap.php', 'conditions' =>
-				[
-					['type' => 'update', 'search' => 'seaching', 'replace' => ['seaching', 'searching']],
-					['type' => 'add', 'search' => "];", 'checkInContents' => 'ROUTE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to calculate of route
+			],
+			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [
+				['type' => 'update', 'search' => 'seaching', 'replace' => ['seaching', 'searching']],
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'ROUTE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to calculate of route
 	'ROUTE_CONNECTOR' => 'Yours'
 "],
-					['type' => 'add', 'search' => "];", 'checkInContents' => 'COORDINATE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'COORDINATE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
 	'COORDINATE_CONNECTOR' => 'OpenStreetMap',
 "],
-				]
+			]
 			],
 		];
 	}
@@ -791,7 +843,7 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Postupdate
+	 * Postupdate.
 	 */
 	public function postupdate()
 	{
@@ -818,11 +870,10 @@ class YetiForceUpdate
 }
 
 /**
- * Class MigrateImages
+ * Class MigrateImages.
  */
 class MigrateImages
 {
-
 	public $modules = [];
 	public $tables = ['u_#__attachments', 'vtiger_salesmanattachmentsrel'];
 	public $moduleName = '';

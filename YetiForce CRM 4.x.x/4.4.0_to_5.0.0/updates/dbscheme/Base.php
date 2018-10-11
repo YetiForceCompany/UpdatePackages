@@ -63,6 +63,56 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__chat_messages' => [
+				'columns' => [
+					'id' => $this->primaryKey(10)->unsigned(),
+					'userid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'user_name' => $this->stringType(50)->notNull(),
+					'created' => $this->integer(10)->unsigned(),
+					'messages' => $this->text(),
+					'room_id' => $this->integer(10)->unsigned()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_rooms' => [
+				'columns' => [
+					'room_id' => $this->integer(10),
+					'name' => $this->stringType(50)->notNull()
+				],
+				'primaryKeys' => [
+					['chat_rooms_pk', 'room_id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_rooms' => [
+				'columns' => [
+					'room_id' => $this->integer(10)->notNull(),
+					'name' => $this->stringType(50)
+				],
+				'primaryKeys' => [
+					['chat_rooms_pk', 'room_id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_users' => [
+				'columns' => [
+					'userid' => $this->integer(10)->notNull(),
+					'room_id' => $this->integer(10)->notNull(),
+					'last_message' => $this->integer(10),
+					'favorite' => $this->smallInteger(1)->notNull(),
+				],
+				'columns_mysql' => [
+					'favorite' => $this->tinyInteger(1)->notNull(),
+				],
+				'primaryKeys' => [
+					['chat_users_pk', ['userid', 'room_id']]
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'u_#__competition' => [
 				'columns' => [
 					'competitionid' => $this->integer(10)->notNull()->defaultValue(0),
@@ -126,6 +176,24 @@ class Base extends \App\Db\Importers\Base
 				],
 				'index' => [
 					['twitter_login', 'twitter_login'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_cvcolumnlist' => [
+				'columns' => [
+					'cvid' => $this->integer(10)->notNull(),
+					'columnindex' => $this->integer(10)->notNull(),
+					'field_name' => $this->stringType(50)->defaultValue(''),
+					'module_name' => $this->stringType(25)->defaultValue(''),
+					'source_field_name' => $this->stringType(50)->defaultValue(''),
+				],
+				'index' => [
+					['cvcolumnlist_columnindex_idx', 'columnindex'],
+					['cvcolumnlist_cvid_idx', 'cvid'],
+				],
+				'primaryKeys' => [
+					['cvcolumnlist_pk', ['cvid', 'columnindex']]
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

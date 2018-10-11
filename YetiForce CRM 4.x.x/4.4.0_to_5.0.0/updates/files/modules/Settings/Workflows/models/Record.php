@@ -157,7 +157,7 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 	public function isDefault()
 	{
 		$wf = $this->getWorkflowObject();
-		if ($wf->defaultworkflow == 1) {
+		if (!empty($wf->defaultworkflow) && $wf->defaultworkflow == 1) {
 			return true;
 		}
 		return false;
@@ -325,8 +325,7 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 			$executionCondition = $this->get('execution_condition');
 		}
 		$arr = ['ON_FIRST_SAVE', 'ONCE', 'ON_EVERY_SAVE', 'ON_MODIFY', 'ON_DELETE', 'ON_SCHEDULE', 'MANUAL', 'TRIGGER', 'BLOCK_EDIT', 'ON_RELATED'];
-
-		return $arr[$executionCondition - 1];
+		return $arr[$executionCondition - 1] ?? '';
 	}
 
 	/**
@@ -405,7 +404,7 @@ class Settings_Workflows_Record_Model extends Settings_Vtiger_Record_Model
 		$transformedConditions = [];
 
 		if (!empty($conditions)) {
-			foreach ($conditions as $index => $info) {
+			foreach ($conditions as $info) {
 				if (!($info['groupid'])) {
 					$firstGroup[] = ['columnname' => $info['fieldname'], 'comparator' => $info['operation'], 'value' => $info['value'],
 						'column_condition' => $info['joincondition'], 'valuetype' => $info['valuetype'], 'groupid' => $info['groupid'], ];

@@ -10,6 +10,7 @@
 	<input value="current" type="hidden" id="showType"/>
 	<input value="workDays" type="hidden" id="switchingDays"/>
 	<input value="{$EVENT_LIMIT}" type="hidden" id="eventLimit"/>
+	<input value="{$WEEK_COUNT}" type="hidden" id="weekCount"/>
 	<input value="{$WEEK_VIEW}" type="hidden" id="weekView"/>
 	<input value="{$DAY_VIEW}" type="hidden" id="dayView"/>
 	<input value="{\App\Purifier::encodeHtml(\App\Json::encode(\AppConfig::module('Calendar', 'HIDDEN_DAYS_IN_CALENDAR_VIEW')))}"
@@ -30,11 +31,11 @@
 									{if $CUSTOM_VIEW->isFeatured()}
 										<li class="nav-item js-filter-tab c-tab--small font-weight-bold"
 											data-cvid="{$CUSTOM_VIEW->getId()}" data-js="click">
-											<a class="nav-link{if $VIEWID == $CUSTOM_VIEW->getId()} active{/if}"
+											<a class="nav-link"
 											   href="#"
 											   {if $CUSTOM_VIEW->get('color')}style="color: {$CUSTOM_VIEW->get('color')};"{/if}
 											   data-toggle="tab" role="tab"
-											   aria-selected="{if $VIEWID == $CUSTOM_VIEW->getId()}true{else}false{/if}">
+											   aria-selected="false">
 												{\App\Language::translate($CUSTOM_VIEW->get('viewname'), $MODULE)}
 												{if $CUSTOM_VIEW->get('description')}
 													<span class="js-popover-tooltip fas fa-info-circle"

@@ -1,14 +1,12 @@
 {
-  "systemParams": "win32-x64-64",
+  "nodeVersion": "v9.5.0",
   "modulesFolders": [
     "public_html\\libraries"
   ],
-  "flags": [
-    "production"
-  ],
+  "flags": [],
   "linkedModules": [],
   "topLevelPatterns": [
-    "@fortawesome/fontawesome-common-types@^0.2.4",
+    "@fortawesome/fontawesome-common-types@^0.2.5",
     "@fortawesome/fontawesome-free-brands@^5.0.9",
     "@fortawesome/fontawesome-free-regular@^5.0.9",
     "@fortawesome/fontawesome-free-solid@^5.0.9",
@@ -70,7 +68,7 @@
   ],
   "lockfileEntries": {
     "@fortawesome/fontawesome-common-types@^0.1.7": "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-0.1.7.tgz#4336c4b06d0b5608ff1215464b66fcf9f4795284",
-    "@fortawesome/fontawesome-common-types@^0.2.4": "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-0.2.4.tgz#7c560ff732c6c7c7c179ae25227ce5449e6f6d65",
+    "@fortawesome/fontawesome-common-types@^0.2.5": "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-0.2.5.tgz#a7f660607997b019cc985d525ec37d2fb72df926",
     "@fortawesome/fontawesome-free-brands@^5.0.9": "https://registry.yarnpkg.com/@fortawesome/fontawesome-free-brands/-/fontawesome-free-brands-5.0.13.tgz#4d15ff4e1e862d5e4a4df3654f8e8acbd47e9c09",
     "@fortawesome/fontawesome-free-regular@^5.0.9": "https://registry.yarnpkg.com/@fortawesome/fontawesome-free-regular/-/fontawesome-free-regular-5.0.13.tgz#eb78c30184e3f456a423a1dcfa0f682f7b50de4a",
     "@fortawesome/fontawesome-free-solid@^5.0.9": "https://registry.yarnpkg.com/@fortawesome/fontawesome-free-solid/-/fontawesome-free-solid-5.0.13.tgz#24b61aaf471a9d34a5364b052d64a516285ba894",

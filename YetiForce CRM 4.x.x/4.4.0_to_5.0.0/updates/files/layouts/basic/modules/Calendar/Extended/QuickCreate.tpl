@@ -1,6 +1,6 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="tpl-Calendar-Extended-QuickCreate quickCalendarModal">
+	<div class="tpl-Calendar-Extended-QuickCreate quick-calendar-modal">
 		<input value="{AppConfig::module($MODULE, 'CALENDAR_VIEW')}" type="hidden" class="js-calendar-type"
 			   data-js="value">
 		{foreach key=index item=cssModel from=$STYLES}
@@ -36,6 +36,7 @@
 							<input type="hidden" id="start_hour" value="{$CURRENT_USER->get('start_hour')}"/>
 							<input type="hidden" id="end_hour" value="{$CURRENT_USER->get('end_hour')}"/>
 							<input value="{$EVENT_LIMIT}" type="hidden" id="eventLimit"/>
+							<input value="{$WEEK_COUNT}" type="hidden" id="weekCount"/>
 							<input value="{$WEEK_VIEW}" type="hidden" id="weekView"/>
 							<input value="{$DAY_VIEW}" type="hidden" id="dayView"/>
 							<div class="tpl-Calendar-Extended-CalendarViewPreProcess">
