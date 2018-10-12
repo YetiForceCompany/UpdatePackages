@@ -39,7 +39,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			updateCountTaskCalendar: self.updateCountTaskCalendar,
 			registerDatesChange: self.registerDatesChange,
 			addHeaderButtons: self.addHeaderButtons,
-			getActiveFilters: self.getActiveFilters,
+			browserHistoryConfig: self.browserHistoryConfig
 		});
 	}
 
@@ -48,8 +48,9 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 	 */
 	renderCalendar(readonly = false) {
 		let self = this,
-			basicOptions = this.setCalendarBasicOptions(),
+			basicOptions = this.setCalendarMergedOptions(),
 			options = {
+				firstLoad: true,
 				header: {
 					left: 'year,month,' + app.getMainParams('weekView') + ',' + app.getMainParams('dayView'),
 					center: 'prevYear,prev,title,next,nextYear',
@@ -134,7 +135,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 					self.getCalendarView().fullCalendar('renderEvent', eventObject);
 				}
 			};
-		options = $.extend(basicOptions, options);
+		options = Object.assign(basicOptions, options);
 		if (!readonly) {
 			options.eventDrop = function (event, delta, revertFunc) {
 				self.updateEvent(event, delta, revertFunc);
@@ -192,14 +193,22 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 
 	registerSwitchEvents() {
 		const calendarView = this.getCalendarView();
-		let isWorkDays = (app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all'),
-			switchShowTypeVal = (app.getMainParams('showType') === 'current' && app.moduleCacheGet('defaultShowType') !== 'history'),
+		let isWorkDays,
+			switchShowTypeVal,
 			switchContainer = $('.js-calendar__tab--filters'),
 			switchShowType = switchContainer.find('.js-switch--showType'),
 			switchSwitchingDays = switchContainer.find('.js-switch--switchingDays');
+		let historyParams = app.getMainParams('historyParams', true);
+		if (historyParams == null) {
+			isWorkDays = (app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all'),
+				switchShowTypeVal = (app.getMainParams('showType') === 'current' && app.moduleCacheGet('defaultShowType') !== 'history');
+			if (!switchShowTypeVal) {
+				switchShowType.find('.js-switch--label-off').button('toggle');
+			}
+		} else {
+			app.setMainParams('showType', historyParams.time);
+			app.setMainParams('switchingDays', historyParams.hiddenDays === '' ? 'all' : 'workDays');
 
-		if (!switchShowTypeVal) {
-			switchShowType.find('.js-switch--label-off').button('toggle');
 		}
 		switchShowType.on('change', 'input', (e) => {
 			const currentTarget = $(e.currentTarget);
@@ -213,7 +222,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			calendarView.fullCalendar('getCalendar').view.options.loadView();
 		});
 		if (switchSwitchingDays.length) {
-			if (!isWorkDays) {
+			if (typeof isWorkDays !== 'undefined' && !isWorkDays) {
 				switchSwitchingDays.find('.js-switch--label-off').button('toggle');
 			}
 			switchSwitchingDays.on('change', 'input', (e) => {
@@ -323,6 +332,9 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		this.addHeaderButtons();
 		if (view.type === 'year') {
 			nextPrevButtons.hide();
+			yearButtons.show();
+		} else if (view.type === 'month') {
+			nextPrevButtons.show();
 			yearButtons.show();
 		} else {
 			nextPrevButtons.show();
@@ -501,7 +513,6 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 	loadCalendarData(view = this.getCalendarView().fullCalendar('getView')) {
 		const self = this;
 		let user = [],
-			filters = this.getActiveFilters(),
 			formatDate = CONFIG.dateFormat.toUpperCase(),
 			cvid = self.getCurrentCvId(),
 			calendarInstance = this.getCalendarView();
@@ -511,12 +522,12 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		if (0 === user.length) {
 			user = [app.getMainParams('userId')];
 		}
-		self.clearFilterButton(user, filters, cvid);
+		self.clearFilterButton(user, cvid);
 		if (view.type === 'agendaDay') {
 			self.selectDays(view.start, view.end);
 			view.end = view.end.add(1, 'day');
 		}
-		AppConnector.request({
+		let options = {
 			module: 'Calendar',
 			action: 'Calendar',
 			mode: 'getEvents',
@@ -524,20 +535,33 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			end: view.end.format(formatDate),
 			user: user,
 			time: app.getMainParams('showType'),
-			filters: filters,
-			cvid: cvid
-		}).done((events) => {
+			cvid: cvid,
+			historyUrl: `index.php?module=Calendar&view=CalendarExtended&history=true&viewType=${view.type}&start=${view.start.format(formatDate)}&end=${view.end.format(formatDate)}&user=${user}&time=${app.getMainParams('showType')}&cvid=${cvid}&hiddenDays=${view.options.hiddenDays}`
+		};
+		let connectorMethod = window["AppConnector"]["requestPjax"];
+		if (view.options.firstLoad && this.browserHistoryConfig !== null) {
+			options = Object.assign(options, {
+				start: this.browserHistoryConfig.start,
+				end: this.browserHistoryConfig.end,
+				user: this.browserHistoryConfig.user,
+				time: this.browserHistoryConfig.time,
+				cvid: this.browserHistoryConfig.cvid
+			});
+			connectorMethod = window["AppConnector"]["request"];
+		}
+		connectorMethod(options).done((events) => {
 			calendarInstance.fullCalendar('removeEvents');
 			calendarInstance.fullCalendar('addEventSource', events.result);
 			progressInstance.progressIndicator({mode: 'hide'});
 		});
 		self.registerViewRenderEvents(view);
+		view.options.firstLoad = false;
 	}
 
-	clearFilterButton(user, filters, cvid) {
+	clearFilterButton(user, cvid) {
 		let currentUser = parseInt(app.getMainParams('userId')),
 			time = app.getMainParams('showType'),
-			statement = ((user.length === 0 || (user.length === 1 && parseInt(user) === currentUser)) && filters.length === 0 && cvid === undefined && time === 'current');
+			statement = ((user.length === 0 || (user.length === 1 && parseInt(user) === currentUser)) && cvid === undefined && time === 'current');
 		$(".js-calendar__clear-filters").toggleClass('d-none', statement);
 	}
 
@@ -687,13 +711,16 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 				startDate = startDate + 'T' + start_hour + ':00';
 				endDate = endDate + 'T' + end_hour + ':00';
 				if (startDate == endDate) {
-					let defaulDuration = 0;
-					if (data.find('[name="activitytype"]').val() == 'Call') {
-						defaulDuration = data.find('[name="defaultCallDuration"]').val();
-					} else {
-						defaulDuration = data.find('[name="defaultOtherEventDuration"]').val();
+					let activityType = data.find('[name="activitytype"]').val();
+					let activityDurations = JSON.parse(data.find('[name="defaultOtherEventDuration"]').val());
+					let minutes = 0;
+					for (let i in activityDurations) {
+						if (activityDurations[i].activitytype === activityType) {
+							minutes = parseInt(activityDurations[i].duration);
+							break;
+						}
 					}
-					endDate = moment(endDate).add(defaulDuration, 'minutes').toISOString();
+					endDate = moment(endDate).add(minutes, 'minutes').toISOString();
 				}
 			}
 			let dateFormat = data.find('[name="date_start"]').data('dateFormat').toUpperCase(),
@@ -706,8 +733,12 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			}
 			data.find('[name="date_start"]').val(moment(startDate).format(dateFormat));
 			data.find('[name="due_date"]').val(moment(endDate).format(dateFormat));
-			data.find('[name="time_start"]').val(moment(startDate).format(defaultTimeFormat));
-			data.find('[name="time_end"]').val(moment(endDate).format(defaultTimeFormat));
+			if (data.find('.js-autofill').prop('checked') === true) {
+				Calendar_Edit_Js.getInstance().getFreeTime(data);
+			} else {
+				data.find('[name="time_start"]').val(moment(startDate).format(defaultTimeFormat));
+				data.find('[name="time_end"]').val(moment(endDate).format(defaultTimeFormat));
+			}
 		});
 	}
 
@@ -946,27 +977,6 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		this.getSidebarView().find('a[data-toggle="tab"]').one('shown.bs.tab', function (e) {
 			$(".js-filter__search").on('keyup', self.findElementOnList.bind(self));
 		});
-	}
-
-	/**
-	 * Get active filters
-	 * @returns {Array}
-	 */
-	getActiveFilters() {
-		let filters = [];
-		$(".calendarFilters .filterField").each(function () {
-			let element = $(this),
-				name, value;
-			if (element.attr('type') === 'checkbox') {
-				name = element.val();
-				value = element.prop('checked') ? 1 : 0;
-			} else {
-				name = element.attr('name');
-				value = element.val();
-			}
-			filters.push({name: name, value: value});
-		});
-		return filters;
 	}
 
 	/**

@@ -127,6 +127,56 @@ class YetiForceUpdate
 		}
 	}
 
+	private function migrateCalendarDefaultTime()
+	{
+		$db = \App\Db::getInstance();
+		$tableName = 'vtiger_users';
+		$columnName = 'othereventduration';
+
+		$tableSchema = $db->getSchema()->getTableSchema($tableName, true);
+		$columnSchema = $tableSchema->getColumn($columnName);
+		if ($columnSchema->dbType !== 'text') {
+			$column = \yii\db\Schema::TYPE_TEXT;
+			$db->createCommand()->alterColumn($tableName, $columnName, $column)->execute();
+			$picklist = \App\Fields\Picklist::getValuesName('activitytype');
+			if (!in_array('Task', $picklist)) {
+				$picklist [] = 'Task';
+			}
+			$db->createCommand()->update('vtiger_field', ['uitype' => 315, 'defaultvalue' => ''], ['tabid' => \App\Module::getModuleId('Users'), 'fieldname' => 'othereventduration'])->execute();
+			$usersData = (new \App\Db\Query())->select(['id', 'callduration', 'othereventduration'])->from('vtiger_users')->where(['or',
+				['and', ['not', ['callduration' => null]], ['<>', 'callduration', '']],
+				['and', ['not', ['othereventduration' => null]], ['<>', 'othereventduration', '']]
+			])->createCommand()->queryAllByGroup(1);
+			foreach ($usersData as $userId => $data) {
+				$value = [];
+				if (!empty($data['callduration'])) {
+					$value[] = ['activitytype' => 'Call', 'duration' => $data['callduration']];
+				}
+				if (!empty($data['othereventduration'])) {
+					foreach ($picklist as $label) {
+						if ($label === 'Call') {
+							continue;
+						}
+						$value[] = ['activitytype' => $label, 'duration' => $data['othereventduration']];
+					}
+
+				}
+			}
+			$value = $value ? \App\Json::encode($value) : '';
+			$db->createCommand()->update($tableName, [$columnName => $value], ['id' => $userId])->execute();
+		}
+		// =========================
+		$fieldname = 'othereventduration';
+		$query = (new \App\Db\Query())->from('vtiger_field')
+			->where(['fieldname' => $fieldname])
+			->andWhere(['in', 'uitype', [15, 16, 33]]);
+		$dataReader = $query->createCommand()->query();
+		if (!$dataReader->count()) {
+			$db->createCommand()->delete('vtiger_picklist', ['name' => $fieldname])->execute();
+		}
+		$db->createCommand()->delete('vtiger_picklist_dependency', ['and', ['tabid' => App\Module::getModuleId('Users')], ['or', ['sourcefield' => $fieldname], ['targetfield' => $fieldname]]])->execute();
+	}
+
 	/**
 	 * Update.
 	 */
@@ -137,6 +187,7 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$this->addFilter();
 		$this->migrateCvColumnList();
+		$this->migrateCalendarDefaultTime();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		try {
 			$this->importer = new \App\Db\Importer();
@@ -145,7 +196,13 @@ class YetiForceUpdate
 			$this->removeForeignKey();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
-			$this->importer->dropTable(['com_vtiger_workflowtasks_seq']);
+			$this->importer->dropTable([
+				'com_vtiger_workflowtasks_seq',
+				'vtiger_callduration',
+				'vtiger_callduration_seq',
+				'vtiger_othereventduration',
+				'vtiger_othereventduration_seq'
+			]);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -159,12 +216,32 @@ class YetiForceUpdate
 		$this->removeEventsModule();
 		$this->updateCron();
 		$this->addFields();
+		$this->removeFields();
 		$this->updateHeaderField();
 		$this->addRelations();
 		$this->updateRecords();
 		$this->imageFix();
 		$this->attachmentsFix();
 		$this->updateConfigurationFiles();
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function removeFields()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$fields = ['Users' => ['callduration']];
+		foreach ($fields as $moduleName => $columns) {
+			$ids = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['columnname' => $columns, 'tabid' => App\Module::getModuleId($moduleName)])->column();
+			foreach ($ids as $id) {
+				try {
+					$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($id);
+					$fieldInstance->delete();
+				} catch (Exception $e) {
+					\App\Log::error('RemoveFields' . _METHOD_ . ': code ' . $e->getCode() . ' message ' . $e->getMessage());
+				}
+			}
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -200,6 +277,14 @@ class YetiForceUpdate
 		$subQuery = (new \App\Db\Query())->select(['emailtemplatesid'])->from('u_#__emailtemplates')
 			->where(['sys_name' => 'ActivityReminderNotificationEvents']);
 		$dbCommand->delete('vtiger_crmentity', ['crmid' => $subQuery])->execute();
+		$dataReader = (new \App\Db\Query())->select(['id', 'data'])->from('vtiger_widgets')->where(['and', ['type' => 'EmailList'], ['not like', 'data', 'OSSMailView']])->createCommand()->query();
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		while ($row = $dataReader->read()) {
+			$data = \App\Json::decode($row['data']);
+			$data['relatedmodule'] = 'OSSMailView';
+			$data = \App\Json::encode($data);
+			$dbCommand->update('vtiger_widgets', ['data' => $data], ['id' => $row['id']])->execute();
+		}
 	}
 
 	private function addRelations()
@@ -540,6 +625,7 @@ class YetiForceUpdate
 			['vtiger_field', ['uitype' => 312], ['fieldname' => 'authy_secret_totp', 'tabid' => \App\Module::getModuleId('Users')]],
 			['vtiger_field', ['fieldlabel' => 'Due Date & Time'], ['fieldname' => 'due_date', 'tabid' => \App\Module::getModuleId('Calendar')]],
 			['vtiger_field', ['typeofdata' => 'V~O'], ['fieldname' => 'salesprocessid', 'tabid' => \App\Module::getModuleId('SQuoteEnquiries')]],
+			['vtiger_field', ['uitype' => '315', 'maximumlength' => ''], ['fieldname' => 'othereventduration', 'tabid' => \App\Module::getModuleId('Users')]],
 		];
 		\App\Db\Updater::batchUpdate($data);
 		$tables = ['u_yf_social_media_config'];
@@ -847,6 +933,10 @@ class YetiForceUpdate
 	 */
 	public function postupdate()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		\App\UserPrivilegesFile::recalculateAll();
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}
 

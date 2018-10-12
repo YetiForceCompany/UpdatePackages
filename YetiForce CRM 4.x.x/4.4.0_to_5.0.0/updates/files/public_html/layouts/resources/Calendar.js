@@ -7,6 +7,7 @@ window.Calendar_Js = class Calendar_Js {
 		this.calendarView = false;
 		this.calendarCreateView = false;
 		this.container = container;
+		this.browserHistoryConfig = this.setBrowserHistoryConfig();
 		this.calendarBasicOptions = this.setCalendarBasicOptions();
 		this.calendarAdvancedOptions = this.setCalendarAdvancedOptions();
 		this.calendarModuleOptions = this.setCalendarModuleOptions();
@@ -39,7 +40,7 @@ window.Calendar_Js = class Calendar_Js {
 	}
 
 	setCalendarMergedOptions() {
-		return Object.assign(this.calendarBasicOptions, this.calendarAdvancedOptions, this.calendarModuleOptions);
+		return Object.assign(this.calendarBasicOptions, this.calendarAdvancedOptions, this.calendarModuleOptions, this.browserHistoryConfig);
 	}
 
 	setCalendarModuleOptions() {
@@ -151,6 +152,37 @@ window.Calendar_Js = class Calendar_Js {
 				app.vtranslate('JS_WED'), app.vtranslate('JS_THU'), app.vtranslate('JS_FRI'),
 				app.vtranslate('JS_SAT')],
 		};
+	}
+
+	setBrowserHistoryConfig() {
+		let historyParams = app.getMainParams('historyParams', true),
+			options;
+		if (historyParams !== null && app.moduleCacheGet('browserHistoryEvent')) {
+			options = {
+				start: historyParams.start,
+				end: historyParams.end,
+				user: historyParams.user.split(",").map((x) => {
+					return parseInt(x)
+				}),
+				time: historyParams.time,
+				hiddenDays: historyParams.hiddenDays.split(",").map((x) => {
+					return parseInt(x)
+				}),
+				cvid: historyParams.cvid,
+				defaultView: historyParams.viewType
+			};
+			let s = moment(options.start).valueOf();
+			let e = moment(options.end).valueOf();
+			options.defaultDate = moment(moment(s + ((e - s) / 2)).format('YYYY-MM-DD'));
+			Object.keys(options).forEach(key => options[key] === 'undefined' && delete options[key]);
+			app.moduleCacheSet('browserHistoryEvent', false)
+		} else {
+			options = null;
+		}
+		window.addEventListener('popstate', function (event) {
+			app.moduleCacheSet('browserHistoryEvent', true)
+		}, false);
+		return options;
 	}
 
 	eventRenderer(event, element) {
@@ -353,4 +385,3 @@ window.Calendar_Js = class Calendar_Js {
 		this.registerAddButton();
 	}
 }
-

@@ -184,9 +184,9 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'cvid' => $this->integer(10)->notNull(),
 					'columnindex' => $this->integer(10)->notNull(),
-					'field_name' => $this->stringType(50)->defaultValue(''),
-					'module_name' => $this->stringType(25)->defaultValue(''),
-					'source_field_name' => $this->stringType(50)->defaultValue(''),
+					'field_name' => $this->stringType(50),
+					'module_name' => $this->stringType(25),
+					'source_field_name' => $this->stringType(50),
 				],
 				'index' => [
 					['cvcolumnlist_columnindex_idx', 'columnindex'],
