@@ -2,8 +2,8 @@
 'use strict';
 window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends Calendar_Calendar_Js {
 
-	constructor(container) {
-		super(container);
+	constructor(container, readonly) {
+		super(container, readonly);
 		this.datesRowView = false;
 		this.sidebarView = {
 			length: 0
@@ -39,14 +39,16 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			updateCountTaskCalendar: self.updateCountTaskCalendar,
 			registerDatesChange: self.registerDatesChange,
 			addHeaderButtons: self.addHeaderButtons,
-			browserHistoryConfig: self.browserHistoryConfig
+			browserHistoryConfig: self.browserHistoryConfig,
+			readonly: self.readonly,
+			container: self.container
 		});
 	}
 
 	/**
 	 * Render calendar
 	 */
-	renderCalendar(readonly = false) {
+	renderCalendar() {
 		let self = this,
 			basicOptions = this.setCalendarMergedOptions(),
 			options = {
@@ -56,7 +58,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 					center: 'prevYear,prev,title,next,nextYear',
 					right: 'today'
 				},
-				editable: !readonly,
+				editable: !self.readonly,
 				height: self.setCalendarHeight(),
 				views: {
 					basic: {
@@ -136,7 +138,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 				}
 			};
 		options = Object.assign(basicOptions, options);
-		if (!readonly) {
+		if (!this.readonly) {
 			options.eventDrop = function (event, delta, revertFunc) {
 				self.updateEvent(event, delta, revertFunc);
 			};
@@ -199,7 +201,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			switchShowType = switchContainer.find('.js-switch--showType'),
 			switchSwitchingDays = switchContainer.find('.js-switch--switchingDays');
 		let historyParams = app.getMainParams('historyParams', true);
-		if (historyParams == null) {
+		if (historyParams === '') {
 			isWorkDays = (app.getMainParams('switchingDays') === 'workDays' && app.moduleCacheGet('defaultSwitchingDays') !== 'all'),
 				switchShowTypeVal = (app.getMainParams('showType') === 'current' && app.moduleCacheGet('defaultShowType') !== 'history');
 			if (!switchShowTypeVal) {
@@ -265,12 +267,12 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			html: true,
 			placement: 'auto',
 			callbackShown: function () {
-				$('.js-calendar-popover' + event.id).find('.js-edit-element').on('click', function () {
+				$(`.js-calendar-popover[data-event-id="${event.id}"]`).find('.js-edit-element').on('click', function () {
 					self.openRightPanel();
 					self.getCalendarEditView(event.id);
 				});
 			},
-			template: '<div class="popover calendarPopover js-calendar-popover' + event.id + '" role="tooltip" data-js="hide"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+			template: `<div class="popover calendarPopover js-calendar-popover" role="tooltip" data-event-id="${event.id}" data-js="hide"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>`,
 			content: '<div><span class="fas fa-clock"></span> <label>' + app.vtranslate('JS_START_DATE') + '</label>: ' + event.start_display + '</div>' +
 				'<div><span class="fas fa-clock"></span> <label>' + app.vtranslate('JS_END_DATE') + '</label>: ' + event.end_display + '</div>' +
 				(event.lok ? '<div><span class="fas fa-globe"></span> <label>' + app.vtranslate('JS_LOCATION') + '</label>: ' + event.lok + '</div>' : '') +
@@ -539,7 +541,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			historyUrl: `index.php?module=Calendar&view=CalendarExtended&history=true&viewType=${view.type}&start=${view.start.format(formatDate)}&end=${view.end.format(formatDate)}&user=${user}&time=${app.getMainParams('showType')}&cvid=${cvid}&hiddenDays=${view.options.hiddenDays}`
 		};
 		let connectorMethod = window["AppConnector"]["requestPjax"];
-		if (view.options.firstLoad && this.browserHistoryConfig !== null) {
+		if (this.readonly || (view.options.firstLoad && this.browserHistoryConfig !== null)) {
 			options = Object.assign(options, {
 				start: this.browserHistoryConfig.start,
 				end: this.browserHistoryConfig.end,

@@ -94,5 +94,7 @@ return [
 	'tests',
 	'vendor',
 	'public_html/vendor',
-	'public_html/libraries'
+	'public_html/libraries',
+	'layouts/basic/modules/Vtiger/Detail/ChatFooter.tpl',
+	'languages/fr_fr/Emails.json'
 ];
