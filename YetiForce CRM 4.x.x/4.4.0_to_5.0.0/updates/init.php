@@ -89,14 +89,23 @@ class YetiForceUpdate
 
 	private function migrateCvColumnList()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = App\Db::getInstance();
 		$tableSchema = $db->getTableSchema('vtiger_cvcolumnlist', true);
-		if ($tableSchema->getColumn('field_name') && $tableSchema->getColumn('module_name') && $tableSchema->getColumn('source_field_name')) {
+		if (!$tableSchema->getColumn('columnname')) {
+			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return;
 		}
-		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'field_name', 'string(50)')->execute();
-		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'module_name', 'string(25)')->execute();
-		$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'source_field_name', 'string(50)')->execute();
+		if (!$tableSchema->getColumn('field_name')) {
+			$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'field_name', 'string(50)')->execute();
+		}
+		if (!$tableSchema->getColumn('module_name')) {
+			$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'module_name', 'string(25)')->execute();
+		}
+		if (!$tableSchema->getColumn('source_field_name')) {
+			$db->createCommand()->addColumn('vtiger_cvcolumnlist', 'source_field_name', 'string(50)')->execute();
+		}
 		$dataReader = (new \App\Db\Query())->from('vtiger_cvcolumnlist')
 			->innerJoin('vtiger_customview', 'vtiger_customview.cvid = vtiger_cvcolumnlist.cvid')->createCommand()->query();
 		while ($row = $dataReader->read()) {
@@ -112,6 +121,7 @@ class YetiForceUpdate
 		if ($tableSchema->getColumn('columnname')) {
 			$db->createCommand()->dropColumn('vtiger_cvcolumnlist', 'columnname')->execute();
 		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function removeForeignKey()
@@ -129,6 +139,8 @@ class YetiForceUpdate
 
 	private function migrateCalendarDefaultTime()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
 		$tableName = 'vtiger_users';
 		$columnName = 'othereventduration';
@@ -174,6 +186,7 @@ class YetiForceUpdate
 			$db->createCommand()->delete('vtiger_picklist', ['name' => $fieldname])->execute();
 		}
 		$db->createCommand()->delete('vtiger_picklist_dependency', ['and', ['tabid' => App\Module::getModuleId('Users')], ['or', ['sourcefield' => $fieldname], ['targetfield' => $fieldname]]])->execute();
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
