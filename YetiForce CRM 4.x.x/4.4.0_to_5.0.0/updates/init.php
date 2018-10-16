@@ -140,7 +140,7 @@ class YetiForceUpdate
 			$db->createCommand()->alterColumn($tableName, $columnName, $column)->execute();
 			$picklist = \App\Fields\Picklist::getValuesName('activitytype');
 			if (!in_array('Task', $picklist)) {
-				$picklist [] = 'Task';
+				$picklist[] = 'Task';
 			}
 			$db->createCommand()->update('vtiger_field', ['uitype' => 315, 'defaultvalue' => ''], ['tabid' => \App\Module::getModuleId('Users'), 'fieldname' => 'othereventduration'])->execute();
 			$usersData = (new \App\Db\Query())->select(['id', 'callduration', 'othereventduration'])->from('vtiger_users')->where(['or',
@@ -159,11 +159,10 @@ class YetiForceUpdate
 						}
 						$value[] = ['activitytype' => $label, 'duration' => $data['othereventduration']];
 					}
-
 				}
+				$value = $value ? \App\Json::encode($value) : '';
+				$db->createCommand()->update($tableName, [$columnName => $value], ['id' => $userId])->execute();
 			}
-			$value = $value ? \App\Json::encode($value) : '';
-			$db->createCommand()->update($tableName, [$columnName => $value], ['id' => $userId])->execute();
 		}
 		// =========================
 		$fieldname = 'othereventduration';
@@ -186,7 +185,6 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = \App\Db::getInstance();
 		$this->addFilter();
-		$this->migrateCvColumnList();
 		$this->migrateCalendarDefaultTime();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		try {
@@ -198,8 +196,6 @@ class YetiForceUpdate
 			$this->importer->postUpdate();
 			$this->importer->dropTable([
 				'com_vtiger_workflowtasks_seq',
-				'vtiger_callduration',
-				'vtiger_callduration_seq',
 				'vtiger_othereventduration',
 				'vtiger_othereventduration_seq'
 			]);
@@ -217,6 +213,7 @@ class YetiForceUpdate
 		$this->updateCron();
 		$this->addFields();
 		$this->removeFields();
+		$this->migrateCvColumnList();
 		$this->updateHeaderField();
 		$this->addRelations();
 		$this->updateRecords();
@@ -238,7 +235,7 @@ class YetiForceUpdate
 					$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($id);
 					$fieldInstance->delete();
 				} catch (Exception $e) {
-					\App\Log::error('RemoveFields' . _METHOD_ . ': code ' . $e->getCode() . ' message ' . $e->getMessage());
+					\App\Log::error('RemoveFields' . __METHOD__ . ': code ' . $e->getCode() . ' message ' . $e->getMessage());
 				}
 			}
 		}
