@@ -20,8 +20,12 @@ window.Calendar_Js = class Calendar_Js {
 		if ('CalendarExtended' === CONFIG.view) {
 			paddingTop = 5;
 		}
-		if (this.container.hasClass('quickCreateContainer')) {
-			paddingTop = 65;
+		if (this.container.hasClass('js-modal-container')) {
+			if (this.container.closest('.user-info--active').length) {
+				paddingTop = 23;
+			} else {
+				paddingTop = 47;
+			}
 		}
 		if ($(window).width() > 993) {
 			calendarH = $(window).height() - this.container.find('.js-calendar__container').offset().top - $('.js-footer').height() - paddingTop;
@@ -158,7 +162,7 @@ window.Calendar_Js = class Calendar_Js {
 	setBrowserHistoryConfig() {
 		let historyParams = app.getMainParams('historyParams', true),
 			options;
-		if (historyParams !== '' && app.moduleCacheGet('browserHistoryEvent')) {
+		if (historyParams && (historyParams.length || Object.keys(historyParams).length) && app.moduleCacheGet('browserHistoryEvent')) {
 			options = {
 				start: historyParams.start,
 				end: historyParams.end,

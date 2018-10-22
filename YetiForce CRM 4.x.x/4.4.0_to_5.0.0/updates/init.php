@@ -616,6 +616,10 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = App\Db::getInstance();
+		$taskColor = (new \App\Db\Query())->select(['value'])->from('vtiger_calendar_config')->where(['type' => 'colors', 'name' => 'Task'])->scalar();
+		if ($taskColor) {
+			$db->createCommand()->update('vtiger_activitytype', ['presence' => 0, 'color' => $taskColor], ['activitytype' => 'Task'])->execute();
+		}
 
 		$data = [
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('DataSetRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
@@ -624,6 +628,7 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('IncidentRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
 			['vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('AuditRegister'), 'name' => 'getActivities', 'label' => 'Activities']],
 			['vtiger_blocks', ['tabid' => \App\Module::getModuleId('Calendar'), 'blocklabel' => 'LBL_CUSTOM_INFORMATION']],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'Task']],
 		];
 		\App\Db\Updater::batchDelete($data);
 		$data = [
@@ -768,6 +773,12 @@ class YetiForceUpdate
 				['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
 	'CALENDAR_VIEW' => 'Extended',
 "],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_EDIT_FORM\'', 'addingType' => 'before', 'value' => "	//Show default edit form
+	'SHOW_EDIT_FORM' => false,
+"],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'AUTOFILL_TIME\'', 'addingType' => 'before', 'value' => "	//Select event free time automatically
+	'AUTOFILL_TIME' => false
+"],
 				['type' => 'add', 'search' => 'return [', 'checkInContents' => '\'WEEK_COUNT\'', 'addingType' => 'after', 'value' => "	// Shows number of the week in the year view
 	// true - show, false - hide
 	'WEEK_COUNT' => true, //Boolean"]
@@ -793,6 +804,10 @@ class YetiForceUpdate
 			['name' => 'config/performance.php', 'conditions' => [
 				['type' => 'add', 'search' => '];', 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
 	'INVENTORY_EDIT_VIEW_LAYOUT' => true,
+"],
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'LIMITED_INFO_IN_FOOTER', 'addingType' => 'before', 'value' => "	// Any modifications of this parameter require the vendor's consent.
+	// Any unauthorised modification breaches the terms and conditions of YetiForce Public License.
+	'LIMITED_INFO_IN_FOOTER' => false,
 "],
 			],
 			],

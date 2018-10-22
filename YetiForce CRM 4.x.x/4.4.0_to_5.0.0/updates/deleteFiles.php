@@ -96,5 +96,8 @@ return [
 	'public_html/vendor',
 	'public_html/libraries',
 	'layouts/basic/modules/Vtiger/Detail/ChatFooter.tpl',
-	'languages/fr_fr/Emails.json'
+	'languages/fr_fr/Emails.json',
+	'layouts/basic/modules/SRecurringOrders/uitypes/Modules.tpl',
+	'layouts/basic/modules/Chat/HeaderButton.tpl',
+	'layouts/basic/modules/Vtiger/QuickDetailModal.tpl'
 ];

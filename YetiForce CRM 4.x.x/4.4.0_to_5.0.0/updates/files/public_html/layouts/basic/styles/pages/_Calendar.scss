@@ -73,17 +73,12 @@ $sitebar-border: 1px solid #ccc;
 		border-right: 0;
 		display: inline-block;
 		border-radius: 0;
-		-webkit-transition: all 0.5s ease;
-		-moz-transition: all 0.5s ease;
-		-o-transition: all 0.5s ease;
-		transition: all 0.5s ease;
 	}
 }
 
 .siteBarRight {
 	width: 100%;
 	position: relative;
-	@include u-transition(all 0.5s ease);
 	z-index: 100;
 }
 
@@ -634,7 +629,6 @@ $sitebar-border: 1px solid #ccc;
 			margin-top: auto;
 			text-align: center;
 			border-top: 1px solid #ddd;
-			@include u-transition(all 0.5s ease);
 			width: 100%;
 			text-align: center;
 			border-top: 1px solid #ddd;
@@ -671,15 +665,13 @@ $sitebar-border: 1px solid #ccc;
 				position: relative;
 
 				@at-root .tpl-Calendar-Extended-QuickCreate #{&} {
-					/*computed height: footer, userinfo, header filter buttons, padding */
-					height: calc(100vh - #{$h-footer} - 17px - 30px - 34px - 10px - 20px - 30px);
+					height: calc(100vh - #{$h-footer} - #{calculate-rem(118px)} - #{$h-header}); // 118px - modal offsets
 					overflow-y: auto;
 					overflow-x: hidden;
+					margin-top: 1rem;
 				}
 				label {
-					margin-bottom: 0.1rem;
 					font-weight: 500;
-					margin-top: 0.6rem;
 					color: #6c757d;
 				}
 				.ps__rail-y {
@@ -704,8 +696,6 @@ $sitebar-border: 1px solid #ccc;
 				@at-root .c-menu--open #{&} {
 					right: calc(25% - 51px);
 				}
-
-				@include u-transition(all 0.5s ease);
 
 				.toggleSiteBarRightButton {
 					padding: calculate-rem(11px) 0;
@@ -751,11 +741,6 @@ $sitebar-border: 1px solid #ccc;
 			}
 		}
 
-		@at-root .user-info--active .o-calendar__tab--filters {
-			/*computed height: footer, userinfo, header filter buttons, padding */
-			height: calc(100vh - #{$h-footer-user-info} - #{$h-header});;
-		}
-
 		.o-calendar__form__actions[min-height~="70px"] {
 			padding-bottom: 0;
 			.btn {
@@ -769,8 +754,32 @@ $sitebar-border: 1px solid #ccc;
 	}
 }
 
+.user-info--active .o-calendar {
+	&__tab--filters,
+	&__form {
+		height: calc(100vh - #{$h-footer-user-info} - #{$h-header});
+	}
+}
+
+.limited-footer--active .o-calendar {
+	&__tab--filters,
+	&__form {
+		height: calc(100vh - #{$h-footer-limited} - #{$h-header});
+	}
+}
+
+.limited-footer--active.limited-footer--active .o-calendar {
+	&__tab--filters,
+	&__form {
+		height: calc(100vh - #{$h-footer} - #{$h-header});
+	}
+}
+
 .tpl-Calendar-Extended-QuickCreate {
 	.boxEventTitle {
 		display: none;
+	}
+	.o-calendar__form {
+		height: auto !important;
 	}
 }
