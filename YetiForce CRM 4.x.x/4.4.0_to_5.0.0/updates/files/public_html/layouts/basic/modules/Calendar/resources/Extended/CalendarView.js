@@ -42,7 +42,8 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			browserHistoryConfig: self.browserHistoryConfig,
 			readonly: self.readonly,
 			container: self.container,
-			showChangeDateButtons: self.showChangeDateButtons
+			showChangeDateButtons: self.showChangeDateButtons,
+			showTodayButtonCheckbox: self.showTodayButtonCheckbox
 		});
 	}
 
@@ -198,17 +199,6 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		}
 	}
 
-	/**
-	 * Render event
-	 * @param {Object} event
-	 * @param {jQuery} element
-	 */
-	eventRenderer(event, element) {
-		if (event.rendering === 'background') {
-			element.append(`<span class="${event.icon} mr-1"></span>${event.title}`)
-		}
-	}
-
 	getDatesRowView() {
 		this.datesRowView = this.container.find('.js-dates-row');
 		return this.datesRowView;
@@ -248,6 +238,23 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		this.appendSubDateRow(toolbar);
 		this.refreshDatesRowView(view);
 		this.addHeaderButtons();
+		this.showTodayButtonCheckbox(toolbar);
+	}
+
+	/**
+	 * Function appends and shows today button's checkbox
+	 * @param {$} toolbar
+	 */
+	showTodayButtonCheckbox(toolbar) {
+		let todayButton = toolbar.find('.fc-today-button'),
+			todyButtonIcon = todayButton.hasClass('fc-state-disabled') ? 'fa-calendar-check' : 'fa-calendar',
+			popoverContent = `${app.vtranslate('JS_CURRENT')} ${toolbar.find('.fc-state-active').text().toLowerCase()}`;
+		todayButton.removeClass('.fc-button');
+		todayButton.html(`<div class="js-popover-tooltip--day-btn" data-toggle="popover"><span class="far fa-lg ${todyButtonIcon}"></span></div>`)
+		app.showPopoverElementView(todayButton.find('.js-popover-tooltip--day-btn'), {
+			content: popoverContent,
+			container: '.fc-today-button .js-popover-tooltip--day-btn'
+		});
 	}
 
 	/**
@@ -388,7 +395,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 
 	/**
 	 * Register events to EditView
-	 * @param {jQuery)}sideBar
+	 * @param {jQuery} sideBar
 	 */
 	registerEditForm(sideBar) {
 		let editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(sideBar.find('[name="module"]').val()),
@@ -421,7 +428,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		const thisInstance = this,
 			aDeferred = $.Deferred();
 		const progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
-		if (typeof params === 'number') {
+		if ($.isNumeric(params)) {
 			params = {
 				module: app.getModuleName(),
 				view: 'EventForm',
@@ -498,7 +505,6 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 			calendarInstance.fullCalendar('removeEvents');
 			calendarInstance.fullCalendar('addEventSource', events.result);
 			progressInstance.progressIndicator({mode: 'hide'});
-			app.registerPopoverLink();
 		});
 		self.registerViewRenderEvents(view);
 		view.options.firstLoad = false;
@@ -708,8 +714,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		const calendarView = this.getCalendarView();
 		let returnFunction = function (data) {
 			if (data.success) {
-				let textToShow = app.vtranslate('JS_SAVE_NOTIFY_SUCCESS'),
-					recordActivityStatus = data.result.activitystatus.value,
+				let recordActivityStatus = data.result.activitystatus.value,
 					historyStatus = app.getMainParams('activityStateLabels', true).history,
 					inHistoryStatus = $.inArray(recordActivityStatus, historyStatus),
 					showType = app.getMainParams('showType');
@@ -751,7 +756,6 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		app.showNewScrollbar(calendarRightPanel.find('.js-calendar__form__wrapper'), {
 			suppressScrollX: true
 		});
-		app.showPopoverElementView(calendarRightPanel.find('.js-popover-tooltip'));
 	}
 
 	registerSiteBarEvents() {
@@ -778,13 +782,13 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 				start: startDate.format(),
 				end: endDate.format(),
 				module: 'Calendar',
-				url: 'index.php?module=Calendar&view=Detail&record=' + calendarDetails._recordId,
-				className: ['ownerCBg_' + calendarDetails.assigned_user_id.value, ' picklistCBr_Calendar_activitytype_' + calendarDetails.activitytype.value, 'js-popover-link'],
+				url: 'index.php?module=Calendar&view=ActivityState&record=' + calendarDetails._recordId,
+				className: ['ownerCBg_' + calendarDetails.assigned_user_id.value, ' picklistCBr_Calendar_activitytype_' + calendarDetails.activitytype.value, 'js-popover-tooltip--record'],
 				start_display: calendarDetails.date_start.display_value,
 				end_display: calendarDetails.due_date.display_value
 			};
 		if (calendarDetails.isEditable && app.getMainParams('showEditForm')) {
-			eventObject.url = 'index.php?module=Calendar&view=ActivityState&record=' + eventObject.id;
+			eventObject.url = 'index.php?module=Calendar&view=EventForm&record=' + eventObject.id;
 		}
 		return eventObject;
 	}
@@ -914,6 +918,16 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 	}
 
 	/**
+	 * Register popover buttons' click
+	 */
+	registetPopoverButtonsClickEvent() {
+		$(document).on('click', '.js-calendar-popover__button', (e) => {
+			e.preventDefault();
+			this.getCalendarSidebarData($(e.currentTarget).attr('href'));
+		});
+	}
+
+	/**
 	 * Register events
 	 */
 	registerEvents() {
@@ -921,6 +935,7 @@ window.Calendar_CalendarExtended_Js = class Calendar_CalendarExtended_Js extends
 		this.registerAddForm();
 		this.registerSiteBarEvents();
 		this.registerFilterForm();
+		this.registetPopoverButtonsClickEvent();
 		ElementQueries.listen();
 	}
 }

@@ -400,4 +400,47 @@ class User
 
 		return $userId;
 	}
+
+	/**
+	 * Get user image details.
+	 *
+	 * @throws \App\Exceptions\AppException
+	 *
+	 * @return array|string[]
+	 */
+	public function getImage()
+	{
+		if (Cache::has('UserImageById', $this->getId())) {
+			return Cache::get('UserImageById', $this->getId());
+		}
+		$image = Json::decode($this->getDetail('imagename'));
+		if (empty($image) || !($imageData = \current($image))) {
+			return [];
+		}
+		$imageData['path'] = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $imageData['path'];
+		$imageData['url'] = "file.php?module=Users&action=MultiImage&field=imagename&record={$this->getId()}&key={$imageData['key']}";
+		Cache::save('UserImageById', $this->getId(), $imageData);
+		return $imageData;
+	}
+
+	/**
+	 * Get user image details by id.
+	 *
+	 * @param int $userId
+	 *
+	 * @throws \App\Exceptions\AppException
+	 *
+	 * @return array|string[]
+	 */
+	public static function getImageById(int $userId)
+	{
+		if (Cache::has('UserImageById', $userId)) {
+			return Cache::get('UserImageById', $userId);
+		}
+		$userModel = static::getUserModel($userId);
+		if (empty($userModel)) {
+			return [];
+		}
+		return $userModel->getImage();
+	}
 }

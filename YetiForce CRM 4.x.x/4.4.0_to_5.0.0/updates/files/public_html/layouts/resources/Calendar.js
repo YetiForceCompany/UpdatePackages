@@ -60,7 +60,7 @@ window.Calendar_Js = class Calendar_Js {
 				center: 'title today',
 				right: 'prev,next'
 			},
-			allDaySlot: false,
+			allDaySlot: app.getMainParams('allDaySlot'),
 			views: {
 				basic: {
 					eventLimit: false,
@@ -74,6 +74,17 @@ window.Calendar_Js = class Calendar_Js {
 			},
 			eventRender: self.eventRenderer,
 			height: this.setCalendarHeight(this.container)
+		}
+	}
+
+	/**
+	 * Render event
+	 * @param {Object} event
+	 * @param {jQuery} element
+	 */
+	eventRenderer(event, element) {
+		if (event.rendering === 'background') {
+			element.append(`<span class="${event.icon} mr-1"></span>${event.title}`);
 		}
 	}
 
@@ -124,7 +135,7 @@ window.Calendar_Js = class Calendar_Js {
 				app.vtranslate('JS_WEDNESDAY'), app.vtranslate('JS_THURSDAY'), app.vtranslate('JS_FRIDAY'),
 				app.vtranslate('JS_SATURDAY')],
 			buttonText: {
-				today: app.vtranslate('JS_TODAY'),
+				today: app.vtranslate('JS_CURRENT'),
 				year: app.vtranslate('JS_YEAR'),
 				month: app.vtranslate('JS_MONTH'),
 				week: app.vtranslate('JS_WEEK'),
@@ -188,10 +199,6 @@ window.Calendar_Js = class Calendar_Js {
 			app.moduleCacheSet('browserHistoryEvent', true)
 		}, false);
 		return options;
-	}
-
-	eventRenderer(event, element) {
-		//TODO:Write basci method
 	}
 
 	registerButtonSelectAll() {

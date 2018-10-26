@@ -154,9 +154,11 @@ class Calendar_Calendar_Model extends App\Base
 	}
 
 	/**
-	 * Gets entity data
-	 * @return array
+	 * Gets entity data.
+	 *
 	 * @throws \App\Exceptions\NoPermittedToRecord
+	 *
+	 * @return array
 	 */
 	public function getEntity()
 	{
@@ -215,7 +217,7 @@ class Calendar_Calendar_Model extends App\Base
 			$item['hour_start'] = $startTimeDisplay;
 			$hours = \App\Fields\Date::getDiff($item['start'], $item['end'], 'hours');
 			$item['hours'] = \App\Fields\Time::formatToHourText($hours, 'short');
-			$item['className'] = 'js-popover-link ownerCBg_' . $row['assigned_user_id'] . ' picklistCBr_Calendar_activitytype_' . $row['activitytype'];
+			$item['className'] = 'js-popover-tooltip--record ownerCBg_' . $row['assigned_user_id'] . ' picklistCBr_Calendar_activitytype_' . $row['activitytype'];
 			$return[] = $item;
 		}
 		$dataReader->close();

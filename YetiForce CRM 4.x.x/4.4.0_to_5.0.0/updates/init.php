@@ -210,7 +210,10 @@ class YetiForceUpdate
 			$this->importer->dropTable([
 				'com_vtiger_workflowtasks_seq',
 				'vtiger_othereventduration',
-				'vtiger_othereventduration_seq'
+				'vtiger_othereventduration_seq',
+				'u_#__chat_messages',
+				'u_#__chat_rooms',
+				'u_#__chat_users'
 			]);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
@@ -294,6 +297,70 @@ class YetiForceUpdate
 			$data['relatedmodule'] = 'OSSMailView';
 			$data = \App\Json::encode($data);
 			$dbCommand->update('vtiger_widgets', ['data' => $data], ['id' => $row['id']])->execute();
+		}
+
+		$db = App\Db::getInstance();
+		$dataReader = (new \App\Db\Query())->select(['fieldname'])->from('vtiger_field')->where(['uitype' => [15, 16, 33]])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$tableName = 'vtiger_' . $row['fieldname'];
+			$tableSchema = $db->getTableSchema($tableName);
+			if ($tableSchema && $tableSchema->getColumn('color')) {
+				$idName = \App\Fields\Picklist::getPickListId($row['fieldname']);
+				$dataReaderColor = (new \App\Db\Query())->select(['color', $idName])->from($tableName)->createCommand()->query();
+				while ($rowColor = $dataReaderColor->read()) {
+					$color = $rowColor['color'];
+					if (strpos($color, '#') !== false) {
+						$color = ltrim($color, '#');
+						$db->createCommand()->update($tableName, ['color' => $color], [$idName => $rowColor[$idName]])->execute();
+					}
+				}
+			}
+		}
+
+		$this->updateVtEmailTemplates();
+	}
+
+	private function updateVtEmailTemplates()
+	{
+		$db = App\Db::getInstance();
+		$dataReader = (new \App\Db\Query())
+			->from('com_vtiger_workflowtasks')
+			->where(['like', 'task', 'VTEmailTemplateTask'])
+			->createCommand()->query();
+		require_once 'modules/com_vtiger_workflow/include.php';
+		require_once 'modules/com_vtiger_workflow/tasks/VTEntityMethodTask.php';
+		require_once 'modules/com_vtiger_workflow/tasks/VTEmailTemplateTask.php';
+		while ($row = $dataReader->read()) {
+			$taskObject = unserialize($row['task']);
+			if (is_array($taskObject->email)) {
+				$newemail = [];
+				foreach ($taskObject->email as $email) {
+					if (strpos($email, '$') !== false) {
+						continue 2;
+					}
+					[$parentFieldName, $moduleName, $fieldName] = array_pad(explode('=', $email), 3, false);
+					if ($fieldName) {
+						$newemail = "$(relatedRecord : $parentFieldName|$fieldName|$moduleName)$";
+					} else {
+						$newemail = "$(record : $parentFieldName)$";
+					}
+					$newemail[] = $newemail;
+				}
+				$taskObject->email = $newemail;
+				$db->createCommand()->update('com_vtiger_workflowtasks', ['task' => serialize($taskObject)], ['task_id' => $row['task_id']])->execute();
+			} else {
+				if (strpos($taskObject->email, '$') !== false) {
+					continue;
+				}
+				[$parentFieldName, $moduleName, $fieldName] = array_pad(explode('=', $taskObject->email), 3, false);
+				if ($fieldName) {
+					$newemail = "$(relatedRecord : $parentFieldName|$fieldName|$moduleName)$";
+				} else {
+					$newemail = "$(record : $parentFieldName)$";
+				}
+				$taskObject->email = $newemail;
+				$db->createCommand()->update('com_vtiger_workflowtasks', ['task' => serialize($taskObject)], ['task_id' => $row['task_id']])->execute();
+			}
 		}
 	}
 
@@ -641,6 +708,15 @@ class YetiForceUpdate
 			['vtiger_field', ['fieldlabel' => 'Due Date & Time'], ['fieldname' => 'due_date', 'tabid' => \App\Module::getModuleId('Calendar')]],
 			['vtiger_field', ['typeofdata' => 'V~O'], ['fieldname' => 'salesprocessid', 'tabid' => \App\Module::getModuleId('SQuoteEnquiries')]],
 			['vtiger_field', ['uitype' => '315', 'maximumlength' => ''], ['fieldname' => 'othereventduration', 'tabid' => \App\Module::getModuleId('Users')]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CREATE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 43]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CLOSE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 42]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_MODIFICATION)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 41]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CREATE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 40]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CREATE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 39]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CLOSE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 38]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_CLOSE)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 37]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_COPY_BILLING_ADDRESS)$  [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 36]],
+			['u_yf_emailtemplates', ['subject' => '$(translate : HelpDesk|LBL_NOTICE_MODIFICATION)$ [$(record : ticket_no)$]:$(record : ticket_title)$'], ['emailtemplatesid' => 35]],
 		];
 		\App\Db\Updater::batchUpdate($data);
 		$tables = ['u_yf_social_media_config'];
@@ -744,9 +820,20 @@ class YetiForceUpdate
 				'admin_access' => null,
 			], ['name' => 'LBL_LOGS']
 			],
-			['u_yf_chat_rooms', [
-				'room_id' => 0,
-				'name' => 'LBL_GENERAL',
+			['vtiger_settings_field', [
+				'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SYSTEM_TOOLS')->get('blockid'),
+				'name' => 'LBL_BACKUP_MANAGER',
+				'iconpath' => 'fas fa-file-archive',
+				'description' => 'LBL_BACKUP_MANAGER_DESCRIPTION',
+				'linkto' => 'index.php?module=Backup&parent=Settings&view=Index',
+				'sequence' => 14,
+				'active' => 0,
+				'pinned' => 0,
+				'admin_access' => null,
+			], ['name' => 'LBL_BACKUP_MANAGER']
+			],
+			['u_#__chat_global', [
+				'name' => 'LBL_GENERAL'
 			], ['name' => 'LBL_GENERAL']
 			],
 		];
@@ -773,12 +860,17 @@ class YetiForceUpdate
 				['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
 	'CALENDAR_VIEW' => 'Extended',
 "],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_ACTIVITY_BUTTONS_IN_EDIT_FORM\'', 'addingType' => 'before', 'value' => "	//Show activity status buttons in edit form
+	'SHOW_ACTIVITY_BUTTONS_IN_EDIT_FORM' => true,
+"],
 				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_EDIT_FORM\'', 'addingType' => 'before', 'value' => "	//Show default edit form
 	'SHOW_EDIT_FORM' => false,
 "],
 				['type' => 'add', 'search' => '];', 'checkInContents' => '\'AUTOFILL_TIME\'', 'addingType' => 'before', 'value' => "	//Select event free time automatically
-	'AUTOFILL_TIME' => false
+	'AUTOFILL_TIME' => false,
 "],
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'ALL_DAY_SLOT\'', 'addingType' => 'before', 'value' => "	//Shows 'all day' row in agendaWeek and agendaDay view
+	'ALL_DAY_SLOT' => true,"],
 				['type' => 'add', 'search' => 'return [', 'checkInContents' => '\'WEEK_COUNT\'', 'addingType' => 'after', 'value' => "	// Shows number of the week in the year view
 	// true - show, false - hide
 	'WEEK_COUNT' => true, //Boolean"]
@@ -791,8 +883,11 @@ class YetiForceUpdate
 			]
 			],
 			['name' => 'config/modules/Chat.php', 'conditions' => [
+				['type' => 'add', 'search' => '];', 'checkInContents' => '\'MAX_LENGTH_MESSAGE\'', 'addingType' => 'before', 'value' => "	// The maximum length of the message, If you want to increase the number of characters, you must also change it in the database (u_yf_chat_messages_crm, u_yf_chat_messages_group, u_yf_chat_messages_global).
+	'MAX_LENGTH_MESSAGE' => 500,
+"],
 				['type' => 'update', 'search' => 'REFRESH_TIME', 'replace' => [AppConfig::module('Chat', 'REFRESH_TIME'), AppConfig::module('Chat', 'REFRESH_TIME') * 1000]],
-			]
+			],
 			],
 			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [
 				['type' => 'add', 'search' => '];', 'checkInContents' => '\'COORDINATE_CONNECTOR\'', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates

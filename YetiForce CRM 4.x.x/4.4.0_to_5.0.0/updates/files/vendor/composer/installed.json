@@ -44,17 +44,17 @@
     },
     {
         "name": "composer/ca-bundle",
-        "version": "1.1.2",
-        "version_normalized": "1.1.2.0",
+        "version": "1.1.3",
+        "version_normalized": "1.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/composer/ca-bundle.git",
-            "reference": "46afded9720f40b9dc63542af4e3e43a1177acb0"
+            "reference": "8afa52cd417f4ec417b4bfe86b68106538a87660"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/46afded9720f40b9dc63542af4e3e43a1177acb0",
-            "reference": "46afded9720f40b9dc63542af4e3e43a1177acb0",
+            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/8afa52cd417f4ec417b4bfe86b68106538a87660",
+            "reference": "8afa52cd417f4ec417b4bfe86b68106538a87660",
             "shasum": ""
         },
         "require": {
@@ -67,7 +67,7 @@
             "psr/log": "^1.0",
             "symfony/process": "^2.5 || ^3.0 || ^4.0"
         },
-        "time": "2018-08-08T08:57:40+00:00",
+        "time": "2018-10-18T06:09:13+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -334,17 +334,17 @@
     },
     {
         "name": "giggsey/libphonenumber-for-php",
-        "version": "8.9.14",
-        "version_normalized": "8.9.14.0",
+        "version": "8.9.16",
+        "version_normalized": "8.9.16.0",
         "source": {
             "type": "git",
             "url": "https://github.com/giggsey/libphonenumber-for-php.git",
-            "reference": "338f988183bee1e85ec7b4ef425a3e64a7604473"
+            "reference": "04425318e27b3a41ef9910fc0a9e43c9d3c3e725"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/338f988183bee1e85ec7b4ef425a3e64a7604473",
-            "reference": "338f988183bee1e85ec7b4ef425a3e64a7604473",
+            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/04425318e27b3a41ef9910fc0a9e43c9d3c3e725",
+            "reference": "04425318e27b3a41ef9910fc0a9e43c9d3c3e725",
             "shasum": ""
         },
         "require": {
@@ -361,7 +361,7 @@
             "phpunit/phpunit": "^4.8.36|^5.0",
             "symfony/console": "^2.8|^3.0"
         },
-        "time": "2018-09-19T15:54:29+00:00",
+        "time": "2018-10-18T08:12:16+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -404,17 +404,17 @@
     },
     {
         "name": "giggsey/locale",
-        "version": "1.5",
-        "version_normalized": "1.5.0.0",
+        "version": "1.6",
+        "version_normalized": "1.6.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/giggsey/Locale.git",
-            "reference": "3c9cc23c15851c54cb3ccd41a00fd4b5a89feeff"
+            "reference": "da6845720b5d104d319d7e84576f54e44dd9e4f5"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/giggsey/Locale/zipball/3c9cc23c15851c54cb3ccd41a00fd4b5a89feeff",
-            "reference": "3c9cc23c15851c54cb3ccd41a00fd4b5a89feeff",
+            "url": "https://api.github.com/repos/giggsey/Locale/zipball/da6845720b5d104d319d7e84576f54e44dd9e4f5",
+            "reference": "da6845720b5d104d319d7e84576f54e44dd9e4f5",
             "shasum": ""
         },
         "require": {
@@ -432,7 +432,7 @@
             "symfony/finder": "^2.8|^3.0|^4.0",
             "symfony/process": "^2.8|^3.0|^4.0"
         },
-        "time": "2018-04-03T15:53:12+00:00",
+        "time": "2018-10-18T07:17:52+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -642,17 +642,17 @@
     },
     {
         "name": "illuminate/contracts",
-        "version": "v5.7.6",
-        "version_normalized": "5.7.6.0",
+        "version": "v5.7.10",
+        "version_normalized": "5.7.10.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/contracts.git",
-            "reference": "2daf3c078610f744e2a4dc2f44fb5060cce9835b"
+            "reference": "64df81d3382d876f1c1d3d5481d89c93b61b8279"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/contracts/zipball/2daf3c078610f744e2a4dc2f44fb5060cce9835b",
-            "reference": "2daf3c078610f744e2a4dc2f44fb5060cce9835b",
+            "url": "https://api.github.com/repos/illuminate/contracts/zipball/64df81d3382d876f1c1d3d5481d89c93b61b8279",
+            "reference": "64df81d3382d876f1c1d3d5481d89c93b61b8279",
             "shasum": ""
         },
         "require": {
@@ -660,7 +660,7 @@
             "psr/container": "^1.0",
             "psr/simple-cache": "^1.0"
         },
-        "time": "2018-09-18T12:50:05+00:00",
+        "time": "2018-10-08T13:34:14+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -688,17 +688,17 @@
     },
     {
         "name": "illuminate/support",
-        "version": "v5.7.6",
-        "version_normalized": "5.7.6.0",
+        "version": "v5.7.10",
+        "version_normalized": "5.7.10.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "f7c68e8c8aab200cc8ad84f974d5511cda58a742"
+            "reference": "45bfc0cd080c51946f61c04e324c2b4c6df58a9d"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/f7c68e8c8aab200cc8ad84f974d5511cda58a742",
-            "reference": "f7c68e8c8aab200cc8ad84f974d5511cda58a742",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/45bfc0cd080c51946f61c04e324c2b4c6df58a9d",
+            "reference": "45bfc0cd080c51946f61c04e324c2b4c6df58a9d",
             "shasum": ""
         },
         "require": {
@@ -718,7 +718,7 @@
             "symfony/process": "Required to use the composer class (^4.1).",
             "symfony/var-dumper": "Required to use the dd function (^4.1)."
         },
-        "time": "2018-09-19T18:36:57+00:00",
+        "time": "2018-10-22T17:36:06+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -787,17 +787,17 @@
     },
     {
         "name": "markbaker/complex",
-        "version": "1.4.6",
-        "version_normalized": "1.4.6.0",
+        "version": "1.4.7",
+        "version_normalized": "1.4.7.0",
         "source": {
             "type": "git",
             "url": "https://github.com/MarkBaker/PHPComplex.git",
-            "reference": "a78d82ae4e682c3809fc3023d1b0ce654f6ab12b"
+            "reference": "1ea674a8308baf547cbcbd30c5fcd6d301b7c000"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/MarkBaker/PHPComplex/zipball/a78d82ae4e682c3809fc3023d1b0ce654f6ab12b",
-            "reference": "a78d82ae4e682c3809fc3023d1b0ce654f6ab12b",
+            "url": "https://api.github.com/repos/MarkBaker/PHPComplex/zipball/1ea674a8308baf547cbcbd30c5fcd6d301b7c000",
+            "reference": "1ea674a8308baf547cbcbd30c5fcd6d301b7c000",
             "shasum": ""
         },
         "require": {
@@ -813,7 +813,7 @@
             "sebastian/phpcpd": "2.*",
             "squizlabs/php_codesniffer": "^3.3.0"
         },
-        "time": "2018-07-31T08:38:40+00:00",
+        "time": "2018-10-13T23:28:42+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1060,17 +1060,17 @@
     },
     {
         "name": "phpoffice/phpspreadsheet",
-        "version": "1.4.0",
-        "version_normalized": "1.4.0.0",
+        "version": "1.5.0",
+        "version_normalized": "1.5.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-            "reference": "125f462a718956f37d81305ca0df4f17cef0f3b9"
+            "reference": "2dfd06c59825914a1a325f2a2ed13634b9d8c411"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/125f462a718956f37d81305ca0df4f17cef0f3b9",
-            "reference": "125f462a718956f37d81305ca0df4f17cef0f3b9",
+            "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/2dfd06c59825914a1a325f2a2ed13634b9d8c411",
+            "reference": "2dfd06c59825914a1a325f2a2ed13634b9d8c411",
             "shasum": ""
         },
         "require": {
@@ -1103,9 +1103,9 @@
             "dompdf/dompdf": "Option for rendering PDF with PDF Writer",
             "jpgraph/jpgraph": "Option for rendering charts, or including charts with PDF or HTML Writers",
             "mpdf/mpdf": "Option for rendering PDF with PDF Writer",
-            "tecnick.com/tcpdf": "Option for rendering PDF with PDF Writer"
+            "tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer"
         },
-        "time": "2018-08-06T02:58:06+00:00",
+        "time": "2018-10-21T10:04:54+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2039,17 +2039,17 @@
     },
     {
         "name": "symfony/console",
-        "version": "v4.1.4",
-        "version_normalized": "4.1.4.0",
+        "version": "v4.1.6",
+        "version_normalized": "4.1.6.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/console.git",
-            "reference": "ca80b8ced97cf07390078b29773dc384c39eee1f"
+            "reference": "dc7122fe5f6113cfaba3b3de575d31112c9aa60b"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/console/zipball/ca80b8ced97cf07390078b29773dc384c39eee1f",
-            "reference": "ca80b8ced97cf07390078b29773dc384c39eee1f",
+            "url": "https://api.github.com/repos/symfony/console/zipball/dc7122fe5f6113cfaba3b3de575d31112c9aa60b",
+            "reference": "dc7122fe5f6113cfaba3b3de575d31112c9aa60b",
             "shasum": ""
         },
         "require": {
@@ -2074,7 +2074,7 @@
             "symfony/lock": "",
             "symfony/process": ""
         },
-        "time": "2018-07-26T11:24:31+00:00",
+        "time": "2018-10-03T08:15:46+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2227,17 +2227,17 @@
     },
     {
         "name": "symfony/translation",
-        "version": "v4.1.4",
-        "version_normalized": "4.1.4.0",
+        "version": "v4.1.6",
+        "version_normalized": "4.1.6.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/translation.git",
-            "reference": "fa2182669f7983b7aa5f1a770d053f79f0ef144f"
+            "reference": "9f0b61e339160a466ebcde167a6c5521c810e304"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/translation/zipball/fa2182669f7983b7aa5f1a770d053f79f0ef144f",
-            "reference": "fa2182669f7983b7aa5f1a770d053f79f0ef144f",
+            "url": "https://api.github.com/repos/symfony/translation/zipball/9f0b61e339160a466ebcde167a6c5521c810e304",
+            "reference": "9f0b61e339160a466ebcde167a6c5521c810e304",
             "shasum": ""
         },
         "require": {
@@ -2263,7 +2263,7 @@
             "symfony/config": "",
             "symfony/yaml": ""
         },
-        "time": "2018-08-07T12:45:11+00:00",
+        "time": "2018-10-02T16:36:10+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2298,17 +2298,17 @@
     },
     {
         "name": "symfony/var-dumper",
-        "version": "v4.1.4",
-        "version_normalized": "4.1.4.0",
+        "version": "v4.1.6",
+        "version_normalized": "4.1.6.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/var-dumper.git",
-            "reference": "a05426e27294bba7b0226ffc17dd01a3c6ef9777"
+            "reference": "60319b45653580b0cdacca499344577d87732f16"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/a05426e27294bba7b0226ffc17dd01a3c6ef9777",
-            "reference": "a05426e27294bba7b0226ffc17dd01a3c6ef9777",
+            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/60319b45653580b0cdacca499344577d87732f16",
+            "reference": "60319b45653580b0cdacca499344577d87732f16",
             "shasum": ""
         },
         "require": {
@@ -2330,7 +2330,7 @@
             "ext-intl": "To show region name in time zone dump",
             "symfony/console": "To use the ServerDumpCommand and/or the bin/var-dump-server script"
         },
-        "time": "2018-08-02T09:24:26+00:00",
+        "time": "2018-10-02T16:36:10+00:00",
         "bin": [
             "Resources/bin/var-dump-server"
         ],
@@ -2375,23 +2375,23 @@
     },
     {
         "name": "tecnickcom/tcpdf",
-        "version": "6.2.25",
-        "version_normalized": "6.2.25.0",
+        "version": "6.2.26",
+        "version_normalized": "6.2.26.0",
         "source": {
             "type": "git",
             "url": "https://github.com/tecnickcom/TCPDF.git",
-            "reference": "a5135e2cf02f8c935b71e9e7d676f0f1d31b1b9d"
+            "reference": "367241059ca166e3a76490f4448c284e0a161f15"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/a5135e2cf02f8c935b71e9e7d676f0f1d31b1b9d",
-            "reference": "a5135e2cf02f8c935b71e9e7d676f0f1d31b1b9d",
+            "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/367241059ca166e3a76490f4448c284e0a161f15",
+            "reference": "367241059ca166e3a76490f4448c284e0a161f15",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2018-09-23T07:52:24+00:00",
+        "time": "2018-10-16T17:24:05+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

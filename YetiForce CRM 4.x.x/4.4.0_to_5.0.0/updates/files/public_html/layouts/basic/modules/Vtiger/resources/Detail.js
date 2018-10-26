@@ -323,7 +323,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 			contentContainer.progressIndicator({mode: 'hide'});
 			contentContainer.html(data);
 			App.Fields.Picklist.showSelect2ElementView(widgetContainer.find('.select2'));
-			app.showPopoverElementView(contentContainer.find('.js-popover-tooltip'));
 			app.registerModal(contentContainer);
 			app.registerMoreContent(contentContainer.find('button.moreBtn'));
 			if (relatedModuleName) {
@@ -1078,9 +1077,9 @@ jQuery.Class("Vtiger_Detail_Js", {
 						Vtiger_Helper_Js.showPnotify({
 							title: app.vtranslate('JS_SAVE_NOTIFY_OK'),
 							text: '<b>' + fieldInfo.data.label + '</b><br>' +
-								'<b>' + app.vtranslate('JS_SAVED_FROM') + '</b>: ' +
-								prevDisplayValue + '<br> ' +
-								'<b>' + app.vtranslate('JS_SAVED_TO') + '</b>: ' + displayValue,
+							'<b>' + app.vtranslate('JS_SAVED_FROM') + '</b>: ' +
+							prevDisplayValue + '<br> ' +
+							'<b>' + app.vtranslate('JS_SAVED_TO') + '</b>: ' + displayValue,
 							type: 'info',
 							textTrusted: true
 						});
@@ -1470,7 +1469,28 @@ jQuery.Class("Vtiger_Detail_Js", {
 			currentTarget.popover('hide');
 			var url = currentTarget.data('url');
 			if (url) {
-				app.showModalWindow(null, url);
+				if (currentTarget.hasClass('showEdit')) {
+					var headerInstance = Vtiger_Header_Js.getInstance();
+					headerInstance.getQuickCreateForm(url, 'Calendar', {noCache: true}).done((data) => {
+						headerInstance.handleQuickCreateData(data, {
+							callbackFunction: () => {
+								let widget = currentTarget.closest('.widgetContentBlock');
+								if (widget.length) {
+									thisInstance.loadWidget(widget);
+									let updatesWidget = thisInstance.getContentHolder().find("[data-type='Updates']");
+									if (updatesWidget.length > 0) {
+										thisInstance.loadWidget(updatesWidget);
+									}
+								} else {
+									thisInstance.loadRelatedList();
+								}
+								thisInstance.registerRelatedModulesRecordCount();
+							}
+						});
+					});
+				} else {
+					app.showModalWindow(null, url);
+				}
 			}
 		});
 
@@ -2262,13 +2282,17 @@ jQuery.Class("Vtiger_Detail_Js", {
 		});
 	},
 	registerBasicEvents: function () {
-		if (typeof Chat_Js !== 'undefined') {
-			Chat_Js.getInstance().registerEvents($('.js-chat-detail'));
-		}
 		var thisInstance = this;
 		var detailContentsHolder = thisInstance.getContentHolder();
 		var selectedTabElement = thisInstance.getSelectedTab();
 		//register all the events for summary view container
+		if (typeof Chat_JS !== 'undefined') {
+			if (this.getSelectedTab().data('labelKey') === 'LBL_CHAT') {
+				Chat_JS.getInstance(detailContentsHolder, 'detail').registerBaseEvents();
+			} else {
+				Chat_JS.getInstance(detailContentsHolder, 'detail').unregisterEvents();
+			}
+		}
 		thisInstance.registerSummaryViewContainerEvents(detailContentsHolder);
 		thisInstance.registerCommentEvents(detailContentsHolder);
 		thisInstance.registerEmailEvents(detailContentsHolder);
@@ -2496,7 +2520,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 					container.find('.js-detail-widget-content').append(data);
 					container.find('.countActivities').val(parseInt(container.find('.countActivities').val()) + currentPage * parseInt(container.find('.pageLimit').val()));
 					thisInstance.reloadWidgetActivitesStats(container);
-					app.showPopoverElementView(container.find('.js-popover-tooltip'));
 				}
 			);
 		});

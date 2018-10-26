@@ -63,52 +63,117 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__chat_messages' => [
+			'u_#__chat_global' => [
 				'columns' => [
-					'id' => $this->primaryKey(10)->unsigned(),
+					'global_room_id' => $this->primaryKeyUnsigned(10),
+					'name' => $this->stringType()->notNull(),
+				],
+				'primaryKeys' => [
+					['chat_global_pk', 'global_room_id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_crm' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+					'crmid' => $this->integer(10),
 					'userid' => $this->smallInteger(5)->unsigned()->notNull(),
-					'user_name' => $this->stringType(50)->notNull(),
-					'created' => $this->integer(10)->unsigned(),
-					'messages' => $this->text(),
-					'room_id' => $this->integer(10)->unsigned()
+					'created' => $this->dateTime(),
+					'messages' => $this->stringType(500)->notNull(),
 				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'u_#__chat_rooms' => [
-				'columns' => [
-					'room_id' => $this->integer(10),
-					'name' => $this->stringType(50)->notNull()
+				'index' => [
+					['room_crmid', 'crmid'],
 				],
 				'primaryKeys' => [
-					['chat_rooms_pk', 'room_id']
+					['chat_messages_crm_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__chat_rooms' => [
+			'u_#__chat_messages_global' => [
 				'columns' => [
-					'room_id' => $this->integer(10)->notNull(),
-					'name' => $this->stringType(50)
+					'id' => $this->primaryKeyUnsigned(10),
+					'globalid' => $this->integer(10)->unsigned()->notNull(),
+					'userid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'created' => $this->dateTime(),
+					'messages' => $this->stringType(500)->notNull(),
+				],
+				'index' => [
+					['globalid', 'globalid'],
 				],
 				'primaryKeys' => [
-					['chat_rooms_pk', 'room_id']
+					['chat_messages_global_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__chat_users' => [
+			'u_#__chat_messages_group' => [
 				'columns' => [
+					'id' => $this->bigPrimaryKeyUnsigned(10),
+					'groupid' => $this->integer(10),
+					'userid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'created' => $this->dateTime(),
+					'messages' => $this->stringType(500)->notNull(),
+				],
+				'index' => [
+					['room_groupid', 'groupid'],
+				],
+				'primaryKeys' => [
+					['chat_messages_group_pk', 'id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_rooms_crm' => [
+				'columns' => [
+					'roomid' => $this->primaryKeyUnsigned(10),
 					'userid' => $this->integer(10)->notNull(),
-					'room_id' => $this->integer(10)->notNull(),
-					'last_message' => $this->integer(10),
-					'favorite' => $this->smallInteger(1)->notNull(),
+					'crmid' => $this->integer(10),
+					'last_message' => $this->integer(10)->unsigned(),
 				],
-				'columns_mysql' => [
-					'favorite' => $this->tinyInteger(1)->notNull(),
+				'index' => [
+					['u_yf_chat_rooms_crm_userid_idx', 'userid'],
+					['u_yf_chat_rooms_crm_crmid_idx', 'crmid'],
+					['u_yf_chat_rooms_crm_last_message_idx', 'last_message'],
 				],
 				'primaryKeys' => [
-					['chat_users_pk', ['userid', 'room_id']]
+					['chat_rooms_crm_pk', 'roomid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_rooms_global' => [
+				'columns' => [
+					'roomid' => $this->primaryKeyUnsigned(10),
+					'userid' => $this->integer(10)->notNull(),
+					'global_room_id' => $this->integer(10)->unsigned()->notNull(),
+					'last_message' => $this->integer(10)->unsigned(),
+				],
+				'index' => [
+					['global_room_id', 'global_room_id'],
+					['userid', 'userid'],
+					['last_message', 'last_message'],
+				],
+				'primaryKeys' => [
+					['chat_rooms_global_pk', 'roomid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_rooms_group' => [
+				'columns' => [
+					'roomid' => $this->primaryKeyUnsigned(10),
+					'userid' => $this->integer(10)->notNull(),
+					'groupid' => $this->integer(10)->notNull(),
+					'last_message' => $this->integer(10)->unsigned(),
+				],
+				'index' => [
+					['u_yf_chat_rooms_group_groupid_idx', 'groupid'],
+					['userid', 'userid'],
+				],
+				'primaryKeys' => [
+					['chat_rooms_group_pk', 'roomid']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -430,6 +495,15 @@ class Base extends \App\Db\Importers\Base
 			['fk_1_a_#__record_converter', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
 			['fk_1_u_#__picklist_close_state', 'u_#__picklist_close_state', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
 			['u_#__users_pinned_fk_1', 'u_#__users_pinned', 'owner_id', 'vtiger_users', 'id', 'CASCADE', null],
+			['fk_chat_messages', 'u_#__chat_messages_crm', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['u_#__chat_messages_global_ibfk_1', 'u_#__chat_messages_global', 'globalid', 'u_#__chat_global', 'global_room_id', 'CASCADE', 'RESTRICT'],
+			['fk_chat_group_messages', 'u_#__chat_messages_group', 'groupid', 'vtiger_groups', 'groupid', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_crm_crm', 'u_#__chat_rooms_crm', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_crm_users', 'u_#__chat_rooms_crm', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_global_global', 'u_#__chat_rooms_global', 'global_room_id', 'u_#__chat_global', 'global_room_id', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_global_users', 'u_#__chat_rooms_global', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_group', 'u_#__chat_rooms_group', 'groupid', 'vtiger_groups', 'groupid', 'CASCADE', 'RESTRICT'],
+			['fk_u_#__chat_rooms_group_users', 'u_#__chat_rooms_group', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }

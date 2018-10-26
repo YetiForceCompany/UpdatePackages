@@ -18,3 +18,16 @@
  - Adam Jimenez @adamjimenez
  - @ambischof
  - Kushagra Gour @chinchang
+ - TIm St.Clair @frumbert
+ - Turkhan @turok1997
+ - @SCrusader
+ - OpenCollective @opencollective
+ - David Evans @davidje13
+ - @saluce65
+ - Peter Lightbody @pet1330
+ - Jakob Gillich @jgillich
+ - Searene @searene
+ - Gabriel Pedro @gpedro
+ - Chi Wang @patr0nus
+ - Adrian Jones @adrianbj
+ - Bradley Kemp @bradleyjkemp
