@@ -189,6 +189,165 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function migrateCvConditions(){
+		$db = App\Db::getInstance();
+		$tableName = 'u_yf_cv_condition';
+		if (!$db->getTableSchema($tableName, true)) {
+			$importer = new \App\Db\Importers\Base();
+			$db->createTable($tableName, [
+				'id' => $importer->primaryKeyUnsigned(10),
+				'group_id' => $importer->integer(10)->unsigned(),
+				'field_name' => $importer->stringType(50),
+				'module_name' => $importer->stringType(25),
+				'source_field_name' => $importer->stringType(50),
+				'operator' => $importer->stringType(20),
+				'value' => $importer->text(),
+				'index' => $importer->tinyInteger(5),
+			]);
+			$tableNameGroup = 'u_yf_cv_condition_group';
+			$db->createTable($tableNameGroup, [
+				'id' => $importer->primaryKeyUnsigned(10),
+				'cvid' => $importer->integer(10),
+				'condition' => $importer->stringType(3),
+				'parent_id' => $importer->integer(10),
+				'index' => $importer->tinyInteger(5),
+			]);
+			$dataReader = (new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->createCommand()->query();
+			while ($row = $dataReader->read()) {
+				$model = CustomView_Record_Model::getInstanceById($row['cvid']);
+				$advfilterlist = [];
+				$dataReaderCondition = (new \App\Db\Query())
+					->from('vtiger_cvadvfilter')
+					->where(['cvid' => $row['cvid'], 'groupid' => 1])
+					->createCommand()->query();
+				if ($dataReaderCondition->count()) {
+					$advfilterlist = [
+						'condition' => 'AND',
+						'rules' => []
+					];
+					while ($condition = $dataReaderCondition->read()) {
+						$moduleName = $model->get('entitytype');
+						[$tableName, $columnName, $fieldName] = array_pad(explode(':', $condition['columnname']), 3, false);
+						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, Vtiger_Module_Model::getInstance($moduleName));
+						$value = $condition['value'];
+						if (in_array($fieldModel->getFieldDataType(), [
+							'userCreator', 'userReference', 'picklist', 'tree',
+							'categoryMultipicklist', 'country', 'multipicklist', 'theme',
+							'modules', 'sharedOwner', 'owner', 'taxes'
+						])) {
+							$value = str_replace(',', '##', $value);
+						}
+						$advfilterlist['rules'][$condition['columnindex']] = [
+							'fieldname' => "{$fieldModel->getModuleName()}:{$fieldModel->get('name')}",
+							'operator' => $condition['comparator'],
+							'value' => $value
+						];
+					}
+				}
+				$dataReaderCondition = (new \App\Db\Query())
+					->from('vtiger_cvadvfilter')
+					->where(['cvid' => $row['cvid'], 'groupid' => 2])
+					->createCommand()->query();
+				if ($dataReaderCondition->count()) {
+					$ors = [
+						'condition' => 'OR',
+						'rules' => []
+					];
+					while ($condition = $dataReaderCondition->read()) {
+						$moduleName = $model->get('entitytype');
+						[$tableName, $columnName, $fieldName] = array_pad(explode(':', $condition['columnname']), 3, false);
+						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, Vtiger_Module_Model::getInstance($moduleName));
+
+						$value = $condition['value'];
+						if (in_array($fieldModel->getFieldDataType(), [
+							'userCreator', 'userReference', 'picklist', 'tree',
+							'categoryMultipicklist', 'country', 'multipicklist', 'theme',
+							'modules', 'sharedOwner', 'owner', 'taxes'
+						])) {
+							$value = str_replace(',', '##', $value);
+						}
+						$ors['rules'][$condition['columnindex']] = [
+							'fieldname' => "{$fieldModel->getModuleName()}:{$fieldModel->get('name')}",
+							'operator' => $condition['comparator'],
+							'value' => $value
+						];
+					}
+					if (count($ors['rules'])) {
+						if (isset($advfilterlist['condition'])) {
+							$advfilterlist['rules'][] = $ors;
+						} else {
+							$advfilterlist = $ors;
+						}
+					}
+				}
+				$this->addGroup($row['cvid'], $advfilterlist, 0, 0);
+			}
+		}
+	}
+
+	/**
+	 * Add condition to database.
+	 *
+	 * @param array $rule
+	 * @param int   $parentId
+	 * @param int   $index
+	 *
+	 * @throws \App\Exceptions\Security
+	 * @throws \yii\db\Exception
+	 *
+	 * @return void
+	 */
+	private function addCondition(array $rule, int $parentId, int $index)
+	{
+		[$fieldModuleName, $fieldName, $sourceFieldName] = array_pad(explode(':', $rule['fieldname']), 3, false);
+		$operator = $rule['operator'];
+		$value = $rule['value'] ?? '';
+		\App\Db::getInstance()->createCommand()->insert('u_#__cv_condition', [
+			'group_id' => $parentId,
+			'field_name' => $fieldName,
+			'module_name' => $fieldModuleName,
+			'source_field_name' => $sourceFieldName,
+			'operator' => $operator,
+			'value' => $value,
+			'index' => $index
+		])->execute();
+	}
+
+	/**
+	 * Add group to database.
+	 *
+	 * @param array|null $rule
+	 * @param int        $parentId
+	 * @param int        $index
+	 *
+	 * @throws \App\Exceptions\Security
+	 * @throws \yii\db\Exception
+	 *
+	 * @return void
+	 */
+	private function addGroup(int $cvId , ?array $rule, int $parentId, int $index)
+	{
+		if (empty($rule)) {
+			return;
+		}
+		$db = \App\Db::getInstance();
+		$db->createCommand()->insert('u_#__cv_condition_group', [
+			'cvid' => $cvId,
+			'condition' => $rule['condition'] === 'AND' ? 'AND' : 'OR',
+			'parent_id' => $parentId,
+			'index' => $index
+		])->execute();
+		$index = 0;
+		$parentId = $db->getLastInsertID('u_#__cv_condition_group_id_seq');
+		foreach ($rule['rules'] as $ruleInfo) {
+			if (isset($ruleInfo['condition'])) {
+				$this->addGroup($cvId, $ruleInfo, $parentId, $index);
+			} else {
+				$this->addCondition($ruleInfo, $parentId, $index);
+			}
+			$index++;
+		}
+	}
 	/**
 	 * Update.
 	 */
@@ -199,6 +358,7 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$this->addFilter();
 		$this->migrateCalendarDefaultTime();
+		$this->migrateCvConditions();
 		$db->createCommand()->checkIntegrity(false)->execute();
 		try {
 			$this->importer = new \App\Db\Importer();
@@ -213,9 +373,13 @@ class YetiForceUpdate
 				'vtiger_othereventduration_seq',
 				'u_#__chat_messages',
 				'u_#__chat_rooms',
-				'u_#__chat_users'
+				'u_#__chat_users',
+				'vtiger_cvstdfilter',
+				'vtiger_pbxmanager_gateway',
+				'vtiger_pbxmanager_phonelookup',
+				'vtiger_callduration',
+				'vtiger_callduration_seq'
 			]);
-			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
 			$this->importer->logs(false);
@@ -236,9 +400,29 @@ class YetiForceUpdate
 		$this->imageFix();
 		$this->attachmentsFix();
 		$this->updateConfigurationFiles();
+		$this->removePbxManager();
+		$this->actionMapp();
+		$this->importer->dropTable([
+			'vtiger_cvadvfilter',
+			'vtiger_cvadvfilter_grouping',
+		]);
+		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function removePbxManager(){
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$pbxmanagerId = \App\Module::getModuleId('PBXManager');
+		if (!$pbxmanagerId) {
+			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+			return;
+		}
+		$moduleInstance = \vtlib\Module::getInstance($pbxmanagerId);
+		$moduleInstance->delete();
+		App\Db::getInstance()->createCommand()->delete('vtiger_ws_entity', ['name' => 'PBXManager'])->execute();
+
+	}
 	private function removeFields()
 	{
 		$start = microtime(true);
@@ -318,6 +502,7 @@ class YetiForceUpdate
 		}
 
 		$this->updateVtEmailTemplates();
+		$db->createCommand()->delete('vtiger_relatedlists', ['name' => 'getContacts'])->execute();
 	}
 
 	private function updateVtEmailTemplates()
@@ -494,7 +679,9 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$fields = [
 			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 1, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
-			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 1, 2, '', null, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments']
+			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 1, 2, '', null, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments'],
+			[95,2771,'issue_time','u_yf_finvoice',1,5,'issue_time','FL_ISSUE_TIME',1,2,'',NULL,4,310,1,'D~O',1,0,'BAS',1,'',0,'',NULL, 'date', 'LBL_BASIC_DETAILS', [], [], 'FInvoice']
+
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -836,11 +1023,114 @@ class YetiForceUpdate
 				'name' => 'LBL_GENERAL'
 			], ['name' => 'LBL_GENERAL']
 			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'Employees Time Control',
+				'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeControl',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId('OSSTimeControl'), 'linklabel' => 'Employees Time Control']
+			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'LBL_ALL_TIME_CONTROL',
+				'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=AllTimeControl',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId('OSSTimeControl'), 'linklabel' => 'LBL_ALL_TIME_CONTROL']
+			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'Mini List',
+				'linkurl' => 'index.php?module=Home&view=ShowWidget&name=MiniList',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId('OSSTimeControl'), 'linklabel' => 'Mini List']
+			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'ChartFilter',
+				'linkurl' => 'index.php?module=Home&view=ShowWidget&name=ChartFilter',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId('OSSTimeControl'), 'linklabel' => 'ChartFilter']
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SRecurringOrders'),
+				'related_tabid' => App\Module::getModuleId('Contacts'),
+				'name' => 'getRelatedList',
+				'sequence' => 4,
+				'label' => 'Contacts',
+				'presence' => 0,
+				'actions' => 'ADD,SELECT',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SRecurringOrders'), 'related_tabid' => App\Module::getModuleId('Contacts')]
+			],
+			['vtiger_widgets', [
+				'tabid' => App\Module::getModuleId('SRecurringOrders'),
+				'type' => 'RelatedModule',
+				'label' => '',
+				'wcol' => '1',
+				'sequence' => '6',
+				'data' => '{"relatedmodule":"4","relatedfields":["4::firstname","4::lastname","4::assigned_user_id"],"viewtype":"List","limit":"5","action":"1","actionSelect":"1","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}'
+			], ['tabid' => App\Module::getModuleId('SRecurringOrders'), 'data' => '{"relatedmodule":"4","relatedfields":["4::firstname","4::lastname","4::assigned_user_id"],"viewtype":"List","limit":"5","action":"1","actionSelect":"1","no_result_text":"0","switchHeader":"-","filter":"-","checkbox":"-"}']
+			],
 		];
 		\App\Db\Updater::batchInsert($data);
+
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function actionMapp()
+	{
+		$allModules = array_keys(vtlib\Functions::getAllModules());
+		$actions = [
+  			['type' => 'add', 'name' => 'OpenRecord', 'tabsData' => $allModules],
+			['type' => 'remove', 'name' => 'DuplicatesHandling']
+			['type' => 'add', 'name' => 'AutoAssignRecord', 'tabsData' => $allModules],
+			['type' => 'add', 'name' => 'AssignToYourself', 'tabsData' => $allModules]
+		];
+		$db = \App\Db::getInstance();
+		foreach ($actions as $action) {
+			$key = (new \App\Db\Query())->select(['actionid'])->from('vtiger_actionmapping')->where(['actionname' => $action['name']])->limit(1)->scalar();
+			if ($action['type'] === 'remove') {
+				if ($key) {
+					$db->createCommand()->delete('vtiger_actionmapping', ['actionid' => $key])->execute();
+					$db->createCommand()->delete('vtiger_profile2utility', ['activityid' => $key])->execute();
+				}
+				continue;
+			}
+			if (empty($key)) {
+				$securitycheck = 0;
+				$key = $db->getUniqueID('vtiger_actionmapping', 'actionid', false);
+				$db->createCommand()->insert('vtiger_actionmapping', ['actionid' => $key, 'actionname' => $action['name'], 'securitycheck' => $securitycheck])->execute();
+			}
+			$permission = 1;
+			if (isset($action['permission'])) {
+				$permission = $action['permission'];
+			}
+
+			$tabsData = $action['tabsData'];
+			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
+			while (($profileId = $dataReader->readColumn(0)) !== false) {
+				foreach ($tabsData as $tabId) {
+					$isExists = (new \App\Db\Query())->from('vtiger_profile2utility')->where(['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key])->exists();
+					if (!$isExists) {
+						$db->createCommand()->insert('vtiger_profile2utility', [
+							'profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission
+						])->execute();
+					}
+				}
+			}
+		}
+	}
 	/**
 	 * Changes in configuration files.
 	 *

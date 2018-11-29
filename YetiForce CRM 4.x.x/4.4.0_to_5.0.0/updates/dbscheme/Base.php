@@ -490,6 +490,82 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__cv_condition_group' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+					'cvid' => $this->integer(10),
+					'condition' => $this->stringType(3),
+					'parent_id' => $this->integer(10),
+					'index' => $this->smallInteger(5),
+				],
+				'columns_mysql' => [
+					'index' => $this->tinyInteger(5),
+				],
+				'index' => [
+					['u_yf_cv_condition_group_cvid_idx', 'cvid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__cv_condition' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+					'group_id' => $this->integer(10)->unsigned(),
+					'field_name' => $this->stringType(50),
+					'module_name' => $this->stringType(25),
+					'source_field_name' => $this->stringType(50),
+					'operator' => $this->stringType(20),
+					'value' => $this->text(),
+					'index' => $this->tinyInteger(5),
+				],
+				'columns_mysql' => [
+					'index' => $this->tinyInteger(5),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__cv_duplicates' => [
+				'columns' => [
+					'cvid' => $this->integer(10),
+					'fieldid' => $this->integer(10),
+					'ignore' => $this->smallInteger(1)->notNull()->defaultValue(0)
+				],
+				'columns_mysql' => [
+					'ignore' => $this->tinyInteger(1)->notNull()->defaultValue(0)
+				],
+				'index' => [
+					['u_yf_cv_duplicates_cvid_idx', 'cvid'],
+					['u_yf_cv_duplicates_fieldid_idx', 'fieldid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__favorite_owners' => [
+				'columns' => [
+					'tabid' => $this->smallInteger(5)->notNull(),
+					'userid' => $this->integer(10)->notNull(),
+					'ownerid' => $this->integer(10)->notNull()
+				],
+				'index' => [
+					['u_yf_favorite_owners_tabid_idx', 'tabid'],
+					['u_yf_favorite_owners_userid_idx', 'userid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__favorite_shared_owners' => [
+				'columns' => [
+					'tabid' => $this->smallInteger(5)->notNull(),
+					'userid' => $this->integer(10)->notNull(),
+					'ownerid' => $this->integer(10)->notNull()
+				],
+				'index' => [
+					['u_yf_favorite_shared_owners_tabid_idx', 'tabid'],
+					['u_yf_favorite_shared_owners_userid_idx', 'userid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['fk_1_a_#__record_converter', 'a_#__record_converter', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
@@ -504,6 +580,14 @@ class Base extends \App\Db\Importers\Base
 			['fk_u_#__chat_rooms_global_users', 'u_#__chat_rooms_global', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
 			['fk_u_#__chat_rooms_group', 'u_#__chat_rooms_group', 'groupid', 'vtiger_groups', 'groupid', 'CASCADE', 'RESTRICT'],
 			['fk_u_#__chat_rooms_group_users', 'u_#__chat_rooms_group', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
+			['u_#__cv_condition_fk', 'u_#__cv_condition', 'group_id', 'u_#__cv_condition_group', 'id', 'CASCADE', 'RESTRICT'],
+			['u_#__cv_condition_group_fk', 'u_#__cv_condition_group', 'cvid', 'vtiger_customview', 'cvid', 'CASCADE', 'RESTRICT'],
+			['u_#__cv_duplicates_cvid_fk', 'u_#__cv_duplicates', 'cvid', 'vtiger_customview', 'cvid', 'CASCADE', 'RESTRICT'],
+			['u_#__cv_duplicates_fieldid_fk', 'u_#__cv_duplicates', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
+			['u_#__favorite_owners_tabid_fk', 'u_#__favorite_owners', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['u_#__favorite_owners_userid_fk', 'u_#__favorite_owners', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
+			['u_#__favorite_shared_owners_tabid_fk', 'u_#__favorite_shared_owners', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['u_#__favorite_shared_owners_userid_fk', 'u_#__favorite_shared_owners', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }
