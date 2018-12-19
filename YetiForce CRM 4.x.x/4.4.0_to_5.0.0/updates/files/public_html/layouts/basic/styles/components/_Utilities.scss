@@ -51,8 +51,8 @@
 	font-size: calculate-rem(15px);
 }
 
-.u-font-size-50px {
-	font-size: calculate-rem(50px);
+.u-font-size-38px {
+	font-size: calculate-rem(38px);
 }
 
 .u-font-size-19px {
@@ -86,11 +86,18 @@
 }
 
 .u-text-ellipsis--no-hover,
-.js-popover-tooltip--ellipsis .js-popover-text,
-.js-popover-tooltip--ellipsis .c-popover-text {
+.js-popover-tooltip--ellipsis,
+.js-popover-tooltip--ellipsis-icon .js-popover-text,
+.js-popover-tooltip--ellipsis-icon .c-popover-text {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.js-popover--before-positioned {
+	opacity: 0;
+	height: 0;
+	overflow: hidden;
 }
 
 .u-text-ellipsis--not-active {
@@ -266,8 +273,12 @@
 	width: 85px;
 }
 
-.u-w-100px {
-	width: 100px;
+.u-w-79px {
+	width: 79px;
+}
+
+.u-w-125px {
+	width: 125px;
 }
 
 .u-w-90per {
@@ -329,6 +340,10 @@
 
 .u-min-h-30per {
 	min-height: 30%;
+}
+
+.u-min-h-85vh {
+	min-height: 85vh;
 }
 
 //--- WHITE SPACE ---//
@@ -409,6 +424,12 @@
 	cursor: -webkit-grab;
 }
 
+.u-cursor-scroll-all {
+	* {
+		cursor: all-scroll !important;
+	}
+}
+
 .u-overflow-auto {
 	overflow: auto !important;
 }
@@ -421,8 +442,8 @@
 	overflow-x: hidden !important;
 }
 
-@include media-breakpoint-down(xs) {
-	.u-overflow-scroll-xs-down {
+@include media-breakpoint-down(xsm) {
+	.u-overflow-scroll-xsm-down {
 		overflow: scroll !important;
 	}
 }

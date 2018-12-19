@@ -7,10 +7,12 @@
 	{/if}
 	{foreach item=ROW key=$KEY_ITEM from=$CHAT_ENTRIES}
 		{if isset($SHOW_MORE_BUTTON) && $SHOW_MORE_BUTTON && $KEY_ITEM == 0 }
-			<button type="button" class="btn btn-success d-block mr-auto ml-auto mt-3 js-load-more"
+			<button type="button"
+					class="btn btn-sm btn-light text-secondary col-2 d-block mr-auto ml-auto mt-3 js-load-more"
 					data-mid="{$ROW['id']}"
 					data-js="click|remove">
-				{\App\Language::translate('LBL_MORE_BTN')}
+				<span class="fas fa-angle-double-up mr-2"></span>
+				{\App\Language::translate('LBL_EARLIER', 'Chat')|upper}
 			</button>
 			{continue}
 		{/if}

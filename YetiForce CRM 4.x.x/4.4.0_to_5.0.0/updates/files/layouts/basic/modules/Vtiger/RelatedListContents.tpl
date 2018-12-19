@@ -3,7 +3,7 @@
 	{include file=\App\Layout::getTemplatePath('ListViewAlphabet.tpl', $RELATED_MODULE_NAME) MODULE_MODEL=$RELATED_MODULE}
 	{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 	{assign var=IS_INVENTORY value=($RELATED_VIEW === 'List' && !empty($INVENTORY_MODULE) && !empty($INVENTORY_FIELDS))}
-	<div class="listViewEntriesDiv u-overflow-scroll-xs-down">
+	<div class="listViewEntriesDiv u-overflow-scroll-xsm-down">
 		<table class="table tableBorderHeadBody listViewEntriesTable {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
 			<thead>
 			<tr class="listViewHeaders">
@@ -28,7 +28,9 @@
 						{/if}
 					</th>
 				{/foreach}
+				{assign var=ADDITIONAL_TD value=0}
 				{if $SHOW_CREATOR_DETAIL}
+					{assign var=ADDITIONAL_TD value=$ADDITIONAL_TD + 2}
 					<th>
 						{\App\Language::translate('LBL_RELATION_CREATED_TIME', $RELATED_MODULE->get('name'))}
 					</th>
@@ -37,12 +39,10 @@
 					</th>
 				{/if}
 				{if $SHOW_COMMENT}
+					{assign var=ADDITIONAL_TD value=$ADDITIONAL_TD + 1}
 					<th>
 						{\App\Language::translate('LBL_RELATION_COMMENT', $RELATED_MODULE->get('name'))}
 					</th>
-				{/if}
-				{if $IS_INVENTORY}
-					<th></th>
 				{/if}
 			</tr>
 			</thead>
@@ -73,7 +73,7 @@
 							FIELD_MODEL=$HEADER_FIELD SEARCH_INFO=$SEARCH_INFO USER_MODEL=$USER_MODEL MODULE_MODEL=$RELATED_MODULE MODULE=$RELATED_MODULE_NAME}
 						</td>
 					{/foreach}
-					<td class="reducePadding"></td>
+					<td class="reducePadding" colspan="{$ADDITIONAL_TD + 1}"></td>
 				</tr>
 			{/if}
 			{assign var="RELATED_HEADER_COUNT" value=count($RELATED_HEADERS)}
@@ -107,7 +107,7 @@
 									   class="form-control form-control-sm js-edit-{$RELATED_HEADERNAME} {$HEADER_FIELD->get('class')}"
 									   title="{App\Language::translate($HEADER_FIELD->getFieldLabel(), $RELATED_MODULE_NAME)}"
 									   data-fieldinfo="{\App\Purifier::encodeHtml(\App\Json::encode($HEADER_FIELD->getFieldInfo()))}"
-									   value="{$HEADER_FIELD->getDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}"
+									   value="{$HEADER_FIELD->getEditViewDisplayValue($RELATED_RECORD->get($RELATED_HEADERNAME))}"
 									   data-js="change"
 								/>
 							{else}
@@ -134,7 +134,8 @@
 					{if $IS_INVENTORY}
 						{$COUNT = $COUNT+1}
 						<td class="medium" nowrap>
-							<button type="button" class="btn btn-sm btn-info js-popover-tooltip showInventoryRow"
+							<button type="button"
+									class="btn btn-sm btn-info float-right js-popover-tooltip showInventoryRow"
 									data-js="popover" data-placement="left"
 									data-content="{\App\Language::translate('LBL_SHOW_INVENTORY_ROW')}"><span
 										class="fas fa-arrows-alt-v"></span></button>
@@ -147,7 +148,7 @@
 						{if $RELATED_MODULE->isQuickSearchEnabled()}
 							{$COUNT = $COUNT+1}
 						{/if}
-						<td colspan="{$COUNT+1}" class="backgroundWhiteSmoke">
+						<td colspan="{$COUNT + $ADDITIONAL_TD}" class="backgroundWhiteSmoke">
 							<table class="table table-sm no-margin">
 								<thead>
 								<tr>
@@ -161,8 +162,8 @@
 								<tbody>
 								{foreach from=$INVENTORY_DATA item=ROWDATA}
 									<tr>
-										{if $INVENTORY_ROW['name']}
-											{assign var="ROW_MODULE" value=\App\Record::getType($INVENTORY_ROW['name'])}
+										{if !empty($ROWDATA['name'])}
+											{assign var="ROW_MODULE" value=\App\Record::getType($ROWDATA['name'])}
 										{/if}
 										{foreach from=$INVENTORY_FIELDS item=FIELD key=NAME}
 											{assign var="FIELD_TPL_NAME" value="inventoryfields/"|cat:$FIELD->getTemplateName('DetailView',$RELATED_MODULE_NAME)}

@@ -139,17 +139,11 @@ class Accounts extends CRMEntity
 		$accountsList = $this->__getParentAccounts($id, $accountsList, $encounteredAccounts);
 		$baseId = current(array_keys($accountsList));
 		$accountsList = [$baseId => $accountsList[$baseId] ?? []];
-
 		// Get the accounts hierarchy (list of child accounts) based on the current account
 		$accountsList[$baseId] = $this->__getChildAccounts($baseId, $accountsList[$baseId], $accountsList[$baseId]['depth']);
-
-		// Create array of all the accounts in the hierarchy
-		$accountHierarchy = $this->getHierarchyData($id, $accountsList[$baseId], $baseId, $listViewEntries);
-
-		$accountHierarchy = ['header' => $listViewHeader, 'entries' => $listViewEntries];
+		$this->getHierarchyData($id, $accountsList[$baseId], $baseId, $listViewEntries);
 		\App\Log::trace('Exiting getAccountHierarchy method ...');
-
-		return $accountHierarchy;
+		return ['header' => $listViewHeader, 'entries' => $listViewEntries];
 	}
 
 	/**
@@ -368,7 +362,7 @@ class Accounts extends CRMEntity
 		if ($id === null) {
 			$id = $this->id;
 		}
-		$query = (new \App\Db\Query())->select('contactid')->from('vtiger_contactdetails')
+		$query = (new \App\Db\Query())->select(['contactid'])->from('vtiger_contactdetails')
 			->innerJoin('vtiger_crmentity', 'vtiger_contactdetails.contactid = vtiger_crmentity.crmid')
 			->where(['vtiger_contactdetails.parentid' => $id, 'vtiger_crmentity.deleted' => 0]);
 		$entityIds = $query->column();

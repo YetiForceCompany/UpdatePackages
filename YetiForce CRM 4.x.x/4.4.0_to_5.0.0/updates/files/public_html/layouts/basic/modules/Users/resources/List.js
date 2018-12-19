@@ -289,30 +289,33 @@ Vtiger_List_Js("Settings_Users_List_Js", {
 					progressInstance.progressIndicator({
 						'mode': 'hide'
 					});
-					jQuery('#listViewContents').html(data);
+					$('.js-fixed-thead').floatThead('destroy');
+					$('#listViewContents').html(data);
 					thisInstance.updatePaginationFilter();
 					var listSearchInstance = thisInstance.getListSearchInstance();
 					if (listSearchInstance !== false) {
 						listSearchInstance.registerEvents();
+					} else {
+						App.Fields.Picklist.showSelect2ElementView(jQuery('#listViewContents').find('select.select2'));
 					}
-					App.Fields.Picklist.showSelect2ElementView(jQuery('#listViewContents').find('select.select2'));
 				});
 		});
 	},
 	updatePaginationFilter: function () {
-		var thisInstance = this;
-		var params = {};
-		params['page'] = 1;
-		params['module'] = app.getModuleName();
-		params['parent'] = app.getParentModuleName();
-		params['view'] = 'Pagination';
-		params['mode'] = 'getPagination';
-		params['search_params'] = jQuery('#usersFilter').val();
-		AppConnector.request(params)
-			.done(function (data) {
-				jQuery('.paginationDiv').html(data);
-				thisInstance.registerPageNavigationEvents();
-			});
+		const self = this,
+			container = this.getListViewContainer();
+		AppConnector.request({
+			page: 1,
+			module: app.getModuleName(),
+			parent: app.getParentModuleName(),
+			view: 'Pagination',
+			mode: 'getPagination',
+			search_params: container.find('#usersFilter').val(),
+			noOfEntries: container.find('#noOfEntries').val(),
+		}).done(function (data) {
+			container.find('.paginationDiv').html(data);
+			self.registerPageNavigationEvents();
+		});
 	},
 	updatePagination: function (pageNumber) {
 		pageNumber = typeof pageNumber !== "undefined" ? pageNumber : 1;

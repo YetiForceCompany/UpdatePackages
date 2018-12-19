@@ -420,13 +420,6 @@ hr {
 	}
 }
 
-#selectAllMsgDiv, #deSelectAllMsgDiv {
-	display: none;
-	background-color: #fafad2;
-	padding: 0.01%;
-	text-align: center;
-}
-
 .blockUI form, #globalmodal form {
 	margin: 0 0 0;
 }
@@ -523,7 +516,7 @@ hr {
 		margin: 0 !important;
 	}
 
-	.commentsList > .liStyleNone > .commentDetails .commentDiv {
+	.commentsList > .liStyleNone > .commentDetails .comment-div {
 		width: 100%;
 	}
 
@@ -584,7 +577,7 @@ hr {
 }
 
 .singleComment {
-	.editedStatus {
+	.edited-status {
 		-webkit-box-sizing: border-box;
 		-moz-box-sizing: border-box;
 		box-sizing: border-box;
@@ -613,7 +606,7 @@ hr {
 	box-sizing: border-box;
 	word-wrap: break-word;
 
-	.commentDiv {
+	.comment-div {
 		min-width: 100%;
 	}
 
@@ -1192,10 +1185,6 @@ hr {
 			border-top: 1px solid #fff;
 			border-bottom: 1px solid #ddd;
 		}
-	}
-
-	.moduleBlocks .editFieldsTable .layoutBlockHeader .blockLabel {
-		padding-top: 13px;
 	}
 }
 
@@ -1908,6 +1897,7 @@ table.dataTable .form-control {
 		font-size: 1rem;
 		vertical-align: text-bottom;
 		position: relative;
+
 		&:after {
 			content: "";
 			width: 100%;
@@ -1920,6 +1910,7 @@ table.dataTable .form-control {
 			box-shadow: inset 0px 0px 1px 1px rgba($body-color, 0.5);
 		}
 	}
+
 	.active .stepNum::after {
 		content: "";
 		width: 100%;
@@ -2350,7 +2341,7 @@ span[name=existingImages] img {
 	padding-top: 7px;
 }
 
-.ui-draggable-menuShortcut .menuIcon {
+.ui-draggable-menuShortcut .c-menu__item__icon {
 	padding-right: 18px;
 	font-size: 24px;
 	height: 100%;
@@ -2533,13 +2524,6 @@ html, body, .o-base-container {
 	.col-xs-4 {
 		padding-left: 0 !important;
 	}
-}
-
-.sortTableUl {
-	list-style-type: none;
-	float: left;
-	min-height: 1px;
-	padding: 2px;
 }
 
 .dashboardHeading {
@@ -3106,14 +3090,6 @@ html, body, .o-base-container {
 }
 
 @media only screen and (max-width: 480px) {
-	.detailViewToolbar {
-		text-align: center !important;
-
-		.btn-group, > div {
-			float: none !important;
-		}
-	}
-
 	.tl-text {
 		.tl-headline-date, h3.tl-headline-date {
 			line-height: 31px;

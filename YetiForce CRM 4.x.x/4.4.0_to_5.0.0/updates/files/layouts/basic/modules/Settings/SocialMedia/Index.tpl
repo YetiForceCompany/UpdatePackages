@@ -3,7 +3,7 @@
 	<div class="tpl-Settings-SocialMedia-Index js-social-media-container" data-js="container">
 		<div class="widget_header row">
 			<div class="col-md-12">
-				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE)}
+				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE_NAME)}
 			</div>
 		</div>
 		<div class="mt-2">
@@ -26,7 +26,7 @@
 				<ul class="nav nav-tabs layoutTabs massEditTabs my-2 m-sm-2">
 					<li class="nav-item">
 						<a class="nav-link active" data-toggle="tab" href="#logs">
-							<span class="menuIcon adminIcon-logs mr-1"></span>
+							<span class="adminIcon-logs mr-1"></span>
 							<strong>{\App\Language::translate('LBL_LOGS', $QUALIFIED_MODULE)}</strong>
 						</a>
 					</li>

@@ -247,6 +247,18 @@ class User
 	}
 
 	/**
+	 * Get user group names.
+	 *
+	 * @return string[]
+	 */
+	public function getGroupNames()
+	{
+		return array_filter(\App\Fields\Owner::getInstance('CustomView')->getGroups(false), function ($key) {
+			return \in_array($key, $this->getGroups());
+		}, ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
 	 * Get user role Id.
 	 *
 	 * @return string
@@ -371,7 +383,7 @@ class User
 					}
 				}
 			} else {
-				$adminId = (new Db\Query())->select('id')
+				$adminId = (new Db\Query())->select(['id'])
 					->from('vtiger_users')
 					->where(['is_admin' => 'on', 'status' => 'Active'])
 					->orderBy(['id' => SORT_ASC])
@@ -395,7 +407,7 @@ class User
 		if (Cache::has(__METHOD__, $name)) {
 			return Cache::get(__METHOD__, $name);
 		}
-		$userId = (new Db\Query())->select('id')->from('vtiger_users')->where(['user_name' => $name])->limit(1)->scalar();
+		$userId = (new Db\Query())->select(['id'])->from('vtiger_users')->where(['user_name' => $name])->limit(1)->scalar();
 		Cache::save(__METHOD__, $name, $userId, Cache::LONG);
 
 		return $userId;

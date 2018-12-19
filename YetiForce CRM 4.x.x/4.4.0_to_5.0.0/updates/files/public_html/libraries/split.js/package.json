@@ -1,50 +1,24 @@
 {
   "name": "split.js",
-  "version": "1.5.6",
+  "version": "1.5.10",
   "description": "2kb unopinionated utility for resizeable split views",
-  "main": "split.js",
-  "minified:main": "split.min.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nathancahill/Split.js.git"
-  },
-  "keywords": [
-    "css",
-    "split",
-    "flexbox",
-    "tiny",
-    "split-layout"
-  ],
+  "main": "dist/split.js",
+  "minified:main": "dist/split.min.js",
+  "module": "dist/split.es.js",
+  "repository": "https://github.com/nathancahill/split",
+  "keywords": ["css", "split", "flexbox", "tiny", "split-layout"],
   "author": "Nathan Cahill <nathan@nathancahill.com>",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/nathancahill/Split.js/issues"
-  },
   "homepage": "https://split.js.org/",
-  "devDependencies": {
-    "buble": "^0.19",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb": "^14.0.0",
-    "eslint-plugin-compat": "^1.0.2",
-    "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jsx-a11y": "^3.0.2",
-    "eslint-plugin-react": "^6.9.0",
-    "grunt": "1.0.1",
-    "grunt-cli": "1.2.0",
-    "grunt-contrib-jasmine": "1.1.0",
-    "gzip-size-cli": "^3.0.0",
-    "jasmine": "2.6.0",
-    "rollup": "^0.66",
-    "rollup-plugin-buble": "^0.19",
-    "rollup-plugin-uglify": "^6.0.0"
-  },
   "scripts": {
     "lint": "eslint src",
-    "test": "npm run lint && npm run build && grunt jasmine",
+    "test": "karma start",
     "build": "rollup -c && npm run size",
     "watch": "rollup -cw",
-    "size": "echo \"gzip size: $(gzip-size --raw $npm_package_minified_main) bytes\""
+    "size": "echo \"gzip size: $(gzip-size --raw $npm_package_minified_main) bytes\"",
+    "saucelabs": "yarn run test --browsers sl_firefox_latest,sl_chrome_latest,sl_safari,sl_firefox,sl_chrome,sl_edge,sl_ie_11,sl_ie_10,sl_ie_9"
   },
+  "files": ["dist"],
   "browserslist": [
     "Chrome >= 22",
     "Firefox >= 6",

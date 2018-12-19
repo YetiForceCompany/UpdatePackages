@@ -17,7 +17,7 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	public static $baseModuleTools = ['Import', 'Export', 'Merge', 'CreateCustomFilter',
 		'DuplicateRecord', 'MassEdit', 'MassArchived', 'MassActive', 'MassDelete', 'MassAddComment', 'MassTransferOwnership',
 		'ReadRecord', 'WorkflowTrigger', 'Dashboard', 'CreateDashboardFilter', 'QuickExportToExcel', 'ExportPdf', 'RecordMapping',
-		'RecordMappingList', 'FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'RemoveRelation', 'ReviewingUpdates'];
+		'RecordMappingList', 'FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'RemoveRelation', 'ReviewingUpdates', 'OpenRecord'];
 
 	/**
 	 * @var array Base module tools exceptions.
@@ -25,7 +25,6 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	public static $baseModuleToolsExceptions = [
 		'Documents' => ['notAllowed' => ['Import']],
 		'Faq' => ['notAllowed' => ['Import', 'Export']],
-		'PBXManager' => ['notAllowed' => 'all'],
 		'OSSMailView' => ['notAllowed' => 'all'],
 		'CallHistory' => ['allowed' => ['QuickExportToExcel']],
 	];
@@ -146,7 +145,7 @@ class Settings_ModuleManager_Module_Model extends Vtiger_Module_Model
 	 */
 	public static function getModulesSupportingSequenceNumbering()
 	{
-		$subQuery = (new \App\Db\Query())->select('tabid')->from('vtiger_field')->where(['uitype' => 4])->distinct('tabid');
+		$subQuery = (new \App\Db\Query())->select(['tabid'])->from('vtiger_field')->where(['uitype' => 4])->distinct('tabid');
 		$dataReader = (new \App\Db\Query())->select(['tabid', 'name'])
 			->from('vtiger_tab')
 			->where(['isentitytype' => 1, 'presence' => 0, 'tabid' => $subQuery])

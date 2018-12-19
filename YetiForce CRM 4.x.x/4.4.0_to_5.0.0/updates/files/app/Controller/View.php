@@ -155,13 +155,11 @@ abstract class View extends Base
 		$view->assign('SHOW_BODY_HEADER', $this->showBodyHeader());
 		$view->assign('SHOW_BREAD_CRUMBS', $this->showBreadCrumbLine());
 		$view->assign('USER_MODEL', \Users_Record_Model::getCurrentUserModel());
+		$view->assign('CURRENT_USER', \App\User::getCurrentUserModel());
 		$view->assign('MODULE', $moduleName);
 		$view->assign('VIEW', $request->getByType('view', 1));
 		$view->assign('MODULE_NAME', $moduleName);
 		$view->assign('PARENT_MODULE', $request->getByType('parent', 2));
-		$companyDetails = \App\Company::getInstanceById();
-		$view->assign('COMPANY_DETAILS', $companyDetails);
-		$view->assign('COMPANY_LOGO', $companyDetails->getLogo());
 		if ($display) {
 			$this->preProcessDisplay($request);
 		}
@@ -217,7 +215,7 @@ abstract class View extends Base
 			'~layouts/resources/icons/userIcons.css',
 			'~layouts/resources/icons/adminIcons.css',
 			'~layouts/resources/icons/additionalIcons.css',
-			'~libraries/fontawesome-web/css/fontawesome-all.css',
+			'~libraries/@fortawesome/fontawesome-free/css/all.css',
 			'~libraries/jquery-ui-dist/jquery-ui.css',
 			'~libraries/select2/dist/css/select2.css',
 			'~libraries/simplebar/dist/simplebar.css',
@@ -249,10 +247,6 @@ abstract class View extends Base
 	{
 		return $this->checkAndConvertJsScripts([
 			'libraries.jquery.dist.jquery',
-			'~libraries/@fortawesome/fontawesome/index.js',
-			'~libraries/@fortawesome/fontawesome-free-regular/index.js',
-			'~libraries/@fortawesome/fontawesome-free-solid/index.js',
-			'~libraries/@fortawesome/fontawesome-free-brands/index.js',
 		]);
 	}
 
@@ -270,7 +264,6 @@ abstract class View extends Base
 			'~libraries/select2/dist/js/select2.full.js',
 			'~libraries/jquery-ui-dist/jquery-ui.js',
 			'~libraries/jquery.class.js/jquery.class.js',
-			'~libraries/jstorage/jstorage.js',
 			'~libraries/perfect-scrollbar/dist/perfect-scrollbar.js',
 			'~libraries/jquery-slimscroll/jquery.slimscroll.js',
 			'~libraries/pnotify/dist/iife/PNotify.js',
@@ -278,6 +271,7 @@ abstract class View extends Base
 			'~libraries/pnotify/dist/iife/PNotifyAnimate.js',
 			'~libraries/pnotify/dist/iife/PNotifyMobile.js',
 			'~libraries/pnotify/dist/iife/PNotifyConfirm.js',
+			'~libraries/pnotify/dist/iife/PNotifyDesktop.js',
 			'~libraries/jquery-hoverintent/jquery.hoverIntent.js',
 			'~libraries/popper.js/dist/umd/popper.js',
 			'~libraries/bootstrap/dist/js/bootstrap.js',
@@ -295,12 +289,17 @@ abstract class View extends Base
 			'~libraries/footable/dist/footable.js',
 			'~layouts/resources/app.js',
 			'~libraries/blueimp-file-upload/js/jquery.fileupload.js',
+			'~libraries/floatthead/dist/jquery.floatThead.js',
+			'~libraries/store/dist/store.legacy.min.js',
 			'~layouts/resources/fields/MultiImage.js',
 			'~layouts/resources/Fields.js',
 			'~layouts/resources/helper.js',
 			'~layouts/resources/Connector.js',
 			'~layouts/resources/ProgressIndicator.js',
 		];
+		if (\App\Privilege::isPermitted('OSSMail')) {
+			$jsFileNames[] = '~layouts/basic/modules/OSSMail/resources/checkmails.js';
+		}
 		if (\App\Privilege::isPermitted('Chat')) {
 			$jsFileNames[] = '~layouts/basic/modules/Chat/resources/Chat.js';
 		}
@@ -310,7 +309,6 @@ abstract class View extends Base
 			$fileName = '~libraries/jQuery-Validation-Engine/js/languages/jquery.validationEngine-en.js';
 		}
 		$jsFileNames[] = $fileName;
-
 		return $this->checkAndConvertJsScripts($jsFileNames);
 	}
 
@@ -354,7 +352,6 @@ abstract class View extends Base
 				}
 				\App\Cache::save('ConvertJsScripts', $jsFileName, $filePath, \App\Cache::LONG);
 				$jsScriptInstances[$jsFileName] = $jsScript->set('src', $filePath);
-				continue;
 			} else {
 				$preLayoutPath = '';
 				if (strpos($jsFileName, '~') === 0) {
@@ -409,7 +406,6 @@ abstract class View extends Base
 					$filePath = "{$prefix}{$layoutPath}/{$filePath}";
 					\App\Cache::save('ConvertJsScripts', $jsFileName, $filePath, \App\Cache::LONG);
 					$jsScriptInstances[$jsFileName] = $jsScript->set('src', $filePath);
-					continue;
 				}
 			}
 		}
@@ -455,7 +451,6 @@ abstract class View extends Base
 				}
 				\App\Cache::save('ConvertCssStyles', $cssFileName, $filePath, \App\Cache::LONG);
 				$cssStyleInstances[$cssFileName] = $cssScriptModel->set('href', $filePath);
-				continue;
 			} else {
 				$preLayoutPath = '';
 				if (strpos($cssFileName, '~') === 0) {
@@ -508,7 +503,6 @@ abstract class View extends Base
 					$filePath = "{$prefix}{$layoutPath}/{$filePath}";
 					\App\Cache::save('ConvertCssStyles', $cssFileName, $filePath, \App\Cache::LONG);
 					$cssStyleInstances[$cssFileName] = $cssScriptModel->set('href', $filePath);
-					continue;
 				}
 			}
 		}
@@ -552,6 +546,7 @@ abstract class View extends Base
 					 'endHour' => $userModel->getDetail('end_hour'),
 					 'firstDayOfWeek' => $userModel->getDetail('dayoftheweek'),
 					 'firstDayOfWeekNo' => \App\Fields\Date::$dayOfWeek[$userModel->getDetail('dayoftheweek')] ?? false,
+					 'eventLimit' => \AppConfig::module('Calendar', 'EVENT_LIMIT'),
 					 'timeZone' => $userModel->getDetail('time_zone'),
 					 'currencyId' => $userModel->getDetail('currency_id'),
 					 'currencyName' => $userModel->getDetail('currency_name'),
@@ -571,6 +566,8 @@ abstract class View extends Base
 					 'globalSearchAutocompleteAmountResponse' => \AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE_LIMIT'),
 					 'sounds' => \AppConfig::sounds(),
 					 'intervalForNotificationNumberCheck' => \AppConfig::performance('INTERVAL_FOR_NOTIFICATION_NUMBER_CHECK'),
+					 'recordPopoverDelay' => \AppConfig::performance('RECORD_POPOVER_DELAY'),
+					 'searchShowOwnerOnlyInList' => \AppConfig::performance('SEARCH_SHOW_OWNER_ONLY_IN_LIST'),
 					 'fieldsReferencesDependent' => \AppConfig::security('FIELDS_REFERENCES_DEPENDENT'),
 					 'soundFilesPath' => \App\Layout::getPublicUrl('layouts/resources/sounds/'),
 					 'debug' => (bool) \AppConfig::debug('JS_DEBUG'),

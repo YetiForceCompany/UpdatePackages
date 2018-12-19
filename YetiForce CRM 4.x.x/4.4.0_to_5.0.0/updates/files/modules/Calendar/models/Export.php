@@ -47,7 +47,7 @@ class Calendar_Export_Model extends Vtiger_Export_Model
 
 		$selectedIds = $request->getArray('selected_ids', 2);
 		$excludedIds = $request->getArray('excluded_ids', 2);
-		if (!empty($selectedIds) && !in_array($selectedIds, ['all', '"all"']) && !empty($selectedIds) && count($selectedIds) > 0) {
+		if (!empty($selectedIds) && !in_array($selectedIds[0], ['all', '"all"']) && count($selectedIds) > 0) {
 			$listInstance->getQueryGenerator()->addCondition('id', $selectedIds, 'e');
 		}
 		if ($excludedIds) {
@@ -55,9 +55,6 @@ class Calendar_Export_Model extends Vtiger_Export_Model
 		}
 		$query = $listInstance->getQueryGenerator()->createQuery();
 		$query->limit(AppConfig::performance('MAX_NUMBER_EXPORT_RECORDS'));
-		$fields = array_values($query->select);
-		$query->select($fields);
-
 		return $query;
 	}
 
@@ -122,17 +119,17 @@ class Calendar_Export_Model extends Vtiger_Export_Model
 
 		while ($row = $dataReader->read()) {
 			$eventFields = $row;
-			$id = $eventFields['activityid'];
+			$id = $eventFields['id'];
 			$type = $eventFields['activitytype'];
-			if ($type != 'Task') {
+			if ($type !== 'Task') {
 				$temp = $moduleModel->get('eventFields');
 				foreach ($temp as $fieldName => $access) {
 					/* Priority property of ical is Integer
 					 * http://kigkonsult.se/iCalcreator/docs/using.html#PRIORITY
 					 */
-					if ($fieldName == 'priority') {
+					if ($fieldName === 'priority') {
 						$priorityMap = ['High' => '1', 'Medium' => '2', 'Low' => '3'];
-						$priorityval = $eventFields[$fieldName];
+						$priorityval = $eventFields['taskpriority'];
 						$icalZeroPriority = 0;
 						if (array_key_exists($priorityval, $priorityMap)) {
 							$temp[$fieldName] = $priorityMap[$priorityval];
@@ -154,15 +151,17 @@ class Calendar_Export_Model extends Vtiger_Export_Model
 			} else {
 				$temp = $moduleModel->get('todoFields');
 				foreach ($temp as $fieldName => $access) {
-					if ($fieldName == 'priority') {
+					if ($fieldName === 'priority') {
 						$priorityMap = ['High' => '1', 'Medium' => '2', 'Low' => '3'];
-						$priorityval = $eventFields[$fieldName];
+						$priorityval = $eventFields['taskpriority'];
 						$icalZeroPriority = 0;
 						if (array_key_exists($priorityval, $priorityMap)) {
 							$temp[$fieldName] = $priorityMap[$priorityval];
 						} else {
 							$temp[$fieldName] = $icalZeroPriority;
 						}
+					} elseif ($fieldName === 'status') {
+						$temp[$fieldName] = $eventFields['activitystatus'];
 					} else {
 						$temp[$fieldName] = $eventFields[$fieldName];
 					}

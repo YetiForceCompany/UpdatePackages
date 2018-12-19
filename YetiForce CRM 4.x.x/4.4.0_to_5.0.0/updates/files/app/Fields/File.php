@@ -171,8 +171,7 @@ class File
 				list(, $extension) = explode('/', $param['mimeShortType']);
 			}
 			$name = uniqid() . '.' . $extension;
-		}
-		if ($extension === 'tmp' && ($fileExt = pathinfo($name, PATHINFO_EXTENSION))) {
+		} elseif ($extension === 'tmp' && ($fileExt = pathinfo($name, PATHINFO_EXTENSION))) {
 			$extension = $fileExt;
 		}
 		$path = tempnam(static::getTmpPath(), 'YFF');
@@ -212,7 +211,7 @@ class File
 			return false;
 		}
 		try {
-			$response = (new \GuzzleHttp\Client())->request('GET', $url, ['timeout' => 5, 'connect_timeout' => 1]);
+			$response = (new \GuzzleHttp\Client())->request('GET', $url, \App\RequestHttp::getOptions() + ['timeout' => 5, 'connect_timeout' => 1]);
 			if ($response->getStatusCode() !== 200) {
 				Log::warning('Error when downloading content: ' . $url . ' | Status code: ' . $response->getStatusCode(), __CLASS__);
 				return false;
@@ -249,7 +248,7 @@ class File
 	 */
 	public function getSanitizeName()
 	{
-		return self::sanitizeUploadFileName($this->name);
+		return static::sanitizeUploadFileName($this->name);
 	}
 
 	/**
@@ -272,8 +271,8 @@ class File
 		if (empty($this->mimeType)) {
 			static::initMimeTypes();
 			$extension = $this->getExtension(true);
-			if (isset(self::$mimeTypes[$extension])) {
-				$this->mimeType = self::$mimeTypes[$extension];
+			if (isset(static::$mimeTypes[$extension])) {
+				$this->mimeType = static::$mimeTypes[$extension];
 			} elseif (function_exists('mime_content_type')) {
 				$this->mimeType = mime_content_type($this->path);
 			} elseif (function_exists('finfo_open')) {
@@ -353,14 +352,14 @@ class File
 		$return = true;
 		Log::trace('File validate - Start', __CLASS__);
 		try {
+			if ($type && $this->getShortMimeType(0) !== $type) {
+				throw new \App\Exceptions\DangerousFile('ERR_FILE_ILLEGAL_FORMAT');
+			}
 			$this->checkFile();
 			$this->validateFormat();
 			$this->validateCodeInjection();
 			if (($type && $type === 'image') || $this->getShortMimeType(0) === 'image') {
 				$this->validateImage();
-			}
-			if ($type && $this->getShortMimeType(0) !== $type) {
-				throw new \App\Exceptions\AppException('Wrong file type');
 			}
 		} catch (\Exception $e) {
 			$return = false;
@@ -379,6 +378,36 @@ class File
 	}
 
 	/**
+	 * Validate image content.
+	 *
+	 * @throws \App\Exceptions\DangerousFile
+	 *
+	 * @return bool
+	 */
+	public function validateImageContent(): bool
+	{
+		$returnVal = false;
+		if (extension_loaded('imagick')) {
+			try {
+				$img = new \imagick($this->path);
+				$returnVal = $img->valid();
+				$img->clear();
+				$img->destroy();
+			} catch (\ImagickException $e) {
+				$this->validateError = $e->getMessage();
+				$returnVal = false;
+			}
+		} else {
+			$img = \imagecreatefromstring(\file_get_contents($this->path));
+			if ($img !== false) {
+				$returnVal = true;
+				\imagedestroy($img);
+			}
+		}
+		return $returnVal;
+	}
+
+	/**
 	 * Basic check file.
 	 *
 	 * @throws \Exception
@@ -386,13 +415,13 @@ class File
 	private function checkFile()
 	{
 		if ($this->error !== false && $this->error != UPLOAD_ERR_OK) {
-			throw new \App\Exceptions\AppException('ERR_FILE_ERROR_REQUEST||' . $this->getErrorMessage($this->error));
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_ERROR_REQUEST||' . $this->getErrorMessage($this->error));
 		}
 		if (empty($this->name)) {
-			throw new \App\Exceptions\AppException('ERR_FILE_EMPTY_NAME');
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_EMPTY_NAME');
 		}
 		if ($this->getSize() === 0) {
-			throw new \App\Exceptions\AppException('ERR_FILE_WRONG_SIZE');
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_WRONG_SIZE');
 		}
 	}
 
@@ -404,7 +433,7 @@ class File
 	private function validateFormat()
 	{
 		if (isset(self::$allowedFormats[$this->getShortMimeType(0)]) && !\in_array($this->getShortMimeType(1), self::$allowedFormats[$this->getShortMimeType(0)])) {
-			throw new \App\Exceptions\AppException('ERR_FILE_ILLEGAL_FORMAT');
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_ILLEGAL_FORMAT');
 		}
 	}
 
@@ -416,10 +445,14 @@ class File
 	private function validateImage()
 	{
 		if (!getimagesize($this->path)) {
-			throw new \App\Exceptions\AppException('ERR_FILE_WRONG_IMAGE');
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_WRONG_IMAGE');
 		}
 		if (preg_match('[\x01-\x08\x0c-\x1f]', $this->getContents())) {
-			throw new \App\Exceptions\AppException('ERR_FILE_WRONG_IMAGE');
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_WRONG_IMAGE');
+		}
+		$this->validateCodeInjectionInMetadata();
+		if (!$this->validateImageContent()) {
+			throw new \App\Exceptions\DangerousFile('ERR_FILE_WRONG_IMAGE ||' . $this->validateError);
 		}
 	}
 
@@ -430,20 +463,43 @@ class File
 	 */
 	private function validateCodeInjection()
 	{
-		if ($this->validateAllCodeInjection || in_array($this->getShortMimeType(0), self::$phpInjection)) {
-			// Check for php code injection
+		$shortMimeType = $this->getShortMimeType(0);
+		if ($this->validateAllCodeInjection || in_array($shortMimeType, static::$phpInjection)) {
+			// Check for code injection
 			$contents = $this->getContents();
-			if (preg_match('/(<\?php?(.*?))/si', $contents) === 1 || preg_match('/(<?script(.*?)language(.*?)=(.*?)"(.*?)php(.*?)"(.*?))/si', $contents) === 1 || stripos($contents, '<?=') !== false || stripos($contents, '<%=') !== false || stripos($contents, '<? ') !== false || stripos($contents, '<% ') !== false) {
-				throw new \App\Exceptions\AppException('ERR_FILE_PHP_CODE_INJECTION');
+			if (
+				preg_match('/(<\?php?(.*?))/si', $contents) === 1 ||
+				preg_match('/(<?script(.*?)language(.*?)=(.*?)"(.*?)php(.*?)"(.*?))/si', $contents) === 1 ||
+				stripos($contents, '<?=') !== false ||
+				stripos($contents, '<%=') !== false ||
+				stripos($contents, '<? ') !== false ||
+				stripos($contents, '<% ') !== false ||
+				stripos($contents, '<?xpacket') !== false
+			) {
+				throw new \App\Exceptions\DangerousFile('ERR_FILE_PHP_CODE_INJECTION');
 			}
-			if (function_exists('exif_read_data') && ($this->mimeType === 'image/jpeg' || $this->mimeType === 'image/tiff') && in_array(exif_imagetype($this->path), [IMAGETYPE_JPEG, IMAGETYPE_TIFF_II, IMAGETYPE_TIFF_MM])) {
-				$imageSize = getimagesize($this->path, $imageInfo);
-				if ($imageSize && (empty($imageInfo['APP1']) || strpos($imageInfo['APP1'], 'Exif') === 0) && ($exifdata = exif_read_data($this->path)) && !$this->validateImageMetadata($exifdata)) {
-					throw new \App\Exceptions\AppException('ERR_FILE_PHP_CODE_INJECTION');
-				}
-			}
-			if (stripos('<?xpacket', $contents) !== false) {
-				throw new \App\Exceptions\AppException('ERR_FILE_XPACKET_CODE_INJECTION');
+		}
+	}
+
+	/**
+	 * Validate code injection in metadata.
+	 *
+	 * @throws \App\Exceptions\DangerousFile
+	 */
+	private function validateCodeInjectionInMetadata()
+	{
+		if (
+			function_exists('exif_read_data') &&
+			\in_array($this->getMimeType(), ['image/jpeg', 'image/tiff']) &&
+			\in_array(exif_imagetype($this->path), [IMAGETYPE_JPEG, IMAGETYPE_TIFF_II, IMAGETYPE_TIFF_MM])
+		) {
+			$imageSize = getimagesize($this->path, $imageInfo);
+			if (
+				$imageSize &&
+				(empty($imageInfo['APP1']) || strpos($imageInfo['APP1'], 'Exif') === 0) &&
+				($exifdata = exif_read_data($this->path)) && !$this->validateImageMetadata($exifdata)
+			) {
+				throw new \App\Exceptions\DangerousFile('ERR_FILE_PHP_CODE_INJECTION');
 			}
 		}
 	}
@@ -526,7 +582,7 @@ class File
 	{
 		if ($checkInAttachments) {
 			$hash = hash('sha1', $this->getContents()) . \App\Encryption::generatePassword(10);
-			if ((new \App\Db\Query())->from('u_#__file_upload_temp')->where(['key' => $hash])->exists() || ($uploadFilePath && file_exists($uploadFilePath . $hash))) {
+			if ($uploadFilePath && file_exists($uploadFilePath . $hash)) {
 				$hash = $this->generateHash($checkInAttachments);
 			}
 			return $hash;
@@ -645,11 +701,10 @@ class File
 	 * Create document from string.
 	 *
 	 * @param string $contents
-	 * @param array  $params
 	 *
-	 * @return bool|array
+	 * @return bool|self
 	 */
-	public static function saveFromString($contents, $params = [])
+	public static function saveFromString($contents)
 	{
 		$result = explode(',', $contents, 2);
 		$contentType = $isBase64 = false;
@@ -669,12 +724,11 @@ class File
 		$rawData = $isBase64 ? base64_decode($data) : $data;
 		if (strlen($rawData) < 12) {
 			Log::error('Incorrect content value: ' . $contents, __CLASS__);
-
 			return false;
 		}
 		$fileInstance = static::loadFromContent($rawData, false, ['mimeShortType' => $contentType]);
-		if ($fileInstance->validate() && ($id = static::saveFromContent($fileInstance, $params))) {
-			return $id;
+		if ($fileInstance->validate()) {
+			return $fileInstance;
 		}
 		return false;
 	}
@@ -705,15 +759,29 @@ class File
 	 * @param \self $file
 	 * @param array $params
 	 *
-	 * @return bool
+	 * @throws \Exception
+	 *
+	 * @return array|bool
 	 */
 	public static function saveFromContent(self $file, $params = [])
 	{
-		$fileName = \App\TextParser::textTruncate($file->getName(), 50, false);
+		$fileName = $file->getName();
+		$fileNameLength = \App\TextParser::getTextLength($fileName);
 		$record = \Vtiger_Record_Model::getCleanInstance('Documents');
+		if ($fileNameLength > ($maxLength = $record->getField('filename')->get('maximumlength'))) {
+			$extLength = 0;
+			if ($ext = $file->getExtension()) {
+				$ext .= ".{$ext}";
+				$extLength = \App\TextParser::getTextLength($ext);
+				$fileName = substr($fileName, 0, $fileNameLength - $extLength);
+			}
+			$fileName = \App\TextParser::textTruncate($fileName, $maxLength - $extLength, false) . $ext;
+		}
+		$fileName = \App\Purifier::decodeHtml(\App\Purifier::purify($fileName));
+
 		$record->setData($params);
-		$record->set('notes_title', \App\Purifier::decodeHtml(\App\Purifier::purify($fileName)));
-		$record->set('filename', \App\Purifier::decodeHtml(\App\Purifier::purify($file->getName())));
+		$record->set('notes_title', $fileName);
+		$record->set('filename', $fileName);
 		$record->set('filestatus', 1);
 		$record->set('filelocationtype', 'I');
 		$record->set('folderid', 'T2');
@@ -722,7 +790,7 @@ class File
 			'size' => $file->getSize(),
 			'type' => $file->getMimeType(),
 			'tmp_name' => $file->getPath(),
-			'error' => 0,
+			'error' => 0
 		];
 		$record->save();
 		$file->delete();
@@ -863,7 +931,7 @@ class File
 	{
 		if (is_dir($dirPath)) {
 			do {
-				$tmpFile = 'tmpfile' . time() . '-' . rand(1, 1000) . '.tmp';
+				$tmpFile = 'tmpfile' . time() . '-' . random_int(1, 1000) . '.tmp';
 				// Continue the loop unless we find a name that does not exists already.
 				$useFilename = "$dirPath/$tmpFile";
 				if (!file_exists($useFilename)) {
@@ -891,7 +959,7 @@ class File
 	public static function isExistsUrl($url)
 	{
 		try {
-			$response = (new \GuzzleHttp\Client())->request('GET', $url, ['timeout' => 1, 'verify' => false, 'connect_timeout' => 1]);
+			$response = (new \GuzzleHttp\Client())->request('GET', $url, \App\RequestHttp::getOptions() + ['timeout' => 1, 'connect_timeout' => 1]);
 			if ($response->getStatusCode() === 200) {
 				return true;
 			} else {
@@ -974,10 +1042,19 @@ class File
 		$attach = [];
 		foreach (static::transform($files, true) as $key => $transformFiles) {
 			foreach ($transformFiles as $fileDetails) {
+				$additionalNotes = '';
 				$file = static::loadFromRequest($fileDetails);
 				if (!$file->validate($type)) {
-					$attach[] = ['name' => $file->getName(), 'error' => $file->validateError, 'hash' => $request->getByType('hash', 'Text')];
-					continue;
+					if (!static::removeForbiddenTags($file)) {
+						$attach[] = ['name' => $file->getName(), 'error' => $file->validateError, 'hash' => $request->getByType('hash', 'Alnum')];
+						continue;
+					}
+					$file = static::loadFromRequest($fileDetails);
+					if (!$file->validate($type)) {
+						$attach[] = ['name' => $file->getName(), 'error' => $file->validateError, 'hash' => $request->getByType('hash', 'Alnum')];
+						continue;
+					}
+					$additionalNotes = \App\Language::translate('LBL_FILE_HAS_BEEN_MODIFIED');
 				}
 				$uploadFilePath = static::initStorageFileDirectory($storageName);
 				$key = $file->generateHash(true, $uploadFilePath);
@@ -995,12 +1072,13 @@ class File
 						'name' => $file->getName(),
 						'size' => \vtlib\Functions::showBytes($file->getSize()),
 						'key' => $key,
-						'hash' => $request->getByType('hash', 'string')
+						'hash' => $request->getByType('hash', 'Alnum'),
+						'info' => $additionalNotes
 					];
 				} else {
 					$db->createCommand()->delete('u_#__file_upload_temp', ['key' => $key])->execute();
 					Log::error("Moves an uploaded file to a new location failed: {$uploadFilePath}");
-					$attach[] = ['hash' => $request->getByType('hash', 'Text'), 'name' => $file->getName(), 'error' => ''];
+					$attach[] = ['hash' => $request->getByType('hash', 'Alnum'), 'name' => $file->getName(), 'error' => ''];
 				}
 			}
 		}
@@ -1018,20 +1096,99 @@ class File
 	 */
 	public static function updateUploadFiles(array $value, \Vtiger_Record_Model $recordModel, \Vtiger_Field_Model $fieldModel)
 	{
-		$previousValue = $recordModel->getPreviousValue($fieldModel->getName());
-		$previousValue = $previousValue ? static::parse($previousValue) : [];
+		$previousValue = $recordModel->get($fieldModel->getName());
+		$previousValue = ($previousValue && !\App\Json::isEmpty($previousValue)) ? static::parse(\App\Json::decode($previousValue)) : [];
 		$value = static::parse($value);
-		foreach ($value as $item) {
-			if (!isset($previousValue[$item['key']]) && ($uploadFile = static::getUploadFile($item['key']))) {
-				$value[$item['key']]['path'] = $uploadFile['path'] . $item['key'];
+		$new = [];
+		$save = false;
+		foreach ($value as $key => $item) {
+			if (isset($previousValue[$item['key']])) {
+				$value[$item['key']] = $previousValue[$item['key']];
+			} elseif (!empty($item['baseContent'])) {
+				$base = static::saveFromBase($item, $recordModel->getModuleName());
+				$new[] = $value[$base['key']] = $base;
+				unset($value[$key]);
+				$save = true;
+			} elseif ($item['key'] ? ($uploadFile = static::getUploadFile($item['key'])) : false) {
+				$new[] = $value[$item['key']] = [
+					'name' => $uploadFile['name'],
+					'size' => $item['size'],
+					'path' => $uploadFile['path'] . $item['key'],
+					'key' => $item['key'],
+				];
+				$save = true;
 			}
 		}
+		$dbCommand = \App\Db::getInstance()->createCommand();
 		foreach ($previousValue as $item) {
 			if (!isset($value[$item['key']])) {
-				static::removeUploadFile($item);
+				$dbCommand->delete('u_#__file_upload_temp', ['key' => $item['key']])->execute();
+				$save = true;
+				if (\file_exists(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $item['path'])) {
+					\unlink(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $item['path']);
+				} else {
+					Log::info('File to delete does not exist', __METHOD__);
+				}
 			}
 		}
-		return array_values($value);
+		unset($dbCommand);
+		return [array_values($value), $new, $save];
+	}
+
+	/**
+	 * Remove the forbidden tags from image.
+	 *
+	 * @param \App\Fields\File $file
+	 *
+	 * @return bool
+	 */
+	public static function removeForbiddenTags(self $file): bool
+	{
+		$result = false;
+		if (extension_loaded('imagick')) {
+			try {
+				$img = new \imagick($file->getPath());
+				$img->stripImage();
+				switch ($file->getExtension()) {
+					case 'jpg':
+					case 'jpeg':
+						$img->setImageCompression(\Imagick::COMPRESSION_JPEG);
+						$img->setImageCompressionQuality(99);
+						break;
+					default:
+						break;
+				}
+				$img->writeImage($file->getPath());
+				$img->clear();
+				$img->destroy();
+				$result = true;
+			} catch (\ImagickException $e) {
+				$result = false;
+			}
+		} else {
+			$img = \imagecreatefromstring(\file_get_contents($file->getPath()));
+			if (false !== $img) {
+				switch ($file->getExtension()) {
+					case 'jpg':
+					case 'jpeg':
+						$result = \imagejpeg($img, $file->getPath());
+						break;
+					case 'png':
+						$result = \imagepng($img, $file->getPath());
+						break;
+					case 'gif':
+						$result = \imagegif($img, $file->getPath());
+						break;
+					case 'bmp':
+						$result = \imagebmp($img, $file->getPath());
+						break;
+					default:
+						break;
+				}
+				\imagedestroy($img);
+			}
+		}
+		return $result;
 	}
 
 	/**
@@ -1060,16 +1217,6 @@ class File
 	{
 		$row = (new \App\Db\Query())->from('u_#__file_upload_temp')->where(['key' => $key])->one();
 		return $row ?: [];
-	}
-
-	/**
-	 * Remove file.
-	 *
-	 * @param array $value
-	 */
-	public static function removeUploadFile(array $value)
-	{
-		\unlink($value['path']);
 	}
 
 	/**
@@ -1121,5 +1268,30 @@ class File
 			}
 		}
 		return $absolutes[0] === 'YetiTemp';
+	}
+
+	/**
+	 * Save file from base64 encoded string.
+	 *
+	 * @param string $raw        base64 string
+	 * @param string $moduleName Destination record module name
+	 *
+	 * @return array
+	 */
+	public static function saveFromBase($raw, $moduleName)
+	{
+		$file = static::loadFromContent(\base64_decode($raw['baseContent']), $raw['name']);
+		$savePath = static::initStorageFileDirectory($moduleName);
+		$key = $file->generateHash(true, $savePath);
+		$size = $file->getSize();
+		if ($file->moveFile($savePath . $key)) {
+			return [
+				'name' => $file->getName(),
+				'size' => \vtlib\Functions::showBytes($size),
+				'key' => $key,
+				'hash' => \md5_file($savePath . $key),
+				'path' => $savePath . $key
+			];
+		}
 	}
 }

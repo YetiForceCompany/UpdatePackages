@@ -469,7 +469,7 @@ $.Class("Vtiger_Header_Js", {
 			};
 		}
 		var url = 'index.php?module=' + moduleName + '&view=QuickCreateAjax';
-		if ((app.getViewName() === 'Detail' || app.getViewName() === 'Edit') && app.getParentModuleName() != 'Settings') {
+		if ((app.getViewName() === 'Detail' || (app.getViewName() === 'Edit' && app.getRecordId() !== undefined)) && app.getParentModuleName() != 'Settings') {
 			url += '&sourceModule=' + app.getModuleName();
 			url += '&sourceRecord=' + app.getRecordId();
 		}
@@ -517,15 +517,16 @@ $.Class("Vtiger_Header_Js", {
 		});
 	},
 	toggleBreadcrumActions(container) {
-		if (!container.find('.js-breadcrumb').length) {
+		let actionsContainer = container.find('.js-header-toggle__actions');
+		if (!actionsContainer.length) {
 			return;
 		}
-		let breadcrumb = container.find('.js-breadcrumb'),
-			actionBtn = breadcrumb.find('.js-breadcrumb__actions-btn'),
-			cssActionsTop = {top: breadcrumb.offset().top + breadcrumb.height()};
-		breadcrumb.find('.o-breadcrumb__actions').css(cssActionsTop);
+		let actionBtn = container.find('.js-header-toggle__actions-btn'),
+			actionBtnMargin = 5,
+			cssActionsTop = {top: actionBtn.offset().top + actionBtn.outerHeight() + actionBtnMargin};
+		actionsContainer.css(cssActionsTop);
 		actionBtn.on('click', () => {
-			breadcrumb.find('.o-breadcrumb__actions').toggleClass('is-active');
+			actionsContainer.toggleClass('is-active');
 		});
 	},
 	registerMobileEvents: function () {
@@ -596,22 +597,13 @@ $.Class("Vtiger_Header_Js", {
 		$('.actionMenu').removeClass('actionMenuOn');
 	},
 	hideBreadcrumbActionMenu: function () {
-		$('.js-breadcrumb__actions').removeClass('is-active');
+		$('.js-header-toggle__actions').removeClass('is-active');
 	},
 	hideReminderNotice: function () {
 		$('.remindersNoticeContainer').removeClass('toggled');
 	},
 	hideReminderNotification: function () {
 		$('.remindersNotificationContainer').removeClass('toggled');
-	},
-	showPdfModal: function (url) {
-		var params = {};
-		if (app.getViewName() == 'List') {
-			var selected = Vtiger_List_Js.getSelectedRecordsParams(false, true);
-			$.extend(params, selected);
-		}
-		url += '&' + $.param(params);
-		app.showModalWindow(null, url);
 	},
 	registerFooTable: function () {
 		var container = $('.tableRWD');
@@ -657,7 +649,7 @@ $.Class("Vtiger_Header_Js", {
 	toggleSiteBar(toogleButton) {
 		$('.rowContent').toggleClass('js-sitebar--active');
 		toogleButton.closest('.siteBarRight').toggleClass('hideSiteBar');
-		toogleButton.find('[data-fa-i2svg]').toggleClass('fa-chevron-left').toggleClass("fa-chevron-right");
+		toogleButton.find('.fas').toggleClass("fa-chevron-right fa-chevron-left");
 		toogleButton.toggleClass('hideToggleSiteBarRightButton');
 	},
 	registerToggleButton: function () {
@@ -685,6 +677,9 @@ $.Class("Vtiger_Header_Js", {
 	},
 	registerEvents: function () {
 		var thisInstance = this;
+		if (typeof Chat_JS !== 'undefined') {
+			Chat_JS.registerTrackingEvents();
+		}
 		const container = thisInstance.getContentsContainer(),
 			menuContainer = container.find('.js-menu--scroll'),
 			quickCreateModal = container.find('.quickCreateModules');

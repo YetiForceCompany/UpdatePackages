@@ -59,7 +59,7 @@ class Module extends ModuleBasic
 		$useactionsText = strtoupper($useactionsText);
 
 		$isExists = (new \App\Db\Query())
-			->select('relation_id')
+			->select(['relation_id'])
 			->from('vtiger_relatedlists')
 			->where(['tabid' => $this->id, 'related_tabid' => $moduleInstance->id, 'name' => $functionName, 'label' => $label])
 			->exists();
@@ -255,15 +255,13 @@ class Module extends ModuleBasic
 	{
 		$return = true;
 		$instance = self::getClassInstance((string) $modulename);
-		if ($instance) {
-			if (method_exists($instance, 'moduleHandler')) {
-				\App\Log::trace("Invoking moduleHandler for $eventType ...START", __METHOD__);
-				$fire = $instance->moduleHandler((string) $modulename, (string) $eventType);
-				if ($fire !== null && $fire !== true) {
-					$return = false;
-				}
-				\App\Log::trace("Invoking moduleHandler for $eventType ...DONE", __METHOD__);
+		if ($instance && method_exists($instance, 'moduleHandler')) {
+			\App\Log::trace("Invoking moduleHandler for $eventType ...START", __METHOD__);
+			$fire = $instance->moduleHandler((string) $modulename, (string) $eventType);
+			if ($fire !== null && $fire !== true) {
+				$return = false;
 			}
+			\App\Log::trace("Invoking moduleHandler for $eventType ...DONE", __METHOD__);
 		}
 		return $return;
 	}

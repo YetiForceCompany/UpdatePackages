@@ -154,7 +154,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			if ($this->checkFieldNameExists($name)) {
 				throw new \App\Exceptions\AppException(\App\Language::translate('LBL_DUPLICATE_FIELD_EXISTS', 'Settings::LayoutEditor'), 512);
 			}
-			if ($this->checkFieldNameIsAnException($name, $params['sourceModule'])) {
+			if ($this->checkFieldNameIsAnException($name)) {
 				throw new \App\Exceptions\AppException(\App\Language::translate('LBL_FIELD_NAME_IS_RESERVED', 'Settings::LayoutEditor'), 512);
 			}
 			if (strlen($name) > 30) {
@@ -459,29 +459,17 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 	 * Check if the field name is reserved.
 	 *
 	 * @param string $fieldName
-	 * @param string $moduleName
 	 *
 	 * @return bool
 	 */
-	public function checkFieldNameIsAnException(string $fieldName, string $moduleName)
+	public function checkFieldNameIsAnException(string $fieldName)
 	{
-		$exceptions = [
-			'id', 'inventoryitemsno', 'seq', 'header_type', 'header_class',
+		return in_array($fieldName, [
+			'id', 'seq', 'header_type', 'header_class',
 			'module', 'parent', 'action', 'mode', 'view', 'selected_ids',
 			'excluded_ids', 'search_params', 'search_key', 'page', 'operator',
-			'source_module', 'viewname', 'sortorder', 'orderby'
-		];
-		$instance = Vtiger_InventoryField_Model::getInstance($moduleName);
-		foreach ($instance->getAllFields() as $field) {
-			$exceptions[] = $field->getColumnName();
-			if (preg_match('/^' . $field->getColumnName() . '[0-9]/', $fieldName) != 0) {
-				return true;
-			}
-			foreach ($field->getCustomColumn() as $columnName => $dbType) {
-				$exceptions[] = $columnName;
-			}
-		}
-		return in_array($fieldName, $exceptions);
+			'source_module', 'viewname', 'sortorder', 'orderby', 'inventory'
+		]);
 	}
 
 	public static $supportedModules = false;
@@ -591,7 +579,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 	public function getTreeTemplates($sourceModule)
 	{
 		$sourceModule = \App\Module::getModuleId($sourceModule);
-		$query = (new \App\Db\Query())->select('templateid, name')->from('vtiger_trees_templates')->where(['module' => $sourceModule])->orWhere(['like', 'share', ",$sourceModule,"]);
+		$query = (new \App\Db\Query())->select(['templateid', 'name'])->from('vtiger_trees_templates')->where(['module' => $sourceModule])->orWhere(['like', 'share', ",$sourceModule,"]);
 		$treeList = [];
 		$dataReader = $query->createCommand()->query();
 		while ($row = $dataReader->read()) {
@@ -620,19 +608,26 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 		];
 	}
 
-	public static function getRelationFields($moduleId)
+	/**
+	 * Get relation fields by module ID.
+	 *
+	 * @param int $moduleId
+	 *
+	 * @return string[]
+	 */
+	public static function getRelationFields(int $moduleId)
 	{
-		$query = (new \App\Db\Query())->select('vtiger_field.fieldname')
+		$dataReader = (new \App\Db\Query())
+			->select(['vtiger_field.fieldid', 'vtiger_field.fieldname'])
 			->from('vtiger_relatedlists_fields')
 			->innerJoin('vtiger_field', 'vtiger_relatedlists_fields.fieldid = vtiger_field.fieldid')
-			->where(['vtiger_relatedlists_fields.relation_id' => $moduleId, 'vtiger_field.presence' => [0, 2]]);
-		$dataReader = $query->createCommand()->query();
+			->where(['vtiger_relatedlists_fields.relation_id' => $moduleId, 'vtiger_field.presence' => [0, 2]])
+			->createCommand()->query();
 		$fields = [];
 		while ($row = $dataReader->read()) {
-			$fields[] = $row['fieldname'];
+			$fields[$row['fieldid']] = $row['fieldname'];
 		}
 		$dataReader->close();
-
 		return $fields;
 	}
 

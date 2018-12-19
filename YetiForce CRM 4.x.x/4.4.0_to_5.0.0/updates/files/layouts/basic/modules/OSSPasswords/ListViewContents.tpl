@@ -21,7 +21,7 @@
 	<div id="deSelectAllMsgDiv" class="alert-block msgDiv noprint">
 		<strong><a id="deSelectAllMsg">{\App\Language::translate('LBL_DESELECT_ALL_RECORDS',$MODULE)}</a></strong>
 	</div>
-	<div class="listViewEntriesDiv u-overflow-scroll-xs-down">
+	<div class="listViewEntriesDiv u-overflow-scroll-xsm-down">
 		<input type="hidden" value="{$ORDER_BY}" id="orderBy"/>
 		<input type="hidden" value="{$SORT_ORDER}" id="sortOrder"/>
 		<div class="listViewLoadingImageBlock d-none modal noprint" id="loadingListViewModal">
@@ -30,7 +30,7 @@
 			<p class="listViewLoadingMsg">{\App\Language::translate('LBL_LOADING_LISTVIEW_CONTENTS')}........</p>
 		</div>
 		{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
-		<table class="table table-bordered listViewEntriesTable {$WIDTHTYPE} {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if}">
+		<table class="table table-bordered listViewEntriesTable {$WIDTHTYPE} {if $VIEW_MODEL && !$VIEW_MODEL->isEmpty('entityState')}listView{$VIEW_MODEL->get('entityState')}{/if} js-fixed-thead" data-js="floatThead">
 			<thead>
 			<tr class="listViewHeaders">
 				<th>
@@ -67,9 +67,8 @@
 					</th>
 				{/foreach}
 			</tr>
-			</thead>
 			{if $MODULE_MODEL->isQuickSearchEnabled()}
-				<tr>
+				<tr class="bg-white">
 					<td class="listViewSearchTd">
 						<div class="flexWrapper">
 							<a class="btn btn-light" role="button" data-trigger="listSearch" href="javascript:void(0);">
@@ -96,12 +95,13 @@
 								{assign var=SEARCH_INFO value=[]}
 							{/if}
 							{include file=\App\Layout::getTemplatePath($FIELD_UI_TYPE_MODEL->getListSearchTemplateName(), $MODULE_NAME)
-						FIELD_MODEL=$LISTVIEW_HEADER SEARCH_INFO=$SEARCH_INFO USER_MODEL=$USER_MODEL}
+							FIELD_MODEL=$LISTVIEW_HEADER SEARCH_INFO=$SEARCH_INFO USER_MODEL=$USER_MODEL}
 						</td>
 					{/foreach}
 					<td class="reducePadding"></td>
 				</tr>
 			{/if}
+			</thead>
 			{assign var="LISTVIEW_HEADER_COUNT" value=count($LISTVIEW_HEADERS)}
 			{foreach item=LISTVIEW_ENTRY from=$LISTVIEW_ENTRIES name=listview}
 				{if array_key_exists('password',$LISTVIEW_HEADERS)}

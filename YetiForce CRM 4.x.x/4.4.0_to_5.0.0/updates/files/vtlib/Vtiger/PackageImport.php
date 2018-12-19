@@ -100,10 +100,8 @@ class PackageImport extends PackageExport
 	 */
 	public function isLanguageType($zipfile = null)
 	{
-		if (!empty($zipfile)) {
-			if (!$this->checkZip($zipfile)) {
-				return false;
-			}
+		if (!empty($zipfile) && !$this->checkZip($zipfile)) {
+			return false;
 		}
 		$packagetype = $this->type();
 		if ($packagetype) {
@@ -126,10 +124,8 @@ class PackageImport extends PackageExport
 	 */
 	public function isExtensionType($zipfile = null)
 	{
-		if (!empty($zipfile)) {
-			if (!$this->checkZip($zipfile)) {
-				return false;
-			}
+		if (!empty($zipfile) && !$this->checkZip($zipfile)) {
+			return false;
 		}
 		$packagetype = $this->type();
 		if ($packagetype) {
@@ -143,10 +139,8 @@ class PackageImport extends PackageExport
 
 	public function isUpdateType($zipfile = null)
 	{
-		if (!empty($zipfile)) {
-			if (!$this->checkZip($zipfile)) {
-				return false;
-			}
+		if (!empty($zipfile) && !$this->checkZip($zipfile)) {
+			return false;
 		}
 		$packagetype = $this->type();
 
@@ -164,10 +158,8 @@ class PackageImport extends PackageExport
 	 */
 	public function isLayoutType($zipfile = null)
 	{
-		if (!empty($zipfile)) {
-			if (!$this->checkZip($zipfile)) {
-				return false;
-			}
+		if (!empty($zipfile) && !$this->checkZip($zipfile)) {
+			return false;
 		}
 		$packagetype = $this->type();
 
@@ -190,10 +182,8 @@ class PackageImport extends PackageExport
 	public function isModuleBundle($zipfile = null)
 	{
 		// If data is not yet available
-		if (!empty($zipfile)) {
-			if (!$this->checkZip($zipfile)) {
-				return false;
-			}
+		if (!empty($zipfile) && !$this->checkZip($zipfile)) {
+			return false;
 		}
 		return (bool) $this->_modulexml->modulebundle;
 	}
@@ -312,7 +302,8 @@ class PackageImport extends PackageExport
 			!empty($this->_modulexml->dependencies) &&
 			!empty($this->_modulexml->dependencies->vtiger_version)) {
 			$moduleVersion = (string) $this->_modulexml->dependencies->vtiger_version;
-			if (\App\Version::check($moduleVersion) >= 0) {
+			$versionCheck = \App\Version::compare(\App\Version::get(), $moduleVersion);
+			if ($versionCheck !== false && $versionCheck >= 0) {
 				$moduleVersionFound = true;
 			} else {
 				$errorText = \App\Language::translate('LBL_ERROR_VERSION', 'Settings:ModuleManager');
@@ -328,7 +319,7 @@ class PackageImport extends PackageExport
 		if ($manifestxml_found && $layoutfile_found && $moduleVersionFound) {
 			$validzip = true;
 		}
-		if ($manifestxml_found && $languagefile_found && $extensionfile_found && $moduleVersionFound) {
+		if ($manifestxml_found && $extensionfile_found && $moduleVersionFound) {
 			$validzip = true;
 		}
 		if ($manifestxml_found && $updatefile_found && $moduleVersionFound) {
@@ -342,17 +333,15 @@ class PackageImport extends PackageExport
 			$validzip = false;
 			$this->_errorText = \App\Language::translate('LBL_INVALID_MODULE_NAME', 'Settings:ModuleManager');
 		}
-		if ($validzip) {
-			if (!empty($this->_modulexml->license)) {
-				if (!empty($this->_modulexml->license->inline)) {
-					$this->_licensetext = (string) $this->_modulexml->license->inline;
-				} elseif (!empty($this->_modulexml->license->file)) {
-					$licensefile = (string) $this->_modulexml->license->file;
-					if ($licenseContent = $zip->getFromName($licensefile)) {
-						$this->_licensetext = $licenseContent;
-					} else {
-						$this->_licensetext = "Missing $licensefile!";
-					}
+		if ($validzip && !empty($this->_modulexml->license)) {
+			if (!empty($this->_modulexml->license->inline)) {
+				$this->_licensetext = (string) $this->_modulexml->license->inline;
+			} elseif (!empty($this->_modulexml->license->file)) {
+				$licensefile = (string) $this->_modulexml->license->file;
+				if ($licenseContent = $zip->getFromName($licensefile)) {
+					$this->_licensetext = $licenseContent;
+				} else {
+					$this->_licensetext = "Missing $licensefile!";
 				}
 			}
 		}
@@ -808,18 +797,18 @@ class PackageImport extends PackageExport
 		$filterInstance->sequence = $customviewnode->sequence;
 		$filterInstance->description = $customviewnode->description;
 		$filterInstance->sort = $customviewnode->sort;
-
 		$moduleInstance->addFilter($filterInstance);
-
 		foreach ($customviewnode->fields->field as $fieldnode) {
-			$fieldInstance = $this->__GetModuleFieldFromCache($moduleInstance, $fieldnode->fieldname);
-			$filterInstance->addField($fieldInstance, $fieldnode->columnindex);
-
-			if (!empty($fieldnode->rules->rule)) {
-				foreach ($fieldnode->rules->rule as $rulenode) {
-					$filterInstance->addRule($fieldInstance, $rulenode->comparator, $rulenode->value, $rulenode->columnindex);
-				}
+			if ((string) $fieldnode->modulename === $moduleInstance->name) {
+				$fieldInstance = $this->__GetModuleFieldFromCache($moduleInstance, $fieldnode->fieldname);
+			} else {
+				$fieldInstance = Field::getInstance((string) $fieldnode->fieldname, Module::getInstance((string) $fieldnode->modulename));
 			}
+			$fieldInstance->sourcefieldname = (string) $fieldnode->sourcefieldname;
+			$filterInstance->addField($fieldInstance, $fieldnode->columnindex);
+		}
+		if (!empty($customviewnode->rules)) {
+			$filterInstance->addRule(\App\Json::decode($customviewnode->rules));
 		}
 	}
 
@@ -1046,38 +1035,47 @@ class PackageImport extends PackageExport
 			return false;
 		}
 		$module = (string) $this->moduleInstance->name;
-
-		$inventoryInstance = \Vtiger_Inventory_Model::getInstance($module);
-		$inventoryInstance->createInventoryTables();
-		$inventoryFieldInstance = \Vtiger_InventoryField_Model::getInstance($module);
+		$inventory = \Vtiger_Inventory_Model::getInstance($module);
+		$inventory->createInventoryTables();
 		foreach ($this->_modulexml->inventory->fields->field as $fieldNode) {
-			$this->importInventoryField($inventoryFieldInstance, $fieldNode);
-		}
-	}
-
-	public function importInventoryField($inventoryFieldInstance, $fieldNode)
-	{
-		$instance = \Vtiger_InventoryField_Model::getFieldInstance($inventoryFieldInstance->get('module'), $fieldNode->invtype);
-		$table = $inventoryFieldInstance->getTableName();
-
-		if ($instance->isColumnType()) {
-			Utils::addColumn($table, $fieldNode->columnname, $instance->getDBType());
-			foreach ($instance->getCustomColumn() as $column => $criteria) {
-				Utils::addColumn($table, $column, $criteria);
+			$fieldModel = $inventory->getFieldCleanInstance((string) $fieldNode->invtype);
+			$fields = ['label', 'defaultValue', 'block', 'displayType', 'params', 'colSpan'];
+			foreach ($fields as $name) {
+				switch ($name) {
+					case 'label':
+						$value = \App\Purifier::purifyByType((string) $fieldNode->label, 'Text');
+						$fieldModel->set($name, $value);
+						break;
+					case 'defaultValue':
+						$value = \App\Purifier::purifyByType((string) $fieldNode->defaultvalue, 'Text');
+						$fieldModel->set($name, $value);
+						break;
+					case 'block':
+						$blockId = (int) $fieldNode->block;
+						if (!in_array($blockId, $fieldModel->getBlocks())) {
+							throw new \App\Exceptions\IllegalValue("ERR_NOT_ALLOWED_VALUE||{$name}||" . $blockId, 406);
+						}
+						$fieldModel->set($name, $blockId);
+						break;
+					case 'displayType':
+						$displayType = (int) $fieldNode->displaytype;
+						if (!in_array($displayType, $fieldModel->displayTypeBase())) {
+							throw new \App\Exceptions\IllegalValue("ERR_NOT_ALLOWED_VALUE||{$name}||" . $displayType, 406);
+						}
+						$fieldModel->set($name, $displayType);
+						break;
+					case 'params':
+						$value = \App\Purifier::purifyByType((string) $fieldNode->params, 'Text');
+						$fieldModel->set($name, $value);
+						break;
+					case 'colSpan':
+						$fieldModel->set($name, (int) $fieldNode->colspan);
+						break;
+					default:
+						break;
+				}
 			}
+			$inventory->saveField($fieldModel);
 		}
-		$db = \PearDatabase::getInstance();
-
-		return $db->insert($inventoryFieldInstance->getTableName('fields'), [
-			'columnname' => $fieldNode->columnname,
-			'label' => $fieldNode->label,
-			'invtype' => $fieldNode->invtype,
-			'defaultvalue' => $fieldNode->defaultvalue,
-			'sequence' => $fieldNode->sequence,
-			'block' => $fieldNode->block,
-			'displaytype' => $fieldNode->displaytype,
-			'params' => $fieldNode->params,
-			'colspan' => $fieldNode->colspan,
-		]);
 	}
 }

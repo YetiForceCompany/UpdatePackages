@@ -35,7 +35,6 @@ class Owner
 		} elseif (is_object($currentUser) && get_class($currentUser) === 'Users_Record_Model') {
 			$currentUser = \App\User::getUserModel($currentUser->getId());
 		}
-
 		$cacheKey = $moduleName . $currentUser->getId();
 		$instance = \Vtiger_Cache::get('App\Fields\Owner', $cacheKey);
 		if ($instance === false) {
@@ -209,7 +208,7 @@ class Owner
 					$fullName .= ' ' . $row[$field];
 				}
 				if ($showRolesName && isset($row['rolename'])) {
-					$roleName = \App\Language::translate($row['rolename']);
+					$roleName = \App\Language::translate($row['rolename'], '_Base', false, false);
 					$fullName .= " ({$roleName})";
 				}
 				$row['fullName'] = trim($fullName);
@@ -347,23 +346,9 @@ class Owner
 			$query->where(['groupid' => $subQuery]);
 		}
 		if ($private === 'private') {
-			$userPrivileges = \App\User::getPrivilegesFile($this->currentUser->getId());
 			$query->andWhere(['groupid' => $this->currentUser->getId()]);
-			$groupsAmount = count($userPrivileges['groups']);
-			if ($groupsAmount) {
-				$query->orWhere(['vtiger_groups.groupid' => $userPrivileges['groups']]);
-			}
-			\App\Log::trace('Sharing is Private. Only the current user should be listed');
-			$unionQuery = (new \App\Db\Query())->select(['vtiger_group2role.groupid as groupid', 'vtiger_groups.groupname as groupname'])->from('vtiger_group2role')
-				->innerJoin('vtiger_groups', 'vtiger_group2role.groupid = vtiger_groups.groupid')
-				->innerJoin('vtiger_role', 'vtiger_group2role.roleid = vtiger_role.roleid')
-				->where(['like', 'vtiger_role.parentrole', $userPrivileges['parent_role_seq'] . '::%', false]);
-			$query->union($unionQuery);
-			if ($groupsAmount) {
-				$unionQuery = (new \App\Db\Query())->select(['vtiger_groups.groupid as groupid', 'vtiger_groups.groupname as groupname'])->from('vtiger_groups')
-					->innerJoin('vtiger_group2rs', 'vtiger_groups.groupid = vtiger_group2rs.groupid')
-					->where(['vtiger_group2rs.roleandsubid' => $userPrivileges['parent_roles']]);
-				$query->union($unionQuery);
+			if ($this->currentUser->getGroups()) {
+				$query->orWhere(['vtiger_groups.groupid' => $this->currentUser->getGroups()]);
 			}
 			$unionQuery = (new \App\Db\Query())->select(['sharedgroupid as groupid', 'vtiger_groups.groupname as groupname'])
 				->from('vtiger_tmp_write_group_sharing_per')
@@ -637,6 +622,67 @@ class Owner
 			self::$ownerLabelCache[$uid] = $user['fullName'];
 		}
 		return isset($users[$id]) ? $users[$id]['fullName'] : false;
+	}
+
+	/**
+	 * Gets favorite owners.
+	 *
+	 * @param string $ownerFieldType
+	 *
+	 * @return array
+	 */
+	public function getFavorites(string $ownerFieldType): array
+	{
+		$userId = $this->currentUser->getId();
+		$tabId = \App\Module::getModuleId($this->moduleName);
+		$cacheName = "{$tabId}:{$userId}:{$ownerFieldType}";
+		if (!\App\Cache::has('getFavoriteOwners', $cacheName)) {
+			$tableName = $ownerFieldType === 'sharedOwner' ? 'u_#__favorite_shared_owners' : 'u_#__favorite_owners';
+			\App\Cache::save('getFavoriteOwners', $cacheName, (new \App\Db\Query())->select(['ownerid', 'owner' => 'ownerid'])
+				->from($tableName)
+				->where(['tabid' => $tabId, 'userid' => $userId])->createCommand()->queryAllByGroup());
+		}
+		return \App\Cache::get('getFavoriteOwners', $cacheName);
+	}
+
+	/**
+	 * Change favorite owner state.
+	 *
+	 * @param string $ownerFieldType
+	 * @param int    $ownerId
+	 *
+	 * @throws \App\Exceptions\NoPermitted
+	 * @throws \yii\db\Exception
+	 *
+	 * @return bool
+	 */
+	public function changeFavorites(string $ownerFieldType, int $ownerId): bool
+	{
+		$userId = $this->currentUser->getId();
+		$tabId = \App\Module::getModuleId($this->moduleName);
+		$dbCommand = \App\Db::getInstance()->createCommand();
+
+		switch (\App\Fields\Owner::getType($ownerId)) {
+			case 'Users':
+				$ownerList = $this->getAccessibleUsers('', $ownerFieldType);
+				break;
+			case 'Groups':
+				$ownerList = $this->getAccessibleGroups('', $ownerFieldType);
+				break;
+			default:
+				throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED');
+		}
+		if (!isset($ownerList[$ownerId])) {
+			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED');
+		}
+		$tableName = $ownerFieldType === 'sharedOwner' ? 'u_#__favorite_shared_owners' : 'u_#__favorite_owners';
+		if (isset($this->getFavorites($ownerFieldType)[$ownerId])) {
+			$result = $dbCommand->delete($tableName, ['tabid' => $tabId, 'userid' => $userId, 'ownerid' => $ownerId])->execute();
+		} else {
+			$result = $dbCommand->insert($tableName, ['tabid' => $tabId, 'userid' => $userId, 'ownerid' => $ownerId])->execute();
+		}
+		\App\Cache::delete('getFavoriteOwners', "{$tabId}:{$userId}:{$ownerFieldType}");
+		return (bool) $result;
 	}
 
 	/**

@@ -5,7 +5,7 @@
 			<input id="selectedModuleName" type="hidden" value="{$SELECTED_MODULE_NAME}"/>
 			<div class="widget_header row align-items-lg-center">
 				<div class="col-md-7">
-					{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE)}
+					{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE_NAME)}
 				</div>
 				<div class="col-md-5">
 					<div class="btn-toolbar justify-content-end form-row">
@@ -37,13 +37,13 @@
 					<div class="relatedListContainer">
 						<div class="relatedModulesList">
 							{foreach item=MODULE_MODEL from=$RELATED_MODULES}
-								{assign var=INVENTORY_FIELD_MODEL value=false}
+								{assign var=INVENTORY_MODEL value=false}
 								{assign var=RELATED_MODULE_NAME value=$MODULE_MODEL->getRelationModuleName()}
 								{assign var=RELATED_MODULE_MODEL value=$MODULE_MODEL->getRelationModuleModel()}
 								{assign var=RECORD_STRUCTURE_INSTANCE value=Vtiger_RecordStructure_Model::getInstanceForModule($RELATED_MODULE_MODEL)}
 								{assign var=RECORD_STRUCTURE value=$RECORD_STRUCTURE_INSTANCE->getStructure()}
 								{if $RELATED_MODULE_MODEL->isInventory()}
-									{assign var=INVENTORY_FIELD_MODEL value=Vtiger_InventoryField_Model::getInstance($RELATED_MODULE_NAME)}
+									{assign var=INVENTORY_MODEL value=Vtiger_Inventory_Model::getInstance($RELATED_MODULE_NAME)}
 									{assign var=SELECTED_INVENTORY_FIELDS value=$MODULE_MODEL->getRelationInventoryFields()}
 								{/if}
 								{if $MODULE_MODEL->isActive()}
@@ -111,13 +111,14 @@
 										</div>
 										<div class="form-horizontal">
 											<div class="form-group row">
-												<label class="col-sm-2 col-form-label text-right">{\App\Language::translate('LBL_STANDARD_FIELDS',$QUALIFIED_MODULE)}
-													:</label>
+												<label class="col-sm-2 col-form-label text-right">
+													{\App\Language::translate('LBL_STANDARD_FIELDS',$QUALIFIED_MODULE)}:
+												</label>
 												<div class="col-sm-10">
 													<select data-placeholder="{\App\Language::translate('LBL_ADD_MORE_COLUMNS',$MODULE)}"
 															multiple="multiple"
-															class="form-control select2_container js-select2-sortable columnsSelect js-related-column-list"
-															data-js="sortable|change">
+															class="form-control select2_container columnsSelect js-related-column-list" data-select-cb="registerSelectSortable"
+															data-js="sortable | change | select2">
 														<optgroup label=''>
 															{foreach item=SELECTED_FIELD from=$SELECTED_FIELDS}
 																{assign var=FIELD_INSTANCE value=$RELATED_MODULE_MODEL->getField($SELECTED_FIELD)}
@@ -134,7 +135,7 @@
 															<optgroup
 																	label='{\App\Language::translate($BLOCK_LABEL, $RELATED_MODULE_NAME)}'>
 																{foreach key=FIELD_NAME item=FIELD_MODEL from=$BLOCK_FIELDS}
-																	{if !in_array($FIELD_MODEL->getId(), $SELECTED_FIELDS)}
+																	{if !isset($SELECTED_FIELDS[$FIELD_MODEL->getId()])}
 																		<option value="{$FIELD_MODEL->getId()}"
 																				data-field-name="{$FIELD_NAME}">
 																			{\App\Language::translate($FIELD_MODEL->get('label'), $RELATED_MODULE_NAME)}
@@ -147,8 +148,8 @@
 												</div>
 											</div>
 										</div>
-										{if $INVENTORY_FIELD_MODEL}
-											{assign var=INVENTORY_FIELDS value=$INVENTORY_FIELD_MODEL->getFields()}
+										{if $INVENTORY_MODEL}
+											{assign var=INVENTORY_FIELDS value=$INVENTORY_MODEL->getFields()}
 											<div class="form-horizontal">
 												<div class="form-group row">
 													<label class="col-sm-2 col-form-label text-right">{\App\Language::translate('LBL_ADVANCED_BLOCK_FIELDS',$QUALIFIED_MODULE)}
@@ -156,8 +157,8 @@
 													<div class="col-sm-10">
 														<select data-placeholder="{\App\Language::translate('LBL_ADD_ADVANCED_BLOCK_FIELDS', $QUALIFIED_MODULE)}"
 																multiple="multiple"
-																class="select2_container js-select2-sortable js-related-column-list"
-																data-js="sortable|change" data-type="inventory">
+																class="select2_container js-related-column-list" data-select-cb="registerSelectSortable"
+																data-js="sortable | change | select2" data-type="inventory">
 															{foreach item=NAME key=SELECTED_FIELD from=$SELECTED_INVENTORY_FIELDS}
 																{assign var=FIELD_INSTANCE value=$INVENTORY_FIELDS[$SELECTED_FIELD]}
 																{if $FIELD_INSTANCE}

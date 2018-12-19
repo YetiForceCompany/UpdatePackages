@@ -1098,7 +1098,12 @@ $.Class("Vtiger_Edit_Js", {
 						} else {
 							response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
 						}
-					}).fail(function () {
+					}).fail(function (textStatus, errorThrown, jqXHR) {
+						Vtiger_Helper_Js.showPnotify({
+							text: jqXHR.responseJSON.error.message,
+							type: 'error',
+							animation: 'show'
+						});
 						response([{label: app.vtranslate('JS_NO_RESULTS_FOUND'), value: ''}]);
 					});
 				},
@@ -1282,13 +1287,14 @@ $.Class("Vtiger_Edit_Js", {
 	},
 	registerFocusFirstField: function (container) {
 		container.find('.fieldValue input.form-control:not([type=hidden],[type=checkbox],.dateField,.clockPicker)').each(function (n, e) {
-			var element = $(e);
+			let element = $(e);
 			if (!element.prop('readonly') && !element.prop('disabled')) {
 				element = element.get(0);
-				var elemLen = element.value.length;
-
-				element.selectionStart = elemLen;
-				element.selectionEnd = elemLen;
+				if (element.type !== 'number') {
+					let elemLen = element.value.length;
+					element.selectionStart = elemLen;
+					element.selectionEnd = elemLen;
+				}
 				element.focus();
 				return false;
 			}

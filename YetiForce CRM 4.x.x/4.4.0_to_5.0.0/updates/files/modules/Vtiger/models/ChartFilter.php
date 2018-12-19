@@ -494,7 +494,7 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 			$this->singleColors[$datasetIndex] = [];
 		}
 		if ((!empty($group['color_id']) && !empty($this->colors[$group['color_id']])) || !isset($dividing['color_id'])) {
-			if ($group['color_id'] === null) {
+			if (!isset($group['color_id'])) {
 				$color = $this->getFieldValueColor($groupValue, $dividingValue);
 				$this->singleColors[$datasetIndex][] = $color;
 				$chartData['datasets'][$datasetIndex]['pointBackgroundColor'][] = $color;
@@ -692,21 +692,17 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 	{
 		if (!empty($this->groupName)) {
 			$picklists = \App\Fields\Picklist::getModulesByName($this->queryGeneratorModuleName);
-			if (!$this->isDividedByField() || !$this->areColorsFromDividingField()) {
-				if (in_array($this->groupName, $picklists, true)) {
-					$primaryKey = App\Fields\Picklist::getPickListId($this->groupName);
-					$fieldTable = 'vtiger_' . $this->groupName;
-					$query->leftJoin($fieldTable, "{$this->groupFieldModel->table}.{$this->groupFieldModel->column} = {$fieldTable}.{$this->groupName}");
-					$query->addSelect(['picklist_id' => "$fieldTable.$primaryKey"]);
-				}
+			if ((!$this->isDividedByField() || !$this->areColorsFromDividingField()) && in_array($this->groupName, $picklists, true)) {
+				$primaryKey = App\Fields\Picklist::getPickListId($this->groupName);
+				$fieldTable = 'vtiger_' . $this->groupName;
+				$query->leftJoin($fieldTable, "{$this->groupFieldModel->table}.{$this->groupFieldModel->column} = {$fieldTable}.{$this->groupName}");
+				$query->addSelect(['picklist_id' => "$fieldTable.$primaryKey"]);
 			}
-			if ($this->isDividedByField() && $this->areColorsFromDividingField()) {
-				if (in_array($this->dividingName, $picklists, true)) {
-					$primaryKey = App\Fields\Picklist::getPickListId($this->dividingName);
-					$fieldTable = 'vtiger_' . $this->dividingName;
-					$query->leftJoin($fieldTable, "{$this->dividingFieldModel->table}.{$this->dividingFieldModel->column} = {$fieldTable}.{$this->dividingName}");
-					$query->addSelect(['picklist_id' => "$fieldTable.$primaryKey"]);
-				}
+			if ($this->isDividedByField() && $this->areColorsFromDividingField() && in_array($this->dividingName, $picklists, true)) {
+				$primaryKey = App\Fields\Picklist::getPickListId($this->dividingName);
+				$fieldTable = 'vtiger_' . $this->dividingName;
+				$query->leftJoin($fieldTable, "{$this->dividingFieldModel->table}.{$this->dividingFieldModel->column} = {$fieldTable}.{$this->dividingName}");
+				$query->addSelect(['picklist_id' => "$fieldTable.$primaryKey"]);
 			}
 		}
 		return $query;
@@ -901,10 +897,8 @@ class Vtiger_ChartFilter_Model extends Vtiger_Widget_Model
 			if (!empty($row[$this->groupName])) {
 				$this->incNumRows($groupValue, $dividingValue);
 			}
-			if (!empty($this->extraData['showOwnerFilter'])) {
-				if (!empty($row['assigned_user_id'])) {
-					$this->owners[] = $row['assigned_user_id'];
-				}
+			if (!empty($this->extraData['showOwnerFilter']) && !empty($row['assigned_user_id'])) {
+				$this->owners[] = $row['assigned_user_id'];
 			}
 			$this->setValueFromRow($row, $groupValue, $dividingValue);
 		}

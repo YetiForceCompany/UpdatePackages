@@ -185,8 +185,9 @@ class Vtiger_ListView_Model extends \App\Base
 				$advancedLinks[] = [
 					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 					'linklabel' => \App\Language::translate('LBL_EXPORT_PDF'),
-					'linkurl' => 'javascript:Vtiger_Header_Js.getInstance().showPdfModal("index.php?module=' . $moduleModel->getName() . '&view=PDF&fromview=List");',
-					'linkicon' => 'fas fa-file-excel',
+					'linkdata' => ['url' => 'index.php?module=' . $moduleModel->getName() . '&view=PDF&fromview=List', 'type' => 'modal'],
+					'linkclass' => 'js-mass-action',
+					'linkicon' => 'fas fa-file-pdf',
 					'title' => \App\Language::translate('LBL_EXPORT_PDF')
 				];
 			}
@@ -207,7 +208,7 @@ class Vtiger_ListView_Model extends \App\Base
 				$advancedLinks[] = [
 					'linktype' => 'LISTVIEW',
 					'linklabel' => 'LBL_GENERATE_RECORDS',
-					'linkurl' => 'javascript:Vtiger_List_Js.triggerGenerateRecords("index.php?module=' . $moduleModel->getName() . '&view=GenerateModal&fromview=List");',
+					'linkurl' => 'javascript:Vtiger_List_Js.triggerGenerateRecords();',
 					'linkicon' => 'fas fa-plus-circle',
 				];
 			}
@@ -243,7 +244,7 @@ class Vtiger_ListView_Model extends \App\Base
 				'linkurl' => 'javascript:',
 				'dataUrl' => 'index.php?module=' . $moduleModel->getName() . '&action=MassState&state=Active&sourceView=List',
 				'linkdata' => ['confirm' => \App\Language::translate('LBL_ACTIVATE_RECORD_DESC')],
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-undo-alt'
 			];
 		}
@@ -254,7 +255,7 @@ class Vtiger_ListView_Model extends \App\Base
 				'linkurl' => 'javascript:',
 				'dataUrl' => 'index.php?module=' . $moduleModel->getName() . '&action=MassState&state=Archived&sourceView=List',
 				'linkdata' => ['confirm' => \App\Language::translate('LBL_ARCHIVE_RECORD_DESC')],
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-archive'
 			];
 		}
@@ -265,7 +266,7 @@ class Vtiger_ListView_Model extends \App\Base
 				'linkurl' => 'javascript:',
 				'dataUrl' => 'index.php?module=' . $moduleModel->getName() . '&action=MassState&state=Trash&sourceView=List',
 				'linkdata' => ['confirm' => \App\Language::translate('LBL_MOVE_TO_TRASH_DESC')],
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-trash-alt'
 			];
 		}
@@ -276,7 +277,7 @@ class Vtiger_ListView_Model extends \App\Base
 				'linkurl' => 'javascript:',
 				'dataUrl' => 'index.php?module=' . $moduleModel->getName() . '&action=MassDelete&sourceView=List',
 				'linkdata' => ['confirm' => \App\Language::translate('LBL_DELETE_RECORD_COMPLETELY_DESC')],
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-eraser'
 			];
 		}
@@ -340,9 +341,9 @@ class Vtiger_ListView_Model extends \App\Base
 			if (count($templates) > 0) {
 				$basicLinks[] = [
 					'linktype' => 'LISTVIEWBASIC',
-					'linkurl' => 'javascript:Vtiger_Header_Js.getInstance().showPdfModal("index.php?module=' . $moduleModel->getName() . '&view=PDF&fromview=List");',
-					'linkclass' => 'btn-light',
-					'linkicon' => 'fas fa-file-excel',
+					'linkdata' => ['url' => 'index.php?module=' . $moduleModel->getName() . '&view=PDF&fromview=List', 'type' => 'modal'],
+					'linkclass' => 'btn-light js-mass-record-event',
+					'linkicon' => 'fas fa-file-pdf',
 					'linkhint' => \App\Language::translate('LBL_EXPORT_PDF')
 				];
 			}
@@ -454,7 +455,6 @@ class Vtiger_ListView_Model extends \App\Base
 			} else {
 				return $this->getQueryGenerator()->setOrder($orderBy, $this->getForSql('sortorder'));
 			}
-			\App\Log::warning("[ListView] Incorrect value of sorting: '$orderBy'");
 		}
 	}
 
@@ -544,7 +544,7 @@ class Vtiger_ListView_Model extends \App\Base
 		foreach ($this->getQueryGenerator()->getRelatedFields() as $fieldInfo) {
 			$relatedFields[$fieldInfo['relatedModule']][$fieldInfo['sourceField']][] = $fieldInfo['relatedField'];
 		}
-		foreach ($rows as $fieldName => $row) {
+		foreach ($rows as $row) {
 			$extRecordModel = [];
 			foreach ($relatedFields as $relatedModuleName => $fields) {
 				foreach ($fields as $sourceField => $field) {

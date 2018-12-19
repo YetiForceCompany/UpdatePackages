@@ -165,8 +165,6 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 			echo $this->invokeExposedMethod($mode, $request);
 			return;
 		}
-		$recordId = $request->getInteger('record');
-		$moduleName = $request->getModule();
 		$defaultMode = $this->defaultMode;
 		if ($defaultMode === 'showDetailViewByMode') {
 			$currentUserModel = Users_Record_Model::getCurrentUserModel();
@@ -219,7 +217,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 	{
 		$moduleName = $request->getModule();
 		$jsFileNames = [
-			'~libraries/split.js/split.js',
+			'~libraries/split.js/dist/split.js',
 			'modules.Vtiger.resources.RelatedList',
 			"modules.$moduleName.resources.RelatedList",
 			'modules.Vtiger.resources.Widgets',
@@ -472,12 +470,9 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 			throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
 		}
 		// Added to support related list view from the related module, rather than the base module.
-		if (!$targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'In' . $moduleName . 'Relation', $relatedModuleName, false)) {
-			// If any module wants to have same view for all the relation, then invoke this.
-			if (!$targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'InRelation', $relatedModuleName, false)) {
-				// Default related list
-				$targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'RelatedList', $moduleName);
-			}
+		if (!($targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'In' . $moduleName . 'Relation', $relatedModuleName, false)) && !($targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'InRelation', $relatedModuleName, false))) {
+			// Default related list
+			$targetControllerClass = Vtiger_Loader::getComponentClassName('View', 'RelatedList', $moduleName);
 		}
 		if ($targetControllerClass) {
 			$targetController = new $targetControllerClass();
@@ -1089,6 +1084,7 @@ class Vtiger_Detail_View extends Vtiger_Index_View
 		$viewer = \Vtiger_Viewer::getInstance();
 		$viewer->assign('RECORD', $recordModel);
 		$viewer->assign('MODULE_NAME', $moduleName);
+		$viewer->assign('VIEW', 'Detail');
 		return $viewer->view('Detail/InventoryView.tpl', $moduleName, true);
 	}
 }

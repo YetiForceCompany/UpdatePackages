@@ -28,6 +28,7 @@ var App = {},
 		},
 		cacheParams: [],
 		modalEvents: [],
+		mousePosition: {x: 0, y: 0},
 		childFrame: false,
 		touchDevice: false,
 		event: new function () {
@@ -143,44 +144,45 @@ var App = {},
 				}, 100);
 			});
 		},
-		registerPopoverManualTrigger(element) {
-			const timeout = 500
+		registerPopoverManualTrigger(element, manualTriggerDelay) {
+			const hideDelay = 500;
 			element.on("mouseleave", (e) => {
-				setTimeout(function () {
-					let popoverId = $(e.currentTarget).attr('aria-describedby');
-					let currentPopover = $(`#${popoverId}`);
+				setTimeout(() => {
+					let currentPopover = this.getBindedPopover(element);
 					if (!$(":hover").filter(currentPopover).length && !currentPopover.find('.js-popover-tooltip--record[aria-describedby]').length) {
 						currentPopover.popover('hide');
 					}
-				}, timeout);
+				}, hideDelay);
 			});
 
-			element.on("mouseenter", (e) => {
-				setTimeout(function () {
-					let element = $(e.currentTarget);
-					element.popover("show");
-					let popoverId = element.attr('aria-describedby');
-					let currentPopover = $(`#${popoverId}`);
-					currentPopover.on("mouseleave", (e) => {
-						setTimeout(function () {
-							if (!$(":hover").filter(currentPopover).length && !currentPopover.find('.js-popover-tooltip--record[aria-describedby]').length) {
-								currentPopover.popover('hide'); //close current popover
-							}
-							if (!$(":hover").filter($(".popover")).length) {
-								$(".popover").popover('hide'); //close all popovers
-							}
-						}, timeout);
-					});
-				}, timeout);
+			element.on("mouseenter", () => {
+				setTimeout(() => {
+					if (element.is(':hover')) {
+						element.popover("show");
+						let currentPopover = this.getBindedPopover(element);
+						currentPopover.on("mouseleave", () => {
+							setTimeout(() => {
+								if (!$(":hover").filter(currentPopover).length && !currentPopover.find('.js-popover-tooltip--record[aria-describedby]').length) {
+									currentPopover.popover('hide'); //close current popover
+								}
+								if (!$(":hover").filter($(".popover")).length) {
+									$(".popover").popover('hide'); //close all popovers
+								}
+							}, hideDelay);
+						});
+					}
+				}, manualTriggerDelay);
 			});
+
 			app.hidePopoversAfterClick(element);
 		},
 		isEllipsisActive(element) {
 			let clone = element
 				.clone()
 				.addClass('u-text-ellipsis--not-active')
+				.css(element.css(['font-size', 'font-weight', 'font-family']))
 				.appendTo('body');
-			if (clone.width() > element.width()) {
+			if (clone.width() - 1 > element.width()) {
 				clone.remove();
 				return true;
 			}
@@ -190,10 +192,12 @@ var App = {},
 		showPopoverElementView: function (selectElement = $('.js-popover-tooltip'), params = {}) {
 			let defaultParams = {
 				trigger: 'manual',
+				manualTriggerDelay: 500,
 				placement: 'auto',
 				html: true,
 				template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
 				container: 'body',
+				boundary: 'viewport',
 				delay: {"show": 300, "hide": 100}
 			};
 			selectElement.each(function (index, domElement) {
@@ -203,11 +207,11 @@ var App = {},
 					elementParams.template = '<div class="popover ' + element.data('class') + '" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
 				}
 				if (element.hasClass('delay0')) {
-					elementParams.delay = {show: 0, hide: 0}
+					elementParams.delay = {show: 0, hide: 0};
 				}
 				element.popover(elementParams);
 				if (elementParams.trigger === 'manual' || typeof elementParams.trigger === 'undefined') {
-					app.registerPopoverManualTrigger(element);
+					app.registerPopoverManualTrigger(element, elementParams.manualTriggerDelay);
 				}
 				if (elementParams.callbackShown) {
 					element.on('shown.bs.popover', function (e) {
@@ -218,51 +222,69 @@ var App = {},
 			});
 			return selectElement;
 		},
-		registerPopoverEllipsis(selectElement = $('.js-popover-tooltip--ellipsis')) {
-			let defaultParams = {
-				trigger: 'hover focus'
+		registerPopoverEllipsis(selectElement = $('.js-popover-tooltip--ellipsis'), params = {trigger: 'hover focus'}) {
+			const self = this;
+			params = {
+				callbackShown: () => {
+					self.setPopoverPosition(selectElement);
+				},
+				trigger: 'manual',
+				placement: 'right',
+				template: '<div class="popover js-popover--before-positioned" role="tooltip"><div class="popover-body"></div></div>'
 			};
+			let popoverText = selectElement.find('.js-popover-text').length ? selectElement.find('.js-popover-text') : selectElement;
+			if (!app.isEllipsisActive(popoverText)) {
+				selectElement.addClass('popover-triggered');
+				return;
+			}
+			app.showPopoverElementView(selectElement, params);
+		},
+		registerPopoverEllipsisIcon(selectElement = $('.js-popover-tooltip--ellipsis-icon'), params = {trigger: 'hover focus'}) {
 			selectElement.each(function (index, domElement) {
 				let element = $(domElement);
-				let popoverText = element.find('js-popover-text').length ? element.find('js-popover-text') : element;
+				let popoverText = element.find('.js-popover-text').length ? element.find('.js-popover-text') : element;
 				if (!app.isEllipsisActive(popoverText)) {
 					return;
 				}
 				let iconElement = element.find('.js-popover-icon');
 				if (iconElement.length) {
 					element.find('.js-popover-icon').removeClass('d-none');
-					defaultParams.selector = '[data-fa-i2svg].js-popover-icon';
+					params.selector = '.js-popover-icon';
 				}
-				app.showPopoverElementView(element, defaultParams);
+				app.showPopoverElementView(element, params);
 			});
 		},
 		/**
 		 * Register popover record
 		 * @param {jQuery} selectElement
+		 * @param {object} customParams
 		 */
 		registerPopoverRecord: function (selectElement = $('a.js-popover-tooltip--record'), customParams = {}) {
+			const self = this;
 			let params = {
-				template: '<div class="popover c-popover--link" role="tooltip"><div class="popover-body"></div></div>',
+				template: '<div class="popover c-popover--link js-popover--before-positioned" role="tooltip"><div class="popover-body"></div></div>',
 				content: '<div class="d-none"></div>',
-				callbackShown: function (e) {
-					let element = $(e.currentTarget);
-					if (!element.attr('href')) {
+				manualTriggerDelay: app.getMainParams('recordPopoverDelay'),
+				placement: 'right',
+				callbackShown: () => {
+					if (!selectElement.attr('href')) {
 						return false;
 					}
-					let link = new URL(element.get(0).href);
+					let link = new URL(selectElement.get(0).href);
 					if (!link.searchParams.get('record') || !link.searchParams.get('view')) {
 						return false;
 					}
 					let url = link.href;
 					url = url.replace('view=', 'xview=') + '&view=RecordPopover';
-					let popoverId = element.attr('aria-describedby');
-					let popoverBody = $(`#${popoverId} .popover-body`);
+					let currentPopover = self.getBindedPopover(selectElement);
+					let popoverBody = currentPopover.find('.popover-body');
 					popoverBody.progressIndicator({});
 					let appendPopoverData = (data) => {
 						popoverBody.progressIndicator({mode: 'hide'}).html(data);
 						if (typeof customParams.callback === 'function') {
 							customParams.callback(popoverBody);
 						}
+						self.setPopoverPosition(selectElement);
 					};
 					let cacheData = window.popoverCache[url];
 					if (typeof cacheData !== 'undefined') {
@@ -276,6 +298,46 @@ var App = {},
 				}
 			};
 			app.showPopoverElementView(selectElement, params);
+		},
+		/**
+		 * Update popover record position (overwrite bootstrap positioning, failing on huge elements)
+		 * @param {jQuery} popover
+		 * @param {number} offsetLeft
+		 */
+		setPopoverPosition(popoverElement) {
+			let popover = this.getBindedPopover(popoverElement);
+			if (!popover.length) {
+				return;
+			}
+			let windowHeight = $(window).height(),
+				windowWidth = $(window).width(),
+				popoverPadding = 10,
+				popoverBody = popover.find('.popover-body'),
+				popoverHeight = popoverBody.height(),
+				popoverWidth = popoverBody.width(),
+				offsetTop = app.mousePosition.y,
+				offsetLeft = app.mousePosition.x;
+			if (popoverHeight + offsetTop + popoverPadding > windowHeight) {
+				offsetTop = offsetTop - popoverHeight - popoverPadding;
+			}
+			if (popoverWidth + offsetLeft + popoverPadding > windowWidth) {
+				offsetLeft = offsetLeft - popoverWidth - popoverPadding;
+			}
+			popover.css({
+				'transform': `translate3d(${offsetLeft}px, ${offsetTop}px, 0)`,
+			});
+			popover.removeClass('js-popover--before-positioned');
+			popoverElement.one('hide.bs.popover', () => {
+				popover.addClass('js-popover--before-positioned');
+			});
+		},
+		/**
+		 * Get binded popover
+		 * @param {jQuery} element
+		 * @returns {Mixed|jQuery|HTMLElement}
+		 */
+		getBindedPopover(element) {
+			return $(`#${element.attr('aria-describedby')}`);
 		},
 		/**
 		 * Function to check the maximum selection size of multiselect and update the results
@@ -375,10 +437,7 @@ var App = {},
 					height: '5em',
 					toolbar: 'Min'
 				});
-				let modalScroll = modalContainer.find('.js-show-scroll');
-				if (modalScroll.length) {
-					app.showNewScrollbar(modalScroll);
-				}
+				app.registesterScrollbar(modalContainer);
 			});
 			$('body').append(container);
 			modalContainer.modal(params);
@@ -439,9 +498,8 @@ var App = {},
 			container.attr('id', Window.lastModalId).addClass('modalContainer js-modal-container');
 			container.one('hidden.bs.modal', function () {
 				container.remove();
-				let backdrop = $('.modal-backdrop'),
-					modalContainers = $('.modalContainer');
-				if (modalContainers.length == 0 && backdrop.length) {
+				let backdrop = $('.modal-backdrop');
+				if (!$('.modal.show').length) {
 					backdrop.remove();
 				}
 				if (backdrop.length > 0) {
@@ -728,7 +786,7 @@ var App = {},
 				elementClockBtn = object;
 				formatTime = elementClockBtn.data('format');
 			}
-			formatTime = formatTime === 12 ? true : false;
+			formatTime = parseInt(formatTime) === 12 ? true : false;
 			let params = {
 				placement: 'bottom',
 				autoclose: true,
@@ -803,10 +861,10 @@ var App = {},
 				return;
 			return new PerfectScrollbar(element[0], options);
 		},
-		showNewScrollbarTopBottomRight: function (element) {
+		showNewScrollbarTopBottomRight: function (element, options = {}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
-			let scrollbarTopLeftInit = new PerfectScrollbar(element[0], {wheelPropagation: true});
+			let scrollbarTopLeftInit = new PerfectScrollbar(element[0], options);
 			let scrollbarTopElement = element.find('.ps__rail-x').first();
 			scrollbarTopElement.css({
 				top: 0,
@@ -816,7 +874,7 @@ var App = {},
 				top: 2,
 				bottom: 'auto'
 			});
-			let scrollbarBottomRightInit = new PerfectScrollbar(element[0], {wheelPropagation: true});
+			let scrollbarBottomRightInit = new PerfectScrollbar(element[0], options);
 			return [scrollbarTopLeftInit, scrollbarBottomRightInit];
 		},
 		showNewScrollbarTopBottom: function (element) {
@@ -840,12 +898,26 @@ var App = {},
 				bottom: 'auto'
 			});
 		},
-		showNewScrollbarLeft: function (element, options) {
+		showNewScrollbarTop: function (element) {
 			if (typeof element === "undefined" || !element.length)
 				return;
-			if (typeof options === "undefined")
-				options = {};
-			options.wheelPropagation = true;
+			new PerfectScrollbar(element[0], {
+				wheelPropagation: true,
+				suppressScrollY: true
+			});
+			var scrollbarTopElement = element.find('.ps__rail-x').first();
+			scrollbarTopElement.css({
+				top: 0,
+				bottom: 'auto'
+			});
+			scrollbarTopElement.find('.ps__thumb-x').css({
+				top: 2,
+				bottom: 'auto'
+			});
+		},
+		showNewScrollbarLeft: function (element, options = {wheelPropagation: true}) {
+			if (typeof element === "undefined" || !element.length)
+				return;
 			new PerfectScrollbar(element[0], options);
 			var scrollbarLeftElement = element.children('.ps__rail-y').first();
 			scrollbarLeftElement.css({
@@ -857,12 +929,43 @@ var App = {},
 				right: 'auto'
 			});
 		},
-		showScrollBar: function (element, options) {
-			if (typeof options === "undefined")
-				options = {};
+		showScrollBar: function (element, options = {}) {
 			if (typeof options.height === "undefined")
 				options.height = element.css('height');
 			return element.slimScroll(options);
+		},
+		/**
+		 * Register middle scroll hack for scrollbar libraries
+		 * @param {jQuery} container
+		 */
+		registerMiddleClickScroll(container) {
+			let middleScroll = false;
+			container.on('mousedown', (e) => {
+				let clickedMouseButton = e.which; // get clicked button id
+				if (clickedMouseButton == 2 && middleScroll == false) {
+					middleScroll = true;
+					let mouseY = e.pageY,
+						mouseX = e.pageX;
+					$(document).on('mousemove', (e) => {
+						if (middleScroll == true) {
+							$('body').addClass('u-cursor-scroll-all');
+							let mouseMoveY = mouseY - e.pageY,
+								scrollSlowerRate = 100, // higher number = slower scroll
+								contentScrollY = container.scrollTop(),
+								scrollerY = contentScrollY - mouseMoveY - scrollSlowerRate,
+								mouseMoveX = mouseX - e.pageX,
+								contentScrollX = container.scrollLeft(),
+								scrollerX = contentScrollX - mouseMoveX - scrollSlowerRate;
+							container.scrollTop(scrollerY);
+							container.scrollLeft(scrollerX);
+						}
+					});
+				}
+			});
+			container.on('mouseup', () => {
+				$('body').removeClass('u-cursor-scroll-all');
+				middleScroll = false;
+			});
 		},
 		/**
 		 * Function returns translated string
@@ -879,28 +982,22 @@ var App = {},
 		cacheNSKey: function (key) { // Namespace in client-storage
 			return 'yf.' + key;
 		},
-		cacheGet: function (key, defvalue) {
+		cacheGet: function (key) {
 			key = this.cacheNSKey(key);
-			return $.jStorage.get(key, defvalue);
+			return store.get(key);
 		},
-		cacheSet: function (key, value, ttl) {
+		cacheSet: function (key, value) {
 			key = this.cacheNSKey(key);
-			$.jStorage.set(key, value);
-			if (ttl) {
-				$.jStorage.setTTL(key, ttl);
-			}
+			store.set(key, value);
 		},
 		cacheClear: function (key) {
 			key = this.cacheNSKey(key);
-			return $.jStorage.deleteKey(key);
+			return store.remove(key);
 		},
-		moduleCacheSet: function (key, value, ttl) {
-			if (ttl == undefined) {
-				ttl = 12 * 60 * 60 * 1000;
-			}
+		moduleCacheSet: function (key, value) {
 			var orgKey = key;
 			key = this.getModuleName() + '_' + key;
-			this.cacheSet(key, value, ttl);
+			this.cacheSet(key, value);
 
 			var cacheKey = 'mCache' + this.getModuleName();
 			var moduleCache = this.cacheGet(cacheKey);
@@ -1158,39 +1255,6 @@ var App = {},
 			app.cacheParams[param] = value;
 			$('#' + param).val(value);
 		},
-		parseNumberToShow(val, numberOfDecimal = CONFIG.noOfCurrencyDecimals) {
-			if (val === undefined) {
-				val = 0;
-			}
-			let groupSeparator = CONFIG.currencyGroupingSeparator;
-			let groupingPattern = app.getMainParams('currencyGroupingPattern');
-			val = parseFloat(val).toFixed(numberOfDecimal);
-			let a = val.toString().split('.');
-			let integer = a[0];
-			let decimal = a[1];
-			if (groupingPattern === '123,456,789') {
-				integer = integer.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + groupSeparator);
-			} else if (groupingPattern === '123456,789') {
-				integer = integer.slice(0, -3) + groupSeparator + integer.slice(-3);
-			} else if (groupingPattern === '12,34,56,789') {
-				integer = integer.slice(0, -3).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + groupSeparator) + groupSeparator + integer.slice(-3);
-			}
-			if (numberOfDecimal) {
-				return integer + CONFIG.currencyDecimalSeparator + decimal;
-			}
-			return integer;
-		},
-		parseNumberToFloat: function (val) {
-			var groupSeparator = CONFIG.currencyGroupingSeparator;
-			var decimalSeparator = CONFIG.currencyDecimalSeparator;
-			if (val == undefined || val == '') {
-				val = 0;
-			}
-			val = val.toString();
-			val = val.split(groupSeparator).join("");
-			val = val.replace(/\s/g, "").replace(decimalSeparator, ".");
-			return parseFloat(val);
-		},
 		errorLog: function (error, err, errorThrown) {
 			if (!CONFIG.debug) {
 				return;
@@ -1318,21 +1382,6 @@ var App = {},
 				}
 			});
 		},
-		registerMenuTextHoverEvent() {
-			$('.js-menu__item').on('mouseenter', function () {
-				setTimeout(() => {
-					let target = $(this);
-					if (target.is(':hover')) {
-						target.find('.js-menu__item__text').first().addClass('u-white-space-n');
-					}
-				}, 300);
-			}).on('mouseleave', function () {
-				let target = $(this);
-				if (!target.is(':hover')) {
-					target.find('.js-menu__item__text').first().removeClass('u-white-space-n');
-				}
-			})
-		},
 		registerMenu: function () {
 			const self = this;
 			self.keyboard = {DOWN: 40, ESCAPE: 27, LEFT: 37, RIGHT: 39, SPACE: 32, UP: 38};
@@ -1364,7 +1413,6 @@ var App = {},
 					window.location = $(e.currentTarget).attr('href');
 				}
 			});
-			self.registerMenuTextHoverEvent();
 			self.registerPinEvent();
 		},
 		openSidebar: function () {
@@ -1626,15 +1674,13 @@ var App = {},
 						},
 						History: {
 							history: false
-						},
+						}
 					}
 				}
 			};
 			if (typeof userParams !== "undefined") {
 				params.data = $.extend(params.data, userParams);
 			}
-			PNotify.defaults.styling = 'bootstrap4';
-			PNotify.defaults.icons = 'fontawesome5';
 			return new PNotify(params);
 		},
 		showConfirmModal: function (customParams, confirmCallback = () => {
@@ -1693,44 +1739,113 @@ var App = {},
 			if (typeof userParams !== "undefined") {
 				params.data = $.extend(params.data, userParams);
 			}
-			PNotify.defaults.styling = 'bootstrap4';
-			PNotify.defaults.icons = 'fontawesome5';
 			new PNotify(params);
 			return aDeferred.promise();
 		},
+		registesterScrollbar(container) {
+			container.find('.js-scrollbar').each(function () {
+				let element = $(this),
+					scrollbarFnName = element.data('scrollbarFnName');
+
+				if (typeof app[scrollbarFnName] === 'function') {
+					app[scrollbarFnName](element);
+				} else {
+					app.showNewScrollbar(element);
+				}
+			});
+		},
 		registerPopover() {
 			window.popoverCache = {};
-			$(document).on('mouseenter', '.js-popover-tooltip, .js-popover-tooltip--record, [data-field-type="reference"], [data-field-type="multireference"]', (e) => {
+			$(document).on('mouseenter', '.js-popover-tooltip, .js-popover-tooltip--record, .js-popover-tooltip--ellipsis, [data-field-type="reference"], [data-field-type="multireference"]', (e) => {
 				let currentTarget = $(e.currentTarget);
+				if (currentTarget.find('.js-popover-tooltip--record').length) {
+					return;
+				}
 				if (!currentTarget.hasClass('popover-triggered')) {
 					if (currentTarget.hasClass('js-popover-tooltip--record')) {
 						app.registerPopoverRecord(currentTarget);
 						currentTarget.trigger('mouseenter');
 					} else if (!currentTarget.hasClass('js-popover-tooltip--record') && currentTarget.data('field-type')) {
 						app.registerPopoverRecord(currentTarget.children('a')); //popoverRecord on children doesn't need triggering
-					} else if (!currentTarget.hasClass('js-popover-tooltip--record') && !currentTarget.data('field-type')) {
-						app.showPopoverElementView(currentTarget);
+					} else if (!currentTarget.hasClass('js-popover-tooltip--record') && !currentTarget.find('.js-popover-tooltip--record').length && !currentTarget.data('field-type')) {
+						if (currentTarget.hasClass('js-popover-tooltip--ellipsis')) {
+							app.registerPopoverEllipsis(currentTarget);
+						} else {
+							app.showPopoverElementView(currentTarget);
+						}
 						currentTarget.trigger('mouseenter');
 					}
 				}
 			});
+		},
+		showNotify: function (params, desktop = false) {
+			if (typeof params.type === 'undefined') {
+				params.type = 'info';
+			}
+			if (typeof params.title === 'undefined') {
+				params.title = app.vtranslate('JS_MESSAGE');
+			}
+			if (desktop) {
+				params = $.extend(params, {
+					modules: {
+						Desktop: {
+							desktop: true
+						}
+					}
+				});
+			}
+			Vtiger_Helper_Js.showPnotify(params);
+		},
+		/**
+		 * Set Pnotify defaults options
+		 */
+		setPnotifyDefaultOptions() {
+			PNotify.defaults.textTrusted = true; // *Trusted option enables html as parameter's value
+			PNotify.defaults.titleTrusted = true;
+			PNotify.defaults.styling = 'bootstrap4';
+			PNotify.defaults.icons = 'fontawesome5';
+		},
+		/**
+		 * Register auto format number value
+		 */
+		registerFormatNumber() {
+			$(document).on('focusout', '.js-format-numer', (e) => {
+				$(e.currentTarget).formatNumber();
+			});
+		},
+		/**
+		 * Register toggle icon click event
+		 * @param container
+		 */
+		registerToggleIconClick(container) {
+			container.on('click', '.js-toggle-icon, .js-toggle-icon__container', (e) => {
+				let icon = $(e.target);
+				if (icon.hasClass('js-toggle-icon__container')) {
+					icon = icon.find('.js-toggle-icon');
+				}
+				let iconData = icon.data();
+				icon.toggleClass(`${iconData.active} ${iconData.inactive}`);
+				e.stopPropagation();
+			})
 		}
 	};
 $(document).ready(function () {
+	let document = $(this);
+	app.registerToggleIconClick(document);
 	app.touchDevice = app.isTouchDevice();
+	app.setPnotifyDefaultOptions();
 	App.Fields.Picklist.changeSelectElementView();
+	app.registerPopoverEllipsisIcon();
 	app.registerPopover();
-	app.registerPopoverEllipsis();
+	app.registerFormatNumber();
 	app.registerSticky();
 	app.registerMoreContent($('body').find('button.moreBtn'));
 	app.registerModal();
 	app.registerMenu();
 	app.registerTabdrop();
-	$('.js-scrollbar').each(function () {
-		app.showNewScrollbar($(this));
-	});
+	app.registesterScrollbar(document);
 	String.prototype.toCamelCase = function () {
-		var value = this.valueOf();
+		let value = this.valueOf();
 		return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
 	}
 // in IE resize option for textarea is not there, so we have to use .resizable() api
@@ -1738,17 +1853,24 @@ $(document).ready(function () {
 		$('textarea').resizable();
 	}
 // Instantiate Page Controller
-	var pageController = app.getPageController();
+	let pageController = app.getPageController();
 	if (pageController) {
 		pageController.registerEvents();
 	}
+	document.on('mousemove', (e) => {
+		app.mousePosition = {x: e.pageX, y: e.pageY};
+	});
 });
 (function ($) {
 	$.fn.getNumberFromValue = function () {
-		return app.parseNumberToFloat($(this).val());
+		return App.Fields.Double.formatToDb($(this).val());
 	}
 	$.fn.getNumberFromText = function () {
-		return app.parseNumberToFloat($(this).text());
+		return App.Fields.Double.formatToDb($(this).text());
+	}
+	$.fn.formatNumber = function () {
+		let element = $(this);
+		element.val(App.Fields.Double.formatToDisplay(App.Fields.Double.formatToDb(element.val()), false));
 	}
 	$.fn.disable = function () {
 		this.attr('disabled', 'disabled');
@@ -1757,19 +1879,19 @@ $(document).ready(function () {
 		this.removeAttr('disabled');
 	}
 	$.fn.serializeFormData = function () {
-		var form = $(this);
+		let form = $(this);
 		for (var instance in CKEDITOR.instances) {
 			CKEDITOR.instances[instance].updateElement();
 		}
-		var values = form.serializeArray();
-		var data = {};
+		let values = form.serializeArray();
+		let data = {};
 		if (values) {
 			$(values).each(function (k, v) {
 				if (v.name in data && (typeof data[v.name] !== 'object')) {
-					var element = form.find('[name="' + v.name + '"]');
+					let element = form.find('[name="' + v.name + '"]');
 					//Only for muti select element we need to send array of values
 					if (element.is('select') && element.attr('multiple') != undefined) {
-						var prevValue = data[v.name];
+						let prevValue = data[v.name];
 						data[v.name] = [];
 						data[v.name].push(prevValue)
 					}
@@ -1782,9 +1904,9 @@ $(document).ready(function () {
 			});
 		}
 		// If data-type="autocomplete", pickup data-value="..." set
-		var autocompletes = $('[data-type="autocomplete"]', $(this));
+		let autocompletes = $('[data-type="autocomplete"]', $(this));
 		$(autocompletes).each(function (i) {
-			var ac = $(autocompletes[i]);
+			let ac = $(autocompletes[i]);
 			data[ac.attr('name')] = ac.data('value');
 		});
 		return data;

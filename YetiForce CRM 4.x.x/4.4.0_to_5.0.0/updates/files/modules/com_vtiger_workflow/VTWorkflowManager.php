@@ -163,6 +163,7 @@ class VTWorkflowManager
 		if ($referenceTime) {
 			$query->andWhere(['or', ['nexttrigger_time' => null], ['<=', 'nexttrigger_time', $referenceTime]]);
 		}
+
 		return $this->getWorkflowsForResult($query->all());
 	}
 
@@ -280,7 +281,7 @@ class VTWorkflowManager
 	public function delete($id)
 	{
 		$dbCommand = \App\Db::getInstance()->createCommand();
-		$subQuery = (new \App\Db\Query())->select('workflow_id')->from('com_vtiger_workflows')->where(['workflow_id' => $id])->andWhere(['or', ['defaultworkflow' => null], ['<>', 'defaultworkflow', 1]]);
+		$subQuery = (new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['workflow_id' => $id])->andWhere(['or', ['defaultworkflow' => null], ['<>', 'defaultworkflow', 1]]);
 		$dbCommand->delete('com_vtiger_workflowtasks', ['workflow_id' => $subQuery])->execute();
 		$dbCommand->delete('com_vtiger_workflows', ['and', ['workflow_id' => $id], ['or', ['defaultworkflow' => null], ['<>', 'defaultworkflow', 1]]])->execute();
 	}

@@ -23,6 +23,19 @@ class Vtiger_Time_UIType extends Vtiger_Base_UIType
 	}
 
 	/**
+	 *  Function to get the DB Insert Value, for the current field type with given User Value for condition builder.
+	 *
+	 * @param mixed  $value
+	 * @param string $operator
+	 *
+	 * @return string
+	 */
+	public function getDbConditionBuilderValue($value, string $operator)
+	{
+		return \App\Purifier::purifyByType($value, 'TimeInUserFormat');
+	}
+
+	/**
 	 * {@inheritdoc}
 	 */
 	public function validate($value, $isUserFormat = false)
@@ -80,7 +93,7 @@ class Vtiger_Time_UIType extends Vtiger_Base_UIType
 
 	public static function getDBTimeFromUserValue($value)
 	{
-		return DateTimeField::convertToDBTimeZone(date('Y-m-d') . ' ' . $value)->format('H:i:s');
+		return DateTimeField::convertToDBTimeZone(date('Y-m-d') . ' ' . $value, null, false)->format('H:i:s');
 	}
 
 	/**
@@ -166,5 +179,37 @@ class Vtiger_Time_UIType extends Vtiger_Base_UIType
 	public function getAllowedColumnTypes()
 	{
 		return null;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getOperators()
+	{
+		return ['e', 'n', 'l', 'g', 'b', 'a', 'y', 'ny'];
+	}
+
+	/**
+	 * Returns template for operator.
+	 *
+	 * @param string $operator
+	 *
+	 * @return string
+	 */
+	public function getOperatorTemplateName(string $operator = '')
+	{
+		return 'ConditionBuilder/Time.tpl';
+	}
+
+	/**
+	 * Generate valid sample value.
+	 *
+	 * @throws \Exception
+	 *
+	 * @return string
+	 */
+	public function getSampleValue()
+	{
+		return random_int(0, 23) . ':' . random_int(0, 59) . ':' . random_int(0, 59);
 	}
 }

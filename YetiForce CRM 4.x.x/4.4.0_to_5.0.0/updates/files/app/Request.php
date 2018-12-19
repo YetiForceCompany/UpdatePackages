@@ -71,6 +71,13 @@ class Request
 	protected $purifiedValuesByExploded = [];
 
 	/**
+	 * Purified request values for multi dimension array.
+	 *
+	 * @var array
+	 */
+	protected $purifiedValuesByMultiDimension = [];
+
+	/**
 	 * Purified request values for date range.
 	 *
 	 * @var array
@@ -242,18 +249,83 @@ class Request
 		if (isset($this->purifiedValuesByExploded[$key])) {
 			return $this->purifiedValuesByExploded[$key];
 		}
+		$value = [];
 		if (isset($this->rawValues[$key])) {
 			if ($this->rawValues[$key] === '') {
-				return [];
+				return $value;
 			}
 			$value = explode($delimiter, $this->rawValues[$key]);
 			if ($value) {
 				$value = $type ? Purifier::purifyByType($value, $type) : Purifier::purify($value);
 			}
-
 			return $this->purifiedValuesByExploded[$key] = $value;
 		}
 		return $value;
+	}
+
+	/**
+	 * Purify multi dimension array.
+	 *
+	 * @param mixed        $values
+	 * @param string|array $template
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 *
+	 * @return mixed
+	 */
+	private function purifyMultiDimensionArray($values, $template)
+	{
+		if (is_array($template)) {
+			foreach ($values as $firstKey => $value) {
+				if (is_array($value)) {
+					if (count($template) === 1) {
+						$template = current($template);
+					}
+					foreach ($value as $secondKey => $val) {
+						if (!isset($template[$secondKey])) {
+							throw new \App\Exceptions\IllegalValue("ERR_NOT_ALLOWED_VALUE||{$secondKey}", 406);
+						}
+						$values[$firstKey][$secondKey] = $this->purifyMultiDimensionArray($val, $template[$secondKey]);
+					}
+				} else {
+					if (!isset($template[$firstKey])) {
+						throw new \App\Exceptions\IllegalValue("ERR_NOT_ALLOWED_VALUE||{$firstKey}", 406);
+					}
+					$values[$firstKey] = $this->purifyMultiDimensionArray($value, $template[$firstKey]);
+				}
+			}
+		} else {
+			$values = $template ? Purifier::purifyByType($values, $template) : Purifier::purify($values);
+		}
+		return $values;
+	}
+
+	/**
+	 * Function to get multi dimension array.
+	 *
+	 * @param string $key
+	 * @param array  $template
+	 *
+	 * @return array
+	 */
+	public function getMultiDimensionArray(string $key, array $template): array
+	{
+		$return = [];
+		if (isset($this->purifiedValuesByMultiDimension[$key])) {
+			$return = $this->purifiedValuesByMultiDimension[$key];
+		} elseif (isset($this->rawValues[$key]) && ($value = $this->rawValues[$key])) {
+			if (\is_string($value) && (strpos($value, '[') === 0 || strpos($value, '{') === 0)) {
+				$decodeValue = Json::decode($value);
+				if ($decodeValue !== null) {
+					$value = $decodeValue;
+				} else {
+					Log::warning('Invalid data format, problem encountered while decoding JSON. Data should be in JSON format. Data: ' . $value);
+				}
+			}
+			$value = (array) $this->purifyMultiDimensionArray($value, $template);
+			$return = $this->purifiedValuesByMultiDimension[$key] = $value;
+		}
+		return $return;
 	}
 
 	/**
@@ -367,8 +439,8 @@ class Request
 			foreach ($_SERVER as $key => $value) {
 				if (substr($key, 0, 5) === 'HTTP_') {
 					$key = str_replace(' ', '-', strtoupper(str_replace('_', ' ', substr($key, 5))));
+					$data[$key] = Purifier::purify($value);
 				}
-				$data[$key] = Purifier::purify($value);
 			}
 		} else {
 			$data = array_change_key_case(apache_request_headers(), CASE_UPPER);
@@ -518,6 +590,9 @@ class Request
 		}
 		if (isset($this->purifiedValuesByExploded[$key])) {
 			unset($this->purifiedValuesByExploded[$key]);
+		}
+		if (isset($this->purifiedValuesByMultiDimension[$key])) {
+			unset($this->purifiedValuesByMultiDimension[$key]);
 		}
 		if (isset($this->rawValues[$key])) {
 			unset($this->rawValues[$key]);

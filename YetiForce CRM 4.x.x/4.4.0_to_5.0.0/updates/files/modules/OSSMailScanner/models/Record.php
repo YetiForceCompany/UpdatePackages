@@ -284,7 +284,7 @@ class OSSMailScanner_Record_Model extends Vtiger_Record_Model
 				try {
 					$mail->addActionResult($action, $handler->process($mail));
 				} catch (Exception $e) {
-					App\Log::error($e->getMessage(), 'MailScanner');
+					App\Log::error($e->__toString(), 'MailScanner');
 				}
 				\App\Log::trace('End action', 'MailScanner');
 			}
@@ -425,7 +425,7 @@ class OSSMailScanner_Record_Model extends Vtiger_Record_Model
 			return $cache;
 		}
 		$return = [];
-		$value = (new \App\Db\Query())->select('value')->from('vtiger_ossmailscanner_config')
+		$value = (new \App\Db\Query())->select(['value'])->from('vtiger_ossmailscanner_config')
 			->where(['conf_type' => 'emailsearch', 'parameter' => 'fields'])
 			->scalar();
 		if (!empty($value)) {
@@ -536,7 +536,7 @@ class OSSMailScanner_Record_Model extends Vtiger_Record_Model
 						return 'ok';
 					}
 				} else {
-					\App\Log::error("Incorrect mail access data, username: {$account['username']} , folder: $folder , Error: " . imap_last_error());
+					\App\Log::error("Incorrect mail access data, username: {$account['username']} , folder: $folder , type: {folderRow['type']} ,  Error: " . imap_last_error());
 				}
 			}
 		}

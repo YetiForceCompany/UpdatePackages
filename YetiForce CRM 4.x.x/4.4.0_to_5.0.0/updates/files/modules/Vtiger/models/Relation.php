@@ -257,7 +257,7 @@ class Vtiger_Relation_Model extends \App\Base
 
 			return $relationModel;
 		}
-		$query = (new \App\Db\Query())->select('vtiger_relatedlists.*, vtiger_tab.name as modulename')
+		$query = (new \App\Db\Query())->select(['vtiger_relatedlists.*', 'modulename' => 'vtiger_tab.name'])
 			->from('vtiger_relatedlists')
 			->innerJoin('vtiger_tab', 'vtiger_relatedlists.related_tabid = vtiger_tab.tabid')
 			->where(['vtiger_relatedlists.tabid' => $parentModuleModel->getId(), 'related_tabid' => $relatedModuleModel->getId()])
@@ -530,25 +530,26 @@ class Vtiger_Relation_Model extends \App\Base
 	 */
 	public function getRelationInventoryFields()
 	{
-		if ($this->has('RelationInventoryFields')) {
-			return $this->get('RelationInventoryFields');
-		}
-		$columns = (new \App\Db\Query())
-			->select(['fieldname'])
-			->from('a_#__relatedlists_inv_fields')
-			->where(['relation_id' => $this->getId()])
-			->orderBy('sequence')
-			->column();
-		$inventoryFields = Vtiger_InventoryField_Model::getInstance($this->get('modulename'))->getFields();
-		$fields = [];
-		foreach ($columns as &$column) {
-			if (!empty($inventoryFields[$column]) && $inventoryFields[$column]->isVisible()) {
-				$fields[$column] = $inventoryFields[$column];
+		if (!$this->has('RelationInventoryFields')) {
+			$this->set('RelationInventoryFields', []);
+			if ($this->getRelationModuleModel()->isInventory()) {
+				$columns = (new \App\Db\Query())
+					->select(['fieldname'])
+					->from('a_#__relatedlists_inv_fields')
+					->where(['relation_id' => $this->getId()])
+					->orderBy('sequence')
+					->column();
+				$inventoryFields = Vtiger_Inventory_Model::getInstance($this->get('modulename'))->getFields();
+				$fields = [];
+				foreach ($columns as &$column) {
+					if (!empty($inventoryFields[$column]) && $inventoryFields[$column]->isVisible()) {
+						$fields[$column] = $inventoryFields[$column];
+					}
+				}
+				$this->set('RelationInventoryFields', $fields);
 			}
 		}
-		$this->set('RelationInventoryFields', $fields);
-
-		return $fields;
+		return $this->get('RelationInventoryFields');
 	}
 
 	/**
@@ -873,7 +874,7 @@ class Vtiger_Relation_Model extends \App\Base
 			$relationList = \App\Cache::get('getAllRelations', $cacheName);
 		} else {
 			$query = new \App\Db\Query();
-			$query->select('vtiger_relatedlists.*, vtiger_tab.name as modulename, vtiger_tab.tabid as moduleid')
+			$query->select(['vtiger_relatedlists.*', 'modulename' => 'vtiger_tab.name', 'moduleid' => 'vtiger_tab.tabid'])
 				->from('vtiger_relatedlists')
 				->innerJoin('vtiger_tab', 'vtiger_relatedlists.related_tabid = vtiger_tab.tabid')
 				->where(['vtiger_relatedlists.tabid' => $parentModuleModel->getId()]);
@@ -1001,18 +1002,31 @@ class Vtiger_Relation_Model extends \App\Base
 		\App\Cache::clear();
 	}
 
-	public static function updateModuleRelatedFields($relationId, $fields)
+	/**
+	 * Update module related fields.
+	 *
+	 * @param int   $relationId
+	 * @param array $fields
+	 *
+	 * @throws \yii\db\Exception
+	 */
+	public static function updateModuleRelatedFields(int $relationId, $fields)
 	{
 		$db = \App\Db::getInstance();
 		$db->createCommand()->delete('vtiger_relatedlists_fields', ['relation_id' => $relationId])->execute();
 		if ($fields) {
+			$addedFields = [];
 			foreach ($fields as $key => $field) {
+				if (in_array($field['id'], $addedFields)) {
+					continue;
+				}
 				$db->createCommand()->insert('vtiger_relatedlists_fields', [
 					'relation_id' => $relationId,
 					'fieldid' => $field['id'],
 					'fieldname' => $field['name'],
 					'sequence' => $key,
 				])->execute();
+				$addedFields[] = $field['id'];
 			}
 		}
 		\App\Cache::clear();

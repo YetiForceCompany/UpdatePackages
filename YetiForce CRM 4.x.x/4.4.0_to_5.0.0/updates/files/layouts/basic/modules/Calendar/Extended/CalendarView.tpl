@@ -1,15 +1,11 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Calendar-Extended-CalendarView -->
-	<input value="{$VIEW}" type="hidden" id="currentView"/>
 	<input value="{\App\Purifier::encodeHtml($CURRENT_USER->get('activity_view'))}" type="hidden" id="activity_view"/>
 	<input value="{$CURRENT_USER->get('hour_format')}" type="hidden" id="time_format"/>
-	<input value="{$CURRENT_USER->get('start_hour')}" type="hidden" id="start_hour"/>
-	<input value="{$CURRENT_USER->get('end_hour')}" type="hidden" id="end_hour"/>
 	<input value="{$CURRENT_USER->get('date_format')}" type="hidden" id="date_format"/>
 	<input value="current" type="hidden" id="showType"/>
 	<input value="workDays" type="hidden" id="switchingDays"/>
-	<input value="{$EVENT_LIMIT}" type="hidden" id="eventLimit"/>
 	<input value="{$WEEK_COUNT}" type="hidden" id="weekCount"/>
 	<input value="{$WEEK_VIEW}" type="hidden" id="weekView"/>
 	<input value="{$DAY_VIEW}" type="hidden" id="dayView"/>
@@ -34,17 +30,18 @@
 									{if $CUSTOM_VIEW->isFeatured()}
 										<li class="nav-item js-filter-tab c-tab--small font-weight-bold"
 											data-cvid="{$CUSTOM_VIEW->getId()}" data-js="click">
-											<a class="nav-link{if $VIEWID eq $CUSTOM_VIEW->getId() || (!empty($HISTORY_PARAMS['cvid']) && $HISTORY_PARAMS['cvid'] eq {$CUSTOM_VIEW->getId()})} active show{/if}"
+											<a class="nav-link{if !empty($HISTORY_PARAMS['cvid']) && $HISTORY_PARAMS['cvid'] eq {$CUSTOM_VIEW->getId()}} active show{/if}"
 											   href="#"
 											   {if $CUSTOM_VIEW->get('color')}style="color: {$CUSTOM_VIEW->get('color')};"{/if}
 											   data-toggle="tab" role="tab"
-											   aria-selected="{if $VIEWID eq $CUSTOM_VIEW->getId() || (!empty($HISTORY_PARAMS['cvid']) && $HISTORY_PARAMS['cvid'] eq {$CUSTOM_VIEW->getId()})}true{else}false{/if}">
+											   aria-selected="{if !empty($HISTORY_PARAMS['cvid']) && $HISTORY_PARAMS['cvid'] eq {$CUSTOM_VIEW->getId()}}true{else}false{/if}">
 												{\App\Language::translate($CUSTOM_VIEW->get('viewname'), $MODULE)}
 												{if $CUSTOM_VIEW->get('description')}
-													<span class="js-popover-tooltip fas fa-info-circle"
-														  data-js="popover"
-														  data-placement="auto right"
-														  data-content="{\App\Purifier::encodeHtml($CUSTOM_VIEW->get('description'))}"></span>
+													<span class="js-popover-tooltip ml-1" data-toggle="popover"
+														  data-placement="top"
+														  data-content="{\App\Purifier::encodeHtml($CUSTOM_VIEW->get('description'))}" data-js="popover">
+											<span class="fas fa-info-circle"></span>
+										</span>
 												{/if}
 											</a>
 										</li>

@@ -115,9 +115,9 @@ class CurrencyField
 		} else {
 			$this->currencyId = self::getDBCurrencyId();
 		}
-		$currencyRateAndSymbol = \vtlib\Functions::getCurrencySymbolandRate($this->currencyId);
-		$this->currencySymbol = $currencyRateAndSymbol['symbol'];
-		$this->conversionRate = $currencyRateAndSymbol['rate'];
+		$currencyData = \App\Fields\Currency::getById($this->currencyId);
+		$this->currencySymbol = $currencyData['currency_symbol'];
+		$this->conversionRate = $currencyData['conversion_rate'];
 		$this->currencySymbolPlacement = $user->getDetail('currency_symbol_placement');
 		$this->numberOfDecimal = (empty($user->getDetail('no_of_currency_decimals')) && (int) $user->getDetail('no_of_currency_decimals') !== 0) ? 2 : (int) $user->getDetail('no_of_currency_decimals');
 	}
@@ -369,7 +369,6 @@ class CurrencyField
 				$wholeNumberFirstPart = str_pad($wholeNumberFirstPart, $numberLength + $gapsToBeFilled, '0', STR_PAD_LEFT);
 				// Split the first part of tne number into chunks of 2 digits
 				$wholeNumberFirstPartElements = str_split($wholeNumberFirstPart, 2);
-				$wholeNumberFirstPart = ltrim(implode($curSeparator, $wholeNumberFirstPartElements), '0');
 				$wholeNumberFirstPart = implode($curSeparator, $wholeNumberFirstPartElements);
 				if ($wholeNumberFirstPart != 0) {
 					$wholeNumberFirstPart = ltrim($wholeNumberFirstPart, '0');
@@ -450,7 +449,7 @@ class CurrencyField
 	 */
 	public static function getDBCurrencyId()
 	{
-		$id = (new \App\Db\Query())->select('id')->from('vtiger_currency_info')->where(['<', 'defaultid', 0])->scalar();
+		$id = (new \App\Db\Query())->select(['id'])->from('vtiger_currency_info')->where(['<', 'defaultid', 0])->scalar();
 		if ($id) {
 			return $id;
 		}
@@ -472,15 +471,6 @@ class CurrencyField
 		return round($amount * $conversionRate, $currencyField->maxNumberOfDecimals);
 	}
 
-	/** This function returns the amount converted from master currency.
-	 * param $amount - amount to be converted.
-	 * param $crate - conversion rate.
-	 */
-	public static function convertFromMasterCurrency($amount, $conversionRate)
-	{
-		return $amount * $conversionRate;
-	}
-
 	public function currencyDecimalFormat($value, $user = null)
 	{
 		if (!$user) {
@@ -496,8 +486,8 @@ class CurrencyField
 			}
 			$decSeparator = $user->getDetail('currency_decimal_separator');
 			$fieldValue = explode(App\Purifier::decodeHtml($decSeparator), $value);
-			$valueField = (int) $fieldValue[0];
-			if (0 === $valueField || !isset($fieldValue[1]) || strlen($fieldValue[1]) <= 1) {
+			$valueField = $fieldValue[0];
+			if (0 === (int) $valueField || !isset($fieldValue[1]) || strlen($fieldValue[1]) <= 1) {
 				if (isset($fieldValue[1]) && strlen($fieldValue[1]) == 1) {
 					return $value = $valueField . $decSeparator . $fieldValue[1];
 				} elseif (!isset($fieldValue[1])) {

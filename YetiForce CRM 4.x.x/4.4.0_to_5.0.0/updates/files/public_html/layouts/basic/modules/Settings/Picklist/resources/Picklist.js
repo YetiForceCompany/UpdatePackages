@@ -166,7 +166,7 @@ var Settings_Picklist_Js = {
 			var pickListVaue = jQuery(e.currentTarget)
 			if (pickListVaue.hasClass('selectedCell')) {
 				pickListVaue.removeClass('selectedCell').addClass('unselectedCell');
-				pickListVaue.find('[data-fa-i2svg]').remove();
+				pickListVaue.find('.fas').remove();
 			} else {
 				pickListVaue.removeClass('unselectedCell').addClass('selectedCell');
 				pickListVaue.prepend('<i class="fas fa-check float-left"></span>');
@@ -406,7 +406,7 @@ var Settings_Picklist_Js = {
 			let form = $(e.currentTarget);
 			if (form.validationEngine('validate')) {
 				let newValue, oldValue = form.find('[name="oldValue"]').val(),
-					id = form.find('[name="id"]').val(),
+					id = form.find('[name="primaryKeyId"]').val(),
 					params = $(e.currentTarget).serializeFormData();
 				if (form.find('[name="newValue"]').length > 0) {
 					newValue = $.trim(form.find('[name="newValue"]').val());
@@ -415,10 +415,10 @@ var Settings_Picklist_Js = {
 				if (form.data('jqv').InvalidFields.length === 0) {
 					form.find('[name="saveButton"]').attr('disabled', "disabled");
 				}
-				const progress = $.progressIndicator();
+				const progress = $.progressIndicator({position: 'html', blockInfo: {enabled: true}});
 				AppConnector.request(params).done((data) => {
+					progress.progressIndicator({'mode': 'hide'});
 					if (typeof data.result !== "undefined") {
-						progress.progressIndicator({'mode': 'hide'});
 						app.hideModalWindow();
 						Vtiger_Helper_Js.showPnotify({
 							title: app.vtranslate('JS_MESSAGE'),

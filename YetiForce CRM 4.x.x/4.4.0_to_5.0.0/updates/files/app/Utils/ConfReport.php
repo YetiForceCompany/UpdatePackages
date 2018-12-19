@@ -78,6 +78,7 @@ class ConfReport
 	 * @var array
 	 */
 	public static $security = [
+		'CaCertBundle' => ['recommended' => 'On', 'type' => 'OnOff', 'container' => 'env', 'testCli' => true, 'label' => 'CACERTBUNDLE'],
 		'HTTPS' => ['recommended' => 'On', 'type' => 'OnOff', 'container' => 'env', 'testCli' => false],
 		'public_html' => ['recommended' => 'On', 'type' => 'OnOff', 'container' => 'env', 'testCli' => false],
 		'display_errors' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'demoMode' => true, 'testCli' => true],
@@ -129,6 +130,7 @@ class ConfReport
 		'ldap' => ['mandatory' => false, 'type' => 'ExtExist', 'extName' => 'ldap', 'container' => 'ext', 'testCli' => true],
 		'OPcache' => ['mandatory' => false, 'type' => 'FnExist', 'fnName' => 'opcache_get_configuration', 'container' => 'ext', 'testCli' => true],
 		'apcu' => ['mandatory' => false, 'type' => 'ExtExist', 'extName' => 'apcu', 'container' => 'ext', 'testCli' => true],
+		'imagick' => ['mandatory' => false, 'type' => 'ExtExist', 'extName' => 'imagick', 'container' => 'ext', 'testCli' => true],
 		'allExt' => ['container' => 'ext', 'type' => 'AllExt', 'testCli' => true, 'label' => 'EXTENSIONS'],
 	];
 	/**
@@ -396,6 +398,7 @@ class ConfReport
 				'phpIniAll' => php_ini_scanned_files() ?: '-',
 				'locale' => $locale,
 				'https' => \App\RequestUtil::getBrowserInfo()->https,
+				'cacertbundle' => \is_file(\Composer\CaBundle\CaBundle::getSystemCaRootBundlePath()) ? 'On' : 'Off',
 				'public_html' => IS_PUBLIC_DIR ? 'On' : 'Off',
 				'crmVersion' => \App\Version::get(),
 				'crmDate' => \App\Version::get('patchVersion'),
@@ -506,10 +509,10 @@ class ConfReport
 				$methodName = 'validate' . $item['type'];
 				if (\method_exists(__CLASS__, $methodName)) {
 					if (static::$sapi === 'www') {
-						$item = call_user_func_array([__CLASS__, $methodName], [$key, $item, 'www']);
+						$item = static::$methodName($key, $item, 'www');
 					}
 					if ($item['testCli'] && !empty($cron)) {
-						$item = call_user_func_array([__CLASS__, $methodName], [$key, $item, 'cron']);
+						$item = static::$methodName($key, $item, 'cron');
 					}
 				}
 				if (isset($item['skip'])) {

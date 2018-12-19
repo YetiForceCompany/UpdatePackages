@@ -8,9 +8,40 @@ namespace App;
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @copyright YetiForce Sp. z o.o
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Purifier
 {
+	/**
+	 * Purify type date in user format.
+	 */
+	public const DATE_USER_FORMAT = 'DateInUserFormat';
+
+	/**
+	 * Purify type integer.
+	 */
+	public const INTEGER = 'Integer';
+
+	/**
+	 * Purify type text.
+	 */
+	public const TEXT = 'Text';
+
+	/**
+	 * Purify type number.
+	 */
+	public const NUMBER = 'Number';
+
+	/**
+	 * Purify type html.
+	 */
+	public const HTML = 'Html';
+
+	/**
+	 * Purify type boolean.
+	 */
+	public const BOOL = 'Bool';
+
 	/**
 	 * Default charset.
 	 *
@@ -272,37 +303,37 @@ class Purifier
 				$value[$k] = static::purifyByType($v, $type);
 			}
 		} else {
-			$value = false;
+			$value = null;
 			switch ($type) {
 				case 'Standard': // only word
 				case 1:
-					$value = preg_match('/^[\-_a-zA-Z]+$/', $input) ? $input : false;
+					$value = preg_match('/^[\-_a-zA-Z]+$/', $input) ? $input : null;
 					break;
 				case 'Alnum': // word and int
 				case 2:
-					$value = preg_match('/^[[:alnum:]_]+$/', $input) ? $input : false;
+					$value = preg_match('/^[[:alnum:]_]+$/', $input) ? $input : null;
 					break;
 				case 'DateInUserFormat': // date in user format
 					if (!$input) {
 						return '';
 					}
-					list($y, $m, $d) = Fields\Date::explode($input, User::getCurrentUserModel()->getDetail('date_format'));
+					[$y, $m, $d] = Fields\Date::explode($input, User::getCurrentUserModel()->getDetail('date_format'));
 					if (checkdate($m, $d, $y) && is_numeric($y) && is_numeric($m) && is_numeric($d)) {
 						$value = $input;
 					}
 					break;
 				case 'Time':
-					if (preg_match('/(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9]):([0-5][0-9])/', $input)) {
+					if (preg_match('/^(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9]):([0-5][0-9])$/', $input)) {
 						$value = $input;
 					}
 					break;
 				case 'TimeInUserFormat':
 					if (\App\User::getCurrentUserModel()->getDetail('hour_format') === '12') {
-						if (preg_match('/([0][0-9]|1[0-2]):([0-5][0-9])([ ]PM|[ ]AM|PM|AM)/', $input)) {
+						if (preg_match('/^([0][0-9]|1[0-2]):([0-5][0-9])([ ]PM|[ ]AM|PM|AM)$/', $input)) {
 							$value = Fields\Time::formatToDB($input);
 						}
 					} else {
-						if (preg_match('/(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9])/', $input)) {
+						if (preg_match('/^(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9])$/', $input)) {
 							$value = Fields\Time::formatToDB($input);
 						}
 					}
@@ -326,17 +357,54 @@ class Purifier
 						$value = $input;
 					}
 					break;
+				case 'DateTime': // date in base format Y-m-d H:i:s
+					$arrInput = \explode(' ', $input);
+					if (\is_array($arrInput) && count($arrInput) === 2) {
+						[$dateInput, $timeInput] = $arrInput;
+						[$y, $m, $d] = Fields\Date::explode($dateInput);
+						if (
+							checkdate($m, $d, $y) && is_numeric($y) && is_numeric($m) && is_numeric($d) &&
+							preg_match('/(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9]):([0-5][0-9])/', $timeInput)
+						) {
+							$value = $input;
+						}
+					}
+					break;
+				case 'DateTimeInUserFormat':
+					$arrInput = \explode(' ', $input);
+					if (\is_array($arrInput) && count($arrInput) === 2) {
+						$userModel = User::getCurrentUserModel();
+						[$dateInput, $timeInput] = $arrInput;
+						[$y, $m, $d] = Fields\Date::explode($dateInput, $userModel->getDetail('date_format'));
+						if ($userModel->getDetail('hour_format') === '12') {
+							$timePattern = '/^(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9])(:([0-5][0-9]))?([ ]PM|[ ]AM|PM|AM)?$/';
+						} else {
+							$timePattern = '/^(2[0-3]|[0][0-9]|1[0-9]):([0-5][0-9])(:([0-5][0-9]))?$/';
+						}
+						if (checkdate($m, $d, $y) && is_numeric($y) && is_numeric($m) && is_numeric($d) && preg_match($timePattern, $timeInput)) {
+							$value = $input;
+						}
+					}
+					break;
 				case 'Bool':
-					if (is_bool($input) || strcasecmp('true', (string) $input) === 0) {
-						$value = $input;
+					if (is_bool($input) || strcasecmp('true', (string) $input) === 0 || (string) $value === '1') {
+						$value = (bool) $input;
 					}
 					break;
 				case 'NumberInUserFormat': // number in user format
-					$currentUser = User::getCurrentUserModel();
-					$input = str_replace([$currentUser->getDetail('currency_grouping_separator'), $currentUser->getDetail('currency_decimal_separator'), ' '], ['', '.', ''], $input);
-					if (is_numeric($input)) {
+					$input = Fields\Double::formatToDb($rawInput = $input);
+					if (is_numeric($input) && Fields\Double::formatToDisplay($input, false) === Fields\Double::truncateZeros($rawInput)) {
 						$value = $input;
 					}
+					break;
+				case 'Number':
+					$dbFormat = Fields\Double::formatToDb($input);
+					if (is_numeric($dbFormat) && Fields\Double::formatToDisplay($dbFormat, false) === Fields\Double::truncateZeros($input)) {
+						$value = $input;
+					}
+					break;
+				case 'Html':
+					$value = self::purifyHtml($input);
 					break;
 				case 'Integer': // Integer
 					if (($input = filter_var($input, FILTER_VALIDATE_INT)) !== false) {
@@ -349,7 +417,7 @@ class Purifier
 					}
 					break;
 				case 'Color': // colors
-					$value = preg_match('/^(#[0-9a-fA-F]{6})$/', $input) ? $input : false;
+					$value = preg_match('/^(#[0-9a-fA-F]{6})$/', $input) ? $input : null;
 					break;
 				case 'Year': // 2018 etc
 					if (is_numeric($input) && (int) $input >= 0 && (int) $input <= 3000 && strlen((string) $input) === 4) {
@@ -357,17 +425,17 @@ class Purifier
 					}
 					break;
 				case 'Version':
-					$value = preg_match('/^[\.0-9]+$/', $input) ? $input : false;
+					$value = preg_match('/^[\.0-9]+$/', $input) ? $input : null;
 					break;
 				case 'Path':
-					$value = Fields\File::checkFilePath($input) ? $input : false;
+					$value = Fields\File::checkFilePath($input) ? $input : null;
 					break;
 				case 'Text':
 				default:
 					$value = self::purify($input);
 					break;
 			}
-			if ($value === false) {
+			if ($value === null) {
 				\App\Log::error('purifyByType: ' . $input, 'IllegalValue');
 				throw new \App\Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE||' . $input, 406);
 			}

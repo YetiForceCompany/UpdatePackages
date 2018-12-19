@@ -3,6 +3,7 @@
 	<div class="tpl-Calendar-Extended-QuickCreate quick-calendar-modal">
 		<input value="{AppConfig::module($MODULE, 'CALENDAR_VIEW')}" type="hidden" class="js-calendar-type"
 			   data-js="value">
+		<input type="hidden" id="showType" value="current"/>
 		{foreach key=index item=cssModel from=$STYLES}
 			<link rel="{$cssModel->getRel()}" href="{$cssModel->getHref()}"/>
 		{/foreach}
@@ -10,7 +11,7 @@
 		<div class="modelContainer modal quickCreateContainer" tabindex="-1" role="dialog">
 			<div class="modal-dialog modal-fullscreen modal-full" role="document">
 				<div class="modal-content">
-					<div class="modal-header col-12 m-0 align-items-center form-row d-flex justify-content-between py-2">
+					<div class="modal-header col-12 m-0 align-items-center form-row d-flex justify-content-between py-2 js-modal-header" data-js="height">
 						<div class="col-xl-6 col-12">
 							<h5 class="modal-title form-row text-center text-xl-left mb-2 mb-xl-0">
 								{if $RECORD}
@@ -40,9 +41,6 @@
 						<div class="col-8 pt-2">
 							<input type="hidden" id="hiddenDays"
 								   value="{\App\Purifier::encodeHtml(\App\Json::encode(AppConfig::module('Calendar', 'HIDDEN_DAYS_IN_CALENDAR_VIEW')))}"/>
-							<input type="hidden" id="start_hour" value="{$CURRENT_USER->get('start_hour')}"/>
-							<input type="hidden" id="end_hour" value="{$CURRENT_USER->get('end_hour')}"/>
-							<input value="{$EVENT_LIMIT}" type="hidden" id="eventLimit"/>
 							<input value="{$WEEK_COUNT}" type="hidden" id="weekCount"/>
 							<input value="{$WEEK_VIEW}" type="hidden" id="weekView"/>
 							<input value="{$DAY_VIEW}" type="hidden" id="dayView"/>

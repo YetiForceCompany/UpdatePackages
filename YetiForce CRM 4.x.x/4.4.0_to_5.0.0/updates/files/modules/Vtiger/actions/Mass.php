@@ -35,7 +35,7 @@ abstract class Vtiger_Mass_Action extends \App\Controller\Action
 			$queryGenerator = new App\QueryGenerator($moduleName);
 			$queryGenerator->setFields(['id']);
 			$queryGenerator->addCondition('id', $selectedIds, 'e');
-
+			$queryGenerator->setStateCondition($request->getByType('entityState'));
 			return $queryGenerator;
 		}
 		if (!$request->isEmpty('operator')) {
@@ -44,6 +44,7 @@ abstract class Vtiger_Mass_Action extends \App\Controller\Action
 			$customViewModel->set('search_value', $request->get('search_value'));
 		}
 		$customViewModel->set('search_params', $request->getArray('search_params'));
+		$customViewModel->set('entityState', $request->getByType('entityState'));
 		return $customViewModel->getRecordsListQuery($request->getArray('excluded_ids', 2), $moduleName);
 	}
 

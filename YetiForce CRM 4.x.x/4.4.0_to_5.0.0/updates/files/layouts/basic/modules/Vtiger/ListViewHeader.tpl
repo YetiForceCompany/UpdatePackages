@@ -48,10 +48,15 @@
 												data-featured="{$CUSTOM_VIEW->isFeatured()}"
 												data-pending="{$CUSTOM_VIEW->isPending()}" {' '}
 												data-public="{$CUSTOM_VIEW->isPublic() && $USER_MODEL->isAdminUser()}"
+												{if $GROUP_LABEL neq 'Mine' && $GROUP_LABEL neq 'System'}
+													data-option="{$CUSTOM_VIEW->getOwnerName()}"
+												{/if}
 												id="filterOptionId_{$CUSTOM_VIEW->get('cvid')}" {' '}
 												value="{$CUSTOM_VIEW->get('cvid')}" {' '}
 												data-id="{$CUSTOM_VIEW->get('cvid')}" {if $VIEWID neq '' && $VIEWID neq '0'  && $VIEWID == $CUSTOM_VIEW->getId()} selected="selected" {elseif ($VIEWID == '' or $VIEWID == '0')&& $CUSTOM_VIEW->isDefault() eq 'true'} selected="selected" {/if}
-												class="filterOptionId_{$CUSTOM_VIEW->get('cvid')}">{\App\Language::translate($CUSTOM_VIEW->get('viewname'), $MODULE)}{if $GROUP_LABEL neq 'Mine' && $GROUP_LABEL neq 'System'} [ {$CUSTOM_VIEW->getOwnerName()} ]  {/if}</option>
+												class="filterOptionId_{$CUSTOM_VIEW->get('cvid')}">
+											{\App\Language::translate($CUSTOM_VIEW->get('viewname'), $MODULE)}
+										</option>
 									{/foreach}
 								</optgroup>
 							{/foreach}
@@ -84,7 +89,7 @@
 						<input type="hidden" value="0" id="customFilter"/>
 					{/if}
 				</div>
-				<div class="c-list__right-container d-flex flex-nowrap u-overflow-scroll-xs-down">
+				<div class="c-list__right-container d-flex flex-nowrap u-overflow-scroll-xsm-down">
 					{include file=\App\Layout::getTemplatePath('ListViewActions.tpl')}
 				</div>
 			</div>
@@ -102,10 +107,11 @@
 								   aria-selected="{if $VIEWID == $CUSTOM_VIEW->getId()}true{else}false{/if}">
 									{\App\Language::translate($CUSTOM_VIEW->get('viewname'), $MODULE)}
 									{if $CUSTOM_VIEW->get('description')}
-										&nbsp;
-										<span class="js-popover-tooltip fas fa-info-circle" data-js="popover"
-											  data-placement="auto right"
-											  data-content="{\App\Purifier::encodeHtml($CUSTOM_VIEW->get('description'))}"></span>
+										<span class="js-popover-tooltip ml-1" data-toggle="popover"
+											  data-placement="top"
+											  data-content="{\App\Purifier::encodeHtml($CUSTOM_VIEW->get('description'))}" data-js="popover">
+											<span class="fas fa-info-circle"></span>
+										</span>
 									{/if}
 								</a>
 							</li>
@@ -114,6 +120,14 @@
 				{/foreach}
 			</ul>
 		{/if}
+	</div>
+	<div id="selectAllMsgDiv" class="alert-block msgDiv noprint">
+		<strong><a id="selectAllMsg" href="#">{\App\Language::translate('LBL_SELECT_ALL',$MODULE_NAME)}
+				&nbsp;{\App\Language::translate($MODULE_NAME ,$MODULE_NAME)}
+				&nbsp;(<span id="totalRecordsCount"></span>)</a></strong>
+	</div>
+	<div id="deSelectAllMsgDiv" class="alert-block msgDiv noprint">
+		<strong><a id="deSelectAllMsg" href="#">{\App\Language::translate('LBL_DESELECT_ALL_RECORDS',$MODULE_NAME)}</a></strong>
 	</div>
 	<div class="listViewContentDiv" id="listViewContents">
 		{/strip}

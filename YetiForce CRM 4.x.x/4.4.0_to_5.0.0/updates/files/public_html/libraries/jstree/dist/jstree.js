@@ -13,7 +13,7 @@
 }(function ($, undefined) {
 	"use strict";
 /*!
- * jsTree 3.3.6
+ * jsTree 3.3.7
  * http://jstree.com/
  *
  * Copyright (c) 2014 Ivan Bozhanov (http://vakata.com)
@@ -54,7 +54,7 @@
 		 * specifies the jstree version in use
 		 * @name $.jstree.version
 		 */
-		version : '3.3.6',
+		version : '3.3.7',
 		/**
 		 * holds all the default options used when creating new instances
 		 * @name $.jstree.defaults
@@ -1022,6 +1022,9 @@
 		get_node : function (obj, as_dom) {
 			if(obj && obj.id) {
 				obj = obj.id;
+			}
+			if (obj instanceof jQuery && obj.length && obj[0].id) {
+				obj = obj[0].id;
 			}
 			var dom;
 			try {
@@ -2325,7 +2328,7 @@
 				this.element.empty().append(f);
 				//this.get_container_ul()[0].appendChild(f);
 			}
-			if(fe !== null) {
+			if(fe !== null && this.settings.core.restore_focus) {
 				tmp = this.get_node(fe, true);
 				if(tmp && tmp.length && tmp.children('.jstree-anchor')[0] !== document.activeElement) {
 					tmp.children('.jstree-anchor').focus();
@@ -4517,6 +4520,7 @@
 							s.replaceWith(a);
 							s.remove();
 							t = f ? t : $('<div></div>').append($.parseHTML(t)).html();
+							obj = this.get_node(obj);
 							this.set_text(obj, t);
 							nv = !!this.rename_node(obj, f ? $('<div></div>').text(v).text() : $('<div></div>').append($.parseHTML(v)).html());
 							if(!nv) {
@@ -8573,7 +8577,7 @@
 	};
 	// include the wholerow plugin by default
 	// $.jstree.defaults.plugins.push("wholerow");
-	if((window.customElements || document.registerElement) && Object && Object.create) {
+	if(window.customElements && Object && Object.create) {
 		var proto = Object.create(HTMLElement.prototype);
 		proto.createdCallback = function () {
 			var c = { core : {}, plugins : [] }, i;
@@ -8595,9 +8599,6 @@
 		// proto.attributeChangedCallback = function (name, previous, value) { };
 		try {
 			window.customElements.define("vakata-jstree", function() {}, { prototype: proto });
-		} catch (ignore) { }
-		try {
-			document.registerElement("vakata-jstree", { prototype: proto });
 		} catch (ignore) { }
 	}
 

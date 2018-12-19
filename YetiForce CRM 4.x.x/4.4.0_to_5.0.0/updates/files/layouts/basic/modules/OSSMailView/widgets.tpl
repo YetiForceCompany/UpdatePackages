@@ -1,22 +1,22 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="tpl-OSSMailView-widgets container-fluid">
+	<div class="tpl-OSSMailView-widgets container-fluid pl-1 pr-1">
 		{assign var=COUNT value=count($RECOLDLIST)}
 		{foreach from=$RECOLDLIST item=ROW key=KEY}
 			<div class="row{if $KEY%2 != 0} even{/if}">
 				{if \App\Privilege::isPermitted($MODULE_NAME, 'DetailView', $ROW['id'])}
 					<div class="col-12 mailActions d-flex justify-content-between mb-1">
 						<div>
-							<a class="showMailBody btn btn-sm btn-outline-secondary mr-1" role="button">
-									<span class="body-icon fas fa-caret-down"
-										  title="{\App\Language::translate('LBL_SHOW_PREVIEW_EMAIL',$MODULE_NAME)}">
+							<a class="js-toggle-icon__container showMailBody btn btn-sm btn-outline-secondary mr-1" role="button" data-js="click">
+									<span class="js-toggle-icon body-icon fas fa-caret-down" data-active="fa-caret-up" data-inactive="fa-caret-down" data-js="click"
+										  aria-label="{\App\Language::translate('LBL_SHOW_PREVIEW_EMAIL',$MODULE_NAME)}">
 									</span>
 							</a>
 							<div class="btn-group" role="group">
 								<button type="button" class="btn btn-sm btn-outline-secondary showMailModal"
 										data-url="{$ROW['url']}">
 									<span class="body-icon fas fa-search"
-										  title="{\App\Language::translate('LBL_SHOW_PREVIEW_EMAIL',$MODULE_NAME)}">
+										  aria-label="{\App\Language::translate('LBL_SHOW_PREVIEW_EMAIL',$MODULE_NAME)}">
 									</span>
 								</button>
 								{if \App\Privilege::isPermitted($SMODULENAME, 'RemoveRelation')}
@@ -98,20 +98,20 @@
 					{elseif $ROW['type'] eq 2}
 						{assign var=FIRST_LETTER_CLASS value='bgBlue'}
 					{/if}
-					<div class="d-inline-flex w-100">
+					<div class="d-inline-flex w-100 col-10 pr-0 pl-0">
 						<div class="firstLetter {$FIRST_LETTER_CLASS}">
 							{$ROW['firstLetter']}
 						</div>
-						<div>
+						<div class="w-100">
 							<h5 class="u-text-ellipsis h6 mb-0">
 								{$ROW['from']}
 							</h5>
-							<h6 class="font-small font-weight-bold mb-0 u-text-ellipsis mb-0">
+							<h6 class="font-small font-weight-bold mb-0 text-truncate mb-0">
 								{$ROW['subject']}
 							</h6>
 						</div>
 					</div>
-					<div class="d-inline-flex w-100 justify-content-end">
+					<div class="d-inline-flex w-100 justify-content-end col-2 pr-0 pl-0">
 						{if $ROW['attachments'] eq 1}
 							<span class="fas mt-1 fa-xs fa-paperclip mr-1"></span>
 						{/if}
@@ -122,7 +122,7 @@
 						{elseif $ROW['type'] eq 2}
 							<span class="fas mt-1 fa-xs fa-retweet text-primary"></span>
 						{/if}
-						<small class="text-muted ml-1">
+						<small class="text-muted ml-1 text-truncate">
 							{\App\Fields\DateTime::formatToViewDate($ROW['date'])}
 						</small>
 					</div>

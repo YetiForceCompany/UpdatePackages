@@ -84,7 +84,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 		scales: {
 			formatAxesLabels: function formatAxesLabels(value, index, values) {
 				if (String(value).length > 0 && !isNaN(Number(value))) {
-					return app.parseNumberToShow(value);
+					return App.Fields.Double.formatToDisplay(value);
 				}
 				return value;
 			},
@@ -99,7 +99,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 			},
 			formatter: function datalabelsFormatter(value, context) {
 				if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-					return app.parseNumberToShow(value, 0);
+					return App.Fields.Double.formatToDisplay(value, 0);
 				}
 				if (
 					typeof context.chart.data.datasets[context.datasetIndex].dataFormatted !== "undefined" &&
@@ -109,7 +109,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 					return context.chart.data.datasets[context.datasetIndex].dataFormatted[context.dataIndex];
 				}
 				if (String(value).length > 0 && isNaN(Number(value))) {
-					return app.parseNumberToShow(value);
+					return App.Fields.Double.formatToDisplay(value);
 				}
 				return value;
 			}
@@ -126,9 +126,9 @@ jQuery.Class('Vtiger_Widget_Js', {
 				// if there is no formatted data so try to format it
 				if (String(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]).length > 0 && !isNaN(Number(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]))) {
 					if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-						return app.parseNumberToShow(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], 0);
+						return App.Fields.Double.formatToDisplay(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], 0);
 					}
-					return app.parseNumberToShow(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
+					return App.Fields.Double.formatToDisplay(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
 				}
 				// return raw data at idex
 				return data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
@@ -142,9 +142,9 @@ jQuery.Class('Vtiger_Widget_Js', {
 				// if there is no formatted title so try to format it
 				if (String(data.labels[tooltipItem.index]).length > 0 && !isNaN(Number(data.labels[tooltipItem.index]))) {
 					if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-						return app.parseNumberToShow(data.labels[tooltipItem.index], 0);
+						return App.Fields.Double.formatToDisplay(data.labels[tooltipItem.index], 0);
 					}
-					return app.parseNumberToShow(data.labels[tooltipItem.index]);
+					return App.Fields.Double.formatToDisplay(data.labels[tooltipItem.index]);
 				}
 				// return label at index
 				return data.labels[tooltipItem.index];
@@ -1247,7 +1247,7 @@ jQuery.Class('Vtiger_Widget_Js', {
 			var url = recordsCountBtn.data('url');
 			AppConnector.request(url).done(function (response) {
 				recordsCountBtn.find('.count').html(response.result.totalCount);
-				recordsCountBtn.find('[data-fa-i2svg]').addClass('d-none')
+				recordsCountBtn.find('.fas').addClass('d-none')
 					.attr('aria-hidden', true);
 				recordsCountBtn.find('a').removeClass('d-none')
 					.attr('aria-hidden', false);
@@ -1411,8 +1411,8 @@ jQuery.Class('Vtiger_Widget_Js', {
 			currentElement.attr('title', currentElement.data(sortorder));
 			currentElement.attr('alt', currentElement.data(sortorder));
 			url += sortorder;
-			var faIcon = currentElement.find('[data-fa-i2svg]');
-			faIcon.removeClass().addClass('[data-fa-i2svg]').addClass(icon);
+			var faIcon = currentElement.find('.fas');
+			faIcon.removeClass().addClass(icon);
 			drefresh.data('url', url);
 		}
 	},
@@ -1569,8 +1569,8 @@ jQuery.Class('Vtiger_Widget_Js', {
 		refreshContainer.html('');
 		refreshContainerFooter.html('');
 		refreshContainer.progressIndicator();
-		if (this.paramCache && (additionalWidgetFilters.length || widgetFilters.length)) {
-			thisInstance.setFilterToCache(params.url, params.data);
+		if (this.paramCache && (additionalWidgetFilters.length || widgetFilters.length || parent.find('.listSearchContributor'))) {
+			thisInstance.setFilterToCache(params.url ? params.url : params, params.data ? params.data : {});
 		}
 		AppConnector.request(params).done((data) => {
 			data = $(data);
@@ -1878,18 +1878,18 @@ jQuery.Class('Vtiger_Widget_Js', {
 					let defaultLabel = data.labels[index];
 					if (String(defaultLabel).length > 0 && !isNaN(Number(defaultLabel))) {
 						if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-							defaultLabel = app.parseNumberToShow(defaultLabel, 0);
+							defaultLabel = App.Fields.Double.formatToDisplay(defaultLabel, 0);
 						} else {
-							defaultLabel = app.parseNumberToShow(defaultLabel);
+							defaultLabel = App.Fields.Double.formatToDisplay(defaultLabel);
 						}
 					}
 					if (typeof dataset.label !== "undefined") {
 						let label = dataset.label;
 						if (String(label).length > 0 && !isNaN(Number(label))) {
 							if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-								label = app.parseNumberToShow(label, 0);
+								label = App.Fields.Double.formatToDisplay(label, 0);
 							} else {
-								label = app.parseNumberToShow(label);
+								label = App.Fields.Double.formatToDisplay(label);
 							}
 						}
 						defaultLabel += ' (' + label + ')';
@@ -1915,9 +1915,9 @@ jQuery.Class('Vtiger_Widget_Js', {
 					let dataFormatted = dataItem;
 					if (String(dataItem).length > 0 && !isNaN(Number(dataItem))) {
 						if (typeof this.widgetData !== 'undefined' && typeof this.widgetData.valueType !== 'undefined' && this.widgetData.valueType === 'count') {
-							dataFormatted = app.parseNumberToShow(dataItem, 0);
+							dataFormatted = App.Fields.Double.formatToDisplay(dataItem, 0);
 						} else {
-							dataFormatted = app.parseNumberToShow(dataItem);
+							dataFormatted = App.Fields.Double.formatToDisplay(dataItem);
 						}
 					}
 					dataset.dataFormatted.push(dataFormatted);
@@ -2163,7 +2163,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 		//Default first day of the week
 		var convertedFirstDay = CONFIG.firstDayOfWeekNo;
 		//Default first hour of the day
-		var defaultFirstHour = jQuery('#start_hour').val();
+		var defaultFirstHour = app.getMainParams('startHour');
 		var explodedTime = defaultFirstHour.split(':');
 		defaultFirstHour = explodedTime['0'];
 		var defaultDate = app.getMainParams('defaultDate');
@@ -2236,14 +2236,15 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 			}).on('mouseleave', function () {
 			$(this).find(".plus").remove();
 		});
+		let formatDate = CONFIG.dateFormat.toUpperCase();
 		thisInstance.getCalendarView().find("td.fc-day-top").on('click', function () {
-			var date = $(this).data('date');
-			var params = {
-				noCache: true
-			};
-			params.data = {
-				date_start: date,
-				due_date: date
+			let date = moment($(this).data('date')).format(formatDate);
+			let params = {
+				noCache: true,
+				data: {
+					date_start: date,
+					due_date: date
+				}
 			};
 			params.callbackFunction = function () {
 				thisInstance.getCalendarView().closest('.dashboardWidget').find('a[name="drefresh"]').trigger('click');
@@ -2434,6 +2435,7 @@ YetiForce_CalendarActivities_Widget_Js('YetiForce_AssignedUpcomingCalendarTasks_
 YetiForce_CalendarActivities_Widget_Js('YetiForce_CreatedNotMineActivities_Widget_Js', {}, {});
 YetiForce_CalendarActivities_Widget_Js('YetiForce_OverDueActivities_Widget_Js', {}, {});
 YetiForce_CalendarActivities_Widget_Js('YetiForce_AssignedOverDueCalendarTasks_Widget_Js', {}, {});
+YetiForce_CalendarActivities_Widget_Js('YetiForce_OverdueActivities_Widget_Js', {}, {});
 YetiForce_Widget_Js('YetiForce_Productssoldtorenew_Widget_Js', {}, {
 	modalView: false,
 	postLoadWidget: function () {
@@ -2697,43 +2699,31 @@ YetiForce_Widget_Js('YetiForce_MiniList_Widget_Js', {}, {
 YetiForce_Widget_Js('YetiForce_Notebook_Widget_Js', {}, {
 	// Override widget specific functions.
 	postLoadWidget: function () {
-		this.reinitNotebookView();
+		this.registerNotebookEvents();
 	},
-	reinitNotebookView: function () {
-		var self = this;
-		app.showScrollBar(jQuery('.dashboard_notebookWidget_viewarea', this.container), {
-			'height': '200px'
+	registerNotebookEvents: function () {
+		this.container.on('click', '.dashboard_notebookWidget_edit', () => {
+			this.editNotebookContent();
 		});
-		jQuery('.dashboard_notebookWidget_edit', this.container).on('click', function () {
-			self.editNotebookContent();
-		});
-		jQuery('.dashboard_notebookWidget_save', this.container).on('click', function () {
-			self.saveNotebookContent();
+		this.container.on('click', '.dashboard_notebookWidget_save', () => {
+			this.saveNotebookContent();
 		});
 	},
 	editNotebookContent: function () {
-		jQuery('.dashboard_notebookWidget_text', this.container).show();
-		jQuery('.dashboard_notebookWidget_view', this.container).hide();
-		$('body').on('click', function (e) {
-			if ($(e.target).closest('.dashboard_notebookWidget_view').length === 0 && $(e.target).closest('.dashboard_notebookWidget_text').length === 0) {
-				$('.dashboard_notebookWidget_save').trigger('click');
-			}
-		});
+		$('.dashboard_notebookWidget_text', this.container).show();
+		$('.dashboard_notebookWidget_view', this.container).hide();
 	},
 	saveNotebookContent: function () {
-		$('body').off('click');
-		var self = this;
-		var textarea = jQuery('.dashboard_notebookWidget_textarea', this.container);
-		var url = this.container.data('url');
-		var params = url + '&content=true&mode=save&contents=' + encodeURIComponent(textarea.val());
-		var refreshContainer = this.container.find('.dashboardWidgetContent');
+		let textarea = $('.dashboard_notebookWidget_textarea', this.container),
+			url = this.container.data('url'),
+			params = url + '&content=true&mode=save&contents=' + encodeURIComponent(textarea.val()),
+			refreshContainer = this.container.find('.dashboardWidgetContent');
 		refreshContainer.progressIndicator();
-		AppConnector.request(params).done(function (data) {
+		AppConnector.request(params).done((data) => {
 			refreshContainer.progressIndicator({
 				'mode': 'hide'
 			});
-			jQuery('.dashboardWidgetContent', self.container).html(data);
-			self.reinitNotebookView();
+			$('.dashboardWidgetContent', this.container).html(data);
 		});
 	}
 });
@@ -2796,6 +2786,7 @@ YetiForce_Widget_Js('YetiForce_ChartFilter_Widget_Js', {}, {
 			}
 		}
 		this.registerRecordsCount();
+		this.registerCache(container);
 	},
 });
 YetiForce_Widget_Js('YetiForce_Multifilter_Widget_Js', {}, {

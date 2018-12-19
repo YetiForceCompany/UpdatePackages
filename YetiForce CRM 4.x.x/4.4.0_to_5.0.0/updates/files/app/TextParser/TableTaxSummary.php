@@ -28,18 +28,18 @@ class TableTaxSummary extends Base
 			return '';
 		}
 		$html = '';
-		$inventoryField = \Vtiger_InventoryField_Model::getInstance($this->textParser->moduleName);
-		$fields = $inventoryField->getFields(true);
-		$columns = $inventoryField->getColumns();
-		$inventoryRows = $this->textParser->recordModel->getInventoryData();
+		$inventory = \Vtiger_Inventory_Model::getInstance($this->textParser->moduleName);
+		$fields = $inventory->getFieldsByBlocks();
 		$baseCurrency = \Vtiger_Util_Helper::getBaseCurrency();
-		if (in_array('currency', $columns)) {
-			if (count($inventoryRows) > 0 && $inventoryRows[0]['currency'] !== null) {
-				$currency = $inventoryRows[0]['currency'];
+		$inventoryRows = $this->textParser->recordModel->getInventoryData();
+		$firstRow = current($inventoryRows);
+		if ($inventory->isField('currency')) {
+			if (\count($firstRow) && $firstRow['currency'] !== null) {
+				$currency = $firstRow['currency'];
 			} else {
 				$currency = $baseCurrency['id'];
 			}
-			$currencySymbolRate = \vtlib\Functions::getCurrencySymbolandRate($currency);
+			$currencyData = \App\Fields\Currency::getById($currency);
 		}
 		$html .= '<style>' .
 			'.productTable{color:#000; font-size:10px}' .
@@ -50,12 +50,16 @@ class TableTaxSummary extends Base
 			'.productTable td, th {padding-left: 5px; padding-right: 5px;}' .
 			'.productTable .summaryContainer{background:#ddd;}' .
 			'</style>';
-		if (count($fields[0]) != 0) {
-			$taxes = 0;
-			foreach ($inventoryRows as $key => &$inventoryRow) {
-				$taxes = $inventoryField->getTaxParam($inventoryRow['taxparam'], $inventoryRow['net'], $taxes);
+		if (\count($fields[0])) {
+			$taxes = [];
+			if ($inventory->isField('tax') && $inventory->isField('net')) {
+				$taxField = $inventory->getField('tax');
+				foreach ($inventoryRows as $key => &$inventoryRow) {
+					$taxes = $taxField->getTaxParam($inventoryRow['taxparam'], $inventoryRow['net'], $taxes);
+				}
 			}
-			if (in_array('tax', $columns) && in_array('taxmode', $columns)) {
+			if ($inventory->isField('tax') && $inventory->isField('taxmode')) {
+				$taxAmount = 0;
 				$html .= '
 						<table class="productTable colapseBorder">
 							<thead>
@@ -67,15 +71,15 @@ class TableTaxSummary extends Base
 							</thead>
 							<tbody>';
 				foreach ($taxes as $key => &$tax) {
-					$tax_AMOUNT += $tax;
+					$taxAmount += $tax;
 					$html .= '<tr>
 										<td class="textAlignRight tBorder" width="70px">' . $key . '%</td>
-										<td class="textAlignRight tBorder">' . \CurrencyField::convertToUserFormat($tax, null, true) . ' ' . $currencySymbolRate['symbol'] . '</td>
+										<td class="textAlignRight tBorder">' . \CurrencyField::convertToUserFormat($tax, null, true) . ' ' . $currencyData['currency_symbol'] . '</td>
 									</tr>';
 				}
 				$html .= '<tr>
 									<td class="textAlignRight tBorder" width="70px">' . \App\Language::translate('LBL_AMOUNT', $this->textParser->moduleName) . '</td>
-									<td class="textAlignRight tBorder">' . \CurrencyField::convertToUserFormat($tax_AMOUNT, null, true) . ' ' . $currencySymbolRate['symbol'] . '</td>
+									<td class="textAlignRight tBorder">' . \CurrencyField::convertToUserFormat($taxAmount, null, true) . ' ' . $currencyData['currency_symbol'] . '</td>
 								</tr>
 							</tbody>
 						</table>

@@ -17,17 +17,14 @@ class Calendar_Calendar_Model extends App\Base
 		'ServiceContracts' => ['vtiger_servicecontracts', 'servicecontractsid', 'sc_related_to'],
 	];
 
+	/**
+	 * Get module name.
+	 *
+	 * @return string
+	 */
 	public function getModuleName()
 	{
 		return $this->moduleName;
-	}
-
-	private function getLabel($labels, $key)
-	{
-		if (isset($labels[$key])) {
-			return $labels[$key];
-		}
-		return '';
 	}
 
 	/**
@@ -98,7 +95,7 @@ class Calendar_Calendar_Model extends App\Base
 		$conditions = [];
 		$currentUser = App\User::getCurrentUserModel();
 		if ($currentUser->getRoleInstance()->get('clendarallorecords') === 1) {
-			$subQuery = (new \App\Db\Query())->select('crmid')->from('u_#__crmentity_showners')->where(['userid' => $currentUser->getId()]);
+			$subQuery = (new \App\Db\Query())->select(['crmid'])->from('u_#__crmentity_showners')->where(['userid' => $currentUser->getId()]);
 			$conditions[] = ['vtiger_crmentity.crmid' => $subQuery];
 		}
 		if (!empty($this->get('user'))) {

@@ -9,7 +9,7 @@
 		<div class="contents">
 			<h5>{\App\Language::translate('LBL_BACKUP_LIST',$QUALIFIED_MODULE)}</h5>
 			<div class="listViewContentDiv ps ps--active-y">
-				{if $SHOW_CONFIG_ALERT}
+				{if !empty($SHOW_CONFIG_ALERT)}
 					<div class="alert alert-block alert-danger fade in show">
 						<button type="button" class="close" data-dismiss="alert">×</button>
 						<h4 class="alert-heading">{\App\Language::translate('ERR_CONFIG_ALERT_TITLE', $QUALIFIED_MODULE)}</h4>
@@ -52,8 +52,7 @@
 							</th>
 						</tr>
 						{foreach from=$STRUCTURE['files'] item=$file}
-							<tr class="listViewEntries"
-								data-recordurl="index.php?module=Accounts&view=Detail&record=166">
+							<tr class="listViewEntries">
 								<td>{$file['name']}</td>
 								<td>{$file['date']}</td>
 								<td>{$file['size']}</td>

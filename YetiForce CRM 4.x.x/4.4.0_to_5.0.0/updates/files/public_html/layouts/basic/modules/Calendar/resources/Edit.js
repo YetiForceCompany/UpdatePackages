@@ -52,7 +52,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		container.find('.recurringType').on('change', function (e) {
 			thisInstance.changeRecurringTypesUIStyles(jQuery(e.currentTarget).val());
 		});
-		container.find('.repeatUI [name="calendarEndType"]').on('change', function (e) {
+		container.find('.js-repeat-ui [name="calendarEndType"]').on('change', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var value = currentTarget.val();
 			if (value === 'never') {
@@ -114,13 +114,13 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 					break;
 				}
 			}
-			let endDateString = moment(startDateTime, dateFormat).add(minutes, 'minutes').format(dateFormat),
-				defaultTimeFormat = 'HH:mm';
+			let defaultTimeFormat = 'HH:mm';
 			if (12 === timeFormat) {
 				defaultTimeFormat = 'hh:mm A';
 			}
-			endDateElement.val(endDateString);
-			endTimeElement.val(moment(startTime, defaultTimeFormat).add(minutes, 'minutes').format(defaultTimeFormat));
+			let endDate = moment(startDateTime, dateFormat + ' ' + defaultTimeFormat).add(minutes, 'minutes');
+			endDateElement.val(endDate.format(dateFormat));
+			endTimeElement.val(endDate.format(defaultTimeFormat));
 		}
 	},
 	/**
@@ -135,47 +135,37 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 	/**
 	 * Function to change the end time based on default call duration
 	 */
-	registerTimeStartChangeEvent: function (container) {
-		var thisInstance = this;
+	registerTimeStartChangeEvent(container) {
+		const thisInstance = this;
 		container.find('input[name="time_start"]').on('change', function (e) {
 			thisInstance.setDefaultEndTime(container);
 		});
-
 		container.find('[name="date_start"]').on('change', function (e) {
-			var startDateElement = jQuery(e.currentTarget);
-			var endDateElement = container.find('[name="due_date"]');
-
-			var start = thisInstance.getDateInstance(container, 'start');
-			var end = thisInstance.getDateInstance(container, 'end');
-			var dateFormat = CONFIG.dateFormat.toUpperCase();
-			container.find('.js-autofill:visible').trigger('change');
+			let endDateElement = container.find('[name="due_date"]'),
+				start = thisInstance.getDateInstance(container, 'start'),
+				end = thisInstance.getDateInstance(container, 'end'),
+				dateFormat = CONFIG.dateFormat.toUpperCase();
+			container.find('.js-autofill').trigger('change');
 			if (start > end) {
 				end = start;
 				endDateElement.val(moment(end).format(dateFormat));
 				App.Fields.Date.register(container);
 			}
-			var timeStartElement = startDateElement.closest('.fieldValue').find('[name="time_start"]');
-			timeStartElement.trigger('changeTime');
 		});
-
 		container.find('input[name="time_start"]').on('focus', function (e) {
-			var element = jQuery(e.currentTarget);
+			let element = $(e.currentTarget);
 			element.data('prevValue', element.val());
 		});
-
 		container.find('input[name="time_start"]').on('blur', function (e, data) {
 			if (typeof data === "undefined") {
 				data = {};
 			}
-
 			if (typeof data.forceChange === "undefined") {
 				data.forceChange = false;
 			}
-			var element = jQuery(e.currentTarget);
-			var currentValue = element.val();
-			var prevValue = element.data('prevValue');
-			if (currentValue != prevValue || data.forceChange) {
-				e = jQuery.Event("keydown");
+			let element = $(e.currentTarget);
+			if (element.val() !== element.data('prevValue') || data.forceChange) {
+				e = $.Event("keydown");
 				e.which = 13;
 				e.keyCode = 13;
 				element.trigger(e);
@@ -213,7 +203,7 @@ Vtiger_Edit_Js("Calendar_Edit_Js", {}, {
 		var freq = form.find('.recurringType').val();
 		var rule = 'FREQ=' + freq;
 		rule += ';INTERVAL=' + form.find('.repeatFrequency').val();
-		var endValue = form.find('.repeatUI [name="calendarEndType"]:checked').val();
+		var endValue = form.find('.js-repeat-ui [name="calendarEndType"]:checked').val();
 		if (endValue === 'count') {
 			rule += ';COUNT=' + form.find('.countEvents').val();
 		} else if (endValue === 'until') {

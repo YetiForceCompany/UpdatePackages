@@ -54,7 +54,7 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public function getWatermarkType()
 	{
-		return [\App\Pdf\Tcpdf::WATERMARK_TYPE_TEXT => 'PLL_TEXT', \App\Pdf\Tcpdf::WATERMARK_TYPE_IMAGE => 'PLL_IMAGE'];
+		return ['text' => 'PLL_TEXT'];
 	}
 
 	/**
@@ -265,7 +265,6 @@ class Vtiger_PDF_Model extends \App\Base
 		$pdf = new $handlerClass();
 		$pdf->setData($row);
 		Vtiger_Cache::set('PDFModel', $recordId, $pdf);
-
 		return $pdf;
 	}
 
@@ -472,7 +471,7 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public static function exportToPdf($recordId, $moduleName, $templateId, $filePath = '', $saveFlag = '')
 	{
-		(new \App\Pdf\Tcpdf())->export($recordId, $moduleName, $templateId, $filePath, $saveFlag);
+		(new \App\Pdf\YetiForcePDF())->export($recordId, $moduleName, $templateId, $filePath, $saveFlag);
 	}
 
 	/**
@@ -498,7 +497,7 @@ class Vtiger_PDF_Model extends \App\Base
 		$zip = new ZipArchive();
 
 		mt_srand(time());
-		$postfix = time() . '_' . mt_rand(0, 1000);
+		$postfix = time() . '_' . random_int(0, 1000);
 		$zipPath = 'storage/';
 		$zipName = "pdfZipFile_{$postfix}.zip";
 		$fileName = $zipPath . $zipName;
@@ -514,11 +513,6 @@ class Vtiger_PDF_Model extends \App\Base
 			$zip->addFile($file, basename($file));
 		}
 		$zip->close();
-
-		// delete added pdf files
-		foreach ($fileNames as $file) {
-			unlink($file);
-		}
 		$mimeType = \App\Fields\File::getMimeContentType($fileName);
 		$size = filesize($fileName);
 		$name = basename($fileName);
@@ -532,5 +526,8 @@ class Vtiger_PDF_Model extends \App\Base
 		readfile($fileName);
 		// delete temporary zip file and saved pdf files
 		unlink($fileName);
+		foreach ($fileNames as $file) {
+			unlink($file);
+		}
 	}
 }

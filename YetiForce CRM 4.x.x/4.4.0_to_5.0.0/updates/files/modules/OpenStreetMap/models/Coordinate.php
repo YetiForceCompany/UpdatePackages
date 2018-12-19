@@ -251,7 +251,6 @@ class OpenStreetMap_Coordinate_Model extends \App\Base
 		$moduleName = $moduleModel->getName();
 		$fields = AppConfig::module('OpenStreetMap', 'FIELDS_IN_POPUP');
 		$fields = $fields[$moduleName];
-		$groupByFieldColumn = '';
 		if (!empty($groupByField)) {
 			$fields[] = $groupByField;
 		}
@@ -418,7 +417,7 @@ class OpenStreetMap_Coordinate_Model extends \App\Base
 		$coordinates = [];
 		foreach ($modules as $moduleName) {
 			$records = (new App\Db\Query())
-				->select('crmids')
+				->select(['crmids'])
 				->from('u_#__openstreetmap_cache')
 				->where(['user_id' => $userId, 'module_name' => $moduleName])
 				->createCommand($db)->queryColumn();

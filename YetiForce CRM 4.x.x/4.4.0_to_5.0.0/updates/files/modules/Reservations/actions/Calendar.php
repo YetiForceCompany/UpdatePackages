@@ -4,7 +4,7 @@
  * Reservations calendar action class.
  *
  * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
 class Reservations_Calendar_Action extends \App\Controller\Action
 {
@@ -13,7 +13,7 @@ class Reservations_Calendar_Action extends \App\Controller\Action
 	public function __construct()
 	{
 		parent::__construct();
-		$this->exposeMethod('getEvent');
+		$this->exposeMethod('getEvents');
 		$this->exposeMethod('updateEvent');
 	}
 
@@ -31,14 +31,14 @@ class Reservations_Calendar_Action extends \App\Controller\Action
 		}
 	}
 
-	public function getEvent(\App\Request $request)
+	public function getEvents(\App\Request $request)
 	{
 		$record = Reservations_Calendar_Model::getInstance();
 		$record->set('user', $request->getArray('user'));
 		$record->set('types', $request->getArray('types'));
 		if ($request->has('start') && $request->has('end')) {
-			$record->set('start', $request->getByType('start', 'Date'));
-			$record->set('end', $request->getByType('end', 'Date'));
+			$record->set('start', $request->getByType('start', 'DateInUserFormat'));
+			$record->set('end', $request->getByType('end', 'DateInUserFormat'));
 		}
 		$entity = $record->getEntity();
 		$response = new Vtiger_Response();

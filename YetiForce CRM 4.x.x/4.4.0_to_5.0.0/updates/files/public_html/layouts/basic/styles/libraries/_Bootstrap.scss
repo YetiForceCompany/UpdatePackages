@@ -1,13 +1,19 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 
+//table
+.table thead th,
+.table-bordered thead td {
+	border-bottom-width: 1px;
+}
+
 //Switch button
-label.btn.btn-outline-primary {
+label.btn[class*=btn-outline-] {
 	&:not(.active) {
 		background: $white;
 
 		&:hover {
-			color: $blue;
 			background: $gray-200;
+			color: $gray-600;
 		}
 	}
 }
@@ -34,11 +40,15 @@ label.btn.btn-outline-primary {
 	cursor: pointer;
 	border-top: 1px solid transparent;
 	border-bottom: 1px solid transparent;
-	white-space: normal;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
 	@at-root .historyList #{&} {
 		min-width: 500px;
 		max-width: calc(100vh - 100px);
 	}
+
 	&:hover {
 		border-top: 1px solid $color-grey-light;
 		border-bottom: 1px solid $color-grey-light;
@@ -69,4 +79,8 @@ label.btn.btn-outline-primary {
 // buttons with class border has the same border color as input
 .border.btn {
 	border-color: #ced4da !important;
+}
+
+.input-group.input-group-sm {
+	min-width: calculate-rem(65px);
 }

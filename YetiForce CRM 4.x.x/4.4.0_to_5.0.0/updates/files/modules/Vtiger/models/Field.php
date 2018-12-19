@@ -277,6 +277,9 @@ class Vtiger_Field_Model extends vtlib\Field
 					case 99:
 						$fieldDataType = 'password';
 						break;
+					case 101:
+						$fieldDataType = 'userReference';
+						break;
 					case 115:
 						$fieldDataType = 'picklist';
 						break;
@@ -483,7 +486,7 @@ class Vtiger_Field_Model extends vtlib\Field
 				if ($fieldDataType === 'picklist') {
 					$fieldValue = $this->get('fieldvalue');
 					if (!empty($fieldValue) && !isset($fieldPickListValues[$fieldValue])) {
-						$fieldPickListValues[$fieldValue] = \App\Purifier::decodeHtml($this->get('fieldvalue'));
+						$fieldPickListValues[$fieldValue] = \App\Purifier::decodeHtml($fieldValue);
 						$this->set('isEditableReadOnly', true);
 					}
 				}
@@ -652,10 +655,8 @@ class Vtiger_Field_Model extends vtlib\Field
 
 	public function isEditableReadOnly()
 	{
-		$isEditableReadOnly = $this->get('isEditableReadOnly');
-
-		if ($isEditableReadOnly !== null) {
-			return $isEditableReadOnly;
+		if ($this->get('isEditableReadOnly') !== null) {
+			return $this->get('isEditableReadOnly');
 		}
 		if ((int) $this->get('displaytype') === 10) {
 			return true;
@@ -667,11 +668,8 @@ class Vtiger_Field_Model extends vtlib\Field
 	{
 		$moduleModel = $this->getModule();
 		$quickCreate = $this->get('quickcreate');
-		if (($quickCreate == self::QUICKCREATE_MANDATORY || $quickCreate == self::QUICKCREATE_ENABLED || $this->isMandatory())) {
-			//isQuickCreateSupported will not be there for settings
-			if (method_exists($moduleModel, 'isQuickCreateSupported') && $moduleModel->isQuickCreateSupported()) {
-				return true;
-			}
+		if (($quickCreate == self::QUICKCREATE_MANDATORY || $quickCreate == self::QUICKCREATE_ENABLED || $this->isMandatory()) && method_exists($moduleModel, 'isQuickCreateSupported') && $moduleModel->isQuickCreateSupported()) {
+			return true;
 		}
 		return false;
 	}
@@ -990,6 +988,21 @@ class Vtiger_Field_Model extends vtlib\Field
 	}
 
 	/**
+	 * Returns instance of field.
+	 *
+	 * @param string|array $fieldInfo
+	 *
+	 * @return bool|null|\Vtiger_Field_Model|\vtlib\Field
+	 */
+	public static function getInstanceFromFilter($fieldInfo)
+	{
+		if (is_string($fieldInfo)) {
+			$fieldInfo = array_combine(['module_name', 'field_name', 'source_field_name'], array_pad(explode(':', $fieldInfo), 3, false));
+		}
+		return static::getInstance($fieldInfo['field_name'], Vtiger_Module_Model::getInstance($fieldInfo['module_name']));
+	}
+
+	/**
 	 * Function checks if the current Field is Read/Write.
 	 *
 	 * @return bool
@@ -1116,7 +1129,7 @@ class Vtiger_Field_Model extends vtlib\Field
 		if (\App\Cache::has('Currency', 'List')) {
 			return \App\Cache::get('Currency', 'List');
 		}
-		$currencies = (new \App\Db\Query())->select('id, currency_name')
+		$currencies = (new \App\Db\Query())->select(['id', 'currency_name'])
 			->from('vtiger_currency_info')
 			->where(['currency_status' => 'Active', 'deleted' => 0])
 			->createCommand()->queryAllByGroup();
@@ -1463,7 +1476,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	 */
 	public function getOperatorTemplateName(string $operator)
 	{
-		if (in_array($operator, App\CustomView::FILTERS_WITHOUT_VALUES)) {
+		if (in_array($operator, App\CustomView::FILTERS_WITHOUT_VALUES + array_keys(App\CustomView::DATE_FILTER_CONDITIONS))) {
 			return;
 		}
 		return $this->getUITypeModel()->getOperatorTemplateName($operator);

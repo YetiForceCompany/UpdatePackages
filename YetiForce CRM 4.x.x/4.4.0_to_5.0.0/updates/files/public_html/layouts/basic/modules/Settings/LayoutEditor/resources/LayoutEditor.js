@@ -252,7 +252,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 
 		AppConnector.request(params).done(function (data) {
 			currentTarget.data('state', status);
-			currentTarget.find('[data-fa-i2svg]').each(function () {
+			currentTarget.find('.fas').each(function () {
 				if ($(this).hasClass('d-none')) {
 					$(this).removeClass('d-none');
 				} else {
@@ -830,7 +830,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 				var form = data.find('.addCustomBlockForm');
 				thisInstance.setBlocksListArray(form);
 				var fieldLabel = form.find('[name="label"]');
-				var params = app.validationEngineOptions;
+				var params = Object.create(app.validationEngineOptions);
 				params.onValidationComplete = function (form, valid) {
 					if (valid) {
 						var formData = form.serializeFormData();
@@ -910,8 +910,8 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		var beforeBlock = contents.find('.block_' + beforeBlockId);
 
 		var newBlockCloneCopy = contents.find('.newCustomBlockCopy').clone(true, true);
-		newBlockCloneCopy.data('blockId', result['id']).find('.blockLabel').append($('<strong>' + result['label'] + '</strong>'));
-		newBlockCloneCopy.find('.blockVisibility').data('blockId', result['id']);
+		newBlockCloneCopy.data('blockId', result['id']).find('.blockLabel').append($('<strong class="align-middle">' + result['label'] + '</strong>'));
+		newBlockCloneCopy.find('.js-block-visibility').data('blockId', result['id']);
 		if (result['isAddCustomFieldEnabled']) {
 			newBlockCloneCopy.find('.addCustomField').removeClass('d-none');
 		}
@@ -956,10 +956,8 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	registerBlockVisibilityEvent: function () {
 		var thisInstance = this;
 		var contents = $('#layoutEditorContainer').find('.contents');
-		contents.on('click', 'li.blockVisibility', function (e) {
+		contents.on('click', '.js-block-visibility', function (e) {
 			var currentTarget = $(e.currentTarget);
-			currentTarget.parent().find('li.blockVisibility .fa-check').addClass('d-none');
-			currentTarget.find('.fa-check').removeClass('d-none');
 			thisInstance.updateBlockStatus(currentTarget);
 		})
 	},
@@ -1005,7 +1003,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	registerInactiveFieldsEvent: function () {
 		var thisInstance = this;
 		var contents = $('#layoutEditorContainer').find('.contents');
-		contents.on('click', 'li.inActiveFields', function (e) {
+		contents.on('click', '.js-inactive-fields-btn', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var currentBlock = currentTarget.closest('.editFieldsTable');
 			var blockId = currentBlock.data('blockId');
@@ -1104,7 +1102,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	registerDeleteCustomBlockEvent: function () {
 		var thisInstance = this;
 		var contents = $('#layoutEditorContainer').find('.contents');
-		contents.on('click', 'li.deleteCustomBlock', function (e) {
+		contents.on('click', '.js-delete-custom-block-btn', function (e) {
 			var currentTarget = $(e.currentTarget);
 			var table = currentTarget.closest('div.editFieldsTable');
 			var blockId = table.data('blockId');
@@ -1551,7 +1549,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			let selectedModule = $('#layoutEditorContainer').find('[name="layoutEditorModules"]').val();
 			let blockId = currentTarget.closest('.inventoryBlock').data('block-id');
 			const progress = $.progressIndicator();
-			app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step1&type=" + selectedModule + "&block=" + blockId, (modalContainer) => {
+			app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step1&sourceModule=" + selectedModule + "&block=" + blockId, (modalContainer) => {
 				app.showScrollBar(modalContainer.find('.well'), {
 					height: '300px'
 				});
@@ -1571,10 +1569,8 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			var selectedModule = $('#layoutEditorContainer').find('[name="layoutEditorModules"]').val();
 			var blockId = currentTarget.closest('.inventoryBlock').data('block-id');
 			var editField = currentTarget.closest('.editFields');
-			var mType = editField.data('name');
-			var id = editField.data('id');
 			var progress = $.progressIndicator();
-			app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&type=" + selectedModule + "&mtype=" + mType + "&id=" + id, function (container) {
+			app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&sourceModule=" + selectedModule + '&type=' + editField.data('type') + "&fieldName=" + editField.data('name'), function (container) {
 				app.showPopoverElementView(container.find('.js-help-info'));
 				thisInstance.registerStep2(container, blockId);
 				progress.progressIndicator({'mode': 'hide'});
@@ -1604,7 +1600,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 						'enabled': true
 					}
 				});
-				app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&type=" + selectedModule + "&mtype=" + type, (modalContainer) => {
+				app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&sourceModule=" + selectedModule + "&type=" + type, (modalContainer) => {
 					thisInstance.registerStep2(modalContainer, blockId);
 					progress.progressIndicator({'mode': 'hide'});
 				});
@@ -1615,19 +1611,20 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 * Function to save inventory field
 	 */
 	registerStep2: function (container, blockId) {
-		var thisInstance = this;
-		var containerInventory = thisInstance.getInventoryViewLayout();
-		var form = container.find('form');
-		var selectedModule = $('#layoutEditorContainer').find('[name="layoutEditorModules"]').val();
+		let thisInstance = this;
+		let containerInventory = thisInstance.getInventoryViewLayout();
+		let form = container.find('form');
+		let selectedModule = $('#layoutEditorContainer').find('[name="layoutEditorModules"]').val();
 		form.validationEngine(app.validationEngineOptions);
 		form.on('submit', function (e) {
-			var formData = form.serializeFormData();
-			var paramsName = thisInstance.getParamsInventory();
-			if (paramsName) {
-				var params = {};
-				for (var i in formData) {
+			let formData = form.serializeFormData();
+			let paramsName = container.find('#params');
+			if (paramsName.length) {
+				paramsName = JSON.parse(paramsName.val());
+				let params = {};
+				for (let i in formData) {
 					if ($.inArray(i, paramsName) != -1) {
-						var value = formData[i];
+						let value = formData[i];
 						if (i === 'modules' && typeof value === 'string') {
 							value = [value];
 						}
@@ -1637,22 +1634,23 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 				}
 				formData.params = JSON.stringify(params);
 			}
-			var errorExists = form.validationEngine('validate');
+			let errorExists = form.validationEngine('validate');
 			if (errorExists != false) {
 				formData.block = blockId;
-				formData.module = selectedModule;
-				app.saveAjax('saveInventoryField', formData).done(function (data) {
-					var result = data.result;
-					if (result && result.edit) {
-						app.hideModalWindow();
-						var liElement = containerInventory.find('[data-id="' + result.data.id + '"]');
+				formData.sourceModule = selectedModule;
+				app.saveAjax('saveInventoryField', null, formData).done(function (data) {
+					let result = data.result,
+						success = data.success;
+					app.hideModalWindow();
+					if (success && result && result.edit) {
+						let liElement = containerInventory.find('[data-id="' + result.data.id + '"]');
 						liElement.find('.fieldLabel').text(result.data.translate);
-					} else if (result) {
-						app.hideModalWindow();
-						var newLiElement = containerInventory.find('.newLiElement').clone(true, true);
-						newLiElement.removeClass('d-none newLiElement').find('.editFields').attr('data-id', result.data.id).attr('data-sequence', result.data.sequence).attr('data-name', result.data.invtype).attr('data-column', result.data.columnname).find('.fieldLabel').text(result.data.translate);
+					} else if (success && result) {
+						let newLiElement = containerInventory.find('.newLiElement').clone(true, true);
+						newLiElement.removeClass('d-none newLiElement').find('.editFields').attr('data-id', result.data.id).attr('data-sequence', result.data.sequence).attr('data-name', result.data.columnName).attr('data-type', result.data.invtype).find('.fieldLabel').text(result.data.translate);
 						containerInventory.find('[data-block-id="' + result.data.block + '"] .connectedSortable').append(newLiElement);
-
+					} else {
+						Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_ERROR'));
 					}
 				});
 			}
@@ -1671,14 +1669,11 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 		containerInventory.on('click', '.saveFieldSequence', function (e) {
 			var button = $(e.currentTarget);
 			var target = button.closest('.inventoryBlock');
-			var params = {};
 			var fieldId = [];
 			target.find('.editFields').each(function () {
 				fieldId.push($(this).data('id'));
 			})
-			params.module = selectedModule;
-			params.ids = fieldId;
-			app.saveAjax('saveSequence', params).done(function (data) {
+			app.saveAjax('saveSequence', null, {sourceModule: selectedModule, ids: fieldId}).done(function (data) {
 				button.addClass('invisible');
 			});
 		});
@@ -1696,39 +1691,33 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			var message = app.vtranslate('JS_DELETE_INVENTORY_CONFIRMATION');
 			Vtiger_Helper_Js.showConfirmationBox({'message': message}).done(function (e) {
 				var progressIndicatorElement = $.progressIndicator({
-					'message': app.vtranslate('JS_SAVE_LOADER_INFO'),
-					'position': 'html',
-					'blockInfo': {
-						'enabled': true
+					message: app.vtranslate('JS_SAVE_LOADER_INFO'),
+					position: 'html',
+					blockInfo: {
+						enabled: true
 					}
 				});
 				var editFields = liElement.find('.editFields');
-				var params = {};
-				params.id = editFields.data('id');
-				params.module = selectedModule;
-				params.name = editFields.data('name');
-				params.column = editFields.data('column');
-				app.saveAjax('delete', params).done(function (data) {
-					liElement.remove();
-					Settings_Vtiger_Index_Js.showMessage({
-						type: 'success',
-						text: app.vtranslate('JS_SAVE_CHANGES')
-					});
+				app.saveAjax('delete', null, {
+					sourceModule: selectedModule,
+					fieldName: editFields.data('name')
+				}).done(function (response) {
+					let param = {};
+					if (response.result) {
+						liElement.remove();
+						param = {type: 'success', text: app.vtranslate('JS_SAVE_CHANGES')};
+					} else {
+						param = {type: 'error', text: app.vtranslate('JS_ERROR')};
+					}
+					Settings_Vtiger_Index_Js.showMessage(param);
 					progressIndicatorElement.progressIndicator({'mode': 'hide'});
-
 				});
 			}).fail(function (error, err) {
+				progressIndicatorElement.progressIndicator({'mode': 'hide'});
 			});
 		});
 	},
-	/**
-	 * get inventory params
-	 */
-	getParamsInventory: function () {
-		if (typeof app.getMainParams('params') !== "undefined") {
-			return JSON.parse(app.getMainParams('params'));
-		}
-	},
+
 	/**
 	 * Loading list of fields for a related module
 	 */

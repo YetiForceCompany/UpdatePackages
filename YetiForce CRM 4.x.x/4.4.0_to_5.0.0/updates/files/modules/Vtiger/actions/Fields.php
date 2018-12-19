@@ -4,9 +4,9 @@
  * Fields Action Class.
  *
  * @copyright YetiForce Sp. z o.o
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
- * @author Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Vtiger_Fields_Action extends \App\Controller\Action
 {
@@ -38,7 +38,7 @@ class Vtiger_Fields_Action extends \App\Controller\Action
 		if ($request->getMode() !== 'findAddress') {
 			$this->fieldModel = Vtiger_Module_Model::getInstance($request->getModule())->getFieldByName($request->getByType('fieldName', 2));
 			if (!$this->fieldModel || !$this->fieldModel->isEditable()) {
-				throw new \App\Exceptions\NoPermitted('ERR_NO_PERMISSIONS_TO_FIELD');
+				throw new \App\Exceptions\NoPermitted('ERR_NO_PERMISSIONS_TO_FIELD', 406);
 			}
 		}
 	}
@@ -52,6 +52,7 @@ class Vtiger_Fields_Action extends \App\Controller\Action
 		$this->exposeMethod('verifyPhoneNumber');
 		$this->exposeMethod('findAddress');
 		$this->exposeMethod('verifyIsHolidayDate');
+		$this->exposeMethod('changeFavoriteOwner');
 	}
 
 	/**
@@ -205,7 +206,7 @@ class Vtiger_Fields_Action extends \App\Controller\Action
 	 */
 	public function findAddress(\App\Request $request)
 	{
-		$instance = \App\AddressFinder::getInstance($request->getByType('type'));
+		$instance = \App\Map\Address::getInstance($request->getByType('type'));
 		$response = new Vtiger_Response();
 		if ($instance) {
 			$response->setResult($instance->find($request->getByType('value', 'Text')));
@@ -228,7 +229,7 @@ class Vtiger_Fields_Action extends \App\Controller\Action
 			if ($request->isEmpty('date', true)) {
 				$data['message'] = \App\Language::translate('LBL_NO_DATE');
 			} else {
-				$holidays = Settings_PublicHoliday_Module_Model::getHolidays($request->getArray('date', 'Date'));
+				$holidays = Settings_PublicHoliday_Module_Model::getHolidays($request->getArray('date', 'DateInUserFormat'));
 				if (!empty($holidays)) {
 					$result = true;
 				}
@@ -239,5 +240,29 @@ class Vtiger_Fields_Action extends \App\Controller\Action
 		} else {
 			throw new \App\Exceptions\NoPermitted('ERR_NO_PERMISSIONS_TO_FIELD');
 		}
+	}
+
+	/**
+	 * Change favorite owner state.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 * @throws \App\Exceptions\NoPermitted
+	 * @throws \yii\db\Exception
+	 */
+	public function changeFavoriteOwner(\App\Request $request)
+	{
+		if (!AppConfig::module('Users', 'FAVORITE_OWNERS') || (\App\User::getCurrentUserRealId() !== \App\User::getCurrentUserId())) {
+			throw new \App\Exceptions\NoPermitted('LBL_PERMISSION_DENIED', 406);
+		}
+		$moduleName = $request->getModule();
+		$ownerField = \App\Fields\Owner::getInstance($moduleName);
+		$result = $ownerField->changeFavorites($this->fieldModel->getFieldDataType(), $request->getInteger('owner'));
+		$message = $result ? 'LBL_MODIFICATION_SUCCESSFUL_AND_RELOAD' : 'LBL_MODIFICATION_FAILURE';
+		$message = \App\Language::translate($this->fieldModel->getFieldLabel(), $moduleName) . ': ' . \App\Language::translate($message, $moduleName);
+		$response = new Vtiger_Response();
+		$response->setResult(['result' => $result, 'message' => $message]);
+		$response->emit();
 	}
 }

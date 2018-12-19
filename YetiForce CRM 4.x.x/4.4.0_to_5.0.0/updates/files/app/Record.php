@@ -284,7 +284,6 @@ class Record
 	public static function getType($recordId)
 	{
 		$metadata = Functions::getCRMRecordMetadata($recordId);
-
 		return $metadata ? $metadata['setype'] : null;
 	}
 
@@ -336,14 +335,10 @@ class Record
 						->innerJoin('vtiger_crmentity', "{$fields['tablename']}.{$index} = vtiger_crmentity.crmid")
 						->where(["{$fields['tablename']}.{$index}" => $recordId, 'vtiger_crmentity.deleted' => 0])
 						->scalar();
-					if ($parentId) {
-						continue;
-					}
 				}
 			}
 		}
 		Cache::save('getParentRecord', $recordId, $parentId);
-
 		return $parentId;
 	}
 }

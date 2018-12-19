@@ -1,9 +1,12 @@
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 'use strict';
-var FC = $.fullCalendar; // a reference to FullCalendar's root namespace
-var View = FC.View;      // the class that all views must inherit from
+var FC = $.fullCalendar, // a reference to FullCalendar's root namespace
+	View = FC.View;      // the class that all views must inherit from
 
-var YearView = View.extend({
+/**
+ * Creates fullcalendar's View year subclass
+ */
+FC.views.year = View.extend({
 	calendarView: false,
 	renderHtml: function (year) {
 		let col2Breakpoint = 'col-xxl-2';
@@ -74,38 +77,40 @@ var YearView = View.extend({
 		if (user.length === 0) {
 			user = [app.getMainParams('userId')];
 		}
-		this.refreshDatesRowView(calendar.view);
+		let dateFormat = CONFIG.dateFormat.toUpperCase();
 		this.clearFilterButton(user, cvid);
 		let options = {
 			module: 'Calendar',
 			action: 'Calendar',
 			mode: 'getEventsYear',
-			start: date + '-01-01',
-			end: date + '-12-31',
+			start: moment(date + '-01-01').format(dateFormat),
+			end: moment(date + '-12-31').format(dateFormat),
 			user: user,
 			yearView: true,
 			time: app.getMainParams('showType'),
 			cvid: cvid,
-			historyUrl: `index.php?module=Calendar&view=CalendarExtended&history=true&viewType=${calendar.view.type}&start=${date + '-01-01'}&end=${date + '-12-31'}&user=${user}&time=${app.getMainParams('showType')}&cvid=${cvid}&hiddenDays=${calendar.view.options.hiddenDays}`
+			historyUrl: `index.php?module=Calendar&view=CalendarExtended&history=true&viewType=${calendar.view.type}&start=${moment(date + '-01-01').format(dateFormat)}&end=${moment(date + '-12-31').format(dateFormat)}&user=${user}&time=${app.getMainParams('showType')}&cvid=${cvid}&hiddenDays=${calendar.view.options.hiddenDays}`
 		};
 		let connectorMethod = window["AppConnector"]["request"];
-		if (!this.readonly) {
+		if (!this.readonly && calendarLoaded) {
 			connectorMethod = window["AppConnector"]["requestPjax"];
 		}
-		if (this.browserHistoryConfig && Object.keys(this.browserHistoryConfig).length && calendar.view.options.firstLoad) {
+		if (this.browserHistoryConfig && Object.keys(this.browserHistoryConfig).length && calendar.view.options.calendarLoaded) {
 			options = Object.assign(options, {
-				start: this.browserHistoryConfig.start,
-				end: this.browserHistoryConfig.end,
+				start: moment(this.browserHistoryConfig.start).format(dateFormat),
+				end: moment(this.browserHistoryConfig.end).format(dateFormat),
 				user: this.browserHistoryConfig.user,
 				time: this.browserHistoryConfig.time,
 				cvid: this.browserHistoryConfig.cvid
 			});
 			connectorMethod = window["AppConnector"]["request"];
+			app.setMainParams('showType', this.browserHistoryConfig.time);
+			app.setMainParams('usersId', this.browserHistoryConfig.user);
 		}
 		connectorMethod(options).done(function (events) {
 			yearView.find('.fc-year__month').each(function (i) {
 				let calendarInstance = new Calendar_Calendar_Js(self.container, self.readonly);
-				let basicOptions = calendarInstance.getCalendarMinimalConfig(),
+				let basicOptions = calendarInstance.setCalendarMinimalOptions(),
 					monthOptions = {
 						defaultView: 'month',
 						titleFormat: 'MMMM',
@@ -118,7 +123,7 @@ var YearView = View.extend({
 						defaultDate: moment(calendar.getDate().year() + '-' + (i + 1), "YYYY-MM-DD"),
 						eventRender: function (event, element) {
 							if (event.rendering === 'background') {
-								element.append(`<span class="${event.icon} mr-1"></span>${event.title}`);
+								element.append(`<span class="js-popover-tooltip" data-content="${event.title}" data-toggle="popover"><span class="${event.icon}"></span></span>`);
 								return element;
 							}
 							event.countShow = '99+';
@@ -127,9 +132,9 @@ var YearView = View.extend({
 							}
 							element = `<div class="js-show-day cell-calendar u-cursor-pointer d-flex" data-date="${event.date}" data-js="click">
 							<a class="fc-year__show-day-btn mx-auto" href="#" data-date="${event.date}" title="${event.count}">
-								  <span class="fa-layers fa-fw">
+								  <span class="fc-year__show-day-btn__container">
 									<span class="fas fa-calendar fa-lg"></span>
-									<span class="fc-year__show-day-btn__text fa-layers-text fa-inverse u-font-weight-700" data-fa-transform="shrink-6 down-4">${event.countShow}</span>
+									<span class="fc-year__show-day-btn__text fa-inverse u-font-weight-700">${event.countShow}</span>
 								  </span>	
 							</a>
 						</div>`;
@@ -147,12 +152,12 @@ var YearView = View.extend({
 		});
 		this.registerTodayButtonYearChange(calendar);
 		this.registerViewRenderEvents(calendar.view);
-		calendar.view.options.firstLoad = false;
+		calendarLoaded = true;
 	},
 
 	/**
 	 * Function extends today button functionality for year view
-	 * @param {$} calendar
+	 * @param {jQuery} calendar
 	 */
 	registerTodayButtonYearChange(calendar) {
 		if (calendar.currentDate.format('YYYY') === moment().format('YYYY')) {
@@ -162,5 +167,3 @@ var YearView = View.extend({
 		}
 	}
 });
-
-FC.views.year = YearView; // register our class with the view system

@@ -9,9 +9,7 @@
  */
 class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 {
-	public static $logoNames = ['logo_login', 'logo_main', 'logo_mail'];
-	public static $logoSupportedFormats = ['jpeg', 'jpg', 'png', 'gif', 'pjpeg', 'x-png'];
-	public $logoPath = 'public_html/layouts/resources/Logo/';
+	public static $logoPath = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'storage/CompaniesLogo';
 
 	/**
 	 * Function to get the Id.
@@ -100,8 +98,8 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	{
 		$value = $this->get($key);
 		switch ($key) {
-			case 'default':
-				$value = $this->getDisplayCheckboxValue($value);
+			case 'type':
+				$value = $this->getDisplayTypeValue((int) $value);
 				break;
 			case 'tabid':
 				$value = \App\Module::getModuleName($value);
@@ -112,16 +110,38 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 			case 'country':
 				$value = \App\Language::translateSingleMod($value, 'Other.Country');
 				break;
-			case 'logo_login':
-			case 'logo_main':
-			case 'logo_mail':
-				$src = \App\Fields\File::getImageBaseData($this->getLogoPath($value));
+			case 'logo':
+				$src = \App\Fields\File::getImageBaseData($this->getLogoPath());
 				$value = "<img src='$src' class='img-thumbnail'/>";
 				break;
 			default:
 				break;
 		}
 		return $value;
+	}
+
+	/**
+	 * Get the displayed value for the type column.
+	 *
+	 * @param int $value
+	 *
+	 * @return string
+	 */
+	public function getDisplayTypeValue(int $value): string
+	{
+		switch ($value) {
+			case 1:
+				$label = 'LBL_TYPE_TARGET_USER';
+				break;
+			case 2:
+				$label = 'LBL_TYPE_INTEGRATOR';
+				break;
+			case 3:
+			default:
+				$label = 'LBL_TYPE_PROVIDER';
+				break;
+		}
+		return \App\Language::translate($label, 'Settings::Companies');
 	}
 
 	/**
@@ -169,16 +189,14 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 				'linkicon' => 'fas fa-edit',
 				'linkclass' => 'btn btn-xs btn-info',
 			],
-		];
-		if (0 === $this->get('default')) {
-			$recordLinks[] = [
+			[
 				'linktype' => 'LISTVIEWRECORD',
 				'linklabel' => 'LBL_DELETE_RECORD',
 				'linkurl' => "javascript:Settings_Vtiger_List_Js.deleteById('{$this->getId()}')",
 				'linkicon' => 'fas fa-trash-alt',
 				'linkclass' => 'btn btn-xs btn-danger',
-			];
-		}
+			]
+		];
 		foreach ($recordLinks as $recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 		}
@@ -188,66 +206,15 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	/**
 	 * Function to get Logo path to display.
 	 *
-	 * @param string $name logo name
-	 *
 	 * @return string path
 	 */
-	public function getLogoPath($name)
+	public function getLogoPath()
 	{
-		$logo = $this->logoPath;
-		if (!is_dir($logo)) {
-			return '';
-		}
-		$iterator = new \DirectoryIterator($logo);
-		foreach ($iterator as $fileInfo) {
-			if ($name === $fileInfo->getFilename() && in_array($fileInfo->getExtension(), self::$logoSupportedFormats) && !$fileInfo->isDot() && !$fileInfo->isDir()) {
-				return $logo . $name;
-			}
+		$logo = static::$logoPath . $this->getId();
+		if (file_exists($logo)) {
+			return $logo;
 		}
 		return '';
-	}
-
-	/**
-	 * Function to save the logoinfo.
-	 */
-	public function saveLogo($name)
-	{
-		$uploadDir = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $this->logoPath;
-		$logoName = $uploadDir . \App\Fields\File::sanitizeUploadFileName($_FILES[$name]['name']);
-		move_uploaded_file($_FILES[$name]['tmp_name'], $logoName);
-		copy($logoName, $uploadDir . 'application.ico');
-	}
-
-	/**
-	 * Function to check if company duplicated.
-	 *
-	 * @param \App\Request $request
-	 *
-	 * @return bool
-	 */
-	public function isCompanyDuplicated(\App\Request $request)
-	{
-		$db = App\Db::getInstance('admin');
-		$query = new \App\Db\Query();
-		$query->from('s_#__companies')
-			->where(['name' => $request->get('name')])
-			->orWhere(['short_name' => $request->get('short_name')]);
-		if ($request->get('record')) {
-			$query->andWhere(['<>', 'id', $request->get('record')]);
-		}
-		return $query->exists($db);
-	}
-
-	/**
-	 * Function to set companies not default.
-	 *
-	 * @param string $name
-	 */
-	public function setCompaniesNotDefault($default)
-	{
-		if ($default) {
-			App\Db::getInstance('admin')->createCommand()->update('s_#__companies', ['default' => 0])->execute();
-		}
 	}
 
 	/**
@@ -257,23 +224,15 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	 */
 	public function saveCompanyLogos()
 	{
-		$logoDetails = [];
-		foreach (self::$logoNames as $image) {
-			$saveLogo[$image] = true;
-			if (!empty($_FILES[$image]['name'])) {
-				$logoDetails[$image] = $_FILES[$image];
-				$fileInstance = \App\Fields\File::loadFromRequest($logoDetails[$image]);
-				if (!$fileInstance->validate('image')) {
-					$saveLogo[$image] = false;
+		if (!empty($_FILES['logo']['name'])) {
+			$fileInstance = \App\Fields\File::loadFromRequest($_FILES['logo']);
+			if ($fileInstance->validate('image')) {
+				$path = static::$logoPath . $this->getId();
+				if (file_exists($path)) {
+					unlink($path);
 				}
-				if ($fileInstance->getShortMimeType(0) !== 'image' || !in_array($fileInstance->getShortMimeType(1), self::$logoSupportedFormats)) {
-					$saveLogo[$image] = false;
-				}
-				if ($saveLogo[$image]) {
-					$this->saveLogo($image);
-				}
+				$fileInstance->moveFile($path);
 			}
 		}
-		return $logoDetails;
 	}
 }

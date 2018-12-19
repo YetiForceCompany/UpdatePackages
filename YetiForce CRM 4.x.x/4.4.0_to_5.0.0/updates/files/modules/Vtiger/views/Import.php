@@ -130,6 +130,7 @@ class Vtiger_Import_View extends Vtiger_Index_View
 			if (!$autoMerge) {
 				$request->set('merge_type', 0);
 				$request->set('merge_fields', '');
+				$viewer->assign('MERGE_FIELDS', '');
 			} else {
 				$viewer->assign('MERGE_FIELDS', \App\Json::encode($request->get('merge_fields')));
 			}
@@ -148,8 +149,8 @@ class Vtiger_Import_View extends Vtiger_Index_View
 				}
 			}
 			if ($moduleModel->isInventory()) {
-				$inventoryFieldModel = Vtiger_InventoryField_Model::getInstance($moduleName);
-				$inventoryFields = $inventoryFieldModel->getFields(true);
+				$inventoryModel = Vtiger_Inventory_Model::getInstance($moduleName);
+				$inventoryFields = $inventoryModel->getFieldsByBlocks();
 				$inventoryFieldsBlock = [];
 				$blocksName = ['LBL_HEADLINE', 'LBL_BASIC_VERSE', 'LBL_ADDITIONAL_VERSE'];
 				foreach ($inventoryFields as $key => $data) {
@@ -255,13 +256,11 @@ class Vtiger_Import_View extends Vtiger_Index_View
 		$importId = $request->getInteger('import_id');
 		$user = App\User::getCurrentUserModel();
 		$importInfo = Import_Queue_Action::getImportInfoById($importId);
-		if ($importInfo !== null) {
-			if ($importInfo['user_id'] === $user->getId() || $user->isAdmin()) {
-				$importDataController = new Import_Data_Action($importInfo, \App\User::getUserModel($importInfo['user_id']));
-				$importStatusCount = $importDataController->getImportStatusCount();
-				$importDataController->finishImport();
-				Import_Main_View::showResult($importInfo, $importStatusCount);
-			}
+		if ($importInfo !== null && ($importInfo['user_id'] === $user->getId() || $user->isAdmin())) {
+			$importDataController = new Import_Data_Action($importInfo, \App\User::getUserModel($importInfo['user_id']));
+			$importStatusCount = $importDataController->getImportStatusCount();
+			$importDataController->finishImport();
+			Import_Main_View::showResult($importInfo, $importStatusCount);
 		}
 	}
 

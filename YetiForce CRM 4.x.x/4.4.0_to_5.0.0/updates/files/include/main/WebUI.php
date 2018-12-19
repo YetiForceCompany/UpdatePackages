@@ -116,7 +116,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 			if (empty($moduleName)) {
 				if ($this->hasLogin()) {
 					$defaultModule = AppConfig::main('default_module');
-					if (!empty($defaultModule) && $defaultModule !== 'Home') {
+					if (!empty($defaultModule) && $defaultModule !== 'Home' && \App\Privilege::isPermitted($defaultModule)) {
 						$moduleName = $defaultModule;
 						$qualifiedModuleName = $defaultModule;
 						$view = 'List';
@@ -195,7 +195,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint
 			\vtlib\Functions::throwNewException($e, false, $messageHeader);
 			if (!$request->isAjax()) {
 				if (AppConfig::debug('DISPLAY_EXCEPTION_BACKTRACE')) {
-					echo '<pre class="my-5 mx-auto card p-3 u-w-fit shadow">' . App\Purifier::encodeHtml(str_replace(ROOT_DIRECTORY . DIRECTORY_SEPARATOR, '', $e->getTraceAsString())) . '</pre>';
+					echo '<pre class="my-5 mx-auto card p-3 u-w-fit shadow">' . App\Purifier::encodeHtml(str_replace(ROOT_DIRECTORY . DIRECTORY_SEPARATOR, '', $e->__toString())) . '</pre>';
 					$response = false;
 				}
 				if (AppConfig::debug('DISPLAY_EXCEPTION_LOGS')) {

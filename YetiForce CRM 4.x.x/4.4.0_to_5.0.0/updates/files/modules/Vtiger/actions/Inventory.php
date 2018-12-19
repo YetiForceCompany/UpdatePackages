@@ -76,9 +76,9 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 		$baseCurrency = Vtiger_Util_Helper::getBaseCurrency();
 		$symbol = $baseCurrency['currency_symbol'];
 		if ($baseCurrency['id'] != $currency) {
-			$selectedCurrency = vtlib\Functions::getCurrencySymbolandRate($currency);
-			$price = (float) $price * $selectedCurrency['rate'];
-			$symbol = $selectedCurrency['symbol'];
+			$selectedCurrency = \App\Fields\Currency::getById($currency);
+			$price = (float) $price * $selectedCurrency['conversion_rate'];
+			$symbol = $selectedCurrency['currency_symbol'];
 		}
 		$totalPrice = $price + $balance;
 
@@ -148,19 +148,18 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 		if (in_array($recordModuleName, ['Products', 'Services'])) {
 			$conversionRate = 1;
 			$info['unitPriceValues'] = $recordModel->getListPriceValues($recordModel->getId());
-			$priceDetails = $recordModel->getPriceDetails();
-			foreach ($priceDetails as $currencyDetails) {
-				if ($currencyId == $currencyDetails['curid']) {
+			foreach ($recordModel->getPriceDetails() as $currencyDetails) {
+				if ($currencyId === (int) $currencyDetails['id']) {
 					$conversionRate = $currencyDetails['conversionrate'];
 				}
 			}
 			$info['price'] = (float) $recordModel->get('unit_price') * (float) $conversionRate;
 			$info['qtyPerUnit'] = $recordModel->getDisplayValue('qty_per_unit');
 		}
-		$inventoryField = Vtiger_InventoryField_Model::getInstance($moduleName);
-		$autoCompleteField = $inventoryField->getAutoCompleteFieldsByModule($recordModuleName);
+
 		$autoFields = [];
-		if ($autoCompleteField) {
+		$inventory = Vtiger_Inventory_Model::getInstance($moduleName);
+		if ($autoCompleteField = ($inventory->getAutoCompleteFields()[$recordModuleName] ?? [])) {
 			foreach ($autoCompleteField as $field) {
 				$fieldModel = Vtiger_Module_Model::getInstance($field['module'])->getFieldByName($field['field']);
 				if (($fieldValue = $recordModel->get($field['field'])) && $fieldModel) {
@@ -182,7 +181,7 @@ class Vtiger_Inventory_Action extends \App\Controller\Action
 				'value' => $taxModel->get('value')
 			];
 		}
-		$autoCustomFields = $inventoryField->getCustomAutoComplete($moduleName, $fieldName, $recordModel);
+		$autoCustomFields = $inventory->getCustomAutoComplete($fieldName, $recordModel);
 		return [$recordId => array_merge($info, $autoCustomFields)];
 	}
 

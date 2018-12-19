@@ -32,37 +32,18 @@ class Settings_Companies_SaveAjax_Action extends Settings_Vtiger_Basic_Action
 		} else {
 			$recordModel = new Settings_Companies_Record_Model();
 		}
-		$exists = $recordModel->isCompanyDuplicated($request);
-		if (!$exists) {
-			$recordModel->setCompaniesNotDefault($request->get('default'));
-			$logoDetails = $recordModel->saveCompanyLogos();
-			$columns = Settings_Companies_Module_Model::getColumnNames();
-			if ($columns) {
-				if ($request->isEmpty('default')) {
-					$columns = array_diff($columns, ['default']);
-				}
-				foreach ($columns as $fieldName) {
-					$fieldValue = $request->getByType($fieldName, 'Text');
-					if ($fieldName === 'logo_login' || $fieldName === 'logo_main' || $fieldName === 'logo_mail') {
-						if (!empty($logoDetails[$fieldName]['name'])) {
-							$fieldValue = ltrim(basename(' ' . \App\Fields\File::sanitizeUploadFileName($logoDetails[$fieldName]['name'])));
-						} else {
-							$fieldValue = $recordModel->get($fieldName);
-						}
-					}
-					if ('default' === $fieldName) {
-						$fieldValue = $request->getBoolean('default');
-					}
-					$recordModel->set($fieldName, $fieldValue);
-				}
-				$recordModel->save();
+		if ($columns = Settings_Companies_Module_Model::getColumnNames()) {
+			foreach ($columns as $fieldName) {
+				$recordModel->set($fieldName, $request->getByType($fieldName, 'Text'));
 			}
-			$result = ['success' => true, 'url' => $recordModel->getDetailViewUrl()];
-		} else {
-			$result = ['success' => false, 'message' => \App\Language::translate('LBL_COMPANY_NAMES_EXIST', $request->getModule(false))];
+			$recordModel->save();
+			$recordModel->saveCompanyLogos();
 		}
 		$response = new Vtiger_Response();
-		$response->setResult($result);
+		$response->setResult([
+			'success' => true,
+			'url' => $recordModel->getDetailViewUrl()
+		]);
 		$response->emit();
 	}
 }

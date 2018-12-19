@@ -138,7 +138,7 @@ class Language
 	 *
 	 * @return string - translated string
 	 */
-	public static function translate($key, $moduleName = '_Base', $language = false)
+	public static function translate($key, $moduleName = '_Base', $language = false, $encode = true)
 	{
 		if (empty($key)) { // nothing to translate
 			return $key;
@@ -157,19 +157,28 @@ class Language
 		}
 		static::loadLanguageFile($language, $moduleName);
 		if (isset(static::$languageContainer[$language][$moduleName]['php'][$key])) {
-			return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$moduleName]['php'][$key]));
+			if ($encode) {
+				return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$moduleName]['php'][$key]));
+			}
+			return \nl2br(static::$languageContainer[$language][$moduleName]['php'][$key]);
 		}
 		// Lookup for the translation in base module, in case of sub modules, before ending up with common strings
 		if (strpos($moduleName, 'Settings') === 0) {
 			$base = 'Settings' . DIRECTORY_SEPARATOR . '_Base';
 			static::loadLanguageFile($language, $base);
 			if (isset(static::$languageContainer[$language][$base]['php'][$key])) {
-				return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$base]['php'][$key]));
+				if ($encode) {
+					return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language][$base]['php'][$key]));
+				}
+				return \nl2br(static::$languageContainer[$language][$base]['php'][$key]);
 			}
 		}
 		static::loadLanguageFile($language);
 		if (isset(static::$languageContainer[$language]['_Base']['php'][$key])) {
-			return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language]['_Base']['php'][$key]));
+			if ($encode) {
+				return \nl2br(Purifier::encodeHtml(static::$languageContainer[$language]['_Base']['php'][$key]));
+			}
+			return \nl2br(static::$languageContainer[$language]['_Base']['php'][$key]);
 		}
 		\App\Log::info("Cannot translate this: '$key' for module '$moduleName', lang: $language");
 		return $key;
@@ -302,7 +311,7 @@ class Language
 					}
 				}
 				if (!file_exists($langFile) && !file_exists($langCustomFile)) {
-					\App\Log::warning("Language file does not exist, module: $moduleName ,language: $language");
+					\App\Log::info("Language file does not exist, module: $moduleName ,language: $language");
 				}
 				Cache::save('LanguageFiles', $language . $moduleName, static::$languageContainer[$language][$moduleName], Cache::LONG);
 			}

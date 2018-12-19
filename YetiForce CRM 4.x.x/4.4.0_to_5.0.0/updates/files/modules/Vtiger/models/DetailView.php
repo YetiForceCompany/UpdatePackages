@@ -167,7 +167,7 @@ class Vtiger_DetailView_Model extends \App\Base
 			$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues([
 				'linktype' => 'DETAIL_VIEW_BASIC',
 				'linklabel' => 'BTN_RECORD_OPEN',
-				'linkdata' => ['url' => 'index.php?module=' . $recordModel->getModuleName() . '&view=Unlock&record=' . $recordModel->getId()],
+				'linkdata' => ['url' => 'index.php?module=' . $recordModel->getModuleName() . '&view=RecordUnlock&record=' . $recordModel->getId()],
 				'linkicon' => 'fas fa-lock-open',
 				'linkclass' => 'js-show-modal btn-outline-dark btn-sm',
 				'linkhint' => 'BTN_RECORD_OPEN'
@@ -250,9 +250,9 @@ class Vtiger_DetailView_Model extends \App\Base
 				$linkModelList['DETAIL_VIEW_BASIC'][] = Vtiger_Link_Model::getInstanceFromValues([
 					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 					'linklabel' => \App\Language::translate('LBL_EXPORT_PDF'),
-					'linkurl' => 'javascript:Vtiger_Header_Js.getInstance().showPdfModal("index.php?module=' . $moduleName . '&view=PDF&fromview=Detail&record=' . $recordId . '");',
-					'linkicon' => 'fas fa-file-excel',
-					'linkclass' => 'btn-outline-dark btn-sm',
+					'dataUrl' => 'index.php?module=' . $moduleName . '&view=PDF&fromview=Detail&record=' . $recordId,
+					'linkicon' => 'fas fa-file-pdf',
+					'linkclass' => 'btn-outline-dark btn-sm showModal',
 					'title' => \App\Language::translate('LBL_EXPORT_PDF'),
 				]);
 			}

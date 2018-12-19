@@ -3,13 +3,13 @@
 	<div class="tpl-Settings-HideBlocks-EditView targetFieldsTableContainer">
 		<div class="widget_header row">
 			<div class="col-12">
-				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE)}
+				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE_NAME)}
 				{\App\Language::translate('LBL_HIDEBLOCKS_DESCRIPTION', $QUALIFIED_MODULE)}
 			</div>
 		</div>
 		<form method="post" action="index.php?module={$MODULE}&parent=Settings&view=Conditions">
 			<input type="hidden" name="record" value="{$RECORD_ID}" />
-			<div class="listViewEntriesDiv u-overflow-scroll-xs-down contents-bottomscroll" style="overflow-x: visible !important;">
+			<div class="listViewEntriesDiv u-overflow-scroll-xsm-down contents-bottomscroll" style="overflow-x: visible !important;">
 				<div class="bottomscroll-div table-responsive">
 					<table class="table table-bordered" width="100%" name="targetModuleFields">
 						<tr class="blockHeader">

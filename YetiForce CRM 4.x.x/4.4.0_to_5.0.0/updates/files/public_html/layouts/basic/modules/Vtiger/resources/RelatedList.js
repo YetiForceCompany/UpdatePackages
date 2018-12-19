@@ -766,7 +766,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 				if (response) {
 					var state = element.data('state') ? 0 : 1;
 					element.data('state', state);
-					element.find('[data-fa-i2svg]').each(function () {
+					element.find('.fas').each(function () {
 						if (jQuery(this).hasClass('d-none')) {
 							jQuery(this).removeClass('d-none');
 						} else {
@@ -889,6 +889,7 @@ jQuery.Class("Vtiger_RelatedList_Js", {
 		var mainBody = container.closest('.mainBody');
 		app.showNewScrollbarTopBottom(container.find('.js-list-preview--scroll'));
 		app.showNewScrollbarLeft(this.list);
+		mainBody.scrollTop(0); // reset scroll to set correct start position
 		let listOffsetTop = this.list.offset().top - this.headerH;
 		let initialH = this.sideBlocks.height();
 		let mainViewPortHeightCss = {height: mainBody.height()};
