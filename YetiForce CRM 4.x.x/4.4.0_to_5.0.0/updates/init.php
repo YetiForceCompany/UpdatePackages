@@ -476,6 +476,7 @@ class YetiForceUpdate
 		$this->actionMapp();
 		$this->addModules(['RecycleBin']);
 		$this->updateInventory();
+		$this->migrateLanguages();
 		$this->importer->dropTable([
 			'vtiger_cvadvfilter',
 			'vtiger_cvadvfilter_grouping',
@@ -488,7 +489,48 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-
+	private function getNewPrefixLang($prefix)
+	{
+		if (strpos($prefix, '-') !== false) {
+			return $prefix;
+		}
+		$oldPrefix = explode('_', $prefix, 2);
+		return $oldPrefix[0] . '-' . strtoupper($oldPrefix[1]);
+	}
+	private function migrateLanguages()
+	{
+		$db = App\Db::getInstance();
+		$allLanguages = (new \App\Db\Query())->from('vtiger_language')->all();
+		foreach ($allLanguages as $row) {
+			$prefix = $row['prefix'];
+			if (strpos($prefix, '-') !== false) {
+				continue;
+			}
+			$newPrefix = $this->getNewPrefixLang($prefix);
+			$db->createCommand()->update('vtiger_language', ['prefix' => $newPrefix], ['id' => $row['id']])->execute();
+		}
+		$dataReader = (new \App\Db\Query())->select(['tablename', 'columnname'])->from('vtiger_field')->where(['uitype' => 32])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			foreach ($allLanguages as $lang) {
+				$db->createCommand()->update($row['tablename'], [$row['columnname'] => $this->getNewPrefixLang($lang['prefix'])], [$row['columnname'] => $lang['prefix']])->execute();
+			}
+		}
+		$dirs = ['languages', 'custom/languages'];
+		foreach ($dirs as $directory) {
+			if (!is_dir($directory)) {
+				continue;
+			}
+			$dir = new \DirectoryIterator($directory);
+			foreach ($dir as $fileinfo) {
+				if ($fileinfo->getType() === 'dir') {
+					if (in_array($fileinfo->getFilename(), ['.', '..'])) {
+						continue;
+					}
+					rename($fileinfo->getPath() . DIRECTORY_SEPARATOR . $fileinfo->getFilename(), $fileinfo->getPath() . DIRECTORY_SEPARATOR . $this->getNewPrefixLang($fileinfo->getFilename()));
+				}
+			}
+		}
+	}
 	private function updateInventory()
 	{
 		$start = microtime(true);
@@ -1353,6 +1395,7 @@ class YetiForceUpdate
 		return [
 			['name' => 'config/config.inc.php', 'conditions' => [
 				['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
+				['type' => 'update', 'search' => '$default_language = \'' . AppConfig::main('default_language') .'\';', 'replace' => ['$default_language = \'' . AppConfig::main('default_language') . '\';', '$default_language = \'' . $this->getNewPrefixLang(AppConfig::main('default_language')) . '\';']],
 			],
 			],
 			['name' => 'config/modules/Calendar.php', 'conditions' => [
