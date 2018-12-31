@@ -1484,7 +1484,7 @@ class YetiForceUpdate
 				['type' => 'add', 'search' => '];', 'checkInContents' => 'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER', 'addingType' => 'before', 'value' => "	/**
 	 * Cache lifetime for SensioLabs security checker.
 	 */
-	'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER' => 3600
+	'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER' => 3600,
 "],
 			],
 			],
@@ -1680,7 +1680,7 @@ class YetiForceUpdate
 					foreach ($subRoles as $subRoleId) {
 						$subRoleAndUsers[$subRoleId] = \App\PrivilegeUtil::getUsersNameByRole($subRoleId);
 					}
-					$parentRoles = PrivilegeUtil::getParentRole($userRole);
+					$parentRoles = \App\PrivilegeUtil::getParentRole($userRole);
 					$newBuf .= "\$current_user_roles='" . $userRole . "';\n";
 					$newBuf .= "\$current_user_parent_role_seq='" . $userRoleParent . "';\n";
 					$newBuf .= '$current_user_profiles=' . App\Utils::varExport(App\PrivilegeUtil::getProfilesByRole($userRole)) . ";\n";
