@@ -70,16 +70,20 @@ class Project extends CRMEntity
 		// Format: Field Label => Array(tablename, columnname)
 		// tablename should not have prefix 'vtiger_'
 		'Project Name' => ['project', 'projectname'],
+		'Related to' => ['project', 'linktoaccountscontacts'],
 		'Start Date' => ['project', 'startdate'],
 		'Status' => ['project', 'projectstatus'],
 		'Type' => ['project', 'projecttype'],
+		'SINGLE_SSalesProcesses' => ['project', 'ssalesprocessesid'],
 	];
 	public $search_fields_name = [
 		// Format: Field Label => fieldname
 		'Project Name' => 'projectname',
+		'Related to' => 'linktoaccountscontacts',
 		'Start Date' => 'startdate',
 		'Status' => 'projectstatus',
 		'Type' => 'projecttype',
+		'SINGLE_SSalesProcesses' => 'ssalesprocessesid',
 	];
 	// For Popup window record selection
 	public $popup_fields = ['projectname'];
@@ -129,7 +133,7 @@ class Project extends CRMEntity
 				}
 			}
 
-			\App\Fields\RecordNumber::setNumber($moduleName, 'PROJ', 1);
+			\App\Fields\RecordNumber::getInstance($moduleName)->set('prefix', 'PROJ')->set('cur_id', 1)->save();
 		} elseif ($eventType === 'module.postupdate') {
 			// Add Comments widget to Project module
 			$modcommentsModuleInstance = vtlib\Module::getInstance('ModComments');
@@ -140,7 +144,7 @@ class Project extends CRMEntity
 				}
 			}
 
-			\App\Fields\RecordNumber::setNumber($moduleName, 'PROJ', 1);
+			\App\Fields\RecordNumber::getInstance($moduleName)->set('prefix', 'PROJ')->set('cur_id', 1)->save();
 		}
 	}
 

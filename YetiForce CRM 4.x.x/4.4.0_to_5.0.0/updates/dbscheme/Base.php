@@ -48,7 +48,6 @@ class Base extends \App\Db\Importers\Base
 					'conditions' => $this->text(),
 					'watermark_type' => $this->smallInteger(1)->notNull()->defaultValue(0),
 					'watermark_text' => $this->stringType()->notNull(),
-					'watermark_size' => $this->smallInteger(2)->unsigned()->notNull(),
 					'watermark_angle' => $this->smallInteger(3)->unsigned()->notNull(),
 					'watermark_image' => $this->stringType()->notNull(),
 					'template_members' => $this->text()->notNull(),
@@ -60,7 +59,6 @@ class Base extends \App\Db\Importers\Base
 					'margin_chkbox' => $this->tinyInteger(1),
 					'default' => $this->tinyInteger(1),
 					'watermark_type' => $this->tinyInteger(1)->notNull()->defaultValue(0),
-					'watermark_size' => $this->tinyInteger(2)->unsigned()->notNull(),
 					'one_pdf' => $this->tinyInteger(1),
 				],
 				'index' => [
@@ -284,6 +282,15 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__modentity_sequences' => [
+				'columns' => [
+					'tabid' => $this->smallInteger(5)->notNull(),
+					'value' => $this->stringType(),
+					'cur_id' => $this->integer(10)->unsigned()->defaultValue(0)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'u_#__picklist_close_state' => [
 				'columns' => [
 					'valueid' => $this->integer()->notNull(),
@@ -405,6 +412,31 @@ class Base extends \App\Db\Importers\Base
 				],
 				'primaryKeys' => [
 					['field_pk', 'fieldid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_language' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(6),
+					'name' => $this->stringType(50)->notNull(),
+					'prefix' => $this->stringType(10)->notNull(),
+					'lastupdated' => $this->dateTime(),
+					'sequence' => $this->smallInteger(6)->unsigned(),
+					'isdefault' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'active' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(1)
+				],
+				'columns_mysql' => [
+					'id' => $this->smallInteger()->unsigned()->autoIncrement()->notNull(),
+					'isdefault' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'active' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1)
+				],
+				'index' => [
+					['prefix', 'prefix'],
+					['isdefault', 'isdefault'],
+				],
+				'primaryKeys' => [
+					['language_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -923,6 +955,7 @@ class Base extends \App\Db\Importers\Base
 			['u_#__favorite_shared_owners_tabid_fk', 'u_#__favorite_shared_owners', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
 			['u_#__favorite_shared_owners_userid_fk', 'u_#__favorite_shared_owners', 'userid', 'vtiger_users', 'id', 'CASCADE', 'RESTRICT'],
 			['u_#__modtracker_inv_id_fk', 'u_#__modtracker_inv', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', 'RESTRICT'],
+			['u_#__modentity_sequences_tabid_fk', 'u_#__modentity_sequences', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
 		];
 	}
 }

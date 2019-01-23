@@ -22,11 +22,11 @@
 						<span class="input-group-prepend">
 							<div class="input-group-text"><span class="fas fa-comments"></span></div>
 						</span>
-						<textarea rows="{$COMMENT_TEXTAREA_DEFAULT_ROWS}" name="commentcontent"
-								  class="js-comment-content commentcontent form-control"
-								  title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-								  placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-								  data-js="val"></textarea>
+						<div name="commentcontent" contenteditable="true"
+							 class="js-comment-content commentcontent form-control js-chat-message js-completions"
+							 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+							 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+							 data-js="html | tribute.js"></div>
 					</div>
 					<button class="btn btn-success mt-3 js-save-comment float-right" type="button"
 							data-mode="add"
@@ -41,9 +41,6 @@
 	<div class="row">
 		<div class="col-lg-6"></div>
 		<div class="col-md-12 col-lg-6 form-row commentsHeader my-3">
-			{if count($HIERARCHY_LIST) == 1}
-				<div class="col-6 col-lg-6 col-md-6 col-sm-6 p-0"></div>
-			{/if}
 			<div class="col-6 col-lg-6 col-md-6 col-sm-6 p-0">
 				<div class="input-group-append bg-white rounded-right">
 					<input type="text" class="js-comment-search form-control"
@@ -55,24 +52,29 @@
 					</button>
 				</div>
 			</div>
-			{if count($HIERARCHY_LIST) != 1}
+			{if $HIERARCHY !== false && $HIERARCHY < 2}
 				<div class="col-5 col-lg-6 col-md-6 col-sm-6 p-0 text-right m-md-0 m-lg-0"
 					 data-toggle="buttons">
 					<div class="btn-group btn-group-toggle detailCommentsHierarchy" data-toggle="buttons">
-						<label class="btn btn-sm btn-outline-primary {if $HIERARCHY_VALUE !== 'all'}active{/if}">
-							<input class="js-detail-hierarchy-comments" type="radio"
-								   name="options" id="option1"
-								   value="current" autocomplete="off"
-								   {if $HIERARCHY_VALUE !== 'all'}checked="checked"{/if}
-								   data-js="change"
-							> {\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}
+						<label class="js-detail-hierarchy-comments-btn c-btn-block-sm-down mt-1 mt-sm-0 btn btn-outline-primary {if in_array('current', $HIERARCHY_VALUE)}active{/if}"
+							   title="{\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}" data-js="click">
+							<input name="options" type="checkbox"
+								   class="js-detail-hierarchy-comments"
+								   data-js="val"
+								   value="current"
+									{if in_array('current', $HIERARCHY_VALUE)} checked="checked"{/if}
+								   autocomplete="off"/>
+							{\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}
 						</label>
-						<label class="btn btn-sm btn-outline-primary {if $HIERARCHY_VALUE === 'all'}active{/if}">
-							<input class="js-detail-hierarchy-comments" type="radio"
-								   name="options" id="option2" value="all"
-								   {if $HIERARCHY_VALUE === 'all'}checked="checked"{/if}
-								   data-js="change"
-								   autocomplete="off"> {\App\Language::translate('LBL_ALL_RECORDS', 'ModComments')}
+						<label class="js-detail-hierarchy-comments-btn c-btn-block-sm-down mt-1 mt-sm-0 btn btn-outline-primary {if in_array('related', $HIERARCHY_VALUE)}active{/if}"
+							   title="{\App\Language::translate('LBL_ALL_RECORDS', 'ModComments')}" data-js="click">
+							<input name="options" type="checkbox"
+								   class="js-detail-hierarchy-comments"
+								   data-js="val"
+								   value="related"
+									{if in_array('related', $HIERARCHY_VALUE)} checked="checked"{/if}
+								   autocomplete="off"/>
+							{\App\Language::translate('LBL_ALL_RECORDS', 'ModComments')}
 						</label>
 					</div>
 				</div>

@@ -110,9 +110,7 @@ class IcalendarComponent
 		// If this property is restricted to only once, blindly overwrite value
 		if (!$xname && $this->valid_properties[$name] & RFC2445_ONCE) {
 			$this->properties[$name] = [$property];
-		}
-
-		// Otherwise add it to the instance array for this property
+		} // Otherwise add it to the instance array for this property
 		else {
 			$this->properties[$name][] = $property;
 		}
@@ -262,11 +260,7 @@ class IcalendarComponent
 	{
 		$activity = [];
 		$activitytype = $ical_activity['TYPE'];
-		if ($activitytype == 'VEVENT') {
-			$modtype = 'Events';
-		} else {
-			$modtype = 'Calendar';
-		}
+		$modtype = 'Calendar';
 		foreach ($this->mapping_arr as $key => $comp) {
 			$type = $comp['type'];
 			$component = $comp['component'];
@@ -362,23 +356,13 @@ class IcalendarComponent
 				$activity['activitystatus'] = 'PLL_PLANNED';
 			}
 		}
-		if ($activity['visibility'] == 'PUBLIC') {
-			$activity['visibility'] = 'Public';
-		}
-		if ($activity['visibility'] == 'PRIVATE' || empty($activity['visibility'])) {
-			$activity['visibility'] = 'Private';
-		}
-		if (array_key_exists('taskpriority', $activity)) {
-			$priorityMap = ['1' => 'Low', '5' => 'Medium', '9' => 'High'];
-			$priorityval = $activity['taskpriority'];
-			if (array_key_exists($priorityval, $priorityMap)) {
-				$activity['taskpriority'] = $priorityMap[$priorityval];
+		$activity['visibility'] = isset($activity['visibility']) && $activity['visibility'] === 'PUBLIC' ? 'Public' : 'Private';
+		if (isset($activity['taskpriority'])) {
+			$priorityMap = ['1' => 'Low', '2' => 'Medium', '3' => 'High'];
+			if (isset($priorityMap[$activity['taskpriority']])) {
+				$activity['taskpriority'] = $priorityMap[$activity['taskpriority']];
 			}
 		}
-		if (!array_key_exists('visibility', $activity)) {
-			$activity['visibility'] = ' ';
-		}
-
 		return $activity;
 	}
 

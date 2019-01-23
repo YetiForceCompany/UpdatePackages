@@ -54,7 +54,7 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public function getWatermarkType()
 	{
-		return ['text' => 'PLL_TEXT'];
+		return [0 => 'PLL_TEXT', 1 => 'PLL_IMAGE'];
 	}
 
 	/**
@@ -420,14 +420,22 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public function getFormat()
 	{
-		$format = $this->get('page_format');
+		return $this->get('page_format');
+	}
+
+	/**
+	 * Get page orientation.
+	 *
+	 * @return string
+	 */
+	public function getOrientation()
+	{
 		$orientation = $this->get('page_orientation');
 		if ($orientation === 'PLL_LANDSCAPE') {
-			$format .= 'L';
+			return 'L';
 		} else {
-			$format .= 'P';
+			return 'P';
 		}
-		return $format;
 	}
 
 	/**
@@ -481,7 +489,7 @@ class Vtiger_PDF_Model extends \App\Base
 	 */
 	public static function attachToEmail($salt)
 	{
-		header('Location: index.php?module=OSSMail&view=Compose&pdf_path=' . $salt);
+		header('location: index.php?module=OSSMail&view=Compose&pdf_path=' . $salt);
 	}
 
 	/**
@@ -517,11 +525,11 @@ class Vtiger_PDF_Model extends \App\Base
 		$size = filesize($fileName);
 		$name = basename($fileName);
 
-		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
-		header("Content-Type: $mimeType");
-		header('Content-Disposition: attachment; filename="' . $name . '";');
-		header('Accept-Ranges: bytes');
-		header('Content-Length: ' . $size);
+		header('expires: Sat, 26 Jul 1997 05:00:00 GMT');
+		header("content-type: $mimeType");
+		header('content-disposition: attachment; filename="' . $name . '";');
+		header('accept-ranges: bytes');
+		header('content-length: ' . $size);
 
 		readfile($fileName);
 		// delete temporary zip file and saved pdf files

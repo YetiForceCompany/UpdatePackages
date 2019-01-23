@@ -177,9 +177,9 @@ Vtiger_Base_Validator_Js("Vtiger_Integer_Validator_Js", {
 	 */
 	validate: function () {
 		let fieldValue = this.getFieldValue(),
-		groupSeperator = CONFIG.currencyGroupingSeparator,
-		integerRegex = new RegExp('(^[-+]?[\\d\\' + groupSeperator + ']+)$', 'g'),
-		decimalIntegerRegex = new RegExp('(^[-+]?[\\d\\' + groupSeperator + ']?).\\d+$', 'g');
+			groupSeperator = CONFIG.currencyGroupingSeparator,
+			integerRegex = new RegExp('(^[-+]?[\\d\\' + groupSeperator + ']+)$', 'g'),
+			decimalIntegerRegex = new RegExp('(^[-+]?[\\d\\' + groupSeperator + ']?).\\d+$', 'g');
 		if ((!fieldValue.match(integerRegex))) {
 			if (!fieldValue.match(decimalIntegerRegex)) {
 				var errorInfo = app.vtranslate("JS_PLEASE_ENTER_INTEGER_VALUE");
@@ -1263,7 +1263,7 @@ Vtiger_Base_Validator_Js("Vtiger_AlphaNumericWithSlashesCurlyBraces_Validator_Js
 	validate: function () {
 		var field = this.getElement();
 		var fieldValue = field.val();
-		var alphaNumericRegex = /^[\/a-z\\0-9{} _-]*$/i;
+		var alphaNumericRegex = /^[\/a-z\\0-9{}: _-]*$/i;
 		if (!fieldValue.match(alphaNumericRegex)) {
 			var errorInfo = app.vtranslate("JS_CONTAINS_ILLEGAL_CHARACTERS");
 			this.setError(errorInfo);
@@ -1347,6 +1347,7 @@ Vtiger_Base_Validator_Js("Vtiger_Textparser_Validator_Js", {
 		return true;
 	}
 });
+
 Vtiger_Base_Validator_Js("Vtiger_YetiForceCompanyName_Validator_Js", {
 	invokeValidation: function (field, rules, i, options) {
 		var instance = new Vtiger_YetiForceCompanyName_Validator_Js();
@@ -1367,6 +1368,54 @@ Vtiger_Base_Validator_Js("Vtiger_YetiForceCompanyName_Validator_Js", {
 		const fieldValue = field.val();
 		if (fieldValue.toLowerCase().indexOf('yetiforce') >= 0) {
 			this.setError(app.vtranslate('JS_YETIFORCE_COMPANY_NAME_NOT_ALLOWED'));
+			return false;
+		}
+		return true;
+	}
+});
+Vtiger_Base_Validator_Js("Vtiger_MultiImage_Validator_Js", {
+	invokeValidation(field, rules, i, options) {
+		const instance = new Vtiger_MultiImage_Validator_Js();
+		instance.setElement(field);
+		if (instance.validate() != true) {
+			return instance.getError();
+		}
+	}
+}, {
+	validate() {
+		let response = this._super();
+		if (response != true) {
+			return response;
+		}
+		const field = this.getElement();
+		const fieldValue = field.val();
+		if (field.data('fieldinfo').mandatory && JSON.parse(fieldValue).length === 0) {
+			this.setError(app.vtranslate('JS_REQUIRED_FIELD'));
+			return false;
+		}
+		return true;
+	}
+});
+Vtiger_Base_Validator_Js("Vtiger_MaxSizeInByte_Validator_Js", {
+	invokeValidation(field, rules, i, options) {
+		const instance = new Vtiger_MaxSizeInByte_Validator_Js();
+		instance.setElement(field);
+		if (instance.validate() != true) {
+			return instance.getError();
+		}
+	}
+}, {
+	validate() {
+		let response = this._super();
+		if (response != true) {
+			return response;
+		}
+		const field = this.getElement();
+		const fieldValue = field.val();
+		if (field.data('fieldinfo').maximumlength && new TextEncoder().encode(fieldValue).byteLength > field.data('fieldinfo').maximumlength) {
+			this.setError(
+				app.vtranslate('JS_MAXIMUM_TEXT_SIZE_IN_BYTES') + ' ' + field.data('fieldinfo').maximumlength
+			);
 			return false;
 		}
 		return true;

@@ -71,17 +71,20 @@ class Vtiger_Pagination_View extends Vtiger_IndexAjax_View
 		$totalCount = (int) $request->get('totalCount');
 		if (AppConfig::performance('LISTVIEW_COMPUTE_PAGE_COUNT') || $totalCount == -1) {
 			$listViewModel = Vtiger_ListView_Model::getInstance($moduleName, $cvId);
+			$operator = 's';
 			if (!$request->isEmpty('operator', true)) {
-				$listViewModel->set('operator', $request->getByType('operator', 1));
+				$operator = $request->getByType('operator');
+				$listViewModel->set('operator', $operator);
 			}
 			if (!$request->isEmpty('search_key', true) && !$request->isEmpty('search_value', true)) {
-				$listViewModel->set('search_key', $request->getByType('search_key', 1));
-				$listViewModel->set('search_value', $request->get('search_value'));
+				$searchKey = $request->getByType('search_key', 'Alnum');
+				$listViewModel->set('search_key', $searchKey);
+				$listViewModel->set('search_value', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $moduleName, $searchKey, $operator));
 			}
 			if ($request->has('entityState')) {
 				$listViewModel->set('entityState', $request->getByType('entityState'));
 			}
-			$searchParmams = $request->getArray('search_params');
+			$searchParmams = App\Condition::validSearchParams($moduleName, $request->getArray('search_params'));
 			if (!empty($searchParmams) && is_array($searchParmams)) {
 				$transformedSearchParams = $listViewModel->get('query_generator')->parseBaseSearchParamsToCondition($searchParmams);
 				$listViewModel->set('search_params', $transformedSearchParams);

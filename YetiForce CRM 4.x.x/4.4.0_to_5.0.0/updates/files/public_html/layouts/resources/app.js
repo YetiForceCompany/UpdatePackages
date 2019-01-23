@@ -10,8 +10,64 @@
 'use strict';
 
 //Globals initialization
-var App = {},
-	AppConnector,
+var AppConnector,
+	App = {
+		Components: {
+			Tree: {
+				Basic: class {
+					constructor(container = $('.js-tree-container')) {
+						this.treeInstance = false;
+						this.treeData = false;
+						this.generateTree(container);
+					}
+
+					generateTree(container) {
+						const slef = this;
+						if (slef.treeInstance === false) {
+							slef.treeInstance = container;
+							slef.treeInstance.on('select_node.jstree', function (e, data) {
+								data.instance.select_node(data.node.children_d);
+							}).on('deselect_node.jstree', function (e, data) {
+								data.instance.deselect_node(data.node.children_d);
+							}).jstree({
+								core: {
+									data: slef.getRecords(container),
+									themes: {
+										name: 'proton',
+										responsive: true
+									},
+								},
+								plugins: ["search", "checkbox"]
+							});
+							this.registerSearchEvent();
+						}
+					}
+
+					registerSearchEvent() {
+						const self = this;
+						let searchTimeout = false,
+							treeSearch = $('.js-tree-search');
+						treeSearch.on('keyup', () => {
+							if (searchTimeout) {
+								clearTimeout(searchTimeout);
+							}
+							searchTimeout = setTimeout(function () {
+								var searchValue = treeSearch.val();
+								self.treeInstance.jstree(true).search(searchValue);
+							}, 250);
+						});
+					}
+
+					getRecords(container) {
+						if (this.treeData === false && container !== "undefined") {
+							this.treeData = JSON.parse(container.find('.js-tree-data').val());
+						}
+						return this.treeData;
+					}
+				}
+			}
+		}
+	},
 	app = {
 		/**
 		 * variable stores client side language strings
@@ -78,6 +134,26 @@ var App = {},
 			return recordId;
 		},
 		/**
+		 * Function which will give you all details of the selected record
+		 * @params {object} params - an object of values like {'record' : recordId, 'module' : searchModule, 'fieldType' : 'email'}
+		 */
+		getRecordDetails: function (params) {
+			let aDeferred = $.Deferred();
+			if (app.getParentModuleName() === 'Settings') {
+				params.parent = 'Settings';
+			}
+			AppConnector.request(Object.assign(params, {action: 'GetData'})).done(function (data) {
+				if (data.success) {
+					aDeferred.resolve(data);
+				} else {
+					aDeferred.reject(data.message);
+				}
+			}).fail(function (error) {
+				aDeferred.reject();
+			});
+			return aDeferred.promise();
+		},
+		/**
 		 * Function to get language
 		 */
 		getLanguage: function () {
@@ -117,6 +193,19 @@ var App = {},
 				$("<style type='text/css'> ::-webkit-scrollbar { display: none;} </style>").appendTo('head');
 			}
 			return supportsTouch;
+		},
+		/**
+		 * Check if string is json
+		 * @param {string} str
+		 * @returns {boolean}
+		 */
+		isJsonString(str) {
+			try {
+				JSON.parse(str);
+			} catch (e) {
+				return false;
+			}
+			return true;
 		},
 		/**
 		 * Function to set page title
@@ -792,8 +881,9 @@ var App = {},
 				autoclose: true,
 				twelvehour: formatTime,
 				minutestep: 5,
-				ampmSubmit: false
+				ampmSubmit: true,
 			};
+
 			$('.js-clock__btn').on('click', (e) => {
 				e.stopPropagation();
 				let tempElement = $(e.currentTarget).closest('.time').find('input.clockPicker');
@@ -801,7 +891,22 @@ var App = {},
 					tempElement.clockpicker('show');
 				}
 			});
-			elementClockBtn.clockpicker(params);
+
+			let formatTimeString = (timeInput) => {
+				if (params.twelvehour) {
+					params.afterDone = () => { //format time string after picking a value
+						let timeString = timeInput.val(),
+							timeStringFormatted = [timeString.slice(0, timeString.length - 2), ' ', timeString.slice(timeString.length - 2)].join('');
+						timeInput.val(timeStringFormatted);
+					};
+				}
+			}
+
+			elementClockBtn.each((i, e) => {
+				let timeInput = $(e);
+				formatTimeString(timeInput);
+				timeInput.clockpicker(params);
+			});
 		},
 		registerDataTables: function (table, options = {}) {
 			if ($.fn.dataTable == undefined) {
@@ -1829,6 +1934,7 @@ var App = {},
 			})
 		}
 	};
+CKEDITOR.disableAutoInline = true;
 $(document).ready(function () {
 	let document = $(this);
 	app.registerToggleIconClick(document);

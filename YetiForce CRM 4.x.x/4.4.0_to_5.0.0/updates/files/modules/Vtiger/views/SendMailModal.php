@@ -96,15 +96,15 @@ class Vtiger_SendMailModal_View extends Vtiger_BasicModal_View
 		if (!empty($searchResult)) {
 			$listView->set('searchResult', $searchResult);
 		}
-		$searchKey = $request->getByType('search_key', 1);
-		$searchValue = $request->get('search_value');
-		$operator = $request->getByType('operator', 1);
+		$searchKey = $request->getByType('search_key', 'Alnum');
+		$operator = $request->getByType('operator');
+		$searchValue = App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $listView->getQueryGenerator()->getModule(), $searchKey, $operator);
 		if (!empty($searchKey) && !empty($searchValue)) {
 			$listView->set('operator', $operator);
 			$listView->set('search_key', $searchKey);
 			$listView->set('search_value', $searchValue);
 		}
-		$searchParams = $request->getArray('search_params');
+		$searchParams = App\Condition::validSearchParams($listView->getQueryGenerator()->getModule(), $request->getArray('search_params'));
 		if (!empty($searchParams) && is_array($searchParams)) {
 			$transformedSearchParams = $listView->getQueryGenerator()->parseBaseSearchParamsToCondition($searchParams);
 			$listView->set('search_params', $transformedSearchParams);

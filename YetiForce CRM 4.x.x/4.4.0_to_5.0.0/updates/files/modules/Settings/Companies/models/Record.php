@@ -101,6 +101,9 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 			case 'type':
 				$value = $this->getDisplayTypeValue((int) $value);
 				break;
+			case 'status':
+				$value = $this->getDisplayStatusValue((int) $value);
+				break;
 			case 'tabid':
 				$value = \App\Module::getModuleName($value);
 				break;
@@ -145,6 +148,18 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	}
 
 	/**
+	 * Get the displayed value for the type column.
+	 *
+	 * @param int $value
+	 *
+	 * @return string
+	 */
+	public function getDisplayStatusValue(int $value): string
+	{
+		return \App\Language::translate(\App\YetiForce\Register::STATUS_MESSAGES[$value], 'Settings::Companies');
+	}
+
+	/**
 	 * Function to get the Display Value, for the checbox field type with given DB Insert Value.
 	 *
 	 * @param int $value
@@ -181,22 +196,26 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	public function getRecordLinks()
 	{
 		$links = [];
-		$recordLinks = [
-			[
-				'linktype' => 'LISTVIEWRECORD',
-				'linklabel' => 'LBL_EDIT_RECORD',
-				'linkurl' => $this->getEditViewUrl(),
-				'linkicon' => 'fas fa-edit',
-				'linkclass' => 'btn btn-xs btn-info',
-			],
-			[
+		$recordLinks = [];
+		$recordLinks[] = [
+			'linktype' => 'LISTVIEWRECORD',
+			'linklabel' => 'LBL_EDIT_RECORD',
+			'linkurl' => $this->getEditViewUrl(),
+			'linkicon' => 'fas fa-edit',
+			'linkclass' => 'btn btn-xs btn-info',
+		];
+		if (is_null(Settings_Companies_ListView_Model::$recordsCount)) {
+			Settings_Companies_ListView_Model::$recordsCount = (new \App\Db\Query())->from('s_#__companies')->count();
+		}
+		if (Settings_Companies_ListView_Model::$recordsCount > 1) {
+			$recordLinks[] = [
 				'linktype' => 'LISTVIEWRECORD',
 				'linklabel' => 'LBL_DELETE_RECORD',
 				'linkurl' => "javascript:Settings_Vtiger_List_Js.deleteById('{$this->getId()}')",
 				'linkicon' => 'fas fa-trash-alt',
 				'linkclass' => 'btn btn-xs btn-danger',
-			]
-		];
+			];
+		}
 		foreach ($recordLinks as $recordLink) {
 			$links[] = Vtiger_Link_Model::getInstanceFromValues($recordLink);
 		}
@@ -234,5 +253,24 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 				$fileInstance->moveFile($path);
 			}
 		}
+	}
+
+	/**
+	 * Function to check if company duplicated.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @return bool
+	 */
+	public function isCompanyDuplicated(\App\Request $request)
+	{
+		$db = App\Db::getInstance('admin');
+		$query = new \App\Db\Query();
+		$query->from('s_#__companies')
+			->where(['name' => $request->get('name')]);
+		if ($request->get('record')) {
+			$query->andWhere(['<>', 'id', $request->get('record')]);
+		}
+		return $query->exists($db);
 	}
 }

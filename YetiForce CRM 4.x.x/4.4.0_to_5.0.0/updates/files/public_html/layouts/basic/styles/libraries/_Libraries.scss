@@ -276,8 +276,12 @@ ul.ui-autocomplete {
 	height: 0 !important;
 }
 
-.pdfTemplateContents .cke {
+#pdf_step2 .cke {
 	border: 0px;
+}
+
+.cke_autocomplete_panel {
+	width: 300px !important;
 }
 
 //-------- js-tree --------//
@@ -396,4 +400,23 @@ ul.ui-autocomplete {
 	background-size: cover;
 	width: 1.3em;
 	margin-left: 2px;
+}
+
+//-------- tribute.js --------//
+//styles based on bootstrap dropdown
+.tribute-container {
+	border: 1px solid rgba(0, 0, 0, .15);
+	border-radius: .25rem;
+	min-width: 10rem;
+
+	ul {
+		color: #212529;
+		background-color: #fff;
+		background-clip: padding-box;
+	}
+
+	li.highlight,
+	li:hover {
+		background: #f8f9fa;
+	}
 }

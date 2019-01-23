@@ -93,16 +93,16 @@ class ConfReport
 		'session_regenerate_id' => ['recommended' => 'On', 'type' => 'SessionRegenerate', 'testCli' => true],
 		'disable_functions' => ['recommended' => 'shell_exec, exec, system, passthru', 'type' => 'In', 'container' => 'php', 'testCli' => true],
 		'allow_url_include' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true],
-		'Header: Server' => ['recommended' => '', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: X-Powered-By' => ['recommended' => '', 'type' => 'Header', 'contaiuse_only_cookiesner' => 'request', 'testCli' => false],
-		'Header: X-Frame-Options' => ['recommended' => 'SAMEORIGIN', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: X-XSS-Protection' => ['recommended' => '1; mode=block', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: X-Content-Type-Options' => ['recommended' => 'nosniff', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: X-Robots-Tag' => ['recommended' => 'none', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: X-Permitted-Cross-Domain-Policies' => ['recommended' => 'none', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: Expect-CT' => ['recommended' => 'enforce; max-age=3600', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: Referrer-Policy' => ['recommended' => 'no-referrer', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
-		'Header: Strict-Transport-Security' => ['recommended' => 'max-age=31536000; includeSubDomains; preload', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: server' => ['recommended' => '', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: x-powered-by' => ['recommended' => '', 'type' => 'Header', 'contaiuse_only_cookiesner' => 'request', 'testCli' => false],
+		'Header: x-frame-options' => ['recommended' => 'sameorigin', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: x-xss-protection' => ['recommended' => '1; mode=block', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: x-content-type-options' => ['recommended' => 'nosniff', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: x-robots-tag' => ['recommended' => 'none', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: x-permitted-cross-domain-policies' => ['recommended' => 'none', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: expect-ct' => ['recommended' => 'enforce; max-age=3600', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: referrer-policy' => ['recommended' => 'no-referrer', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
+		'Header: strict-transport-security' => ['recommended' => 'max-age=31536000; includeSubDomains; preload', 'type' => 'Header', 'container' => 'request', 'testCli' => false],
 	];
 	/**
 	 * Libraries map.
@@ -322,7 +322,7 @@ class ConfReport
 	 *
 	 * @return mixed
 	 */
-	public static function getAll()
+	public static function getAll(): array
 	{
 		static::init('all');
 		$all = [];
@@ -742,7 +742,7 @@ class ConfReport
 	private static function validateOnOff(string $name, array $row, string $sapi)
 	{
 		unset($name);
-		if ($row[$sapi] !== $row['recommended'] && !(isset($row['demoMode']) && \AppConfig::main('systemMode') === 'demo')) {
+		if (isset($row[$sapi]) && $row[$sapi] !== $row['recommended'] && !(isset($row['demoMode']) && \AppConfig::main('systemMode') === 'demo')) {
 			$row['status'] = false;
 		}
 		return $row;
@@ -1122,6 +1122,39 @@ class ConfReport
 						$val = $data['www'] ?? $data['cron'];
 					}
 					$result[$category][$param] = $val;
+				}
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * Get configuration error values.
+	 *
+	 * @param string $type
+	 * @param bool   $returnMore
+	 *
+	 * @return array
+	 */
+	public static function getErrors(string $type, bool $returnMore = false): array
+	{
+		$result = [];
+		foreach (static::get($type, true) as $param => $data) {
+			if (!$data['status']) {
+				if (!isset($data['www']) && !isset($data['cron'])) {
+					if (!empty($data['type']) && $data['type'] === 'ExistsUrl') {
+						$val = !$data['status'];
+					} else {
+						$val = $data['status'];
+					}
+				} else {
+					$val = $data['www'] ?? $data['cron'];
+				}
+				if ($returnMore) {
+					$data['val'] = $val;
+					$result[$param] = $data;
+				} else {
+					$result[$param] = $val;
 				}
 			}
 		}

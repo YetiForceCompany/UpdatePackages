@@ -3,18 +3,52 @@
 
 var Settings_Index_Js = {
 	initEvants: function () {
-		$('.LangManagement .add_lang').on('click', Settings_Index_Js.ShowLangMondal);
-		$('.LangManagement .edit_lang a').on('click', function (e) {
+		let container = $('.LangManagement');
+		container.find('.add_lang').on('click', Settings_Index_Js.ShowLangMondal);
+		container.find('.edit_lang a').on('click', function (e) {
 			jQuery('#edit_lang').html('');
 			document.showDiff = false;
 			Settings_Index_Js.LoadEditLang(this)
+		});
+		container.find('.js-add-languages-modal').on('click', () => {
+			app.showModalWindow(null, 'index.php?module=YetiForce&parent=Settings&view=DownloadLanguageModal');
 		});
 		$('.AddNewLangMondal .btn-primary').on('click', Settings_Index_Js.AddLangMondal);
 		$('.AddNewTranslationMondal .btn-primary').on('click', Settings_Index_Js.AddTranslationMondal);
 		$('#lang_list tr').each(function (index, element) {
 			element = $(element);
 			Settings_Index_Js.initEvant(element);
-		})
+		});
+		this.registerUpdateLanguageBtn(container);
+	},
+	registerUpdateLanguageBtn(container) {
+		container.find('.js-update').on('click', function (e) {
+			let icon = $(e.target).find('.js-update__icon'),
+				progress = $.progressIndicator({
+					'message': app.vtranslate('JS_LOADING_PLEASE_WAIT'),
+					'blockInfo': {
+						'enabled': true
+					}
+				});
+			icon.addClass('fa-spin');
+			AppConnector.request({
+				module: 'YetiForce',
+				parent: 'Settings',
+				action: 'DownloadLanguage',
+				prefix: $(e.target).data('prefix')
+			}).done(function (data) {
+				Vtiger_Helper_Js.showPnotify({
+					text: data['result']['message'],
+					type: data['result']['type']
+				});
+				if (data['result']['type'] === 'success') {
+					location.reload();
+				} else {
+					progress.progressIndicator({'mode': 'hide'});
+					icon.removeClass('fa-spin');
+				}
+			});
+		});
 	},
 	LoadEditLang: function (e) {
 		var element = jQuery(e);
@@ -192,8 +226,8 @@ var Settings_Index_Js = {
 		$(cloneModal).css("z-index", "9999999");
 	},
 	AddLangMondal: function (e) {
-		const currentTarget = $(e.currentTarget);
-		const container = currentTarget.closest('.modalContainer');
+		const currentTarget = $(e.currentTarget),
+			container = currentTarget.closest('.modalContainer');
 		let SaveEvent = Settings_Index_Js.registerSaveEvent('add', {
 			'type': 'Add',
 			'label': container.find("input[name='label']").val(),

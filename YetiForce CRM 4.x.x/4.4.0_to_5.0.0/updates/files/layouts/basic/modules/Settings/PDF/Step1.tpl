@@ -12,7 +12,6 @@
 			<input type="hidden" class="step" value="1"/>
 			<input type="hidden" name="record" value="{$RECORDID}"/>
 
-
 			<div class="row">
 				<div class="col-12 mb-2">
 					<div class="card">
@@ -382,16 +381,6 @@
 								<div class="form-group col-12 col-sm-6 col-xl-6 col-xxl-4 watertext {if $PDF_MODEL->get('watermark_type') neq $WATERMARK_TEXT}d-none{/if}">
 									<div class="row">
 										<div class="col-12 col-sm-6">
-											<label class="col-form-label">{\App\Language::translate('LBL_WATERMARK_SIZE', $QUALIFIED_MODULE)}</label>
-										</div>
-										<div class="col-sm-6 controls">
-											<input type="number" name="watermark_size" class="form-control" value="{intval($PDF_MODEL->get('watermark_size'))}" id="watermark_size" min="0" max="99"/>
-										</div>
-									</div>
-								</div>
-								<div class="form-group col-12 col-sm-6 col-xl-6 col-xxl-4 watertext {if $PDF_MODEL->get('watermark_type') neq $WATERMARK_TEXT}d-none{/if}">
-									<div class="row">
-										<div class="col-12 col-sm-6">
 											<label class="col-form-label">{\App\Language::translate('LBL_WATERMARK_ANGLE', $QUALIFIED_MODULE)}</label>
 										</div>
 										<div class="col-sm-6 controls">
@@ -406,7 +395,7 @@
 												<span class="ml-2 js-popover-tooltip" data-content="{\App\Language::translate('LBL_USE_VARIABLES',$QUALIFIED_MODULE)}"><span class="fas fa-clipboard"></span></span></label>
 										</div>
 										<div class="col-12 controls">
-											<textarea name="watermark_text" class="form-control" id="watermark_text">{$PDF_MODEL->get('watermark_text')}</textarea>
+											<textarea name="watermark_text" class="form-control js-editor" id="watermark_text">{$PDF_MODEL->get('watermark_text')}</textarea>
 										</div>
 									</div>
 								</div>
@@ -423,14 +412,13 @@
 													{/if}
 												</div>
 												<div class="col-9">
-													<input type="file" name="watermark_image_file" accept="images/*" class="form-control" data-validation-engine='validate[required]' id="watermark_image"/>
+													<input type="file" name="watermark_image_file" accept="images/*" class="form-control" id="watermark_image"/>
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
 								<div class="form-group col-12 col-xxl-4 pt-2 pt-xxl-0 text-center waterimage {if $PDF_MODEL->get('watermark_type') eq $WATERMARK_TEXT}d-none{/if}">
-									<button id="uploadWM" class="btn btn-success mr-2">{\App\Language::translate('LBL_UPLOAD_WM', $QUALIFIED_MODULE)}</button>
 									<button id="deleteWM" class="btn btn-danger {if $PDF_MODEL->get('watermark_image') eq ''}d-none{/if}">{\App\Language::translate('LBL_DELETE_WM', $QUALIFIED_MODULE)}</button>
 								</div>
 							</div>

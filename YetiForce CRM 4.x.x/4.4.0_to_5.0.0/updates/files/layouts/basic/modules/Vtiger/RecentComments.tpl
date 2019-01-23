@@ -10,7 +10,6 @@
 ********************************************************************************/
 -->*}
 {strip}
-	{assign var="COMMENT_TEXTAREA_DEFAULT_ROWS" value="2"}
 	{* Change to this also refer: AddCommentForm.tpl *}
 	<div class="tpl-Base-RecentComments js-comments-container commentContainer recentComments" data-js="container">
 		<div class="commentTitle">
@@ -22,11 +21,11 @@
 								<span class="fas fa-comments"></span>
 							</span>
 						</div>
-						<textarea name="commentcontent" rows="{$COMMENT_TEXTAREA_DEFAULT_ROWS}"
-								  class="js-comment-content commentcontent form-control"
-								  title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-								  placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-								  data-js="val"></textarea>
+						<div name="commentcontent" contenteditable="true"
+							 class="js-comment-content js-completions commentcontent form-control"
+							 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+							 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+							 data-js="html | tribute.js"></div>
 						<div class="input-group-append">
 							<button class="btn btn-success js-detail-view-save-comment" type="button" data-mode="add">
 								<span class="fa fa-plus"></span>
@@ -51,23 +50,27 @@
 				</div>
 			</div>
 			<div class="col-3 col-lg-7 col-md-12 col-sm-6 p-0 text-md-center text-lg-right m-md-2 m-lg-0">
-				{if $LEVEL < 2}
-					<div class="btn-group btn-group-toggle hierarchyButtons float-right float-md-none"
+				{if $HIERARCHY !== false && $HIERARCHY < 2}
+					<div class="btn-group btn-group-toggle float-right float-md-none"
 						 data-toggle="buttons">
-						<label class="btn btn-sm btn-outline-primary {if $HIERARCHY_VALUE !== 'all'}active{/if}">
-							<input class="js-hierarchy-comments" type="radio" name="options"
-								   id="option1"
-								   value="current" autocomplete="off"
-								   {if $HIERARCHY_VALUE !== 'all'}checked="checked"{/if}
-								   data-js="value"
-							> {\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}
+						<label class="js-hierarchy-comments-btn mt-1 mt-sm-0 btn btn-outline-primary {if in_array('current', $HIERARCHY_VALUE)}active{/if}"
+							   title="{\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}" data-js="click">
+							<input type="checkbox"
+								   class="js-hierarchy-comments"
+								   data-js="val"
+								   value="current"
+									{if in_array('current', $HIERARCHY_VALUE)} checked="checked"{/if}
+								   autocomplete="off"/>
+							{\App\Language::translate('LBL_COMMENTS_0', 'ModComments')}
 						</label>
-						<label class="btn btn-sm btn-outline-primary {if $HIERARCHY_VALUE === 'all'}active{/if}">
-							<input class="js-hierarchy-comments" type="radio" name="options"
-								   id="option2" value="all"
-								   {if $HIERARCHY_VALUE === 'all'}checked="checked"{/if}
-								   autocomplete="off"
-								   data-js="value">
+						<label class="js-hierarchy-comments-btn mt-1 mt-sm-0 btn btn-outline-primary {if in_array('related', $HIERARCHY_VALUE)}active{/if}"
+							   title="{\App\Language::translate('LBL_ALL_RECORDS', 'ModComments')}" data-js="click">
+							<input type="checkbox"
+								   class="js-hierarchy-comments"
+								   data-js="val"
+								   value="related"
+									{if in_array('related', $HIERARCHY_VALUE)} checked="checked"{/if}
+								   autocomplete="off"/>
 							{\App\Language::translate('LBL_ALL_RECORDS', 'ModComments')}
 						</label>
 					</div>
@@ -99,11 +102,11 @@
 							<span class="input-group-prepend">
 								<span class="input-group-text"><span class="fas fa-comments"></span></span>
 							</span>
-							<textarea rows="{$COMMENT_TEXTAREA_DEFAULT_ROWS}"
-									  class="form-control commentcontenthidden fullWidthAlways js-comment-content"
-									  name="commentcontent"
-									  title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-									  placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"></textarea>
+							<div contenteditable="true"
+								 class="form-control commentcontenthidden fullWidthAlways js-comment-content js-completions"
+								 name="commentcontent"
+								 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+								 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}" data-js="html | tribute.js"></div>
 						</div>
 						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right cancel"
 								type="reset">
@@ -137,11 +140,11 @@
 							<span class="input-group-prepend">
 								<span class="input-group-text"><span class="fas fa-comments"></span></span>
 							</span>
-							<textarea rows="{$COMMENT_TEXTAREA_DEFAULT_ROWS}"
-									  class="form-control commentcontenthidden fullWidthAlways js-comment-content"
-									  name="commentcontent"
-									  title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
-									  placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"></textarea>
+							<div contenteditable="true"
+								 class="form-control commentcontenthidden fullWidthAlways js-comment-content js-completions"
+								 name="commentcontent"
+								 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
+								 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}" data-js="html | tribute.js"></div>
 						</div>
 						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right cancel"
 								type="reset">

@@ -477,16 +477,96 @@ class YetiForceUpdate
 		$this->addModules(['RecycleBin']);
 		$this->updateInventory();
 		$this->migrateLanguages();
+		$this->addNotificationForNewUser();
 		$this->importer->dropTable([
 			'vtiger_cvadvfilter',
 			'vtiger_cvadvfilter_grouping',
 			'vtiger_def_org_field',
 			'vtiger_cvstdfilter',
 			'vtiger_callduration',
-			'vtiger_callduration_seq'
+			'vtiger_callduration_seq',
+			'vtiger_language_seq'
+		]);
+		$this->importer->dropColumns([
+			['a_yf_pdf', 'watermark_size'],
+			['vtiger_language', 'label']
 		]);
 		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function addNotificationForNewUser()
+	{
+		if ((new \App\Db\Query())->from('com_vtiger_workflows')->where(['module_name' => 'Users', 'summary' => 'LBL_NEW_USER_CREATED'])->exists()) {
+			return;
+		}
+		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
+		require_once 'modules/com_vtiger_workflow/VTWorkflowManager.php';
+		require_once 'modules/com_vtiger_workflow/tasks/VTEntityMethodTask.php';
+		$workflowManager = new VTWorkflowManager();
+		$workflow = new Workflow();
+		$workflow->test = '[]';
+		$workflow->moduleName = 'Users';
+		$workflow->description = 'LBL_NEW_USER_CREATED';
+		$workflow->executionCondition = VTWorkflowManager::$ON_FIRST_SAVE;
+		$workflow->type = 'basic';
+		$workflow->filtersavedinnew = 6;
+		$workflowManager->save($workflow);
+		$tm = new VTTaskManager();
+		$task = new VTEntityMethodTask();
+
+		$task->executeImmediately = 1;
+		$task->workflowId = $workflow->id;
+		$task->summary = 'New user created';
+		$task->active = 0;
+		$task->methodName = 'newUser';
+		$tm->saveTask($task);
+		(new VTEntityMethodManager())->addEntityMethod('Users', 'newUser', 'modules/Users/workflows/UsersWorkflow.php', 'UsersWorkflow');
+		$recordModel = Vtiger_Record_Model::getCleanInstance('EmailTemplates');
+		$recordModel->set('name', 'New user');
+		$recordModel->set('emial_template_type', 'PLL_RECORD');
+		$recordModel->set('module_name', 'Users');
+		$recordModel->set('subject', 'A new user has been created');
+		$recordModel->set('content', "<table border=\"0\" style=\"width:100%;font-family:Arial, 'Sans-serif';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;\">
+	<tbody>
+		<tr>
+			<td style=\"background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, 'Sans-serif';font-size:11px;\">
+			<h3 style=\"padding:0 0 6px 0;margin:0;font-family:Arial, 'Sans-serif';font-size:16px;font-weight:bold;color:#222;\"><span>A new user has been created</span></h3>
+			</td>
+		</tr>
+		<tr>
+			<td>
+			<div style=\"padding:2px;\">
+			<table border=\"0\">
+				<tbody>
+					<tr>
+						<td style=\"padding:0 1em 10px 0;font-family:Arial, 'Sans-serif';font-size:13px;color:#888;white-space:nowrap;\">Dear user,<br>
+						A new user has been created. Below you can find your password and access data to your account.<br>
+						<br>
+						$(translate : LBL_SITE_URL)$: $(general : SiteUrl)$<br>
+						$(translate : Users|User Name)$: $(record : user_name)$<br>
+						$(translate : Users|Password)$: $(params : password)$</td>
+					</tr>
+				</tbody>
+			</table>
+			</div>
+			</td>
+		</tr>
+		<tr>
+			<td style=\"background-color:#f6f6f6;color:#888;border-top:1px solid #ccc;font-family:Arial, 'Sans-serif';font-size:11px;\">
+			<div style=\"float:right;\">$(organization : mailLogo)$</div>
+			 
+			<p><span style=\"font-size:12px;\">$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$</span></p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+");
+		$recordModel->setHandlerExceptions(['disableHandlers' => true]);
+		$recordModel->set('email_template_priority', 9);
+		$recordModel->save();
+		App\Db::getInstance()->createCommand()->update('u_#__emailtemplates', ['sys_name' => 'NewUser'], ['emailtemplatesid' => $recordModel->getId()])->execute();
+
 	}
 
 	private function getNewPrefixLang($prefix)
@@ -701,7 +781,7 @@ class YetiForceUpdate
 				}
 			}
 		}
-
+		$db->createCommand()->update('vtiger_field', ['maximumlength' => 65535], ['uitype' => 300])->execute();
 		$this->updateVtEmailTemplates();
 		$db->createCommand()->delete('vtiger_relatedlists', ['name' => 'getContacts'])->execute();
 		$db->createCommand()->update('vtiger_blocks', ['display_status' => 2], ['display_status' => 1])->execute();
@@ -887,6 +967,9 @@ class YetiForceUpdate
 			[61, 2772, 'multicompanyid', 'vtiger_ossemployees', 1, 10, 'multicompanyid', 'FL_ORGANIZATION_STRUCTURE', 0, 0, '', '-2147483648,2147483647', 20, 151, 1, 'I~M', 2, 0, 'BAS', 1, '', 0, '', '', 'integer(10)', 'LBL_INFORMATION', [], ['MultiCompany'], 'OSSEmployees'],
 			[119, 2773, 'website', 'u_yf_multicompany', 2, 17, 'website', 'FL_WEBSITE', 0, 2, '', '255', 9, 407, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'string(255)', 'LBL_CONTACT_INFORMATION', [], [], 'MultiCompany'],
 			[119, 2774, 'logo', 'u_yf_multicompany', 2, 69, 'logo', 'FL_LOGO', 0, 2, '', NULL, 0, 406, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_ADDITIONAL_INFORMATION', [], [], 'MultiCompany'],
+			[85,2775,'campaign_id','u_yf_squoteenquiries',1,10,'campaign_id','FL_CAMPAIGN_ID',0,2,'','-2147483648,2147483647',9,265,1,'I~O',1,0,'BAS',1,'',0,'',NULL, 'integer', 'LBL_QUOTESENQUIRES_INFORMATION', [], ['Campaigns'], 'SQuoteEnquiries'],
+			[29,2776,'sync_carddav','vtiger_users',1,16,'sync_carddav','LBL_CARDDAV_SYNCHRONIZATION_CONTACT',0,2,'','255',17,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL, 'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP', 'PLL_BASED_CREDENTIALS'], [], 'Users'],
+			[29,2777,'sync_caldav','vtiger_users',1,16,'sync_caldav','LBL_CALDAV_SYNCHRONIZATION_CALENDAR',0,2,'','255',18,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL,'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP'], [], 'Users']
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -1336,7 +1419,139 @@ class YetiForceUpdate
 				'view_type' => 'RelatedTab',
 			], ['tabid' => App\Module::getModuleId('MultiCompany'), 'related_tabid' => App\Module::getModuleId('OSSEmployees')]
 			],
+			['vtiger_eventhandlers', [
+				'event_name' => 'UserAfterSave',
+				'handler_class' => 'Vtiger_Workflow_Handler',
+				'is_active' => 1,
+				'include_modules' => 'Users',
+				'exclude_modules' => '',
+				'priority' => 4,
+				'owner_id' => 0,
+			], [
+				'event_name' => 'UserAfterSave',
+				'handler_class' => 'Vtiger_Workflow_Handler'
+			]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SQuoteEnquiries'),
+				'name' => 'getDependentsList',
+				'sequence' => 30,
+				'label' => 'SQuoteEnquiries',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SQuoteEnquiries')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SQuotes'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SQuotes',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SQuotes')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SRequirementsCards'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SRequirementsCards',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SRequirementsCards')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SSingleOrders'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SSingleOrders',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SSingleOrders')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SRecurringOrders'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SRecurringOrders',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SRecurringOrders')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SVendorEnquiries'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SVendorEnquiries',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SVendorEnquiries')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Accounts'),
+				'related_tabid' => App\Module::getModuleId('SCalculations'),
+				'name' => 'getDependentsList',
+				'sequence' => 31,
+				'label' => 'SCalculations',
+				'presence' => 1,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SCalculations')]
+			],
 		];
+		foreach(['Vendors', 'Partners', 'Competition','SSalesProcesses','Project', 'ServiceContracts', 'Campaigns', 'FBookkeeping', 'ProjectTask', 'ProjectMilestone', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders',
+					'SRecurringOrders', 'FInvoice', 'SVendorEnquiries'] as $moduleName) {
+			$data[] = ['vtiger_links', [
+				'tabid' => App\Module::getModuleId($moduleName),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'ChartFilter',
+				'linkurl' => 'index.php?module=Home&view=ShowWidget&name=ChartFilter',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId($moduleName), 'linklabel' => 'ChartFilter']
+			];
+			$data[] = ['vtiger_links', [
+				'tabid' => App\Module::getModuleId($moduleName),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'Mini List',
+				'linkurl' => 'index.php?module=Home&view=ShowWidget&name=MiniList',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId($moduleName), 'linklabel' => 'Mini List']
+			];
+		}
 		\App\Db\Updater::batchInsert($data);
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1495,6 +1710,12 @@ class YetiForceUpdate
 "],
 			],
 			],
+			['name' => 'config/developer.php', 'conditions' => [
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'LANGUAGES_UPDATE_DEV_MODE', 'addingType' => 'before', 'value' => "	// Developer Languages update mode
+	'LANGUAGES_UPDATE_DEV_MODE' => false,
+"],
+			],
+			],
 			['name' => 'config/modules/OSSMail.php', 'conditions' => [
 				['type' => 'update', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'isset($dbconfig)', 'value' => "if (isset(\$dbconfig)) {
 	\$config['db_dsnw'] = 'mysql://' . \$dbconfig['db_username'] . ':' . \$dbconfig['db_password'] . '@' . \$dbconfig['db_server'] . ':' . \$dbconfig['db_port'] . '/' . \$dbconfig['db_name'];
@@ -1509,7 +1730,8 @@ class YetiForceUpdate
 	\$config['public_URL'] .= strpos(\$_SERVER['SCRIPT_NAME'], 'public_html/modules/OSSMail') === false ? '' : 'public_html/';
 }
 "],
-				['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)']
+				['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)'],
+				['type' => 'remove', 'search' => '\'ical_attachments\',', 'checkInContents' => 'ical_attachments']
 			],
 			],
 			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [

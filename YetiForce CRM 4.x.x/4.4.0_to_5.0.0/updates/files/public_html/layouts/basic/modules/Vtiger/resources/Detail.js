@@ -399,12 +399,6 @@ jQuery.Class("Vtiger_Detail_Js", {
 		}
 	},
 
-	/**
-	 * Function to load only Comments Widget.
-	 */
-	loadCommentsWidget: function () {
-
-	},
 	loadContents: function (url, data) {
 		var thisInstance = this;
 		var aDeferred = jQuery.Deferred();
@@ -481,7 +475,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 	},
 	getSelectedTab: function () {
 		var tabContainer = this.getTabContainer();
-		return tabContainer.find('.nav li.active:not(.d-none)');
+		return tabContainer.find('.js-detail-tab.active:not(.d-none)');
 	},
 	getTabContainer: function () {
 		return jQuery('div.related');
@@ -614,7 +608,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			commentMode = currentTarget.data('mode'),
 			closestCommentBlock = currentTarget.closest('.js-add-comment-block'),
 			commentContent = closestCommentBlock.find('.js-comment-content'),
-			commentContentValue = commentContent.val(),
+			commentContentValue = commentContent.html(),
 			errorMsg, editCommentReason;
 		if ("" === commentContentValue) {
 			errorMsg = app.vtranslate('JS_LBL_COMMENT_VALUE_CANT_BE_EMPTY')
@@ -623,7 +617,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			return aDeferred.promise();
 		}
 		if ("edit" === commentMode) {
-			editCommentReason = closestCommentBlock.find('[name="reasonToEdit"]').val();
+			editCommentReason = closestCommentBlock.find('[name="reasonToEdit"]').html();
 		}
 		let element = jQuery(e.currentTarget),
 			commentInfoHeader = closestCommentBlock.closest('.js-comment-details').find('.js-comment-info-header'),
@@ -665,6 +659,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 	getEditCommentBlock: function () {
 		let clonedCommentBlock = jQuery('.basicEditCommentBlock', this.getContentHolder()).clone(true, true).removeClass('basicEditCommentBlock d-none').addClass('js-add-comment-block');
 		clonedCommentBlock.find('.commentcontenthidden').removeClass('commentcontenthidden').addClass('js-comment-content');
+		new App.Fields.Text.Completions(clonedCommentBlock.find('.js-completions'));
 		return clonedCommentBlock;
 	},
 	/*
@@ -674,7 +669,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		var thisInstance = this;
 		jQuery('body').on('submit', '#massSave', function (e) {
 			var form = jQuery(e.currentTarget);
-			var smsTextLength = form.find('#message').val().length;
+			var smsTextLength = form.find('#message').html().length;
 			if (smsTextLength > 160) {
 				var params = {
 					title: app.vtranslate('JS_MESSAGE'),
@@ -1191,15 +1186,13 @@ jQuery.Class("Vtiger_Detail_Js", {
 					'data': urlParams
 				};
 				AppConnector.request(params).done(function (data) {
-						var activitiesWidget = widgetContainer.find('.js-detail-widget-content');
-						activitiesWidget.html(data);
-						App.Fields.Picklist.changeSelectElementView(activitiesWidget);
-					}
-				);
-				thisInstance.loadWidgets();
+					var activitiesWidget = widgetContainer.find('.js-detail-widget-content');
+					activitiesWidget.html(data);
+					App.Fields.Picklist.changeSelectElementView(activitiesWidget);
+					thisInstance.loadWidget($('.widgetContentBlock[data-type="Updates"]'));
+					thisInstance.loadWidget($('.widgetContentBlock[data-name="Calendar"]'));
+				});
 			}
-
-
 			let QuickCreateParams = {};
 			QuickCreateParams['callbackPostShown'] = preQuickCreateSave;
 			QuickCreateParams['callbackFunction'] = callbackFunction;
@@ -1479,18 +1472,18 @@ jQuery.Class("Vtiger_Detail_Js", {
 					headerInstance.getQuickCreateForm(url, 'Calendar', {noCache: true}).done((data) => {
 						headerInstance.handleQuickCreateData(data, {
 							callbackFunction: () => {
-								let widget = currentTarget.closest('.widgetContentBlock');
-								if (widget.length) {
-									thisInstance.loadWidget(widget);
-									let updatesWidget = thisInstance.getContentHolder().find("[data-type='Updates']");
-									if (updatesWidget.length > 0) {
-										thisInstance.loadWidget(updatesWidget);
-									}
-								} else {
-									thisInstance.loadRelatedList();
-								}
-								thisInstance.registerRelatedModulesRecordCount();
-							}
+							let widget = currentTarget.closest('.widgetContentBlock');
+					if (widget.length) {
+						thisInstance.loadWidget(widget);
+						let updatesWidget = thisInstance.getContentHolder().find("[data-type='Updates']");
+						if (updatesWidget.length > 0) {
+							thisInstance.loadWidget(updatesWidget);
+						}
+					} else {
+						thisInstance.loadRelatedList();
+					}
+					thisInstance.registerRelatedModulesRecordCount();
+				}
 						});
 					});
 				} else {
@@ -1516,52 +1509,56 @@ jQuery.Class("Vtiger_Detail_Js", {
 				fieldName = fieldnameElement.val(),
 				fieldElement = jQuery('[name="' + fieldName + '"]', editElement),
 				callbackFunction = () => {
-					let previousValue = fieldnameElement.data('prevValue'),
-						ajaxEditNewValue = fieldElement.val(),
-						ajaxEditNewLable = fieldElement.val(),
-						activityDiv = currentDiv.closest('.activityEntries'),
-						activityId = activityDiv.find('.activityId').val(),
-						moduleName = activityDiv.find('.activityModule').val(),
-						activityType = activityDiv.find('.activityType').val();
-					if (previousValue == ajaxEditNewValue) {
-						closeDescription();
-					} else {
-						let errorExists = fieldElement.validationEngine('validate');
-						//If validation fails
-						if (errorExists) {
+				let previousValue = fieldnameElement.data('prevValue'),
+					ajaxEditNewValue = fieldElement.val(),
+					ajaxEditNewLable = fieldElement.val(),
+					activityDiv = currentDiv.closest('.activityEntries'),
+					activityId = activityDiv.find('.activityId').val(),
+					moduleName = activityDiv.find('.activityModule').val(),
+					activityType = activityDiv.find('.activityType').val();
+				if (previousValue == ajaxEditNewValue) {
+					closeDescription();
+				} else {
+					//If validation fails
+					currentDiv.progressIndicator();
+					editElement.add(activityButtonContainer).addClass('d-none');
+					return new Promise(function (resolve, reject) {
+						resolve(fieldElement.validationEngine('validate'))
+					}).then((errorExists) => {
+						if(errorExists) {
 							Vtiger_Helper_Js.addClickOutSideEvent(currentDiv, callbackFunction);
 							return;
-						}
-						currentDiv.progressIndicator();
-						editElement.add(activityButtonContainer).addClass('d-none');
-						AppConnector.request({
-							action: 'SaveAjax',
-							record: activityId,
-							field: fieldName,
-							value: ajaxEditNewValue,
-							module: moduleName,
-							activitytype: activityType
-						}).done(() => {
-								currentDiv.progressIndicator({'mode': 'hide'});
-								detailViewElement.removeClass('d-none');
-								currentTarget.show();
-								descriptionText.html(ajaxEditNewLable);
-								fieldnameElement.data('prevValue', ajaxEditNewValue);
-								if (ajaxEditNewValue === '') {
-									descriptionEmpty.removeClass('d-none');
-								} else {
-									descriptionEmpty.addClass('d-none');
-								}
-							}
-						);
-					}
-				},
-				closeDescription = function () {
-					fieldElement.val(fieldnameElement.data('prevValue'));
-					editElement.add(activityButtonContainer).addClass('d-none');
+						} else {
+							ajaxEditNewValue = fieldElement.val(); //update editor value after conversion
+					AppConnector.request({
+						action: 'SaveAjax',
+						record: activityId,
+						field: fieldName,
+						value: ajaxEditNewValue,
+						module: moduleName,
+						activitytype: activityType
+					}).done(() => {
+						currentDiv.progressIndicator({'mode': 'hide'});
 					detailViewElement.removeClass('d-none');
 					currentTarget.show();
-				};
+					descriptionText.html(ajaxEditNewLable);
+					fieldnameElement.data('prevValue', ajaxEditNewValue);
+					if (ajaxEditNewValue === '') {
+						descriptionEmpty.removeClass('d-none');
+					} else {
+						descriptionEmpty.addClass('d-none');
+					}
+								});
+				}
+				})
+				}
+				},
+			closeDescription = function () {
+				fieldElement.val(fieldnameElement.data('prevValue'));
+				editElement.add(activityButtonContainer).addClass('d-none');
+				detailViewElement.removeClass('d-none');
+				currentTarget.show();
+			};
 			currentTarget.hide();
 			detailViewElement.addClass('d-none');
 			activityButtonContainer.removeClass('d-none');
@@ -2041,8 +2038,8 @@ jQuery.Class("Vtiger_Detail_Js", {
 			let commentInfoBlock = $(e.currentTarget).closest('.js-comment-single'),
 				commentInfoContent = commentInfoBlock.find('.js-comment-info'),
 				editCommentBlock = self.getEditCommentBlock();
-			editCommentBlock.find('.js-comment-content').val(commentInfoContent.text());
-			editCommentBlock.find('.js-reason-to-edit').val(commentInfoBlock.find('.js-edit-reason-span').text());
+			editCommentBlock.find('.js-comment-content').html(commentInfoContent.text());
+			editCommentBlock.find('.js-reason-to-edit').html(commentInfoBlock.find('.js-edit-reason-span').text());
 			commentInfoContent.hide();
 			commentInfoBlock.find('.js-comment-container').hide();
 			editCommentBlock.appendTo(commentInfoBlock).show();
@@ -2077,13 +2074,25 @@ jQuery.Class("Vtiger_Detail_Js", {
 		detailContentsHolder.on('click', '.js-more-recent-comments ', function () {
 			self.getTabByLabel(self.detailViewRecentCommentsTabLabel).trigger('click');
 		});
-		detailContentsHolder.on('change', '.js-detail-hierarchy-comments', function (e) {
+		detailContentsHolder.find('.js-detail-hierarchy-comments-btn').on('click', function (e) {
+			if ($(this).hasClass('active') && detailContentsHolder.find('.js-detail-hierarchy-comments-btn.active').length < 2) {
+				return;
+			}
 			let recentCommentsTab = self.getTabByLabel(self.detailViewRecentCommentsTabLabel),
 				url = recentCommentsTab.data('url'),
 				regex = /&hierarchy=+([\w,]+)/;
 			url = url.replace(regex, "");
-			if ($(this).val()) {
-				url += '&hierarchy=' + $(this).val();
+			let hierarchy = [];
+			if ($(this).hasClass('active')) {
+				$(this).removeClass('active');
+			} else {
+				$(this).addClass('active');
+			}
+			detailContentsHolder.find('.js-detail-hierarchy-comments-btn.active').each(function(){
+				hierarchy.push($(this).find('.js-detail-hierarchy-comments').val());
+			});
+			if (hierarchy.length !== 0) {
+				url += '&hierarchy=' + hierarchy.join(',');
 			}
 			recentCommentsTab.data('url', url);
 			recentCommentsTab.trigger('click');
@@ -2112,19 +2121,25 @@ jQuery.Class("Vtiger_Detail_Js", {
 				detailContentsHolder.find('.js-comments-container').html(data);
 			});
 		} else {
-			let hierarchy = detailContentsHolder.find('.js-detail-hierarchy-comments:checked').val(),
+			let hierarchy = [],
 				limit = '',
 				isWidget = false;
 			if (searchTextDom.data('container') === 'widget') {
-				hierarchy = detailContentsHolder.find('.js-detail-hierarchy-comments:checked').val();
-				limit = widgetContainer.data('limit');
-				isWidget = true;
+				limit = widgetContainer.data('limit'),
+					isWidget = true;
+				widgetContainer.find('.js-hierarchy-comments:checked').each(function () {
+					hierarchy.push($(this).val());
+				});
+			} else {
+				detailContentsHolder.find('.js-detail-hierarchy-comments:checked').each(function () {
+					hierarchy.push($(this).val());
+				});
 			}
 			AppConnector.request({
 				module: app.getModuleName(),
 				view: 'Detail',
 				mode: 'showSearchComments',
-				hierarchy: hierarchy,
+				hierarchy: hierarchy.join(','),
 				limit: limit,
 				record: app.getRecordId(),
 				search_key: searchTextDom.val(),
@@ -2144,14 +2159,22 @@ jQuery.Class("Vtiger_Detail_Js", {
 	 * @param {jQuery} widgetContainer
 	 */
 	registerCommentEventsInDetail(widgetContainer) {
+		new App.Fields.Text.Completions();
 		widgetContainer.on('change', '.js-hierarchy-comments', function (e) {
+			let hierarchy = [];
+			widgetContainer.find('.js-hierarchy-comments').each(function () {
+				if ($(this).is(':checked')) {
+					hierarchy.push($(this).val());
+				}
+			});
 			let progressIndicatorElement = $.progressIndicator();
 			AppConnector.request({
 				module: app.getModuleName(),
 				view: 'Detail',
 				mode: 'showRecentComments',
-				hierarchy: $(this).val(),
+				hierarchy: hierarchy.join(','),
 				record: app.getRecordId(),
+				limit: widgetContainer.find('.widgetContentBlock').data('limit'),
 			}).done(function (data) {
 				progressIndicatorElement.progressIndicator({'mode': 'hide'});
 				let widgetDataContainer = widgetContainer.find('.js-detail-widget-content');
@@ -2164,10 +2187,10 @@ jQuery.Class("Vtiger_Detail_Js", {
 		const self = this;
 		container.on('click', '.showMailBody', (e) => {
 			let row = $(e.currentTarget).closest('.row'),
-				mailBody = row.find('.mailBody'),
-				mailTeaser = row.find('.mailTeaser');
-			mailBody.toggleClass('d-none');
-			mailTeaser.toggleClass('d-none');
+			mailBody = row.find('.mailBody'),
+			mailTeaser = row.find('.mailTeaser');
+		mailBody.toggleClass('d-none');
+		mailTeaser.toggleClass('d-none');
 		});
 		container.find('[name="mail-type"]').on('change', function (e) {
 			self.loadMailPreviewWidget(container);
@@ -2177,16 +2200,16 @@ jQuery.Class("Vtiger_Detail_Js", {
 		});
 		container.on('click', '.showMailsModal', (e) => {
 			let url = $(e.currentTarget).data('url');
-			url += '&type=' + container.find('[name="mail-type"]').val();
-			if (container.find('[name="mailFilter"]').length > 0) {
-				url += '&mailFilter=' + container.find('[name="mailFilter"]').val();
-			}
-			let progressIndicatorElement = jQuery.progressIndicator();
-			app.showModalWindow("", url, (data) => {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				self.registerMailPreviewWidget(data);
-				Vtiger_Index_Js.registerMailButtons(data);
-				data.find('.expandAllMails').click();
+		url += '&type=' + container.find('[name="mail-type"]').val();
+		if (container.find('[name="mailFilter"]').length > 0) {
+			url += '&mailFilter=' + container.find('[name="mailFilter"]').val();
+		}
+		let progressIndicatorElement = jQuery.progressIndicator();
+		app.showModalWindow("", url, (data) => {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		self.registerMailPreviewWidget(data);
+		Vtiger_Index_Js.registerMailButtons(data);
+		data.find('.expandAllMails').click();
 			});
 		});
 		container.find('.expandAllMails').on('click', function (e) {
@@ -2260,16 +2283,16 @@ jQuery.Class("Vtiger_Detail_Js", {
 			message: app.vtranslate('JS_CHANGE_VALUE_CONFIRMATION')
 		}).done(() => {
 			const progressIndicatorElement = $.progressIndicator();
-			self.saveFieldValues({
-				value: picklistValue,
-				field: picklistName
-			}).done(() => {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				window.location.reload();
+		self.saveFieldValues({
+			value: picklistValue,
+			field: picklistName
+		}).done(() => {
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+		window.location.reload();
 			}).fail(function (error, err) {
-				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				app.errorLog(error, err);
-			});
+			progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			app.errorLog(error, err);
+		});
 		});
 	},
 	/**
@@ -2279,8 +2302,8 @@ jQuery.Class("Vtiger_Detail_Js", {
 		const self = this;
 		$('.js-header-progress-bar').each((index, element) => {
 			let picklistName = $(element).data('picklistName');
-			$(element).find('.js-access').on('click', (e) => {
-				self.showProgressConfirmation(e.currentTarget, picklistName);
+		$(element).find('.js-access').on('click', (e) => {
+			self.showProgressConfirmation(e.currentTarget, picklistName);
 			});
 		});
 	},
@@ -2295,6 +2318,9 @@ jQuery.Class("Vtiger_Detail_Js", {
 			} else {
 				Chat_JS.getInstance(detailContentsHolder, 'detail').unregisterEvents();
 			}
+		}
+		if (this.getSelectedTab().data('labelKey') === 'ModComments') {
+			new App.Fields.Text.Completions(detailContentsHolder.find('.js-completions'));
 		}
 		thisInstance.registerSummaryViewContainerEvents(detailContentsHolder);
 		thisInstance.registerCommentEvents(detailContentsHolder);

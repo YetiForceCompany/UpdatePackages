@@ -1,13 +1,18 @@
 <?php
-
-namespace App\Controller;
-
 /**
  * Abstract view controller class.
+ *
+ * @package   Controller
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
+
+namespace App\Controller;
+
+/**
+ * Class View.
  */
 abstract class View extends Base
 {
@@ -198,7 +203,7 @@ abstract class View extends Base
 		$currentUser = \Users_Record_Model::getCurrentUserModel();
 		$view->assign('ACTIVITY_REMINDER', $currentUser->getCurrentUserActivityReminderInSeconds());
 		$view->assign('FOOTER_SCRIPTS', $this->getFooterScripts($request));
-		$view->assign('SHOW_FOOTER', $this->showFooter());
+		$view->assign('SHOW_FOOTER', $this->showFooter() && \App\YetiForce\Register::getStatus() !== 8);
 		$view->view('Footer.tpl');
 	}
 
@@ -227,6 +232,8 @@ abstract class View extends Base
 			'~libraries/footable/css/footable.core.css',
 			'~libraries/clockpicker/dist/bootstrap-clockpicker.css',
 			'~libraries/animate.css/animate.css',
+			'~libraries/tributejs/dist/tribute.css',
+			'~libraries/emojipanel/dist/emojipanel.css',
 			'~layouts/resources/colors/calendar.css',
 			'~layouts/resources/colors/owners.css',
 			'~layouts/resources/colors/modules.css',
@@ -287,12 +294,17 @@ abstract class View extends Base
 			'~libraries/jquery-outside-events/jquery.ba-outside-events.js',
 			'~libraries/dompurify/dist/purify.js',
 			'~libraries/footable/dist/footable.js',
+			'~vendor/ckeditor/ckeditor/ckeditor.js',
+			'~vendor/ckeditor/ckeditor/adapters/jquery.js',
+			'~libraries/tributejs/dist/tribute.js',
+			'~libraries/emojipanel/dist/emojipanel.js',
 			'~layouts/resources/app.js',
 			'~libraries/blueimp-file-upload/js/jquery.fileupload.js',
 			'~libraries/floatthead/dist/jquery.floatThead.js',
 			'~libraries/store/dist/store.legacy.min.js',
 			'~layouts/resources/fields/MultiImage.js',
 			'~layouts/resources/Fields.js',
+			'~layouts/resources/Tools.js',
 			'~layouts/resources/helper.js',
 			'~layouts/resources/Connector.js',
 			'~layouts/resources/ProgressIndicator.js',
@@ -535,6 +547,7 @@ abstract class View extends Base
 		$userModel = \App\User::getCurrentUserModel();
 		foreach ([
 					 'skinPath' => \Vtiger_Theme::getCurrentUserThemePath(),
+					 'siteUrl' => \App\Layout::getPublicUrl('', true),
 					 'layoutPath' => \App\Layout::getPublicUrl('layouts/' . \App\Layout::getActiveLayout()),
 					 'langPrefix' => \App\Language::getLanguage(),
 					 'langKey' => \App\Language::getShortLanguageName(),
@@ -564,6 +577,7 @@ abstract class View extends Base
 					 'globalSearchAutocompleteActive' => \AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE'),
 					 'globalSearchAutocompleteMinLength' => \AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE_MIN_LENGTH'),
 					 'globalSearchAutocompleteAmountResponse' => \AppConfig::search('GLOBAL_SEARCH_AUTOCOMPLETE_LIMIT'),
+					 'globalSearchDefaultOperator' => \AppConfig::search('GLOBAL_SEARCH_DEFAULT_OPERATOR'),
 					 'sounds' => \AppConfig::sounds(),
 					 'intervalForNotificationNumberCheck' => \AppConfig::performance('INTERVAL_FOR_NOTIFICATION_NUMBER_CHECK'),
 					 'recordPopoverDelay' => \AppConfig::performance('RECORD_POPOVER_DELAY'),

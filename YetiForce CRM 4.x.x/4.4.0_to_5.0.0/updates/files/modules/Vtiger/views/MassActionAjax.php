@@ -59,10 +59,10 @@ class Vtiger_MassActionAjax_View extends Vtiger_IndexAjax_View
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
 		$viewer->assign('MODULE_MODEL', $moduleModel);
 		$viewer->assign('MAPPING_RELATED_FIELD', \App\Json::encode(\App\ModuleHierarchy::getRelationFieldByHierarchy($moduleName)));
-		$viewer->assign('OPERATOR', $request->getByType('operator', 1));
-		$viewer->assign('ALPHABET_VALUE', $request->getByType('search_value', 2));
-		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 1));
-		$viewer->assign('SEARCH_PARAMS', $request->getArray('search_params'));
+		$viewer->assign('OPERATOR', $request->getByType('operator'));
+		$viewer->assign('ALPHABET_VALUE', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $moduleName, $request->getByType('search_key', 'Alnum'), $request->getByType('operator')));
+		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 'Alnum'));
+		$viewer->assign('SEARCH_PARAMS', App\Condition::validSearchParams($moduleName, $request->getArray('search_params')));
 		$viewer->view('MassEditForm.tpl', $moduleName);
 	}
 
@@ -89,11 +89,11 @@ class Vtiger_MassActionAjax_View extends Vtiger_IndexAjax_View
 		$viewer->assign('SELECTED_IDS', $request->getArray('selected_ids', 2));
 		$viewer->assign('EXCLUDED_IDS', $request->getArray('excluded_ids', 2));
 		$viewer->assign('USER_MODEL', Users_Record_Model::getCurrentUserModel());
-		$viewer->assign('OPERATOR', $request->getByType('operator', 1));
-		$viewer->assign('ALPHABET_VALUE', $request->getByType('search_value', 2));
+		$viewer->assign('OPERATOR', $request->getByType('operator'));
+		$viewer->assign('ALPHABET_VALUE', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $moduleName, $request->getByType('search_key', 'Alnum'), $request->getByType('operator')));
 		$viewer->assign('ENTITY_STATE', $request->getByType('entityState'));
-		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 1));
-		$viewer->assign('SEARCH_PARAMS', $request->getArray('search_params'));
+		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 'Alnum'));
+		$viewer->assign('SEARCH_PARAMS', App\Condition::validSearchParams($sourceModule, $request->getArray('search_params')));
 		$viewer->view('AddCommentForm.tpl', $moduleName);
 	}
 
@@ -130,10 +130,10 @@ class Vtiger_MassActionAjax_View extends Vtiger_IndexAjax_View
 		$viewer->assign('EXCLUDED_IDS', $request->getArray('excluded_ids', 2));
 		$viewer->assign('ENTITY_STATE', $request->getByType('entityState'));
 		$viewer->assign('PHONE_FIELDS', $phoneFields);
-		$viewer->assign('OPERATOR', $request->getByType('operator', 1));
-		$viewer->assign('ALPHABET_VALUE', $request->getByType('search_value', 2));
-		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 1));
-		$viewer->assign('SEARCH_PARAMS', $request->getArray('search_params'));
+		$viewer->assign('OPERATOR', $request->getByType('operator'));
+		$viewer->assign('ALPHABET_VALUE', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $moduleName, $request->getByType('search_key', 'Alnum'), $request->getByType('operator')));
+		$viewer->assign('SEARCH_KEY', $request->getByType('search_key', 'Alnum'));
+		$viewer->assign('SEARCH_PARAMS', App\Condition::validSearchParams($sourceModule, $request->getArray('search_params')));
 		$viewer->view('SendSMSForm.tpl', $moduleName);
 	}
 

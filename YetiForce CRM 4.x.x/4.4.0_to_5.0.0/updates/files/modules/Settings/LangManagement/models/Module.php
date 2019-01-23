@@ -143,15 +143,17 @@ class Settings_LangManagement_Module_Model extends Settings_Vtiger_Module_Model
 			return ['success' => false, 'data' => 'LBL_LangExist'];
 		}
 		$prefix = \App\Purifier::purifyByType($params['prefix'], 1);
+		if (!self::isCorrectLangTag($prefix)) {
+			return ['success' => false, 'data' => 'LBL_NOT_CORRECT_LANGUAGE_TAG'];
+		}
 		$destiny = 'languages/' . $prefix . '/';
 		mkdir($destiny);
-		vtlib\Functions::recurseCopy('languages/en_us/', $destiny);
+		vtlib\Functions::recurseCopy('languages/' . \App\Language::DEFAULT_LANG, $destiny);
 		$db = \App\Db::getInstance();
 		$db->createCommand()->insert('vtiger_language', [
-			'id' => $db->getUniqueId('vtiger_language'),
 			'name' => $params['name'],
 			'prefix' => $params['prefix'],
-			'label' => $params['label'],
+			'name' => $params['label'],
 		])->execute();
 		\App\Cache::clear();
 
@@ -260,7 +262,7 @@ class Settings_LangManagement_Module_Model extends Settings_Vtiger_Module_Model
 	public function getStatsData($langBase, $langs, $byModule = false)
 	{
 		$filesName = $this->getModFromLang($langBase);
-		settype($langs, 'array');
+		$langs = (array) $langs;
 		if (!in_array($langBase, $langs)) {
 			$langs[] = $langBase;
 		}
@@ -304,5 +306,22 @@ class Settings_LangManagement_Module_Model extends Settings_Vtiger_Module_Model
 			array_unshift($differences, $i);
 		}
 		return $differences;
+	}
+
+	/**
+	 * Check if is correct given language tag.
+	 *
+	 * @param string $languageTag
+	 *
+	 * @return bool
+	 */
+	public static function isCorrectLangTag(string $languageTag): bool
+	{
+		$data = false;
+		if (!empty($languageTag)) {
+			$localePrefix = Locale::acceptFromHttp($languageTag);
+			$data = explode('-', $languageTag) === explode('_', $localePrefix);
+		}
+		return $data;
 	}
 }

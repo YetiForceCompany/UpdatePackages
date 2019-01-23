@@ -14,6 +14,11 @@ namespace App;
 class Language
 {
 	/**
+	 * Default language code.
+	 */
+	public const DEFAULT_LANG = 'en-US';
+
+	/**
 	 * Allowed types of language variables.
 	 */
 	const LANG_TYPE = ['php', 'js'];
@@ -22,7 +27,12 @@ class Language
 	 * Language files format.
 	 */
 	const FORMAT = 'json';
-
+	/**
+	 * Custom language directory.
+	 *
+	 * @var string
+	 */
+	public static $customDirectory = 'custom';
 	/**
 	 * Current language.
 	 *
@@ -76,7 +86,19 @@ class Language
 		} else {
 			$language = User::getCurrentUserModel()->getDetail('language');
 		}
-		return static::$language = empty($language) ? \AppConfig::main('default_language') : strtolower($language);
+		return static::$language = empty($language) ? \AppConfig::main('default_language') : $language;
+	}
+
+	/**
+	 * Get IETF language tag.
+	 *
+	 * @see https://en.wikipedia.org/wiki/IETF_language_tag
+	 *
+	 * @return string
+	 */
+	public static function getLanguageTag($separator = '_')
+	{
+		return str_replace('-', $separator, static::getLanguage());
 	}
 
 	/**
@@ -86,7 +108,7 @@ class Language
 	 */
 	public static function setTemporaryLanguage($language)
 	{
-		static::$temporaryLanguage = strtolower($language);
+		static::$temporaryLanguage = $language;
 	}
 
 	/**
@@ -110,23 +132,7 @@ class Language
 			return static::$shortLanguage;
 		}
 		preg_match('/^[a-z]+/i', static::getLanguage(), $match);
-		return static::$shortLanguage = (empty($match[0])) ? 'en' : $match[0];
-	}
-
-	/**
-	 * Get IETF language tag.
-	 *
-	 * @see https://en.wikipedia.org/wiki/IETF_language_tag
-	 *
-	 * @return string
-	 */
-	public static function getLanguageTag($separator = '-')
-	{
-		$lang = \explode('_', static::getLanguage());
-		if (isset($lang[1])) {
-			$lang[1] = \strtoupper($lang[1]);
-		}
-		return \implode($separator, $lang);
+		return static::$shortLanguage = (empty($match[0])) ? \Locale::getPrimaryLanguage(self::DEFAULT_LANG) : $match[0];
 	}
 
 	/**
@@ -301,7 +307,7 @@ class Language
 				if (file_exists($langFile)) {
 					static::$languageContainer[$language][$moduleName] = Json::decode(file_get_contents($langFile), true) ?? [];
 				}
-				$langCustomFile = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'custom' . $file;
+				$langCustomFile = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . static::$customDirectory . $file;
 				if (file_exists($langCustomFile)) {
 					$translation = Json::decode(file_get_contents($langCustomFile), true) ?? [];
 					foreach ($translation as $type => $rows) {
@@ -605,7 +611,7 @@ class Language
 	 */
 	public static function getLanguageLabel(string $prefix)
 	{
-		return static::getLangInfo($prefix)['label'] ?? null;
+		return static::getLangInfo($prefix)['name'] ?? null;
 	}
 
 	/**
@@ -621,7 +627,7 @@ class Language
 		$cacheKey = $active ? 'Active' : 'All';
 		if (Cache::has('getAllLanguages', $cacheKey)) {
 			if (!$allData) {
-				return array_column(Cache::get('getAllLanguages', $cacheKey), 'label', 'prefix');
+				return array_column(Cache::get('getAllLanguages', $cacheKey), 'name', 'prefix');
 			}
 			return Cache::get('getAllLanguages', $cacheKey);
 		}
@@ -639,7 +645,7 @@ class Language
 		Cache::save('getAllLanguages', 'All', $all);
 		Cache::save('getAllLanguages', 'Active', $actives);
 		if (!$allData) {
-			return array_column(Cache::get('getAllLanguages', $cacheKey), 'label', 'prefix');
+			return array_column(Cache::get('getAllLanguages', $cacheKey), 'name', 'prefix');
 		}
 		return Cache::get('getAllLanguages', $cacheKey);
 	}
@@ -705,7 +711,9 @@ class Language
 	{
 		$original = explode(';', setlocale(LC_ALL, 0));
 		$defaultCharset = strtolower(\AppConfig::main('default_charset'));
-		setlocale(LC_ALL, static::getLanguageTag('_') . '.' . $defaultCharset, \AppConfig::main('default_language') . '.' . $defaultCharset, 'en_US.' . $defaultCharset, 'en_US.utf8');
+		setlocale(LC_ALL, \Locale::acceptFromHttp(self::getLanguage()) . '.' . $defaultCharset,
+			\Locale::acceptFromHttp(\AppConfig::main('default_language')) . '.' . $defaultCharset, \Locale::acceptFromHttp(self::DEFAULT_LANG) . ".$defaultCharset",
+			\Locale::acceptFromHttp(self::DEFAULT_LANG) . '.utf8');
 		foreach ($original as $localeSetting) {
 			if (strpos($localeSetting, '=') !== false) {
 				list($category, $locale) = explode('=', $localeSetting);
@@ -717,5 +725,17 @@ class Language
 				setlocale(constant($category), $locale);
 			}
 		}
+	}
+
+	/**
+	 * Get display language name.
+	 *
+	 * @param string $prefix
+	 *
+	 * @return string
+	 */
+	public static function getDisplayName(string $prefix)
+	{
+		return \ucfirst(locale_get_region($prefix) === strtoupper(locale_get_primary_language($prefix)) ? locale_get_display_language($prefix, $prefix) : locale_get_display_name($prefix, $prefix));
 	}
 }

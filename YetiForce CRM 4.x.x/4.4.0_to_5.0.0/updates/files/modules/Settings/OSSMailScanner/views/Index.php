@@ -10,6 +10,16 @@ class Settings_OSSMailScanner_Index_View extends Settings_Vtiger_Index_View
 {
 	private $prefixesForModules = ['Project', 'HelpDesk', 'SSalesProcesses', 'Campaigns'];
 
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getFooterScripts(\App\Request $request)
+	{
+		return array_merge(parent::getFooterScripts($request), $this->checkAndConvertJsScripts([
+			'~layouts/resources/libraries/jstree.checkbox.js'
+		]));
+	}
+
 	public function process(\App\Request $request)
 	{
 		$moduleName = $request->getModule();
@@ -31,7 +41,7 @@ class Settings_OSSMailScanner_Index_View extends Settings_Vtiger_Index_View
 		$supportedModules = Settings_Vtiger_CustomRecordNumberingModule_Model::getSupportedModules();
 		foreach ($supportedModules as $supportedModule) {
 			if (in_array($supportedModule->name, $this->prefixesForModules)) {
-				$numbering[$supportedModule->name] = \App\Fields\RecordNumber::getNumber($supportedModule->name);
+				$numbering[$supportedModule->name] = \App\Fields\RecordNumber::getInstance($supportedModule->name);
 			}
 		}
 

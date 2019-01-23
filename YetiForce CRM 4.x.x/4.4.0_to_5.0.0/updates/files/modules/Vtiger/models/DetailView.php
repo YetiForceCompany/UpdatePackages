@@ -243,7 +243,7 @@ class Vtiger_DetailView_Model extends \App\Base
 				'title' => \App\Language::translate('LBL_DUPLICATE_RECORD'),
 			]);
 		}
-		if (!Settings_ModuleManager_Library_Model::checkLibrary('mPDF') && $moduleModel->isPermitted('ExportPdf')) {
+		if ($moduleModel->isPermitted('ExportPdf')) {
 			$handlerClass = Vtiger_Loader::getComponentClassName('Model', 'PDF', $moduleName);
 			$pdfModel = new $handlerClass();
 			if ($pdfModel->checkActiveTemplates($recordId, $moduleName, 'Detail')) {
@@ -326,6 +326,18 @@ class Vtiger_DetailView_Model extends \App\Base
 				'related' => 'ModTracker',
 				'countRelated' => AppConfig::module('ModTracker', 'UNREVIEWED_COUNT') && $parentModuleModel->isPermitted('ReviewingUpdates'),
 				'badgeClass' => 'bgDanger',
+			];
+		}
+		if (
+			\App\User::getCurrentUserId() === \App\User::getCurrentUserRealId() &&
+			\App\Module::isModuleActive('Chat') &&
+			\App\ModuleHierarchy::getModuleLevel($parentModuleModel->getName()) !== false
+		) {
+			$relatedLinks[] = [
+				'linktype' => 'DETAILVIEWTAB',
+				'linklabel' => 'LBL_CHAT',
+				'linkurl' => $recordModel->getDetailViewUrl() . '&mode=showChat',
+				'linkicon' => 'fas fa-comments',
 			];
 		}
 		foreach ($parentModuleModel->getRelations() as $relation) {

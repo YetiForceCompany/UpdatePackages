@@ -1,4 +1,4 @@
-/* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]}*/
+/* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 /**
  * Retrieves a color value from the $material-colors Sass map
@@ -6335,14 +6335,14 @@ button.bg-dark:focus {
 .grid-stack .dashboardWidget .dashboardWidgetContent .row {
   margin-left: 0 !important; }
 
-.m-1, .c-detail-widget {
+.m-1, .o-chat__btn-send, .c-detail-widget {
   margin: 0.25rem !important; }
 
-.mt-1, .select2-selection__arrow,
+.mt-1, .select2-selection__arrow, .o-chat__message-block,
 .my-1 {
   margin-top: 0.25rem !important; }
 
-.mr-1, .PreferenceDetailViewHeader .detailViewButtoncontainer .btn,
+.mr-1, .c-completions__item, .PreferenceDetailViewHeader .detailViewButtoncontainer .btn,
 .mx-1,
 .childrenMarginTopX > * {
   margin-right: 0.25rem !important; }
@@ -12081,8 +12081,11 @@ header .c-header__btn__container .select2-selection {
 .cke_screen_reader_only {
   height: 0 !important; }
 
-.pdfTemplateContents .cke {
+#pdf_step2 .cke {
   border: 0px; }
+
+.cke_autocomplete_panel {
+  width: 300px !important; }
 
 .jstree-proton {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important; }
@@ -12147,6 +12150,18 @@ header .c-header__btn__container .select2-selection {
   background-size: cover;
   width: 1.3em;
   margin-left: 2px; }
+
+.tribute-container {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: .25rem;
+  min-width: 10rem; }
+  .tribute-container ul {
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box; }
+  .tribute-container li.highlight,
+  .tribute-container li:hover {
+    background: #f8f9fa; }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .table thead th, .c-detail-widget__table thead th,
@@ -15940,6 +15955,9 @@ ul.tweets li {
 .u-min-h-30per {
   min-height: 30%; }
 
+.u-min-h-85vh {
+  min-height: 85vh; }
+
 .u-white-space-nowrap {
   white-space: nowrap !important; }
 
@@ -16157,12 +16175,12 @@ ul.tweets li {
 
 .c-btn-collapsible {
   overflow: hidden;
+  max-width: 2.5rem;
   -webkit-transition: all 275ms ease;
   -moz-transition: all 275ms ease;
   -ms-transition: all 275ms ease;
   -o-transition: all 275ms ease;
-  transition: all 275ms ease;
-  max-width: 2.5rem; }
+  transition: all 275ms ease; }
   .c-btn-collapsible.btn-xs {
     max-width: 1.5625rem; }
   .c-btn-collapsible.btn-sm, .btn-group-sm > .c-btn-collapsible.btn, .rightRecordActions .actions .dropdown-menu .c-btn-collapsible.btn-xs,
@@ -16170,7 +16188,7 @@ ul.tweets li {
     max-width: 1.875rem; }
   .c-btn-collapsible.btn-lg, .btn-group-lg > .c-btn-collapsible.btn {
     max-width: 3.125rem; }
-  .c-btn-collapsible span {
+  .c-btn-collapsible__text {
     opacity: 0;
     text-indent: -6px;
     display: inline-block;
@@ -16186,7 +16204,7 @@ ul.tweets li {
     -ms-transition: all 275ms ease;
     -o-transition: all 275ms ease;
     transition: all 275ms ease; }
-    .c-btn-collapsible:hover span {
+    .c-btn-collapsible:hover .c-btn-collapsible__text {
       opacity: 1;
       text-indent: 0;
       -webkit-transition: all 275ms ease;
@@ -16274,6 +16292,14 @@ ul.tweets li {
 .c-img__user {
   width: auto;
   height: 2.5rem; }
+.c-img__completion {
+  width: inherit; }
+  .c-img__completion[src=""] {
+    display: none; }
+  .c-img__completion__container {
+    width: 1.875rem;
+    height: fit-content;
+    margin: auto 0.3125rem auto 0; }
 
 .c-popover--link {
   max-width: 30%; }
@@ -16297,10 +16323,15 @@ ul.tweets li {
 .c-circle-icon {
   height: 1.875rem;
   width: 1.875rem;
+  max-width: 1.875rem;
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 50%; }
+  .c-circle-icon [class^="userIcon-"],
+  .c-circle-icon .adminIcon-user,
+  .c-circle-icon .adminIcon-user {
+    font-size: 1.25rem; }
 
 .c-icon--tripple {
   width: 1.25rem;
@@ -16317,6 +16348,129 @@ ul.tweets li {
   .c-icon--tripple__top {
     top: -7px;
     left: 5px; }
+
+[contenteditable=true]:empty:after {
+  content: attr(placeholder) !important;
+  color: #6c757d !important;
+  display: block !important;
+  /* For Firefox */ }
+[contenteditable=true].form-control {
+  height: auto !important;
+  min-height: calc(2.25rem + 2px); }
+
+.c-textarea--completions {
+  height: 0;
+  visibility: hidden;
+  position: relative;
+  top: 0.9375rem; }
+
+.c-completions {
+  color: #808080;
+  font-size: 14px; }
+  .c-completions__item {
+    cursor: pointer; }
+
+.js-completions__emojis .EmojiPanel {
+  display: none; }
+.js-completions__emojis.active .EmojiPanel {
+  display: block; }
+
+.EmojiPanel {
+  position: absolute;
+  z-index: 90000000;
+  transform: translateY(calc(-100% - 0.9375rem)); }
+  .EmojiPanel .EmojiPanel__brand {
+    display: none; }
+  .EmojiPanel .fa-search {
+    display: none; }
+
+.c-range-slider {
+  -webkit-appearance: none;
+  margin: 10px 0;
+  width: 100%; }
+
+.c-range-slider:focus {
+  outline: none; }
+
+.c-range-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: #e9ecef;
+  border-radius: 10px;
+  border: 0px solid #000101; }
+
+.c-range-slider::-webkit-slider-thumb {
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 0.25rem;
+  background: #337ab7;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -7px; }
+
+.c-range-slider:focus::-webkit-slider-runnable-track {
+  background: #e9ecef; }
+
+.c-range-slider::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: #e9ecef;
+  border-radius: 10px;
+  border: 0px solid #000101; }
+
+.c-range-slider::-moz-range-thumb {
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 0.25rem;
+  background: #337ab7;
+  cursor: pointer; }
+
+.c-range-slider::-ms-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  border-width: 39px 0;
+  color: transparent; }
+
+.c-range-slider::-ms-fill-lower {
+  background: #e9ecef;
+  border: 0px solid #000101;
+  border-radius: 10px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d; }
+
+.c-range-slider::-ms-fill-upper {
+  background: #e9ecef;
+  border: 0px solid #000101;
+  border-radius: 10px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d; }
+
+.c-range-slider::-ms-thumb {
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 0.25rem;
+  background: #337ab7;
+  cursor: pointer; }
+
+.c-range-slider:focus::-ms-fill-lower {
+  background: #e9ecef; }
+
+.c-range-slider:focus::-ms-fill-upper {
+  background: #e9ecef; }
+
+.c-gantt-header__option {
+  max-width: 200px; }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .btn-default {
@@ -16555,11 +16709,9 @@ input[type="radio"]:checked:before {
   width: 50px;
   height: 50px; }
 .o-chat__btn-send {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
+  height: fit-content;
   border-radius: 50% !important;
-  z-index: 1000; }
+  width: 2.625rem; }
 .o-chat__icon-search {
   position: absolute;
   top: 18px;
@@ -16581,7 +16733,12 @@ input[type="radio"]:checked:before {
 .o-chat__form-control {
   border: 0px; }
   .o-chat__form-control:focus {
-    box-shadow: none; }
+    box-shadow: none;
+    outline: none; }
+.o-chat__message-block {
+  height: 3.125rem;
+  width: calc(100% - 2.625rem);
+  position: relative; }
 .o-chat__user-message {
   max-width: 150px;
   color: #797676;
@@ -16613,7 +16770,8 @@ input[type="radio"]:checked:before {
   padding: 2px 8px 2px 8px; }
 .o-chat__messages {
   font-size: 13px;
-  background: #e8e8e8; }
+  background: #e8e8e8;
+  word-break: break-word; }
 .o-chat__room {
   background: #d5d7de;
   color: #177e96; }

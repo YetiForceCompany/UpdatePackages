@@ -78,14 +78,17 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 		if ($request->has('entityState')) {
 			$relationListView->set('entityState', $request->getByType('entityState'));
 		}
+		$operator = 's';
 		if (!$request->isEmpty('operator', true)) {
-			$relationListView->set('operator', $request->getByType('operator'));
+			$operator = $request->getByType('operator');
+			$relationListView->set('operator', $operator);
 		}
 		if (!$request->isEmpty('search_key', true)) {
-			$relationListView->set('search_key', $request->getByType('search_key'));
-			$relationListView->set('search_value', $request->get('search_value'));
+			$searchKey = $request->getByType('search_key', 'Alnum');
+			$relationListView->set('search_key', $searchKey);
+			$relationListView->set('search_value', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $relationListView->getQueryGenerator()->getModule(), $searchKey, $operator));
 		}
-		$searchParmams = $request->getArray('search_params');
+		$searchParmams = App\Condition::validSearchParams($request->getByType('relatedModule', 'Alnum'), $request->getArray('search_params'));
 		if (empty($searchParmams) || !is_array($searchParmams)) {
 			$searchParmams = [];
 		}
@@ -165,9 +168,11 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 		$relatedModuleModel = Vtiger_Module_Model::getInstance($relatedModule);
 		$relationModel = Vtiger_Relation_Model::getInstance($sourceModuleModel, $relatedModuleModel);
 		$result = false;
-		foreach ($relatedRecordIdList as $relatedRecordId) {
-			if (\App\Privilege::isPermitted($relatedModule, 'DetailView', $relatedRecordId)) {
-				$result = $relationModel->deleteRelation($sourceRecordId, (int) $relatedRecordId);
+		if ($relationModel->privilegeToDelete()) {
+			foreach ($relatedRecordIdList as $relatedRecordId) {
+				if (\App\Privilege::isPermitted($relatedModule, 'DetailView', $relatedRecordId)) {
+					$result = $relationModel->deleteRelation($sourceRecordId, (int) $relatedRecordId);
+				}
 			}
 		}
 		$response = new Vtiger_Response();
@@ -191,14 +196,17 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 		$relationListView = Vtiger_RelationListView_Model::getInstance($parentRecordModel, $relatedModuleName);
 		$excludedIds = $request->getArray('excluded_ids', 'Integer');
 		if ('all' === $request->getRaw('selected_ids')) {
+			$operator = 's';
 			if (!$request->isEmpty('operator', true)) {
-				$relationListView->set('operator', $request->getByType('operator', 1));
+				$operator = $request->getByType('operator');
+				$relationListView->set('operator', $operator);
 			}
 			if (!$request->isEmpty('search_key', true)) {
-				$relationListView->set('search_key', $request->getByType('search_key', 1));
-				$relationListView->set('search_value', $request->get('search_value'));
+				$searchKey = $request->getByType('search_key', 'Alnum');
+				$relationListView->set('search_key', $searchKey);
+				$relationListView->set('search_value', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $relatedModuleName, $searchKey, $operator));
 			}
-			$searchParmams = $request->getArray('search_params');
+			$searchParmams = App\Condition::validSearchParams($relatedModuleName, $request->getArray('search_params'));
 			if (empty($searchParmams) || !is_array($searchParmams)) {
 				$searchParmams = [];
 			}
@@ -206,7 +214,7 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 			$relationListView->set('search_params', $transformedSearchParams);
 			$rows = array_keys($relationListView->getEntries($pagingModel));
 		} else {
-			$rows = $request->getRaw('selected_ids') === '[]' ? [] : $request->getArray('selected_ids');
+			$rows = $request->getRaw('selected_ids') === '[]' ? [] : $request->getArray('selected_ids', 'Integer');
 		}
 		$relationModel = $relationListView->getRelationModel();
 		foreach ($rows as $relatedRecordId) {
@@ -238,14 +246,17 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 			if ($request->has('entityState')) {
 				$relationListView->set('entityState', $request->getByType('entityState'));
 			}
+			$operator = 's';
 			if (!$request->isEmpty('operator', true)) {
-				$relationListView->set('operator', $request->getByType('operator', 1));
+				$operator = $request->getByType('operator');
+				$relationListView->set('operator', $operator);
 			}
 			if (!$request->isEmpty('search_key', true)) {
-				$relationListView->set('search_key', $request->getByType('search_key', 1));
-				$relationListView->set('search_value', $request->get('search_value'));
+				$searchKey = $request->getByType('search_key', 'Alnum');
+				$relationListView->set('search_key', $searchKey);
+				$relationListView->set('search_value', App\Condition::validSearchValue($request->getByType('search_value', 'Text'), $relatedModuleName, $searchKey, $operator));
 			}
-			$searchParmams = $request->getArray('search_params');
+			$searchParmams = App\Condition::validSearchParams($relatedModuleName, $request->getArray('search_params'));
 			if (empty($searchParmams) || !is_array($searchParmams)) {
 				$searchParmams = [];
 			}
@@ -253,7 +264,7 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 			$relationListView->set('search_params', $transformedSearchParams);
 			$rows = array_keys($relationListView->getEntries($pagingModel));
 		} else {
-			$rows = $request->getRaw('selected_ids') === '[]' ? [] : $request->getArray('selected_ids');
+			$rows = $request->getRaw('selected_ids') === '[]' ? [] : $request->getArray('selected_ids', 'Integer');
 		}
 		$workbook = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 		$worksheet = $workbook->setActiveSheetIndex(0);
@@ -322,13 +333,13 @@ class Vtiger_RelationAjax_Action extends \App\Controller\Action
 		$workbookWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xls');
 		$workbookWriter->save($tempFileName);
 		if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE')) {
-			header('Pragma: public');
-			header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+			header('pragma: public');
+			header('cache-control: must-revalidate, post-check=0, pre-check=0');
 		}
-		header('Content-Type: application/x-msexcel');
-		header('Content-Length: ' . filesize($tempFileName));
+		header('content-type: application/x-msexcel');
+		header('content-length: ' . filesize($tempFileName));
 		$filename = \App\Language::translate($relatedModuleName, $relatedModuleName) . '.xls';
-		header("Content-Disposition: attachment; filename=\"$filename\"");
+		header("content-disposition: attachment; filename=\"$filename\"");
 		$fp = fopen($tempFileName, 'rb');
 		fpassthru($fp);
 		fclose($fp);

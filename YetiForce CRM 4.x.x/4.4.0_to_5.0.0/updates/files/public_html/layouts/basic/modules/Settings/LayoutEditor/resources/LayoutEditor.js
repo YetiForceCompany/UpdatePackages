@@ -252,13 +252,13 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 
 		AppConnector.request(params).done(function (data) {
 			currentTarget.data('state', status);
-			currentTarget.find('.fas').each(function () {
-				if ($(this).hasClass('d-none')) {
-					$(this).removeClass('d-none');
-				} else {
-					$(this).addClass('d-none');
-				}
-			})
+			if (status) {
+				currentTarget.find('.far').addClass('d-none');
+				currentTarget.find('.fas').removeClass('d-none');
+			} else {
+				currentTarget.find('.fas').addClass('d-none');
+				currentTarget.find('.far').removeClass('d-none');
+			}
 			Settings_Vtiger_Index_Js.showMessage({text: app.vtranslate('JS_SAVE_NOTIFY_OK')});
 		}).fail(function (error) {
 			var params = {};
@@ -734,12 +734,14 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 
 			//hide all the elements like length, decimal,picklist
 			form.find('.supportedType').addClass('d-none');
-
 			if (selectedOption.data('lengthsupported')) {
 				form.find('.lengthsupported').removeClass('d-none');
-				lengthInput.data('validator', maxLengthValidator);
+				if (!selectedOption.data('nolimitforlength')) {
+					lengthInput.data('validator', maxLengthValidator);
+				} else {
+					lengthInput.data('validator', [{'name': 'WholeNumberGreaterThanZero'}]);
+				}
 			}
-
 			if (selectedOption.data('decimalsupported')) {
 				var decimalFieldUi = form.find('.decimalsupported');
 				decimalFieldUi.removeClass('d-none');
@@ -1593,16 +1595,17 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 					'showPrompt', app.vtranslate('JS_REQUIRED_FIELD'), 'error', 'topRight', true
 				);
 			} else {
-				app.hideModalWindow();
-				const progress = $.progressIndicator({
-					'position': 'html',
-					'blockInfo': {
-						'enabled': true
-					}
-				});
-				app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&sourceModule=" + selectedModule + "&type=" + type, (modalContainer) => {
-					thisInstance.registerStep2(modalContainer, blockId);
-					progress.progressIndicator({'mode': 'hide'});
+				app.hideModalWindow(() => {
+					const progress = $.progressIndicator({
+						'position': 'html',
+						'blockInfo': {
+							'enabled': true
+						}
+					});
+					app.showModalWindow(null, "index.php?module=LayoutEditor&parent=Settings&view=CreateInventoryFields&mode=step2&sourceModule=" + selectedModule + "&type=" + type, (modalContainer) => {
+						thisInstance.registerStep2(modalContainer, blockId);
+						progress.progressIndicator({'mode': 'hide'});
+					});
 				});
 			}
 		});
@@ -1810,12 +1813,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			}).done(function (data) {
 				app.showModalWindow(data, function (modalContainer) {
 					const customConfig = {
-						toolbar: 'Min',
-						toolbarGroups: [
-							{name: 'document', groups: ['document', 'doctools']},
-							{name: 'basicstyles', groups: ['basicstyles', 'cleanup']},
-							{name: 'clipboard', groups: ['clipboard', 'undo']}
-						]
+						toolbar: 'Clipboard'
 					};
 					new App.Fields.Text.Editor(modalContainer, customConfig);
 					app.showPopoverElementView(modalContainer.find('.js-help-info'));
@@ -1829,6 +1827,7 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 						let textArea = modalContainer.find('#' + element + '.js-context-area');
 						textArea.prop('disabled', false);
 						textArea.closest('.js-context-block').removeClass('d-none');
+						App.Fields.Text.destroyEditor(textArea);
 						modalContainer.find('.js-help-info').attr('data-content', textArea.val());
 						new App.Fields.Text.Editor(textArea, customConfig);
 					});
