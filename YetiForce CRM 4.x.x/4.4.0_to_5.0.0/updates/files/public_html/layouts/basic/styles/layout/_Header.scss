@@ -74,6 +74,14 @@
 	}
 }
 
+.limited-footer--active {
+	.remindersNoticeContainer,
+	.remindersNotificationContainer,
+	.modalRightSiteBar {
+		height: $h-main-viewport-limited-footer;
+	}
+}
+
 .remindersContent {
 	margin: 5px 8px 0 8px;
 
@@ -394,6 +402,11 @@
 //breadcrumbs
 .o-breadcrumb__container {
 	width: 100%;
+	display: flex;
+}
+
+.widget_header > div[class*="col-"]:first-child {
+	display: flex;
 }
 
 .widget_header {

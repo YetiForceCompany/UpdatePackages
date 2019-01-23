@@ -1,33 +1,35 @@
 <?php
 /**
+ * SVendorEnquiries CRMEntity Class.
+ *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Tomasz Kur <t.kur@yetiforce.com>
  */
 include_once 'modules/Vtiger/CRMEntity.php';
 
-class SRequirementsCards extends Vtiger_CRMEntity
+class SVendorEnquiries extends Vtiger_CRMEntity
 {
-	public $table_name = 'u_yf_srequirementscards';
-	public $table_index = 'srequirementscardsid';
+	public $table_name = 'u_yf_svendorenquiries';
+	public $table_index = 'svendorenquiriesid';
 
 	/**
 	 * Mandatory table for supporting custom fields.
 	 */
-	public $customFieldTable = ['u_yf_srequirementscardscf', 'srequirementscardsid'];
+	public $customFieldTable = ['u_yf_svendorenquiriescf', 'svendorenquiriesid'];
 
 	/**
 	 * Mandatory for Saving, Include tables related to this module.
 	 */
-	public $tab_name = ['vtiger_crmentity', 'u_yf_srequirementscards', 'u_yf_srequirementscardscf', 'vtiger_entity_stats'];
+	public $tab_name = ['vtiger_crmentity', 'u_yf_svendorenquiries', 'u_yf_svendorenquiriescf', 'vtiger_entity_stats'];
 
 	/**
 	 * Mandatory for Saving, Include tablename and tablekey columnname here.
 	 */
 	public $tab_name_index = [
 		'vtiger_crmentity' => 'crmid',
-		'u_yf_srequirementscards' => 'srequirementscardsid',
-		'u_yf_srequirementscardscf' => 'srequirementscardsid',
+		'u_yf_svendorenquiries' => 'svendorenquiriesid',
+		'u_yf_svendorenquiriescf' => 'svendorenquiriesid',
 		'vtiger_entity_stats' => 'crmid', ];
 
 	/**
@@ -36,7 +38,7 @@ class SRequirementsCards extends Vtiger_CRMEntity
 	public $list_fields = [
 		// Format: Field Label => Array(tablename, columnname)
 		// tablename should not have prefix 'vtiger_'
-		'LBL_SUBJECT' => ['srequirementscards', 'subject'],
+		'LBL_SUBJECT' => ['svendorenquiries', 'subject'],
 		'Assigned To' => ['crmentity', 'smownerid'],
 	];
 	public $list_fields_name = [
@@ -55,7 +57,7 @@ class SRequirementsCards extends Vtiger_CRMEntity
 	public $search_fields = [
 		// Format: Field Label => Array(tablename, columnname)
 		// tablename should not have prefix 'vtiger_'
-		'LBL_SUBJECT' => ['srequirementscards', 'subject'],
+		'LBL_SUBJECT' => ['svendorenquiries', 'subject'],
 		'Assigned To' => ['vtiger_crmentity', 'assigned_user_id'],
 	];
 	public $search_fields_name = [
@@ -74,26 +76,4 @@ class SRequirementsCards extends Vtiger_CRMEntity
 	public $mandatory_fields = ['subject', 'assigned_user_id'];
 	public $default_order_by = '';
 	public $default_sort_order = 'ASC';
-
-	/**
-	 * Invoked when special actions are performed on the module.
-	 *
-	 * @param string Module name
-	 * @param string Event Type
-	 */
-	public function moduleHandler($moduleName, $eventType)
-	{
-		if ($eventType === 'module.postinstall') {
-			\App\Fields\RecordNumber::getInstance($moduleName)->set('prefix', 'S-RC')->set('cur_id', 1)->save();
-			\App\Db::getInstance()->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
-			$modcommentsModuleInstance = vtlib\Module::getInstance('ModComments');
-			if ($modcommentsModuleInstance && file_exists('modules/ModComments/ModComments.php')) {
-				include_once 'modules/ModComments/ModComments.php';
-				if (class_exists('ModComments')) {
-					ModComments::addWidgetTo(['SRequirementsCards']);
-				}
-			}
-			CRMEntity::getInstance('ModTracker')->enableTrackingForModule(\App\Module::getModuleId($moduleName));
-		}
-	}
 }

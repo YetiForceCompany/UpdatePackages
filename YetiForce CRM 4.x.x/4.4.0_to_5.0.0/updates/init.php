@@ -1693,6 +1693,10 @@ class YetiForceUpdate
 				['type' => 'add', 'search' => '];', 'checkInContents' => 'PICKLIST_DEPEDENCY_DEFAULT_EMPTY', 'addingType' => 'before', 'value' => "	// Empty value when is not selected item in picklist depedency
 	'PICKLIST_DEPEDENCY_DEFAULT_EMPTY' => true,
 "],
+				['type' => 'add', 'search' => '];', 'checkInContents' => 'LIMITED_INFO_SUPPORT', 'addingType' => 'before', 'value' => "// Any modifications of this parameter require the vendor's consent.
+	// Any unauthorised modification breaches the terms and conditions of YetiForce Public License.
+	'LIMITED_INFO_SUPPORT' => false,
+"],
 			],
 			],
 			['name' => 'config/security.php', 'conditions' => [
