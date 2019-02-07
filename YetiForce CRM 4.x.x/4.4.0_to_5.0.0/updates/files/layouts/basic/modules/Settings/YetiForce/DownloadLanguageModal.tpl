@@ -1,18 +1,38 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="tpl-Settings-YetiForce-DownloadLanguageModal modal-body">
-		<table class="table mb-0 mx-auto u-w-fit">
+	<div class="tpl-Settings-YetiForce-DownloadLanguageModal modal-body p-0">
+		<table class="table mb-0 mx-auto">
 			{assign var="INDEX" value=0}
 			{if $LANGUAGES}
-				{foreach key=FIELD_NAME item=FIELD_DETAILS from=$LANGUAGES}
-					{if !$FIELD_DETAILS['exist']}
+				<thead>
+				<tr>
+					<th class="text-center border-top-0">{App\Language::translate('LBL_LANG', $QUALIFIED_MODULE)}</th>
+					<th class="text-center border-top-0">{App\Language::translate('LBL_Lang_prefix', 'Settings:LangManagement')}</th>
+					<th class="text-center border-top-0">{App\Language::translate('LBL_TRANSLATED_WORDS', $QUALIFIED_MODULE)}</th>
+					<th class="text-center border-top-0">{App\Language::translate('LBL_ACTIONS', $QUALIFIED_MODULE)}</th>
+				</tr>
+				</thead>
+				{foreach key=PREFIX item=DETAILS from=$LANGUAGES}
+					{if !$DETAILS['exist']}
 						<tr>
-							<td {if $INDEX == 0} class="border-top-0"{/if}>
-								<strong>{\App\Purifier::encodeHtml($FIELD_DETAILS['name'])} {\App\Purifier::encodeHtml($FIELD_NAME)}</strong>
+							<td class="align-middle{if $INDEX == 0} border-top-0{/if} u-white-space-normal u-white-space-lg-nowrap">
+								<strong>{\App\Purifier::encodeHtml($DETAILS['name'])}</strong>
 							</td>
-							<td {if $INDEX == 0} class="border-top-0"{/if}>
+							<td class="align-middle{if $INDEX == 0} border-top-0{/if} u-white-space-normal u-white-space-lg-nowrap">
+								<strong>{\App\Purifier::encodeHtml($PREFIX)}</strong>
+							</td>
+							<td class="align-middle u-table-column__vw-20 u-table-column__before-block{if $INDEX == 0} border-top-0{/if} w-100">
+								<div class="progress position-relative">
+									<div class="progress-bar bg-color-blue-100" role="progressbar"
+										 style="width: {$DETAILS['progress']}%;"
+										 aria-valuenow="{$DETAILS['progress']}" aria-valuemin="0" aria-valuemax="100">
+									</div>
+									<div class="position-absolute w-100 text-center">{$DETAILS['progress']}%</div>
+								</div>
+							</td>
+							<td class="align-middle {if $INDEX == 0} border-top-0{/if}">
 								<button class="js-download btn btn-sm btn-outline-success"
-										data-prefix="{\App\Purifier::encodeHtml($FIELD_NAME)}" data-js="click | data">
+										data-prefix="{\App\Purifier::encodeHtml($PREFIX)}" data-js="click | data">
 									<span class="fas fa-download fa-xs mr-1"></span>
 									{\App\Language::translate('LBL_DOWNLOAD', $QUALIFIED_MODULE)}
 								</button>

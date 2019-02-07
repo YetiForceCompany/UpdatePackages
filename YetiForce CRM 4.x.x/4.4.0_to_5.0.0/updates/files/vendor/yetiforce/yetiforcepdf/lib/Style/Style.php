@@ -1300,9 +1300,11 @@ class Style extends \YetiForcePDF\Base
 	/**
 	 * Fix tables.
 	 *
+	 * @param bool $removeBottomBorders
+	 *
 	 * @return $this
 	 */
-	public function fixTables()
+	public function fixTables(bool $removeBottomBorders)
 	{
 		$box = $this->getBox();
 		$boxStyle = $box->getStyle();
@@ -1313,13 +1315,13 @@ class Style extends \YetiForcePDF\Base
 		foreach ($boxes as $box) {
 			// max cell borders widths top,right,bottom,left
 			$cellBorders = ['0', '0', '0', '0'];
-			$rowGroups = $box->getChildren();
+			$rowGroups = $box->getChildren(true, true);
 			$rowGroupsCount = count($rowGroups);
 			foreach ($rowGroups as $rowGroupIndex => $rowGroup) {
-				$rows = $rowGroup->getChildren();
+				$rows = $rowGroup->getChildren(true, true);
 				$rowsCount = count($rows);
 				foreach ($rows as $rowIndex => $row) {
-					$columns = $row->getChildren();
+					$columns = $row->getChildren(true, true);
 					$columnsCount = count($columns);
 					foreach ($columns as $columnIndex => $column) {
 						$rowStyle = $column->getParent()->getStyle();
@@ -1348,7 +1350,7 @@ class Style extends \YetiForcePDF\Base
 								Math::max($cellBorders[2], $cellStyle->getRules('border-bottom-width')),
 								Math::max($cellBorders[3], $cellStyle->getRules('border-left-width')),
 							];
-							if ($rowIndex + $column->getRowSpan() < $rowsCount) {
+							if ($rowIndex + $column->getRowSpan() < $rowsCount && $removeBottomBorders) {
 								$cellStyle->setRule('border-bottom-width', '0');
 							}
 							if ($columnIndex + $column->getColSpan() < $columnsCount) {
@@ -1384,22 +1386,17 @@ class Style extends \YetiForcePDF\Base
 				if ($boxStyle->getRules('border-collapse') === 'collapse') {
 					$rowsCount = count($rows) - 1;
 					foreach ($rows as $rowIndex => $row) {
-						if ($rowIndex < $rowsCount) {
+						if ($rowIndex < $rowsCount && $removeBottomBorders) {
 							$row->getStyle()->setRule('border-bottom-width', '0');
 						}
 					}
 				} else {
 					foreach ($rows as $row) {
-						$row->getStyle()->setRule('border-top-width', '0');
-						$row->getStyle()->setRule('border-right-width', '0');
-						$row->getStyle()->setRule('border-bottom-width', '0');
-						$row->getStyle()->setRule('border-left-width', '0');
-					}
-				}
-				if ($boxStyle->getRules('border-collapse') === 'separate') {
-					// move background to cells from rows
-					foreach ($rows as $row) {
 						$rowStyle = $row->getStyle();
+						$rowStyle->setRule('border-top-width', '0');
+						$rowStyle->setRule('border-right-width', '0');
+						$rowStyle->setRule('border-bottom-width', '0');
+						$rowStyle->setRule('border-left-width', '0');
 						if ($rowStyle->getRules('background-color') !== 'transparent') {
 							foreach ($row->getChildren() as $column) {
 								$cell = $column->getFirstChild();
@@ -1417,13 +1414,15 @@ class Style extends \YetiForcePDF\Base
 	/**
 	 * Fix dom tree - after dom tree is parsed we must clean up or add some rules.
 	 *
+	 * @param bool $removeBottomBorders
+	 *
 	 * @return $this
 	 */
-	public function fixDomTree()
+	public function fixDomTree(bool $removeBottomBorders = true)
 	{
 		foreach ($this->box->getChildren() as $childBox) {
-			$childBox->getStyle()->fixTables();
-			$childBox->getStyle()->fixDomTree();
+			$childBox->getStyle()->fixTables($removeBottomBorders);
+			$childBox->getStyle()->fixDomTree($removeBottomBorders);
 		}
 		return $this;
 	}

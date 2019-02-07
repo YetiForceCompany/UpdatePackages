@@ -26,7 +26,7 @@ class Settings_Mail_Detail_View extends Settings_Vtiger_Index_View
 	public function checkPermission(\App\Request $request)
 	{
 		$currentUserModel = \App\User::getCurrentUserModel();
-		if (!$currentUserModel->isAdmin() || empty($request->get('record'))) {
+		if (!$currentUserModel->isAdmin() || $request->isEmpty('record')) {
 			throw new \App\Exceptions\NoPermittedForAdmin('LBL_PERMISSION_DENIED');
 		}
 	}
@@ -38,7 +38,7 @@ class Settings_Mail_Detail_View extends Settings_Vtiger_Index_View
 	 */
 	public function process(\App\Request $request)
 	{
-		$record = $request->get('record');
+		$record = $request->getInteger('record');
 		$qualifiedModuleName = $request->getModule(false);
 		$recordModel = Settings_Mail_Record_Model::getInstance($record);
 		$viewer = $this->getViewer($request);
@@ -49,20 +49,5 @@ class Settings_Mail_Detail_View extends Settings_Vtiger_Index_View
 		$viewer->assign('RECORD_MODEL', $recordModel);
 		$viewer->assign('QUALIFIED_MODULE', $qualifiedModuleName);
 		$viewer->view('DetailView.tpl', $qualifiedModuleName);
-	}
-
-	/**
-	 * Function to get the list of Script models to be included.
-	 *
-	 * @param \App\Request $request
-	 *
-	 * @return array - List of Vtiger_JsScript_Model instances
-	 */
-	public function getFooterScripts(\App\Request $request)
-	{
-		return array_merge(parent::getFooterScripts($request), $this->checkAndConvertJsScripts([
-			'modules.Settings.Vtiger.resources.Detail',
-			'modules.Settings.' . $request->getModule() . '.resources.Detail',
-		]));
 	}
 }

@@ -2154,7 +2154,7 @@ YetiForce_Widget_Js('YetiForce_Calendar_Widget_Js', {}, {
 		var userDefaultActivityView = 'month';
 		var container = thisInstance.getContainer();
 		//Default time format
-		var userDefaultTimeFormat = jQuery('#time_format').val();
+		var userDefaultTimeFormat = CONFIG.hourFormat;
 		if (userDefaultTimeFormat == 24) {
 			userDefaultTimeFormat = 'H(:mm)';
 		} else {
@@ -2437,7 +2437,7 @@ YetiForce_CalendarActivities_Widget_Js('YetiForce_CreatedNotMineActivities_Widge
 YetiForce_CalendarActivities_Widget_Js('YetiForce_OverDueActivities_Widget_Js', {}, {});
 YetiForce_CalendarActivities_Widget_Js('YetiForce_AssignedOverDueCalendarTasks_Widget_Js', {}, {});
 YetiForce_CalendarActivities_Widget_Js('YetiForce_OverdueActivities_Widget_Js', {}, {});
-YetiForce_Widget_Js('YetiForce_Productssoldtorenew_Widget_Js', {}, {
+YetiForce_Widget_Js('YetiForce_ProductsSoldToRenew_Widget_Js', {}, {
 	modalView: false,
 	postLoadWidget: function () {
 		this._super();
@@ -2468,7 +2468,7 @@ YetiForce_Widget_Js('YetiForce_Productssoldtorenew_Widget_Js', {}, {
 	registerListViewButton: function () {
 		var thisInstance = this;
 		var container = thisInstance.getContainer();
-		container.find('.goToListView').on('click', function () {
+		container.on('click', '.goToListView', function () {
 			var url = jQuery(this).data('url');
 			var orderBy = container.find('.orderby');
 			var sortOrder = container.find('.changeRecordSort');
@@ -2482,7 +2482,7 @@ YetiForce_Widget_Js('YetiForce_Productssoldtorenew_Widget_Js', {}, {
 		});
 	}
 });
-YetiForce_Productssoldtorenew_Widget_Js('YetiForce_ServicesSoldToRenew_Widget_Js', {}, {});
+YetiForce_ProductsSoldToRenew_Widget_Js('YetiForce_ServicesSoldToRenew_Widget_Js', {}, {});
 YetiForce_Bar_Widget_Js('YetiForce_AllTimeControl_Widget_Js', {}, {
 	getBasicOptions: function getBasicOptions() {
 		return {

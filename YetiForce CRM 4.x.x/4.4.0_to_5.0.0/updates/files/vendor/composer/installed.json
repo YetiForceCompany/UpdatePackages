@@ -44,17 +44,17 @@
     },
     {
         "name": "composer/ca-bundle",
-        "version": "1.1.3",
-        "version_normalized": "1.1.3.0",
+        "version": "1.1.4",
+        "version_normalized": "1.1.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/composer/ca-bundle.git",
-            "reference": "8afa52cd417f4ec417b4bfe86b68106538a87660"
+            "reference": "558f321c52faeb4828c03e7dc0cfe39a09e09a2d"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/8afa52cd417f4ec417b4bfe86b68106538a87660",
-            "reference": "8afa52cd417f4ec417b4bfe86b68106538a87660",
+            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/558f321c52faeb4828c03e7dc0cfe39a09e09a2d",
+            "reference": "558f321c52faeb4828c03e7dc0cfe39a09e09a2d",
             "shasum": ""
         },
         "require": {
@@ -67,7 +67,7 @@
             "psr/log": "^1.0",
             "symfony/process": "^2.5 || ^3.0 || ^4.0"
         },
-        "time": "2018-10-18T06:09:13+00:00",
+        "time": "2019-01-28T09:30:10+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -334,17 +334,17 @@
     },
     {
         "name": "giggsey/libphonenumber-for-php",
-        "version": "8.10.3",
-        "version_normalized": "8.10.3.0",
+        "version": "8.10.4",
+        "version_normalized": "8.10.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/giggsey/libphonenumber-for-php.git",
-            "reference": "8c129346bcb057caf7ed243792d5dacc137b4617"
+            "reference": "3cda94a4a442c24259fb0893618422a56cb8a898"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/8c129346bcb057caf7ed243792d5dacc137b4617",
-            "reference": "8c129346bcb057caf7ed243792d5dacc137b4617",
+            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/3cda94a4a442c24259fb0893618422a56cb8a898",
+            "reference": "3cda94a4a442c24259fb0893618422a56cb8a898",
             "shasum": ""
         },
         "require": {
@@ -361,7 +361,7 @@
             "phpunit/phpunit": "^4.8.36|^5.0",
             "symfony/console": "^2.8|^3.0"
         },
-        "time": "2019-01-09T12:30:34+00:00",
+        "time": "2019-01-24T15:41:24+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -644,8 +644,8 @@
     },
     {
         "name": "illuminate/contracts",
-        "version": "v5.7.21",
-        "version_normalized": "5.7.21.0",
+        "version": "v5.7.23",
+        "version_normalized": "5.7.23.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/contracts.git",
@@ -690,8 +690,8 @@
     },
     {
         "name": "illuminate/support",
-        "version": "v5.7.20",
-        "version_normalized": "5.7.20.0",
+        "version": "v5.7.23",
+        "version_normalized": "5.7.23.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
@@ -1030,6 +1030,154 @@
         ]
     },
     {
+        "name": "nette/php-generator",
+        "version": "v3.2.1",
+        "version_normalized": "3.2.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/nette/php-generator.git",
+            "reference": "9de4e093a130f7a1bd175198799ebc0efbac6924"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/nette/php-generator/zipball/9de4e093a130f7a1bd175198799ebc0efbac6924",
+            "reference": "9de4e093a130f7a1bd175198799ebc0efbac6924",
+            "shasum": ""
+        },
+        "require": {
+            "nette/utils": "^2.4.2 || ~3.0.0",
+            "php": ">=7.1"
+        },
+        "conflict": {
+            "nette/nette": "<2.2"
+        },
+        "require-dev": {
+            "nette/tester": "^2.0",
+            "tracy/tracy": "^2.3"
+        },
+        "time": "2018-11-27T19:00:14+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "3.2-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "src/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD-3-Clause",
+            "GPL-2.0",
+            "GPL-3.0"
+        ],
+        "authors": [
+            {
+                "name": "David Grudl",
+                "homepage": "https://davidgrudl.com"
+            },
+            {
+                "name": "Nette Community",
+                "homepage": "https://nette.org/contributors"
+            }
+        ],
+        "description": "🐘 Nette PHP Generator: generates neat PHP code for you. Supports new PHP 7.3 features.",
+        "homepage": "https://nette.org",
+        "keywords": [
+            "code",
+            "nette",
+            "php",
+            "scaffolding"
+        ]
+    },
+    {
+        "name": "nette/utils",
+        "version": "v2.5.3",
+        "version_normalized": "2.5.3.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/nette/utils.git",
+            "reference": "17b9f76f2abd0c943adfb556e56f2165460b15ce"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/nette/utils/zipball/17b9f76f2abd0c943adfb556e56f2165460b15ce",
+            "reference": "17b9f76f2abd0c943adfb556e56f2165460b15ce",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.6.0"
+        },
+        "conflict": {
+            "nette/nette": "<2.2"
+        },
+        "require-dev": {
+            "nette/tester": "~2.0",
+            "tracy/tracy": "^2.3"
+        },
+        "suggest": {
+            "ext-gd": "to use Image",
+            "ext-iconv": "to use Strings::webalize() and toAscii()",
+            "ext-intl": "for script transliteration in Strings::webalize() and toAscii()",
+            "ext-json": "to use Nette\\Utils\\Json",
+            "ext-mbstring": "to use Strings::lower() etc...",
+            "ext-xml": "to use Strings::length() etc. when mbstring is not available"
+        },
+        "time": "2018-09-18T10:22:16+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.5-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "src/"
+            ],
+            "files": [
+                "src/loader.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD-3-Clause",
+            "GPL-2.0",
+            "GPL-3.0"
+        ],
+        "authors": [
+            {
+                "name": "David Grudl",
+                "homepage": "https://davidgrudl.com"
+            },
+            {
+                "name": "Nette Community",
+                "homepage": "https://nette.org/contributors"
+            }
+        ],
+        "description": "🛠 Nette Utils: lightweight utilities for string & array manipulation, image handling, safe JSON encoding/decoding, validation, slug or strong password generating etc.",
+        "homepage": "https://nette.org",
+        "keywords": [
+            "array",
+            "core",
+            "datetime",
+            "images",
+            "json",
+            "nette",
+            "paginator",
+            "password",
+            "slugify",
+            "string",
+            "unicode",
+            "utf-8",
+            "utility",
+            "validation"
+        ]
+    },
+    {
         "name": "parsecsv/php-parsecsv",
         "version": "1.1.0",
         "version_normalized": "1.1.0.0",
@@ -1127,17 +1275,17 @@
     },
     {
         "name": "phpmailer/phpmailer",
-        "version": "v6.0.6",
-        "version_normalized": "6.0.6.0",
+        "version": "v6.0.7",
+        "version_normalized": "6.0.7.0",
         "source": {
             "type": "git",
             "url": "https://github.com/PHPMailer/PHPMailer.git",
-            "reference": "8190d73eb5def11a43cfb020b7f36db65330698c"
+            "reference": "0c41a36d4508d470e376498c1c0c527aa36a2d59"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/8190d73eb5def11a43cfb020b7f36db65330698c",
-            "reference": "8190d73eb5def11a43cfb020b7f36db65330698c",
+            "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/0c41a36d4508d470e376498c1c0c527aa36a2d59",
+            "reference": "0c41a36d4508d470e376498c1c0c527aa36a2d59",
             "shasum": ""
         },
         "require": {
@@ -1162,7 +1310,7 @@
             "stevenmaguire/oauth2-microsoft": "Needed for Microsoft XOAUTH2 authentication",
             "symfony/polyfill-mbstring": "To support UTF-8 if the Mbstring PHP extension is not enabled (^1.2)"
         },
-        "time": "2018-11-16T00:41:32+00:00",
+        "time": "2019-02-01T15:04:28+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2224,17 +2372,17 @@
     },
     {
         "name": "symfony/console",
-        "version": "v4.2.2",
-        "version_normalized": "4.2.2.0",
+        "version": "v4.2.3",
+        "version_normalized": "4.2.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/console.git",
-            "reference": "b0a03c1bb0fcbe288629956cf2f1dd3f1dc97522"
+            "reference": "1f0ad51dfde4da8a6070f06adc58b4e37cbb37a4"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/console/zipball/b0a03c1bb0fcbe288629956cf2f1dd3f1dc97522",
-            "reference": "b0a03c1bb0fcbe288629956cf2f1dd3f1dc97522",
+            "url": "https://api.github.com/repos/symfony/console/zipball/1f0ad51dfde4da8a6070f06adc58b4e37cbb37a4",
+            "reference": "1f0ad51dfde4da8a6070f06adc58b4e37cbb37a4",
             "shasum": ""
         },
         "require": {
@@ -2246,6 +2394,9 @@
             "symfony/dependency-injection": "<3.4",
             "symfony/process": "<3.3"
         },
+        "provide": {
+            "psr/log-implementation": "1.0"
+        },
         "require-dev": {
             "psr/log": "~1.0",
             "symfony/config": "~3.4|~4.0",
@@ -2255,12 +2406,12 @@
             "symfony/process": "~3.4|~4.0"
         },
         "suggest": {
-            "psr/log-implementation": "For using the console logger",
+            "psr/log": "For using the console logger",
             "symfony/event-dispatcher": "",
             "symfony/lock": "",
             "symfony/process": ""
         },
-        "time": "2019-01-04T15:13:53+00:00",
+        "time": "2019-01-25T14:35:16+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2483,17 +2634,17 @@
     },
     {
         "name": "symfony/translation",
-        "version": "v4.2.2",
-        "version_normalized": "4.2.2.0",
+        "version": "v4.2.3",
+        "version_normalized": "4.2.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/translation.git",
-            "reference": "939fb792d73f2ce80e6ae9019d205fc480f1c9a0"
+            "reference": "23fd7aac70d99a17a8e6473a41fec8fab3331050"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/translation/zipball/939fb792d73f2ce80e6ae9019d205fc480f1c9a0",
-            "reference": "939fb792d73f2ce80e6ae9019d205fc480f1c9a0",
+            "url": "https://api.github.com/repos/symfony/translation/zipball/23fd7aac70d99a17a8e6473a41fec8fab3331050",
+            "reference": "23fd7aac70d99a17a8e6473a41fec8fab3331050",
             "shasum": ""
         },
         "require": {
@@ -2523,7 +2674,7 @@
             "symfony/config": "",
             "symfony/yaml": ""
         },
-        "time": "2019-01-03T09:07:35+00:00",
+        "time": "2019-01-27T23:11:39+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2558,17 +2709,17 @@
     },
     {
         "name": "symfony/var-dumper",
-        "version": "v4.2.2",
-        "version_normalized": "4.2.2.0",
+        "version": "v4.2.3",
+        "version_normalized": "4.2.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/var-dumper.git",
-            "reference": "85bde661b178173d85c6f11ea9d03b61d1212bb2"
+            "reference": "223bda89f9be41cf7033eeaf11bc61a280489c17"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/85bde661b178173d85c6f11ea9d03b61d1212bb2",
-            "reference": "85bde661b178173d85c6f11ea9d03b61d1212bb2",
+            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/223bda89f9be41cf7033eeaf11bc61a280489c17",
+            "reference": "223bda89f9be41cf7033eeaf11bc61a280489c17",
             "shasum": ""
         },
         "require": {
@@ -2591,7 +2742,7 @@
             "ext-intl": "To show region name in time zone dump",
             "symfony/console": "To use the ServerDumpCommand and/or the bin/var-dump-server script"
         },
-        "time": "2019-01-03T09:07:35+00:00",
+        "time": "2019-01-30T11:44:30+00:00",
         "bin": [
             "Resources/bin/var-dump-server"
         ],
@@ -2745,46 +2896,18 @@
         ]
     },
     {
-        "name": "yetiforce/icalendar",
-        "version": "1.0.2",
-        "version_normalized": "1.0.2.0",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/YetiForceCompany/iCalendar.git",
-            "reference": "c16fd35eb8dbecc3bdbdc6016bfcd179e9dd2bde"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/YetiForceCompany/iCalendar/zipball/c16fd35eb8dbecc3bdbdc6016bfcd179e9dd2bde",
-            "reference": "c16fd35eb8dbecc3bdbdc6016bfcd179e9dd2bde",
-            "shasum": ""
-        },
-        "time": "2019-01-14T13:32:14+00:00",
-        "type": "library",
-        "installation-source": "dist",
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "LGPL-2.0-or-later"
-        ],
-        "description": "iCalendar for PHP",
-        "homepage": "https://github.com/YetiForceCompany/iCalendar",
-        "keywords": [
-            "ical"
-        ]
-    },
-    {
         "name": "yetiforce/yetiforcepdf",
-        "version": "0.1.6",
-        "version_normalized": "0.1.6.0",
+        "version": "0.1.9",
+        "version_normalized": "0.1.9.0",
         "source": {
             "type": "git",
             "url": "https://github.com/YetiForceCompany/YetiForcePDF.git",
-            "reference": "1f0a79a8994a8a515d5f5173f4ca116826b223ab"
+            "reference": "790d8c6ff0fd3bd2e8648b75db605e4ad8bdcacb"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/YetiForceCompany/YetiForcePDF/zipball/1f0a79a8994a8a515d5f5173f4ca116826b223ab",
-            "reference": "1f0a79a8994a8a515d5f5173f4ca116826b223ab",
+            "url": "https://api.github.com/repos/YetiForceCompany/YetiForcePDF/zipball/790d8c6ff0fd3bd2e8648b75db605e4ad8bdcacb",
+            "reference": "790d8c6ff0fd3bd2e8648b75db605e4ad8bdcacb",
             "shasum": ""
         },
         "require": {
@@ -2794,7 +2917,7 @@
             "phenx/php-font-lib": "^0.5.1",
             "php": ">=7.1"
         },
-        "time": "2019-01-22T10:43:03+00:00",
+        "time": "2019-02-01T12:28:29+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

@@ -298,8 +298,21 @@ App.Fields = {
 				} else {
 					elements = $('.js-editor:not([disabled])', parentElement);
 				}
-				if (elements.length !== 0 || typeof elements !== "undefined") {
-					this.loadEditor(elements, params);
+				if (elements.length !== 0 && typeof elements !== "undefined") {
+					this.isModal = elements.closest('.js-modal-container').length;
+					if (this.isModal) {
+						let self = this;
+						this.progressInstance = jQuery.progressIndicator({
+							blockInfo: {
+								enabled: true,
+								onBlock: () => {
+									self.loadEditor(elements, params);
+								}
+							},
+						});
+					} else {
+						this.loadEditor(elements, params);
+					}
 				}
 			}
 
@@ -339,7 +352,8 @@ App.Fields = {
 			 */
 			loadEditor(element, customConfig) {
 				this.setElement(element);
-				const instance = this.getEditorInstanceFromName();
+				const instance = this.getEditorInstanceFromName(),
+					self = this;
 				let config = {
 					language: CONFIG.langKey,
 					allowedContent: true,
@@ -354,6 +368,9 @@ App.Fields = {
 							evt.editor.on('blur', function () {
 								evt.editor.updateElement();
 							});
+							if (self.isModal) {
+								self.progressInstance.progressIndicator({mode: 'hide'});
+							}
 						}
 					},
 					extraPlugins: 'colorbutton,pagebreak,colordialog,find,selectall,showblocks,div,print,font,justify,bidi',
@@ -365,7 +382,10 @@ App.Fields = {
 						},
 						{name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt']},
 						{name: 'links', items: ['Link', 'Unlink']},
-						{name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']},
+						{
+							name: 'insert',
+							items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
+						},
 						{name: 'tools', items: ['Maximize', 'ShowBlocks']},
 						{name: 'paragraph', items: ['Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv']},
 						{name: 'document', items: ['Source', 'Print']},

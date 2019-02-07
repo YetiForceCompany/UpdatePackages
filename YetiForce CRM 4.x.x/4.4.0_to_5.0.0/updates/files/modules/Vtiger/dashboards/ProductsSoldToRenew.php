@@ -28,13 +28,14 @@ class Vtiger_ProductsSoldToRenew_Dashboard extends Vtiger_IndexAjax_View
 			'orderby' => $request->getForSql('orderby'),
 			'sortorder' => $request->getForSql('sortorder'),
 		]);
+		$data['orderby'] = $this->getFromData('orderby');
+		$data['sortorder'] = $this->getFromData('sortorder');
 		$viewer->assign('WIDGET', $widget);
 		$viewer->assign('MODULE_NAME', $moduleName);
 		$viewer->assign('OWNER', $currentUser->getId());
 		$viewer->assign('CURRENTUSER', $currentUser);
 		$viewer->assign('WIDGET_MODEL', $this);
 		$viewer->assign('BASE_MODULE', $this->getTargetModule());
-		$viewer->assign('LISTVIEWLINKS', true);
 		$viewer->assign('DATA', $data);
 		if ($request->has('content')) {
 			$viewer->view('dashboards/ProductsSoldToRenewContents.tpl', $moduleName);
@@ -124,18 +125,22 @@ class Vtiger_ProductsSoldToRenew_Dashboard extends Vtiger_IndexAjax_View
 		return count($this->getHeaders());
 	}
 
-	public function getRecords($user)
+	/**
+	 * Gets record list.
+	 *
+	 * @return array
+	 */
+	public function getRecords(): array
 	{
 		$this->initListViewController();
 		if (empty($this->listviewRecords)) {
-			$this->queryGenerator->addNativeCondition($this->getConditions());
+			foreach ($this->getConditions() as $condition) {
+				$this->queryGenerator->addCondition($condition[0], $condition[2], $condition[1]);
+			}
+			$this->queryGenerator->setOrder($this->getFromData('orderby'), $this->getFromData('sortorder'));
 			$query = $this->queryGenerator->createQuery();
 			$query->limit($this->getRecordLimit());
-			if (strtoupper($this->getFromData('sortorder')) === 'ASC') {
-				$query->orderBy([$this->getFromData('orderby') => SORT_ASC]);
-			} else {
-				$query->orderBy([$this->getFromData('orderby') => SORT_DESC]);
-			}
+
 			$this->listviewRecords = [];
 			$dataReader = $query->createCommand()->query();
 			while ($row = $dataReader->read()) {
@@ -151,8 +156,25 @@ class Vtiger_ProductsSoldToRenew_Dashboard extends Vtiger_IndexAjax_View
 		return 'assets_renew';
 	}
 
-	public function getConditions()
+	/**
+	 * Conditions.
+	 *
+	 * @return array
+	 */
+	public function getConditions(): array
 	{
-		return ['assetstatus' => 'PLL_ACCEPTED', 'assets_renew' => 'PLL_WAITING_FOR_RENEWAL'];
+		return [['assetstatus', 'e', 'PLL_ACCEPTED'], ['assets_renew', 'e', 'PLL_WAITING_FOR_RENEWAL']];
+	}
+
+	/**
+	 * Gets url.
+	 *
+	 * @throws \App\Exceptions\AppException
+	 *
+	 * @return string
+	 */
+	public function getUrl(): string
+	{
+		return $this->getTargetModuleModel()->getListViewUrl() . '&viewname=All&search_params=' . urlencode(App\Json::encode([$this->getConditions()]));
 	}
 }

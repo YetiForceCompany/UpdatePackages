@@ -53,6 +53,7 @@ return array(
     'DebugBar\\' => array($vendorDir . '/yetiforce/debugbar/src/DebugBar'),
     'CsrfMagic\\' => array($vendorDir . '/yetiforce/csrf-magic/src'),
     'Cron\\' => array($baseDir . '/cron'),
+    'Config\\' => array($baseDir . '/config'),
     'Composer\\CaBundle\\' => array($vendorDir . '/composer/ca-bundle/src'),
     'Complex\\' => array($vendorDir . '/markbaker/complex/classes/src'),
     'App\\' => array($baseDir . '/app'),

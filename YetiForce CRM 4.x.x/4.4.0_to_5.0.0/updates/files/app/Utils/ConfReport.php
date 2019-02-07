@@ -254,7 +254,6 @@ class ConfReport
 	 */
 	public static $writableFilesAndFolders = [
 		'config/' => ['type' => 'IsWritable', 'testCli' => true],
-		'config/config.inc.php' => ['type' => 'IsWritable', 'testCli' => true],
 		'user_privileges/' => ['type' => 'IsWritable', 'testCli' => true],
 		'user_privileges/tabdata.php' => ['type' => 'IsWritable', 'testCli' => true],
 		'user_privileges/menu_0.php' => ['type' => 'IsWritable', 'testCli' => true],
@@ -1009,9 +1008,9 @@ class ConfReport
 		$row['spaceTotal'] = $total;
 		$row['spaceFree'] = $free;
 		$row[$sapi] = round((($total - $free) / $total) * 100) . '% | ';
-		$row[$sapi] .= \App\Language::translateSingleMod('LBL_SPACE_FREE', 'Settings::ConfReport') . ': ';
+		$row[$sapi] .= \App\Language::translate('LBL_SPACE_FREE', 'Settings::ConfReport') . ': ';
 		$row[$sapi] .= \vtlib\Functions::showBytes($free) . ' | ';
-		$row[$sapi] .= \App\Language::translateSingleMod('LBL_SPACE_USED', 'Settings::ConfReport') . ': ';
+		$row[$sapi] .= \App\Language::translate('LBL_SPACE_USED', 'Settings::ConfReport') . ': ';
 		$row[$sapi] .= \vtlib\Functions::showBytes($total - $free);
 		if ($free < 1024 * 1024 * 1024) {
 			$row['status'] = false;

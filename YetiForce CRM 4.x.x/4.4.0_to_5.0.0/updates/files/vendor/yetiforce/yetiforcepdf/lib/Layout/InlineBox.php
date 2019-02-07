@@ -210,14 +210,18 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 		}
 		if ($text !== '') {
 			if ($whiteSpace === 'normal') {
-				$words = preg_split('/ /u', $text, 0, PREG_SPLIT_NO_EMPTY);
+				$words = preg_split('/ /u', $text, 0);
 				$count = count($words);
 				if ($count) {
 					foreach ($words as $index => $word) {
-						$this->createText($word);
-						$parent = $this->getParent();
-						$anonymous = ($parent instanceof self && $parent->isAnonymous()) || $parent instanceof LineBox;
-						if ($index + 1 !== $count || $anonymous) {
+						if ($word !== '') {
+							$this->createText($word);
+							$parent = $this->getParent();
+							$anonymous = ($parent instanceof self && $parent->isAnonymous()) || $parent instanceof LineBox;
+							if ($index + 1 !== $count || $anonymous) {
+								$this->createText(' ', true);
+							}
+						} else {
 							$this->createText(' ', true);
 						}
 					}

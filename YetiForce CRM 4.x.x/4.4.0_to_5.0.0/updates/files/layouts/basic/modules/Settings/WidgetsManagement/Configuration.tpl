@@ -5,7 +5,6 @@
 		<div class="widget_header row align-items-lg-center">
 			<div class="col-md-9">
 				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $QUALIFIED_MODULE)}
-				{\App\Language::translate('LBL_WIDGETS_MANAGEMENT_DESCRIPTION', $QUALIFIED_MODULE)}
 			</div>
 			<div class="col-md-3">
 				<div class="float-right col-6 col-md-6 px-0">
@@ -136,7 +135,8 @@
 											{/if}
 											<div class="btn-group actions ml-1">
 												<a href="javascript:void(0)"
-												   class="deleteCustomBlock btn btn-sm btn-danger">
+												   class="js-delete-custom-block-btn btn btn-sm btn-danger"
+												   data-js="click">
 													<span class="fas fa-trash-alt alignMiddle"
 														  title="{\App\Language::translate('LBL_DELETE', $QUALIFIED_MODULE)}"></span>
 												</a>
@@ -282,7 +282,8 @@
 										</div>
 									{/if}
 									<div class="btn-group actions">
-										<a href="javascript:void(0)" class="deleteCustomBlock btn btn-sm btn-danger">
+										<a href="javascript:void(0)"
+										   class="js-delete-custom-block-btn btn btn-sm btn-danger" data-js="click">
 											<span class="fas fa-trash-alt alignMiddle"
 												  title="{\App\Language::translate('LBL_DELETE', $QUALIFIED_MODULE)}"></span>
 										</a>

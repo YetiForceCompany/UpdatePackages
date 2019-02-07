@@ -50,8 +50,8 @@ class SocialMedia extends Base
 	public function __construct(string $type)
 	{
 		$this->type = $type;
-		if (\App\Cache::has('SocialMediaConfig', $this->type)) {
-			$this->value = \App\Cache::get('SocialMediaConfig', $this->type);
+		if (Cache::has('SocialMediaConfig', $this->type)) {
+			$this->value = Cache::get('SocialMediaConfig', $this->type);
 			return;
 		}
 		$this->value = [];
@@ -65,7 +65,7 @@ class SocialMedia extends Base
 			$this->value[$row['name']] = \App\Json::decode($row['value']);
 		}
 		$dataReader->close();
-		\App\Cache::save('SocialMediaConfig', $this->type, $this->value, \App\Cache::LONG);
+		Cache::save('SocialMediaConfig', $this->type, $this->value, Cache::LONG);
 	}
 
 	/**
@@ -97,7 +97,7 @@ class SocialMedia extends Base
 	 */
 	public function clearCache()
 	{
-		\App\Cache::delete('SocialMediaConfig', $this->type);
+		Cache::delete('SocialMediaConfig', $this->type);
 	}
 
 	/**
@@ -107,21 +107,16 @@ class SocialMedia extends Base
 	 *
 	 * @return bool
 	 */
-	public static function isEnableForModule(string $moduleName)
+	public static function isEnableForModule(string $moduleName): bool
 	{
-		$socialMediaConfig = \AppConfig::module($moduleName, 'enable_social');
-		if (false === $socialMediaConfig || empty($socialMediaConfig)) {
-			return false;
-		}
-		if (!is_array($socialMediaConfig)) {
-			throw new \App\Exceptions\AppException("ERR_ILLEGAL_VALUE||$moduleName:ENABLE_SOCIAL");
-		}
-		foreach ($socialMediaConfig as $socialMediaType) {
-			if (in_array($socialMediaType, static::ALLOWED_UITYPE)) {
-				return true;
+		$returnVal = false;
+		foreach (static::ALLOWED_UITYPE as $socialMediaType) {
+			if (in_array($moduleName, \App\Config::component('Social', \strtoupper("{$socialMediaType}_ENABLE_FOR_MODULES"), []))) {
+				$returnVal = true;
+				break;
 			}
 		}
-		return false;
+		return $returnVal;
 	}
 
 	/**

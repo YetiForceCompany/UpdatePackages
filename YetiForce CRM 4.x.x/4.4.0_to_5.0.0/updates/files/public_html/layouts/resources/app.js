@@ -880,8 +880,7 @@ var AppConnector,
 				placement: 'bottom',
 				autoclose: true,
 				twelvehour: formatTime,
-				minutestep: 5,
-				ampmSubmit: true,
+				minutestep: 5
 			};
 
 			$('.js-clock__btn').on('click', (e) => {
@@ -894,10 +893,19 @@ var AppConnector,
 
 			let formatTimeString = (timeInput) => {
 				if (params.twelvehour) {
+					let meridiemTime = '';
 					params.afterDone = () => { //format time string after picking a value
 						let timeString = timeInput.val(),
-							timeStringFormatted = [timeString.slice(0, timeString.length - 2), ' ', timeString.slice(timeString.length - 2)].join('');
+							timeStringFormatted = timeString.slice(0, timeString.length - 2) + ' ' + meridiemTime;
 						timeInput.val(timeStringFormatted);
+						app.event.trigger('Clockpicker.changed', timeInput);
+					};
+					params.beforeHide = () => {
+						meridiemTime = $('.clockpicker-buttons-am-pm').find('a:not(.text-white-50)').text();
+					};
+				} else {
+					params.afterDone = () => {
+						app.event.trigger('Clockpicker.changed', timeInput);
 					};
 				}
 			}

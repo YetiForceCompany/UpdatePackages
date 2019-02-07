@@ -37,16 +37,18 @@
 		</div>
 		<div class="col-md-12 form-row commentsHeader my-3 mx-0 px-0">
 			<div class="col-9 col-lg-5 col-md-12 col-sm-6 p-0">
-				<div class="input-group-append bg-white rounded-right">
+				<div class="input-group">
 					<input type="text" class="js-comment-search form-control"
 						   placeholder="{\App\Language::translate('LBL_COMMENTS_SEARCH','ModComments')}"
 						   aria-describedby="commentSearchAddon"
 						   data-container="widget"
 						   data-js="keypress|data">
-					<button class="btn btn-outline-dark border-0 h-100 js-search-icon" type="button"
-							data-js="click">
-						<span class="fas fa-search fa-fw" title="{\App\Language::translate('LBL_SEARCH')}"></span>
-					</button>
+					<div class="input-group-append">
+						<button class="btn btn-light js-search-icon" type="button"
+								data-js="click">
+							<span class="fas fa-search fa-fw" title="{\App\Language::translate('LBL_SEARCH')}"></span>
+						</button>
+					</div>
 				</div>
 			</div>
 			<div class="col-3 col-lg-7 col-md-12 col-sm-6 p-0 text-md-center text-lg-right m-md-2 m-lg-0">
@@ -108,16 +110,16 @@
 								 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
 								 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}" data-js="html | tribute.js"></div>
 						</div>
-						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right cancel"
+						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right ml-1 cancel"
 								type="reset">
-							<span class="visible-xs-inline-block fas fa-times"></span>
-							<strong class="d-none d-sm-none d-md-block">{\App\Language::translate('LBL_CANCEL', $MODULE_NAME)}</strong>
+							<span class="visible-xs-inline fas fa-times"></span>
+							<span class="d-none d-sm-none d-md-inline ml-1">{\App\Language::translate('LBL_CANCEL', $MODULE_NAME)}</span>
 						</button>
 						<button class="btn btn-success js-save-comment mt-3 float-right" type="button"
 								data-mode="add"
 								data-js="click|data-mode">
-							<span class="visible-xs-inline-block fas fa-check"></span>
-							<strong class="d-none d-sm-none d-md-block">{\App\Language::translate('LBL_POST', $MODULE_NAME)}</strong>
+							<span class="visible-xs-inline fas fa-check"></span>
+							<span class="d-none d-sm-none d-md-inline ml-1">{\App\Language::translate('LBL_POST', $MODULE_NAME)}</span>
 						</button>
 					</div>
 				</div>
@@ -146,16 +148,16 @@
 								 title="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}"
 								 placeholder="{\App\Language::translate('LBL_ADD_YOUR_COMMENT_HERE', $MODULE_NAME)}" data-js="html | tribute.js"></div>
 						</div>
-						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right cancel"
+						<button class="u-cursor-pointer js-close-comment-block mt-3 btn btn-warning float-right ml-1 cancel"
 								type="reset">
-							<span class="visible-xs-inline-block fas fa-times"></span>
-							<strong class="d-none d-sm-none d-md-block">{\App\Language::translate('LBL_CANCEL', $MODULE_NAME)}</strong>
+							<span class="visible-xs-inline fas fa-times"></span>
+							<span class="d-none d-sm-none d-md-inline ml-1">{\App\Language::translate('LBL_CANCEL', $MODULE_NAME)}</span>
 						</button>
 						<button class="btn btn-success js-save-comment mt-3 float-right" type="button"
 								data-mode="edit"
 								data-js="click|data-mode">
-							<span class="visible-xs-inline-block fas fa-check"></span>
-							<strong class="d-none d-sm-none d-md-block">{\App\Language::translate('LBL_POST', $MODULE_NAME)}</strong>
+							<span class="visible-xs-inline fas fa-check"></span>
+							<span class="d-none d-sm-none d-md-inline ml-1">{\App\Language::translate('LBL_POST', $MODULE_NAME)}</span>
 						</button>
 					</div>
 				</div>

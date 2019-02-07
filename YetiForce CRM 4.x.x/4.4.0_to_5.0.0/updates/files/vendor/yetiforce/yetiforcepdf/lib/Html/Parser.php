@@ -221,7 +221,7 @@ class Parser extends \YetiForcePDF\Base
 
 			$pageGroup->buildTree();
 			$pageGroup->fixTables();
-			$pageGroup->getStyle()->fixDomTree();
+			$pageGroup->getStyle()->fixDomTree(false);
 			$pageGroup->layout();
 			$page->setBox($pageGroup);
 
@@ -234,6 +234,7 @@ class Parser extends \YetiForcePDF\Base
 			foreach ($this->document->getPages($groupIndex) as $page) {
 				$page->getBox()->spanAllRows();
 			}
+			$pageGroup->getStyle()->fixDomTree();
 			$this->document->fixPageNumbers();
 			foreach ($this->document->getPages($groupIndex) as $page) {
 				$this->document->setCurrentPage($page);

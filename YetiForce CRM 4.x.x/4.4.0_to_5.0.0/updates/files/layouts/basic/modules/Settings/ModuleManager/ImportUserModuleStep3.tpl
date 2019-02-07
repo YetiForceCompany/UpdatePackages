@@ -10,17 +10,14 @@
 ********************************************************************************/
 -->*}
 {strip}
-	<div id="tpl-Settings-ModuleManager-ImportUserModuleStep3 importModules">
+	<div class="tpl-Settings-ModuleManager-ImportUserModuleStep3" id="importModules">
 		<div class='widget_header row '>
 			<div class="col-12">
 				{include file=\App\Layout::getTemplatePath('BreadCrumbs.tpl', $MODULE_NAME)}
-				{if isset($SELECTED_PAGE)}
-					{\App\Language::translate($SELECTED_PAGE->get('description'),$QUALIFIED_MODULE)}
-				{/if}
 			</div>
 		</div>
 		<div class="contents">
-			<div class="">
+			<div>
 				<div id="vtlib_modulemanager_import_div">
 					<form method="POST" action="index.php">
 						<table class="table table-bordered">
@@ -55,17 +52,17 @@
 										{else if $IMPORT_MODULE_TYPE eq 'font'}
 											{\App\Language::translate('LBL_IMPORTED_FONT', $QUALIFIED_MODULE)}
 										{else}
-											{\App\Language::translate('LBL_IMPORTED_MODULE', $QUALIFIED_MODULE, $IMPORT_MODULE_NAME)}
+											{\App\Language::translateArgs('LBL_IMPORTED_MODULE', $QUALIFIED_MODULE, $IMPORT_MODULE_NAME)}
 										{/if}
 									{/if}
 								</td>
 							</tr>
 							</tbody>
 						</table>
-						<div class="modal-footer">
-							<a href="index.php?module=ModuleManager&parent=Settings&view=List"
-							   class="btn btn-success"><strong>{\App\Language::translate('LBL_FINISH', $QUALIFIED_MODULE)}</strong></a>
-						</div>
+						<a href="index.php?module=ModuleManager&parent=Settings&view=List" role="button"
+						   class="btn btn-success"><span
+									class="fas fa-check mr-1"></span>{\App\Language::translate('LBL_FINISH', $QUALIFIED_MODULE)}
+						</a>
 					</form>
 				</div>
 			</div>

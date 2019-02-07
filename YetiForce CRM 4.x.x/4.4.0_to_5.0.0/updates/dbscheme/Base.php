@@ -86,6 +86,71 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'dav_calendarobjects' => [
+				'columns' => [
+					'id' => $this->primaryKey(10)->unsigned(),
+					'calendardata' => $this->binary(),
+					'uri' => $this->stringType(200),
+					'calendarid' => $this->integer(10)->unsigned()->notNull(),
+					'lastmodified' => $this->integer(10)->unsigned(),
+					'etag' => $this->stringType(32),
+					'size' => $this->integer(10)->unsigned()->notNull(),
+					'componenttype' => $this->stringType(8),
+					'firstoccurence' => $this->integer(10)->unsigned(),
+					'lastoccurence' => $this->integer(10)->unsigned(),
+					'uid' => $this->stringType(200),
+					'crmid' => $this->integer(10),
+				],
+				'columns_mysql' => [
+					'uri' => $this->varbinary(200),
+					'etag' => $this->varbinary(32),
+					'componenttype' => $this->varbinary(8),
+					'uid' => $this->varbinary(200),
+				],
+				'index' => [
+					['calendarid', ['calendarid', 'uri'], true],
+					['uri', 'uri'],
+					['crmid', 'crmid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+			'dav_cards' => [
+				'columns' => [
+					'id' => $this->primaryKey(10)->unsigned(),
+					'addressbookid' => $this->integer(10)->unsigned()->notNull(),
+					'carddata' => $this->binary(),
+					'uri' => $this->stringType(200),
+					'lastmodified' => $this->integer(10)->unsigned(),
+					'etag' => $this->stringType(32),
+					'size' => $this->integer(10)->unsigned()->notNull(),
+					'crmid' => $this->integer(10)->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'uri' => $this->varbinary(200),
+					'etag' => $this->varbinary(32),
+				],
+				'index' => [
+					['addressbookid', 'addressbookid'],
+					['uri', 'uri'],
+					['crmid', 'crmid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+			'l_#__settings_tracker_detail' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'prev_value' => $this->text()->notNull()->defaultValue(''),
+					'post_value' => $this->text()->notNull()->defaultValue(''),
+					'field' => $this->stringType()->notNull(),
+				],
+				'index' => [
+					['id', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			's_#__mail_queue' => [
 				'columns' => [
 					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),

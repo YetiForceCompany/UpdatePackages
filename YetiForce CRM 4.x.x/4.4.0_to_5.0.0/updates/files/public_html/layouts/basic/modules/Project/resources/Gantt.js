@@ -20,6 +20,9 @@ class Gantt {
 				}
 			},
 			maxRows: 30,
+			times: {
+				timeZoom: 21
+			},
 			style: {
 				'chart-row-bar-polygon': {
 					'stroke': '#E74C3C00',
@@ -92,7 +95,7 @@ class Gantt {
 							}
 						}
 					},
-					{id: 5, label: app.vtranslate('JS_ASSIGNED', 'Project'), value: 'assigned_user_name', width: 150},
+					{id: 5, label: app.vtranslate('JS_ASSIGNED', 'Project'), value: 'assigned_user_name', width: 110},
 					{
 						id: 5, label: '%', value: 'progress', width: 35, style: {
 							'task-list-header-label': {
@@ -252,7 +255,7 @@ class Gantt {
 		this.resize();
 		const self = this;
 		if (typeof self.ganttElastic === 'undefined') {
-			GanttElastic.mount({
+			this.ganttApp = GanttElastic.mount({
 				el: '#' + this.container.attr('id'),
 				tasks: this.allTasks,
 				options: this.options,
@@ -264,7 +267,7 @@ class Gantt {
 			});
 			this.container = this.containerParent.find('.gantt-elastic').eq(0);
 		} else {
-			self.ganttState.tasks = this.allTasks;
+			self.ganttApp.tasks = this.allTasks;
 		}
 	}
 
@@ -273,11 +276,18 @@ class Gantt {
 	 * @param {object} params - request params such as module/action and projectId
 	 */
 	loadProjectFromAjax(params) {
-		const progressInstance = jQuery.progressIndicator({blockInfo: {enabled: true}});
-		AppConnector.request(params).done((response) => {
-			this.loadProject(response.result);
-			progressInstance.progressIndicator({mode: 'hide'});
-		});
+		const self = this,
+			progressInstance = jQuery.progressIndicator({
+				blockInfo: {
+					enabled: true,
+					onBlock: () => {
+						AppConnector.request(params).done((response) => {
+							self.loadProject(response.result);
+							progressInstance.progressIndicator({mode: 'hide'});
+						});
+					}
+				},
+			});
 	}
 
 	/**
@@ -296,7 +306,7 @@ class Gantt {
 	 */
 	saveFilter(filterOptions) {
 		this.filter = filterOptions;
-		this.ganttState.tasks = this.filterProjectData(this.projectData);
+		this.ganttApp.tasks = this.filterProjectData(this.projectData);
 	}
 
 	/**

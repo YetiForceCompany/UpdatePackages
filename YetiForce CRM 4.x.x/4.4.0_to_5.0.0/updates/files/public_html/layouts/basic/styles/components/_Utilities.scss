@@ -116,6 +116,11 @@
 	@extend .font-weight-bold;
 }
 
+.u-hover-opacity:hover {
+	opacity: 0.5;
+	@include u-transition(opacity 275ms ease);
+}
+
 .u-word-break-all {
 	word-break: break-all !important;
 }
@@ -241,6 +246,11 @@
 	width: fit-content !important;
 }
 
+.u-w-max {
+	width: max-content !important;
+	width: -moz-max-content !important;
+}
+
 .u-w-max-320px {
 	max-width: 320px !important;
 }
@@ -286,7 +296,11 @@
 }
 
 .u-min-w-650px {
-	min-width: 650px !important;
+	min-width: calculate-rem(650px) !important;
+}
+
+.u-min-w-300px {
+	min-width: calculate-rem(300px) !important;
 }
 
 .u-w-1em {
@@ -346,11 +360,6 @@
 	min-height: 85vh;
 }
 
-//--- WHITE SPACE ---//
-.u-white-space-nowrap {
-	white-space: nowrap !important;
-}
-
 //--- BORDER ---//
 .u-border-right-10px {
 	border-right: 10px solid
@@ -405,10 +414,6 @@
 
 .u-z-index-100 {
 	z-index: 100;
-}
-
-.u-white-space-n {
-	white-space: normal !important;
 }
 
 .u-cursor-pointer {
@@ -557,5 +562,39 @@
 .u-align-middle-children {
 	* {
 		vertical-align: middle !important;
+	}
+}
+
+.u-table-column__before-block {
+	&--inventory {
+		width: 1%;
+	}
+
+	&:before {
+		content: '';
+		display: block;
+	}
+}
+
+@for $i from 1 through 100 {
+	.u-table-column__vw-#{$i} {
+		&:before {
+			width: #{$i}vw;
+		}
+	}
+}
+
+//--- WHITE SPACE ---//
+
+@each $breakpoint in map-keys($grid-breakpoints) {
+	@include media-breakpoint-up($breakpoint) {
+		$infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+
+		.u-white-space#{$infix}-nowrap {
+			white-space: nowrap !important;
+		}
+		.u-white-space#{$infix}-normal {
+			white-space: normal !important;
+		}
 	}
 }

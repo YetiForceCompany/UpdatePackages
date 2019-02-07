@@ -278,11 +278,11 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Set cut.
 	 *
-	 * @param bool $cut
+	 * @param int $cut
 	 *
 	 * @return $this
 	 */
-	public function setCut(bool $cut)
+	public function setCut(int $cut)
 	{
 		$this->cut = $cut;
 		return $this;
@@ -319,7 +319,7 @@ class Box extends \YetiForcePDF\Base
 	 * Set style.
 	 *
 	 * @param \YetiForcePDF\Style\Style $style
-	 * @param bool                      $init
+	 * @param bool $init
 	 *
 	 * @return $this
 	 */
@@ -623,19 +623,31 @@ class Box extends \YetiForcePDF\Base
 
 	/**
 	 * Get children.
-	 *
+	 * @param bool $onlyRenderable
+	 * @param bool $onlyForMeasurment
 	 * @return Box[]
 	 */
-	public function getChildren(): array
+	public function getChildren(bool $onlyRenderable = false, bool $onlyForMeasurment = false): array
 	{
-		return $this->children;
+		if (!$onlyRenderable && !$onlyForMeasurment) {
+			return $this->children;
+		}
+		return array_filter($this->children, function (Box $box) use ($onlyRenderable, $onlyForMeasurment) {
+			if ($onlyRenderable && $onlyForMeasurment) {
+				return $box->isRenderable() && $box->isForMeasurement();
+			}
+			if ($onlyRenderable) {
+				return $box->isRenderable();
+			}
+			return $box->isForMeasurement();
+		});
 	}
 
 	/**
 	 * Get all children.
 	 *
 	 * @param Box[] $allChildren
-	 * @param bool  $withCurrent
+	 * @param bool $withCurrent
 	 *
 	 * @return Box[]
 	 */
@@ -654,8 +666,8 @@ class Box extends \YetiForcePDF\Base
 	 * Iterate all children.
 	 *
 	 * @param callable $fn
-	 * @param bool     $reverse
-	 * @param bool     $deep
+	 * @param bool $reverse
+	 * @param bool $deep
 	 *
 	 * @return $this
 	 */
@@ -681,7 +693,7 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Get boxes by type.
 	 *
-	 * @param string      $shortClassName
+	 * @param string $shortClassName
 	 * @param string|null $until
 	 *
 	 * @return array
@@ -1015,7 +1027,7 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Add border instructions.
 	 *
-	 * @param array  $element
+	 * @param array $element
 	 * @param string $pdfX
 	 * @param string $pdfY
 	 * @param string $width

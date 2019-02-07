@@ -471,7 +471,6 @@ class YetiForceUpdate
 		$this->updateHeaderField();
 		$this->addRelations();
 		$this->updateRecords();
-		$this->updateConfigurationFiles();
 		$this->removePbxManager();
 		$this->actionMapp();
 		$this->addModules(['RecycleBin']);
@@ -489,7 +488,8 @@ class YetiForceUpdate
 		]);
 		$this->importer->dropColumns([
 			['a_yf_pdf', 'watermark_size'],
-			['vtiger_language', 'label']
+			['vtiger_language', 'label'],
+			['a_yf_pdf', 'meta_creator'],
 		]);
 		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -786,6 +786,7 @@ class YetiForceUpdate
 		$db->createCommand()->delete('vtiger_relatedlists', ['name' => 'getContacts'])->execute();
 		$db->createCommand()->update('vtiger_blocks', ['display_status' => 2], ['display_status' => 1])->execute();
 		$db->createCommand()->update('s_#__companies', ['type' => 2])->execute();
+		$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
 	}
 
 	private function updateVtEmailTemplates()
@@ -1198,6 +1199,11 @@ class YetiForceUpdate
 			['vtiger_field', ['displaytype' => '9'], ['fieldname' => 'projectid', 'tabid' => \App\Module::getModuleId('ProjectTask')]],
 			['vtiger_field', ['uitype' => '9', 'typeofdata' => 'N~O', 'maximumlength' => '999', 'readonly' => 1, 'displaytype' => 10], ['fieldname' => 'progress', 'tabid' => \App\Module::getModuleId('Project')]],
 			['vtiger_field', ['uitype' => '9', 'typeofdata' => 'N~O', 'maximumlength' => '999', 'readonly' => 1], ['fieldname' => 'projectmilestone_progress', 'tabid' => \App\Module::getModuleId('ProjectMilestone')]],
+			['vtiger_eventhandlers', ['include_modules' => 'Calendar'], ['handler_class' => 'API_CalDAV_Handler', 'event_name' => 'EntityAfterSave']],
+			['vtiger_eventhandlers', ['priority' => '3'], ['handler_class' => 'Accounts_SaveChanges_Handler']],
+			['vtiger_field', ['uitype' => '14'], ['fieldname' => 'time_start', 'tabid' => \App\Module::getModuleId('Calendar')]],
+			['vtiger_field', ['uitype' => '14'], ['fieldname' => 'time_end', 'tabid' => \App\Module::getModuleId('Calendar')]],
+			['vtiger_field', ['uitype' => '19', 'maximumlength' => '65535'], ['fieldname' => 'description', 'tabid' => \App\Module::getModuleId('Calendar')]],
 		];
 		$db->createCommand()->alterColumn('vtiger_project', 'progress', 'decimal(5,2)')->execute();
 		$db->createCommand()->alterColumn('vtiger_projectmilestone', 'projectmilestone_progress', 'decimal(5,2)')->execute();
@@ -1530,6 +1536,83 @@ class YetiForceUpdate
 				'view_type' => 'RelatedTab',
 			], ['tabid' => App\Module::getModuleId('Accounts'), 'related_tabid' => App\Module::getModuleId('SCalculations')]
 			],
+			['vtiger_eventhandlers', [
+				'event_name' => 'EntityAfterDelete',
+				'handler_class' => 'API_CardDAV_Handler',
+				'is_active' => 1,
+				'include_modules' => 'Contacts,OSSEmployees',
+				'exclude_modules' => '',
+				'priority' => 3,
+				'owner_id' => 0,
+			], [
+				'event_name' => 'EntityAfterDelete',
+				'handler_class' => 'API_CardDAV_Handler'
+			]
+			],
+			['vtiger_eventhandlers', [
+				'event_name' => 'EntityChangeState',
+				'handler_class' => 'API_CardDAV_Handler',
+				'is_active' => 1,
+				'include_modules' => 'Contacts,OSSEmployees',
+				'exclude_modules' => '',
+				'priority' => 3,
+				'owner_id' => 0,
+			], [
+				'event_name' => 'EntityChangeState',
+				'handler_class' => 'API_CardDAV_Handler'
+			]
+			],
+			['vtiger_eventhandlers', [
+				'event_name' => 'EntityAfterDelete',
+				'handler_class' => 'API_CalDAV_Handler',
+				'is_active' => 1,
+				'include_modules' => 'Calendar',
+				'exclude_modules' => '',
+				'priority' => 3,
+				'owner_id' => 0,
+			], [
+				'event_name' => 'EntityAfterDelete',
+				'handler_class' => 'API_CalDAV_Handler'
+			]
+			],
+			['vtiger_eventhandlers', [
+				'event_name' => 'EntityChangeState',
+				'handler_class' => 'API_CalDAV_Handler',
+				'is_active' => 1,
+				'include_modules' => 'Calendar',
+				'exclude_modules' => '',
+				'priority' => 3,
+				'owner_id' => 0,
+			], [
+				'event_name' => 'EntityChangeState',
+				'handler_class' => 'API_CalDAV_Handler'
+			]
+			],
+			['vtiger_fieldmodulerel', [
+				'fieldid' => Vtiger_Module_Model::getInstance('SQuoteEnquiries')->getField('accountid')->getId(),
+				'module' => 'SQuoteEnquiries',
+				'relmodule' => 'Leads',
+				'status' => null,
+				'sequence' => 0,
+			], [
+				'fieldid' => Vtiger_Module_Model::getInstance('SQuoteEnquiries')->getField('accountid')->getId(),
+				'relmodule' => 'Leads'
+			]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('Leads'),
+				'related_tabid' => App\Module::getModuleId('SQuoteEnquiries'),
+				'name' => 'getDependentsList',
+				'sequence' => 23,
+				'label' => 'SQuoteEnquiries',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('Leads'), 'related_tabid' => App\Module::getModuleId('SQuoteEnquiries')]
+			],
 		];
 		foreach(['Vendors', 'Partners', 'Competition','SSalesProcesses','Project', 'ServiceContracts', 'Campaigns', 'FBookkeeping', 'ProjectTask', 'ProjectMilestone', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders',
 					'SRecurringOrders', 'FInvoice', 'SVendorEnquiries'] as $moduleName) {
@@ -1601,255 +1684,6 @@ class YetiForceUpdate
 		}
 	}
 	/**
-	 * Changes in configuration files.
-	 *
-	 * @return array
-	 */
-	private function getConfigurations()
-	{
-		return [
-			['name' => 'config/config.inc.php', 'conditions' => [
-				['type' => 'update', 'search' => '$default_theme = \'softed\';', 'replace' => ['$default_theme = \'softed\';', '$default_theme = \'twilight\';']],
-				['type' => 'update', 'search' => '$default_language = \'' . AppConfig::main('default_language') .'\';', 'replace' => ['$default_language = \'' . AppConfig::main('default_language') . '\';', '$default_language = \'' . $this->getNewPrefixLang(AppConfig::main('default_language')) . '\';']],
-			],
-			],
-			['name' => 'config/modules/Calendar.php', 'conditions' => [
-				['type' => 'update', 'search' => 'SHOW_TIMELINE_WEEK', 'replace' => ['false', 'true']],
-				['type' => 'update', 'search' => 'SHOW_TIMELINE_DAY', 'replace' => ['false', 'true']],
-				['type' => 'update', 'search' => 'Event/To Do', 'replace' => ['Event/To Do', 'Calendar']],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'CALENDAR_VIEW\'', 'addingType' => 'before', 'value' => "	//Calendar view - allowed values: Extended, 'Standard'
-	'CALENDAR_VIEW' => 'Extended',
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_ACTIVITY_BUTTONS_IN_EDIT_FORM\'', 'addingType' => 'before', 'value' => "	//Show activity status buttons in edit form
-	'SHOW_ACTIVITY_BUTTONS_IN_EDIT_FORM' => true,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_EDIT_FORM\'', 'addingType' => 'before', 'value' => "	//Show default edit form
-	'SHOW_EDIT_FORM' => false,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'AUTOFILL_TIME\'', 'addingType' => 'before', 'value' => "	//Select event free time automatically
-	'AUTOFILL_TIME' => false,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'ALL_DAY_SLOT\'', 'addingType' => 'before', 'value' => "	//Shows 'all day' row in agendaWeek and agendaDay view
-	'ALL_DAY_SLOT' => true,"],
-				['type' => 'add', 'search' => 'return [', 'checkInContents' => '\'WEEK_COUNT\'', 'addingType' => 'after', 'value' => "	// Shows number of the week in the year view
-	// true - show, false - hide
-	'WEEK_COUNT' => true, //Boolean"]
-			]
-			],
-			['name' => 'config/modules/Users.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'SHOW_ROLE_NAME', 'addingType' => 'before', 'value' => "	// Show role name
-	'SHOW_ROLE_NAME' => true,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'FAVORITE_OWNERS', 'addingType' => 'before', 'value' => "	// Activation of favorite owners
-	'FAVORITE_OWNERS' => false,
-"],
-			]
-			],
-			['name' => 'config/debug.php', 'conditions' => [
-				['type' => 'add', 'search' => '// Debug Viewer => cache/logs/viewer-debug.log', 'checkInContents' => 'DEBUG_CRON', 'addingType' => 'before', 'value' => "	// Debug cron => cache/logs/cron/
-	'DEBUG_CRON' => false,
-"],
-			]
-			],
-			['name' => 'config/modules/Chat.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'MAX_LENGTH_MESSAGE\'', 'addingType' => 'before', 'value' => "	// The maximum length of the message, If you want to increase the number of characters, you must also change it in the database (u_yf_chat_messages_crm, u_yf_chat_messages_group, u_yf_chat_messages_global).
-	'MAX_LENGTH_MESSAGE' => 500,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'REFRESH_MESSAGE_TIME\'', 'addingType' => 'before', 'value' => "	// What time to update the new message, number of milliseconds. Default: 2000
-	'REFRESH_MESSAGE_TIME' => 2000,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'REFRESH_TIME_GLOBAL\'', 'addingType' => 'before', 'value' => "	// Refresh time for global timer.
-	'REFRESH_TIME_GLOBAL' => 5000,"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'DEFAULT_SOUND_NOTIFICATION\'', 'addingType' => 'before', 'value' => "	// Default sound notification.
-	'DEFAULT_SOUND_NOTIFICATION' => true,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'SHOW_NUMBER_OF_NEW_MESSAGES\'', 'addingType' => 'before', 'value' => "	// Show the number of new messages.
-	'SHOW_NUMBER_OF_NEW_MESSAGES' => true,
-"],
-				['type' => 'update', 'search' => '\'ROWS_LIMIT\'', 'replace' => ['\'ROWS_LIMIT\'', '\'CHAT_ROWS_LIMIT\'']],
-				['type' => 'update', 'search' => 'REFRESH_TIME', 'replace' => [AppConfig::module('Chat', 'REFRESH_TIME'), AppConfig::module('Chat', 'REFRESH_TIME') * 1000]],
-			],
-			],
-			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'COORDINATE_CONNECTOR\'', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
-	'COORDINATE_CONNECTOR' => 'OpenStreetMap',
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => '\'ROUTE_CONNECTOR\'', 'addingType' => 'before', 'value' => "// Name of connector to calculate of route
-	'ROUTE_CONNECTOR' => 'Yours',
-"]
-			]
-			],
-			['name' => 'config/performance.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'INVENTORY_EDIT_VIEW_LAYOUT', 'addingType' => 'before', 'value' => "	//Is divided layout style on edit view in modules with products
-	'INVENTORY_EDIT_VIEW_LAYOUT' => true,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'LIMITED_INFO_IN_FOOTER', 'addingType' => 'before', 'value' => "	// Any modifications of this parameter require the vendor's consent.
-	// Any unauthorised modification breaches the terms and conditions of YetiForce Public License.
-	'LIMITED_INFO_IN_FOOTER' => false,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'RECORD_POPOVER_DELAY', 'addingType' => 'before', 'value' => "	// Popover record's trigger delay in ms
-	'RECORD_POPOVER_DELAY' => 500,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'PICKLIST_DEPEDENCY_DEFAULT_EMPTY', 'addingType' => 'before', 'value' => "	// Empty value when is not selected item in picklist depedency
-	'PICKLIST_DEPEDENCY_DEFAULT_EMPTY' => true,
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'LIMITED_INFO_SUPPORT', 'addingType' => 'before', 'value' => "// Any modifications of this parameter require the vendor's consent.
-	// Any unauthorised modification breaches the terms and conditions of YetiForce Public License.
-	'LIMITED_INFO_SUPPORT' => false,
-"],
-			],
-			],
-			['name' => 'config/security.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER', 'addingType' => 'before', 'value' => "	/**
-	 * Cache lifetime for SensioLabs security checker.
-	 */
-	'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER' => 3600,
-"],
-			],
-			],
-			['name' => 'config/sounds.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHAT', 'addingType' => 'before', 'value' => "	'CHAT' => 'sound_1.mp3',
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'CHAT', 'addingType' => 'before', 'value' => "	'MAILS' => 'sound_1.mp3',
-"],
-			],
-			],
-			['name' => 'config/developer.php', 'conditions' => [
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'LANGUAGES_UPDATE_DEV_MODE', 'addingType' => 'before', 'value' => "	// Developer Languages update mode
-	'LANGUAGES_UPDATE_DEV_MODE' => false,
-"],
-			],
-			],
-			['name' => 'config/modules/OSSMail.php', 'conditions' => [
-				['type' => 'update', 'search' => '$config[\'db_dsnw\']', 'checkInContents' => 'isset($dbconfig)', 'value' => "if (isset(\$dbconfig)) {
-	\$config['db_dsnw'] = 'mysql://' . \$dbconfig['db_username'] . ':' . \$dbconfig['db_password'] . '@' . \$dbconfig['db_server'] . ':' . \$dbconfig['db_port'] . '/' . \$dbconfig['db_name'];
-}
-"],
-				['type' => 'add', 'search' => '$config[\'db_prefix\']', 'checkInContents' => 'defined(\'RCUBE_INSTALL_PATH\')', 'addingType' => 'before', 'value' => "if (!defined('RCUBE_INSTALL_PATH')) {
-	define('RCUBE_INSTALL_PATH', realpath(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'public_html' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'OSSMail' . DIRECTORY_SEPARATOR . 'roundcube'));
-}
-"],
-				['type' => 'update', 'search' => '$config[\'site_URL\']', 'checkInContents' => 'isset($site_URL)', 'value' => "if (isset(\$site_URL)) {
-	\$config['site_URL'] = \$config['public_URL'] = \$site_URL;
-	\$config['public_URL'] .= strpos(\$_SERVER['SCRIPT_NAME'], 'public_html/modules/OSSMail') === false ? '' : 'public_html/';
-}
-"],
-				['type' => 'remove', 'search' => '$config[\'public_URL\'] .=', 'checkInContents' => 'isset($site_URL)'],
-				['type' => 'remove', 'search' => '\'ical_attachments\',', 'checkInContents' => 'ical_attachments']
-			],
-			],
-			['name' => 'config/modules/OpenStreetMap.php', 'conditions' => [
-				['type' => 'update', 'search' => 'seaching', 'replace' => ['seaching', 'searching']],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'ROUTE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to calculate of route
-	'ROUTE_CONNECTOR' => 'Yours'
-"],
-				['type' => 'add', 'search' => '];', 'checkInContents' => 'COORDINATE_CONNECTOR', 'addingType' => 'before', 'value' => "	// Name of connector to get coordinates
-	'COORDINATE_CONNECTOR' => 'OpenStreetMap',
-"],
-			]
-			],
-		];
-	}
-
-	/**
-	 * Configuration files.
-	 */
-	private function updateConfigurationFiles()
-	{
-		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$rootDirectory = ROOT_DIRECTORY . DIRECTORY_SEPARATOR;
-		foreach ($this->getConfigurations() as $config) {
-			if (!$config) {
-				continue;
-			}
-			$conditions = $config['conditions'];
-			$fileName = $rootDirectory . $config['name'];
-			if (file_exists($fileName)) {
-				$baseContent = file_get_contents($fileName);
-				$configContent = $configContentClone = file($fileName);
-				$emptyLine = false;
-				$addContent = [];
-				$indexes = [];
-				foreach ($configContent as $key => $line) {
-					if ($emptyLine && strlen($line) == 1) {
-						unset($configContent[$key]);
-						$emptyLine = false;
-						continue;
-					}
-					$emptyLine = false;
-					foreach ($conditions as $index => $condition) {
-						if (empty($condition)) {
-							continue;
-						}
-						if ($condition['type'] === 'add' && !in_array($index, $indexes)) {
-							$addContent[$index] = $condition['value'];
-							$indexes[] = $index;
-						}
-						if (strpos($line, $condition['search']) !== false) {
-							switch ($condition['type']) {
-								case 'add':
-									if (isset($condition['checkInContents']) && strpos($baseContent, $condition['checkInContents']) === false) {
-										$configContent[$key] = $condition['addingType'] === 'before' ? $condition['value'] . $configContent[$key] : $configContent[$key] . $condition['value'];
-									}
-									unset($addContent[$index]);
-									break;
-								case 'remove':
-									if (isset($condition['checkInContents']) && strpos($baseContent, $condition['checkInContents']) !== false) {
-										break;
-									}
-									if (!empty($condition['before'])) {
-										if (strpos($configContentClone[$key - 1], $condition['before']) !== false) {
-											unset($configContent[$key]);
-											$emptyLine = true;
-										}
-									} else {
-										unset($configContent[$key]);
-										$emptyLine = true;
-									}
-									break;
-								case 'removeTo':
-									unset($configContent[$key]);
-									$while = 0;
-									while ($while !== false) {
-										$while++;
-										unset($configContent[$key + $while]);
-										if (strpos($configContent[$key + $while], $condition['end']) === false) {
-											$while = false;
-										}
-									}
-									$emptyLine = true;
-									break;
-								case 'update':
-									if (isset($condition['checkInLine']) && (strpos($condition['checkInLine'], $configContent[$key]) !== false)) {
-										break;
-									} elseif (isset($condition['checkInContents']) && strpos($baseContent, $condition['checkInContents']) !== false) {
-										break;
-									}
-									if (isset($condition['replace'])) {
-										$configContent[$key] = str_replace($condition['replace'][0], $condition['replace'][1], $configContent[$key]);
-									} else {
-										$configContent[$key] = $condition['value'];
-									}
-									break;
-								default:
-									break;
-							}
-						}
-					}
-				}
-				$content = implode('', $configContent);
-				if ($addContent) {
-					$addContentString = implode('', $addContent);
-					$content .= $addContentString;
-				}
-				file_put_contents($fileName, $content);
-			}
-		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-	}
-
-	/**
 	 * Cron data.
 	 */
 	private function updateCron()
@@ -1863,6 +1697,109 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function createConfigFiles()
+	{
+		if (class_exists('Config\\Main')) {
+			return;
+		}
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/PhpLiteral.php';
+		require_once 'vendor/nette/utils/src/Utils/SmartObject.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Traits/CommentAware.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/ClassType.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/PhpNamespace.php';
+		require_once 'vendor/nette/utils/src/Utils/StaticClass.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Helpers.php';
+		require_once 'vendor/nette/utils/src/Utils/Callback.php';
+		require_once 'vendor/nette/utils/src/Utils/Strings.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Traits/VisibilityAware.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Traits/NameAware.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Property.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Printer.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Traits/FunctionLike.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/Method.php';
+		require_once 'vendor/nette/php-generator/src/PhpGenerator/PhpFile.php';
+		require 'config/api.php';
+		(new UpdateConfig('api'))
+			->set('enabledServices', $enabledServices)
+			->set('enableBrowser', $enableBrowser)
+			->set('enableCardDAV', $enableCardDAV)
+			->set('enableCalDAV', $enableCalDAV)
+			->set('enableWebDAV', $enableWebDAV)
+			->create();
+		require 'config/sounds.php';
+		(new UpdateConfig('sounds'))
+			->set('IS_ENABLED', $SOUNDS_CONFIG['IS_ENABLED'])
+			->set('REMINDERS', $SOUNDS_CONFIG['REMINDERS'])
+			->set('CHAT', $SOUNDS_CONFIG['REMINDERS'])
+			->set('MAILS', $SOUNDS_CONFIG['REMINDERS'])
+			->create();
+		$dbConfig = AppConfig::main('dbconfig');
+		(new UpdateConfig('db'))
+			->set('db_server', $dbConfig['db_server'])
+			->set('db_port', $dbConfig['db_port'])
+			->set('db_username', $dbConfig['db_username'])
+			->set('db_password', $dbConfig['db_password'])
+			->set('db_name', $dbConfig['db_name'])
+			->set('db_type', $dbConfig['db_type'])
+			->create();
+
+		$skip = ['module', 'component', 'db', 'api', 'sounds'];
+		foreach (array_diff(UpdateConfig::TYPES, $skip) as $type) {
+			(new UpdateConfig($type))->create();
+		}
+		$allConfig = [];
+		foreach ((new \DirectoryIterator('config/modules/')) as $item) {
+			if ($item->isFile() && !in_array($item->getBasename(), ['.', '..'])) {
+				$moduleName = $item->getBasename();
+				$filePath = 'config/modules' . \DIRECTORY_SEPARATOR . $moduleName;
+				$fileName = current(explode('.', $moduleName));
+				$allConfig[$fileName] = require $filePath;
+			}
+		}
+		$allConfig['OSSMail'] = $config;
+		AppConfig::load('modules', $allConfig);
+		rename('config/modules', 'config/Modules');
+		foreach ((new \DirectoryIterator('modules/')) as $item) {
+			if ($item->isDir() && !in_array($item->getBasename(), ['.', '..'])) {
+				$moduleName = $item->getBasename();
+				$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+				if (file_exists($filePath)) {
+					(new UpdateConfig('module', $moduleName))->create($allConfig[$moduleName]);
+					unset($allConfig[$moduleName]);
+				}
+			}
+		}
+
+
+		$path = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
+		$componentsData = require_once "$path";
+		$skip = ['Dav'];
+		foreach ($componentsData as $component => $data) {
+			if (!in_array($component, $skip)) {
+				(new UpdateConfig('component', $component))->create($allConfig[$component]);
+				if (isset($allConfig[$component])) {
+					unset($allConfig[$component]);
+				}
+			}
+		}
+		(new UpdateConfig('component', 'Dav'))
+			->set('CALDAV_DEFAULT_VISIBILITY_FROM_DAV', AppConfig::module('API', 'CALDAV_DEFAULT_VISIBILITY_FROM_DAV'))
+			->set('CALDAV_EXCLUSION_FROM_DAV', AppConfig::module('API', 'CALDAV_EXCLUSION_FROM_DAV'))
+			->set('CALDAV_EXCLUSION_TO_DAV', AppConfig::module('API', 'CALDAV_EXCLUSION_TO_DAV'))
+			->create();
+		unset($allConfig['API']);
+		foreach ($allConfig as $file => $badConfig) {
+			$this->log('ERROR: Can not create config file for '. $file . '| ' . date('Y-m-d H:i:s'));
+		}
+		unlink('config/Modules/API.php');
+		unlink('config/Modules/Export.php');
+		unlink('config/Modules/Mail.php');
+		unlink('config/config.db.php');
+		unlink('config/config.inc.php');
+		unlink('config/config.php');
+		unlink('config/config.template.php');
+		unlink('config/secret_keys.php');
+	}
 	/**
 	 * Postupdate.
 	 */
@@ -1967,6 +1904,7 @@ class YetiForceUpdate
 		}
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+		$this->createConfigFiles();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}
@@ -2243,6 +2181,180 @@ class MigrateImages
 			} else {
 				\App\Log::error("MIGRATE FILES - $table can not be deleted. There is data.");
 			}
+		}
+	}
+}
+
+class UpdateConfig extends \App\Base
+{
+	/** Types of configuration files */
+	public const TYPES = [
+		'main',
+		'db',
+		'performance',
+		'module',
+		'api',
+		'debug',
+		'developer',
+		'security',
+		'securityKeys',
+		'relation',
+		'sounds',
+		'search',
+		'component',
+	];
+
+	/** @var string Type of configuration file */
+	private $type;
+	/** @var string|null Component name */
+	private $component;
+	/** @var string Path to the configuration file */
+	private $path;
+	/** @var string Path to the configuration template file */
+	private $templatePath;
+	/** @var array Template data */
+	private $template = [];
+
+	/** @var string License */
+	private $license = 'Configuration file.
+This file is auto-generated.
+
+@package Config
+
+@copyright YetiForce Sp. z o.o
+@license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+';
+
+	/**
+	 * ConfigFile constructor.
+	 *
+	 * @param string      $type
+	 * @param string|null $component
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 */
+	public function __construct(string $type, ?string $component = '')
+	{
+		parent::__construct();
+		if (!in_array($type, self::TYPES)) {
+			throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE||' . $type, 406);
+		}
+		$this->type = $type;
+		if ($component) {
+			$this->component = $component;
+		}
+		if ($this->type === 'module') {
+			$this->templatePath = 'modules' . \DIRECTORY_SEPARATOR . $component . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+			$this->path = 'config' . \DIRECTORY_SEPARATOR . 'Modules' . \DIRECTORY_SEPARATOR . "{$component}.php";
+		} elseif ($this->type === 'component') {
+			$this->templatePath = 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
+			$this->path = 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . "{$component}.php";
+		} else {
+			$this->templatePath = 'config' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
+			$this->path = 'config' . \DIRECTORY_SEPARATOR . \ucfirst($this->type) . '.php';
+		}
+		$this->loadTemplate();
+	}
+
+	/**
+	 * Load configuration template.
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 */
+	private function loadTemplate()
+	{
+		if (!\file_exists($this->templatePath)) {
+			throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE||' . $this->templatePath, 406);
+		}
+		$data = require "{$this->templatePath}";
+		if ('component' === $this->type) {
+			if (!isset($data[$this->component])) {
+				throw new Exceptions\IllegalValue("ERR_NOT_ALLOWED_VALUE||{$this->type}:{$this->component}", 406);
+			}
+			$data = $data[$this->component];
+		} elseif ('module' !== $this->type) {
+			if (!isset($data[$this->type])) {
+				throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE||' . $this->type, 406);
+			}
+			$data = $data[$this->type];
+		}
+		$this->template = $data;
+	}
+
+	/**
+	 * Gets class name.
+	 *
+	 * @return string
+	 */
+	private function getClassName()
+	{
+		$className = 'Config\\';
+		if ($this->type === 'module') {
+			$className .= 'Modules\\' . $this->component;
+		} elseif ($this->type === 'component') {
+			$className .= 'Components\\' . $this->component;
+		} else {
+			$className .= ucfirst($this->type);
+		}
+		return $className;
+	}
+
+	/**
+	 * Gets template data.
+	 *
+	 * @param string|null $key
+	 *
+	 * @return mixed
+	 */
+	public function getTemplate(?string $key = null)
+	{
+		return $key ? ($this->template[$key] ?? null) : $this->template;
+	}
+
+
+	/**
+	 * Create configuration file.
+	 *
+	 * @throws \App\Exceptions\AppException
+	 * @throws \App\Exceptions\IllegalValue
+	 */
+	public function create($config = [])
+	{
+		if (\array_diff_key($this->getData(), $this->template)) {
+			throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE', 406);
+		}
+		$className = $this->getClassName();
+		$file = new \Nette\PhpGenerator\PhpFile();
+		$file->addComment($this->license);
+		$class = $file->addClass($className);
+		$class->addComment('Configuration Class.');
+		foreach ($this->template as $parameterName => $parameter) {
+			if (isset($parameter['type']) && 'function' === $parameter['type']) {
+				$class->addMethod($parameterName)->setStatic()->setBody($parameter['default'])->addComment($parameter['description']);
+			} else {
+
+				$value = '';
+				if ($this->has($parameterName)) {
+					$value = $this->get($parameterName);
+				} else {
+					$method = $this->type;
+					if ($method === 'module' || $method === 'component') {
+						$value = AppConfig::module($this->component, $parameterName);
+						if (!isset($config[$parameterName])) {
+							$value = $parameter['default'];
+						}
+					} else {
+						$value = AppConfig::$method($parameterName, $parameter['default']);
+					}
+				}
+				$class->addProperty($parameterName, $value)->setStatic()->addComment($parameter['description']);
+			}
+		}
+		if (file_exists($this->path)) {
+			unlink($this->path);
+		}
+		if (false === file_put_contents($this->path, $file, LOCK_EX)) {
+			throw new Exceptions\AppException("ERR_CREATE_FILE_FAILURE||{$this->path}");
 		}
 	}
 }

@@ -211,8 +211,8 @@ class PackageExport
 			$zip->addFile('layouts/' . \Vtiger_Viewer::getDefaultLayoutName() . "/skins/images/$module.png", "$module.png");
 		}
 		// Copy config files
-		if (file_exists("config/modules/$module.php")) {
-			$zip->addFile("config/modules/$module.php", "config/$module.php");
+		if (file_exists("config/Modules/$module.php")) {
+			$zip->addFile("config/Modules/$module.php", "config/$module.php");
 		}
 		if ($directDownload) {
 			$zip->download($module);
@@ -517,7 +517,7 @@ class PackageExport
 						$this->openNode('tree_value');
 						$this->outputNode($adb->queryResultRaw($treesData, $i, 'name'), 'name');
 						$this->outputNode($adb->queryResultRaw($treesData, $i, 'tree'), 'tree');
-						$this->outputNode($adb->queryResultRaw($treesData, $i, 'parenttrre'), 'parenttrre');
+						$this->outputNode($adb->queryResultRaw($treesData, $i, 'parentTree'), 'parentTree');
 						$this->outputNode($adb->queryResultRaw($treesData, $i, 'depth'), 'depth');
 						$this->outputNode($adb->queryResultRaw($treesData, $i, 'label'), 'label');
 						$this->outputNode($adb->queryResultRaw($treesData, $i, 'state'), 'state');

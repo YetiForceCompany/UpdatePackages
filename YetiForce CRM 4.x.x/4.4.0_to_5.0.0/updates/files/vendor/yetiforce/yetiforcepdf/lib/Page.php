@@ -75,6 +75,14 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 	 */
 	const ORIENTATION_LANDSCAPE = 'L';
 	/**
+	 * After page breaking box was cut below
+	 */
+	const CUT_BELOW = 1;
+	/**
+	 * After page breaking box was cut above
+	 */
+	const CUT_ABOVE = 2;
+	/**
 	 * Current page format.
 	 *
 	 * @var string
@@ -542,16 +550,16 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 			->setDocument($this->document)
 			->init();
 		$this->dimensions
-			->setWidth(Math::sub((string) $dimensions[0], Math::add((string) $this->margins['left'], (string) $this->margins['right'])))
-			->setHeight(Math::sub((string) $dimensions[1], Math::add((string) $this->margins['top'], (string) $this->margins['bottom'])));
+			->setWidth(Math::sub((string)$dimensions[0], Math::add((string)$this->margins['left'], (string)$this->margins['right'])))
+			->setHeight(Math::sub((string)$dimensions[1], Math::add((string)$this->margins['top'], (string)$this->margins['bottom'])));
 		$this->outerDimensions = (new Dimensions())
 			->setDocument($this->document)
 			->init();
-		$this->outerDimensions->setWidth((string) $dimensions[0])->setHeight((string) $dimensions[1]);
+		$this->outerDimensions->setWidth((string)$dimensions[0])->setHeight((string)$dimensions[1]);
 		$this->coordinates = (new Coordinates())
 			->setDocument($this->document)
 			->init();
-		$this->coordinates->setX((string) $this->margins['left'])->setY((string) $this->margins['top'])->init();
+		$this->coordinates->setX((string)$this->margins['left'])->setY((string)$this->margins['top'])->init();
 		return $this;
 	}
 
@@ -717,8 +725,8 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 	/**
 	 * Add page resource.
 	 *
-	 * @param string                          $groupName
-	 * @param string                          $resourceName
+	 * @param string $groupName
+	 * @param string $resourceName
 	 * @param \YetiForcePDF\Objects\PdfObject $resource
 	 *
 	 * @return \YetiForcePDF\Page
@@ -952,7 +960,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 	/**
 	 * Cut box above specified position.
 	 *
-	 * @param Box    $child
+	 * @param Box $child
 	 * @param string $yPos
 	 *
 	 * @return $this
@@ -965,14 +973,14 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 			->setRule('border-top-width', '0')
 			->setRule('padding-top', '0')
 			->setRule('margin-top', '0');
-		$child->setCut(true);
+		$child->setCut(static::CUT_ABOVE);
 		return $this;
 	}
 
 	/**
 	 * Cut box below specified position.
 	 *
-	 * @param Box    $child
+	 * @param Box $child
 	 * @param string $yPos
 	 *
 	 * @return $this
@@ -989,7 +997,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 			->setRule('border-bottom-width', '0')
 			->setRule('margin-bottom', '0')
 			->setRule('padding-bottom', '0');
-		$child->setCut(true);
+		$child->setCut(static::CUT_BELOW);
 		return $this;
 	}
 
@@ -1005,7 +1013,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 		if ($boxes === null) {
 			$boxes = [];
 			foreach ($this->getBox()->getChildren() as $child) {
-				if (Math::comp($child->getCoordinates()->getEndY(), $yPos) > 0) {
+				if (Math::comp($child->getCoordinates()->getEndY(), $yPos) >= 0) {
 					$boxes[] = $child;
 				}
 			}
@@ -1026,9 +1034,9 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 						continue;
 					}
 					$childCoords = $child->getCoordinates();
-					if (Math::comp($childCoords->getEndY(), $yPos) > 0) {
-						$boxes = $this->cloneAndDivideChildrenAfterY($yPos, [$child]);
-						foreach ($boxes as $childBox) {
+					if (Math::comp($childCoords->getEndY(), $yPos) >= 0) {
+						$childBoxes = $this->cloneAndDivideChildrenAfterY($yPos, [$child]);
+						foreach ($childBoxes as $childBox) {
 							$cloned->appendChild($childBox);
 						}
 					}
@@ -1039,6 +1047,8 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 				if (Math::comp($box->getCoordinates()->getY(), $yPos) < 0 && Math::comp($box->getCoordinates()->getEndY(), $yPos) > 0) {
 					$this->cutBelow($box, $yPos);
 					$this->cutAbove($cloned, $yPos);
+				} elseif (Math::comp($box->getCoordinates()->getY(), $yPos) >= 0) {
+					$box->setRenderable(false)->setForMeasurement(false);
 				}
 			}
 			$clonedBoxes[] = $cloned;
@@ -1056,7 +1066,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 	protected function divideTable(Box $tableChild)
 	{
 		$tableWrapperBox = $tableChild->getClosestByType('TableWrapperBox');
-		$pageEnd = Math::add($this->getDimensions()->getHeight(), (string) $this->margins['top']);
+		$pageEnd = Math::add($this->getDimensions()->getHeight(), (string)$this->margins['top']);
 		if (Math::comp($tableWrapperBox->getCoordinates()->getY(), $pageEnd) >= 0) {
 			// if table is below page do nothing - it will be moved to the next page and then again checked
 			return $tableWrapperBox;
@@ -1211,7 +1221,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 	 */
 	public function breakOverflow()
 	{
-		$atYPos = Math::add($this->getDimensions()->getHeight(), (string) $this->margins['top']);
+		$atYPos = Math::add($this->getDimensions()->getHeight(), (string)$this->margins['top']);
 		$clonedBoxes = $this->cloneAndDivideChildrenAfterY($atYPos);
 		if (empty($clonedBoxes)) {
 			return $this;
@@ -1222,13 +1232,14 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 		foreach ($clonedBoxes as $clonedBox) {
 			$newBox->appendChild($clonedBox->getParent()->removeChild($clonedBox));
 		}
-		$this->getBox()->getStyle()->fixTables(true);
-		$this->getBox()->measureHeight()->measureOffset()->alignText()->measurePosition();
+		$this->getBox()->getStyle()->fixDomTree();
+		$this->getBox()->measureHeight(true)->measureOffset()->alignText()->measurePosition();
 		$newBox->layout(true);
-		$newBox->getStyle()->fixTables();
 		$this->document->setCurrentPage($newPage);
 		if (Math::comp($newBox->getDimensions()->getHeight(), $this->getDimensions()->getHeight()) > 0) {
 			$newPage->breakOverflow();
+		} else {
+			$newPage->getBox()->getStyle()->fixDomTree();
 		}
 		return $this;
 	}

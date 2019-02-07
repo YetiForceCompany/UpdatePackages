@@ -2,7 +2,7 @@
 /**
  * Condition main class.
  *
- * @package App
+ * @package   App
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
@@ -32,8 +32,13 @@ class Condition
 			throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE');
 		}
 		$fields = \Vtiger_Module_Model::getInstance($moduleName)->getFields();
+		$result = [];
 		foreach ($searchParams as $params) {
+			$tempParam = [];
 			foreach ($params as $param) {
+				if (empty($param)) {
+					continue;
+				}
 				$countvariables = count($param);
 				if ($countvariables !== 3 && $countvariables !== 4) {
 					throw new Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE');
@@ -43,9 +48,11 @@ class Condition
 				}
 				$fieldModel = $fields[$param[0]];
 				$fieldModel->getUITypeModel()->getDbConditionBuilderValue($param[2], $param[1]);
+				$tempParam[]= $param;
 			}
+			$result[]= $tempParam;
 		}
-		return $searchParams;
+		return $result;
 	}
 
 	/**
