@@ -461,6 +461,7 @@ class YetiForceUpdate
 		$this->attachmentsFix();
 		$this->migrateDefOrgField();
 		$this->addFields();
+		$this->changeLengthFields();
 		$this->migrateCompanies();
 		$this->updateData();
 		$this->addPicklistValues();
@@ -786,7 +787,9 @@ class YetiForceUpdate
 		$db->createCommand()->delete('vtiger_relatedlists', ['name' => 'getContacts'])->execute();
 		$db->createCommand()->update('vtiger_blocks', ['display_status' => 2], ['display_status' => 1])->execute();
 		$db->createCommand()->update('s_#__companies', ['type' => 2])->execute();
-		$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
+		if ($db->getTableSchema('vtiger_trees_templates_data')->getColumn('parenttrre')){
+			$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
+		}
 	}
 
 	private function updateVtEmailTemplates()
@@ -954,6 +957,33 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function changeLengthFields()
+	{
+		$fields = [
+			['Accounts', 'website', 255],
+			['Products', 'website', 255],
+			['Vendors', 'website', 255],
+			['Services', 'website', 255],
+		];
+		$db = App\Db::getInstance();
+		foreach ($fields as $fieldInfo) {
+			$moduleModel = Vtiger_Module_Model::getInstance($fieldInfo[0]);
+			if(!$moduleModel) {
+				$this->log('Can not found module' . $fieldInfo[0]);
+				continue;
+			}
+			$fieldModel = $moduleModel->getField($fieldInfo[1]);
+			if(!$fieldModel) {
+				$this->log('Can not found field' . $fieldInfo[1] . ' in module ' . $fieldInfo[0]);
+				continue;
+			}
+			$db->createCommand()->alterColumn($fieldModel->getTableName(), $fieldModel->getColumnName(), 'string('. $fieldInfo[2].')')->execute();
+			$db->createCommand()->update('vtiger_field', ['maximumlength' => $fieldInfo[2]], [
+				'tabid' => App\Module::getModuleId($fieldInfo[0]),
+				'fieldname' => $fieldInfo[1]
+			])->execute();
+		}
+	}
 	/**
 	 * Add fields.
 	 */
@@ -961,6 +991,7 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$importerType = new \App\Db\Importers\Base();
 		$fields = [
 			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 0, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
 			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 0, 2, '', null, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments'],
@@ -970,7 +1001,8 @@ class YetiForceUpdate
 			[119, 2774, 'logo', 'u_yf_multicompany', 2, 69, 'logo', 'FL_LOGO', 0, 2, '', NULL, 0, 406, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_ADDITIONAL_INFORMATION', [], [], 'MultiCompany'],
 			[85,2775,'campaign_id','u_yf_squoteenquiries',1,10,'campaign_id','FL_CAMPAIGN_ID',0,2,'','-2147483648,2147483647',9,265,1,'I~O',1,0,'BAS',1,'',0,'',NULL, 'integer', 'LBL_QUOTESENQUIRES_INFORMATION', [], ['Campaigns'], 'SQuoteEnquiries'],
 			[29,2776,'sync_carddav','vtiger_users',1,16,'sync_carddav','LBL_CARDDAV_SYNCHRONIZATION_CONTACT',0,2,'','255',17,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL, 'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP', 'PLL_BASED_CREDENTIALS'], [], 'Users'],
-			[29,2777,'sync_caldav','vtiger_users',1,16,'sync_caldav','LBL_CALDAV_SYNCHRONIZATION_CALENDAR',0,2,'','255',18,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL,'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP'], [], 'Users']
+			[29,2777,'sync_caldav','vtiger_users',1,16,'sync_caldav','LBL_CALDAV_SYNCHRONIZATION_CALENDAR',0,2,'','255',18,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL,'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP'], [], 'Users'],
+			[112, 2778, 'smtp_id', 'u_yf_emailtemplates', 2, 316, 'smtp_id', 'SMTP', 0, 2, '', '4294967295', 0, 376, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, $importerType->integer(11)->unsigned()->null(), 'LBL_BASIC_DETAILS', [], [], 'EmailTemplates']
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -1791,14 +1823,29 @@ class YetiForceUpdate
 		foreach ($allConfig as $file => $badConfig) {
 			$this->log('ERROR: Can not create config file for '. $file . '| ' . date('Y-m-d H:i:s'));
 		}
-		unlink('config/Modules/API.php');
-		unlink('config/Modules/Export.php');
-		unlink('config/Modules/Mail.php');
-		unlink('config/config.db.php');
-		unlink('config/config.inc.php');
-		unlink('config/config.php');
-		unlink('config/config.template.php');
-		unlink('config/secret_keys.php');
+		$files = [
+			'config/Modules/API.php',
+			'config/Modules/Export.php',
+			'config/Modules/Mail.php',
+			'config/config.db.php',
+			'config/config.inc.php',
+			'config/config.php',
+			'config/config.template.php',
+			'config/secret_keys.php',
+			'config/api.php',
+			'config/debug.php',
+			'config/developer.php',
+			'config/performance.php',
+			'config/relation.php',
+			'config/search.php',
+			'config/security.php',
+			'config/sounds.php',
+		];
+		foreach($files as $file) {
+			if (file_exists($file)) {
+				unlink($file);
+			}
+		}
 	}
 	/**
 	 * Postupdate.

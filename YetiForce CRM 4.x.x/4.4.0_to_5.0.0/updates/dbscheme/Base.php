@@ -864,15 +864,17 @@ class Base extends \App\Db\Importers\Base
 			's_#__companies' => [
 				'columns' => [
 					'id' => $this->primaryKey(5)->unsigned(),
+					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'name' => $this->stringType(100)->notNull(),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'industry' => $this->stringType(50),
 					'city' => $this->stringType(100),
 					'country' => $this->stringType(100),
 					'website' => $this->stringType(100),
-					'email' => $this->stringType(100),
 					'logo' => $this->stringType(50),
-					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'firstname' => $this->stringType(),
+					'lastname' => $this->stringType(),
+					'email' => $this->stringType(100),
 				],
 				'columns_mysql' => [
 					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
