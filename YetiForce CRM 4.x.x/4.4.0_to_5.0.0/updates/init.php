@@ -1834,7 +1834,7 @@ class YetiForceUpdate
 			'config/secret_keys.php'
 		];
 		if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-			$files += [
+			$files = array_merge($files, [
 				'config/api.php',
 				'config/debug.php',
 				'config/developer.php',
@@ -1843,7 +1843,7 @@ class YetiForceUpdate
 				'config/search.php',
 				'config/security.php',
 				'config/sounds.php',
-			];
+			]);
 		}
 		foreach($files as $file) {
 			if (file_exists($file)) {
