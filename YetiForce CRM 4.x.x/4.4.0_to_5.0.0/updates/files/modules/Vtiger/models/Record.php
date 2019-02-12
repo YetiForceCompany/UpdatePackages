@@ -24,6 +24,7 @@ class Vtiger_Record_Model extends \App\Base
 	public $summaryRowCount = 4;
 	public $isNew = true;
 	public $ext = [];
+	protected $dataForSave = [];
 
 	/**
 	 * Function to get the id of the record.
@@ -549,7 +550,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function getEntityDataForSave()
 	{
-		$row = [];
+		$row = $this->dataForSave;
 		$time = date('Y-m-d H:i:s');
 		if ($this->isNew()) {
 			$row['setype'] = $this->getModuleName();
@@ -1405,7 +1406,7 @@ class Vtiger_Record_Model extends \App\Base
 				'linkicon' => 'fas fa-eraser',
 				'dataUrl' => 'index.php?module=' . $this->getModuleName() . '&action=Delete',
 				'linkdata' => ['confirm' => \App\Language::translate('LBL_DELETE_RECORD_COMPLETELY_DESC')],
-				'linkclass' => 'btn-sm btn-black recordEvent',
+				'linkclass' => 'btn-sm btn-dark recordEvent',
 			];
 		}
 		foreach ($recordLinks as $recordLink) {
@@ -1494,7 +1495,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkicon' => 'fas fa-eraser',
 					'dataUrl' => 'index.php?module=' . $this->getModuleName() . '&action=Delete&record=' . $this->getId(),
 					'linkdata' => ['confirm' => \App\Language::translate('LBL_DELETE_RECORD_COMPLETELY_DESC')],
-					'linkclass' => 'btn-sm btn-black relationDelete entityStateBtn'
+					'linkclass' => 'btn-sm btn-dark relationDelete entityStateBtn'
 				]);
 			}
 		}

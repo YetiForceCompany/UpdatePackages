@@ -13,6 +13,13 @@ class Gantt {
 		this.container = $(container);
 		this.containerParent = this.container.parent();
 		this.headerContainer = this.containerParent.parent().find('.js-gantt-header').eq(0);
+		let workingDays = [1, 2, 3, 4, 5].map(day => {
+			day = day - CONFIG.firstDayOfWeekNo;
+			if (day < 0) {
+				day = day + 7;
+			}
+			return day;
+		});
 		this.options = {
 			slots: {
 				header: {
@@ -21,9 +28,15 @@ class Gantt {
 			},
 			maxRows: 30,
 			times: {
-				timeZoom: 21
+				timeZoom: 20
+			},
+			calendar: {
+				workingDays
 			},
 			style: {
+				'chart-expander-wrapper': {
+					'line-height': '1'
+				},
 				'chart-row-bar-polygon': {
 					'stroke': '#E74C3C00',
 					'stroke-width': 0,
@@ -32,6 +45,9 @@ class Gantt {
 				'chart-row-progress-bar-outline': {
 					'stroke': '#E74C3C00',
 					'stroke-width': 0
+				},
+				'chart-days-highlight-rect': {
+					'fill': '#f3f5f780'
 				},
 				'header-title': {
 					'float': 'none',
@@ -192,8 +208,8 @@ class Gantt {
 		let offsetTop = this.container.offset().top;
 		let contentHeight = $('body').eq(0).height() - $('.js-footer').eq(0).height();
 		let height = contentHeight - offsetTop - 100;
-		if (height < 0) {
-			height = 0;
+		if (height < 300) {
+			height = 300;
 		}
 		this.options.maxHeight = height;
 		if (typeof this.ganttState !== 'undefined' && this.ganttState) {

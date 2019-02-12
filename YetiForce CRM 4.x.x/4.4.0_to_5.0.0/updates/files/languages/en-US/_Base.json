@@ -1139,8 +1139,8 @@
     "LBL_PIE_CHART": "Pie chart",
     "LBL_DONUT_CHART": "Donut chart",
     "LBL_AXIS_CHART": "Axis chart",
-    "LBL_VERTICAL_BAR_CHART": "Horizontal bar chart",
-    "LBL_HORIZONTAL_BAR_CHART": "Vertical bar chart",
+    "LBL_VERTICAL_BAR_CHART": "Vertical bar chart",
+    "LBL_HORIZONTAL_BAR_CHART": "Horizontal bar chart",
     "LBL_LINE_CHART": "Line chart",
     "LBL_LINE_CHART_PLAIN": "Smooth line graph",
     "LBL_FUNNEL_CHART": "Sales funnel",
@@ -1311,7 +1311,8 @@
     "LBL_YETIFORCE_NEWSLETTER_FILL_DATA": "Fill in the required information",
     "LBL_YETIFORCE_NEWSLETTER_ERROR": "No e-mail address was added to company details. If you want to receive newsletter %s.",
     "LBL_START": "Start",
-    "LBL_END": "End"
+    "LBL_END": "End",
+    "LBL_AUTOMATIC": "Automatic"
   },
   "js": {
     "JS_APPROVE": "Approve",

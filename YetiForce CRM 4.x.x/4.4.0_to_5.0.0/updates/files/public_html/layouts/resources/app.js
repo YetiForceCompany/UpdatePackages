@@ -271,6 +271,8 @@ var AppConnector,
 				.addClass('u-text-ellipsis--not-active')
 				.css(element.css(['font-size', 'font-weight', 'font-family']))
 				.appendTo('body');
+			clone.find('.u-text-ellipsis')
+				.removeClass('u-text-ellipsis').addClass('u-text-ellipsis--not-active');
 			if (clone.width() - 1 > element.width()) {
 				clone.remove();
 				return true;
@@ -747,6 +749,12 @@ var AppConnector,
 			},
 		},
 		/**
+		 * Default scroll options
+		 */
+		scrollOptions: {
+			wheelSpeed: 0.1
+		},
+		/**
 		 * Function to push down the error message size when validation is invoked
 		 * @params : form Element
 		 */
@@ -866,20 +874,16 @@ var AppConnector,
 				currentElement.val(date);
 			});
 		},
-		registerEventForClockPicker: function (object) {
-			let elementClockBtn, formatTime;
-			if (typeof object === "undefined") {
-				elementClockBtn = $('.clockPicker');
-				formatTime = CONFIG.hourFormat;
-			} else {
-				elementClockBtn = object;
-				formatTime = elementClockBtn.data('format');
+		registerEventForClockPicker: function (timeInputs = $('.clockPicker')) {
+			if (!timeInputs.hasClass('clockPicker')) {
+				timeInputs = timeInputs.find('.clockPicker');
 			}
-			formatTime = parseInt(formatTime) === 12 ? true : false;
+			if (!timeInputs.length) {
+				return;
+			}
 			let params = {
 				placement: 'bottom',
 				autoclose: true,
-				twelvehour: formatTime,
 				minutestep: 5
 			};
 
@@ -901,7 +905,7 @@ var AppConnector,
 						app.event.trigger('Clockpicker.changed', timeInput);
 					};
 					params.beforeHide = () => {
-						meridiemTime = $('.clockpicker-buttons-am-pm').find('a:not(.text-white-50)').text();
+						meridiemTime = $('.clockpicker-buttons-am-pm:visible').find('a:not(.text-white-50)').text();
 					};
 				} else {
 					params.afterDone = () => {
@@ -910,8 +914,10 @@ var AppConnector,
 				}
 			}
 
-			elementClockBtn.each((i, e) => {
+			timeInputs.each((i, e) => {
 				let timeInput = $(e);
+				let formatTime = timeInputs.data('format') || CONFIG.hourFormat;
+				params.twelvehour = parseInt(formatTime) === 12 ? true : false;
 				formatTimeString(timeInput);
 				timeInput.clockpicker(params);
 			});
@@ -972,11 +978,12 @@ var AppConnector,
 		showNewScrollbar: function (element, options = {wheelPropagation: true}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
-			return new PerfectScrollbar(element[0], options);
+			return new PerfectScrollbar(element[0], Object.assign(this.scrollOptions, options));
 		},
 		showNewScrollbarTopBottomRight: function (element, options = {}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
+			options = Object.assign(this.scrollOptions, options);
 			let scrollbarTopLeftInit = new PerfectScrollbar(element[0], options);
 			let scrollbarTopElement = element.find('.ps__rail-x').first();
 			scrollbarTopElement.css({
@@ -990,17 +997,12 @@ var AppConnector,
 			let scrollbarBottomRightInit = new PerfectScrollbar(element[0], options);
 			return [scrollbarTopLeftInit, scrollbarBottomRightInit];
 		},
-		showNewScrollbarTopBottom: function (element) {
+		showNewScrollbarTopBottom: function (element, options = {wheelPropagation: true, suppressScrollY: true}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
-			new PerfectScrollbar(element[0], {
-				wheelPropagation: true,
-				suppressScrollY: true
-			});
-			new PerfectScrollbar(element[0], {
-				wheelPropagation: true,
-				suppressScrollY: true
-			});
+			options = Object.assign(this.scrollOptions, options);
+			new PerfectScrollbar(element[0], options);
+			new PerfectScrollbar(element[0], options);
 			var scrollbarTopElement = element.find('.ps__rail-x').first();
 			scrollbarTopElement.css({
 				top: 0,
@@ -1011,13 +1013,11 @@ var AppConnector,
 				bottom: 'auto'
 			});
 		},
-		showNewScrollbarTop: function (element) {
+		showNewScrollbarTop: function (element, options = {wheelPropagation: true, suppressScrollY: true}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
-			new PerfectScrollbar(element[0], {
-				wheelPropagation: true,
-				suppressScrollY: true
-			});
+			options = Object.assign(this.scrollOptions, options);
+			new PerfectScrollbar(element[0], options);
 			var scrollbarTopElement = element.find('.ps__rail-x').first();
 			scrollbarTopElement.css({
 				top: 0,
@@ -1031,6 +1031,7 @@ var AppConnector,
 		showNewScrollbarLeft: function (element, options = {wheelPropagation: true}) {
 			if (typeof element === "undefined" || !element.length)
 				return;
+			options = Object.assign(this.scrollOptions, options);
 			new PerfectScrollbar(element[0], options);
 			var scrollbarLeftElement = element.children('.ps__rail-y').first();
 			scrollbarLeftElement.css({
@@ -1823,6 +1824,7 @@ var AppConnector,
 								{
 									text: app.vtranslate('JS_OK'),
 									primary: true,
+									promptTrigger: true,
 									click: function (notice) {
 										notice.close();
 										confirmCallback();

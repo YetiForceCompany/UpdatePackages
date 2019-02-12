@@ -803,9 +803,9 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 			fieldContainer.find('.maskField').remove();
 		}
 		var block = relatedBlock.find('.blockFieldsList');
-		var sortable1 = block.find('ul[name=sortable1]');
+		var sortable1 = block.find('.js-sort-table1');
 		var length1 = sortable1.children().length;
-		var sortable2 = block.find('ul[name=sortable2]');
+		var sortable2 = block.find('.js-sort-table2');
 		var length2 = sortable2.children().length;
 		// Deciding where to add the new field
 		if (length1 > length2) {
@@ -1071,32 +1071,39 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 * Function to unHide the selected fields in the inactive fields modal
 	 */
 	reActivateHiddenFields: function (currentBlock) {
-		var thisInstance = this;
-		var progressIndicatorElement = $.progressIndicator({
-			'position': 'html',
-			'blockInfo': {
-				'enabled': true
-			}
-		});
-		var params = {};
-		params['module'] = app.getModuleName();
-		params['parent'] = app.getParentModuleName();
-		params['action'] = 'Field';
-		params['mode'] = 'unHide';
-		params['blockId'] = currentBlock.data('blockId');
-		params['fieldIdList'] = JSON.stringify(thisInstance.reactiveFieldsList);
-
-		AppConnector.request(params).done(function (data) {
-			for (var index in data.result) {
-				thisInstance.showCustomField(data.result[index]);
-			}
+		const thisInstance = this;
+		let progressIndicatorElement = $.progressIndicator({
+				'position': 'html',
+				'blockInfo': {
+					'enabled': true
+				}
+			}),
+			params = {
+				module: app.getModuleName(),
+				parent: app.getParentModuleName(),
+				action: 'Field',
+				mode: 'unHide',
+				blockId: currentBlock.data('blockId'),
+				fieldIdList: JSON.stringify(thisInstance.reactiveFieldsList)
+			},
+			messageParams = {};
+		if (params.fieldIdList !== '[]') {
+			AppConnector.request(params).done(function (data) {
+				for (let index in data.result) {
+					thisInstance.showCustomField(data.result[index]);
+				}
+				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+				messageParams.text = app.vtranslate('JS_SELECTED_FIELDS_REACTIVATED');
+				Settings_Vtiger_Index_Js.showMessage(messageParams);
+			}).fail(function (error) {
+				progressIndicatorElement.progressIndicator({'mode': 'hide'});
+			});
+		} else {
+			messageParams.text = app.vtranslate('JS_NO_ITEM_SELECTED');
+			messageParams.type = 'error';
 			progressIndicatorElement.progressIndicator({'mode': 'hide'});
-			var params = {};
-			params['text'] = app.vtranslate('JS_SELECTED_FIELDS_REACTIVATED');
-			Settings_Vtiger_Index_Js.showMessage(params);
-		}).fail(function (error) {
-			progressIndicatorElement.progressIndicator({'mode': 'hide'});
-		});
+			Settings_Vtiger_Index_Js.showMessage(messageParams);
+		}
 	},
 	/**
 	 * Function to register the click event for delete custom block
@@ -1804,8 +1811,15 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 	 */
 	registerContextHelp: function (container) {
 		container.on('click', '.js-context-help', function (e) {
-			var progressIndicatorElement = $.progressIndicator({blockInfo: {enabled: true}});
+			const customConfig = {
+				toolbar: 'Min',
+			};
 			const element = $(e.currentTarget);
+			this.progressInstance = $.progressIndicator({
+				blockInfo: {
+					enabled: true,
+				}
+			});
 			AppConnector.request({
 				module: app.getModuleName(),
 				parent: app.getParentModuleName(),
@@ -1813,12 +1827,8 @@ $.Class('Settings_LayoutEditor_Js', {}, {
 				field: element.data('field-id')
 			}).done(function (data) {
 				app.showModalWindow(data, function (modalContainer) {
-					const customConfig = {
-						toolbar: 'Clipboard'
-					};
 					new App.Fields.Text.Editor(modalContainer, customConfig);
 					app.showPopoverElementView(modalContainer.find('.js-help-info'));
-					progressIndicatorElement.progressIndicator({'mode': 'hide'});
 					modalContainer.find('.js-lang').on('change', function (e) {
 						let previous = modalContainer.find('.js-editor:not([disabled])');
 						App.Fields.Text.destroyEditor(previous);

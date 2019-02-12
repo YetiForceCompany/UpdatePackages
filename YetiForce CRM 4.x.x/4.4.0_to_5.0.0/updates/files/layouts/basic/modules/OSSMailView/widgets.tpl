@@ -38,7 +38,7 @@
 										'linkicon' => 'fas fa-eraser',
 										'dataUrl' => "index.php?module={$MODULE_NAME}&action=Delete&record={$ROW['id']}",
 										'linkdata' => ['confirm' => \App\Language::translate('LBL_DELETE_RECORD_COMPLETELY_DESC')],
-									'linkclass' => 'btn-sm btn-black relationDelete entityStateBtn'
+									'linkclass' => 'btn-sm btn-dark relationDelete entityStateBtn'
 									])}
 										{include file=\App\Layout::getTemplatePath('ButtonLink.tpl', $MODULE_NAME) MODULE=$MODULE_NAME}
 									{/if}
@@ -68,17 +68,20 @@
 									</button>
 								{else}
 									<a class="btn btn-sm btn-light ml-1" role="button"
-									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'reply',$SRECORD,$SMODULENAME)}">
+									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'reply',$SRECORD,$SMODULENAME)}"
+									   rel="noreferrer noopener">
 										<span class="fas fa-reply"
 											  title="{\App\Language::translate('LBL_REPLY',$MODULE_NAME)}"></span>
 									</a>
 									<a class="btn btn-sm btn-light ml-1" role="button"
-									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'replyAll',$SRECORD,$SMODULENAME)}">
+									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'replyAll',$SRECORD,$SMODULENAME)}"
+									   rel="noreferrer noopener">
 										<span class="fas fa-reply-all"
 											  title="{\App\Language::translate('LBL_REPLYALLL', $MODULE_NAME)}"></span>
 									</a>
 									<a class="btn btn-sm btn-light ml-1" role="button"
-									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'forward',$SRECORD,$SMODULENAME)}">
+									   href="{OSSMail_Module_Model::getExternalUrlForWidget($ROW, 'forward',$SRECORD,$SMODULENAME)}"
+									   rel="noreferrer noopener">
 										<span class="fas fa-share"
 											  title="{\App\Language::translate('LBL_FORWARD', $MODULE_NAME)}"></span>
 									</a>

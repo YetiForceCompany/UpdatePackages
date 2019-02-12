@@ -2,6 +2,26 @@
 'use strict';
 
 Settings_Vtiger_Edit_Js('Settings_Companies_Edit_Js', {}, {
+	/**
+	 * Register events for form checkbox element
+	 */
+	registerNewsletter() {
+		const form = $('[name="EditCompanies"]');
+		form.find('[id$="newsletter"]').on('click', (e) => {
+			let inputsContainer = $(e.target).closest('.js-card-body');
+			if ($(e.target).prop('checked')) {
+				inputsContainer.find('[id$="firstname"]').attr('data-validation-engine', 'validate[required]');
+				inputsContainer.find('[id$="lastname"]').attr('data-validation-engine', 'validate[required]');
+				inputsContainer.find('[id$="email"]').attr('data-validation-engine', 'validate[required,custom[email]]');
+				inputsContainer.find('.js-newsletter-content').removeClass('d-none');
+			} else {
+				inputsContainer.find('[id$="firstname"]').removeAttr('data-validation-engine').val('');
+				inputsContainer.find('[id$="lastname"]').removeAttr('data-validation-engine').val('');
+				inputsContainer.find('[id$="email"]').removeAttr('data-validation-engine').val('');
+				inputsContainer.find('.js-newsletter-content').addClass('d-none');
+			}
+		});
+	},
 	registerSubmitForm: function () {
 		var form = this.getForm();
 		form.on('submit', function (e) {
@@ -39,5 +59,6 @@ Settings_Vtiger_Edit_Js('Settings_Companies_Edit_Js', {}, {
 			form.find("[data-inputmask]").inputmask();
 		}
 		this.registerSubmitForm();
+		this.registerNewsletter();
 	}
 })

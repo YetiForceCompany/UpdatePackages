@@ -32,7 +32,7 @@
 								<div class="col-12 paddingLRZero marginBottom10px">
 									<div class="checkbox">
 										<label>
-											<input type="checkbox" name="confirmRegulations">
+											<input type="checkbox" name="confirmRegulations" class="mr-1">
 											{\App\Language::translateArgs('LBL_CONFIRM_REGULATIONS', $QUALIFIED_MODULE,\Settings_Github_Issues_Model::getIssueReportRulesUrl())}
 										</label>
 									</div>

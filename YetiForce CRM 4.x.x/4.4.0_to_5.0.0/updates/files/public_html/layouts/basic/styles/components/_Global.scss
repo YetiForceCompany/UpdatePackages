@@ -130,7 +130,9 @@
 
 .c-btn-collapsible {
 	overflow: hidden;
+	white-space: nowrap;
 	max-width: calculate-rem(40px);
+	white-space: nowrap;
 	@include u-transition(all 275ms ease);
 
 	&.btn-xs {
@@ -356,7 +358,7 @@
 }
 
 .c-icon--tripple {
-	width: calculate-rem(20px);
+	width: calculate-rem(40px);
 	display: inline-block;
 	font-size: .75em;
 

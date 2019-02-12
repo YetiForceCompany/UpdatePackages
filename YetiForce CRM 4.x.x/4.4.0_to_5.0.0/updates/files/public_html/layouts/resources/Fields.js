@@ -114,7 +114,6 @@ App.Fields = {
 				autoUpdateInput: false,
 				autoApply: true,
 				ranges: ranges,
-				opens: "center",
 				locale: {
 					format: format,
 					separator: ",",
@@ -127,7 +126,7 @@ App.Fields = {
 					firstDay: CONFIG.firstDayOfWeekNo,
 					daysOfWeek: App.Fields.Date.daysTranslated,
 					monthNames: App.Fields.Date.fullMonthsTranslated,
-				},
+				}
 			};
 
 			if (typeof customParams !== "undefined") {
@@ -138,12 +137,35 @@ App.Fields = {
 			});
 			elements.each((index, element) => {
 				let currentParams = $.extend(true, params, $(element).data('params'));
-				$(element).daterangepicker(currentParams).on('apply.daterangepicker', function (ev, picker) {
-					$(this).val(picker.startDate.format(currentParams.locale.format) + ',' + picker.endDate.format(currentParams.locale.format));
-					$(this).trigger('change');
-				});
+				$(element).daterangepicker(currentParams)
+					.on('apply.daterangepicker', function (ev, picker) {
+						$(this).val(picker.startDate.format(currentParams.locale.format) + ',' + picker.endDate.format(currentParams.locale.format));
+						$(this).trigger('change');
+					})
+					.on('show.daterangepicker', (ev, picker) => {
+						this.positionPicker(ev, picker);
+					})
+					.on('showCalendar.daterangepicker', (ev, picker) => {
+						this.positionPicker(ev, picker);
+					});
 			});
 		},
+		positionPicker(ev, picker) {
+			let offset = picker.element.offset();
+			let $window = $(window);
+			if (offset.left - $window.scrollLeft() + picker.container.outerWidth() > $window.width()) {
+				picker.opens = 'left';
+			} else {
+				picker.opens = 'right';
+			}
+			picker.move();
+			if (offset.top - $window.scrollTop() + picker.container.outerHeight() > $window.height()) {
+				picker.drops = 'up';
+			} else {
+				picker.drops = 'down';
+			}
+			picker.move();
+		}
 	},
 	DateTime: {
 		/*
@@ -302,7 +324,7 @@ App.Fields = {
 					this.isModal = elements.closest('.js-modal-container').length;
 					if (this.isModal) {
 						let self = this;
-						this.progressInstance = jQuery.progressIndicator({
+						this.progressInstance = $.progressIndicator({
 							blockInfo: {
 								enabled: true,
 								onBlock: () => {
@@ -513,6 +535,9 @@ App.Fields = {
 			 * @param params
 			 */
 			constructor(inputDiv = $('.js-completions').eq(0), params = {}) {
+				if (typeof inputDiv === "undefined" || inputDiv.length === 0) {
+					return;
+				}
 				let basicParams = {
 					completionsCollection: {
 						records: true,
@@ -642,12 +667,13 @@ App.Fields = {
 					this.registerCompletionsButtons();
 				}
 				if (App.emoji === undefined) {
-					fetch('../../vendor/ckeditor/ckeditor/plugins/emoji/emoji.json')
+					fetch(`${CONFIG.siteUrl}/vendor/ckeditor/ckeditor/plugins/emoji/emoji.json`)
 						.then(response => response.json())
 						.then(response => {
 							App.emoji = response;
 						}).catch(error => console.error('Error:', error));
 				}
+				this.registerTagClick(inputDiv);
 			}
 
 			/**
@@ -655,11 +681,21 @@ App.Fields = {
 			 * @param {jQuery} inputDiv - contenteditable div
 			 */
 			registerCompletionsTextArea(inputDiv) {
-				let textarea = element.siblings(`[name=${inputDiv.attr('id')}]`);
+				let textarea = inputDiv.siblings(`[name=${inputDiv.attr('id')}]`);
 				inputDiv.on('focus', function () {
 					textarea.val(inputDiv.html());
 				}).on('blur keyup paste input', function () {
 					textarea.val(inputDiv.html());
+				});
+			}
+
+			/**
+			 * Register tag click
+			 * @param inputDiv
+			 */
+			registerTagClick(inputDiv) {
+				inputDiv.closest('.js-completions__container').find('.js-completions__messages').on('click', '.js-completions__tag', (e) => {
+					inputDiv.append($(e.target).clone());
 				});
 			}
 

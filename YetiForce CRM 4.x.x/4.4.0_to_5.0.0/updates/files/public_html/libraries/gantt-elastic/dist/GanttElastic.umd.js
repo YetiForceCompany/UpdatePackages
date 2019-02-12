@@ -261,74 +261,68 @@ render._withStripped = true
 
 // CONCATENATED MODULE: ./src/GanttElastic.vue?vue&type=template&id=02c6304c&
 
-// CONCATENATED MODULE: ./node_modules/dayjs/src/constant.js
-const SECONDS_A_MINUTE = 60
-const SECONDS_A_HOUR = SECONDS_A_MINUTE * 60
-const SECONDS_A_DAY = SECONDS_A_HOUR * 24
-const SECONDS_A_WEEK = SECONDS_A_DAY * 7
+// CONCATENATED MODULE: ./node_modules/dayjs/esm/constant.js
+var SECONDS_A_MINUTE = 60;
+var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
+var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
+var SECONDS_A_WEEK = SECONDS_A_DAY * 7;
+var MILLISECONDS_A_SECOND = 1e3;
+var MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND; // English locales
 
-const MILLISECONDS_A_SECOND = 1e3
-const MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND
-const MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND
-const MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND
-const MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND
+var MS = 'millisecond';
+var S = 'second';
+var MIN = 'minute';
+var H = 'hour';
+var D = 'day';
+var W = 'week';
+var M = 'month';
+var Q = 'quarter';
+var Y = 'year';
+var DATE = 'date';
+var FORMAT_DEFAULT = 'YYYY-MM-DDTHH:mm:ssZ';
+var INVALID_DATE_STRING = 'Invalid Date'; // regex
 
-// English locales
-const MS = 'millisecond'
-const S = 'second'
-const MIN = 'minute'
-const H = 'hour'
-const D = 'day'
-const W = 'week'
-const M = 'month'
-const Q = 'quarter'
-const Y = 'year'
-const DATE = 'date'
-
-const FORMAT_DEFAULT = 'YYYY-MM-DDTHH:mm:ssZ'
-
-const INVALID_DATE_STRING = 'Invalid Date'
-
-// regex
-const REGEX_PARSE = /^(\d{4})-?(\d{1,2})-?(\d{0,2})[^0-9]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?.?(\d{1,3})?$/
-const REGEX_FORMAT = /\[.*?\]|Y{2,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g
-
-const en = {
+var REGEX_PARSE = /^(\d{4})-?(\d{1,2})-?(\d{0,2})[^0-9]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?.?(\d{1,3})?$/;
+var REGEX_FORMAT = /\[.*?\]|Y{2,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+var en = {
   name: 'en',
   weekdays: 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_'),
   months: 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_')
-}
+};
+// CONCATENATED MODULE: ./node_modules/dayjs/esm/utils.js
 
-// CONCATENATED MODULE: ./node_modules/dayjs/src/utils.js
 
+var padStart = function padStart(string, length, pad) {
+  var s = String(string);
+  if (!s || s.length >= length) return string;
+  return "" + Array(length + 1 - s.length).join(pad) + string;
+};
 
-const padStart = (string, length, pad) => {
-  const s = String(string)
-  if (!s || s.length >= length) return string
-  return `${Array((length + 1) - s.length).join(pad)}${string}`
-}
+var padZoneStr = function padZoneStr(negMinuts) {
+  var minutes = Math.abs(negMinuts);
+  var hourOffset = Math.floor(minutes / 60);
+  var minuteOffset = minutes % 60;
+  return "" + (negMinuts <= 0 ? '+' : '-') + padStart(hourOffset, 2, '0') + ":" + padStart(minuteOffset, 2, '0');
+};
 
-const padZoneStr = (negMinuts) => {
-  const minutes = Math.abs(negMinuts)
-  const hourOffset = Math.floor(minutes / 60)
-  const minuteOffset = minutes % 60
-  return `${negMinuts <= 0 ? '+' : '-'}${padStart(hourOffset, 2, '0')}:${padStart(minuteOffset, 2, '0')}`
-}
-
-const monthDiff = (a, b) => {
+var monthDiff = function monthDiff(a, b) {
   // function from moment.js in order to keep the same result
-  const wholeMonthDiff = ((b.year() - a.year()) * 12) + (b.month() - a.month())
-  const anchor = a.clone().add(wholeMonthDiff, 'months')
-  const c = b - anchor < 0
-  const anchor2 = a.clone().add(wholeMonthDiff + (c ? -1 : 1), 'months')
-  return Number(-(wholeMonthDiff + ((b - anchor) / (c ? (anchor - anchor2) :
-    (anchor2 - anchor)))) || 0)
-}
+  var wholeMonthDiff = (b.year() - a.year()) * 12 + (b.month() - a.month());
+  var anchor = a.clone().add(wholeMonthDiff, 'months');
+  var c = b - anchor < 0;
+  var anchor2 = a.clone().add(wholeMonthDiff + (c ? -1 : 1), 'months');
+  return Number(-(wholeMonthDiff + (b - anchor) / (c ? anchor - anchor2 : anchor2 - anchor)) || 0);
+};
 
-const absFloor = n => (n < 0 ? Math.ceil(n) || 0 : Math.floor(n))
+var absFloor = function absFloor(n) {
+  return n < 0 ? Math.ceil(n) || 0 : Math.floor(n);
+};
 
-const prettyUnit = (u) => {
-  const special = {
+var utils_prettyUnit = function prettyUnit(u) {
+  var special = {
     M: M,
     y: Y,
     w: W,
@@ -337,296 +331,326 @@ const prettyUnit = (u) => {
     m: MIN,
     s: S,
     ms: MS
-  }
-  return special[u] || String(u || '').toLowerCase().replace(/s$/, '')
-}
+  };
+  return special[u] || String(u || '').toLowerCase().replace(/s$/, '');
+};
 
-const isUndefined = s => s === undefined
+var isUndefined = function isUndefined(s) {
+  return s === undefined;
+};
 
 /* harmony default export */ var utils = ({
-  padStart,
-  padZoneStr,
-  monthDiff,
-  absFloor,
-  prettyUnit,
-  isUndefined
+  padStart: padStart,
+  padZoneStr: padZoneStr,
+  monthDiff: monthDiff,
+  absFloor: absFloor,
+  prettyUnit: utils_prettyUnit,
+  isUndefined: isUndefined
 });
-
-// CONCATENATED MODULE: ./node_modules/dayjs/src/index.js
-
+// CONCATENATED MODULE: ./node_modules/dayjs/esm/index.js
 
 
-let L = 'en' // global locale
-const Ls = {} // global loaded locale
-Ls[L] = en
+var L = 'en'; // global locale
 
-const isDayjs = d => d instanceof src_Dayjs // eslint-disable-line no-use-before-define
+var Ls = {}; // global loaded locale
 
-const parseLocale = (preset, object, isLocal) => {
-  let l
-  if (!preset) return null
+Ls[L] = en;
+
+var isDayjs = function isDayjs(d) {
+  return d instanceof esm_Dayjs;
+}; // eslint-disable-line no-use-before-define
+
+
+var parseLocale = function parseLocale(preset, object, isLocal) {
+  var l;
+  if (!preset) return null;
+
   if (typeof preset === 'string') {
     if (Ls[preset]) {
-      l = preset
+      l = preset;
     }
+
     if (object) {
-      Ls[preset] = object
-      l = preset
+      Ls[preset] = object;
+      l = preset;
     }
   } else {
-    const { name } = preset
-    Ls[name] = preset
-    l = name
+    var name = preset.name;
+    Ls[name] = preset;
+    l = name;
   }
-  if (!isLocal) L = l
-  return l
-}
 
-const dayjs = (date, c) => {
+  if (!isLocal) L = l;
+  return l;
+};
+
+var dayjs = function dayjs(date, c) {
   if (isDayjs(date)) {
-    return date.clone()
-  }
-  // eslint-disable-next-line no-nested-ternary
-  const cfg = c ? (typeof c === 'string' ? { format: c } : c) : {}
-  cfg.date = date
-  return new src_Dayjs(cfg) // eslint-disable-line no-use-before-define
-}
+    return date.clone();
+  } // eslint-disable-next-line no-nested-ternary
 
-const wrapper = (date, instance) => dayjs(date, { locale: instance.$L })
 
-const Utils = utils // for plugin use
-Utils.parseLocale = parseLocale
-Utils.isDayjs = isDayjs
-Utils.wrapper = wrapper
+  var cfg = c ? typeof c === 'string' ? {
+    format: c
+  } : c : {};
+  cfg.date = date;
+  return new esm_Dayjs(cfg); // eslint-disable-line no-use-before-define
+};
 
-const parseDate = (date) => {
-  let reg
-  if (date === null) return new Date(NaN) // Treat null as an invalid date
-  if (Utils.isUndefined(date)) return new Date()
-  if (date instanceof Date) return date
-  // eslint-disable-next-line no-cond-assign
-  if ((typeof date === 'string')
-    && (/.*[^Z]$/i.test(date)) // looking for a better way
-    && (reg = date.match(REGEX_PARSE))) {
+var wrapper = function wrapper(date, instance) {
+  return dayjs(date, {
+    locale: instance.$L
+  });
+};
+
+var Utils = utils; // for plugin use
+
+Utils.parseLocale = parseLocale;
+Utils.isDayjs = isDayjs;
+Utils.wrapper = wrapper;
+
+var esm_parseDate = function parseDate(date) {
+  var reg;
+  if (date === null) return new Date(NaN); // Treat null as an invalid date
+
+  if (Utils.isUndefined(date)) return new Date();
+  if (date instanceof Date) return date; // eslint-disable-next-line no-cond-assign
+
+  if (typeof date === 'string' && /.*[^Z]$/i.test(date) // looking for a better way
+  && (reg = date.match(REGEX_PARSE))) {
     // 2018-08-08 or 20180808
-    return new Date(
-      reg[1], reg[2] - 1, reg[3] || 1,
-      reg[4] || 0, reg[5] || 0, reg[6] || 0, reg[7] || 0
-    )
-  }
-  return new Date(date) // timestamp
-}
-
-class src_Dayjs {
-  constructor(cfg) {
-    this.parse(cfg) // for plugin
+    return new Date(reg[1], reg[2] - 1, reg[3] || 1, reg[4] || 0, reg[5] || 0, reg[6] || 0, reg[7] || 0);
   }
 
-  parse(cfg) {
-    this.$d = parseDate(cfg.date)
-    this.init(cfg)
+  return new Date(date); // timestamp
+};
+
+var esm_Dayjs =
+/*#__PURE__*/
+function () {
+  function Dayjs(cfg) {
+    this.parse(cfg); // for plugin
   }
 
-  init(cfg) {
-    const { $d } = this
-    this.$y = $d.getFullYear()
-    this.$M = $d.getMonth()
-    this.$D = $d.getDate()
-    this.$W = $d.getDay()
-    this.$H = $d.getHours()
-    this.$m = $d.getMinutes()
-    this.$s = $d.getSeconds()
-    this.$ms = $d.getMilliseconds()
-    this.$L = this.$L || parseLocale(cfg.locale, null, true) || L
-  }
+  var _proto = Dayjs.prototype;
 
-  // eslint-disable-next-line class-methods-use-this
-  $utils() {
-    return Utils
-  }
+  _proto.parse = function parse(cfg) {
+    this.$d = esm_parseDate(cfg.date);
+    this.init(cfg);
+  };
 
-  isValid() {
-    return !(this.$d.toString() === INVALID_DATE_STRING)
-  }
+  _proto.init = function init(cfg) {
+    var $d = this.$d;
+    this.$y = $d.getFullYear();
+    this.$M = $d.getMonth();
+    this.$D = $d.getDate();
+    this.$W = $d.getDay();
+    this.$H = $d.getHours();
+    this.$m = $d.getMinutes();
+    this.$s = $d.getSeconds();
+    this.$ms = $d.getMilliseconds();
+    this.$L = this.$L || parseLocale(cfg.locale, null, true) || L;
+  }; // eslint-disable-next-line class-methods-use-this
 
-  isSame(that, units) {
-    const other = dayjs(that)
-    return this.startOf(units) <= other && other <= this.endOf(units)
-  }
 
-  isAfter(that, units) {
-    return dayjs(that) < this.startOf(units)
-  }
+  _proto.$utils = function $utils() {
+    return Utils;
+  };
 
-  isBefore(that, units) {
-    return this.endOf(units) < dayjs(that)
-  }
+  _proto.isValid = function isValid() {
+    return !(this.$d.toString() === INVALID_DATE_STRING);
+  };
 
-  year() {
-    return this.$y
-  }
+  _proto.isSame = function isSame(that, units) {
+    var other = dayjs(that);
+    return this.startOf(units) <= other && other <= this.endOf(units);
+  };
 
-  month() {
-    return this.$M
-  }
+  _proto.isAfter = function isAfter(that, units) {
+    return dayjs(that) < this.startOf(units);
+  };
 
-  day() {
-    return this.$W
-  }
+  _proto.isBefore = function isBefore(that, units) {
+    return this.endOf(units) < dayjs(that);
+  };
 
-  date() {
-    return this.$D
-  }
+  _proto.year = function year() {
+    return this.$y;
+  };
 
-  hour() {
-    return this.$H
-  }
+  _proto.month = function month() {
+    return this.$M;
+  };
 
-  minute() {
-    return this.$m
-  }
+  _proto.day = function day() {
+    return this.$W;
+  };
 
-  second() {
-    return this.$s
-  }
+  _proto.date = function date() {
+    return this.$D;
+  };
 
-  millisecond() {
-    return this.$ms
-  }
+  _proto.hour = function hour() {
+    return this.$H;
+  };
 
-  unix() {
-    return Math.floor(this.valueOf() / 1000)
-  }
+  _proto.minute = function minute() {
+    return this.$m;
+  };
 
-  valueOf() {
+  _proto.second = function second() {
+    return this.$s;
+  };
+
+  _proto.millisecond = function millisecond() {
+    return this.$ms;
+  };
+
+  _proto.unix = function unix() {
+    return Math.floor(this.valueOf() / 1000);
+  };
+
+  _proto.valueOf = function valueOf() {
     // timezone(hour) * 60 * 60 * 1000 => ms
-    return this.$d.getTime()
-  }
+    return this.$d.getTime();
+  };
 
-  startOf(units, startOf) { // startOf -> endOf
-    const isStartOf = !Utils.isUndefined(startOf) ? startOf : true
-    const unit = Utils.prettyUnit(units)
-    const instanceFactory = (d, m) => {
-      const ins = wrapper(new Date(this.$y, m, d), this)
-      return isStartOf ? ins : ins.endOf(D)
-    }
-    const instanceFactorySet = (method, slice) => {
-      const argumentStart = [0, 0, 0, 0]
-      const argumentEnd = [23, 59, 59, 999]
-      return wrapper(this.toDate()[method].apply( // eslint-disable-line prefer-spread
-        this.toDate(),
-        (isStartOf ? argumentStart : argumentEnd).slice(slice)
-      ), this)
-    }
+  _proto.startOf = function startOf(units, _startOf) {
+    var _this = this;
+
+    // startOf -> endOf
+    var isStartOf = !Utils.isUndefined(_startOf) ? _startOf : true;
+    var unit = Utils.prettyUnit(units);
+
+    var instanceFactory = function instanceFactory(d, m) {
+      var ins = wrapper(new Date(_this.$y, m, d), _this);
+      return isStartOf ? ins : ins.endOf(D);
+    };
+
+    var instanceFactorySet = function instanceFactorySet(method, slice) {
+      var argumentStart = [0, 0, 0, 0];
+      var argumentEnd = [23, 59, 59, 999];
+      return wrapper(_this.toDate()[method].apply( // eslint-disable-line prefer-spread
+      _this.toDate(), (isStartOf ? argumentStart : argumentEnd).slice(slice)), _this);
+    };
 
     switch (unit) {
       case Y:
-        return isStartOf ? instanceFactory(1, 0) :
-          instanceFactory(31, 11)
+        return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
+
       case M:
-        return isStartOf ? instanceFactory(1, this.$M) :
-          instanceFactory(0, this.$M + 1)
+        return isStartOf ? instanceFactory(1, this.$M) : instanceFactory(0, this.$M + 1);
+
       case W:
-        return isStartOf ? instanceFactory(this.$D - this.$W, this.$M) :
-          instanceFactory(this.$D + (6 - this.$W), this.$M)
+        {
+          var weekStart = this.$locale().weekStart || 0;
+          return isStartOf ? instanceFactory(this.$D - (this.$W - weekStart), this.$M) : instanceFactory(this.$D + (6 - (this.$W - weekStart)), this.$M);
+        }
+
       case D:
       case DATE:
-        return instanceFactorySet('setHours', 0)
+        return instanceFactorySet('setHours', 0);
+
       case H:
-        return instanceFactorySet('setMinutes', 1)
+        return instanceFactorySet('setMinutes', 1);
+
       case MIN:
-        return instanceFactorySet('setSeconds', 2)
+        return instanceFactorySet('setSeconds', 2);
+
       case S:
-        return instanceFactorySet('setMilliseconds', 3)
+        return instanceFactorySet('setMilliseconds', 3);
+
       default:
-        return this.clone()
+        return this.clone();
     }
-  }
+  };
 
-  endOf(arg) {
-    return this.startOf(arg, false)
-  }
+  _proto.endOf = function endOf(arg) {
+    return this.startOf(arg, false);
+  };
 
-  $set(units, int) { // private set
-    const unit = Utils.prettyUnit(units)
-    const name = {
-      [D]: 'setDate',
-      [DATE]: 'setDate',
-      [M]: 'setMonth',
-      [Y]: 'setFullYear',
-      [H]: 'setHours',
-      [MIN]: 'setMinutes',
-      [S]: 'setSeconds',
-      [MS]: 'setMilliseconds'
-    }[unit]
-    const arg = unit === D ? this.$D + (int - this.$W) : int
+  _proto.$set = function $set(units, int) {
+    var _C$D$C$DATE$C$M$C$Y$C;
 
-    if (this.$d[name]) this.$d[name](arg)
+    // private set
+    var unit = Utils.prettyUnit(units);
+    var name = (_C$D$C$DATE$C$M$C$Y$C = {}, _C$D$C$DATE$C$M$C$Y$C[D] = 'setDate', _C$D$C$DATE$C$M$C$Y$C[DATE] = 'setDate', _C$D$C$DATE$C$M$C$Y$C[M] = 'setMonth', _C$D$C$DATE$C$M$C$Y$C[Y] = 'setFullYear', _C$D$C$DATE$C$M$C$Y$C[H] = 'setHours', _C$D$C$DATE$C$M$C$Y$C[MIN] = 'setMinutes', _C$D$C$DATE$C$M$C$Y$C[S] = 'setSeconds', _C$D$C$DATE$C$M$C$Y$C[MS] = 'setMilliseconds', _C$D$C$DATE$C$M$C$Y$C)[unit];
+    var arg = unit === D ? this.$D + (int - this.$W) : int;
+    if (this.$d[name]) this.$d[name](arg);
+    this.init();
+    return this;
+  };
 
-    this.init()
-    return this
-  }
+  _proto.set = function set(string, int) {
+    return this.clone().$set(string, int);
+  };
 
-  set(string, int) {
-    return this.clone().$set(string, int)
-  }
+  _proto.add = function add(number, units) {
+    var _this2 = this,
+        _C$MIN$C$H$C$S$unit;
 
-  add(number, units) {
-    number = Number(number) // eslint-disable-line no-param-reassign
-    const unit = Utils.prettyUnit(units)
-    const instanceFactory = (u, n) => {
-      const date = this.set(DATE, 1).set(u, n + number)
-      return date.set(DATE, Math.min(this.$D, date.daysInMonth()))
-    }
-    const instanceFactorySet = (n) => {
-      const date = new Date(this.$d)
-      date.setDate(date.getDate() + (n * number))
-      return wrapper(date, this)
-    }
+    number = Number(number); // eslint-disable-line no-param-reassign
+
+    var unit = Utils.prettyUnit(units);
+
+    var instanceFactory = function instanceFactory(u, n) {
+      var date = _this2.set(DATE, 1).set(u, n + number);
+
+      return date.set(DATE, Math.min(_this2.$D, date.daysInMonth()));
+    };
+
+    var instanceFactorySet = function instanceFactorySet(n) {
+      var date = new Date(_this2.$d);
+      date.setDate(date.getDate() + n * number);
+      return wrapper(date, _this2);
+    };
+
     if (unit === M) {
-      return instanceFactory(M, this.$M)
+      return instanceFactory(M, this.$M);
     }
+
     if (unit === Y) {
-      return instanceFactory(Y, this.$y)
+      return instanceFactory(Y, this.$y);
     }
+
     if (unit === D) {
-      return instanceFactorySet(1)
+      return instanceFactorySet(1);
     }
+
     if (unit === W) {
-      return instanceFactorySet(7)
-    }
-    const step = {
-      [MIN]: MILLISECONDS_A_MINUTE,
-      [H]: MILLISECONDS_A_HOUR,
-      [S]: MILLISECONDS_A_SECOND
-    }[unit] || 1 // ms
-
-    const nextTimeStamp = this.valueOf() + (number * step)
-    return wrapper(nextTimeStamp, this)
-  }
-
-  subtract(number, string) {
-    return this.add(number * -1, string)
-  }
-
-  format(formatStr) {
-    if (!this.isValid()) return INVALID_DATE_STRING
-
-    const str = formatStr || FORMAT_DEFAULT
-    const zoneStr = Utils.padZoneStr(this.$d.getTimezoneOffset())
-    const locale = this.$locale()
-    const {
-      weekdays, months
-    } = locale
-    const getShort = (arr, index, full, length) => (
-      (arr && arr[index]) || full[index].substr(0, length)
-    )
-    const get$H = (match) => {
-      if (this.$H === 0) return 12
-      return Utils.padStart(this.$H < 13 ? this.$H : this.$H - 12, match === 'hh' ? 2 : 1, '0')
+      return instanceFactorySet(7);
     }
 
-    const matches = {
+    var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1; // ms
+
+    var nextTimeStamp = this.valueOf() + number * step;
+    return wrapper(nextTimeStamp, this);
+  };
+
+  _proto.subtract = function subtract(number, string) {
+    return this.add(number * -1, string);
+  };
+
+  _proto.format = function format(formatStr) {
+    var _this3 = this;
+
+    if (!this.isValid()) return INVALID_DATE_STRING;
+    var str = formatStr || FORMAT_DEFAULT;
+    var zoneStr = Utils.padZoneStr(this.$d.getTimezoneOffset());
+    var locale = this.$locale();
+    var weekdays = locale.weekdays,
+        months = locale.months;
+
+    var getShort = function getShort(arr, index, full, length) {
+      return arr && arr[index] || full[index].substr(0, length);
+    };
+
+    var get$H = function get$H(match) {
+      if (_this3.$H === 0) return 12;
+      return Utils.padStart(_this3.$H < 13 ? _this3.$H : _this3.$H - 12, match === 'hh' ? 2 : 1, '0');
+    };
+
+    var matches = {
       YY: String(this.$y).slice(-2),
       YYYY: String(this.$y),
       M: String(this.$M + 1),
@@ -651,87 +675,71 @@ class src_Dayjs {
       ss: Utils.padStart(this.$s, 2, '0'),
       SSS: Utils.padStart(this.$ms, 3, '0'),
       Z: zoneStr
-    }
+    };
+    return str.replace(REGEX_FORMAT, function (match) {
+      if (match.indexOf('[') > -1) return match.replace(/\[|\]/g, '');
+      return matches[match] || zoneStr.replace(':', ''); // 'ZZ'
+    });
+  };
 
-    return str.replace(REGEX_FORMAT, (match) => {
-      if (match.indexOf('[') > -1) return match.replace(/\[|\]/g, '')
-      return matches[match] || zoneStr.replace(':', '') // 'ZZ'
-    })
-  }
-
-  utcOffset() {
+  _proto.utcOffset = function utcOffset() {
     // Because a bug at FF24, we're rounding the timezone offset around 15 minutes
     // https://github.com/moment/moment/pull/1871
-    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15
-  }
+    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15;
+  };
 
-  diff(input, units, float) {
-    const unit = Utils.prettyUnit(units)
-    const that = dayjs(input)
-    const zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE
-    const diff = this - that
-    let result = Utils.monthDiff(this, that)
+  _proto.diff = function diff(input, units, float) {
+    var _C$Y$C$M$C$Q$C$W$C$D$;
 
-    result = {
-      [Y]: result / 12,
-      [M]: result,
-      [Q]: result / 3,
-      [W]: (diff - zoneDelta) / MILLISECONDS_A_WEEK,
-      [D]: (diff - zoneDelta) / MILLISECONDS_A_DAY,
-      [H]: diff / MILLISECONDS_A_HOUR,
-      [MIN]: diff / MILLISECONDS_A_MINUTE,
-      [S]: diff / MILLISECONDS_A_SECOND
-    }[unit] || diff // milliseconds
+    var unit = Utils.prettyUnit(units);
+    var that = dayjs(input);
+    var zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE;
+    var diff = this - that;
+    var result = Utils.monthDiff(this, that);
+    result = (_C$Y$C$M$C$Q$C$W$C$D$ = {}, _C$Y$C$M$C$Q$C$W$C$D$[Y] = result / 12, _C$Y$C$M$C$Q$C$W$C$D$[M] = result, _C$Y$C$M$C$Q$C$W$C$D$[Q] = result / 3, _C$Y$C$M$C$Q$C$W$C$D$[W] = (diff - zoneDelta) / MILLISECONDS_A_WEEK, _C$Y$C$M$C$Q$C$W$C$D$[D] = (diff - zoneDelta) / MILLISECONDS_A_DAY, _C$Y$C$M$C$Q$C$W$C$D$[H] = diff / MILLISECONDS_A_HOUR, _C$Y$C$M$C$Q$C$W$C$D$[MIN] = diff / MILLISECONDS_A_MINUTE, _C$Y$C$M$C$Q$C$W$C$D$[S] = diff / MILLISECONDS_A_SECOND, _C$Y$C$M$C$Q$C$W$C$D$)[unit] || diff; // milliseconds
 
-    return float ? result : Utils.absFloor(result)
-  }
+    return float ? result : Utils.absFloor(result);
+  };
 
-  daysInMonth() {
-    return this.endOf(M).$D
-  }
+  _proto.daysInMonth = function daysInMonth() {
+    return this.endOf(M).$D;
+  };
 
-  $locale() { // get locale object
-    return Ls[this.$L]
-  }
+  _proto.$locale = function $locale() {
+    // get locale object
+    return Ls[this.$L];
+  };
 
-  locale(preset, object) {
-    const that = this.clone()
-    that.$L = parseLocale(preset, object, true)
-    return that
-  }
+  _proto.locale = function locale(preset, object) {
+    var that = this.clone();
+    that.$L = parseLocale(preset, object, true);
+    return that;
+  };
 
-  clone() {
-    return wrapper(this.toDate(), this)
-  }
+  _proto.clone = function clone() {
+    return wrapper(this.toDate(), this);
+  };
 
-  toDate() {
-    return new Date(this.$d)
-  }
+  _proto.toDate = function toDate() {
+    return new Date(this.$d);
+  };
 
-  toArray() {
-    return [
-      this.$y,
-      this.$M,
-      this.$D,
-      this.$H,
-      this.$m,
-      this.$s,
-      this.$ms
-    ]
-  }
+  _proto.toArray = function toArray() {
+    return [this.$y, this.$M, this.$D, this.$H, this.$m, this.$s, this.$ms];
+  };
 
-  toJSON() {
-    return this.toISOString()
-  }
+  _proto.toJSON = function toJSON() {
+    return this.toISOString();
+  };
 
-  toISOString() {
+  _proto.toISOString = function toISOString() {
     // ie 8 return
     // new Dayjs(this.valueOf() + this.$d.getTimezoneOffset() * 60000)
     // .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]')
-    return this.$d.toISOString()
-  }
+    return this.$d.toISOString();
+  };
 
-  toObject() {
+  _proto.toObject = function toObject() {
     return {
       years: this.$y,
       months: this.$M,
@@ -740,33 +748,32 @@ class src_Dayjs {
       minutes: this.$m,
       seconds: this.$s,
       milliseconds: this.$ms
-    }
-  }
+    };
+  };
 
-  toString() {
-    return this.$d.toUTCString()
-  }
-}
+  _proto.toString = function toString() {
+    return this.$d.toUTCString();
+  };
 
-dayjs.prototype = src_Dayjs.prototype
+  return Dayjs;
+}();
 
-dayjs.extend = (plugin, option) => {
-  plugin(option, src_Dayjs, dayjs)
-  return dayjs
-}
+dayjs.prototype = esm_Dayjs.prototype;
 
-dayjs.locale = parseLocale
+dayjs.extend = function (plugin, option) {
+  plugin(option, esm_Dayjs, dayjs);
+  return dayjs;
+};
 
-dayjs.isDayjs = isDayjs
+dayjs.locale = parseLocale;
+dayjs.isDayjs = isDayjs;
 
-dayjs.unix = timestamp => (
-  dayjs(timestamp * 1e3)
-)
+dayjs.unix = function (timestamp) {
+  return dayjs(timestamp * 1e3);
+};
 
-dayjs.en = Ls[L]
-
-/* harmony default export */ var src = (dayjs);
-
+dayjs.en = Ls[L];
+/* harmony default export */ var esm = (dayjs);
 // CONCATENATED MODULE: ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./src/components/MainView.vue?vue&type=template&id=0bc4212e&
 var MainViewvue_type_template_id_0bc4212e_render = function() {
   var _vm = this
@@ -828,11 +835,8 @@ var MainViewvue_type_template_id_0bc4212e_render = function() {
                                 {
                                   name: "show",
                                   rawName: "v-show",
-                                  value:
-                                    _vm.root.state.taskList.display &&
-                                    _vm.root.state.taskList.displayAfterResize,
-                                  expression:
-                                    "root.state.taskList.display && root.state.taskList.displayAfterResize"
+                                  value: _vm.root.state.taskList.display,
+                                  expression: "root.state.taskList.display"
                                 }
                               ],
                               ref: "svgTaskList",
@@ -957,11 +961,8 @@ var TaskListvue_type_template_id_6e11f12f_render = function() {
         {
           name: "show",
           rawName: "v-show",
-          value:
-            _vm.root.state.taskList.display &&
-            _vm.root.state.taskList.displayAfterResize,
-          expression:
-            "root.state.taskList.display && root.state.taskList.displayAfterResize"
+          value: _vm.root.state.taskList.display,
+          expression: "root.state.taskList.display"
         }
       ],
       ref: "taskListWrapper",
@@ -1046,7 +1047,12 @@ var TaskListHeadervue_type_template_id_aefdd7c8_render = function() {
         },
         [
           column.expander
-            ? _c("task-list-expander", { attrs: { tasks: _vm.collapsible } })
+            ? _c("task-list-expander", {
+                attrs: {
+                  tasks: _vm.collapsible,
+                  options: _vm.root.state.taskList.expander
+                }
+              })
             : _vm._e(),
           _vm._v(" "),
           _c(
@@ -1129,42 +1135,38 @@ TaskListHeadervue_type_template_id_aefdd7c8_render._withStripped = true
 
 // CONCATENATED MODULE: ./src/components/TaskList/TaskListHeader.vue?vue&type=template&id=aefdd7c8&
 
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./src/components/TaskList/Expander.vue?vue&type=template&id=5f156c33&
-var Expandervue_type_template_id_5f156c33_render = function() {
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./src/components/Expander.vue?vue&type=template&id=09a21177&
+var Expandervue_type_template_id_09a21177_render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c(
     "div",
     {
-      staticClass: "gantt-elastic__task-list-column-expander-wrapper",
-      style: _vm.root.style("task-list-column-expander-wrapper")
+      class: _vm.getClassPrefix() + "-wrapper",
+      style: _vm.root.style(_vm.getClassPrefix(false) + "-wrapper")
     },
     [
       _vm.allChildren.length
         ? _c(
             "svg",
             {
-              staticClass: "gantt-elastic__task-list-column-expander-content",
-              style: _vm.root.style("task-list-column-expander-content"),
-              attrs: {
-                width: _vm.root.state.taskList.expander.size,
-                height: _vm.root.state.taskList.expander.size
-              }
+              class: _vm.getClassPrefix() + "-content",
+              style: _vm.root.style(_vm.getClassPrefix(false) + "-content"),
+              attrs: { width: _vm.options.size, height: _vm.options.size }
             },
             [
               _c("rect", {
-                staticClass: "gantt-elastic__task-list-column-expander-border",
+                class: _vm.getClassPrefix() + "-border",
                 style: _vm.root.style(
-                  "task-list-column-expander-border",
+                  _vm.getClassPrefix(false) + "-border",
                   _vm.borderStyle
                 ),
                 attrs: {
                   x: _vm.border,
                   y: _vm.border,
-                  width: _vm.root.state.taskList.expander.size - _vm.border * 2,
-                  height:
-                    _vm.root.state.taskList.expander.size - _vm.border * 2,
+                  width: _vm.options.size - _vm.border * 2,
+                  height: _vm.options.size - _vm.border * 2,
                   rx: "2",
                   ry: "2"
                 },
@@ -1173,15 +1175,13 @@ var Expandervue_type_template_id_5f156c33_render = function() {
               _vm._v(" "),
               _vm.allChildren.length
                 ? _c("line", {
-                    staticClass:
-                      "gantt-elastic__task-list-column-expander-line",
-                    style: _vm.root.style("task-list-column-expander-line"),
+                    class: _vm.getClassPrefix() + "-line",
+                    style: _vm.root.style(_vm.getClassPrefix(false) + "-line"),
                     attrs: {
                       x1: _vm.lineOffset,
-                      y1: _vm.root.state.taskList.expander.size / 2,
-                      x2:
-                        _vm.root.state.taskList.expander.size - _vm.lineOffset,
-                      y2: _vm.root.state.taskList.expander.size / 2
+                      y1: _vm.options.size / 2,
+                      x2: _vm.options.size - _vm.lineOffset,
+                      y2: _vm.options.size / 2
                     },
                     on: { click: _vm.toggle }
                   })
@@ -1189,14 +1189,13 @@ var Expandervue_type_template_id_5f156c33_render = function() {
               _vm._v(" "),
               _vm.collapsed
                 ? _c("line", {
-                    staticClass:
-                      "gantt-elastic__task-list-column-expander-line",
-                    style: _vm.root.style("task-list-column-expander-line"),
+                    class: _vm.getClassPrefix() + "-line",
+                    style: _vm.root.style(_vm.getClassPrefix(false) + "-line"),
                     attrs: {
-                      x1: _vm.root.state.taskList.expander.size / 2,
+                      x1: _vm.options.size / 2,
                       y1: _vm.lineOffset,
-                      x2: _vm.root.state.taskList.expander.size / 2,
-                      y2: _vm.root.state.taskList.expander.size - _vm.lineOffset
+                      x2: _vm.options.size / 2,
+                      y2: _vm.options.size - _vm.lineOffset
                     },
                     on: { click: _vm.toggle }
                   })
@@ -1207,16 +1206,13 @@ var Expandervue_type_template_id_5f156c33_render = function() {
     ]
   )
 }
-var Expandervue_type_template_id_5f156c33_staticRenderFns = []
-Expandervue_type_template_id_5f156c33_render._withStripped = true
+var Expandervue_type_template_id_09a21177_staticRenderFns = []
+Expandervue_type_template_id_09a21177_render._withStripped = true
 
 
-// CONCATENATED MODULE: ./src/components/TaskList/Expander.vue?vue&type=template&id=5f156c33&
+// CONCATENATED MODULE: ./src/components/Expander.vue?vue&type=template&id=09a21177&
 
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib??vue-loader-options!./src/components/TaskList/Expander.vue?vue&type=script&lang=js&
-//
-//
-//
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib??vue-loader-options!./src/components/Expander.vue?vue&type=script&lang=js&
 //
 //
 //
@@ -1272,7 +1268,7 @@ Expandervue_type_template_id_5f156c33_render._withStripped = true
 
 /* harmony default export */ var Expandervue_type_script_lang_js_ = ({
   inject: ["root"],
-  props: ["tasks"],
+  props: ["tasks", "options"],
   data () {
     const border = 0.5;
     return {
@@ -1319,6 +1315,14 @@ Expandervue_type_template_id_5f156c33_render._withStripped = true
   },
   methods: {
     /**
+     * Get specific class prefix
+     * @returns {string}
+     */
+    getClassPrefix (full = true) {
+      return `${full ? 'gantt-elastic__' : ''}${this.options.type}-expander`;
+    },
+
+    /**
      * Toggle expander
      */
     toggle () {
@@ -1336,8 +1340,8 @@ Expandervue_type_template_id_5f156c33_render._withStripped = true
   }
 });
 
-// CONCATENATED MODULE: ./src/components/TaskList/Expander.vue?vue&type=script&lang=js&
- /* harmony default export */ var TaskList_Expandervue_type_script_lang_js_ = (Expandervue_type_script_lang_js_); 
+// CONCATENATED MODULE: ./src/components/Expander.vue?vue&type=script&lang=js&
+ /* harmony default export */ var components_Expandervue_type_script_lang_js_ = (Expandervue_type_script_lang_js_); 
 // CONCATENATED MODULE: ./node_modules/vue-loader/lib/runtime/componentNormalizer.js
 /* globals __VUE_SSR_CONTEXT__ */
 
@@ -1433,7 +1437,7 @@ function normalizeComponent (
   }
 }
 
-// CONCATENATED MODULE: ./src/components/TaskList/Expander.vue
+// CONCATENATED MODULE: ./src/components/Expander.vue
 
 
 
@@ -1442,9 +1446,9 @@ function normalizeComponent (
 /* normalize component */
 
 var component = normalizeComponent(
-  TaskList_Expandervue_type_script_lang_js_,
-  Expandervue_type_template_id_5f156c33_render,
-  Expandervue_type_template_id_5f156c33_staticRenderFns,
+  components_Expandervue_type_script_lang_js_,
+  Expandervue_type_template_id_09a21177_render,
+  Expandervue_type_template_id_09a21177_staticRenderFns,
   false,
   null,
   null,
@@ -1454,7 +1458,7 @@ var component = normalizeComponent(
 
 /* hot reload */
 if (false) { var api; }
-component.options.__file = "src/components/TaskList/Expander.vue"
+component.options.__file = "src/components/Expander.vue"
 /* harmony default export */ var Expander = (component.exports);
 // CONCATENATED MODULE: ./node_modules/vue-loader/lib??vue-loader-options!./src/components/TaskList/TaskListHeader.vue?vue&type=script&lang=js&
 //
@@ -1654,7 +1658,10 @@ var TaskListItemvue_type_template_id_9716293c_render = function() {
           column.expander
             ? _c("task-list-expander", {
                 style: _vm.expanderStyle,
-                attrs: { tasks: [_vm.task] }
+                attrs: {
+                  tasks: [_vm.task],
+                  options: _vm.root.state.taskList.expander
+                }
               })
             : _vm._e()
         ],
@@ -1837,6 +1844,11 @@ if (false) { var ItemColumn_api; }
 ItemColumn_component.options.__file = "src/components/TaskList/ItemColumn.vue"
 /* harmony default export */ var ItemColumn = (ItemColumn_component.exports);
 // CONCATENATED MODULE: ./node_modules/vue-loader/lib??vue-loader-options!./src/components/TaskList/TaskListItem.vue?vue&type=script&lang=js&
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2257,7 +2269,7 @@ Gridvue_type_template_id_2bf979a7_render._withStripped = true
             x1: step.offset.px,
             y1: 0,
             x2: step.offset.px,
-            y2: state.tasks.length * (state.row.height + state.grid.horizontal.gap * 2) + this.root.style('grid-line-vertical')['stroke-width'],
+            y2: state.tasks.length * (state.row.height + state.chart.grid.horizontal.gap * 2) + this.root.style('grid-line-vertical')['stroke-width'],
           });
         }
       });
@@ -2268,7 +2280,7 @@ Gridvue_type_template_id_2bf979a7_render._withStripped = true
       const state = this.root.state;
       let tasks = this.root.visibleTasks;
       for (let index = 0, len = tasks.length; index <= len; index++) {
-        const y = (index * (state.row.height + state.grid.horizontal.gap * 2) + this.root.style('grid-line-vertical')['stroke-width'] / 2);
+        const y = (index * (state.row.height + state.chart.grid.horizontal.gap * 2) + this.root.style('grid-line-vertical')['stroke-width'] / 2);
         lines.push({
           key: "hl" + index,
           x1: 0,
@@ -2399,6 +2411,11 @@ DaysHighlightvue_type_template_id_1bfe64e8_render._withStripped = true
     return {};
   },
   methods: {
+    /**
+     * Get key
+     * @param {object} day
+     * @returns {string} key ideintifier for loop
+     */
     getKey (day) {
       return day.date.format('YYYY-MM-DD');
     }
@@ -2788,7 +2805,7 @@ CalendarRow_component.options.__file = "src/components/Calendar/CalendarRow.vue"
       const additionalSpace = this.root.style('calendar-row')["stroke-width"] + 2;
       let fullWidth = this.root.state.width;
       let formatNames = Object.keys(this.root.state.calendar.month.format);
-      let currentMonth = src(this.root.state.times.firstDate);
+      let currentMonth = esm(this.root.state.times.firstDate);
       let previousMonth = currentMonth.clone();
       const lastTime = this.root.state.times.lastTime;
       let monthsCount = 1;
@@ -2845,7 +2862,7 @@ CalendarRow_component.options.__file = "src/components/Calendar/CalendarRow.vue"
         const hourStep = 24 / hoursCount.count;
         const hourWidthPx = this.root.state.times.steps[hourIndex].width.px / hoursCount.count;
         for (let i = 0, len = hoursCount.count; i < len; i++) {
-          const date = src(this.root.state.times.steps[hourIndex].date).add(i * hourStep, "hour");
+          const date = esm(this.root.state.times.steps[hourIndex].date).add(i * hourStep, "hour");
           let textWidth = 0;
           if (typeof this.root.state.calendar.hour.widths[hourIndex] !== 'undefined') {
             textWidth = this.root.state.calendar.hour.widths[hourIndex][hoursCount.type];
@@ -2883,7 +2900,7 @@ CalendarRow_component.options.__file = "src/components/Calendar/CalendarRow.vue"
             dayWidthPx += this.root.state.times.steps[dayIndex + currentStep].width.px;
           }
         }
-        const date = src(this.root.state.times.steps[dayIndex].date);
+        const date = esm(this.root.state.times.steps[dayIndex].date);
         let textWidth = 0;
         if (typeof this.root.state.calendar.day.widths[dayIndex] !== 'undefined') {
           textWidth = this.root.state.calendar.day.widths[dayIndex][daysCount.type];
@@ -2912,13 +2929,13 @@ CalendarRow_component.options.__file = "src/components/Calendar/CalendarRow.vue"
       let months = [];
       const monthsCount = this.howManyMonthsFit();
       let formatNames = Object.keys(this.root.state.calendar.month.format);
-      let currentDate = src(this.root.state.times.firstDate);
+      let currentDate = esm(this.root.state.times.firstDate);
       for (let monthIndex = 0; monthIndex < monthsCount.count; monthIndex++) {
         let monthWidth = 0;
         let monthOffset = Number.MAX_SAFE_INTEGER;
-        let finalDate = src(currentDate).add(1, "month").startOf("month");
+        let finalDate = esm(currentDate).add(1, "month").startOf("month");
         if (finalDate.valueOf() > this.root.state.times.lastDate.valueOf()) {
-          finalDate = src(this.root.state.times.lastDate);
+          finalDate = esm(this.root.state.times.lastDate);
         }
         // we must find first and last step to get the offsets / widths
         for (let step = 0, len = this.root.state.times.steps.length; step < len; step++) {
@@ -2956,7 +2973,7 @@ CalendarRow_component.options.__file = "src/components/Calendar/CalendarRow.vue"
         });
         currentDate = currentDate.add(1, "month").startOf("month");
         if (currentDate.valueOf() > this.root.state.times.lastDate.valueOf()) {
-          currentDate = src(this.root.state.times.lastDate);
+          currentDate = esm(this.root.state.times.lastDate);
         }
       }
       return this.months = months;
@@ -3271,6 +3288,43 @@ var Taskvue_type_template_id_e9c23eca_render = function() {
       )
     },
     [
+      _vm.displayExpander
+        ? _c(
+            "foreignObject",
+            {
+              staticClass:
+                "gantt-elastic__chart-expander gantt-elastic__chart-expander--task",
+              style: _vm.root.style(
+                "chart-expander",
+                "chart-expander--task",
+                _vm.task.style["chart-expander"]
+              ),
+              attrs: {
+                x:
+                  _vm.task.x -
+                  _vm.root.state.chart.expander.offset -
+                  _vm.root.state.chart.expander.size,
+                y:
+                  _vm.task.y +
+                  (_vm.root.state.row.height -
+                    _vm.root.state.chart.expander.size) /
+                    2,
+                width: _vm.root.state.chart.expander.size,
+                height: _vm.root.state.chart.expander.size
+              }
+            },
+            [
+              _c("expander", {
+                attrs: {
+                  tasks: [_vm.task],
+                  options: _vm.root.state.chart.expander
+                }
+              })
+            ],
+            1
+          )
+        : _vm._e(),
+      _vm._v(" "),
       _c(
         "svg",
         {
@@ -3353,7 +3407,7 @@ var Taskvue_type_template_id_e9c23eca_render = function() {
         1
       ),
       _vm._v(" "),
-      _vm.root.state.row.showText
+      _vm.root.state.chart.text.display
         ? _c("chart-text", { attrs: { task: _vm.task } })
         : _vm._e()
     ],
@@ -3377,8 +3431,8 @@ var Textvue_type_template_id_459c2fe4_render = function() {
       staticClass: "gantt-elastic__chart-row-text-wrapper",
       style: _vm.root.style("chart-row-text-wrapper"),
       attrs: {
-        x: _vm.task.x + _vm.task.width + _vm.root.state.chartText.offset,
-        y: _vm.task.y - _vm.root.state.grid.horizontal.gap,
+        x: _vm.task.x + _vm.task.width + _vm.root.state.chart.text.offset,
+        y: _vm.task.y - _vm.root.state.chart.grid.horizontal.gap,
         width: _vm.getWidth,
         height: _vm.getHeight
       }
@@ -3498,10 +3552,10 @@ Textvue_type_template_id_459c2fe4_render._withStripped = true
       const textStyle = this.root.style('chart-row-text');
       this.root.state.ctx.font = `${textStyle["font-weight"]} ${textStyle["font-size"]} ${textStyle["font-family"]}`;
       const textWidth = this.root.state.ctx.measureText(this.task.label).width;
-      return textWidth + this.root.state.chartText.xPadding * 2;
+      return textWidth + this.root.state.chart.text.xPadding * 2;
     },
     getHeight () {
-      return this.task.height + this.root.state.grid.horizontal.gap * 2;
+      return this.task.height + this.root.state.chart.grid.horizontal.gap * 2;
     },
     contentStyle () {
       return { height: '100%', 'line-height': this.getHeight + 'px' };
@@ -3565,8 +3619,8 @@ var ProgressBarvue_type_template_id_4bc39355_render = function() {
           {
             attrs: {
               id: "diagonalHatch",
-              width: _vm.root.state.progress.width,
-              height: _vm.root.state.progress.width,
+              width: _vm.root.state.chart.progress.width,
+              height: _vm.root.state.chart.progress.width,
               patternTransform: "rotate(45 0 0)",
               patternUnits: "userSpaceOnUse"
             }
@@ -3582,14 +3636,14 @@ var ProgressBarvue_type_template_id_4bc39355_render = function() {
                 x1: "0",
                 y1: "0",
                 x2: "0",
-                y2: _vm.root.state.progress.width
+                y2: _vm.root.state.chart.progress.width
               }
             })
           ]
         )
       ]),
       _vm._v(" "),
-      _vm.root.state.progress.bar
+      _vm.root.state.chart.progress.bar
         ? _c("rect", {
             staticClass: "gantt-elastic__chart-row-progress-bar-solid",
             style: _vm.root.style(
@@ -3600,7 +3654,7 @@ var ProgressBarvue_type_template_id_4bc39355_render = function() {
           })
         : _vm._e(),
       _vm._v(" "),
-      _vm.root.state.progress.pattern
+      _vm.root.state.chart.progress.pattern
         ? _c("g", [
             _c("rect", {
               staticClass: "gantt-elastic__chart-row-progress-bar-pattern",
@@ -3710,7 +3764,7 @@ ProgressBarvue_type_template_id_4bc39355_render._withStripped = true
       return `M ${start} 0 L ${start} ${this.task.height}`;
     },
     getSolidStyle () {
-      return Object.assign({}, this.root.state.progress.styles.bar.solid, this.task.progressBarStyle.bar);
+      return Object.assign({}, this.root.state.chart.progress.styles.bar.solid, this.task.progressBarStyle.bar);
     },
     getLineStyle () {
       return Object.assign({}, {
@@ -3796,13 +3850,26 @@ ProgressBar_component.options.__file = "src/components/Chart/ProgressBar.vue"
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
 /* harmony default export */ var Taskvue_type_script_lang_js_ = ({
   components: {
     ChartText: Text,
-    ProgressBar: ProgressBar
+    ProgressBar: ProgressBar,
+    Expander: Expander
   },
   inject: ["root"],
   props: ["task"],
@@ -3810,24 +3877,58 @@ ProgressBar_component.options.__file = "src/components/Chart/ProgressBar.vue"
     return {};
   },
   computed: {
+
+    /**
+     * Get clip path id
+     * @returns {string}
+     */
     clipPathId () {
       return "gantt-elastic__task-clip-path-" + this.task.id;
     },
+
+    /**
+     * Get view box
+     * @returns {string}
+     */
     getViewBox () {
       const task = this.task;
       return `0 0 ${task.width} ${task.height}`;
     },
+
+    /**
+     * Get group transform
+     * @returns {string}
+     */
     getGroupTransform () {
       return `translate(${this.task.x} ${this.task.y})`;
     },
+
+    /**
+     * Get points
+     * @returns {string}
+     */
     getPoints () {
       const task = this.task;
       return `0,0 ${task.width},0 ${task.width},${task.height} 0,${
         task.height
         }`;
     },
+
+    /**
+     * Should we display expander?
+     * @returns {boolean}
+     */
+    displayExpander () {
+      const expander = this.root.state.chart.expander;
+      return expander.display || (expander.displayIfTaskListHidden && !this.root.state.taskList.display);
+    }
   },
   methods: {
+    /**
+     * Emit event
+     * @param {string} eventName
+     * @param {Event} event
+     */
     emitEvent (eventName, event) {
       if (!this.root.state.scroll.scrolling) {
         this.root.$emit(`chart-${this.task.type}-${eventName}`, { event, data: this.task });
@@ -3878,6 +3979,43 @@ var Milestonevue_type_template_id_3013006c_render = function() {
       )
     },
     [
+      _vm.displayExpander
+        ? _c(
+            "foreignObject",
+            {
+              staticClass:
+                "gantt-elastic__chart-expander gantt-elastic__chart-expander--milestone",
+              style: _vm.root.style(
+                "chart-expander",
+                "chart-expander--milestone",
+                _vm.task.style["chart-expander"]
+              ),
+              attrs: {
+                x:
+                  _vm.task.x -
+                  _vm.root.state.chart.expander.offset -
+                  _vm.root.state.chart.expander.size,
+                y:
+                  _vm.task.y +
+                  (_vm.root.state.row.height -
+                    _vm.root.state.chart.expander.size) /
+                    2,
+                width: _vm.root.state.chart.expander.size,
+                height: _vm.root.state.chart.expander.size
+              }
+            },
+            [
+              _c("expander", {
+                attrs: {
+                  tasks: [_vm.task],
+                  options: _vm.root.state.chart.expander
+                }
+              })
+            ],
+            1
+          )
+        : _vm._e(),
+      _vm._v(" "),
       _c(
         "svg",
         {
@@ -3960,7 +4098,7 @@ var Milestonevue_type_template_id_3013006c_render = function() {
         1
       ),
       _vm._v(" "),
-      _vm.root.state.row.showText
+      _vm.root.state.chart.text.display
         ? _c("chart-text", { attrs: { task: _vm.task } })
         : _vm._e()
     ],
@@ -4023,13 +4161,26 @@ Milestonevue_type_template_id_3013006c_render._withStripped = true
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
 /* harmony default export */ var Milestonevue_type_script_lang_js_ = ({
   components: {
     ChartText: Text,
-    ProgressBar: ProgressBar
+    ProgressBar: ProgressBar,
+    Expander: Expander
   },
   inject: ["root"],
   props: ["task"],
@@ -4037,15 +4188,34 @@ Milestonevue_type_template_id_3013006c_render._withStripped = true
     return {};
   },
   computed: {
+    /**
+     * Get clip path id
+     * @returns {string}
+     */
     clipPathId () {
       return "gantt-elastic__milestone-clip-path-" + this.task.id;
     },
+
+    /**
+     * Get view box
+     * @returns {string}
+     */
     getViewBox () {
       return `0 0 ${this.task.width} ${this.task.height}`;
     },
+
+    /**
+     * Get group transform
+     * @returns {string}
+     */
     getGroupTransform () {
       return `translate(${this.task.x} ${this.task.y})`;
     },
+
+    /**
+     * Get points
+     * @returns {string}
+     */
     getPoints () {
       const task = this.task;
       const fifty = task.height / 2;
@@ -4060,8 +4230,22 @@ Milestonevue_type_template_id_3013006c_render._withStripped = true
         ${task.width - offset},${task.height}
         ${offset},${task.height}`;
     },
+
+    /**
+     * Should we display expander?
+     * @returns {boolean}
+     */
+    displayExpander () {
+      const expander = this.root.state.chart.expander;
+      return expander.display || (expander.displayIfTaskListHidden && !this.root.state.taskList.display);
+    }
   },
   methods: {
+    /**
+     * Emit event
+     * @param {string} eventName
+     * @param {Event} event
+     */
     emitEvent (eventName, event) {
       if (!this.root.state.scroll.scrolling) {
         this.root.$emit(`chart-${this.task.type}-${eventName}`, { event, data: this.task });
@@ -4112,6 +4296,43 @@ var Projectvue_type_template_id_077bbd73_render = function() {
       )
     },
     [
+      _vm.displayExpander
+        ? _c(
+            "foreignObject",
+            {
+              staticClass:
+                "gantt-elastic__chart-expander gantt-elastic__chart-expander--project",
+              style: _vm.root.style(
+                "chart-expander",
+                "chart-expander--project",
+                _vm.task.style["chart-expander"]
+              ),
+              attrs: {
+                x:
+                  _vm.task.x -
+                  _vm.root.state.chart.expander.offset -
+                  _vm.root.state.chart.expander.size,
+                y:
+                  _vm.task.y +
+                  (_vm.root.state.row.height -
+                    _vm.root.state.chart.expander.size) /
+                    2,
+                width: _vm.root.state.chart.expander.size,
+                height: _vm.root.state.chart.expander.size
+              }
+            },
+            [
+              _c("expander", {
+                attrs: {
+                  tasks: [_vm.task],
+                  options: _vm.root.state.chart.expander
+                }
+              })
+            ],
+            1
+          )
+        : _vm._e(),
+      _vm._v(" "),
       _c(
         "svg",
         {
@@ -4194,7 +4415,7 @@ var Projectvue_type_template_id_077bbd73_render = function() {
         1
       ),
       _vm._v(" "),
-      _vm.root.state.row.showText
+      _vm.root.state.chart.text.display
         ? _c("chart-text", { attrs: { task: _vm.task } })
         : _vm._e()
     ],
@@ -4257,13 +4478,26 @@ Projectvue_type_template_id_077bbd73_render._withStripped = true
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
 /* harmony default export */ var Projectvue_type_script_lang_js_ = ({
   components: {
     ChartText: Text,
-    ProgressBar: ProgressBar
+    ProgressBar: ProgressBar,
+    Expander: Expander
   },
   inject: ["root"],
   props: ["task"],
@@ -4271,15 +4505,34 @@ Projectvue_type_template_id_077bbd73_render._withStripped = true
     return {};
   },
   computed: {
+    /**
+     * Get clip path id
+     * @returns {string}
+     */
     clipPathId () {
       return "gantt-elastic__project-clip-path-" + this.task.id;
     },
+
+    /**
+     * Get view box
+     * @returns {string}
+     */
     getViewBox () {
       return `0 0 ${this.task.width} ${this.task.height}`;
     },
+
+    /**
+     * Get group transform
+     * @returns {string}
+     */
     getGroupTransform () {
       return `translate(${this.task.x} ${this.task.y})`;
     },
+
+    /**
+     * Get points
+     * @returns {string}
+     */
     getPoints () {
       const task = this.task;
       const bottom = task.height - task.height / 4;
@@ -4298,8 +4551,22 @@ Projectvue_type_template_id_077bbd73_render._withStripped = true
                 Z
         `;
     },
+
+    /**
+     * Should we display expander?
+     * @returns {boolean}
+     */
+    displayExpander () {
+      const expander = this.root.state.chart.expander;
+      return expander.display || (expander.displayIfTaskListHidden && !this.root.state.taskList.display);
+    }
   },
   methods: {
+    /**
+     * Emit event
+     * @param {string} eventName
+     * @param {Event} event
+     */
     emitEvent (eventName, event) {
       if (!this.root.state.scroll.scrolling) {
         this.root.$emit(`chart-${this.task.type}-${eventName}`, { event, data: this.task });
@@ -4799,26 +5066,48 @@ const fontFamily = "Arial, sans-serif";
     "background": "#f3f5f7",
     "border-color": "transparent"
   },
-  "task-list-column-expander-wrapper": {
+  "task-list-expander-wrapper": {
     "display": "inline-flex",
     "flex-shrink": "0",
     "box-sizing": "border-box",
     "margin": "0 10px"
   },
-  "task-list-column-expander-content": {
+  "task-list-expander-content": {
     "display": "inline-flex",
     "cursor": "pointer",
     "margin": "auto 0px",
     "box-sizing": "border-box",
     "user-select": "none"
   },
-  "task-list-column-expander-line": {
+  "task-list-expander-line": {
     "fill": "transparent",
     "stroke": "#000000",
     "stroke-width": "1",
     "stroke-linecap": "round"
   },
-  "task-list-column-expander-border": {
+  "task-list-expander-border": {
+    "fill": "#ffffffa0",
+    "stroke": "#000000",
+  },
+  "chart-expander-wrapper": {
+    "display": "block",
+    "box-sizing": "border-box",
+    "margin": "0"
+  },
+  "chart-expander-content": {
+    "display": "inline-flex",
+    "cursor": "pointer",
+    "margin": "auto 0px",
+    "box-sizing": "border-box",
+    "user-select": "none"
+  },
+  "chart-expander-line": {
+    "fill": "transparent",
+    "stroke": "#000000",
+    "stroke-width": "1",
+    "stroke-linecap": "round"
+  },
+  "chart-expander-border": {
     "fill": "#ffffffa0",
     "stroke": "#000000",
   },
@@ -4948,7 +5237,7 @@ const fontFamily = "Arial, sans-serif";
     "stroke-width": 20
   },
   "chart-row-progress-bar-solid": {
-    "fill": "#E74C3C",
+    "fill": "#0EAC51",
     "height": "20%"
   },
   "chart-row-progress-bar-pattern": {
@@ -4977,7 +5266,7 @@ const fontFamily = "Arial, sans-serif";
     "float": "right",
   },
   "chart-days-highlight-rect": {
-    "fill": "#FFCCBC40"
+    "fill": "#f3f5f780"
   },
   "svg-chart": {
     "overflow": "hidden"
@@ -5072,7 +5361,7 @@ function getOptions (userOptions) {
       timeScale: 60 * 1000,
       timeZoom: 17,
       timePerPixel: 0,
-      fistDate: null,
+      firstDate: null,
       firstTime: null, // firstDate getTime()
       lastDate: null,
       lastTime: null, // last date getTime()
@@ -5087,34 +5376,38 @@ function getOptions (userOptions) {
     },
     row: {
       height: 24,
-      showText: true,
     },
     maxRows: 20,
     maxHeight: 0,
-    chartText: {
-      offset: 0,
-      xPadding: 10
-    },
-    dependencyLines: {},
-    progress: {
-      width: 20,
-      height: 6,
-      pattern: true,
-      bar: false,
-    },
-    grid: {
-      horizontal: {
-        gap: 6,
-        lines: []
+    chart: {
+      grid: {
+        horizontal: {
+          gap: 6,
+        },
       },
-      vertical: {
-        lines: []
+      progress: {
+        width: 20,
+        height: 6,
+        pattern: true,
+        bar: false,
       },
-      timeLine: {}
+      text: {
+        offset: 0,
+        xPadding: 10,
+        display: true,
+      },
+      expander: {
+        type: 'chart',
+        display: false,
+        displayIfTaskListHidden: true,
+        offset: 4,
+        size: 18,
+      }
     },
     taskList: {
       display: true,
-      displayAfterResize: true,
+      resizeAfterThreshold: true,
+      widthThreshold: 75,
       columns: [{
         id: 0,
         label: "ID",
@@ -5125,8 +5418,10 @@ function getOptions (userOptions) {
       percent: 100,
       width: 0,
       finalWidth: 0,
+      widthFromPercentage: 0,
       minWidth: 18,
       expander: {
+        type: 'task-list',
         size: 16,
         columnWidth: 24,
         padding: 16,
@@ -5145,17 +5440,17 @@ function getOptions (userOptions) {
         maxWidths: {},
         format: {
           long (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("HH:mm");
           },
           medium (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("HH:mm");
           },
           short (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("HH");
           }
@@ -5168,17 +5463,17 @@ function getOptions (userOptions) {
         maxWidths: {},
         format: {
           long (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("DD dddd");
           },
           medium (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("DD ddd");
           },
           short (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("DD");
           }
@@ -5191,17 +5486,17 @@ function getOptions (userOptions) {
         maxWidths: {},
         format: {
           short (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("MM");
           },
           medium (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("MMM 'YY");
           },
           long (date) {
-            return src(date)
+            return esm(date)
               .locale(userOptions.locale.code)
               .format("MMMM YYYY");
           }
@@ -5435,11 +5730,11 @@ const GanttElastic = {
       }
       if (itsUpdate === '' || itsUpdate === 'tasks') {
         this.state.tasks = this.tasks.map(task => {
-          this.$set(task, 'start', src(task.start).format("YYYY-MM-DD HH:mm:ss"));
+          this.$set(task, 'start', esm(task.start).format("YYYY-MM-DD HH:mm:ss"));
           return task;
         });
       }
-      src.locale(this.options.locale, null, true);
+      esm.locale(this.options.locale, null, true);
       if (typeof this.state.taskList === "undefined") {
         this.$set(this.state, 'taskList', {});
       }
@@ -5447,7 +5742,9 @@ const GanttElastic = {
         this.$set(this.state.taskList, 'columns', []);
       }
       this.state.taskList.columns = this.state.taskList.columns.map((column, index) => {
-        this.$set(column, 'finalWidth', (column.width / 100) * this.state.taskList.percent);
+        this.$set(column, 'thresholdPercent', 100);
+        this.$set(column, 'widthFromPercentage', 0);
+        this.$set(column, 'finalWidth', 0);
         if (typeof column.height === "undefined") {
           this.$set(column, 'height', 0);
         }
@@ -5457,6 +5754,7 @@ const GanttElastic = {
         this.$set(column, '_id', `${index}-${column.label}`);
         return column;
       });
+      this.globalOnResize();
       if (itsUpdate === '' || itsUpdate === 'tasks') {
         // initialize observer
         this.refreshTasks();
@@ -5551,21 +5849,20 @@ const GanttElastic = {
      */
     calculateTaskListColumnsDimensions () {
       let final = 0;
+      let percentage = 0;
       this.state.taskList.columns.forEach(column => {
         if (column.expander) {
-          column.finalWidth = ((this.getMaximalExpanderWidth() + column.width) / 100) * this.state.taskList.percent;
+          column.widthFromPercentage = ((this.getMaximalExpanderWidth() + column.width) / 100) * this.state.taskList.percent;
         } else {
-          column.finalWidth = (column.width / 100) * this.state.taskList.percent;
+          column.widthFromPercentage = (column.width / 100) * this.state.taskList.percent;
         }
+        percentage += column.widthFromPercentage;
+        column.finalWidth = column.thresholdPercent * column.widthFromPercentage / 100;
         final += column.finalWidth;
         column.height = this.getTaskHeight() - this.style("grid-line-horizontal")["stroke-width"];
       });
+      this.state.taskList.widthFromPercentage = percentage;
       this.state.taskList.finalWidth = final;
-      if (typeof document !== 'undefined') {
-        if (final > document.body.clientWidth / 2) {
-          this.state.taskList.displayAfterResize = false;
-        }
-      }
       this.syncScrollTop();
     },
 
@@ -5669,7 +5966,7 @@ const GanttElastic = {
      * @returns {number}
      */
     getHeight (visibleTasks, outer = false) {
-      let height = visibleTasks.length * (this.state.row.height + this.state.grid.horizontal.gap * 2) + this.state.calendar.height + this.style('calendar-row')["stroke-width"] * 2 + this.state.calendar.gap;
+      let height = visibleTasks.length * (this.state.row.height + this.state.chart.grid.horizontal.gap * 2) + this.state.calendar.height + this.style('calendar-row')["stroke-width"] * 2 + this.state.calendar.gap;
       if (outer) {
         height += this.state.scrollBarHeight;
       }
@@ -5683,9 +5980,9 @@ const GanttElastic = {
      */
     getTaskHeight (withStroke = false) {
       if (withStroke) {
-        return (this.state.row.height + this.state.grid.horizontal.gap * 2) + this.style("grid-line-horizontal")["stroke-width"];
+        return (this.state.row.height + this.state.chart.grid.horizontal.gap * 2) + this.style("grid-line-horizontal")["stroke-width"];
       }
-      return (this.state.row.height + this.state.grid.horizontal.gap * 2);
+      return (this.state.row.height + this.state.chart.grid.horizontal.gap * 2);
     },
 
     /**
@@ -5759,8 +6056,8 @@ const GanttElastic = {
       this.state.scroll.chart.top = top;
       this.state.scroll.chart.time = this.pixelOffsetXToTime(left);
       this.state.scroll.chart.timeCenter = this.pixelOffsetXToTime(left + chartContainerWidth / 2);
-      this.state.scroll.chart.dateTime.left = src(this.state.scroll.chart.time);
-      this.state.scroll.chart.dateTime.right = src(this.pixelOffsetXToTime(left + this.state.refs.chart.clientWidth));
+      this.state.scroll.chart.dateTime.left = esm(this.state.scroll.chart.time);
+      this.state.scroll.chart.dateTime.right = esm(this.pixelOffsetXToTime(left + this.state.refs.chart.clientWidth));
       this.scrollTo(left, top);
     },
 
@@ -5916,12 +6213,12 @@ const GanttElastic = {
      * Initialize time variables
      */
     initTimes () {
-      this.state.times.firstDate = src(this.state.times.firstTaskDate)
+      this.state.times.firstDate = esm(this.state.times.firstTaskDate)
         .locale(this.locale)
         .startOf("day")
         .subtract(this.state.scope.before, "days")
         .startOf("day");
-      this.state.times.lastDate = src(this.state.times.lastTaskDate)
+      this.state.times.lastDate = esm(this.state.times.lastTaskDate)
         .locale(this.locale)
         .endOf("day")
         .add(this.state.scope.after, "days")
@@ -5938,8 +6235,8 @@ const GanttElastic = {
      */
     calculateSteps () {
       const steps = [];
-      const lastMs = src(this.state.times.lastDate).valueOf();
-      const currentDate = src(this.state.times.firstDate);
+      const lastMs = esm(this.state.times.lastDate).valueOf();
+      const currentDate = esm(this.state.times.firstDate);
       steps.push({
         date: currentDate,
         offset: {
@@ -5947,7 +6244,7 @@ const GanttElastic = {
           px: 0
         }
       });
-      for (let currentDate = src(this.state.times.firstDate).add(1, this.state.times.stepDuration).startOf("day");
+      for (let currentDate = esm(this.state.times.firstDate).add(1, this.state.times.stepDuration).startOf("day");
         currentDate.valueOf() <= lastMs;
         currentDate = currentDate.add(1, this.state.times.stepDuration).startOf("day")) {
         const offsetMs = currentDate.diff(this.state.times.firstDate, "milisecods");
@@ -5990,7 +6287,7 @@ const GanttElastic = {
       const state = this.state;
       const monthStyle = this.style("calendar-row-text--hour");
       state.ctx.font = monthStyle["font-size"] + " " + monthStyle["font-family"];
-      let currentDate = src("2018-01-01T00:00:00"); // any date will be good for hours
+      let currentDate = esm("2018-01-01T00:00:00"); // any date will be good for hours
       let maxWidths = {};
       state.calendar.hour.widths = [];
       Object.keys(state.calendar.hour.format).forEach(formatName => {
@@ -6021,7 +6318,7 @@ const GanttElastic = {
       const state = this.state;
       const monthStyle = this.style("calendar-row-text--day");
       state.ctx.font = monthStyle["font-size"] + " " + monthStyle["font-family"];
-      let currentDate = src(state.times.steps[0].date);
+      let currentDate = esm(state.times.steps[0].date);
       let maxWidths = {};
       state.calendar.day.widths = [];
       Object.keys(state.calendar.day.format).forEach(formatName => {
@@ -6057,7 +6354,7 @@ const GanttElastic = {
       Object.keys(state.calendar.month.format).forEach(formatName => {
         maxWidths[formatName] = 0;
       });
-      let currentDate = src(this.state.times.firstDate);
+      let currentDate = esm(this.state.times.firstDate);
       const monthsCount = Math.ceil(this.state.times.lastDate.diff(this.state.times.firstDate, "months", true));
       for (let month = 0; month < monthsCount; month++) {
         const widths = {
@@ -6086,7 +6383,7 @@ const GanttElastic = {
       let firstTaskDate, lastTaskDate;
       for (let index = 0, len = this.state.tasks.length; index < len; index++) {
         let task = this.state.tasks[index];
-        task.startDate = src(task.start);
+        task.startDate = esm(task.start);
         task.startTime = task.startDate.valueOf();
         task.durationMs = task.duration * 1000;
         if (task.startTime < firstTaskTime) {
@@ -6095,19 +6392,19 @@ const GanttElastic = {
         }
         if (task.startTime + task.durationMs > lastTaskTime) {
           lastTaskTime = task.startTime + task.durationMs;
-          lastTaskDate = src(task.startTime + task.durationMs);
+          lastTaskDate = esm(task.startTime + task.durationMs);
         }
       }
       this.state.times.firstTaskTime = firstTaskTime;
       this.state.times.lastTaskTime = lastTaskTime;
       this.state.times.firstTaskDate = firstTaskDate;
       this.state.times.lastTaskDate = lastTaskDate;
-      this.state.times.firstDate = src(firstTaskDate)
+      this.state.times.firstDate = esm(firstTaskDate)
         .locale(this.locale)
         .startOf("day")
         .subtract(this.state.scope.before, "days")
         .startOf("day");
-      this.state.times.lastDate = src(lastTaskDate)
+      this.state.times.lastDate = esm(lastTaskDate)
         .locale(this.locale)
         .endOf("day")
         .add(this.state.scope.after, "days")
@@ -6135,11 +6432,25 @@ const GanttElastic = {
      * Global resize event (from window.addEventListener)
      */
     globalOnResize (ev) {
-      if (this.state.taskList.finalWidth > document.body.clientWidth / 2) {
-        this.state.taskList.displayAfterResize = false;
-      } else {
-        this.state.taskList.displayAfterResize = true;
+      if (typeof this.$el === 'undefined' || !this.$el) {
+        return;
       }
+      this.state.clientWidth = this.$el.clientWidth;
+      if (this.state.taskList.widthFromPercentage > (this.state.clientWidth / 100) * this.state.taskList.widthThreshold) {
+        const diff = this.state.taskList.widthFromPercentage - (this.state.clientWidth / 100) * this.state.taskList.widthThreshold;
+        let diffPercent = 100 - (diff / this.state.taskList.widthFromPercentage * 100);
+        if (diffPercent < 0) {
+          diffPercent = 0;
+        }
+        this.state.taskList.columns.forEach(column => {
+          column.thresholdPercent = diffPercent;
+        });
+      } else {
+        this.state.taskList.columns.forEach(column => {
+          column.thresholdPercent = 100;
+        });
+      }
+      this.calculateTaskListColumnsDimensions();
     }
 
   },
@@ -6172,7 +6483,7 @@ const GanttElastic = {
         }
         task.height = this.state.row.height;
         task.x = this.timeToPixelOffsetX(task.startTime);
-        task.y = (this.state.row.height + this.state.grid.horizontal.gap * 2) * index + this.state.grid.horizontal.gap;
+        task.y = (this.state.row.height + this.state.chart.grid.horizontal.gap * 2) * index + this.state.chart.grid.horizontal.gap;
       }
       this.$nextTick(() => {
         this.syncScrollTop();
@@ -6186,7 +6497,8 @@ const GanttElastic = {
     getTaskListColumns () {
       this.calculateTaskListColumnsDimensions();
       return this.state.taskList.columns;
-    }
+    },
+
   },
 
   /**
@@ -6210,6 +6522,7 @@ const GanttElastic = {
    * Emit ready/mounted events and deliver this gantt instance to outside world when needed
    */
   mounted () {
+    this.state.clientWidth = this.$el.clientWidth;
     window.addEventListener('resize', this.globalOnResize);
     this.$root.$emit('gantt-elastic-mounted', this);
     this.$emit('mounted');

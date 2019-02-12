@@ -1981,6 +1981,20 @@ jQuery.Class("Vtiger_List_Js", {
 			this.getFloatTheadContainer().floatThead('reflow');
 		}
 	},
+	registerMassActionsBtnEvents() {
+		this.getListViewContainer().on('click', '.js-mass-action', (e) => {
+			e.preventDefault();
+			const url = $(e.currentTarget).data('url');
+			if (typeof url != 'undefined') {
+				if (this.checkListRecordSelected() !== true) {
+					Vtiger_List_Js.triggerMassAction(url);
+				} else {
+					this.noRecordSelectedAlert();
+				}
+			}
+			e.stopPropagation();
+		});
+	},
 	registerMassActionsBtnMergeEvents() {
 		this.getListViewContainer().on('click', '.js-mass-action--merge', (e) => {
 			let url = $(e.target).data('url');
@@ -2011,7 +2025,6 @@ jQuery.Class("Vtiger_List_Js", {
 		}
 	},
 	registerEvents: function () {
-		this.breadCrumbsFilter();
 		this.registerRowClickEvent();
 		this.registerPageNavigationEvents();
 		this.registerMainCheckBoxClickEvent();
@@ -2036,6 +2049,7 @@ jQuery.Class("Vtiger_List_Js", {
 		this.registerEmailFieldClickEvent();
 		this.registerPhoneFieldClickEvent();
 		this.registerMassActionModalEvents();
+		this.registerMassActionsBtnEvents();
 		//this.triggerDisplayTypeEvent();
 		Vtiger_Helper_Js.showHorizontalTopScrollBar();
 		this.registerUrlFieldClickEvent();

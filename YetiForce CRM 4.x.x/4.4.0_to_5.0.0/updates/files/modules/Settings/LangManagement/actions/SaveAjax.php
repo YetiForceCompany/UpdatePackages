@@ -128,7 +128,7 @@ class Settings_LangManagement_SaveAjax_Action extends Settings_Vtiger_IndexAjax_
 		$params = [
 			'label' => $request->getByType('label', 'Text'),
 			'name' => $request->getByType('name', 'Text'),
-			'prefix' => $request->getByType('prefix'),
+			'prefix' => $request->getByType('prefix', 'Text'),
 		];
 		$saveResp = Settings_LangManagement_Module_Model::add($params);
 		$response = new Vtiger_Response();
@@ -147,7 +147,11 @@ class Settings_LangManagement_SaveAjax_Action extends Settings_Vtiger_IndexAjax_
 	 */
 	public function delete(\App\Request $request)
 	{
-		$saveResp = Settings_LangManagement_Module_Model::delete($request->getByType('prefix'));
+		$lang = $request->getByType('prefix');
+		if (\App\Language::DEFAULT_LANG === $lang) {
+			throw new \App\Exceptions\IllegalValue('ERR_NOT_ALLOWED_VALUE', 406);
+		}
+		$saveResp = Settings_LangManagement_Module_Model::delete($lang);
 		$response = new Vtiger_Response();
 		if ($saveResp) {
 			$response->setResult(['success' => true, 'message' => \App\Language::translate('LBL_DeleteDataOK', $request->getModule(false))]);

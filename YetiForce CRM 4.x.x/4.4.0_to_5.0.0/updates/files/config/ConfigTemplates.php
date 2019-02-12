@@ -98,7 +98,7 @@ return [
 			'description' => 'Maximum file size for uploaded files in bytes also used when uploading import files: upload_maxsize default value = 52428800 (50MB)',
 			'validation' => function () {
 				$arg = func_get_arg(0);
-				return $arg && \App\Validator::naturalNumber($arg) && ($arg * 1048576) <= vtlib\Functions::getMaxUploadSize();
+				return $arg && \App\Validator::naturalNumber($arg) && ($arg * 1048576) <= \vtlib\Functions::getMaxUploadSize();
 			},
 			'sanitization' => function () {
 				return (int) func_get_arg(0) * 1048576;
@@ -345,7 +345,7 @@ return [
 			'description' => 'Display Smarty Debug Console'
 		],
 		'SMARTY_ERROR_REPORTING' => [
-			'default' => E_ALL & ~E_NOTICE,
+			'default' => new \Nette\PhpGenerator\PhpLiteral('E_ALL & ~E_NOTICE'),
 			'description' => 'Do not show Smarty Notice in phpError.log',
 		],
 		'JS_DEBUG' => [
@@ -373,7 +373,7 @@ return [
 			'description' => 'Display errors'
 		],
 		'EXCEPTION_ERROR_LEVEL' => [
-			'default' => E_ALL & ~E_NOTICE,
+			'default' => new \Nette\PhpGenerator\PhpLiteral('E_ALL & ~E_NOTICE'),
 			'description' => "Set the error reporting level. The parameter is either an integer representing a bit field, or named constants.\nhttps://secure.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting\nAll errors - E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED / Critical errors - E_ERROR | E_WARNING | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR",
 		],
 		'DAV_DEBUG_EXCEPTIONS' => [
@@ -711,32 +711,19 @@ return [
 	'relation' => [
 		'COMMENT_MAX_LENGTH' => [
 			'default' => 20,
-			'description' => 'Maximum length of a comment visible in the related module',
-			'validation' => '\App\Validator::naturalNumber',
-		],
-		'SELECTABLE_CATEGORY' => [
-			'default' => true,
-			'description' => 'Enabling this option makes it possible to select a folder/category in the Tree Category Modal window, together with the category tree and records; for example: Product and Services in Account.',
-			'validation' => '\App\Validator::bool',
-			'sanitization' => '\App\Purifier::bool'
+			'description' => 'Maximum length of a comment visible in the related module'
 		],
 		'SHOW_RELATED_MODULE_NAME' => [
 			'default' => true,
-			'description' => 'Show names related modules',
-			'validation' => '\App\Validator::bool',
-			'sanitization' => '\App\Purifier::bool'
+			'description' => 'Show names related modules'
 		],
 		'SHOW_RELATED_ICON' => [
 			'default' => true,
-			'description' => 'Show icon related modules',
-			'validation' => '\App\Validator::bool',
-			'sanitization' => '\App\Purifier::bool'
+			'description' => 'Show icon related modules'
 		],
 		'SHOW_RECORDS_COUNT' => [
 			'default' => false,
-			'description' => 'Show record count in tabs related modules',
-			'validation' => '\App\Validator::bool',
-			'sanitization' => '\App\Purifier::bool'
+			'description' => 'Show record count in tabs related modules'
 		]
 	],
 	'search' => [
@@ -886,25 +873,25 @@ return [
 		],
 		'CACHING_PERMISSION_TO_RECORD' => [
 			'default' => false,
-			'description' => "Configuration of the permission mechanism on records list.\ntrue - Permissions based on the users column in vtiger_crmentity.\n		Permissions are not verified in real time. They are updated via cron.\n		We do not recommend using this option in production environments.\nfalse - Permissions based on adding tables with permissions to query (old mechanism)",
+			'description' => "Configuration of the permission mechanism on records list.\ntrue - Permissions based on the users column in vtiger_crmentity.\n		Permissions are not verified in real time. They are updated via cron.\n		We do not recommend using this option in production environments.\nfalse - Permissions based on adding tables with permissions to query (old mechanism).",
 			'validation' => '\App\Validator::bool',
 			'sanitization' => '\App\Purifier::bool'
 		],
-		'RESTRICTED_DOMAINS_ACTIVE' => [
+		'EMAIL_FIELD_RESTRICTED_DOMAINS_ACTIVE' => [
 			'default' => false,
 			'description' => "Restricted domains allow you to block saving an email address from a given domain in the system.\nRestricted domains work only for email address type fields.",
 			'validation' => '\App\Validator::bool',
 			'sanitization' => '\App\Purifier::bool'
 		],
-		'RESTRICTED_DOMAINS_VALUES' => [
+		'EMAIL_FIELD_RESTRICTED_DOMAINS_VALUES' => [
 			'default' => [],
 			'description' => 'Restricted domains',
 		],
-		'RESTRICTED_DOMAINS_ALLOWED' => [
+		'EMAIL_FIELD_RESTRICTED_DOMAINS_ALLOWED' => [
 			'default' => [],
 			'description' => 'List of modules where restricted domains are enabled, if empty it will be enabled everywhere.',
 		],
-		'RESTRICTED_DOMAINS_EXCLUDED' => [
+		'EMAIL_FIELD_RESTRICTED_DOMAINS_EXCLUDED' => [
 			'default' => ['OSSEmployees', 'Users'],
 			'description' => 'List of modules excluded from restricted domains validation.',
 		],
@@ -922,7 +909,7 @@ return [
 		],
 		'HPKP_KEYS' => [
 			'default' => [],
-			'description' => "HTTP Public-Key-Pins (HPKP) pin-sha256 For HPKP to work properly at least 2 keys are needed.\nhttps://scotthelme.co.uk/hpkp-http-public-key-pinning/, https://sekurak.pl/mechanizm-http-public-key-pinning/",
+			'description' => "HTTP Public-Key-Pins (HPKP) pin-sha256 For HPKP to work properly at least 2 keys are needed.\nhttps://scotthelme.co.uk/hpkp-http-public-key-pinning/, https://sekurak.pl/mechanizm-http-public-key-pinning/.",
 		],
 		'CSP_ACTIVE' => [
 			'default' => true,
@@ -940,7 +927,7 @@ return [
 		],
 		'USER_AUTHY_MODE' => [
 			'default' => 'TOTP_OPTIONAL',
-			'description' => "User authentication mode.\n@see \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE Available values.",
+			'description' => "User authentication mode.\n		@see \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE Available values.",
 			'validation' => function () {
 				$arg = func_get_arg(0);
 				return in_array($arg, \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE);

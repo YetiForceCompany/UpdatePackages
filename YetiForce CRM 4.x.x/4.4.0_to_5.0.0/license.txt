@@ -1,4 +1,6 @@
 YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
 
-1. IMPORTANT!!! 
-This update package is a development version (dev-calendar)
+The update time might be longer depending on the server speed and amount of data in the system. 
+Before launching the update package we recommend disabling all cron actions.
+Log files should be checked after update.
+We recommend perfoming a backup of system configuration files, the update package doesn't convert additional configuration files except the default ones within the system.

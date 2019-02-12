@@ -34,12 +34,7 @@ class Register
 	 * @var string
 	 */
 	private static $registrationUrl = 'https://api.yetiforce.com/registration/';
-	/**
-	 * Companies details.
-	 *
-	 * @var null|string[]
-	 */
-	public $companies;
+
 	/**
 	 * Registration file path.
 	 *
@@ -56,7 +51,8 @@ class Register
 		1 => 'LBL_WAITING_FOR_ACCEPTANCE',
 		2 => 'LBL_INCORRECT_DATA',
 		3 => 'LBL_INCOMPLETE_DATA',
-		4 => 'LBL_OFFLINE_SERIAL_NOT_FOUND',
+		4 => 'LBL_OFFLINE_SIGNED',
+		5 => 'LBL_OFFLINE_SERIAL_NOT_FOUND',
 		7 => 'LBL_OFFLINE_SIGNED',
 		8 => 'LBL_SPECIAL_REGISTRATION',
 		9 => 'LBL_ACCEPTED',
@@ -67,7 +63,7 @@ class Register
 	 *
 	 * @return string
 	 */
-	private static function getCrmKey(): string
+	public static function getCrmKey(): string
 	{
 		return sha1(\App\Config::main('application_unique_key'));
 	}
@@ -79,7 +75,7 @@ class Register
 	 */
 	private static function getInstanceKey(): string
 	{
-		return sha1(\App\Config::main('site_URL') . ($_SERVER['SERVER_ADDR'] ?? $_SERVER['COMPUTERNAME'] ?? null));
+		return sha1(\App\Config::main('application_unique_key') . \App\Config::main('site_URL') . ($_SERVER['SERVER_ADDR'] ?? $_SERVER['COMPUTERNAME'] ?? null));
 	}
 
 	/**
@@ -89,19 +85,13 @@ class Register
 	 */
 	private function getData(): array
 	{
-		$companies = $this->companies ?? \App\Company::getAll();
-		foreach ($companies as &$row) {
-			if (\file_exists(\Settings_Companies_Record_Model::$logoPath . $row['id'])) {
-				$row['logo'] = \App\Fields\File::getImageBaseData(\Settings_Companies_Record_Model::$logoPath . $row['id']);
-			}
-		}
 		return [
 			'version' => \App\Version::get(),
 			'language' => \App\Language::getLanguage(),
 			'timezone' => date_default_timezone_get(),
 			'insKey' => static::getInstanceKey(),
 			'crmKey' => static::getCrmKey(),
-			'companies' => $companies,
+			'companies' => \App\Company::getAll(),
 		];
 	}
 
@@ -133,6 +123,7 @@ class Register
 						'status' => $body['status'],
 						'text' => $body['text'],
 						'serialKey' => $body['serialKey'] ?? '',
+						'last_check_time' => ''
 					]);
 					$result = true;
 				}
@@ -157,7 +148,7 @@ class Register
 			return false;
 		}
 		$conf = static::getConf();
-		if (isset($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+1 day', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] > 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time()))) {
+		if (!empty($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+1 day', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] > 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time()))) {
 			return false;
 		}
 		$params = [
@@ -168,7 +159,7 @@ class Register
 			'status' => $conf['status'] ?? 0,
 		];
 		try {
-			$data = [];
+			$data = ['last_check_time' => date('Y-m-d H:i:s')];
 			$response = (new \GuzzleHttp\Client())
 				->post(static::$registrationUrl . 'check', \App\RequestHttp::getOptions() + ['form_params' => $params]);
 			$body = $response->getBody();
@@ -180,10 +171,12 @@ class Register
 						'status' => $body['status'],
 						'text' => $body['text'],
 						'serialKey' => $body['serialKey'],
+						'last_check_time' => date('Y-m-d H:i:s')
 					];
 					$status = true;
 				}
 			}
+
 			static::updateMetaData($data);
 		} catch (\Throwable $e) {
 			\App\Log::warning($e->getMessage(), __METHOD__);
@@ -222,13 +215,14 @@ class Register
 	private static function updateMetaData(array $data): void
 	{
 		$conf = static::getConf();
-		file_put_contents(static::REGISTRATION_FILE, "<?php //Modifying this file will breach the licence terms. \n return " . \var_export([
-				'register_time' => $data['register_time'] ?? $conf['register_time'] ?? '',
-				'last_check_time' => date('Y-m-d H:i:s'),
-				'status' => $data['status'] ?? $conf['status'] ?? 0,
-				'text' => $data['text'] ?? $conf['text'] ?? '',
-				'serialKey' => $data['serialKey'] ?? $conf['serialKey'] ?? '',
-			], true) . ';');
+		static::$config = [
+			'register_time' => $data['register_time'] ?? $conf['register_time'] ?? '',
+			'last_check_time' => $data['last_check_time'] ?? '',
+			'status' => $data['status'] ?? $conf['status'] ?? 0,
+			'text' => $data['text'] ?? $conf['text'] ?? '',
+			'serialKey' => $data['serialKey'] ?? $conf['serialKey'] ?? '',
+		];
+		file_put_contents(static::REGISTRATION_FILE, "<?php //Modifying this file will breach the licence terms. \n return " . \var_export(static::$config, true) . ';');
 	}
 
 	/**
@@ -244,10 +238,10 @@ class Register
 			return false;
 		}
 		static::updateMetaData([
-			'status' => 7,
+			'status' => 4,
 			'text' => 'OK',
 			'insKey' => static::getInstanceKey(),
-			'serialKey' => $serial,
+			'serialKey' => $serial
 		]);
 		return true;
 	}

@@ -133,5 +133,14 @@ return [
 	'app/SystemWarnings/SystemRequirements/LibraryPDF.php',
 	'app/SystemWarnings/YetiForce/Stats.php',
 	'app/AddressFinder.php',
-	'vtlib/ModuleDir/BaseModule/languages/en_us/_ModuleName_.json'
+	'vtlib/ModuleDir/BaseModule/languages/en_us/_ModuleName_.json',
+	'layouts/basic/modules/Calendar/Export.tpl',
+	'layouts/basic/modules/Calendar/Import.tpl',
+	'layouts/basic/modules/Settings/Menu/types/Script.tpl',
+	'layouts/basic/modules/Vtiger/menu/Script.tpl',
+	'modules/Calendar/actions/ImportICS.php',
+	'modules/Calendar/models/Export.php',
+	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.js',
+	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.min.js',
+	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.min.js.map',
 ];

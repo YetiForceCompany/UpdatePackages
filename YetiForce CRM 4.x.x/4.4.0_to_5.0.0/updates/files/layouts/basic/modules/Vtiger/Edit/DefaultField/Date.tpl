@@ -5,8 +5,9 @@
 	<div class="js-base-element row {if $IS_CUSTOM_DEFAULT_VALUE} d-none{/if}" data-js="container|data-name"
 		 data-name="{$FIELD_MODEL->getName()}">
 		<div class="col-10">
-			{$FIELD_MODEL->set('fieldvalue', $FIELD_MODEL->get('defaultvalue'))}
-			{include file=\App\Layout::getTemplatePath($FIELD_MODEL->getUITypeModel()->getTemplateName(), $FIELD_MODEL->getModuleName())}
+			{assign var="FIELD_MODEL" value=$FIELD_MODEL->set('fieldvalue',$FIELD_MODEL->get('defaultvalue'))}
+			{include file=\App\Layout::getTemplatePath($FIELD_MODEL->getUITypeModel()->getTemplateName(), $FIELD_MODEL->getModuleName())
+			MODULE=$FIELD_MODEL->getModuleName() RECORD=null}
 		</div>
 		<div class="col-2">
 			<span class="input-group-prepend"

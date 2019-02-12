@@ -618,7 +618,7 @@ class Language
 	}
 
 	/**
-	 * Function return languanges data.
+	 * Function return languages data.
 	 *
 	 * @param bool $active
 	 * @param bool $allData
@@ -740,5 +740,17 @@ class Language
 	public static function getDisplayName(string $prefix)
 	{
 		return \ucfirst(locale_get_region($prefix) === strtoupper(locale_get_primary_language($prefix)) ? locale_get_display_language($prefix, $prefix) : locale_get_display_name($prefix, $prefix));
+	}
+
+	/**
+	 * Get region from language prefix.
+	 *
+	 * @param string $prefix
+	 *
+	 * @return mixed
+	 */
+	public static function getRegion(string $prefix)
+	{
+		return locale_parse($prefix)['region'];
 	}
 }

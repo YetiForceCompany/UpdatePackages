@@ -217,9 +217,7 @@ window.Calendar_CalendarExtended_Js = class extends Calendar_Calendar_Js {
 								`);
 			toolbar.append(this.subDateRow);
 			if ($(window).width() > app.breakpoints.lg) {
-				app.showNewScrollbar(this.subDateRow, {
-					suppressScrollY: true
-				});
+				app.showNewScrollbar(this.subDateRow);
 			}
 		}
 	}
@@ -806,23 +804,27 @@ window.Calendar_CalendarExtended_Js = class extends Calendar_Calendar_Js {
 	}
 
 	getCalendarCreateView() {
-		const thisInstance = this;
-		let sideBar = thisInstance.getSidebarView(),
-			qcForm = sideBar.find('.js-qc-form'),
-			aDeferred = $.Deferred();
-		if (qcForm.find('form').length > 0 && qcForm.find('input[name=record]').length === 0) {
-			aDeferred.resolve(qcForm);
-			return aDeferred.promise();
+		let aDeferred = $.Deferred();
+		if (this.eventCreate) {
+			const thisInstance = this;
+			let sideBar = thisInstance.getSidebarView(),
+				qcForm = sideBar.find('.js-qc-form');
+			if (qcForm.find('form').length > 0 && qcForm.find('input[name=record]').length === 0) {
+				aDeferred.resolve(qcForm);
+			} else {
+				let progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
+				this.getCalendarSidebarData({'module': app.getModuleName(), 'view': 'EventForm',}).done(() => {
+					progressInstance.progressIndicator({mode: 'hide'});
+					thisInstance.registerAutofillTime();
+					aDeferred.resolve(qcForm);
+				}).fail((error) => {
+					progressInstance.progressIndicator({mode: 'hide'});
+					app.errorLog(error);
+				});
+			}
+		} else {
+			aDeferred.reject()
 		}
-		let progressInstance = $.progressIndicator({blockInfo: {enabled: true}});
-		this.getCalendarSidebarData({'module': app.getModuleName(), 'view': 'EventForm',}).done(() => {
-			progressInstance.progressIndicator({mode: 'hide'});
-			thisInstance.registerAutofillTime();
-			aDeferred.resolve(qcForm);
-		}).fail((error) => {
-			progressInstance.progressIndicator({mode: 'hide'});
-			app.errorLog(error);
-		});
 		return aDeferred.promise();
 	}
 

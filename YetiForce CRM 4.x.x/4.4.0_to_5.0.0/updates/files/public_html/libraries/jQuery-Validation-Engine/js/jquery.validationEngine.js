@@ -985,11 +985,9 @@
 				default:
 					var field_val      = $.trim( field.val()                               );
 					var dv_placeholder = $.trim( field.attr("data-validation-placeholder") );
-					var placeholder    = $.trim( field.attr("placeholder")                 );
 					if (
 						   ( !field_val                                    )
 						|| ( dv_placeholder && field_val == dv_placeholder )
-						|| ( placeholder    && field_val == placeholder    )
 					) {
 						return options.allrules[rules[i]].alertText;
 					}

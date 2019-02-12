@@ -6,6 +6,7 @@
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Adrian Koń <a.kon@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Settings_Companies_SaveAjax_Action extends Settings_Vtiger_Basic_Action
 {
@@ -34,13 +35,17 @@ class Settings_Companies_SaveAjax_Action extends Settings_Vtiger_Basic_Action
 		}
 		$response = new Vtiger_Response();
 		if (!$recordModel->isCompanyDuplicated($request)) {
-			if ($columns = Settings_Companies_Module_Model::getColumnNames()) {
-				foreach ($columns as $fieldName) {
-					$recordModel->set($fieldName, $request->getByType($fieldName, 'Text'));
+			$field = $recordModel->getModule()->getFormFields();
+			foreach (array_keys($field) as $fieldName) {
+				if ($request->has($fieldName)) {
+					$uiTypeModel = $recordModel->getFieldInstanceByName($fieldName)->getUITypeModel();
+					$value = $request->getByType($fieldName, 'Text');
+					$uiTypeModel->validate($value, true);
+					$recordModel->set($fieldName, $uiTypeModel->getDBValue($value));
 				}
-				$recordModel->save();
-				$recordModel->saveCompanyLogos();
 			}
+			$recordModel->saveCompanyLogos();
+			$recordModel->save();
 			$response->setResult([
 				'success' => true,
 				'url' => $recordModel->getDetailViewUrl()

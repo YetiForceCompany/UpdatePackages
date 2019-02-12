@@ -6,10 +6,14 @@
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 {
-	public static $logoPath = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'storage/CompaniesLogo';
+	/**
+	 * List of types.
+	 */
+	public const TYPES = [1 => 'LBL_TYPE_TARGET_USER', 2 => 'LBL_TYPE_INTEGRATOR', 3 => 'LBL_TYPE_PROVIDER'];
 
 	/**
 	 * Function to get the Id.
@@ -71,13 +75,48 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	}
 
 	/**
+	 * function to get clean instance.
+	 *
+	 * @return \static
+	 */
+	public static function getCleanInstance()
+	{
+		return new static();
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function get($key)
+	{
+		if ($key === 'newsletter' && !empty(parent::get('email'))) {
+			return 1;
+		}
+		return parent::get($key);
+	}
+
+	/**
+	 * Function to get Module instance.
+	 *
+	 * @return Settings_Companies_Module_Model
+	 */
+	public function getModule()
+	{
+		if (!isset($this->module)) {
+			$this->module = Settings_Vtiger_Module_Model::getInstance('Settings:Companies');
+		}
+		return $this->module;
+	}
+
+	/**
 	 * Function to save.
 	 */
 	public function save()
 	{
 		$db = \App\Db::getInstance('admin');
 		$recordId = $this->getId();
-		$params = $this->getData();
+		$fields = $this->getModule()->getNameFields();
+		$params = array_intersect_key($this->getData(), array_flip($fields));
 		if ($recordId) {
 			$db->createCommand()->update('s_#__companies', $params, ['id' => $recordId])->execute();
 		} else {
@@ -99,10 +138,10 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 		$value = $this->get($key);
 		switch ($key) {
 			case 'type':
-				$value = $this->getDisplayTypeValue((int) $value);
+				$value = \App\Language::translate(self::TYPES[$value], 'Settings::Companies');
 				break;
 			case 'status':
-				$value = $this->getDisplayStatusValue((int) $value);
+				$value = \App\Language::translate(\App\YetiForce\Register::STATUS_MESSAGES[(int) $value], 'Settings::Companies');
 				break;
 			case 'tabid':
 				$value = \App\Module::getModuleName($value);
@@ -114,64 +153,11 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 				$value = \App\Language::translateSingleMod($value, 'Other.Country');
 				break;
 			case 'logo':
-				$src = \App\Fields\File::getImageBaseData($this->getLogoPath());
-				$value = $src ? "<img src='$src' class='img-thumbnail sad'/>" : App\Language::translate('LBL_COMPANY_LOGO', 'Settings::Companies');
+				$src = \App\Purifier::encodeHtml($value);
+				$value = $src ? "<img src='$src' class='img-thumbnail sad'/>" : \App\Language::translate('LBL_COMPANY_LOGO', 'Settings::Companies');
 				break;
 			default:
 				break;
-		}
-		return $value;
-	}
-
-	/**
-	 * Get the displayed value for the type column.
-	 *
-	 * @param int $value
-	 *
-	 * @return string
-	 */
-	public function getDisplayTypeValue(int $value): string
-	{
-		switch ($value) {
-			case 1:
-				$label = 'LBL_TYPE_TARGET_USER';
-				break;
-			case 2:
-				$label = 'LBL_TYPE_INTEGRATOR';
-				break;
-			case 3:
-			default:
-				$label = 'LBL_TYPE_PROVIDER';
-				break;
-		}
-		return \App\Language::translate($label, 'Settings::Companies');
-	}
-
-	/**
-	 * Get the displayed value for the type column.
-	 *
-	 * @param int $value
-	 *
-	 * @return string
-	 */
-	public function getDisplayStatusValue(int $value): string
-	{
-		return \App\Language::translate(\App\YetiForce\Register::STATUS_MESSAGES[$value], 'Settings::Companies');
-	}
-
-	/**
-	 * Function to get the Display Value, for the checbox field type with given DB Insert Value.
-	 *
-	 * @param int $value
-	 *
-	 * @return string
-	 */
-	public function getDisplayCheckboxValue($value)
-	{
-		if (0 === $value) {
-			$value = \App\Language::translate('LBL_NO');
-		} else {
-			$value = \App\Language::translate('LBL_YES');
 		}
 		return $value;
 	}
@@ -223,34 +209,16 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 	}
 
 	/**
-	 * Function to get Logo path to display.
+	 * Function to save company logo.
 	 *
-	 * @return string path
-	 */
-	public function getLogoPath()
-	{
-		$logo = static::$logoPath . $this->getId();
-		if (file_exists($logo)) {
-			return $logo;
-		}
-		return '';
-	}
-
-	/**
-	 * Function to save company logos.
-	 *
-	 * @return array
+	 * @throws \Exception
 	 */
 	public function saveCompanyLogos()
 	{
 		if (!empty($_FILES['logo']['name'])) {
 			$fileInstance = \App\Fields\File::loadFromRequest($_FILES['logo']);
 			if ($fileInstance->validate('image')) {
-				$path = static::$logoPath . $this->getId();
-				if (file_exists($path)) {
-					unlink($path);
-				}
-				$fileInstance->moveFile($path);
+				$this->set('logo', \App\Fields\File::getImageBaseData($fileInstance->getPath()));
 			}
 		}
 	}
@@ -272,5 +240,73 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 			$query->andWhere(['<>', 'id', $request->getInteger('record')]);
 		}
 		return $query->exists($db);
+	}
+
+	/**
+	 * Function determines fields available in edition view.
+	 *
+	 * @param string $name
+	 * @param string $label
+	 *
+	 * @return \Settings_Vtiger_Field_Model
+	 */
+	public function getFieldInstanceByName($name, $label = '')
+	{
+		$moduleName = $this->getModule()->getName(true);
+		$labels = $this->getModule()->getFormFields();
+		$label = $label ? $label : ($labels[$name]['label'] ?? '');
+		$sourceModule = $this->get('source');
+		$companyId = $this->getId();
+		$fieldName = $sourceModule === 'YetiForce' ? "companies[$companyId][$name]" : $name;
+		$params = ['uitype' => 1, 'column' => $name, 'name' => $fieldName, 'value' => '', 'label' => $label, 'displaytype' => 1, 'typeofdata' => 'V~M', 'presence' => '', 'isEditableReadOnly' => false, 'maximumlength' => '255'];
+		switch ($name) {
+			case 'name':
+				unset($params['validator']);
+				break;
+			case 'industry':
+				$params['uitype'] = 16;
+				$params['maximumlength'] = '50';
+				foreach (Settings_Companies_Module_Model::getIndustryList() as $industry) {
+					$params['picklistValues'][$industry] = \App\Language::translate($industry, $moduleName);
+				}
+				break;
+			case 'city':
+				$params['maximumlength'] = '100';
+				unset($params['validator']);
+				break;
+			case 'country':
+				$params['uitype'] = 16;
+				$params['maximumlength'] = '100';
+				foreach (\App\Fields\Country::getAll() as $country) {
+					$params['picklistValues'][$country['name']] = \App\Language::translateSingleMod($country['name'], 'Other.Country');
+				}
+				break;
+			case 'companysize':
+				$params['uitype'] = 7;
+				$params['typeofdata'] = 'I~M';
+				$params['maximumlength'] = '16777215';
+				unset($params['validator']);
+				break;
+			case 'website':
+				$params['uitype'] = 17;
+				unset($params['validator']);
+				break;
+			case 'firstname':
+				unset($params['validator']);
+				break;
+			case 'lastname':
+				break;
+			case 'email':
+				$params['uitype'] = 13;
+				break;
+			case 'newsletter':
+				$params['typeofdata'] = 'V~O';
+				$params['uitype'] = 56;
+				unset($params['validator']);
+				break;
+			default:
+				break;
+		}
+		return Settings_Vtiger_Field_Model::init($moduleName, $params);
 	}
 }

@@ -460,6 +460,7 @@ class YetiForceUpdate
 		$this->imageFix();
 		$this->attachmentsFix();
 		$this->migrateDefOrgField();
+		$this->addNotificationForNewUser();
 		$this->addFields();
 		$this->changeLengthFields();
 		$this->migrateCompanies();
@@ -477,7 +478,6 @@ class YetiForceUpdate
 		$this->addModules(['RecycleBin']);
 		$this->updateInventory();
 		$this->migrateLanguages();
-		$this->addNotificationForNewUser();
 		$this->importer->dropTable([
 			'vtiger_cvadvfilter',
 			'vtiger_cvadvfilter_grouping',
@@ -1333,7 +1333,7 @@ class YetiForceUpdate
 			['vtiger_settings_field', [
 				'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SECURITY_MANAGEMENT')->get('blockid'),
 				'name' => 'LBL_LOGS',
-				'iconpath' => 'fa fa-exclamation-triangle',
+				'iconpath' => 'fas fa-exclamation-triangle',
 				'description' => 'LBL_LOGS_DESC',
 				'linkto' => 'index.php?module=Log&parent=Settings&view=Index',
 				'sequence' => 6,
@@ -1831,16 +1831,20 @@ class YetiForceUpdate
 			'config/config.inc.php',
 			'config/config.php',
 			'config/config.template.php',
-			'config/secret_keys.php',
-			'config/api.php',
-			'config/debug.php',
-			'config/developer.php',
-			'config/performance.php',
-			'config/relation.php',
-			'config/search.php',
-			'config/security.php',
-			'config/sounds.php',
+			'config/secret_keys.php'
 		];
+		if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+			$files += [
+				'config/api.php',
+				'config/debug.php',
+				'config/developer.php',
+				'config/performance.php',
+				'config/relation.php',
+				'config/search.php',
+				'config/security.php',
+				'config/sounds.php',
+			];
+		}
 		foreach($files as $file) {
 			if (file_exists($file)) {
 				unlink($file);

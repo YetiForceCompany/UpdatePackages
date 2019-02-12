@@ -129,91 +129,91 @@ Settings_Vtiger_Edit_Js("Settings_Workflows_Edit_Js", {
 			modulesList.attr('disabled', 'disabled').trigger('change');
 		}
 	},
-	getPopUp: function (container) {
-		var thisInstance = this;
+	/**
+	 * Get popup with value
+	 * @param container
+	 */
+	getPopUp(container) {
 		if (typeof container === "undefined") {
-			container = thisInstance.getContainer();
+			container = this.getContainer();
 		}
-		container.on('click', '.getPopupUi', function (e) {
+		container.on('click', '.getPopupUi', (e) => {
 			if (container.find('[name="execution_condition"]').val() == 6) {
 				return false;
 			}
-			var fieldValueElement = jQuery(e.currentTarget);
-			var fieldValue = fieldValueElement.val();
-			var fieldUiHolder = fieldValueElement.closest('.fieldUiHolder');
-			var valueType = fieldUiHolder.find('[name="valuetype"]').val();
-			if (valueType == '') {
+			const fieldValueElement = jQuery(e.currentTarget);
+			const fieldValue = fieldValueElement.val();
+			const fieldUiHolder = fieldValueElement.closest('.fieldUiHolder');
+			let valueType = fieldUiHolder.find('[name="valuetype"]').val();
+			if (valueType === '') {
 				valueType = 'rawtext';
 			}
-			var conditionsContainer = fieldValueElement.closest('.js-conditions-container');
-			var conditionRow = fieldValueElement.closest('.js-conditions-row');
-
-			var clonedPopupUi = conditionsContainer.find('.popupUi').clone(true, true).removeClass('popupUi').addClass('clonedPopupUi')
+			const conditionsContainer = fieldValueElement.closest('.js-conditions-container');
+			const conditionRow = fieldValueElement.closest('.js-conditions-row');
+			var clonedPopupUi = conditionsContainer.find('.popupUi').clone(true, true).removeClass('popupUi').addClass('clonedPopupUi');
 			clonedPopupUi.find('select').addClass('select2');
 			clonedPopupUi.find('.fieldValue').val(fieldValue);
-			var value;
+			let value;
 			if (fieldValueElement.hasClass('date')) {
 				clonedPopupUi.find('.textType').find('option[value="rawtext"]').attr('data-ui', 'input');
-				var dataFormat = fieldValueElement.data('date-format');
-				if (valueType == 'rawtext') {
+				const dataFormat = fieldValueElement.data('date-format');
+				if (valueType === 'rawtext') {
 					value = fieldValueElement.val();
 				} else {
 					value = '';
 				}
-				var clonedDateElement = '<input type="text" class="dateField fieldValue col-md-4" value="' + value + '" data-date-format="' + dataFormat + '" data-input="true" >'
+				const clonedDateElement = '<input type="text" class="dateField fieldValue col-md-4 form-control" value="' + value + '" data-date-format="' + dataFormat + '" data-input="true" >'
 				clonedPopupUi.find('.fieldValueContainer').prepend(clonedDateElement);
 			} else if (fieldValueElement.hasClass('time')) {
 				clonedPopupUi.find('.textType').find('option[value="rawtext"]').attr('data-ui', 'input');
-				if (valueType == 'rawtext') {
+				if (valueType === 'rawtext') {
 					value = fieldValueElement.val();
 				} else {
 					value = '';
 				}
-				var clonedTimeElement = '<input type="text" class="timepicker-default fieldValue col-md-4 form-control" value="' + value + '" data-input="true" >'
+				const clonedTimeElement = '<input type="text" class="timepicker-default fieldValue col-md-4 form-control" value="' + value + '" data-input="true" >'
 				clonedPopupUi.find('.fieldValueContainer').prepend(clonedTimeElement);
 			} else if (fieldValueElement.hasClass('boolean')) {
 				clonedPopupUi.find('.textType').find('option[value="rawtext"]').attr('data-ui', 'input');
-				if (valueType == 'rawtext') {
+				if (valueType === 'rawtext') {
 					value = fieldValueElement.val();
 				} else {
 					value = '';
 				}
-				var clonedBooleanElement = '<input type="checkbox" class="fieldValue col-md-4" value="' + value + '" data-input="true" >';
+				const clonedBooleanElement = '<input type="checkbox" class="fieldValue col-md-4 form-control" value="' + value + '" data-input="true" >';
 				clonedPopupUi.find('.fieldValueContainer').prepend(clonedBooleanElement);
-				if (value == 'true:boolean' || value == '') {
+				if (value === 'true:boolean' || value === '') {
 					clonedPopupUi.find('.fieldValueContainer input').attr('checked', 'checked');
 				} else {
 					clonedPopupUi.find('.fieldValueContainer input').removeAttr('checked');
 				}
 			}
-			var callBackFunction = function (data) {
+			conditionsContainer.find('.clonedPopUp').html(clonedPopupUi);
+			const clonedPopupElement = $('.clonedPopUp', conditionsContainer).find('.clonedPopupUi');
+			$('.clonedPopupUi', conditionsContainer).on('shown.bs.modal', () => {
+				const data = $('.clonedPopupUi', conditionsContainer);
 				data.find('.clonedPopupUi').removeClass('d-none');
-				var moduleNameElement = conditionRow.find('[name="modulename"]');
+				const moduleNameElement = conditionRow.find('[name="modulename"]');
 				if (moduleNameElement.length > 0) {
-					var moduleName = moduleNameElement.val();
+					const moduleName = moduleNameElement.val();
 					data.find('.useFieldElement').addClass('d-none');
 					data.find('[name="' + moduleName + '"]').removeClass('d-none');
 				}
 				App.Fields.Picklist.changeSelectElementView(data);
 				App.Fields.Date.register(data);
 				app.registerEventForClockPicker(data);
-				thisInstance.postShowModalAction(data, valueType);
-				thisInstance.registerChangeFieldEvent(data);
-				thisInstance.registerSelectOptionEvent(data);
-				thisInstance.registerPopUpSaveEvent(data, fieldUiHolder);
-				thisInstance.registerRemoveModalEvent(data);
+				this.postShowModalAction(data, valueType);
+				this.registerChangeFieldEvent(data);
+				this.registerSelectOptionEvent(data);
+				this.registerPopUpSaveEvent(data, fieldUiHolder);
 				data.find('.fieldValue').filter(':visible').trigger('focus');
-				data.find('[data-close-modal="modal"]').off('click').on('click', function () {
-					jQuery(this).closest('.modal').removeClass('in').css('display', 'none');
+				clonedPopupElement.find('[data-close-modal="modal"], [data-dismiss="modal"]').off('click').on('click', function (e) {
+					e.preventDefault();
+					e.stopPropagation();
+					$(this).closest('.modal').removeClass('in').css('display', 'none');
 				});
-			}
-			conditionsContainer.find('.clonedPopUp').html(clonedPopupUi);
-			jQuery('.clonedPopupUi').on('shown.bs.modal', function () {
-				if (typeof callBackFunction == 'function') {
-					callBackFunction(jQuery('.clonedPopupUi', conditionsContainer));
-				}
 			});
-			jQuery('.clonedPopUp', conditionsContainer).find('.clonedPopupUi').modal();
+			clonedPopupElement.modal();
 		});
 	},
 	registerRemoveModalEvent: function (data) {

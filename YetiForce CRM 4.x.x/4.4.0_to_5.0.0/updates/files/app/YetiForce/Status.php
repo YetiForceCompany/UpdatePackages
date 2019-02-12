@@ -53,6 +53,33 @@ class Status
 	public $cache = [];
 
 	/**
+	 * Send status informations.
+	 */
+	public static function send()
+	{
+		$config = \App\Config::component('YetiForce');
+		if (empty($config['statusUrl'])) {
+			return;
+		}
+		$url = $config['statusUrl'];
+		unset($config['statusUrl']);
+		$status = new self();
+		$info = [];
+		foreach ($config as $name => $state) {
+			if ($state) {
+				$info[$name] = call_user_func([$status, 'get' . ucfirst($name)]);
+			}
+		}
+		try {
+			(new \GuzzleHttp\Client(\App\RequestHttp::getOptions()))->post($url, [
+				'timeout' => 5,
+				'body' => \App\Json::encode($info)]);
+		} catch (\Throwable $e) {
+			\App\Log::warning('Not possible to connect to the server status' . PHP_EOL . $e->getMessage(), 'YetiForceStatus');
+		}
+	}
+
+	/**
 	 * Returns array of all flags with current config.
 	 *
 	 * @return array
@@ -77,9 +104,12 @@ class Status
 		if (empty($this->cache['stability'])) {
 			$this->cache['stability'] = \App\Utils\ConfReport::get('stability');
 		}
-		$value = [$this->cache['stability']['phpVersion']['www']];
+		$value = [];
+		if (isset($this->cache['stability']['phpVersion']['www'])) {
+			$value['www'] = $this->cache['stability']['phpVersion']['www'];
+		}
 		if (isset($this->cache['stability']['phpVersion']['cron'])) {
-			$value[] = $this->cache['stability']['phpVersion']['cron'];
+			$value['cron'] = $this->cache['stability']['phpVersion']['cron'];
 		}
 		return $value;
 	}
@@ -94,7 +124,7 @@ class Status
 		if (empty($this->cache['environment'])) {
 			$this->cache['environment'] = \App\Utils\ConfReport::get('environment');
 		}
-		return $this->cache['environment']['crmVersion']['www'];
+		return $this->cache['environment']['crmVersion']['www'] ?? '';
 	}
 
 	/**
@@ -107,7 +137,7 @@ class Status
 		if (empty($this->cache['database'])) {
 			$this->cache['database'] = \App\Utils\ConfReport::get('database');
 		}
-		return $this->cache['database']['serverVersion']['www'];
+		return $this->cache['database']['serverVersion']['www'] ?? '';
 	}
 
 	/**
@@ -120,7 +150,7 @@ class Status
 		if (empty($this->cache['environment'])) {
 			$this->cache['environment'] = \App\Utils\ConfReport::get('database');
 		}
-		return $this->cache['environment']['operatingSystem']['www'];
+		return $this->cache['environment']['operatingSystem']['www'] ?? '';
 	}
 
 	/**
