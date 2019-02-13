@@ -391,10 +391,12 @@ class YetiForceUpdate
 			\App\Cache::clear();
 			$recordModel->save();
 			$companyId = $recordModel->getId();
-			$db->createCommand()->update('s_#__companies', ['logo' => $row['logo_main']], ['id' => $row['id']])->execute();
 			$filePath = 'public_html/layouts/resources/Logo/' . $row['logo_login'];
 			if (file_exists($filePath)) {
+				$db->createCommand()->update('s_#__companies', ['logo' => \App\Fields\File::getImageBaseData($filePath)], ['id' => $row['id']])->execute();
 				unlink($filePath);
+			} else {
+				$db->createCommand()->update('s_#__companies', ['logo' => ''], ['id' => $row['id']])->execute();
 			}
 			$filePath = 'public_html/layouts/resources/Logo/' . $row['logo_mail'];
 			if (file_exists($filePath)) {
@@ -872,19 +874,32 @@ class YetiForceUpdate
 		}
 		$customViewData['columnslist'] = $selectedColumnsList;
 		$statusFieldModel = $moduleModel->getField('internal_tickets_status');
-		$advFilterList = [
-			'1' => [
-				'columns' => [
+		if (method_exists($customViewModel, 'addGroup')) {
+			$advFilterList = [
+				'rules' => [
 					[
-						'columnname' => $statusFieldModel->getCustomViewColumnName(),
-						'comparator' => 'n',
-						'value' => 'PLL_CANCELLED,PLL_ACCEPTED',
-						'column_condition' => ''
+						'operator' => 'n',
+						'value' => 'PLL_CANCELLED##PLL_ACCEPTED',
+						'fieldname' => $statusFieldModel->getCustomViewSelectColumnName()
 					]
 				],
-				'condition' => 'and'
-			]
-		];
+				'condition' => 'AND'
+			];
+		} else {
+			$advFilterList = [
+				'1' => [
+					'columns' => [
+						[
+							'columnname' => $statusFieldModel->getCustomViewColumnName(),
+							'comparator' => 'n',
+							'value' => 'PLL_CANCELLED,PLL_ACCEPTED',
+							'column_condition' => ''
+						]
+					],
+					'condition' => 'and'
+				]
+			];
+		}
 		if (!empty($advFilterList)) {
 			$customViewData['advfilterlist'] = $advFilterList;
 		}
@@ -1790,7 +1805,8 @@ class YetiForceUpdate
 		}
 		$allConfig['OSSMail'] = $config;
 		AppConfig::load('modules', $allConfig);
-		rename('config/modules', 'config/Modules');
+		rename('config/modules', 'config/Modules_temp');
+		rename('config/Modules_temp', 'config/Modules');
 		foreach ((new \DirectoryIterator('modules/')) as $item) {
 			if ($item->isDir() && !in_array($item->getBasename(), ['.', '..'])) {
 				$moduleName = $item->getBasename();

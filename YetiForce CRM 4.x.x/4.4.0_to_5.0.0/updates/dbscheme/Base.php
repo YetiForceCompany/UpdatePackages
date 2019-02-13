@@ -870,8 +870,9 @@ class Base extends \App\Db\Importers\Base
 					'industry' => $this->stringType(50),
 					'city' => $this->stringType(100),
 					'country' => $this->stringType(100),
+					'companysize' => $this->integer(10),
 					'website' => $this->stringType(100),
-					'logo' => $this->stringType(50),
+					'logo' => $this->text(),
 					'firstname' => $this->stringType(),
 					'lastname' => $this->stringType(),
 					'email' => $this->stringType(100),
@@ -879,6 +880,8 @@ class Base extends \App\Db\Importers\Base
 				'columns_mysql' => [
 					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'status' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'logo' => $this->schema->createColumnSchemaBuilder('LONGTEXT'),
+					'companysize' => $this->schema->createColumnSchemaBuilder('MEDIUMINT', 6),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
