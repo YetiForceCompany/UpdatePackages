@@ -440,6 +440,7 @@ class YetiForceUpdate
 			$this->importer = new \App\Db\Importer();
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->updateScheme();
+
 			$this->removeForeignKey();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -453,6 +454,7 @@ class YetiForceUpdate
 				'vtiger_pbxmanager_gateway',
 				'vtiger_pbxmanager_phonelookup',
 			]);
+			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
 			$this->importer->logs(false);
