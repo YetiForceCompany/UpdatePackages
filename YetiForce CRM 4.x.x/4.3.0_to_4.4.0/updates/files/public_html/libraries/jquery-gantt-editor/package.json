@@ -1,0 +1,21 @@
+{
+  "name": "jquery-gantt-editor",
+  "version": "1.0.3",
+  "license": "MIT",
+  "description": "jQuery Gantt editor",
+  "dependencies": {
+    "jquery-timers": "https://github.com/patryk/jquery.timers",
+    "svg": "https://github.com/kbwood/svg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YetiForceCompany/jQueryGantt"
+  },
+  "keywords": [
+    "jquery",
+    "Gantt"
+  ],
+  "author": "Roberto Bicchierai & Silvia Chelazzi & YetiForce",
+  "license": "MIT",
+  "homepage": "https://github.com/YetiForceCompany/jQueryGantt"
+}

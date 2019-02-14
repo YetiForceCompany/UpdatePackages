@@ -138,7 +138,7 @@ class YetiForceUpdate
 		$this->addFields(1);
 		$this->dropTables();
 		$this->importer->dropColumns([
-				['vtiger_users', 'crypt_type'],
+			['vtiger_users', 'crypt_type'],
 		]);
 	}
 
@@ -151,7 +151,7 @@ class YetiForceUpdate
 			$db = \App\Db::getInstance();
 			$db->createCommand("UPDATE u_yf_emailtemplates SET content = REPLACE(content, 'href=\"$(record%20%3A%20CrmDetailViewURL)$\"', 'href=\"$(record%20%3A%20PortalDetailViewURL)$\"') WHERE name = 'Notify Owner On Ticket Create';")->execute();
 			\App\Db\Updater::batchUpdate([
-					['u_yf_emailtemplates', ['name' => 'ResetPassword', 'sys_name' => 'UsersResetPassword', 'email_template_priority' => 9, 'subject' => 'Your password has been changed', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
+				['u_yf_emailtemplates', ['name' => 'ResetPassword', 'sys_name' => 'UsersResetPassword', 'email_template_priority' => 9, 'subject' => 'Your password has been changed', 'content' => '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
 	<tbody>
 		<tr>
 			<td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
@@ -187,31 +187,31 @@ class YetiForceUpdate
 	</tbody>
 </table>
 ',], ['sys_name' => 'UsersForgotPassword']],
-					['vtiger_field', ['displaytype' => 1], ['tablename' => 'vtiger_users', 'columnname' => 'user_name']],
-					['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=Logs'], ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=logs']],
-					['vtiger_settings_field', ['linkto' => 'index.php?module=Colors&parent=Settings&view=Index'], ['linkto' => 'index.php?module=Users&parent=Settings&view=Colors']],
-					['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'uid']],
-					['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'content']],
-					['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'orginal_mail']],
-					['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1a']],
-					['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1b']],
-					['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
-					['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
+				['vtiger_field', ['displaytype' => 1], ['tablename' => 'vtiger_users', 'columnname' => 'user_name']],
+				['vtiger_settings_field', ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=Logs'], ['linkto' => 'index.php?module=OSSMailScanner&parent=Settings&view=logs']],
+				['vtiger_settings_field', ['linkto' => 'index.php?module=Colors&parent=Settings&view=Index'], ['linkto' => 'index.php?module=Users&parent=Settings&view=Colors']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'uid']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'content']],
+				['vtiger_field', ['uitype' => 300], ['tablename' => 'vtiger_ossmailview', 'columnname' => 'orginal_mail']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1a']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1b']],
+				['vtiger_field', ['uitype' => 35], ['columnname' => 'addresslevel1c']],
+				['vtiger_field', ['typeofdata' => 'I~O'], ['tablename' => 'vtiger_entity_stats', 'columnname' => 'crmactivity']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Vtiger_Workflow_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
 				//['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'PBXManager_PBXManagerHandler_Handler']],
 				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
-					['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
-					['vtiger_field', ['typeofdata' => 'V~M', 'quickcreate' => 2], ['tablename' => 'vtiger_lettersin', 'columnname' => 'lin_status']],
-					['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'cocument_no']],
-					['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'no_internal']],
-					['vtiger_lin_status', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
-					['vtiger_lin_status', ['lin_status' => 'PLL_REDIRECTED_TO_ANOTHER_DEPARTMENT'], ['lin_status' => 'PLL_SETTLED']],
-					['vtiger_language', ['name' => 'Italian',
+				['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'OSSTimeControl_TimeControl_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterDelete', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityAfterDelete'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ProjectTask_ProjectTaskHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityAfterRestore', 'handler_class' => 'Calendar_CalendarHandler_Handler']],
+				['vtiger_eventhandlers', ['event_name' => 'EntityChangeState'], ['event_name' => 'EntityBeforeDelete']],
+				['vtiger_field', ['typeofdata' => 'V~M', 'quickcreate' => 2], ['tablename' => 'vtiger_lettersin', 'columnname' => 'lin_status']],
+				['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'cocument_no']],
+				['vtiger_field', ['typeofdata' => 'V~O'], ['tablename' => 'vtiger_lettersin', 'columnname' => 'no_internal']],
+				['vtiger_lin_status', ['lin_status' => 'PLL_IN_DEPARTMENT'], ['lin_status' => 'PLL_NEW']],
+				['vtiger_lin_status', ['lin_status' => 'PLL_REDIRECTED_TO_ANOTHER_DEPARTMENT'], ['lin_status' => 'PLL_SETTLED']],
+				['vtiger_language', ['name' => 'Italian',
 						'prefix' => 'it_it',
 						'label' => 'Italian',
 						'lastupdated' => '2017-12-23 15:12:39',
@@ -219,15 +219,15 @@ class YetiForceUpdate
 						'isdefault' => 0,
 						'active' => 1
 					], ['prefix' => 'fr_fr']],
-					['yetiforce_menu', ['label' => 'MEN_ORGANIZATION'], ['label' => 'MEN_SECRETARY']],
-					['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","filter":"-"}']],
-					['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","action":"1","filter":"-"}']],
-					['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"-","checkbox":"-"}']],
-					['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']],
+				['yetiforce_menu', ['label' => 'MEN_ORGANIZATION'], ['label' => 'MEN_SECRETARY']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","filter":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"5","relatedmodule":"8","columns":"3","action":"1","filter":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"-","checkbox":"-"}']],
+				['vtiger_widgets', ['data' => '{"relatedmodule":"8","relatedfields":["8::notes_title","8::folderid","8::filelocationtype","8::filename"],"viewtype":"List","limit":"5","action":"1","switchHeader":"-","filter":"-","checkbox":"-"}'], ['data' => '{"limit":"","relatedmodule":"8","columns":"3","action":"1","filter":"-","checkbox_selected":"","checkbox":"-"}']],
 			]);
 		} elseif ($type === 2) {
 			\App\Db\Updater::batchUpdate([
-					['vtiger_field', ['uitype' => 16], ['tablename' => 'u_yf_multicompany', 'columnname' => 'mulcomp_status']],
+				['vtiger_field', ['uitype' => 16], ['tablename' => 'u_yf_multicompany', 'columnname' => 'mulcomp_status']],
 			]);
 		}
 	}
@@ -235,9 +235,9 @@ class YetiForceUpdate
 	public function addRows()
 	{
 		$data = [
-				['vtiger_password', ['type' => 'change_time', 'val' => '0'], ['type' => 'change_time']],
-				['vtiger_password', ['type' => 'lock_time', 'val' => '5'], ['type' => 'lock_time']],
-				['vtiger_settings_field', [
+			['vtiger_password', ['type' => 'change_time', 'val' => '0'], ['type' => 'change_time']],
+			['vtiger_password', ['type' => 'lock_time', 'val' => '5'], ['type' => 'lock_time']],
+			['vtiger_settings_field', [
 					'blockid' => \Settings_Vtiger_Menu_Model::getInstance('LBL_SYSTEM_TOOLS')->get('blockid'),
 					'name' => 'LBL_COUNTRY_SETTINGS',
 					'iconpath' => 'glyphicon glyphicon-picture',
@@ -266,16 +266,16 @@ class YetiForceUpdate
 	public function deleteRows()
 	{
 		$data = [
-				['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break']],
-				['vtiger_calendar_config', ['type' => 'colors', 'name' => 'holiday']],
-				['vtiger_calendar_config', ['type' => 'colors', 'name' => 'work']],
-				['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break_time']],
-				['vtiger_eventhandlers', ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
-				['vtiger_settings_field', ['name' => 'LBL_DATAACCESS']],
-				['vtiger_settings_field', ['name' => 'LBL_ACTIVITY_TYPES']],
-				['vtiger_settings_blocks', ['label' => 'LBL_YETIFORCE_SHOP']],
-				['vtiger_ws_operation', ['name' => 'changePassword']],
-				['vtiger_module_dashboard', ['linkid' => (new \App\Db\Query())->select(['linkid'])->from('vtiger_links')->where(['linklabel' => 'ChartFilter'])]],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break']],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'holiday']],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'work']],
+			['vtiger_calendar_config', ['type' => 'colors', 'name' => 'break_time']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterRestore', 'handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
+			['vtiger_settings_field', ['name' => 'LBL_DATAACCESS']],
+			['vtiger_settings_field', ['name' => 'LBL_ACTIVITY_TYPES']],
+			['vtiger_settings_blocks', ['label' => 'LBL_YETIFORCE_SHOP']],
+			['vtiger_ws_operation', ['name' => 'changePassword']],
+			['vtiger_module_dashboard', ['linkid' => (new \App\Db\Query())->select(['linkid'])->from('vtiger_links')->where(['linklabel' => 'ChartFilter'])]],
 		];
 		\App\Db\Updater::batchDelete($data);
 	}
@@ -292,29 +292,29 @@ class YetiForceUpdate
 				$fields[] = [NULL, NULL, $row['columnname'] . '_extra', $row['tablename'], 1, 1, $row['fieldname'] . '_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, NULL, NULL, 3, 'V~O', 1, NULL, 'BAS', 1, '', 0, '', NULL, 'string(100)', $row['block'], [], [], App\Module::getModuleName($row['tabid'])];
 			}
 			$fields = array_merge($fields, [
-					[33, 2618, 'customernumber_extra', 'vtiger_pbxmanager', 1, 1, 'customernumber_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, 19, 88, 3, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(100)', 'LBL_PBXMANAGER_INFORMATION', [], [], 'PBXManager'],
-					[29, 2625, 'date_password_change', 'vtiger_users', 1, 80, 'date_password_change', 'FL_DATE_PASSWORD_CHANGE', 1, 2, '', 100, 27, 79, 2, 'DT~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'datetime', 'LBL_MORE_INFORMATION', [], [], 'Users'],
-					[29, 2626, 'force_password_change', 'vtiger_users', 1, 56, 'force_password_change', 'FL_FORCE_PASSWORD_CHANGE', 1, 2, '', 100, 28, 79, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'tinyint(1)', 'LBL_MORE_INFORMATION', [], [], 'Users'],
-					[37, 2627, 'contactid', 'vtiger_assets', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 8, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'Assets'],
-					[58, 2628, 'contactid', 'vtiger_osssoldservices', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 0, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'OSSSoldServices'],
-					[16, 2629, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Events'],
-					[9, 2630, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 0, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Calendar'],
-					[111, 2631, 'linkextend', 'u_yf_notification', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 15, 374, 1, 'I~O', 2, 8, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_NOTIFICATION_INFORMATION', [], ['Contacts'], 'Notification'],
-					[51, 2632, 'linkextend', 'vtiger_osstimecontrol', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'OSSTimeControl'],
-					[84, 2633, 'linkextend', 'vtiger_reservations', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 262, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'Reservations'],
-					[60, 2634, 'linkextend', 'vtiger_osspasswords', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 147, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_OSSPASSWORD_INFORMATION', [], [], 'OSSPasswords'],
-					[81, 2635, 'custom_sender', 'vtiger_lettersin', 1, 1, 'custom_sender', 'FL_CUSTOM_SENDER', 1, 2, '', 100, 20, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
-					[81, 2636, 'lin_type', 'vtiger_lettersin', 1, 16, 'lin_type', 'FL_TYPE', 1, 2, '', 100, 21, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', ['PLL_REGULAR_LETTER', 'PLL_REGISTERED_LETTER', 'PLL_REGULAR_PARCEL', 'PLL_LARGESIZE_PARCEL', 'PLL_DOCUMENT', 'PLL_RETURN', 'PLL_POSTAL_ADVICE'], [], 'LettersIn'],
-					[81, 2637, 'cash_amount_on_delivery', 'vtiger_lettersin', 1, 71, 'cash_amount_on_delivery', 'FL_CASH_AMOUNT_ON_DELIVERY', 1, 2, '', 100, 22, 254, 1, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'decimal(25,8)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
-					[81, 2638, 'date_of_receipt', 'vtiger_lettersin', 1, 5, 'date_of_receipt', 'FL_DATE_OF_RECEIPT', 1, 2, '', 100, 23, 254, 1, 'D~M', 1, 0, 'BAS', 1, '', 0, '', NULL, 'date', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
-					[81, 2639, 'outgoing_correspondence', 'vtiger_lettersin', 1, 10, 'outgoing_correspondence', 'FL_OUTGOING_CORRESPONDENCE', 1, 2, '', 100, 24, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersOut'], 'LettersIn'],
-					[81, 2640, 'internal_notes', 'vtiger_lettersincf', 1, 300, 'internal_notes', 'FL_INTERNAL_NOTES', 1, 2, '', 100, 2, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
-					[81, 2641, 'public_notes', 'vtiger_lettersincf', 1, 300, 'public_notes', 'FL_PUBLIC_NOTES', 1, 2, '', 100, 3, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
-					[82, 2642, 'incoming_correspondence', 'vtiger_lettersout', 1, 10, 'incoming_correspondence', 'FL_INCOMING_CORRESPONDENCE', 1, 2, '', 100, 20, 256, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersIn'], 'LettersOut'],
+				[33, 2618, 'customernumber_extra', 'vtiger_pbxmanager', 1, 1, 'customernumber_extra', 'FL_PHONE_CUSTOM_INFORMATION', 1, 2, '', 100, 19, 88, 3, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(100)', 'LBL_PBXMANAGER_INFORMATION', [], [], 'PBXManager'],
+				[29, 2625, 'date_password_change', 'vtiger_users', 1, 80, 'date_password_change', 'FL_DATE_PASSWORD_CHANGE', 1, 2, '', 100, 27, 79, 2, 'DT~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'datetime', 'LBL_MORE_INFORMATION', [], [], 'Users'],
+				[29, 2626, 'force_password_change', 'vtiger_users', 1, 56, 'force_password_change', 'FL_FORCE_PASSWORD_CHANGE', 1, 2, '', 100, 28, 79, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'tinyint(1)', 'LBL_MORE_INFORMATION', [], [], 'Users'],
+				[37, 2627, 'contactid', 'vtiger_assets', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 8, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'Assets'],
+				[58, 2628, 'contactid', 'vtiger_osssoldservices', 1, 10, 'contactid', 'FL_CONTACT', 1, 2, '', 100, 0, 96, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(19)', 'LBL_CUSTOM_INFORMATION', [], ['Contacts'], 'OSSSoldServices'],
+				[16, 2629, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Events'],
+				[9, 2630, 'linkextend', 'vtiger_activity', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 0, 119, 1, 'I~O', 2, 11, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_RELATED_TO', [], [], 'Calendar'],
+				[111, 2631, 'linkextend', 'u_yf_notification', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 15, 374, 1, 'I~O', 2, 8, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_NOTIFICATION_INFORMATION', [], ['Contacts'], 'Notification'],
+				[51, 2632, 'linkextend', 'vtiger_osstimecontrol', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'OSSTimeControl'],
+				[84, 2633, 'linkextend', 'vtiger_reservations', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 5, 262, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_BLOCK', [], [], 'Reservations'],
+				[60, 2634, 'linkextend', 'vtiger_osspasswords', 1, 65, 'linkextend', 'FL_RELATION_EXTEND', 1, 2, '', 100, 14, 147, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_OSSPASSWORD_INFORMATION', [], [], 'OSSPasswords'],
+				[81, 2635, 'custom_sender', 'vtiger_lettersin', 1, 1, 'custom_sender', 'FL_CUSTOM_SENDER', 1, 2, '', 100, 20, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2636, 'lin_type', 'vtiger_lettersin', 1, 16, 'lin_type', 'FL_TYPE', 1, 2, '', 100, 21, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(255)', 'LBL_MAIN_INFORMATION', ['PLL_REGULAR_LETTER', 'PLL_REGISTERED_LETTER', 'PLL_REGULAR_PARCEL', 'PLL_LARGESIZE_PARCEL', 'PLL_DOCUMENT', 'PLL_RETURN', 'PLL_POSTAL_ADVICE'], [], 'LettersIn'],
+				[81, 2637, 'cash_amount_on_delivery', 'vtiger_lettersin', 1, 71, 'cash_amount_on_delivery', 'FL_CASH_AMOUNT_ON_DELIVERY', 1, 2, '', 100, 22, 254, 1, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'decimal(25,8)', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2638, 'date_of_receipt', 'vtiger_lettersin', 1, 5, 'date_of_receipt', 'FL_DATE_OF_RECEIPT', 1, 2, '', 100, 23, 254, 1, 'D~M', 1, 0, 'BAS', 1, '', 0, '', NULL, 'date', 'LBL_MAIN_INFORMATION', [], [], 'LettersIn'],
+				[81, 2639, 'outgoing_correspondence', 'vtiger_lettersin', 1, 10, 'outgoing_correspondence', 'FL_OUTGOING_CORRESPONDENCE', 1, 2, '', 100, 24, 254, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersOut'], 'LettersIn'],
+				[81, 2640, 'internal_notes', 'vtiger_lettersincf', 1, 300, 'internal_notes', 'FL_INTERNAL_NOTES', 1, 2, '', 100, 2, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
+				[81, 2641, 'public_notes', 'vtiger_lettersincf', 1, 300, 'public_notes', 'FL_PUBLIC_NOTES', 1, 2, '', 100, 3, 255, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_CUSTOM_INFORMATION', [], [], 'LettersIn'],
+				[82, 2642, 'incoming_correspondence', 'vtiger_lettersout', 1, 10, 'incoming_correspondence', 'FL_INCOMING_CORRESPONDENCE', 1, 2, '', 100, 20, 256, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'int(10)', 'LBL_MAIN_INFORMATION', [], ['LettersIn'], 'LettersOut'],
 			]);
 		} elseif ($type === 2) {
 			$fields = [
-					[29, 2676, 'view_date_format', 'vtiger_users', 1, 16, 'view_date_format', 'FL_VIEW_DATE_FORMAT', 1, 2, 'PLL_ELAPSED', 100, 15, 118, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(50)', 'LBL_CALENDAR_SETTINGS', ['PLL_FULL', 'PLL_ELAPSED'], [], 'Users'],
+				[29, 2676, 'view_date_format', 'vtiger_users', 1, 16, 'view_date_format', 'FL_VIEW_DATE_FORMAT', 1, 2, 'PLL_ELAPSED', 100, 15, 118, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'varchar(50)', 'LBL_CALENDAR_SETTINGS', ['PLL_FULL', 'PLL_ELAPSED'], [], 'Users'],
 			];
 		}
 		foreach ($fields as $field) {
@@ -426,52 +426,52 @@ class YetiForceUpdate
 	private function getConfigurations()
 	{
 		return [
-				['name' => 'config/modules/Accounts.php', 'conditions' => [
-						['type' => 'remove', 'search' => 'List of date and time fields'],
-						['type' => 'remove', 'search' => '[Label => Name]'],
-						['type' => 'removeTo', 'search' => 'FIELD_TO_UPDATE_BY_BUTTON', 'end' => '],'],
-						['type' => 'add', 'search' => 'COUNT_IN_HIERARCHY', 'checkInContents' => 'Hide summary products services bookmark', 'addingType' => 'after', 'value' => "	// Hide summary products services bookmark
+			['name' => 'config/modules/Accounts.php', 'conditions' => [
+					['type' => 'remove', 'search' => 'List of date and time fields'],
+					['type' => 'remove', 'search' => '[Label => Name]'],
+					['type' => 'removeTo', 'search' => 'FIELD_TO_UPDATE_BY_BUTTON', 'end' => '],'],
+					['type' => 'add', 'search' => 'COUNT_IN_HIERARCHY', 'checkInContents' => 'Hide summary products services bookmark', 'addingType' => 'after', 'value' => "	// Hide summary products services bookmark
 "],
-						['type' => 'add', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'checkInContents' => 'Default view for record detail view', 'addingType' => 'after', 'value' => "	// Default view for record detail view. Values: LBL_RECORD_DETAILS or LBL_RECORD_SUMMARY
+					['type' => 'add', 'search' => 'HIDE_SUMMARY_PRODUCTS_SERVICES', 'checkInContents' => 'Default view for record detail view', 'addingType' => 'after', 'value' => "	// Default view for record detail view. Values: LBL_RECORD_DETAILS or LBL_RECORD_SUMMARY
 "],
-						['type' => 'add', 'search' => 'DEFAULT_VIEW_RECORD', 'checkInContents' => 'defaultDetailViewName', 'addingType' => 'after', 'value' => "	// Default module view. Values: List, ListPreview or DashBoard
+					['type' => 'add', 'search' => 'DEFAULT_VIEW_RECORD', 'checkInContents' => 'defaultDetailViewName', 'addingType' => 'after', 'value' => "	// Default module view. Values: List, ListPreview or DashBoard
 	'defaultViewName' => 'List',
 	// Default record view for list preview. Values: full or summary
 	'defaultDetailViewName' => 'full',
 "],
 				]
 			],
-				['name' => 'config/modules/Notification.php', 'conditions' => [
-						['type' => 'add', 'search' => 'AUTO_REFRESH_REMINDERS', 'checkInContents' => 'AUTO_MARK_NOTIFICATIONS_READ_AFTER_EMAIL_SEND', 'addingType' => 'after', 'value' => "	// Auto mark notifications as readed after send emails to users
+			['name' => 'config/modules/Notification.php', 'conditions' => [
+					['type' => 'add', 'search' => 'AUTO_REFRESH_REMINDERS', 'checkInContents' => 'AUTO_MARK_NOTIFICATIONS_READ_AFTER_EMAIL_SEND', 'addingType' => 'after', 'value' => "	// Auto mark notifications as readed after send emails to users
 	'AUTO_MARK_NOTIFICATIONS_READ_AFTER_EMAIL_SEND' => true, // Boolean
 "],
 				],
 			],
-				['name' => 'config/modules/OSSMail.php', 'conditions' => [
-						['type' => 'update', 'search' => 'verfify_peer_name', 'replace' => ['verfify_peer_name', 'verify_peer_name']],
+			['name' => 'config/modules/OSSMail.php', 'conditions' => [
+					['type' => 'update', 'search' => 'verfify_peer_name', 'replace' => ['verfify_peer_name', 'verify_peer_name']],
 				],
 			],
-				['name' => 'config/modules/Users.php', 'conditions' => [
-						['type' => 'remove', 'search' => 'Password crypt type'],
-						['type' => 'remove', 'search' => 'PASSWORD_CRYPT_TYPE'],
-						['type' => 'add', 'search' => 'IS_VISIBLE_USER_INFO_FOOTER', 'checkInContents' => 'USER_NAME_IS_EDITABLE', 'addingType' => 'after', 'value' => "	// Is it possible to edit a user's name
+			['name' => 'config/modules/Users.php', 'conditions' => [
+					['type' => 'remove', 'search' => 'Password crypt type'],
+					['type' => 'remove', 'search' => 'PASSWORD_CRYPT_TYPE'],
+					['type' => 'add', 'search' => 'IS_VISIBLE_USER_INFO_FOOTER', 'checkInContents' => 'USER_NAME_IS_EDITABLE', 'addingType' => 'after', 'value' => "	// Is it possible to edit a user's name
 	'USER_NAME_IS_EDITABLE' => true,
 	// Verify previously used usernames
 	'CHECK_LAST_USERNAME' => true,
 "],
 				],
 			],
-				['name' => 'config/config.inc.php', 'conditions' => [
-						['type' => 'add', 'search' => '$forceRedirect', 'checkInContents' => '$phoneFieldAdvancedVerification', 'addingType' => 'after', 'value' => '// Enable advanced phone number validation. Enabling  it will block saving invalid phone number.
+			['name' => 'config/config.inc.php', 'conditions' => [
+					['type' => 'add', 'search' => '$forceRedirect', 'checkInContents' => '$phoneFieldAdvancedVerification', 'addingType' => 'after', 'value' => '// Enable advanced phone number validation. Enabling  it will block saving invalid phone number.
 $phoneFieldAdvancedVerification = true;'],
 				],
 			],
-				['name' => 'config/debug.php', 'conditions' => [
-						['type' => 'remove', 'search' => 'isplays information about the tracking code when an error occurs'],
-						['type' => 'remove', 'search' => 'DISPLAY_DEBUG_BACKTRACE'],
-						['type' => 'remove', 'search' => 'EXCEPTION_ERROR_HANDLER'],
-						['type' => 'remove', 'search' => 'Save logs to file'],
-						['type' => 'add', 'search' => 'EXCEPTION_ERROR_TO_SHOW', 'checkInContents' => 'DISPLAY_EXCEPTION_BACKTRACE', 'addingType' => 'after', 'value' => "	// Displays information about the tracking code when an error occurs. Available only with the active SQL_DIE_ON_ERROR = true
+			['name' => 'config/debug.php', 'conditions' => [
+					['type' => 'remove', 'search' => 'isplays information about the tracking code when an error occurs'],
+					['type' => 'remove', 'search' => 'DISPLAY_DEBUG_BACKTRACE'],
+					['type' => 'remove', 'search' => 'EXCEPTION_ERROR_HANDLER'],
+					['type' => 'remove', 'search' => 'Save logs to file'],
+					['type' => 'add', 'search' => 'EXCEPTION_ERROR_TO_SHOW', 'checkInContents' => 'DISPLAY_EXCEPTION_BACKTRACE', 'addingType' => 'after', 'value' => "	// Displays information about the tracking code when an error occurs. Available only with the active SQL_DIE_ON_ERROR = true
 	'DISPLAY_EXCEPTION_BACKTRACE' => false,
 	// Display logs when error exception occurs
 	'DISPLAY_EXCEPTION_LOGS' => false,
@@ -480,8 +480,8 @@ $phoneFieldAdvancedVerification = true;'],
 "],
 				]
 			],
-				['name' => 'config/search.php', 'conditions' => [
-						['type' => 'add', 'search' => 'GLOBAL_SEARCH_OPERATOR', 'checkInContents' => 'LIST_ENTITY_STATE_COLOR', 'addingType' => 'after', 'value' => "	// Colors for record state will be displayed in list view, history, and preview.
+			['name' => 'config/search.php', 'conditions' => [
+					['type' => 'add', 'search' => 'GLOBAL_SEARCH_OPERATOR', 'checkInContents' => 'LIST_ENTITY_STATE_COLOR', 'addingType' => 'after', 'value' => "	// Colors for record state will be displayed in list view, history, and preview.
 	'LIST_ENTITY_STATE_COLOR' => [
 		'Archived' => '#0032a2',
 		'Trash' => '#ab0505',
@@ -490,14 +490,14 @@ $phoneFieldAdvancedVerification = true;'],
 "],
 				]
 			],
-				['name' => 'config/security.php', 'conditions' => [
-						['type' => 'add', 'search' => '$SECURITY_CONFIG = [', 'checkInContents' => 'USER_ENCRYPT_PASSWORD_COST', 'addingType' => 'after', 'value' => "	// Password encrypt algorithmic cost. Numeric values - we recommend values greater than 10. The greater the value, the longer it takes to encrypt the password.
+			['name' => 'config/security.php', 'conditions' => [
+					['type' => 'add', 'search' => '$SECURITY_CONFIG = [', 'checkInContents' => 'USER_ENCRYPT_PASSWORD_COST', 'addingType' => 'after', 'value' => "	// Password encrypt algorithmic cost. Numeric values - we recommend values greater than 10. The greater the value, the longer it takes to encrypt the password.
 	'USER_ENCRYPT_PASSWORD_COST' => 10,
 "],
 				]
 			],
-				['name' => 'user_privileges/moduleHierarchy.php', 'conditions' => [
-						['type' => 'add', 'search' => 'modulesMap1M', 'checkInContents' => 'xxxxxxxxx', 'addingType' => 'after', 'value' => "		'SSalesProcesses' => ['Accounts'],
+			['name' => 'user_privileges/moduleHierarchy.php', 'conditions' => [
+					['type' => 'add', 'search' => 'modulesMap1M', 'checkInContents' => 'xxxxxxxxx', 'addingType' => 'after', 'value' => "		'SSalesProcesses' => ['Accounts'],
 		'SQuotes' => ['SSalesProcesses'],
 		'FInvoice' => ['Accounts'],
 		'SSingleOrders' => ['SSalesProcesses'],
@@ -677,7 +677,11 @@ $phoneFieldAdvancedVerification = true;'],
 			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
 				$importInstance = new \vtlib\PackageImport();
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/' . $moduleName . '.xml');
-				$importInstance->import_Module();
+				if (method_exists($importInstance, 'import_Module')) {
+					$importInstance->import_Module();
+				} elseif (method_exists($importInstance, 'importModule')) {
+					$importInstance->importModule();
+				}
 				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
 				$moduleId = (new App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar();
 				$id = (new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['or', ['label' => 'MEN_SECRETARY'], ['label' => 'MEN_ORGANIZATION']])->scalar();
@@ -709,6 +713,12 @@ $phoneFieldAdvancedVerification = true;'],
 		$fieldModel = Settings_Picklist_Field_Model::getInstance('lin_status', $moduleModel);
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
 		$rolesSelected = array_keys($roleRecordList);
+		$tableName = 'vtiger_' . $fieldModel->getName();
+		$db = \App\Db::getInstance();
+		if ($db->isTableExists($tableName)) {
+			$id = $db->getUniqueId($tableName, $fieldModel->getName() . 'id', false);
+			$db->createCommand()->update("{$tableName}_seq", ['id' => --$id])->execute();
+		}
 		foreach ($values as $newValue) {
 			$moduleModel->addPickListValues($fieldModel, $newValue, $rolesSelected);
 		}
@@ -720,7 +730,7 @@ $phoneFieldAdvancedVerification = true;'],
 	private function renameColumns()
 	{
 		$this->importer->renameColumns([
-				['vtiger_salutationtype', 'salutationid', 'salutationtypeid'],
+			['vtiger_salutationtype', 'salutationid', 'salutationtypeid'],
 		]);
 	}
 }

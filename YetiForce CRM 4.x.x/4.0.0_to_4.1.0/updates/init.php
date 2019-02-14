@@ -32,13 +32,13 @@ class YetiForceUpdate
 
 	/**
 	 * Cron list
-	 * @var string[] 
+	 * @var string[]
 	 */
 	private $cronAction = [];
 
 	/**
 	 * DbImporter
-	 * @var DbImporter 
+	 * @var DbImporter
 	 */
 	private $importer;
 
@@ -115,7 +115,7 @@ class YetiForceUpdate
 		$module->save();
 		$db->createCommand()->update('vtiger_tab', ['customized' => 0], ['name' => 'Chat'])->execute();
 		mkdir(ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'public_html/layouts/resources/Logo', 0777, true);
-		\vtlib\Functions::recurseCopy('storage/Logo', 'public_html/layouts/resources/Logo');
+		(new \vtlib\Functions())->recurseCopy('storage/Logo', 'public_html/layouts/resources/Logo');
 	}
 
 	/**
@@ -375,19 +375,17 @@ class YetiForceUpdate
 			['vtiger_language', ['name' => 'Spanish', 'prefix' => 'es_es', 'label' => 'ES Spanish', 'lastupdated' => '2017-03-11 00:00:00', 'sequence' => NULL, 'isdefault' => 0, 'active' => 1,]],
 			['vtiger_links', ['tabid' => App\Module::getModuleId('SSalesProcesses'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'DW_TEAMS_ESTIMATED_SALES', 'linkurl' => 'index.php?module=SSalesProcesses&view=ShowWidget&name=TeamsEstimatedSales', 'linkicon' => '', 'sequence' => 0,]],
 			['vtiger_links', ['tabid' => App\Module::getModuleId('SSalesProcesses'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'DW_ACTUAL_SALES_OF_TEAM', 'linkurl' => 'index.php?module=SSalesProcesses&view=ShowWidget&name=ActualSalesOfTeam', 'linkicon' => '', 'sequence' => 0,]],
+			['vtiger_settings_blocks', ['blockid' => 5, 'label' => 'LBL_INTEGRATION', 'sequence' => 9, 'icon' => 'adminIcon-integration', 'type' => 0, 'linkto' => NULL, 'admin_access' => NULL,]],
 			['vtiger_settings_field', ['blockid' => 5, 'name' => 'LBL_PBX', 'iconpath' => 'adminIcon-pbx-manager', 'description' => 'LBL_PBX_DESCRIPTION', 'linkto' => 'index.php?module=PBX&parent=Settings&view=List', 'sequence' => 3, 'active' => 0, 'pinned' => 0, 'admin_access' => NULL,]],
 			['vtiger_settings_field', ['blockid' => 5, 'name' => 'LBL_SMSNOTIFIER', 'iconpath' => 'userIcon-SMSNotifier', 'description' => 'LBL_SMSNOTIFIER_DESCRIPTION', 'linkto' => 'index.php?module=SMSNotifier&parent=Settings&view=List', 'sequence' => 12, 'active' => 0, 'pinned' => 0, 'admin_access' => NULL,]],
 			['vtiger_ws_fieldtype', ['uitype' => 311, 'fieldtype' => 'multiImage',]],
 		];
-
 		$cvid = (new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->where(['viewname' => 'LBL_UNREAD', 'entitytype' => 'Notification'])->scalar();
 		if ($cvid) {
 			$data[] = ['vtiger_cvadvfilter', ['cvid' => $cvid, 'columnindex' => 0, 'columnname' => 'u_yf_notification:notification_status:notification_status:Notification_FL_STATUS:V', 'comparator' => 'e', 'value' => 'PLL_UNREAD', 'groupid' => 1, 'column_condition' => '']];
 			$data[] = ['vtiger_cvadvfilter_grouping', ['groupid' => 1, 'cvid' => $cvid, 'group_condition' => 'and', 'condition_expression' => ' 0 ']];
 			$data[] = ['vtiger_cvadvfilter_grouping', ['groupid' => 2, 'cvid' => $cvid, 'group_condition' => '', 'condition_expression' => ' 0 ']];
 		}
-
-
 		\App\Db\Updater::batchInsert($data);
 	}
 

@@ -1,0 +1,29 @@
+{
+  "name": "yetiforce/yetiforcepdf",
+  "description": "Library that generate pdf files from html.",
+  "type": "library",
+  "keywords": [
+    "pdf",
+    "html",
+    "html to pdf"
+  ],
+  "homepage": "http://yetiforce.com",
+  "authors": [
+    {
+      "name": "Rafal Pospiech",
+      "email": "r.pospiech@yetiforce.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1",
+    "phenx/php-font-lib": "^0.5.1",
+    "guzzlehttp/guzzle": "^6.3",
+    "composer/ca-bundle": "^1.1",
+    "milon/barcode": "^5.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "YetiForcePDF\\": "lib/"
+    }
+  }
+}

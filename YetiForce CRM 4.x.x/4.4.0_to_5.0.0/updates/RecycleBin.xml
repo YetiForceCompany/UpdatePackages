@@ -1,0 +1,15 @@
+<?xml version='1.0'?>
+<module>
+<exporttime>2018-12-18 10:00:00</exporttime>
+<name>RecycleBin</name>
+<label>RecycleBin</label>
+<type>extension</type>
+<version>0</version>
+<dependencies>
+<vtiger_version>4.4.0</vtiger_version>
+</dependencies>
+<tables>
+</tables>
+<crons>
+</crons>
+</module>

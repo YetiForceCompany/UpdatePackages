@@ -211,6 +211,7 @@ class YetiForceUpdate2
 		$this->setTablesScheme($this->getTablesAction(1));
 		$this->addModules(['CFixedAssets', 'CInternalTickets', 'FInvoiceCost', 'CMileageLogbook', 'SVendorEnquiries']);
 		$this->addRecords('EmailTemplates');
+		$this->setAlterTables($this->getAlterTables(2));
 		$this->updateData();
 		$this->setTablesScheme($this->getTablesAction(5));
 		$this->setAlterTables($this->getAlterTables(1));
@@ -968,7 +969,14 @@ class YetiForceUpdate2
 				$fields = [
 					['type' => ['change', 'Null'], 'validType' => 'YES', 'name' => 'ip', 'table' => 'o_yf_access_for_user', 'sql' => "ALTER TABLE `o_yf_access_for_user` 
 							CHANGE `ip` `ip` varchar(100) NULL after `date` , 
-							CHANGE `agent` `agent` varchar(255) NULL after `url` ;"],
+							CHANGE `agent` `agent` varchar(255) NULL after `url` ;"]
+				];
+				break;
+			case 2:
+				$fields = [
+					['type' => ['remove', 'Column_name'], 'validType' => 'YES', 'name' => 'recurringid', 'table' => 'vtiger_activity_reminder', 'sql' => "ALTER TABLE `vtiger_activity_reminder`   
+							DROP PRIMARY KEY,
+							ADD PRIMARY KEY (`activity_id`);"],
 				];
 				break;
 			default:

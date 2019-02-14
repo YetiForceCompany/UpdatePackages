@@ -1,0 +1,15 @@
+<?xml version='1.0'?>
+<module>
+<exporttime>2018-04-22 16:59:07</exporttime>
+<name>PermissionInspector</name>
+<label>PermissionInspector</label>
+<type>extension</type>
+<version>0.16</version>
+<dependencies>
+<vtiger_version>4.4.0</vtiger_version>
+</dependencies>
+<tables>
+</tables>
+<crons>
+</crons>
+</module>
