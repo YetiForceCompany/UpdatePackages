@@ -143,4 +143,8 @@ return [
 	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.js',
 	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.min.js',
 	'public_html/layouts/basic/modules/Settings/Vtiger/resources/Detail.min.js.map',
+	'phpdoc.ini',
+	'crowdin.yml',
+	'sonar-project.properties',
+	'public_html/install',
 ];

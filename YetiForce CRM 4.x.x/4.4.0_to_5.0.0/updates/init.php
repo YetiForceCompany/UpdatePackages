@@ -80,10 +80,8 @@ class YetiForceUpdate
 			if (ini_get('max_input_time') < $minTime) {
 				$this->package->_errorText .= PHP_EOL . 'max_input_time = ' . ini_get('max_input_time') . ' < ' . $minTime;
 			}
-			$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return false;
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}
 
@@ -189,7 +187,8 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	private function migrateCvConditions(){
+	private function migrateCvConditions()
+	{
 		$db = App\Db::getInstance();
 		$tableName = 'u_yf_cv_condition';
 		if (!$db->getTableSchema($tableName, true)) {
@@ -325,7 +324,7 @@ class YetiForceUpdate
 	 *
 	 * @return void
 	 */
-	private function addGroup(int $cvId , ?array $rule, int $parentId, int $index)
+	private function addGroup(int $cvId, ?array $rule, int $parentId, int $index)
 	{
 		if (empty($rule)) {
 			return;
@@ -348,6 +347,7 @@ class YetiForceUpdate
 			$index++;
 		}
 	}
+
 	private function migrateCompanies()
 	{
 		$dataReader = (new \App\Db\Query())->from('s_#__companies')->createCommand()->query();
@@ -423,6 +423,7 @@ class YetiForceUpdate
 			['s_#__companies', 'logo_mail_height'],
 		]);
 	}
+
 	/**
 	 * Update.
 	 */
@@ -580,6 +581,7 @@ class YetiForceUpdate
 		$oldPrefix = explode('_', $prefix, 2);
 		return $oldPrefix[0] . '-' . strtoupper($oldPrefix[1]);
 	}
+
 	private function migrateLanguages()
 	{
 		$db = App\Db::getInstance();
@@ -614,6 +616,7 @@ class YetiForceUpdate
 			}
 		}
 	}
+
 	private function updateInventory()
 	{
 		$start = microtime(true);
@@ -637,7 +640,7 @@ class YetiForceUpdate
 					if (!in_array($tableName, ['u_yf_finvoicecost_inventory', 'u_yf_svendorenquiries_inventory'])) {
 						$db->createCommand()->dropForeignKey("fk_1_{$tableName}", $tableName)->execute();
 						$db->createCommand()->dropIndex("id", $tableName)->execute();
-					} elseif($tableName === 'u_yf_finvoicecost_inventory') {
+					} elseif ($tableName === 'u_yf_finvoicecost_inventory') {
 						$db->createCommand()->dropIndex("finvoicecost_inventory_idx", $tableName)->execute();
 					} elseif ($tableName === 'u_yf_svendorenquiries_inventory') {
 						$db->createCommand()->dropIndex("svendorenquiries_inventory_idx", $tableName)->execute();
@@ -654,6 +657,7 @@ class YetiForceUpdate
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
+
 	/**
 	 * Add modules.
 	 *
@@ -677,7 +681,8 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	private function migrateDefOrgField(){
+	private function migrateDefOrgField()
+	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$db = App\Db::getInstance();
@@ -694,7 +699,8 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	private function removePbxManager(){
+	private function removePbxManager()
+	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$pbxmanagerId = \App\Module::getModuleId('PBXManager');
@@ -707,6 +713,7 @@ class YetiForceUpdate
 		App\Db::getInstance()->createCommand()->delete('vtiger_ws_entity', ['name' => 'PBXManager'])->execute();
 
 	}
+
 	private function removeFields()
 	{
 		$start = microtime(true);
@@ -789,7 +796,7 @@ class YetiForceUpdate
 		$db->createCommand()->delete('vtiger_relatedlists', ['name' => 'getContacts'])->execute();
 		$db->createCommand()->update('vtiger_blocks', ['display_status' => 2], ['display_status' => 1])->execute();
 		$db->createCommand()->update('s_#__companies', ['type' => 2])->execute();
-		if ($db->getTableSchema('vtiger_trees_templates_data')->getColumn('parenttrre')){
+		if ($db->getTableSchema('vtiger_trees_templates_data')->getColumn('parenttrre')) {
 			$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
 		}
 	}
@@ -983,22 +990,23 @@ class YetiForceUpdate
 		$db = App\Db::getInstance();
 		foreach ($fields as $fieldInfo) {
 			$moduleModel = Vtiger_Module_Model::getInstance($fieldInfo[0]);
-			if(!$moduleModel) {
+			if (!$moduleModel) {
 				$this->log('Can not found module' . $fieldInfo[0]);
 				continue;
 			}
 			$fieldModel = $moduleModel->getField($fieldInfo[1]);
-			if(!$fieldModel) {
+			if (!$fieldModel) {
 				$this->log('Can not found field' . $fieldInfo[1] . ' in module ' . $fieldInfo[0]);
 				continue;
 			}
-			$db->createCommand()->alterColumn($fieldModel->getTableName(), $fieldModel->getColumnName(), 'string('. $fieldInfo[2].')')->execute();
+			$db->createCommand()->alterColumn($fieldModel->getTableName(), $fieldModel->getColumnName(), 'string(' . $fieldInfo[2] . ')')->execute();
 			$db->createCommand()->update('vtiger_field', ['maximumlength' => $fieldInfo[2]], [
 				'tabid' => App\Module::getModuleId($fieldInfo[0]),
 				'fieldname' => $fieldInfo[1]
 			])->execute();
 		}
 	}
+
 	/**
 	 * Add fields.
 	 */
@@ -1010,13 +1018,13 @@ class YetiForceUpdate
 		$fields = [
 			[93, 2769, 'parent_id', 'u_yf_competition', 2, 10, 'parent_id', 'LBL_PARENT_ID', 0, 2, '', '4294967295', 8, 303, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'integer', 'LBL_COMPETITION_INFORMATION', [], ['Competition'], 'Competition'],
 			[40, 2770, 'parents', 'vtiger_modcomments', 1, 1, 'parents', 'FL_PARENTS', 0, 2, '', null, 9, 98, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 'text', 'LBL_COMPETITION_INFORMATION', [], [], 'ModComments'],
-			[95, 2771, 'issue_time','u_yf_finvoice',1,5,'issue_time','FL_ISSUE_TIME',0,2,'',NULL,4,310,1,'D~O',1,0,'BAS',1,'',0,'',NULL, 'date', 'LBL_BASIC_DETAILS', [], [], 'FInvoice'],
+			[95, 2771, 'issue_time', 'u_yf_finvoice', 1, 5, 'issue_time', 'FL_ISSUE_TIME', 0, 2, '', NULL, 4, 310, 1, 'D~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'date', 'LBL_BASIC_DETAILS', [], [], 'FInvoice'],
 			[61, 2772, 'multicompanyid', 'vtiger_ossemployees', 1, 10, 'multicompanyid', 'FL_ORGANIZATION_STRUCTURE', 0, 0, '', '-2147483648,2147483647', 20, 151, 1, 'I~M', 2, 0, 'BAS', 1, '', 0, '', '', 'integer(10)', 'LBL_INFORMATION', [], ['MultiCompany'], 'OSSEmployees'],
 			[119, 2773, 'website', 'u_yf_multicompany', 2, 17, 'website', 'FL_WEBSITE', 0, 2, '', '255', 9, 407, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'string(255)', 'LBL_CONTACT_INFORMATION', [], [], 'MultiCompany'],
 			[119, 2774, 'logo', 'u_yf_multicompany', 2, 69, 'logo', 'FL_LOGO', 0, 2, '', NULL, 0, 406, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'text', 'LBL_ADDITIONAL_INFORMATION', [], [], 'MultiCompany'],
-			[85,2775,'campaign_id','u_yf_squoteenquiries',1,10,'campaign_id','FL_CAMPAIGN_ID',0,2,'','-2147483648,2147483647',9,265,1,'I~O',1,0,'BAS',1,'',0,'',NULL, 'integer', 'LBL_QUOTESENQUIRES_INFORMATION', [], ['Campaigns'], 'SQuoteEnquiries'],
-			[29,2776,'sync_carddav','vtiger_users',1,16,'sync_carddav','LBL_CARDDAV_SYNCHRONIZATION_CONTACT',0,2,'','255',17,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL, 'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP', 'PLL_BASED_CREDENTIALS'], [], 'Users'],
-			[29,2777,'sync_caldav','vtiger_users',1,16,'sync_caldav','LBL_CALDAV_SYNCHRONIZATION_CALENDAR',0,2,'','255',18,83,1,'V~O',1,0,'BAS',1,'',0,'',NULL,'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP'], [], 'Users'],
+			[85, 2775, 'campaign_id', 'u_yf_squoteenquiries', 1, 10, 'campaign_id', 'FL_CAMPAIGN_ID', 0, 2, '', '-2147483648,2147483647', 9, 265, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'integer(10)', 'LBL_QUOTESENQUIRES_INFORMATION', [], ['Campaigns'], 'SQuoteEnquiries'],
+			[29, 2776, 'sync_carddav', 'vtiger_users', 1, 16, 'sync_carddav', 'LBL_CARDDAV_SYNCHRONIZATION_CONTACT', 0, 2, '', '255', 17, 83, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP', 'PLL_BASED_CREDENTIALS'], [], 'Users'],
+			[29, 2777, 'sync_caldav', 'vtiger_users', 1, 16, 'sync_caldav', 'LBL_CALDAV_SYNCHRONIZATION_CALENDAR', 0, 2, '', '255', 18, 83, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 'string(100)', 'LBL_USER_ADV_OPTIONS', ['PLL_OWNER', 'PLL_OWNER_PERSON', 'PLL_OWNER_PERSON_GROUP'], [], 'Users'],
 			[112, 2778, 'smtp_id', 'u_yf_emailtemplates', 2, 316, 'smtp_id', 'SMTP', 0, 2, '', '4294967295', 0, 376, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, $importerType->integer(11)->unsigned()->null(), 'LBL_BASIC_DETAILS', [], [], 'EmailTemplates']
 		];
 		foreach ($fields as $field) {
@@ -1661,8 +1669,8 @@ class YetiForceUpdate
 			], ['tabid' => App\Module::getModuleId('Leads'), 'related_tabid' => App\Module::getModuleId('SQuoteEnquiries')]
 			],
 		];
-		foreach(['Vendors', 'Partners', 'Competition','SSalesProcesses','Project', 'ServiceContracts', 'Campaigns', 'FBookkeeping', 'ProjectTask', 'ProjectMilestone', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders',
-					'SRecurringOrders', 'FInvoice', 'SVendorEnquiries'] as $moduleName) {
+		foreach (['Vendors', 'Partners', 'Competition', 'SSalesProcesses', 'Project', 'ServiceContracts', 'Campaigns', 'FBookkeeping', 'ProjectTask', 'ProjectMilestone', 'SQuoteEnquiries', 'SRequirementsCards', 'SCalculations', 'SQuotes', 'SSingleOrders',
+					 'SRecurringOrders', 'FInvoice', 'SVendorEnquiries'] as $moduleName) {
 			$data[] = ['vtiger_links', [
 				'tabid' => App\Module::getModuleId($moduleName),
 				'linktype' => 'DASHBOARDWIDGET',
@@ -1691,7 +1699,7 @@ class YetiForceUpdate
 	{
 		$allModules = array_keys(vtlib\Functions::getAllModules());
 		$actions = [
-  			['type' => 'add', 'name' => 'OpenRecord', 'tabsData' => $allModules],
+			['type' => 'add', 'name' => 'OpenRecord', 'tabsData' => $allModules],
 			['type' => 'remove', 'name' => 'DuplicatesHandling'],
 			['type' => 'add', 'name' => 'AutoAssignRecord', 'tabsData' => $allModules],
 			['type' => 'add', 'name' => 'AssignToYourself', 'tabsData' => $allModules]
@@ -1730,6 +1738,7 @@ class YetiForceUpdate
 			}
 		}
 	}
+
 	/**
 	 * Cron data.
 	 */
@@ -1837,7 +1846,7 @@ class YetiForceUpdate
 			->create();
 		unset($allConfig['API']);
 		foreach ($allConfig as $file => $badConfig) {
-			$this->log('ERROR: Can not create config file for '. $file . '| ' . date('Y-m-d H:i:s'));
+			$this->log('ERROR: Can not create config file for ' . $file . '| ' . date('Y-m-d H:i:s'));
 		}
 		$files = [
 			'config/Modules/API.php',
@@ -1861,12 +1870,13 @@ class YetiForceUpdate
 				'config/sounds.php',
 			]);
 		}
-		foreach($files as $file) {
+		foreach ($files as $file) {
 			if (file_exists($file)) {
 				unlink($file);
 			}
 		}
 	}
+
 	/**
 	 * Postupdate.
 	 */
@@ -1973,7 +1983,42 @@ class YetiForceUpdate
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->stopProcess();
 		return true;
+	}
+
+	public function stopProcess()
+	{
+		\App\Module::createModuleMetaFile();
+		\App\Cache::clear();
+		\App\Cache::clearOpcache();
+		try {
+			$dbCommand = \App\Db::getInstance()->createCommand();
+			$dbCommand->insert('yetiforce_updates', [
+				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+				'name' => (string)$this->modulenode->label,
+				'from_version' => (string)$this->modulenode->from_version,
+				'to_version' => (string)$this->modulenode->to_version,
+				'result' => true,
+				'time' => date('Y-m-d H:i:s')
+			])->execute();
+			$dbCommand->update('vtiger_version', ['current_version' => (string)$this->modulenode->to_version])->execute();
+			\vtlib\Functions::recurseDelete('cache/updates');
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+
+			\App\Cache::clear();
+			\App\Cache::clearOpcache();
+			clearstatcache();
+		} catch (\Throwable $ex) {
+			file_put_contents('cache/logs/update.log', $ex->__toString(), FILE_APPEND);
+		}
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
+		echo '<div class="modal in" style="display: block;top: 20%;"><div class="modal-dialog"><div class="modal-content"><div class="modal-header">
+		<h4 class="modal-title">' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h4>
+		</div><div class="modal-body">' . \App\Language::translate('LBL_IMPORTED_UPDATE', 'Settings:ModuleManager') .
+			'</div><div class="modal-footer"><a class="btn btn-success" href="index.php?module=LangManagement&parent=Settings&view=Index&block=4&fieldid=53"></span>' . \App\Language::translate('LangManagement', 'Settings:LangManagement') . '<a></div></div></div></div>';
+		exit;
 	}
 
 	/**

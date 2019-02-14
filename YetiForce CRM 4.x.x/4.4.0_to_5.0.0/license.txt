@@ -4,3 +4,7 @@ The update time might be longer depending on the server speed and amount of data
 Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 We recommend perfoming a backup of system configuration files, the update package doesn't convert additional configuration files except the default ones within the system.
+
+Starting from version 5.0 on, the update packages don't include language files. 
+We added a functionality to update languages that allows you to update the translation at any time. 
+After the system update is completed, please also update the language.
