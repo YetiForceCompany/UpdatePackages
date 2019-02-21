@@ -358,20 +358,34 @@ class YetiForceUpdate
 				return;
 			}
 			$recordModel = Vtiger_Record_Model::getCleanInstance('MultiCompany');
-			$recordModel->set('company_name', $row['name']);
+			$mapValues = [
+				'company_name' => 'name',
+				'addresslevel8a' => 'street',
+				'addresslevel5a' => 'city',
+				'poboxa' => 'code',
+				'addresslevel2a' => 'state',
+				'addresslevel1a' => 'country',
+				'phone' => 'phone',
+				'fax' => 'fax',
+				'website' => 'website',
+				'vat' => 'vatid',
+				'companyid1' => 'id1',
+				'companyid2' => 'id2',
+				'email1' => 'email',
+			];
+			foreach ($mapValues as $recordFieldName => $field) {
+				try {
+					$fieldModel = $recordModel->getField($recordFieldName);
+					if (!$fieldModel) {
+						continue;
+					}
+					$fieldModel->getUITypeModel()->validate($row[$field]);
+					$recordModel->set($recordFieldName, $row[$field]);
+				} catch (\Throwable $ex) {
+					$this->log('ERROR: Field ' . $recordFieldName . ' has invalid value - ' . $ex->getMessage());
+				}
+			}
 			$recordModel->set('mulcomp_status', 'PLL_ACTIVE');
-			$recordModel->set('addresslevel8a', $row['street']);
-			$recordModel->set('addresslevel5a', $row['city']);
-			$recordModel->set('poboxa', $row['code']);
-			$recordModel->set('addresslevel2a', $row['state']);
-			$recordModel->set('addresslevel1a', $row['country']);
-			$recordModel->set('phone', $row['phone']);
-			$recordModel->set('fax', $row['fax']);
-			$recordModel->set('website', $row['website']);
-			$recordModel->set('vat', $row['vatid']);
-			$recordModel->set('companyid1', $row['id1']);
-			$recordModel->set('companyid2', $row['id2']);
-			$recordModel->set('email1', $row['email']);
 			if (file_exists('public_html/layouts/resources/Logo/' . $row['logo_main'])) {
 				$filePath = 'public_html/layouts/resources/Logo/' . 'backup' . $row['logo_main'];
 				copy('public_html/layouts/resources/Logo/' . $row['logo_main'], $filePath);
