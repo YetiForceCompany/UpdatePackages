@@ -815,6 +815,19 @@ class YetiForceUpdate
 		if ($db->getTableSchema('vtiger_trees_templates_data')->getColumn('parenttrre')) {
 			$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
 		}
+		$dataReader = (new \App\Db\Query())->select(['id', 'position'])->from('vtiger_module_dashboard_widgets')->where(['like', 'position', '{"row":%', false])
+			->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$position = App\Json::decode($row['position']);
+			if(isset($position['row'])) {
+				unset($position['row']);
+			}
+			if(isset($position['col'])) {
+				unset($position['col']);
+			}
+			$db->createCommand()->update('vtiger_module_dashboard_widgets', ['position' => App\Json::encode($position)], ['id' => $row['id']])->execute();
+		}
+
 	}
 
 	private function updateVtEmailTemplates()
