@@ -2008,6 +2008,7 @@ class YetiForceUpdate
 
 			\App\UserPrivilegesFile::createUserSharingPrivilegesfile($userid);
 		}
+		App\Db::getInstance()->createCommand()->update('vtiger_cron_task', ['status' => 1], ['name' => 'LBL_BATCH_PROCESSES'])->execute();
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
