@@ -609,6 +609,7 @@ class YetiForceUpdate
 			}
 			$newPrefix = $this->getNewPrefixLang($prefix);
 			$db->createCommand()->update('vtiger_language', ['prefix' => $newPrefix], ['id' => $row['id']])->execute();
+			$db->createCommand()->update('a_yf_pdf', ['language' => $newPrefix], ['language' => $row['prefix']])->execute();
 		}
 		$dataReader = (new \App\Db\Query())->select(['tablename', 'columnname'])->from('vtiger_field')->where(['uitype' => 32])->createCommand()->query();
 		while ($row = $dataReader->read()) {
@@ -827,7 +828,8 @@ class YetiForceUpdate
 			}
 			$db->createCommand()->update('vtiger_module_dashboard_widgets', ['position' => App\Json::encode($position)], ['id' => $row['id']])->execute();
 		}
-
+		$db->createCommand()->update('vtiger_users', ['sync_carddav' => 'PLL_OWNER'], ['or', ['sync_carddav' => ''], ['sync_carddav' => null]])->execute();
+		$db->createCommand()->update('vtiger_users', ['sync_caldav' => 'PLL_OWNER'], ['or', ['sync_caldav' => ''], ['sync_caldav' => null]])->execute();
 	}
 
 	private function updateVtEmailTemplates()
