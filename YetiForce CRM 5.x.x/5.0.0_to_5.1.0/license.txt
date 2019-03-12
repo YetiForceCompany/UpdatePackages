@@ -1,3 +1,4 @@
 License: YetiForce Public License 3.0 licenses/License.html
 The update time might be longer depending on the server speed and amount of data in the system.
 Log files should be checked after update.
+After the system update, please verify if the "Status" picklists are correct in the following modules: Projects, Project milestones and Project tasks

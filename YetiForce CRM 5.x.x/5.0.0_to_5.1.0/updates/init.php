@@ -109,9 +109,102 @@ class YetiForceUpdate
 		}
 		$this->importer->refreshSchema();
 		$db->createCommand()->checkIntegrity(true)->execute();
-		$this->updateData();
 		$this->addFields();
+		$this->updateData();
+		$this->migrateSubprocess();
+		$this->syncPicklist();
+
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function synchornizationPicklist($moduleName, $fieldName, $map, $mapAutomation)
+	{
+		$rolesSelected = [];
+		$roleRecordList = Settings_Roles_Record_Model::getAll();
+		foreach ($roleRecordList as $roleRecord) {
+			$rolesSelected[] = $roleRecord->getId();
+		}
+		$tableName = 'vtiger_' . $fieldName;
+		$picklistData = (new App\Db\Query())->select([$fieldName, $fieldName . 'id'])->from($tableName)->createCommand()->queryAllByGroup();
+		foreach ($map as $newStatus => $oldStatus) {
+			$id = null;
+			$moduleModel = Settings_Picklist_Module_Model::getInstance($moduleName);
+			$fieldModel = Settings_Picklist_Field_Model::getInstance($fieldName, $moduleModel);
+			if (empty($oldStatus)) {
+				if (!isset($picklistData[$newStatus])) {
+					$id = $moduleModel->addPickListValues($fieldModel, $newStatus, $rolesSelected, '', '');
+				}
+			} else {
+				if (isset($picklistData[$oldStatus]) && $id = $picklistData[$oldStatus]) {
+					if ($newStatus !== $oldStatus) {
+						$moduleModel->renamePickListValues($fieldModel, $oldStatus, $newStatus, $id, '', '');
+					}
+				}
+			}
+			if ($id) {
+				App\Db::getInstance()->createCommand()->update($tableName, ['presence' => 1, 'automation' => $mapAutomation[$newStatus]], [$fieldName . 'id' => $id])->execute();
+			}
+		}
+	}
+
+	private function syncPicklist()
+	{
+		$picklistWithAutomation = ['projectmilestone_status', 'projectstatus', 'projecttaskstatus'];
+		$db = App\Db::getInstance();
+		$importer = new \App\Db\Importers\Base();
+		foreach ($picklistWithAutomation as $fieldname) {
+			$tableName = 'vtiger_' . $fieldname;
+			if (!$db->getTableSchema($tableName, true)->getColumn('automation')) {
+				$db->createCommand()->addColumn($tableName, 'automation', $importer->tinyInteger(1)->defaultValue(0))->execute();
+			}
+		}
+		$this->synchornizationPicklist('ProjectMilestone', 'projectmilestone_status', [
+			'PLL_PLANNED' => 'PLL_OPEN',
+			'PLL_ON_HOLD' => 'PLL_DEFERRED',
+			'PLL_IN_PROGRESSING' => 'PLL_IN_PROGRESS',
+			'PLL_IN_APPROVAL' => '',
+			'PLL_COMPLETED' => 'PLL_COMPLETED',
+			'PLL_CANCELLED' => 'PLL_CANCELLED',
+		], [
+			'PLL_PLANNED' => '1',
+			'PLL_ON_HOLD' => '1',
+			'PLL_IN_PROGRESSING' => '1',
+			'PLL_IN_APPROVAL' => '1',
+			'PLL_COMPLETED' => '2',
+			'PLL_CANCELLED' => '2',
+		]);
+		$this->synchornizationPicklist('Project', 'projectstatus', [
+			'PLL_PLANNED' => 'prospecting',
+			'PLL_ON_HOLD' => 'on hold',
+			'PLL_IN_PROGRESSING' => 'in progress',
+			'PLL_IN_APPROVAL' => 'waiting for feedback',
+			'PLL_COMPLETED' => 'completed',
+			'PLL_CANCELLED' => 'archived',
+		], [
+			'PLL_PLANNED' => '1',
+			'PLL_ON_HOLD' => '1',
+			'PLL_IN_PROGRESSING' => '1',
+			'PLL_IN_APPROVAL' => '1',
+			'PLL_COMPLETED' => '2',
+			'PLL_CANCELLED' => '2',
+		]);
+		$this->synchornizationPicklist('ProjectTask', 'projecttaskstatus', [
+			'PLL_PLANNED' => 'Open',
+			'PLL_ON_HOLD' => 'Deferred',
+			'PLL_SUBMITTED_COMMENTS' => '',
+			'PLL_IN_PROGRESSING' => 'In Progress',
+			'PLL_IN_APPROVAL' => '',
+			'PLL_COMPLETED' => 'Completed',
+			'PLL_CANCELLED' => 'Cancelled',
+		], [
+			'PLL_PLANNED' => '1',
+			'PLL_ON_HOLD' => '1',
+			'PLL_SUBMITTED_COMMENTS' => '1',
+			'PLL_IN_PROGRESSING' => '1',
+			'PLL_IN_APPROVAL' => '1',
+			'PLL_COMPLETED' => '2',
+			'PLL_CANCELLED' => '2',
+		]);
 	}
 
 	/**
@@ -121,9 +214,13 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$importerType = new \App\Db\Importers\Base();
 		$fields = [
-			[41, 2779, 'estimated_work_time', 'vtiger_projectmilestone', 1, 7, 'estimated_work_time', 'LBL_ESTIMATED_WORK_TIME', 1, 2, '', null, 15, 101, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0],
-			[43, 2780, 'estimated_work_time', 'vtiger_project', 1, 7, 'estimated_work_time', 'LBL_ESTIMATED_WORK_TIME', 1, 2, '', null, 16, 107, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0]
+			[41, 2779, 'estimated_work_time', 'vtiger_projectmilestone', 1, 7, 'estimated_work_time', 'LBL_ESTIMATED_WORK_TIME', 1, 2, '', '999999', 15, 101, 10, 'NN~O', 1, 0, 'BAS', 1, '', 0, '', null, $importerType->decimal('15,2'), 'LBL_PROJECT_MILESTONE_INFORMATION', [], [], 'ProjectMilestone'],
+			[43, 2780, 'estimated_work_time', 'vtiger_project', 1, 7, 'estimated_work_time', 'LBL_ESTIMATED_WORK_TIME', 1, 2, '', '999999', 16, 107, 10, 'NN~O', 1, 0, 'BAS', 1, '', 0, '', null, $importerType->decimal('15,2'), 'LBL_PROJECT_INFORMATION', [], [], 'Project'],
+			[9, 2781, 'subprocess_sl', 'vtiger_activity', 1, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 6, 87, 1, 'I~O', 1, 0, 'BAS', 1, '', 1, '', null, $importerType->integer(10)->unsigned(), 'LBL_RELATED_TO', [], [], 'Calendar'],
+			[51, 2782, 'subprocess_sl', 'vtiger_osstimecontrol', 1, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 15, 129, 1, 'I~O', 1, 0, 'BAS', 1, '', 1, '', null, $importerType->integer(10)->unsigned(), 'LBL_BLOCK', [], [], 'OSSTimeControl'],
+			[29, 2783, 'sync_carddav_default_country', 'vtiger_users', 1, 35, 'sync_carddav_default_country', 'LBL_CARDDAV_DEFAULT_COUNTRY', 0, 2, '', '255', 19, 83, 1, 'V~O', 1, 0, 'BAS', 1, 'Edit,Detail,PreferenceDetail', 0, '', null, $importerType->stringType(255), 'LBL_USER_ADV_OPTIONS', [], [], 'Users']
 		];
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field[28]);
@@ -160,10 +257,10 @@ class YetiForceUpdate
 			$fieldInstance->defaultvalue = $field[10];
 			$fieldInstance->fieldparams = $field[22];
 			$blockInstance->addField($fieldInstance);
-			if ($field[26] && ($field[5] == 15 || $field[5] == 16 || $field[5] == 33)) {
+			if ($field[26] && (15 == $field[5] || 16 == $field[5] || 33 == $field[5])) {
 				$fieldInstance->setPicklistValues($field[26]);
 			}
-			if ($field[27] && $field[5] == 10) {
+			if ($field[27] && 10 == $field[5]) {
 				$fieldInstance->setRelatedModules($field[27]);
 			}
 		}
@@ -198,10 +295,218 @@ class YetiForceUpdate
 			['vtiger_field', ['uitype' => '317'], ['fieldname' => 'sum_total', 'tabid' => \App\Module::getModuleId(('FInvoiceCost'))]],
 			['vtiger_field', ['uitype' => '317'], ['fieldname' => 'sum_gross', 'tabid' => \App\Module::getModuleId(('FInvoiceCost'))]],
 			['vtiger_field', ['uitype' => '317'], ['fieldname' => 'sum_total', 'tabid' => \App\Module::getModuleId(('SVendorEnquiries'))]],
+			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projectstatus', 'tabid' => \App\Module::getModuleId(('Project'))]],
+			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projecttaskstatus', 'tabid' => \App\Module::getModuleId(('ProjectTask'))]],
+			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projectmilestone_status', 'tabid' => \App\Module::getModuleId(('ProjectMilestone'))]],
 		];
 
 		\App\Db\Updater::batchUpdate($data);
+		$data = [
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('ProjectMilestone'),
+				'related_tabid' => App\Module::getModuleId('Calendar'),
+				'name' => 'getActivities',
+				'sequence' => 2,
+				'label' => 'Activities',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('ProjectMilestone'), 'related_tabid' => App\Module::getModuleId('Calendar')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('FInvoice'),
+				'related_tabid' => App\Module::getModuleId('Calendar'),
+				'name' => 'getActivities',
+				'sequence' => 4,
+				'label' => 'Activities',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('FInvoice'), 'related_tabid' => App\Module::getModuleId('Calendar')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('ProjectTask'),
+				'related_tabid' => App\Module::getModuleId('Calendar'),
+				'name' => 'getActivities',
+				'sequence' => 4,
+				'label' => 'Activities',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('ProjectTask'), 'related_tabid' => App\Module::getModuleId('Calendar')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('ProjectMilestone'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 4,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('ProjectMilestone'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SQuoteEnquiries'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 5,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SQuoteEnquiries'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SRequirementsCards'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 6,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SRequirementsCards'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SCalculations'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 6,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SCalculations'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SQuotes'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 5,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SQuotes'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SSingleOrders'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 5,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SSingleOrders'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SRecurringOrders'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 3,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SRecurringOrders'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('FInvoice'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 3,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('FInvoice'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_relatedlists', [
+				'tabid' => App\Module::getModuleId('SVendorEnquiries'),
+				'related_tabid' => App\Module::getModuleId('OSSTimeControl'),
+				'name' => 'getDependentsList',
+				'sequence' => 3,
+				'label' => 'OSSTimeControl',
+				'presence' => 0,
+				'actions' => 'ADD',
+				'favorites' => 0,
+				'creator_detail' => 0,
+				'relation_comment' => 0,
+				'view_type' => 'RelatedTab',
+			], ['tabid' => App\Module::getModuleId('SVendorEnquiries'), 'related_tabid' => App\Module::getModuleId('OSSTimeControl')]
+			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('Home'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'LBL_UPCOMING_PROJECT_TASKS',
+				'linkurl' => 'index.php?module=ProjectTask&view=ShowWidget&name=UpcomingProjectTasks',
+				'linkicon' => '',
+				'sequence' => 26
+			], ['tabid' => App\Module::getModuleId('Home'), 'linklabel' => 'LBL_UPCOMING_PROJECT_TASKS']
+			],
+			['vtiger_links', [
+				'tabid' => App\Module::getModuleId('Home'),
+				'linktype' => 'DASHBOARDWIDGET',
+				'linklabel' => 'LBL_COMPLETED_PROJECT_TASKS',
+				'linkurl' => 'index.php?module=ProjectTask&view=ShowWidget&name=CompletedProjectTasks',
+				'linkicon' => '',
+				'sequence' => 0
+			], ['tabid' => App\Module::getModuleId('Home'), 'linklabel' => 'LBL_COMPLETED_PROJECT_TASKS']
+			],
+		];
+		\App\Db\Updater::batchInsert($data);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function migrateSubprocess()
+	{
+		$start = microtime(true);
+		$db = App\Db::getInstance();
+		try {
+			$db->createCommand('UPDATE vtiger_activity
+				INNER JOIN  vtiger_projecttask ON vtiger_activity.subprocess = vtiger_projecttask.projecttaskid
+				SET subprocess_sl = vtiger_projecttask.projecttaskid, subprocess = vtiger_projecttask.projectmilestoneid')->execute();
+			$db->createCommand('UPDATE vtiger_osstimecontrol
+				INNER JOIN  vtiger_projecttask ON vtiger_osstimecontrol.subprocess = vtiger_projecttask.projecttaskid
+				SET subprocess_sl = vtiger_projecttask.projecttaskid, subprocess = vtiger_projecttask.projectmilestoneid')->execute();
+		} catch (\Throwable $e) {
+			$this->log('ERROR: ' . __METHOD__ . '| ' . $e->getMessage() . '|' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		}
 	}
 
 	/**
@@ -214,6 +519,7 @@ class YetiForceUpdate
 
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
+		$this->createConfigFiles();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		$this->stopProcess();
 		return true;
@@ -251,5 +557,31 @@ class YetiForceUpdate
 		</div><div class="modal-body">' . \App\Language::translate('LBL_IMPORTED_UPDATE', 'Settings:ModuleManager') .
 			'</div><div class="modal-footer"><a class="btn btn-success" href="index.php?module=LangManagement&parent=Settings&view=Index&block=4&fieldid=53"></span>' . \App\Language::translate('LangManagement', 'Settings:LangManagement') . '<a></div></div></div></div>';
 		exit;
+	}
+
+	private function createConfigFiles()
+	{
+		$skip = ['module', 'component'];
+		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
+			(new \App\ConfigFile($type))->create();
+		}
+		$dirPath = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Modules';
+		if (!is_dir($dirPath)) {
+			mkdir($dirPath);
+		}
+		foreach ((new \DirectoryIterator('modules/')) as $item) {
+			if ($item->isDir() && !in_array($item->getBasename(), ['.', '..'])) {
+				$moduleName = $item->getBasename();
+				$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+				if (file_exists($filePath)) {
+					(new \App\ConfigFile('module', $moduleName))->create();
+				}
+			}
+		}
+		$path = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
+		$componentsData = require_once "$path";
+		foreach ($componentsData as $component => $data) {
+			(new \App\ConfigFile('component', $component))->create();
+		}
 	}
 }
