@@ -321,6 +321,8 @@ class YetiForceUpdate
 			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projectstatus', 'tabid' => \App\Module::getModuleId(('Project'))]],
 			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projecttaskstatus', 'tabid' => \App\Module::getModuleId(('ProjectTask'))]],
 			['vtiger_field', ['defaultvalue' => 'PLL_PLANNED'], ['fieldname' => 'projectmilestone_status', 'tabid' => \App\Module::getModuleId(('ProjectMilestone'))]],
+			['vtiger_language', ['progress' => '100'], ['prefix' => 'en-US']],
+			['vtiger_fieldmodulerel', ['sequence' => 2], ['module' => 'HelpDesk', 'relmodule' => 'Vendors']]
 		];
 
 		\App\Db\Updater::batchUpdate($data);
@@ -585,6 +587,36 @@ class YetiForceUpdate
 	private function createConfigFiles()
 	{
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
+		\App\Config::set('module', 'Project', 'defaultGanttColors', [
+			'Project' => [
+				'projectstatus' => [
+					'PLL_PLANNED' => '#7B1FA2',
+					'PLL_IN_PROGRESSING' => '#1976D2',
+					'PLL_IN_APPROVAL' => '#F57C00',
+					'PLL_ON_HOLD' => '#455A64',
+					'PLL_COMPLETED' => '#388E3C',
+					'PLL_CANCELLED' => '#616161',
+				],
+			],
+			'ProjectMilestone' => [
+				'projectmilestone_status' => [
+					'PLL_PLANNED' => '#3F51B5',
+					'PLL_IN_PROGRESSING' => '#2196F3',
+					'PLL_COMPLETED' => '#4CAF50',
+					'PLL_ON_HOLD' => '#607D8B',
+					'PLL_CANCELLED' => '#9E9E9E',
+				],
+			],
+			'ProjectTask' => [
+				'projecttaskstatus' => [
+					'PLL_PLANNED' => '#7986CB',
+					'PLL_IN_PROGRESSING' => '#64B5F6',
+					'PLL_COMPLETED' => '#81C784',
+					'PLL_ON_HOLD' => '#90A4AE',
+					'PLL_CANCELLED' => '#E0E0E0',
+				],
+			]
+		]);
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
