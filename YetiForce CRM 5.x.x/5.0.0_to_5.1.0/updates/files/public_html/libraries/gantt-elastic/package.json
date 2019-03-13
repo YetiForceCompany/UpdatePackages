@@ -1,0 +1,60 @@
+{
+  "name": "gantt-elastic",
+  "version": "0.9.6",
+  "description": "Gantt chart. Elastic javascript gantt chart. Vue gantt. Project manager responsive gantt. jquery gantt.",
+  "main": "src/GanttElastic.vue",
+  "dependencies": {
+    "dayjs": "^1.8.5"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^3.4.0",
+    "css-loader": "^1.0.1",
+    "gulp-vueify2": "0.0.3",
+    "vue": "^2.6.4",
+    "vue-loader": "^15.6.2",
+    "vue-slider-component": "^2.8.7",
+    "vue-switches": "^2.0.1",
+    "vue-template-compiler": "^2.6.4",
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.2.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "dev": "webpack --watch",
+    "dev-fast": "webpack --watch --config webpack.dev.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neuronetio/gantt-elastic.git"
+  },
+  "keywords": [
+    "gantt",
+    "gantt js",
+    "gantt chart",
+    "gantt elastic",
+    "javascript gantt",
+    "javascript gantt chart",
+    "jQuery gantt",
+    "vue gantt",
+    "js gantt",
+    "gantt-chart",
+    "responsive",
+    "vue",
+    "vue-gantt",
+    "javascript gantt",
+    "project gantt",
+    "project manger",
+    "responsive gantt",
+    "gantt component",
+    "javascript gantt",
+    "project",
+    "task"
+  ],
+  "author": "Rafal Pospiech <neuronet.io@gmail.com> (https://neuronet.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/neuronetio/gantt-elastic/issues"
+  },
+  "homepage": "https://neuronetio.github.io/gantt-elastic/"
+}

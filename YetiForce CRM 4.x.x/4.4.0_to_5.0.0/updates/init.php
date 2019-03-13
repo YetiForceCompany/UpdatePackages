@@ -358,20 +358,34 @@ class YetiForceUpdate
 				return;
 			}
 			$recordModel = Vtiger_Record_Model::getCleanInstance('MultiCompany');
-			$recordModel->set('company_name', $row['name']);
+			$mapValues = [
+				'company_name' => 'name',
+				'addresslevel8a' => 'street',
+				'addresslevel5a' => 'city',
+				'poboxa' => 'code',
+				'addresslevel2a' => 'state',
+				'addresslevel1a' => 'country',
+				'phone' => 'phone',
+				'fax' => 'fax',
+				'website' => 'website',
+				'vat' => 'vatid',
+				'companyid1' => 'id1',
+				'companyid2' => 'id2',
+				'email1' => 'email',
+			];
+			foreach ($mapValues as $recordFieldName => $field) {
+				try {
+					$fieldModel = $recordModel->getField($recordFieldName);
+					if (!$fieldModel) {
+						continue;
+					}
+					$fieldModel->getUITypeModel()->validate($row[$field]);
+					$recordModel->set($recordFieldName, $row[$field]);
+				} catch (\Throwable $ex) {
+					$this->log('ERROR: Field ' . $recordFieldName . ' has invalid value - ' . $ex->getMessage());
+				}
+			}
 			$recordModel->set('mulcomp_status', 'PLL_ACTIVE');
-			$recordModel->set('addresslevel8a', $row['street']);
-			$recordModel->set('addresslevel5a', $row['city']);
-			$recordModel->set('poboxa', $row['code']);
-			$recordModel->set('addresslevel2a', $row['state']);
-			$recordModel->set('addresslevel1a', $row['country']);
-			$recordModel->set('phone', $row['phone']);
-			$recordModel->set('fax', $row['fax']);
-			$recordModel->set('website', $row['website']);
-			$recordModel->set('vat', $row['vatid']);
-			$recordModel->set('companyid1', $row['id1']);
-			$recordModel->set('companyid2', $row['id2']);
-			$recordModel->set('email1', $row['email']);
 			if (file_exists('public_html/layouts/resources/Logo/' . $row['logo_main'])) {
 				$filePath = 'public_html/layouts/resources/Logo/' . 'backup' . $row['logo_main'];
 				copy('public_html/layouts/resources/Logo/' . $row['logo_main'], $filePath);
@@ -595,6 +609,7 @@ class YetiForceUpdate
 			}
 			$newPrefix = $this->getNewPrefixLang($prefix);
 			$db->createCommand()->update('vtiger_language', ['prefix' => $newPrefix], ['id' => $row['id']])->execute();
+			$db->createCommand()->update('a_yf_pdf', ['language' => $newPrefix], ['language' => $row['prefix']])->execute();
 		}
 		$dataReader = (new \App\Db\Query())->select(['tablename', 'columnname'])->from('vtiger_field')->where(['uitype' => 32])->createCommand()->query();
 		while ($row = $dataReader->read()) {
@@ -801,6 +816,20 @@ class YetiForceUpdate
 		if ($db->getTableSchema('vtiger_trees_templates_data')->getColumn('parenttrre')) {
 			$db->createCommand()->renameColumn('vtiger_trees_templates_data', 'parenttrre', 'parentTree')->execute();
 		}
+		$dataReader = (new \App\Db\Query())->select(['id', 'position'])->from('vtiger_module_dashboard_widgets')->where(['like', 'position', '{"row":%', false])
+			->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$position = App\Json::decode($row['position']);
+			if(isset($position['row'])) {
+				unset($position['row']);
+			}
+			if(isset($position['col'])) {
+				unset($position['col']);
+			}
+			$db->createCommand()->update('vtiger_module_dashboard_widgets', ['position' => App\Json::encode($position)], ['id' => $row['id']])->execute();
+		}
+		$db->createCommand()->update('vtiger_users', ['sync_carddav' => 'PLL_OWNER'], ['or', ['sync_carddav' => ''], ['sync_carddav' => null]])->execute();
+		$db->createCommand()->update('vtiger_users', ['sync_caldav' => 'PLL_OWNER'], ['or', ['sync_caldav' => ''], ['sync_caldav' => null]])->execute();
 	}
 
 	private function updateVtEmailTemplates()
@@ -1981,6 +2010,7 @@ class YetiForceUpdate
 
 			\App\UserPrivilegesFile::createUserSharingPrivilegesfile($userid);
 		}
+		App\Db::getInstance()->createCommand()->update('vtiger_cron_task', ['status' => 1], ['name' => 'LBL_BATCH_PROCESSES'])->execute();
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
