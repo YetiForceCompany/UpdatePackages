@@ -327,7 +327,6 @@ return array(
     'Config\\Modules\\Competition' => $baseDir . '/config/Modules/Competition.php',
     'Config\\Modules\\Contacts' => $baseDir . '/config/Modules/Contacts.php',
     'Config\\Modules\\FInvoice' => $baseDir . '/config/Modules/FInvoice.php',
-    'Config\\Modules\\GUS' => $baseDir . '/config/Modules/GUS.php',
     'Config\\Modules\\HelpDesk' => $baseDir . '/config/Modules/HelpDesk.php',
     'Config\\Modules\\Home' => $baseDir . '/config/Modules/Home.php',
     'Config\\Modules\\IStorages' => $baseDir . '/config/Modules/IStorages.php',
