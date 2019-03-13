@@ -255,7 +255,7 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 	public function measureWidth()
 	{
 		$style = $this->getStyle();
-		if ($this->parentWidth === $this->getParent()->getDimensions()->getWidth()) {
+		if ($this->parentWidth === $this->getParent()->getDimensions()->getWidth() && $this->getDimensions()->getWidth()!==null) {
 			if (!$this->isForMeasurement()) {
 				$this->getDimensions()->setWidth(Math::add($style->getHorizontalBordersWidth(), $style->getHorizontalPaddingsWidth()));
 			}

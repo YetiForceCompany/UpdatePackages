@@ -46,6 +46,7 @@ class ElementBox extends Box
 	{
 		$this->element = $element;
 		$element->setBox($this);
+
 		return $this;
 	}
 
@@ -71,6 +72,7 @@ class ElementBox extends Box
 				}
 			}
 		}
+
 		return $boxes;
 	}
 
@@ -116,7 +118,7 @@ class ElementBox extends Box
 						foreach ($columns as $columnIndex => $column) {
 							if ($column->getRowSpan() > 1) {
 								$rowSpans = $column->getRowSpan();
-								for ($i = 1; $i < $rowSpans; $i++) {
+								for ($i = 1; $i < $rowSpans; ++$i) {
 									$nextRow = $rowGroup->getChildren()[$rowIndex + $i];
 									$rowChildren = $nextRow->getChildren();
 									$insertColumn = $nextRow->removeChild($nextRow->createColumnBox());
@@ -138,7 +140,7 @@ class ElementBox extends Box
 					foreach ($rowGroup->getChildren() as $row) {
 						$columns = $row->getChildren();
 						$missing = $columnsCount - count($columns);
-						for ($i = 0; $i < $missing; $i++) {
+						for ($i = 0; $i < $missing; ++$i) {
 							$column = $row->createColumnBox();
 							$column->createCellBox();
 						}
@@ -157,7 +159,7 @@ class ElementBox extends Box
 							} else {
 								if (isset($rowSpans[$columnIndex]) && $rowSpans[$columnIndex] > 1) {
 									if ($rowSpansUp[$columnIndex] < $rowSpans[$columnIndex]) {
-										$rowSpansUp[$columnIndex]++;
+										++$rowSpansUp[$columnIndex];
 										$column->setRowSpanUp($rowSpansUp[$columnIndex]);
 										$row->setRowSpanUp(max($row->getRowSpanUp(), $rowSpansUp[$columnIndex]));
 										$row->setRowSpan(max($row->getRowSpan(), $column->getRowSpan()));
@@ -172,6 +174,7 @@ class ElementBox extends Box
 				}
 			}
 		}
+
 		return $this;
 	}
 
@@ -186,6 +189,7 @@ class ElementBox extends Box
 		foreach ($tablesBoxes as $tableBox) {
 			$tableBox->spanRows();
 		}
+
 		return $this;
 	}
 
@@ -209,20 +213,31 @@ class ElementBox extends Box
 				if ($childDomElement instanceof \DOMComment) {
 					continue;
 				}
-				$styleStr = '';
-				if ($childDomElement instanceof \DOMElement && $childDomElement->hasAttribute('style')) {
-					$styleStr = $childDomElement->getAttribute('style');
-				}
+
 				$element = (new Element())
 					->setDocument($this->document)
 					->setDOMElement($childDomElement)
 					->init();
-				// for now only basic style is used - from current element only (with defaults)
 				$style = (new \YetiForcePDF\Style\Style())
 					->setDocument($this->document)
-					->setElement($element)
-					->setContent($styleStr)
-					->parseInline();
+					->setElement($element);
+				if ($childDomElement instanceof \DOMElement) {
+					if ($childDomElement->hasAttribute('style')) {
+						// for now only basic style is used - from current element only (with defaults)
+						$style->setContent($childDomElement->getAttribute('style'));
+					} elseif ($childDomElement->nodeName === 'style') {
+						$style->parseCss($childDomElement->nodeValue);
+					}elseif ($childDomElement->hasAttribute('class')) {
+						$classNames = [];
+						foreach (explode(' ', $childDomElement->getAttribute('class')) as $className) {
+							if (trim($className)) {
+								$classNames[] = '.' . $className;
+							}
+						}
+						$element->setClassNames(implode(' ', $classNames));
+					}
+				}
+				$style = $style->parseInline();
 				$display = $style->getRules('display');
 				switch ($display) {
 					case 'block':
@@ -239,34 +254,48 @@ class ElementBox extends Box
 						} else {
 							$this->appendBlockBox($childDomElement, $element, $style, $parentBlock);
 						}
+
 						break;
 					case 'table':
 						$tableWrapper = $this->appendTableWrapperBox($childDomElement, $element, $style, $parentBlock);
 						$tableWrapper->appendTableBox($childDomElement, $element, $style, $parentBlock);
+
 						break;
 					case 'table-row-group':
 					case 'table-header-group':
 					case 'table-footer-group':
 						$this->appendTableRowGroupBox($childDomElement, $element, $style, $parentBlock, $display);
+
 						break;
 					case 'table-row':
 						$this->appendTableRowBox($childDomElement, $element, $style, $parentBlock);
+
 						break;
 					case 'table-cell':
 						$this->appendTableCellBox($childDomElement, $element, $style, $parentBlock);
+
 						break;
 					case 'inline':
 						$inline = $this->appendInlineBox($childDomElement, $element, $style, $parentBlock);
 						if (isset($inline) && $childDomElement instanceof \DOMText) {
 							$inline->setAnonymous(true)->appendText($childDomElement, null, null, $parentBlock);
 						}
+
 						break;
 					case 'inline-block':
 						$this->appendInlineBlockBox($childDomElement, $element, $style, $parentBlock);
+
+						break;
+						case 'none':
+							if ($childDomElement->nodeName === 'style') {
+								$this->appendStyleBox($childDomElement, $element, $style, $parentBlock);
+							}
+
 						break;
 				}
 			}
 		}
+
 		return $this;
 	}
 }

@@ -40,6 +40,12 @@ class Element extends \YetiForcePDF\Base
 	 * @var \DOMElement
 	 */
 	protected $domElement;
+	/**
+	 * Class names for element
+	 *
+	 * @var  string
+	 */
+	protected $classNames = '';
 
 	/**
 	 * Initialisation.
@@ -169,5 +175,29 @@ class Element extends \YetiForcePDF\Base
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Set class names for element
+	 *
+	 * @param  string  $classNames  Class names for element
+	 *
+	 * @return  self
+	 */
+	public function setClassNames(string $classNames)
+	{
+		$this->classNames = $classNames;
+
+		return $this;
+	}
+
+	/**
+	 * Get class names for element
+	 *
+	 * @return  string[]
+	 */
+	public function getClassNames()
+	{
+		return $this->classNames;
 	}
 }

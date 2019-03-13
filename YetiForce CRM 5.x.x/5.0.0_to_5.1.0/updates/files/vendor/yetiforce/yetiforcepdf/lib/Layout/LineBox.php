@@ -28,7 +28,7 @@ class LineBox extends Box implements BoxInterface
 	 * @param \DOMNode                           $childDomElement
 	 * @param Element                            $element
 	 * @param Style                              $style
-	 * @param \YetiForcePDF\Layout\BlockBox|null $parentBlock
+	 * @param null|\YetiForcePDF\Layout\BlockBox $parentBlock
 	 *
 	 * @return \YetiForcePDF\Layout\BlockBox
 	 */
@@ -43,7 +43,7 @@ class LineBox extends Box implements BoxInterface
 	 * @param \DOMNode                           $childDomElement
 	 * @param Element                            $element
 	 * @param Style                              $style
-	 * @param \YetiForcePDF\Layout\BlockBox|null $parentBlock
+	 * @param null|\YetiForcePDF\Layout\BlockBox $parentBlock
 	 *
 	 * @return \YetiForcePDF\Layout\BlockBox
 	 */
@@ -58,7 +58,7 @@ class LineBox extends Box implements BoxInterface
 	 * @param \DOMNode                           $childDomElement
 	 * @param Element                            $element
 	 * @param Style                              $style
-	 * @param \YetiForcePDF\Layout\BlockBox|null $parentBlock
+	 * @param null|\YetiForcePDF\Layout\BlockBox $parentBlock
 	 *
 	 * @return \YetiForcePDF\Layout\InlineBlockBox
 	 */
@@ -82,6 +82,7 @@ class LineBox extends Box implements BoxInterface
 		$this->appendChild($box);
 		$box->getStyle()->init();
 		$box->buildTree($box);
+
 		return $box;
 	}
 
@@ -91,7 +92,7 @@ class LineBox extends Box implements BoxInterface
 	 * @param \DOMNode                           $childDomElement
 	 * @param Element                            $element
 	 * @param Style                              $style
-	 * @param \YetiForcePDF\Layout\BlockBox|null $parentBlock
+	 * @param null|\YetiForcePDF\Layout\BlockBox $parentBlock
 	 *
 	 * @return \YetiForcePDF\Layout\InlineBlockBox
 	 */
@@ -119,6 +120,7 @@ class LineBox extends Box implements BoxInterface
 		$box->generateBarcodeImage();
 		$box->getStyle()->init();
 		$box->buildTree($box);
+
 		return $box;
 	}
 
@@ -128,7 +130,7 @@ class LineBox extends Box implements BoxInterface
 	 * @param \DOMNode                           $childDomElement
 	 * @param Element                            $element
 	 * @param Style                              $style
-	 * @param \YetiForcePDF\Layout\BlockBox|null $parentBlock
+	 * @param null|\YetiForcePDF\Layout\BlockBox $parentBlock
 	 *
 	 * @return \YetiForcePDF\Layout\InlineBox
 	 */
@@ -143,6 +145,7 @@ class LineBox extends Box implements BoxInterface
 		$this->appendChild($box);
 		$box->getStyle()->init();
 		$box->buildTree($parentBlock);
+
 		return $box;
 	}
 
@@ -156,6 +159,7 @@ class LineBox extends Box implements BoxInterface
 				return false;
 			}
 		}
+
 		return true;
 	}
 
@@ -174,6 +178,7 @@ class LineBox extends Box implements BoxInterface
 		if (!$boxWidth) {
 			$boxWidth = $box->getDimensions()->getOuterWidth();
 		}
+
 		return Math::comp(Math::sub($availableSpace, $childrenWidth), $boxWidth) >= 0;
 	}
 
@@ -187,10 +192,12 @@ class LineBox extends Box implements BoxInterface
 		$this->iterateChildren(function ($child) {
 			if ($child->containContent()) {
 				$child->setForMeasurement(true);
+
 				return false;
 			}
 			$child->setForMeasurement(false);
 		}, true, false);
+
 		return $this;
 	}
 
@@ -255,12 +262,14 @@ class LineBox extends Box implements BoxInterface
 			foreach ($line->getChildren() as $child) {
 				if ($child->isForMeasurement()) {
 					$isForMeasurement = true;
+
 					break;
 				}
 			}
 			$line->forMeasurement = $isForMeasurement;
 		}
 		unset($children);
+
 		return $lines;
 	}
 
@@ -281,6 +290,7 @@ class LineBox extends Box implements BoxInterface
 			$width = Math::max($parentWidth, $width);
 		}*/
 		$this->getDimensions()->setWidth($width);
+
 		return $this;
 	}
 
@@ -293,6 +303,7 @@ class LineBox extends Box implements BoxInterface
 	{
 		if (!$this->isForMeasurement()) {
 			$this->getDimensions()->setHeight('0');
+
 			return $this;
 		}
 		foreach ($this->getChildren() as $child) {
@@ -301,6 +312,7 @@ class LineBox extends Box implements BoxInterface
 		$lineHeight = $this->getStyle()->getMaxLineHeight();
 		$this->getDimensions()->setHeight($lineHeight);
 		$this->measureMargins();
+
 		return $this;
 	}
 
@@ -312,15 +324,11 @@ class LineBox extends Box implements BoxInterface
 	public function measureMargins()
 	{
 		$allChildren = [];
-		$this->getAllChildren($allChildren);
-		// array_reverse + array_pop + array_reverse is faster than array_shift
-		$allChildren = array_reverse($allChildren);
-		array_pop($allChildren);
-		$allChildren = array_reverse($allChildren);
+		$this->getAllChildren($allChildren, false);
 		$marginTop = '0';
 		$marginBottom = '0';
 		foreach ($allChildren as $child) {
-			if (!$child instanceof InlineBox) {
+			if ($child instanceof InlineBlockBox) {
 				$marginTop = Math::max($marginTop, $child->getStyle()->getRules('margin-top'));
 				$marginBottom = Math::max($marginBottom, $child->getStyle()->getRules('margin-bottom'));
 			}
@@ -328,6 +336,7 @@ class LineBox extends Box implements BoxInterface
 		$style = $this->getStyle();
 		$style->setRule('margin-top', $marginTop);
 		$style->setRule('margin-bottom', $marginBottom);
+
 		return $this;
 	}
 
@@ -352,6 +361,7 @@ class LineBox extends Box implements BoxInterface
 		foreach ($this->getChildren() as $child) {
 			$child->measureOffset();
 		}
+
 		return $this;
 	}
 
@@ -371,6 +381,7 @@ class LineBox extends Box implements BoxInterface
 		foreach ($this->getChildren() as $child) {
 			$child->measurePosition();
 		}
+
 		return $this;
 	}
 
@@ -389,7 +400,7 @@ class LineBox extends Box implements BoxInterface
 			$allNestedChildren[] = $allChildren;
 		}
 		$clones = [];
-		for ($row = 0; $row < $maxLevel; $row++) {
+		for ($row = 0; $row < $maxLevel; ++$row) {
 			foreach ($allNestedChildren as $childArray) {
 				if (isset($childArray[$row])) {
 					$current = $childArray[$row];
@@ -411,6 +422,7 @@ class LineBox extends Box implements BoxInterface
 				}
 			}
 		}
+
 		return $this;
 	}
 
@@ -431,6 +443,7 @@ class LineBox extends Box implements BoxInterface
 				}
 			}
 		}
+
 		return $width;
 	}
 
@@ -449,6 +462,7 @@ class LineBox extends Box implements BoxInterface
 		$height = $dimensions->getHeight();
 		$element = [];
 		$element = $this->addBorderInstructions($element, $pdfX, $pdfY, $width, $height);
+
 		return implode("\n", $element);
 	}
 }

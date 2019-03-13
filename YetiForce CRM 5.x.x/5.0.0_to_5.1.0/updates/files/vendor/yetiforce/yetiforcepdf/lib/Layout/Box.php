@@ -127,6 +127,7 @@ class Box extends \YetiForcePDF\Base
 			->setDocument($this->document)
 			->setBox($this)
 			->init();
+
 		return $this;
 	}
 
@@ -153,13 +154,14 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Set parent.
 	 *
-	 * @param \YetiForcePDF\Layout\Box|null $parent
+	 * @param null|\YetiForcePDF\Layout\Box $parent
 	 *
 	 * @return $this
 	 */
 	public function setParent(self $parent = null)
 	{
 		$this->parent = $parent;
+
 		return $this;
 	}
 
@@ -176,13 +178,14 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Set next.
 	 *
-	 * @param \YetiForcePDF\Layout\Box|null $next
+	 * @param null|\YetiForcePDF\Layout\Box $next
 	 *
 	 * @return $this
 	 */
 	public function setNext(self $next = null)
 	{
 		$this->next = $next;
+
 		return $this;
 	}
 
@@ -199,13 +202,14 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Set previous.
 	 *
-	 * @param \YetiForcePDF\Layout\Box|null $previous
+	 * @param null|\YetiForcePDF\Layout\Box $previous
 	 *
 	 * @return $this
 	 */
 	public function setPrevious(self $previous = null)
 	{
 		$this->previous = $previous;
+
 		return $this;
 	}
 
@@ -229,6 +233,7 @@ class Box extends \YetiForcePDF\Base
 	public function setRoot(bool $isRoot)
 	{
 		$this->root = $isRoot;
+
 		return $this;
 	}
 
@@ -262,6 +267,7 @@ class Box extends \YetiForcePDF\Base
 	public function setAbsolute(bool $absolute)
 	{
 		$this->absolute = $absolute;
+
 		return $this;
 	}
 
@@ -285,6 +291,7 @@ class Box extends \YetiForcePDF\Base
 	public function setCut(int $cut)
 	{
 		$this->cut = $cut;
+
 		return $this;
 	}
 
@@ -312,6 +319,7 @@ class Box extends \YetiForcePDF\Base
 		foreach ($allChildren as $child) {
 			$child->displayable = $displayable;
 		}
+
 		return $this;
 	}
 
@@ -333,6 +341,7 @@ class Box extends \YetiForcePDF\Base
 		if ($init) {
 			$style->init();
 		}
+
 		return $this;
 	}
 
@@ -366,6 +375,7 @@ class Box extends \YetiForcePDF\Base
 	public function setAnonymous(bool $anonymous)
 	{
 		$this->anonymous = $anonymous;
+
 		return $this;
 	}
 
@@ -383,6 +393,7 @@ class Box extends \YetiForcePDF\Base
 		foreach ($allChildren as $child) {
 			$child->forMeasurement = $forMeasurement;
 		}
+
 		return $this;
 	}
 
@@ -406,6 +417,7 @@ class Box extends \YetiForcePDF\Base
 		$this->renderableState['styleRules'] = $this->getStyle()->getRules();
 		$this->renderableState['width'] = $this->getDimensions()->getRawWidth();
 		$this->renderableState['height'] = $this->getDimensions()->getRawHeight();
+
 		return $this;
 	}
 
@@ -423,6 +435,7 @@ class Box extends \YetiForcePDF\Base
 		if (isset($this->renderableState['height'])) {
 			$this->getDimensions()->setHeight($this->renderableState['height']);
 		}
+
 		return $this;
 	}
 
@@ -449,6 +462,7 @@ class Box extends \YetiForcePDF\Base
 		]);
 		$this->getDimensions()->setWidth('0');
 		$this->getDimensions()->setHeight('0');
+
 		return $this;
 	}
 
@@ -476,6 +490,7 @@ class Box extends \YetiForcePDF\Base
 				$child->setRenderable($renderable, $forceUpdate);
 			}
 		}
+
 		return $this;
 	}
 
@@ -501,6 +516,7 @@ class Box extends \YetiForcePDF\Base
 		foreach ($children as $child) {
 			$childrenContent = $childrenContent || $child->containContent();
 		}
+
 		return $childrenContent;
 	}
 
@@ -533,6 +549,7 @@ class Box extends \YetiForcePDF\Base
 			$box->setPrevious()->setNext();
 		}
 		$this->children[] = $box;
+
 		return $this;
 	}
 
@@ -567,6 +584,7 @@ class Box extends \YetiForcePDF\Base
 			}
 		}
 		$child->setParent()->setPrevious()->setNext();
+
 		return $child;
 	}
 
@@ -578,6 +596,7 @@ class Box extends \YetiForcePDF\Base
 	public function clearChildren()
 	{
 		$this->children = [];
+
 		return $this;
 	}
 
@@ -592,6 +611,7 @@ class Box extends \YetiForcePDF\Base
 			$child->removeChildren();
 			$this->removeChild($child);
 		}
+
 		return $this;
 	}
 
@@ -615,6 +635,7 @@ class Box extends \YetiForcePDF\Base
 				$this->appendChild($currentChild);
 			}
 		}
+
 		return $this;
 	}
 
@@ -631,15 +652,21 @@ class Box extends \YetiForcePDF\Base
 		if (!$onlyRenderable && !$onlyForMeasurment) {
 			return $this->children;
 		}
-		return array_filter($this->children, function (self $box) use ($onlyRenderable, $onlyForMeasurment) {
-			if ($onlyRenderable && $onlyForMeasurment) {
-				return $box->isRenderable() && $box->isForMeasurement();
+		$children = [];
+		foreach ($this->children as $box) {
+			if ($onlyRenderable && $onlyForMeasurment && !($box->isRenderable() && $box->isForMeasurement())) {
+				continue;
 			}
-			if ($onlyRenderable) {
-				return $box->isRenderable();
+			if ($onlyRenderable && !$box->isRenderable()) {
+				continue;
 			}
-			return $box->isForMeasurement();
-		});
+			if (!$box->isForMeasurement()) {
+				continue;
+			}
+			$children[] = $box;
+		}
+
+		return $children;
 	}
 
 	/**
@@ -658,6 +685,7 @@ class Box extends \YetiForcePDF\Base
 		foreach ($this->getChildren() as $child) {
 			$child->getAllChildren($allChildren);
 		}
+
 		return $allChildren;
 	}
 
@@ -686,6 +714,7 @@ class Box extends \YetiForcePDF\Base
 				break;
 			}
 		}
+
 		return $this;
 	}
 
@@ -693,7 +722,7 @@ class Box extends \YetiForcePDF\Base
 	 * Get boxes by type.
 	 *
 	 * @param string      $shortClassName
-	 * @param string|null $until
+	 * @param null|string $until
 	 *
 	 * @return array
 	 */
@@ -709,12 +738,13 @@ class Box extends \YetiForcePDF\Base
 				$boxes[] = $child;
 			}
 			if ($reflectShortClassName === $until) {
-				$untilWas++;
+				++$untilWas;
 			}
 			if ($reflectShortClassName === $until && $untilWas === 2) {
 				break;
 			}
 		}
+
 		return $boxes;
 	}
 
@@ -739,6 +769,7 @@ class Box extends \YetiForcePDF\Base
 		if ($this->getParent()->isRoot()) {
 			return null;
 		}
+
 		return $this->getParent()->getClosestByType($className);
 	}
 
@@ -755,7 +786,7 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Get first child.
 	 *
-	 * @return \YetiForcePDF\Layout\Box|null
+	 * @return null|\YetiForcePDF\Layout\Box
 	 */
 	public function getFirstChild()
 	{
@@ -767,7 +798,7 @@ class Box extends \YetiForcePDF\Base
 	/**
 	 * Get last child.
 	 *
-	 * @return \YetiForcePDF\Layout\Box|null
+	 * @return null|\YetiForcePDF\Layout\Box
 	 */
 	public function getLastChild()
 	{
@@ -787,6 +818,7 @@ class Box extends \YetiForcePDF\Base
 		if ($parent instanceof LineBox) {
 			return $parent;
 		}
+
 		return $parent->getClosestLineBox();
 	}
 
@@ -801,6 +833,7 @@ class Box extends \YetiForcePDF\Base
 		if (!$parent instanceof LineBox) {
 			return $parent;
 		}
+
 		return $parent->getClosestBox();
 	}
 
@@ -848,9 +881,9 @@ class Box extends \YetiForcePDF\Base
 			$box = $this->getParent();
 			if ($box->isRoot()) {
 				return $this;
-			} else {
-				return $box->getFirstRootChild();
 			}
+
+			return $box->getFirstRootChild();
 		}
 	}
 
@@ -869,13 +902,14 @@ class Box extends \YetiForcePDF\Base
 				$textContent .= $box->getText();
 			}
 		}
+
 		return $textContent;
 	}
 
 	/**
 	 * Get first child text box.
 	 *
-	 * @return \YetiForcePDF\Layout\TextBox|null
+	 * @return null|\YetiForcePDF\Layout\TextBox
 	 */
 	public function getFirstTextBox()
 	{
@@ -886,6 +920,7 @@ class Box extends \YetiForcePDF\Base
 			if ($child instanceof TextBox) {
 				return $child;
 			}
+
 			return $child->getFirstTextBox();
 		}
 	}
@@ -910,6 +945,7 @@ class Box extends \YetiForcePDF\Base
 	public function setPageGroup(bool $pageGroup)
 	{
 		$this->pageGroup = true;
+
 		return $this;
 	}
 
@@ -934,6 +970,7 @@ class Box extends \YetiForcePDF\Base
 	public function setOption(string $name, string $value)
 	{
 		$this->options[$name] = $value;
+
 		return $this;
 	}
 
@@ -949,6 +986,7 @@ class Box extends \YetiForcePDF\Base
 		if (isset($this->options[$name])) {
 			return $this->options[$name];
 		}
+
 		return '';
 	}
 
@@ -963,6 +1001,7 @@ class Box extends \YetiForcePDF\Base
 		if ($styleWidth !== null) {
 			$this->getDimensions()->setWidth($styleWidth);
 		}
+
 		return $this;
 	}
 
@@ -986,12 +1025,15 @@ class Box extends \YetiForcePDF\Base
 				if ($parentHeight) {
 					$calculatedHeight = Math::mul(Math::div($parentHeight, '100'), $heightInPercent);
 					$this->getDimensions()->setHeight($calculatedHeight);
+
 					return $this;
 				}
 			}
+
 			return $this;
 		}
 		$this->getDimensions()->setHeight($height);
+
 		return $this;
 	}
 
@@ -1020,6 +1062,7 @@ class Box extends \YetiForcePDF\Base
 				$child->alignText();
 			}
 		}
+
 		return $this;
 	}
 
@@ -1124,6 +1167,7 @@ class Box extends \YetiForcePDF\Base
 			$element = array_merge($element, $borderTop);
 		}
 		$element[] = '% end border';
+
 		return $element;
 	}
 
@@ -1146,6 +1190,7 @@ class Box extends \YetiForcePDF\Base
 			$clonedChild = $child->cloneWithChildren();
 			$newBox->appendChild($clonedChild->getParent()->removeChild($clonedChild));
 		}
+
 		return $newBox;
 	}
 
@@ -1156,6 +1201,7 @@ class Box extends \YetiForcePDF\Base
 		$newBox->coordinates->setBox($newBox);
 		$newBox->offset->setBox($newBox);
 		$newBox->style->setBox($newBox);
+
 		return $newBox;
 	}
 

@@ -41,6 +41,7 @@ class TableRowBox extends BlockBox
 	public function setRowSpan(int $rowSpan)
 	{
 		$this->rowSpan = $rowSpan;
+
 		return $this;
 	}
 
@@ -64,6 +65,7 @@ class TableRowBox extends BlockBox
 	public function setRowSpanUp(int $rowSpanUp)
 	{
 		$this->rowSpanUp = $rowSpanUp;
+
 		return $this;
 	}
 
@@ -79,6 +81,11 @@ class TableRowBox extends BlockBox
 
 	/**
 	 * We shouldn't append block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -86,6 +93,11 @@ class TableRowBox extends BlockBox
 
 	/**
 	 * We shouldn't append table wrapper here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendTableWrapperBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -93,6 +105,11 @@ class TableRowBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -100,6 +117,11 @@ class TableRowBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -124,6 +146,7 @@ class TableRowBox extends BlockBox
 			->init();
 		$this->appendChild($box);
 		$box->getStyle()->init();
+
 		return $box;
 	}
 
@@ -140,7 +163,7 @@ class TableRowBox extends BlockBox
 				$spanCount = $column->getColSpan() - 1;
 				$spans = [$column];
 				$currentColumn = $column;
-				for ($i = 0; $i < $spanCount; $i++) {
+				for ($i = 0; $i < $spanCount; ++$i) {
 					$currentColumn = $currentColumn->getNext();
 					$spans[] = $currentColumn;
 				}
@@ -149,9 +172,7 @@ class TableRowBox extends BlockBox
 		}
 		$colSpansCount = count($colSpans);
 		foreach ($colSpans as $index => $columns) {
-			$columns = array_reverse($columns);
-			$source = array_pop($columns);
-			$columns = array_reverse($columns);
+			$source = array_shift($columns);
 			$spannedWidth = '0';
 			foreach ($columns as $column) {
 				if (isset($column) && $column !== null) {
@@ -181,6 +202,7 @@ class TableRowBox extends BlockBox
 				$cell->getDimensions()->setWidth($sourceDmns->getInnerWidth());
 			}
 		}
+
 		return $this;
 	}
 
@@ -226,8 +248,8 @@ class TableRowBox extends BlockBox
 			->init();
 		$column->appendChild($box);
 		$box->getStyle()->init();
-		$colSpan--;
-		for ($i = 0; $i < $colSpan; $i++) {
+		--$colSpan;
+		for ($i = 0; $i < $colSpan; ++$i) {
 			$clearStyle = (new \YetiForcePDF\Style\Style())
 				->setDocument($this->document)
 				->parseInline();
@@ -249,6 +271,7 @@ class TableRowBox extends BlockBox
 			$column->appendChild($spanBox);
 		}
 		$box->buildTree($box);
+
 		return $box;
 	}
 }

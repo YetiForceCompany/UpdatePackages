@@ -36,6 +36,7 @@ class Math
 		foreach ($numbers as $number) {
 			$result = bcadd($result, $number, static::$scale);
 		}
+
 		return $result;
 	}
 
@@ -52,9 +53,10 @@ class Math
 			return bcsub($numbers[0], $numbers[1], static::$scale);
 		}
 		$result = $numbers[0];
-		for ($i=1,$len=count($numbers); $i<$len; $i++) {
+		for ($i = 1,$len = count($numbers); $i < $len; ++$i) {
 			$result = bcsub($result, $numbers[$i], static::$scale);
 		}
+
 		return $result;
 	}
 
@@ -74,6 +76,7 @@ class Math
 		foreach ($numbers as $number) {
 			$result = bcmul($result, $number, static::$scale);
 		}
+
 		return $result;
 	}
 
@@ -87,19 +90,20 @@ class Math
 	public static function div(string ...$numbers)
 	{
 		if (!isset($numbers[2])) {
-			if ((float) $numbers[0]!==(float) 0 && (float) $numbers[1]!==(float) 0) {
+			if ((float) $numbers[0] !== (float) 0 && (float) $numbers[1] !== (float) 0) {
 				return bcdiv($numbers[0], $numbers[1], static::$scale);
-			} else {
-				return '0';
 			}
+
+			return '0';
 		}
 		$result = $numbers[0];
-		for ($i=1,$len=count($numbers); $i<$len; $i++) {
-			if ((float) $numbers[$i]===(float) 0) {
+		for ($i = 1,$len = count($numbers); $i < $len; ++$i) {
+			if ((float) $numbers[$i] === (float) 0) {
 				return '0';
 			}
 			$result = bcdiv($result, $numbers[$i], static::$scale);
 		}
+
 		return $result;
 	}
 
@@ -127,8 +131,9 @@ class Math
 	{
 		$result = '0';
 		foreach ($numbers as $number) {
-			$result = bccomp($number, $result, static::$scale) >= 0 ? $number : $result;
+			$result = bccomp($number, $result, static::$scale) === 1 ? $number : $result;
 		}
+
 		return $result;
 	}
 
@@ -142,9 +147,10 @@ class Math
 	public static function min(string ...$numbers)
 	{
 		$result = $numbers[0];
-		for ($i=1,$len=count($numbers); $i<$len; $i++) {
-			$result = bccomp($result, $numbers[$i], static::$scale) > 0 ? $numbers[$i] : $result;
+		for ($i = 1,$len = count($numbers); $i < $len; ++$i) {
+			$result = bccomp($result, $numbers[$i], static::$scale) === 1 ? $numbers[$i] : $result;
 		}
+
 		return $result;
 	}
 
@@ -159,6 +165,7 @@ class Math
 	public static function percent(string $percent, string $from)
 	{
 		$percent = trim($percent, '%');
+
 		return static::mul(static::div($from, '100'), $percent);
 	}
 }

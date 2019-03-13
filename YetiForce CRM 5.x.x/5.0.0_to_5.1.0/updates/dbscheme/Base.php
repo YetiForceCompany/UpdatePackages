@@ -20,11 +20,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'id' => $this->primaryKeyUnsigned(10),
 					'username' => $this->stringType(100)->notNull(),
-					'date' => $this->text(),
-				],
-				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
-					'username' => $this->stringType(100)->notNull(),
 					'date' => $this->dateTime()->notNull(),
 					'ip' => $this->stringType(100)->notNull(),
 					'referer' => $this->stringType(300)->notNull(),
@@ -81,6 +76,47 @@ class Base extends \App\Db\Importers\Base
 				'index' => [
 					['module_name', ['module_name', 'status']],
 					['module_name_2', 'module_name'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__activity_invitation' => [
+				'columns' => [
+					'inviteesid' => $this->primaryKeyUnsigned(10),
+					'activityid' => $this->integer(10)->notNull(),
+					'crmid' => $this->integer(10)->notNull()->defaultValue(0),
+					'email' => $this->stringType(100)->notNull()->defaultValue(''),
+					'name' => $this->stringType(500),
+					'status' => $this->smallInteger(1)->defaultValue(0),
+					'time' => $this->dateTime(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'index' => [
+					['activityid', 'activityid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_language' => [
+				'columns' => [
+					'name' => $this->stringType(50)->notNull(),
+					'prefix' => $this->stringType(10)->notNull(),
+					'lastupdated' => $this->dateTime(),
+					'sequence' => $this->smallInteger(6)->unsigned(),
+					'isdefault' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'active' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(1),
+					'progress' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0)
+				],
+				'columns_mysql' => [
+					'isdefault' => $this->tinyInteger(1)->notNull()->unsigned()->defaultValue(0),
+					'active' => $this->tinyInteger(1)->notNull()->unsigned()->defaultValue(1),
+					'progress' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0)
+				],
+				'index' => [
+					['prefix', 'prefix'],
+					['isdefault', 'isdefault'],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

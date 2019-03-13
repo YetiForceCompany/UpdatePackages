@@ -40,7 +40,7 @@ class Register
 	 *
 	 * @var string
 	 */
-	private const REGISTRATION_FILE = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'user_privileges' . \DIRECTORY_SEPARATOR . 'registration.php';
+	private const REGISTRATION_FILE = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR . 'registration.php';
 	/**
 	 * Status messages.
 	 *
@@ -143,15 +143,15 @@ class Register
 	 *
 	 * @return bool
 	 */
-	public static function check()
+	public static function check($force = false)
 	{
 		if (!\App\RequestUtil::isNetConnection() || 'yetiforce.com' === gethostbyname('yetiforce.com')) {
 			\App\Log::warning('ERR_NO_INTERNET_CONNECTION', __METHOD__);
-
+			static::updateMetaData(['lastError' => 'ERR_NO_INTERNET_CONNECTION']);
 			return false;
 		}
 		$conf = static::getConf();
-		if (!empty($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+6 hours', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] > 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time()))) {
+		if (!$force && (!empty($conf['last_check_time']) && (($conf['status'] < 6 && strtotime('+6 hours', strtotime($conf['last_check_time'])) > time()) || ($conf['status'] > 6 && strtotime('+7 day', strtotime($conf['last_check_time'])) > time())))) {
 			return false;
 		}
 		$params = [
@@ -179,11 +179,15 @@ class Register
 					];
 					$status = true;
 				}
+			} else {
+				\App\Log::warning('ERR_BODY_IS_EMPTY', __METHOD__);
+				static::updateMetaData(['lastError' => 'ERR_BODY_IS_EMPTY']);
 			}
 
 			static::updateMetaData($data);
 		} catch (\Throwable $e) {
 			\App\Log::warning($e->getMessage(), __METHOD__);
+			static::updateMetaData(['lastError' => $e->getMessage()]);
 		}
 		return $status ?? false;
 	}
@@ -289,6 +293,17 @@ class Register
 	{
 		$conf = static::getConf();
 		return $conf['last_check_time'] ?? false;
+	}
+
+	/**
+	 * Get last check error.
+	 *
+	 * @return mixed
+	 */
+	public static function getLastCheckError()
+	{
+		$conf = static::getConf();
+		return $conf['lastError'] ?? false;
 	}
 
 	/**

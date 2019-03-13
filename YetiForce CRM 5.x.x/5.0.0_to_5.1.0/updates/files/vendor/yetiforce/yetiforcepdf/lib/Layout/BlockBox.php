@@ -59,6 +59,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			->setDocument($this->document)
 			->setBox($this)
 			->init();
+
 		return $this;
 	}
 
@@ -83,6 +84,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	{
 		$this->element = $element;
 		$element->setBox($this);
+
 		return $this;
 	}
 
@@ -119,13 +121,14 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			->setBox($this->currentLineBox);
 		$this->currentLineBox->setStyle($style);
 		$this->currentLineBox->getStyle()->init();
+
 		return $this->currentLineBox;
 	}
 
 	/**
 	 * Close line box.
 	 *
-	 * @param \YetiForcePDF\Layout\LineBox|null $lineBox
+	 * @param null|\YetiForcePDF\Layout\LineBox $lineBox
 	 * @param bool                              $createNew
 	 *
 	 * @return \YetiForcePDF\Layout\LineBox
@@ -134,6 +137,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	{
 		$this->saveSourceLine($this->currentLineBox);
 		$this->currentLineBox = null;
+
 		return $this->currentLineBox;
 	}
 
@@ -164,6 +168,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$this->appendChild($box);
 		$box->getStyle()->init();
 		$box->buildTree($box);
+
 		return $box;
 	}
 
@@ -194,6 +199,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$box->getStyle()->init();
 		$box->buildTree($box);
 		$box->setDisplayable(false);
+
 		return $box;
 	}
 
@@ -224,6 +230,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$box->getStyle()->init();
 		$box->buildTree($box);
 		$box->setDisplayable(false);
+
 		return $box;
 	}
 
@@ -254,6 +261,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$box->getStyle()->init();
 		$box->buildTree($box);
 		$box->setDisplayable(false);
+
 		return $box;
 	}
 
@@ -289,6 +297,20 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$box->loadFont();
 		$box->buildTree($box);
 		$box->setDisplayable(false)->setRenderable(false)->setForMeasurement(false);
+
+		return $box;
+	}
+
+	public function appendStyleBox($childDomElement, $element, $style, $parentBlock)
+	{
+		$box = (new StyleBox())
+			->setDocument($this->document)
+			->setParent($this)
+			->setElement($element)
+			->setStyle($style)
+			->init();
+		$this->appendChild($box);
+		$box->setDisplayable(false)->setRenderable(false)->setForMeasurement(false);
 		return $box;
 	}
 
@@ -311,6 +333,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		} else {
 			$currentLineBox = $this->getNewLineBox();
 		}
+
 		return $currentLineBox->appendBarcode($childDomElement, $element, $style, $this);
 	}
 
@@ -344,6 +367,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		} else {
 			$currentLineBox = $this->getNewLineBox();
 		}
+
 		return $currentLineBox->appendInlineBlock($childDomElement, $element, $style, $this);
 	}
 
@@ -357,6 +381,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		} else {
 			$currentLineBox = $this->getNewLineBox();
 		}
+
 		return $currentLineBox->appendInline($childDomElement, $element, $style, $this);
 	}
 
@@ -384,6 +409,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 					}
 					$this->divideLines();
 				}
+
 				return $this;
 			}
 			// if parent doesn't have a width specified
@@ -400,10 +426,11 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			$maxWidth = Math::sub($maxWidth, $style->getHorizontalMarginsWidth());
 			$dimensions->setWidth($maxWidth);
 			$this->applyStyleWidth();
+
 			return $this;
 		}
 		$width = $this->document->getCurrentPage()->getDimensions()->getWidth();
-		if ($this->getDimensions()->getWidth()!==$width) {
+		if ($this->getDimensions()->getWidth() !== $width) {
 			$dimensions->setWidth($width);
 			$this->applyStyleWidth();
 			foreach ($this->getChildren() as $child) {
@@ -411,6 +438,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			}
 			$this->divideLines();
 		}
+
 		return $this;
 	}
 
@@ -428,10 +456,11 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 				$lineGroups[$currentGroup][] = $child;
 			} else {
 				if (isset($lineGroups[$currentGroup])) {
-					$currentGroup++;
+					++$currentGroup;
 				}
 			}
 		}
+
 		return $lineGroups;
 	}
 
@@ -456,6 +485,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 				$lines[] = $currentLine;
 			}
 		}
+
 		return $lines;
 	}
 
@@ -475,6 +505,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 				}
 			}
 		}
+
 		return $this;
 	}
 
@@ -488,6 +519,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	protected function saveSourceLine(LineBox $line)
 	{
 		$this->sourceLines[] = $line->clone();
+
 		return $this;
 	}
 
@@ -525,6 +557,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		}
 		$this->hideEmptyLines();
 		unset($lines);
+
 		return $this;
 	}
 
@@ -552,6 +585,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$height = Math::add($height, $style->getVerticalPaddingsWidth(), $style->getVerticalBordersWidth());
 		$this->getDimensions()->setHeight($height);
 		$this->applyStyleHeight();
+
 		return $this;
 	}
 
@@ -590,6 +624,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		foreach ($this->getChildren() as $child) {
 			$child->measureOffset();
 		}
+
 		return $this;
 	}
 
@@ -614,6 +649,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		foreach ($this->getChildren() as $child) {
 			$child->measurePosition();
 		}
+
 		return $this;
 	}
 
@@ -633,6 +669,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$this->measureOffset();
 		$this->alignText();
 		$this->measurePosition();
+
 		return $this;
 	}
 
@@ -660,6 +697,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			}
 		}
 		unset($allChildren);
+
 		return $this;
 	}
 
@@ -694,6 +732,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			];
 			$element = array_merge($element, $bgColor);
 		}
+
 		return $element;
 	}
 
@@ -727,6 +766,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			];
 			$element = array_merge($element, $bgColor);
 		}
+
 		return $element;
 	}
 
@@ -748,6 +788,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		foreach ($breakAfter as $breakBox) {
 			$this->document->getCurrentPage()->breakAfter($breakBox);
 		}
+
 		return $this;
 	}
 
@@ -771,6 +812,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$element = $this->addBackgroundColorInstructions($element, $pdfX, $pdfY, $width, $height);
 		$element = $this->addBackgroundImageInstructions($element, $pdfX, $pdfY, $width, $height);
 		$element = $this->addBorderInstructions($element, $pdfX, $pdfY, $width, $height);
+
 		return implode("\n", $element);
 	}
 }

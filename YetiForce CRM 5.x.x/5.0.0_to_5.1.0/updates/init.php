@@ -113,11 +113,25 @@ class YetiForceUpdate
 		$this->updateData();
 		$this->migrateSubprocess();
 		$this->syncPicklist();
-
+		$this->addAutoIncrement();
+		$this->importer->dropTable([
+			'com_vtiger_workflow_tasktypes_seq',
+			'com_vtiger_workflowtasks_entitymethod_seq'
+		]);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	private function synchornizationPicklist($moduleName, $fieldName, $map, $mapAutomation)
+	private function addAutoIncrement()
+	{
+		$db = App\Db::getInstance();
+		if (!$db->getTableSchema('com_vtiger_workflow_tasktypes')->getColumn('id')->autoIncrement) {
+			$db->createCommand('ALTER TABLE com_vtiger_workflow_tasktypes  ADD KEY (`id`)')->execute();
+			$db->createCommand('ALTER TABLE com_vtiger_workflow_tasktypes  CHANGE `id` `id` INT(10) NOT NULL AUTO_INCREMENT FIRST')->execute();
+			$db->createCommand('ALTER TABLE com_vtiger_workflowtasks_entitymethod  CHANGE `workflowtasks_entitymethod_id` `workflowtasks_entitymethod_id` INT(10) NOT NULL AUTO_INCREMENT FIRST')->execute();
+		}
+	}
+
+	private function synchornizationPicklist($moduleName, $fieldName, $map, $mapAutomation, $picklisitToDelete = [])
 	{
 		$rolesSelected = [];
 		$roleRecordList = Settings_Roles_Record_Model::getAll();
@@ -126,10 +140,10 @@ class YetiForceUpdate
 		}
 		$tableName = 'vtiger_' . $fieldName;
 		$picklistData = (new App\Db\Query())->select([$fieldName, $fieldName . 'id'])->from($tableName)->createCommand()->queryAllByGroup();
+		$moduleModel = Settings_Picklist_Module_Model::getInstance($moduleName);
+		$fieldModel = Settings_Picklist_Field_Model::getInstance($fieldName, $moduleModel);
 		foreach ($map as $newStatus => $oldStatus) {
 			$id = null;
-			$moduleModel = Settings_Picklist_Module_Model::getInstance($moduleName);
-			$fieldModel = Settings_Picklist_Field_Model::getInstance($fieldName, $moduleModel);
 			if (empty($oldStatus)) {
 				if (!isset($picklistData[$newStatus])) {
 					$id = $moduleModel->addPickListValues($fieldModel, $newStatus, $rolesSelected, '', '');
@@ -142,7 +156,13 @@ class YetiForceUpdate
 				}
 			}
 			if ($id) {
-				App\Db::getInstance()->createCommand()->update($tableName, ['presence' => 1, 'automation' => $mapAutomation[$newStatus]], [$fieldName . 'id' => $id])->execute();
+				App\Db::getInstance()->createCommand()->update($tableName, ['presence' => 0, 'automation' => $mapAutomation[$newStatus]], [$fieldName . 'id' => $id])->execute();
+			}
+		}
+		$picklistData = (new App\Db\Query())->select([$fieldName, $fieldName . 'id'])->from($tableName)->createCommand()->queryAllByGroup();
+		foreach ($picklisitToDelete as $oldStatus => $toPicklist) {
+			if (isset($picklistData[$oldStatus], $picklistData[$toPicklist])) {
+				$moduleModel->remove($fieldName, $picklistData[$oldStatus], $picklistData[$toPicklist], $moduleName);
 			}
 		}
 	}
@@ -187,6 +207,9 @@ class YetiForceUpdate
 			'PLL_IN_APPROVAL' => '1',
 			'PLL_COMPLETED' => '2',
 			'PLL_CANCELLED' => '2',
+		], [
+			'delivered' => 'PLL_COMPLETED',
+			'initiated' => 'PLL_PLANNED'
 		]);
 		$this->synchornizationPicklist('ProjectTask', 'projecttaskstatus', [
 			'PLL_PLANNED' => 'Open',
@@ -561,6 +584,7 @@ class YetiForceUpdate
 
 	private function createConfigFiles()
 	{
+		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();

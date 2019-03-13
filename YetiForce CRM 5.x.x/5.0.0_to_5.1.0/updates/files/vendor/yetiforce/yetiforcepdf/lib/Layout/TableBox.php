@@ -91,6 +91,11 @@ class TableBox extends BlockBox
 
 	/**
 	 * We shouldn't append block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -98,6 +103,11 @@ class TableBox extends BlockBox
 
 	/**
 	 * We shouldn't append table wrapper here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendTableWrapperBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -105,6 +115,11 @@ class TableBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -112,6 +127,11 @@ class TableBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -134,6 +154,7 @@ class TableBox extends BlockBox
 			->init();
 		$this->appendChild($box);
 		$box->getStyle()->init();
+
 		return $box;
 	}
 
@@ -158,9 +179,11 @@ class TableBox extends BlockBox
 		switch ($display) {
 			case 'table-header-group':
 				$rowGroupClass = 'YetiForcePDF\\Layout\\TableHeaderGroupBox';
+
 				break;
 			case 'table-footer-group':
 				$rowGroupClass = 'YetiForcePDF\\Layout\\TableFooterGroupBox';
+
 				break;
 		}
 		$box = (new $rowGroupClass())
@@ -172,6 +195,7 @@ class TableBox extends BlockBox
 		$this->appendChild($box);
 		$box->getStyle()->init()->setRule('display', 'block');
 		$box->buildTree($box);
+
 		return $box;
 	}
 
@@ -196,6 +220,7 @@ class TableBox extends BlockBox
 		$this->appendChild($box);
 		$box->getStyle()->init()->setRule('display', 'block');
 		$box->buildTree($box);
+
 		return $box;
 	}
 
@@ -214,6 +239,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $rows;
 	}
 
@@ -234,6 +260,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $columns;
 	}
 
@@ -252,6 +279,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $cells;
 	}
 
@@ -341,6 +369,7 @@ class TableBox extends BlockBox
 			}
 		}
 		unset($columnSizingTypes);
+
 		return $this;
 	}
 
@@ -374,6 +403,7 @@ class TableBox extends BlockBox
 		$spacing = Math::add($style->getHorizontalPaddingsWidth(), $style->getHorizontalBordersWidth());
 		$rowWidth = Math::add($rowWidth, $spacing);
 		$this->getDimensions()->setWidth($rowWidth);
+
 		return $this;
 	}
 
@@ -392,6 +422,7 @@ class TableBox extends BlockBox
 			}
 		}
 		$this->setRowsWidth();
+
 		return $this;
 	}
 
@@ -457,6 +488,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return Math::sub($leftSpace, $totalToAdd);
 	}
 
@@ -475,6 +507,7 @@ class TableBox extends BlockBox
 		foreach ($this->pixelColumns as $columns) {
 			$currentOthersWidth = Math::add($currentOthersWidth, $columns[0]->getDimensions()->getInnerWidth());
 		}
+
 		return $currentOthersWidth;
 	}
 
@@ -489,6 +522,7 @@ class TableBox extends BlockBox
 		foreach ($this->percentColumns as $columnIndex => $columns) {
 			$totalPercentageSpecified = Math::add($totalPercentageSpecified, $this->percentages[$columnIndex]);
 		}
+
 		return $totalPercentageSpecified;
 	}
 
@@ -503,6 +537,7 @@ class TableBox extends BlockBox
 		foreach ($this->percentColumns as $columns) {
 			$totalPercentageColumnsWidth = Math::add($totalPercentageColumnsWidth, $columns[0]->getDimensions()->getInnerWidth());
 		}
+
 		return $totalPercentageColumnsWidth;
 	}
 
@@ -551,6 +586,7 @@ class TableBox extends BlockBox
 		$currentOthersWidth = $this->getCurrentOthersWidth();
 		$leftSpace = Math::sub($othersShouldHaveWidth, $currentOthersWidth);
 		$this->addToOthers($leftSpace);
+
 		return $this;
 	}
 
@@ -582,6 +618,7 @@ class TableBox extends BlockBox
 			if (Math::comp($this->minWidths[$columnIndex], $columnWidth) > 0) {
 				// we need to expand proportionally
 				$mustExpand = true;
+
 				break;
 			}
 		}
@@ -613,6 +650,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $this;
 	}
 
@@ -629,6 +667,7 @@ class TableBox extends BlockBox
 		foreach ($rows[0]->getChildren() as $columnIndex => $column) {
 			$this->beforeWidths[$columnIndex] = $column->getDimensions()->getWidth();
 		}
+
 		return $this;
 	}
 
@@ -645,6 +684,7 @@ class TableBox extends BlockBox
 		$this->saveState($rows);
 		$this->applyPercentage($availableSpace);
 		$this->setRowsWidth();
+
 		return $this;
 	}
 
@@ -672,6 +712,7 @@ class TableBox extends BlockBox
 
 		$this->applyPercentage($availableSpace);
 		$this->setRowsWidth();
+
 		return $this;
 	}
 
@@ -708,6 +749,7 @@ class TableBox extends BlockBox
 		}
 		$this->applyPercentage($availableSpace);
 		$this->setRowsWidth();
+
 		return $this;
 	}
 
@@ -725,7 +767,7 @@ class TableBox extends BlockBox
 					if ($column->getRowSpan() > 1) {
 						$rowSpans = $column->getRowSpan();
 						$spanHeight = '0';
-						for ($i = 1; $i < $rowSpans; $i++) {
+						for ($i = 1; $i < $rowSpans; ++$i) {
 							$spanColumn = $row->getParent()->getChildren()[$rowIndex + $i]->getChildren()[$columnIndex];
 							$spanHeight = Math::add($spanHeight, $spanColumn->getDimensions()->getHeight());
 							$toRemove[] = $spanColumn;
@@ -754,12 +796,15 @@ class TableBox extends BlockBox
 								$padding = Math::div($toDisposition, '2');
 								$cellStyle->setRule('padding-top', $padding);
 								$cellStyle->setRule('padding-bottom', $padding);
+
 								break;
 							case 'top':
 								$cellStyle->setRule('padding-bottom', $toDisposition);
+
 								break;
 							case 'bottom':
 								$cellStyle->setRule('padding-top', $toDisposition);
+
 								break;
 						}
 						$cell->measureWidth();
@@ -774,6 +819,7 @@ class TableBox extends BlockBox
 		foreach ($toRemove as $remove) {
 			$remove->setRenderable(false);
 		}
+
 		return $this;
 	}
 
@@ -803,6 +849,7 @@ class TableBox extends BlockBox
 		foreach ($this->getCells() as $cell) {
 			$cell->measureWidth();
 		}
+
 		return $this;
 	}
 
@@ -818,6 +865,7 @@ class TableBox extends BlockBox
 		$row = $this->rows[0];
 		$width = $row->getDimensions()->getWidth();
 		$width = Math::add($width, $this->getStyle()->getHorizontalBordersWidth(), $this->getStyle()->getHorizontalPaddingsWidth());
+
 		return Math::comp($availableSpace, $width) >= 0;
 	}
 
@@ -832,6 +880,7 @@ class TableBox extends BlockBox
 		foreach ($this->rows[0]->getChildren() as $column) {
 			$width = Math::add($width, $column->getDimensions()->getWidth());
 		}
+
 		return $width;
 	}
 
@@ -846,6 +895,7 @@ class TableBox extends BlockBox
 		foreach ($this->autoColumns as $columnIndex => $columns) {
 			$autoColumnsMaxWidth = Math::add($autoColumnsMaxWidth, $this->contentWidths[$columnIndex]);
 		}
+
 		return $autoColumnsMaxWidth;
 	}
 
@@ -860,6 +910,7 @@ class TableBox extends BlockBox
 		foreach ($this->autoColumns as $columnIndex => $columns) {
 			$autoColumnsMinWidth = Math::add($autoColumnsMinWidth, $this->minWidths[$columnIndex]);
 		}
+
 		return $autoColumnsMinWidth;
 	}
 
@@ -874,6 +925,7 @@ class TableBox extends BlockBox
 		foreach ($this->autoColumns as $columns) {
 			$autoColumnsWidth = Math::add($autoColumnsWidth, $columns[0]->getDimensions()->getInnerWidth());
 		}
+
 		return $autoColumnsWidth;
 	}
 
@@ -923,6 +975,7 @@ class TableBox extends BlockBox
 					$rowWidth = Math::add($rowWidth, $cDimensions->getWidth());
 				}
 				$this->setRowsWidth();
+
 				break;
 			case 1:
 				// minimal stays minimal, decreasing pixels
@@ -944,6 +997,7 @@ class TableBox extends BlockBox
 					}
 				}
 				$this->setRowsWidth();
+
 				break;
 			case 2:
 				// minimal stays minimal, pixels stays untouched, auto columns decreasing
@@ -965,8 +1019,10 @@ class TableBox extends BlockBox
 					}
 				}
 				$this->setRowsWidth();
+
 				break;
 		}
+
 		return $this->finish();
 	}
 
@@ -1024,6 +1080,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $this;
 	}
 
@@ -1097,6 +1154,7 @@ class TableBox extends BlockBox
 		$this->addToOthers($leftSpace, true);
 		// percent columns were redistributed in the first step so we don't need to do anything
 		$this->setRowsWidth();
+
 		return $this;
 	}
 
@@ -1114,6 +1172,7 @@ class TableBox extends BlockBox
 		$this->setUpSizingTypes();
 		$this->setUpWidths('0');
 		$this->minContentGuess($this->rows)->finish();
+
 		return $this->getDimensions()->getWidth();
 	}
 
@@ -1160,6 +1219,7 @@ class TableBox extends BlockBox
 		if (Math::comp($leftSpace, '0') > 0) {
 			$this->tryPreferred($leftSpace, $outerWidthSet);
 		}
+
 		return $this->finish();
 	}
 
@@ -1186,7 +1246,7 @@ class TableBox extends BlockBox
 			}
 			$rowsCount = []; // rowsCount is array with number of rows they must share for each row
 			foreach ($spannedRowsCount as $currentRowSpanIndex => $currentRowsCount) {
-				for ($i = 0; $i < $currentRowsCount; $i++) {
+				for ($i = 0; $i < $currentRowsCount; ++$i) {
 					$rowsCount[$currentRowSpanIndex + $i] = max($rowsCount[$currentRowSpanIndex + $i] ?? '0', $currentRowsCount);
 				}
 			}
@@ -1214,7 +1274,7 @@ class TableBox extends BlockBox
 					if ($rowSpan > 1) {
 						$spannedRowsHeight = '0';
 						// get sum of spanned row height starting from current row
-						for ($i = 0; $i < $rowSpan; $i++) {
+						for ($i = 0; $i < $rowSpan; ++$i) {
 							if (isset($maxRowHeights[$rowGroupIndex][$rowIndex + $i])) {
 								$spannedRowsHeight = Math::add($spannedRowsHeight, $maxRowHeights[$rowGroupIndex][$rowIndex + $i]);
 							}
@@ -1224,7 +1284,7 @@ class TableBox extends BlockBox
 						$currentRowMax = Math::max($currentRowMax, $fromOtherRows, $fromColumnHeight);
 						// if column that have rowSpan >1 is higher than sum of all other spanned rows max height expand others
 						if (Math::comp($fromColumnHeight, $fromOtherRows) > 0) {
-							for ($i = 0; $i < $rowSpan; $i++) {
+							for ($i = 0; $i < $rowSpan; ++$i) {
 								$maxRowHeights[$rowGroupIndex][$rowIndex + $i] = $currentRowMax;
 							}
 						}
@@ -1261,10 +1321,12 @@ class TableBox extends BlockBox
 							case 'top':
 								$freeSpace = Math::add($freeSpace, $cellStyle->getRules('padding-bottom'));
 								$cellStyle->setRule('padding-bottom', $freeSpace);
+
 								break;
 							case 'bottom':
 								$freeSpace = Math::add($freeSpace, $cellStyle->getRules('padding-top'));
 								$cellStyle->setRule('padding-top', $freeSpace);
+
 								break;
 							case 'baseline':
 							case 'middle':
@@ -1274,6 +1336,7 @@ class TableBox extends BlockBox
 								$paddingBottom = Math::add($cellStyle->getRules('padding-bottom'), $disposition);
 								$cellStyle->setRule('padding-top', $paddingTop);
 								$cellStyle->setRule('padding-bottom', $paddingBottom);
+
 								break;
 						}
 					}
@@ -1285,6 +1348,7 @@ class TableBox extends BlockBox
 			$tableHeight = Math::add($tableHeight, $rowGroupHeight);
 		}
 		$this->getDimensions()->setHeight(Math::add($tableHeight, $style->getVerticalBordersWidth(), $style->getVerticalPaddingsWidth()));
+
 		return $this;
 	}
 
@@ -1306,6 +1370,7 @@ class TableBox extends BlockBox
 				}
 			}
 		}
+
 		return $this;
 	}
 }

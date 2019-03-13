@@ -120,7 +120,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	/**
 	 * Text height with ascender and descender.
 	 *
-	 * @var string|null
+	 * @var null|string
 	 */
 	protected $textHeight;
 	/**
@@ -204,10 +204,10 @@ class Font extends \YetiForcePDF\Objects\Resource
 	 *
 	 * @var array
 	 */
-	protected $textWidths=[];
+	protected $textWidths = [];
 
 	/**
-	 * Initialisation.
+	 * Initialization.
 	 *
 	 * @return $this
 	 */
@@ -228,6 +228,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 			foreach ($this->document->getObjects('Page') as $page) {
 				$page->synchronizeFonts();
 			}
+
 			return $this;
 		}
 		$this->setAddToDocument(false);
@@ -259,6 +260,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	public function setNumber(string $number): self
 	{
 		$this->fontNumber = $number;
+
 		return $this;
 	}
 
@@ -272,6 +274,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	public function setFamily(string $name)
 	{
 		$this->family = $name;
+
 		return $this;
 	}
 
@@ -295,6 +298,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	public function setWeight(string $weight)
 	{
 		$this->weight = $weight;
+
 		return $this;
 	}
 
@@ -318,6 +322,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	public function setStyle(string $style)
 	{
 		$this->style = $style;
+
 		return $this;
 	}
 
@@ -372,6 +377,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	{
 		$this->size = $size;
 		$this->textHeight = Math::div(Math::mul($this->size, $this->height), $this->unitsPerEm);
+
 		return $this;
 	}
 
@@ -406,6 +412,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 				return $result[1];
 			}
 		}
+
 		return $this->document->ordCache[$string] = ord($string);
 	}
 
@@ -422,19 +429,20 @@ class Font extends \YetiForcePDF\Objects\Resource
 			return $this->textWidths[$text];
 		}
 		$width = '0';
-		for ($i = 0, $len = mb_strlen($text); $i < $len; $i++) {
+		for ($i = 0, $len = mb_strlen($text); $i < $len; ++$i) {
 			$char = mb_substr($text, $i, 1);
 			if (isset($this->widths[$this->mbOrd($char)])) {
 				$width = Math::add($width, (string) $this->widths[$this->mbOrd($char)]);
 			}
 		}
+
 		return $this->textWidths[$text] = Math::div(Math::mul($this->size, $width), '1000');
 	}
 
 	/**
 	 * Get text height.
 	 *
-	 * @param string|null $text
+	 * @param null|string $text
 	 *
 	 * @return string
 	 */
@@ -443,6 +451,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 		if ($this->textHeight === null) {
 			$this->textHeight = Math::div(Math::mul($this->size, $this->height), $this->unitsPerEm);
 		}
+
 		return $this->textHeight;
 	}
 
@@ -555,6 +564,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 		for ($currentWeight = (int) $this->weight; $currentWeight >= 0; $currentWeight -= 100) {
 			if (isset(static::$customFontFiles[$this->family][(string) $currentWeight])) {
 				$weight = (string) $currentWeight;
+
 				break;
 			}
 		}
@@ -562,6 +572,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 			for ($currentWeight = (int) $this->weight; $currentWeight <= 900; $currentWeight += 100) {
 				if (isset(static::$customFontFiles[$this->family][(string) $currentWeight])) {
 					$weight = (string) $currentWeight;
+
 					break;
 				}
 			}
@@ -633,6 +644,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 				}
 			}
 		}
+
 		return $this->matchFont(true);
 	}
 
@@ -641,7 +653,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 	 *
 	 * @throws \FontLib\Exception\FontNotFoundException
 	 *
-	 * @return \FontLib\TrueType\File|null
+	 * @return null|\FontLib\TrueType\File
 	 */
 	protected function loadFontData()
 	{
@@ -659,11 +671,11 @@ class Font extends \YetiForcePDF\Objects\Resource
 		}
 		$this->outputInfo['descriptor'] = [];
 		$this->outputInfo['descriptor']['FontBBox'] = '[' . implode(' ', [
-				$this->normalizeUnit((string) $head['xMin']),
-				$this->normalizeUnit((string) $head['yMin']),
-				$this->normalizeUnit((string) $head['xMax']),
-				$this->normalizeUnit((string) $head['yMax']),
-			]) . ']';
+			$this->normalizeUnit((string) $head['xMin']),
+			$this->normalizeUnit((string) $head['yMin']),
+			$this->normalizeUnit((string) $head['xMax']),
+			$this->normalizeUnit((string) $head['yMax']),
+		]) . ']';
 		$this->outputInfo['descriptor']['Ascent'] = (string) $hhea['ascent'];
 		$this->outputInfo['descriptor']['Descent'] = (string) $hhea['descent'];
 		$this->ascender = (string) $this->outputInfo['descriptor']['Ascent'];
@@ -679,7 +691,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 			$flags += 2 ** 6;
 		}
 		if ($post['isFixedPitch'] === true) {
-			$flags += 1;
+			++$flags;
 		}
 		$flags += 2 ** 5;
 		$this->outputInfo['descriptor']['Flags'] = (string) $flags;
@@ -736,6 +748,7 @@ class Font extends \YetiForcePDF\Objects\Resource
 			->addValue('DescendantFonts', '[' . $this->getReference() . ']')
 			->addValue('ToUnicode', $this->toUnicode->getReference());
 		$font->close();
+
 		return $font;
 	}
 
