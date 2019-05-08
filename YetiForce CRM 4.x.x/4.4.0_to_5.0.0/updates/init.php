@@ -655,8 +655,8 @@ class YetiForceUpdate
 				}
 				if ($db->isTableExists($tableName) && !$schema->getTableSchema($tableName)->getColumn('crmid')) {
 					if (!in_array($tableName, ['u_yf_finvoicecost_inventory', 'u_yf_svendorenquiries_inventory'])) {
-						$db->createCommand()->dropForeignKey("fk_1_{$tableName}", $tableName)->execute();
-						$db->createCommand()->dropIndex("id", $tableName)->execute();
+						$db->createCommand("ALTER TABLE $tableName DROP FOREIGN KEY IF EXISTS `fk_1_{$tableName}`")->execute();
+						$db->createCommand("DROP INDEX IF EXISTS `id` ON `$tableName`")->execute();
 					} elseif ($tableName === 'u_yf_finvoicecost_inventory') {
 						$db->createCommand()->dropIndex("finvoicecost_inventory_idx", $tableName)->execute();
 					} elseif ($tableName === 'u_yf_svendorenquiries_inventory') {
@@ -669,7 +669,7 @@ class YetiForceUpdate
 					$db->createCommand("ALTER TABLE $tableName  CHANGE `id` `id` INT(10) NOT NULL AUTO_INCREMENT FIRST")->execute();
 				}
 			} catch (\Throwable $e) {
-				$this->log(__METHOD__ . '| Error: ' . $moduleName . ', tablename: ' . $tableName);
+				$this->log(__METHOD__ . '| Error: ' . $moduleName . ', tablename: ' . $tableName . ' ' . $e->getMessage());
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
