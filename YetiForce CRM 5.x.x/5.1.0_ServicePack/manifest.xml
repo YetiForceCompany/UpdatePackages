@@ -3,7 +3,7 @@
 	<name>YetiForce CRM 5.1 Service Pack</name>
 	<label>YetiForce CRM 5.1 Service Pack</label>
 	<type>update</type>
-	<version>2</version>
+	<version>3</version>
 	<from_version>5.1.0</from_version>
 	<to_version>5.1.0</to_version>
 	<dependencies>
