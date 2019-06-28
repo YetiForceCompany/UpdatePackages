@@ -3,7 +3,7 @@
 	<name>YetiForce CRM 5.0</name>
 	<label>YetiForce CRM 5.0</label>
 	<type>update</type>
-	<version>1</version>
+	<version>5</version>
 	<from_version>4.4.0</from_version>
 	<to_version>5.0.0</to_version>
 	<dependencies>
