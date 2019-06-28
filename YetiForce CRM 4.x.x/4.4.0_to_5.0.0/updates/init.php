@@ -1830,6 +1830,9 @@ class YetiForceUpdate
 			->set('db_type', $dbConfig['db_type'])
 			->create();
 
+		$langCode = (new \App\Db\Query())->select(['prefix'])->from('vtiger_language')->where(['isdefault' => 1])->scalar();
+		AppConfig::set('main', 'default_language', $langCode);
+		
 		$skip = ['module', 'component', 'db', 'api', 'sounds'];
 		foreach (array_diff(UpdateConfig::TYPES, $skip) as $type) {
 			(new UpdateConfig($type))->create();
