@@ -92,7 +92,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__business_hours' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->primaryKey()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10)->notNull(),
 					'name' => $this->stringType()->notNull(),
 					'working_days' => $this->stringType(15)->notNull(),
 					'working_hours_from' => $this->stringType(8)->notNull()->defaultValue('00:00:00'),
@@ -116,7 +116,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__sla_policy' => [
 				'columns' => [
-					'id' => $this->integer()->primaryKey()->notNull(),
+					'id' => $this->primaryKey(11)->notNull(),
 					'name' => $this->stringType()->notNull(),
 					'operational_hours' => $this->smallInteger(1)->notNull()->defaultValue(0),
 					'tabid' => $this->smallInteger(5)->notNull(),

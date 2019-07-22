@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: d2c3e4cb1e58ace006aa77f50f5519ac64775a6d
+// last check: 46af284fe479b1824e876fd148083a417f52c0b9
 /**
  * YetiForceUpdate Class.
  */
@@ -99,11 +99,11 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->updateScheme();
 			$this->importer->dropColumns([
-				['vtiger_ossmailview', 'rel_mod'],
+				['w_#__servers', 'accounts_id'],
 			]);
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
-			$this->importer->dropTable(['vtiger_inventoryproductrel_seq', 'vtiger_inventoryproductrel','vtiger_eventstatus_seq','vtiger_eventstatus']);
+			$this->importer->dropTable(['vtiger_vendorcontactrel']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -121,27 +121,475 @@ class YetiForceUpdate
 		$this->setRelations();
 		$this->actionMapp();
 		$this->updateFaq();
+		$this->updatePayments();
+		$this->updateInvoice();
+		$this->updateProducts();
+		$this->updateServices();
+		$this->updateNextData();
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function dropTableIfNotUse(string $tableName, array $conditions, bool $drop = false)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | {$tableName} |" . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$dropTable = [];
+		if (!(new \App\Db\Query())->from('vtiger_field')->where($conditions)->exists() && $db->isTableExists($tableName)) {
+			$dropTable[] = $tableName;
+			if ($db->isTableExists($tableName . '_seq')) {
+				$dropTable[] = $tableName . '_seq';
+			}
+		}
+		if ($drop && $dropTable) {
+			$this->importer->dropTable($dropTable);
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		return $dropTable;
 	}
 
 	private function updateFaq()
 	{
-		// add mapping: question=>introduction, answer=>content, category(pickllist)=>category(tree)
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+		$queryBuilder = $db->getSchema()->getQueryBuilder();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('Faq');
+		$mapp = ['question' => 'introduction', 'faq_answer' => 'content', 'faqcategories' => 'category'];
+		$templateId = null;
+		$fieldModel = $moduleInstance->getFieldByName('faqcategories');
+		if ($fieldModel && 'picklist' === $fieldModel->getFieldDataType()) {
+			$oldValue = $fieldModel->getPicklistValues(true);
+			$treeData = [];
+			foreach (array_keys($oldValue) as $value) {
+				$treeData[] = [0, $value, 'T1', 'T1', 0, $value, '{"loaded":"1","opened":false,"selected":false,"disabled":false}', ''];
+			}
+			$templateId = $this->setTree([
+				'column' => 'category',
+				'base' => [30, 'Category', $moduleInstance->getId(), 0],
+				'data' => $treeData
+			]);
+		}
+		if (!isset($moduleInstance->getFieldsByBlocks()['LBL_ARTICLE'])) {
+			$blockInstance = new \vtlib\Block();
+			$blockInstance->label = 'LBL_ARTICLE';
+			$moduleInstance->addBlock($blockInstance);
+		}
+		$fields = [
+			'subject' => [15, 2794, 'subject', 'vtiger_faq', 2, 1, 'subject', 'FL_SUBJECT', 0, 2, '', '255', 1, 37, 1, 'V~O~LE~255', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
+				'type' => $importerType->stringType(255)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'content' => [15, 2795, 'content', 'vtiger_faq', 1, 300, 'content', 'FL_CONTENT', 0, 2,'' , '16777215', 1, 442, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
+				'type' => $importerType->mediumText(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'category' => [15, 2796, 'category', 'vtiger_faq', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 3, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, $templateId, null, 0, 0, 0,
+				'type' => $importerType->stringType(30)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'featured' => [15, 2797, 'featured', 'vtiger_faq', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 37, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
+				'type' => $importerType->tinyInteger(1)->defaultValue(0), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'introduction' => [15, 2798, 'introduction', 'vtiger_faq', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 442, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,	'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'knowledgebase_view' => [15, 2799, 'knowledgebase_view', 'vtiger_faq', 1, 16, 'knowledgebase_view', 'FL_VIEWS', 0, 2, '', '255', 4, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => ['PLL_PAGE', 'PLL_PRESENTATION'], 'relatedModules' => [], 'moduleName' => 'Faq'],
+
+			'accountid' => [15, 2821, 'accountid', 'vtiger_faq', 1, 10, 'accountid', 'FL_ACCOUNT', 0, 2, '', '4294967295', 8, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
+				'type' => $importerType->int(11)->unsigned(), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['Accounts'], 'moduleName' => 'Faq']
+		];
+
+		$transaction = $db->beginTransaction();
+		try {
+			$tableName = $moduleInstance->basetable;
+			foreach ($mapp as $fromField => $toField) {
+				$data = [];
+				if ($fieldModel = $moduleInstance->getFieldByName($fromField)) {
+					if ('category' === $toField) {
+						$dataCategory = [];
+						$dataReader = (new \App\Db\Query())->select(['name', 'tree'])->from('vtiger_trees_templates_data')->where(['templateid' => $templateId])->createCommand()->query();
+						while ($row = $dataReader->read()) {
+							$dataCategory[] = [$fieldModel->getTableName(), [$fieldModel->getColumnName() => $row['tree']], [$fieldModel->getColumnName() => $row['name']]];
+						}
+						$dataReader->close();
+						\App\Db\Updater::batchUpdate($dataCategory);
+					}
+					$type = $queryBuilder->getColumnType($fields[$toField]['type']);
+					$db->createCommand("ALTER TABLE {$tableName} CHANGE {$fieldModel->getColumnName()} {$toField} {$type};")->execute();
+					$fieldData = $fields[$toField];
+					$data[] = ['vtiger_field', ['columnname' => $fieldData[2], 'generatedtype' => $fieldData[4], 'uitype' => $fieldData[5], 'fieldname' => $fieldData[6], 'fieldlabel' => $fieldData[7], 'readonly' => $fieldData[8], 'presence' => $fieldData[9], 'defaultvalue' => $fieldData[10], 'maximumlength' => $fieldData[11], 'displaytype' => $fieldData[14], 'typeofdata' => $fieldData[15], 'quickcreate' => $fieldData[16], 'quickcreatesequence' => $fieldData[17], 'info_type' => $fieldData[18], 'masseditable' => $fieldData[19], 'helpinfo' => $fieldData[20], 'summaryfield' => $fieldData[21], 'fieldparams' => $fieldData[22], 'header_field' => $fieldData[23], 'maxlengthtext' => $fieldData[24], 'maxwidthcolumn' => $fieldData[25]], ['fieldid' => $fieldModel->getId()]];
+					\App\Db\Updater::batchUpdate($data);
+					$this->removeField($fieldModel, $toField);
+				}
+			}
+			if (($fieldModel = $moduleInstance->getFieldByName('comments')) && !$fieldModel->isActiveField()) {
+				$this->removeField($fieldModel);
+			}
+			$this->dropTableIfNotUse('vtiger_faqcomments', ['tablename' => $tableName], true);
+			$this->addFields($fields);
+			$dbIndexes = $db->getTableKeys($tableName);
+			if (!isset($dbIndexes['search']) && 'mysql' === $db->getDriverName()) {
+				$db->createCommand("ALTER TABLE {$tableName} ADD FULLTEXT KEY `search` (`subject`,`content`,`introduction`);")->execute();
+			}
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function updatePayments()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+		$queryBuilder = $db->getSchema()->getQueryBuilder();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('PaymentsIn');
+
+		$transaction = $db->beginTransaction();
+		try {
+			$fieldModel = $moduleInstance->getFieldByName('paymentscurrency');
+			if ($fieldModel) {
+				$newField = 'currency_id';
+				$importerType = new \App\Db\Importers\Base();
+				$queryBuilder = $db->getSchema()->getQueryBuilder();
+				$type = $queryBuilder->getColumnType($importerType->integer(10));
+				$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$newField} {$type};")->execute();
+				$db->createCommand->update('vtiger_field', ['columnname' => $newField, 'fieldname' => $newField], ['fieldid' => $fieldModel->getId()])->execute();
+				$this->removeField($fieldModel, $newField);
+			}
+			$fields = [
+				'payment_system' => [
+					79, 2802, 'payment_system', 'vtiger_paymentsin', 1, 16, 'payment_system', 'FL_PAYMENT_SYSTEM', 1, 2, '', '64', 5, 251, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_PAYMENT_INFORMATION', 'picklistValues' => ['PLL_REDSYS', 'PLL_DOTPAY'], 'relatedModules' => [], 'moduleName' => 'PaymentsIn'
+				],
+				'transaction_id' => [
+					79, 2803, 'transaction_id', 'vtiger_paymentsin', 1, 1, 'transaction_id', 'FL_TRANSACTION', 1, 2, '', '255', 6, 251, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_PAYMENT_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'PaymentsIn'
+				],
+				'ssingleordersid' => [
+					79, 2804, 'ssingleordersid', 'vtiger_paymentsin', 1, 10, 'ssingleordersid', 'FL_ORDER', 1, 2, '', '-2147483648,2147483647', 7, 251, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_PAYMENT_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['SSingleOrders'], 'moduleName' => 'PaymentsIn'
+				],
+				'finvoiceid' => [
+					79, 2805, 'finvoiceid', 'vtiger_paymentsin', 1, 10, 'finvoiceid', 'FL_INVOICE', 1, 2, '', '-2147483648,2147483647', 8, 251, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_PAYMENT_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['FInvoice'], 'moduleName' => 'PaymentsIn'
+				],
+			];
+			$this->addFields($fields);
+			\App\EventHandler::registerHandler('EntityAfterSave', 'PaymentsIn_PaymentsInHandler_Handler', $moduleInstance->getName());
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateInvoice()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+		$queryBuilder = $db->getSchema()->getQueryBuilder();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('PaymentsIn');
+
+		$transaction = $db->beginTransaction();
+		try {
+			$mapp = ['finvoice_paymentstatus' => 'payment_status'];
+			$fields = [
+				'ssalesprocessesid' => [
+					95, 2786, 'ssalesprocessesid', 'u_yf_finvoice', 1, 10, 'ssalesprocessesid', 'FL_OPPORTUNITY', 0, 2, '', null, 12, 310, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => [], 'relatedModules' => ['SSalesProcesses'], 'moduleName' => 'FInvoice'
+				],
+				'projectid' => [
+					95, 2787, 'projectid', 'u_yf_finvoice', 1, 10, 'projectid', 'FL_PROJECT', 0, 2, '', null, 13, 310, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => [], 'relatedModules' => ['Project'], 'moduleName' => 'FInvoice'
+				],
+				'payment_status' => [
+					95, 2825, 'payment_status', 'u_yf_finvoice', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 14, 310, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'FInvoice'
+				],
+			];
+
+			foreach ($mapp as $fromField => $toField) {
+				$data = [];
+				if ($fieldModel = $moduleInstance->getFieldByName($fromField)) {
+					$type = $queryBuilder->getColumnType($fields[$toField]['type']);
+					$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$toField} {$type};")->execute();
+					$fieldData = $fields[$toField];
+					$data[] = ['vtiger_field', ['columnname' => $fieldData[2], 'generatedtype' => $fieldData[4], 'uitype' => $fieldData[5], 'fieldname' => $fieldData[6], 'fieldlabel' => $fieldData[7], 'readonly' => $fieldData[8], 'presence' => $fieldData[9], 'defaultvalue' => $fieldData[10], 'maximumlength' => $fieldData[11], 'displaytype' => $fieldData[14], 'typeofdata' => $fieldData[15], 'quickcreate' => $fieldData[16], 'quickcreatesequence' => $fieldData[17], 'info_type' => $fieldData[18], 'masseditable' => $fieldData[19], 'helpinfo' => $fieldData[20], 'summaryfield' => $fieldData[21], 'fieldparams' => $fieldData[22], 'header_field' => $fieldData[23], 'maxlengthtext' => $fieldData[24], 'maxwidthcolumn' => $fieldData[25]], ['fieldid' => $fieldModel->getId()]];
+					\App\Db\Updater::batchUpdate($data);
+					$this->removeField($fieldModel, $toField);
+					if ('payment_status' === $toField) {
+						$dataUpdate = [];
+						foreach (['PLL_AWAITING_PAYMENT' => 'PLL_NOT_PAID', 'PLL_PARTIALLY_PAID' => 'PLL_UNDERPAID', 'PLL_FULLY_PAID' => 'PLL_PAID'] as $oldValue => $newValue) {
+							$dataUpdate[] = [$fieldModel->getTableName(), [$fieldModel->getColumnName() => $newValue], [$fieldModel->getColumnName() => $oldValue]];
+						}
+						\App\Db\Updater::batchUpdate($dataUpdate);
+					}
+				}
+			}
+
+			$this->addFields($fields);
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateProducts()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+
+		$transaction = $db->beginTransaction();
+		try {
+			$fields = [
+				'category_multipicklist' => [
+					14, 2357, 'category_multipicklist', 'vtiger_products', 1, 309, 'category_multipicklist', 'LBL_CATEGORY_MULTIPICKLIST', 0, 2, null, '65535', 31, 31, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '31', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRODUCT_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'purchase' => [
+					14, 2817, 'purchase', 'vtiger_products', 1, 360, 'purchase', 'FL_PURCHASE', 0, 2, '', '65535', 6, 32, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'unit_price' => [
+					14, 193, 'unit_price', 'vtiger_products', 1, 360, 'unit_price', 'Unit Price', 0, 0, '', '65535', 1, 32, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'weight' => [
+					14, 2824, 'weight', 'vtiger_products', 1, 7, 'weight', 'FL_WEIGHT', 0, 2, '', null, 8, 33, 1, 'NN~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(11, 3), 'blockLabel' => 'LBL_STOCK_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'commissionrate' => [
+					14, 194, 'commissionrate', 'vtiger_products', 1, 365, 'commissionrate', 'Commission Rate', 0, 2, '', '99999', 2, 32, 2, 'NN~O', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(8, 3), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+			];
+			$this->updateProductAndServiceFiels('Products', $fields);
+			\App\EventHandler::registerHandler('EntityBeforeSave', 'Products_Calculations_Handler', 'Products,Services', '', 5, true, \App\Module::getModuleId('Products'));
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateServices()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+		$queryBuilder = $db->getSchema()->getQueryBuilder();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('PaymentsIn');
+
+		$transaction = $db->beginTransaction();
+		try {
+			$fields = [
+				'purchase' => [
+					35, 2819, 'purchase', 'vtiger_service', 1, 360, 'purchase', 'FL_COST', 0, 2, '', '65535', 4, 92, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'unit_price' => [
+					35, 575, 'unit_price', 'vtiger_service', 1, 360, 'unit_price', 'Price', 0, 0, '', '65535', 1, 92, 1, 'V~O', 2, 2, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+				'commissionrate' => [
+					35, 577, 'commissionrate', 'vtiger_service', 1, 365, 'commissionrate', 'Commission Rate', 0, 2, '', '99999', 2, 92, 2, 'NN~O', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(8, 3), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+				],
+			];
+			$this->updateProductAndServiceFiels('Services', $fields);
+			$this->addFields($fields);
+			$this->importer->dropTable(['vtiger_productcurrencyrel']);
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateProductAndServiceFiels($moduleName, $fields)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$queryBuilder = $db->getSchema()->getQueryBuilder();
+		$moduleInstance = \Vtiger_Module_Model::getInstance($moduleName);
+		$mapp = ['unit_price' => 'multiCurrency', 'commissionrate' => 'advPercentage'];
+		foreach ($mapp as $fromField => $dataType) {
+			$data = [];
+			if (($fieldModel = $moduleInstance->getFieldByName($fromField)) && $dataType !== $fieldModel->getFieldDataType()) {
+				$type = $queryBuilder->getColumnType($fields[$fromField]['type']);
+				$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$fromField} {$type};")->execute();
+				$fieldData = $fields[$fromField];
+				$data[] = ['vtiger_field', ['columnname' => $fieldData[2], 'generatedtype' => $fieldData[4], 'uitype' => $fieldData[5], 'fieldname' => $fieldData[6], 'fieldlabel' => $fieldData[7], 'readonly' => $fieldData[8], 'presence' => $fieldData[9], 'defaultvalue' => $fieldData[10], 'maximumlength' => $fieldData[11], 'displaytype' => $fieldData[14], 'typeofdata' => $fieldData[15], 'quickcreate' => $fieldData[16], 'quickcreatesequence' => $fieldData[17], 'info_type' => $fieldData[18], 'masseditable' => $fieldData[19], 'helpinfo' => $fieldData[20], 'summaryfield' => $fieldData[21], 'fieldparams' => $fieldData[22], 'header_field' => $fieldData[23], 'maxlengthtext' => $fieldData[24], 'maxwidthcolumn' => $fieldData[25]], ['fieldid' => $fieldModel->getId()]];
+				\App\Db\Updater::batchUpdate($data);
+				$this->removeField($fieldModel, $fromField);
+				if ('unit_price' === $fromField) {
+					$tableName = $moduleInstance->basetable;
+					$index = $moduleInstance->basetableid;
+					$dataReader = (new \App\Db\Query())->select(['currency_id', $index])->from($tableName)->createCommand()->query();
+					while ($row = $dataReader->read()) {
+						$currencyData = [];
+						$dataReaderRel = (new \App\Db\Query())->select(['currency_id', 'actual_price'])->from('vtiger_productcurrencyrel')->where(['productid' => $row[$index]])->createCommand()->query();
+						while ($rowRel = $dataReaderRel->read()) {
+							$currencyData['currencies'][(int) $rowRel['currency_id']]['price'] = $rowRel['actual_price'];
+						}
+						if ($currencyData) {
+							$currencyData['currencyId'] = (int) $row['currency_id'];
+						}
+						$dataReaderRel->close();
+						$db->createCommand->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row['productid']])->execute();
+					}
+					$dataReader->close();
+					$this->importer->dropColumns([[$tableName, 'currency_id']]);
+				}
+			}
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateNextData()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$this->statusActivate('HelpDesk', 'ticketstatus');
+		\App\EventHandler::registerHandler('EntityAfterSave', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
+		\App\EventHandler::registerHandler('EntityAfterDelete', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
+		\App\EventHandler::registerHandler('EntityChangeState', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+	private  function statusActivate(string $moduleName, string $fieldName): bool
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+		if (!($fieldModel = $moduleModel->getFieldByName($fieldName))) {
+			return false;
+		}
+		$db = \App\Db::getInstance();
+		$schema = $db->getSchema();
+		$dbCommand = $db->createCommand();
+		$transaction = $db->beginTransaction();
+		try {
+			$params = $fieldModel->getFieldParams();
+			$params['isProcessStatusField'] = true;
+			$fieldModel->set('fieldparams', Json::encode($params));
+			$fieldModel->save();
+			$tableStatusHistory = $moduleModel->get('basetable') . '_state_history';
+			if (!$db->getTableSchema($tableStatusHistory)) {
+				$db->createTable($tableStatusHistory, [
+					'id' => \yii\db\Schema::TYPE_UPK,
+					'crmid' => $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_INTEGER, 11),
+					'before' => $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TINYINT, 1)->notNull()->defaultValue(0),
+					'after' => $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TINYINT, 1)->notNull()->defaultValue(0),
+					'date' => $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TIMESTAMP)->null(),
+				]);
+				$dbCommand->createIndex($tableStatusHistory . '_crmid_idx', $tableStatusHistory, 'crmid')->execute();
+				$dbCommand->addForeignKey('fk_1_' . $tableStatusHistory, $tableStatusHistory, 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT')->execute();
+			}
+			$tableName = \App\Fields\Picklist::getPicklistTableName($fieldName);
+			$tableSchema = $db->getTableSchema($tableName);
+			if (!isset($tableSchema->columns['record_state'])) {
+				$dbCommand->addColumn($tableName, 'record_state', $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TINYINT, 1)->notNull()->defaultValue(0))->execute();
+			}
+			if (!isset($tableSchema->columns['time_counting'])) {
+				$dbCommand->addColumn($tableName, 'time_counting', $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TINYINT, 1)->notNull()->defaultValue(0))->execute();
+			}
+			foreach (\App\EventHandler::getAll(false) as $handler) {
+				if ('Vtiger_RecordStatusHistory_Handler' === $handler['handler_class']) {
+					$modules = $handler['include_modules'] ? \explode(',', $handler['include_modules']) : [];
+					if (!\in_array($moduleName, $modules)) {
+						$modules[] = $moduleName;
+					}
+					\App\EventHandler::update([
+						'is_active' => 1,
+						'include_modules' => \implode(',', $modules)
+					], $handler['eventhandler_id']);
+				}
+			}
+			$this->addFieldsAndBlock($moduleName);
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Add block and fields.
+	 *
+	 * @param string $moduleName
+	 *
+	 * @return void
+	 */
+	private function addFieldsAndBlock(string $moduleName)
+	{
+		$stateTimeFields = [
+			'RangeTime' => [
+				'response_range_time' => 'FL_RESPONSE_RANGE_TIME',
+				'solution_range_time' => 'FL_SOLUTION_RANGE_TIME',
+				'idle_range_time' => 'FL_IDLE_RANGE_TIME',
+				'closing_range_time' => 'FL_CLOSING_RANGE_TIME',
+			],
+			'DateTime' => [
+				'response_datatime' => 'FL_RESPONSE_DATE_TIME',
+				'solution_datatime' => 'FL_SOLUTION_DATE_TIME',
+				'idle_datatime' => 'FL_IDLE_DATE_TIME',
+				'closing_datatime' => 'FL_CLOSING_DATE_TIME',
+				'response_expected' => 'FL_RESPONSE_EXPECTED',
+				'solution_expected' => 'FL_SOLUTION_EXPECTED',
+				'idle_expected' => 'FL_IDLE_DATE_EXPECTED',
+			]
+		];
+		$moduleModel = \Settings_LayoutEditor_Module_Model::getInstanceByName($moduleName);
+		$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => 'BL_RECORD_STATUS_TIMES', 'tabid' => $moduleModel->getId()])->scalar();
+		if (!$blockId) {
+			$blockInstance = new \Settings_LayoutEditor_Block_Model();
+			$blockInstance->set('label', 'BL_RECORD_STATUS_TIMES');
+			$blockId = $blockInstance->save($moduleModel);
+		}
+		$allFields = $moduleModel->getFields();
+		foreach ($stateTimeFields as $type => $fields) {
+			foreach ($fields as $name => $label) {
+				if (!isset($allFields[$name])) {
+					$moduleModel->addField($type, $blockId, [
+						'fieldLabel' => $label,
+						'fieldName' => $name,
+						'fieldTypeList' => 0,
+						'generatedtype' => 1,
+						'displayType' => 2,
+						'helpinfo' => 'Detail'
+					]);
+				}
+			}
+		}
+	}
 	private function updateData()
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 
 		$data = [
-			['vtiger_cron_task', ['handler_file' => 'cron/CardDav.php'], ['handler_file' => 'modules/API/cron/CardDav.php', 'tabid' => \App\Module::getModuleId(('FInvoice'))]],
-			['vtiger_cron_task', ['handler_file' => 'cron/CalDav.php'], ['handler_file' => 'modules/API/cron/CalDav.php', 'tabid' => \App\Module::getModuleId(('FInvoice'))]],
+			['vtiger_cron_task', ['handler_file' => 'cron/CardDav.php'], ['handler_file' => 'modules/API/cron/CardDav.php', 'tabid' => \App\Module::getModuleId('FInvoice')]],
+			['vtiger_cron_task', ['handler_file' => 'cron/CalDav.php'], ['handler_file' => 'modules/API/cron/CalDav.php', 'tabid' => \App\Module::getModuleId('FInvoice')]],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 			['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'content', 'tablename' => 'vtiger_ossmailview']],
 			['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'orginal_mail', 'tablename' => 'vtiger_ossmailview']],
 			['vtiger_field', ['maximumlength' => '64'], ['fieldname' => 'user_name', 'tablename' => 'vtiger_users']],
-			['vtiger_relatedlists', ['name' => 'getDependentsList', 'actions' => 'ADD'], ['tabid' => \App\Module::getModuleId(('Assets')), 'related_tabid' => \App\Module::getModuleId(('HelpDesk'))]],
+			['vtiger_relatedlists', ['name' => 'getDependentsList', 'actions' => 'ADD'], ['tabid' => \App\Module::getModuleId('Assets'), 'related_tabid' => \App\Module::getModuleId('HelpDesk')]],
 		];
 		\App\Db\Updater::batchUpdate($data);
 
@@ -171,6 +619,9 @@ class YetiForceUpdate
 			]
 		];
 		\App\Db\Updater::batchInsert($data);
+
+		\App\EventHandler::registerHandler('EntityAfterSave', 'Vtiger_RecordStatusHistory_Handler', '', '', 5, false);
+		\App\EventHandler::registerHandler('EntityBeforeSave', 'Vtiger_RecordStatusHistory_Handler', '', '', 5, false);
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -207,6 +658,16 @@ class YetiForceUpdate
 				$updateData[] = [$tableName, $info[2], [$fieldModel->getName() => $info[1]]];
 			}
 		}
+		$newColors = ['PLL_USERS' => '1baee2', 'PLL_SYSTEM' => 'FF9800'];
+		$colors = (new \App\Db\Query())->select(['notification_type', 'color'])->from('vtiger_notification_type')->createCommand()->queryAllByGroup();
+		foreach ($newColors as $label => $color) {
+			if (!isset($colors[$label])) {
+				$this->log("[ERROR] . No required value {$label} in the notification_type field");
+			} elseif (empty($colors[$label])) {
+				$updateData[] = ['vtiger_notification_type', ['color' => $color], ['notification_type' => $label]];
+			}
+		}
+
 		\App\Db\Updater::batchUpdate($updateData);
 		static::generate('picklist');
 
@@ -249,6 +710,13 @@ class YetiForceUpdate
 				if ($tableToRemove = $this->getTableSeqToRemove($tableName, $fieldName)) {
 					$dropTable[] = $tableToRemove;
 				}
+			}
+		}
+		$fields = ['eventstatus', 'progress', 'projecttaskprogress'];
+		foreach ($fields as $fieldName) {
+			$tableName = 'vtiger_' . $fieldName;
+			if ($drop = $this->dropTableIfNotUse($tableName, ['fieldname' => $fieldName, 'uitype' => [16, 15, 33]])) {
+				$dropTable = array_merge($dropTable, $drop);
 			}
 		}
 		foreach ($dropCustomTables as $tableName => $fieldName) {
@@ -346,42 +814,43 @@ class YetiForceUpdate
 
 	/**
 	 * Add fields.
+	 *
+	 * @param mixed $fields
 	 */
-	public function addFields()
+	public function addFields($fields = [])
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$importerType = new \App\Db\Importers\Base();
-		$fields = [
-			[29, 2784, 'default_search_module', 'vtiger_users', 1, 301, 'default_search_module', 'FL_DEFAULT_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(25), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
-			[29, 2785, 'default_search_override', 'vtiger_users', 1, 56, 'default_search_override', 'FL_OVERRIDE_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, 'Edit,Detail,PreferenceDetail', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
+		if (empty($fields)) {
+			$fields = [
+				[29, 2784, 'default_search_module', 'vtiger_users', 1, 301, 'default_search_module', 'FL_DEFAULT_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(25), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
+				[29, 2785, 'default_search_override', 'vtiger_users', 1, 56, 'default_search_override', 'FL_OVERRIDE_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, 'Edit,Detail,PreferenceDetail', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
 
-			[95, 2786, 'ssalesprocessesid', 'u_yf_finvoice', 1, 10, 'ssalesprocessesid', 'FL_OPPORTUNITY', 0, 2, '', null, 12, 310, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => [], 'relatedModules' => ['SSalesProcesses'], 'moduleName' => 'FInvoice'],
-			[95, 2787, 'projectid', 'u_yf_finvoice', 1, 10, 'projectid', 'FL_PROJECT', 0, 2, '', null, 13, 310, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => [], 'relatedModules' => ['Project'], 'moduleName' => 'FInvoice'],
-			[95, 2825, 'payment_status', 'u_yf_finvoice', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 14, 310, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_BASIC_DETAILS', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'FInvoice'],
 
-			[6, 2788, 'pricebook_id', 'vtiger_account', 1, 10, 'pricebook_id', 'LBL_PRICEBOOK', 0, 2, '', null, 27, 9, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_ACCOUNT_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['PriceBooks'], 'moduleName' => 'Accounts'],
-			[6, 2793, 'check_stock_levels', 'vtiger_account', 1, 56, 'check_stock_levels', 'FL_CHECK_STOCK_LEVELS', 0, 2, '', '-128,127', 0, 439, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
-			[6, 2800, 'sum_open_orders', 'vtiger_account', 1, 71, 'sum_open_orders', 'FL_SUM_ORDERS', 0, 2, '', '9999999999999999999', 2, 439, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
-			[6, 2822, 'taxes', 'vtiger_account', 1, 303, 'taxes', 'FL_TAXES', 0, 2, '', '65535', 11, 198, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FINANSIAL_SUMMARY', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
-			[6, 2823, 'accounts_available_taxes', 'vtiger_account', 1, 33, 'accounts_available_taxes', 'FL_AVAILABLE_TAXES', 0, 2, '', '65535', 3, 439, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => ['LBL_REGIONAL_TAX', 'LBL_GROUP_TAX'], 'relatedModules' => [], 'moduleName' => 'Accounts'],
+				[6, 2788, 'pricebook_id', 'vtiger_account', 1, 10, 'pricebook_id', 'LBL_PRICEBOOK', 0, 2, '', null, 27, 9, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_ACCOUNT_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['PriceBooks'], 'moduleName' => 'Accounts'],
+				[6, 2793, 'check_stock_levels', 'vtiger_account', 1, 56, 'check_stock_levels', 'FL_CHECK_STOCK_LEVELS', 0, 2, '', '-128,127', 0, 439, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
+				[6, 2800, 'sum_open_orders', 'vtiger_account', 1, 71, 'sum_open_orders', 'FL_SUM_ORDERS', 0, 2, '', '9999999999999999999', 2, 439, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
+				[6, 2822, 'taxes', 'vtiger_account', 1, 303, 'taxes', 'FL_TAXES', 0, 2, '', '65535', 11, 198, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FINANSIAL_SUMMARY', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
+				[6, 2823, 'accounts_available_taxes', 'vtiger_account', 1, 33, 'accounts_available_taxes', 'FL_AVAILABLE_TAXES', 0, 2, '', '65535', 3, 439, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => ['LBL_REGIONAL_TAX', 'LBL_GROUP_TAX'], 'relatedModules' => [], 'moduleName' => 'Accounts'],
 
-			[96, 2789, 'featured', 'u_yf_knowledgebase', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 314, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_KNOWLEDGEBASE_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
-			[96, 2790, 'introduction', 'u_yf_knowledgebase', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 315, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
-			[15,2799,'knowledgebase_view','vtiger_faq',1,16,'knowledgebase_view','FL_VIEWS',0,2,'','255',4,37,1,'V~O',1,0,'BAS',1,'',0,'',null,0,0,0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => ['PLL_PAGE','PLL_PRESENTATION'], 'relatedModules' => [], 'moduleName' => 'Faq'],
-			[15,2821,'accountid','vtiger_faq',1,10,'accountid','FL_ACCOUNT',0,2,'','4294967295',8,37,1,'V~O',1,0,'BAS',1,'',0,'',null,0,0,0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
+				[96, 2789, 'featured', 'u_yf_knowledgebase', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 314, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_KNOWLEDGEBASE_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
+				[96, 2790, 'introduction', 'u_yf_knowledgebase', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 315, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
 
-			[111, 2801, 'category', 'u_yf_notification', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 7, 374, 1, 'V~O', 2, 3, 'BAS', 1, '', 0, '30', '', 0, 0, 0, 'type' => $importerType->stringType(30), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'picklistValues' => [
-				'column' => 'category',
-				'base' => [30, 'Category', \App\Module::getModuleId('Notification'), 0],
-				'data' => [[30, 'Base', 'T1', 'T1', 0, 'Base', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '']]
-			], 'relatedModules' => [], 'moduleName' => 'Notification'],
+				[111, 2801, 'category', 'u_yf_notification', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 7, 374, 1, 'V~O', 2, 3, 'BAS', 1, '', 0, '30', '', 0, 0, 0, 'type' => $importerType->stringType(30), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'picklistValues' => [
+					'column' => 'category',
+					'base' => [30, 'Category', \App\Module::getModuleId('Notification'), 0],
+					'data' => [[30, 'Base', 'T1', 'T1', 0, 'Base', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '']]
+				], 'relatedModules' => [], 'moduleName' => 'Notification'],
 
-			[90, 2792, 'istorageaddressid', 'u_yf_ssingleorders', 1, 10, 'istorageaddressid', 'FL_STORAGE', 0, 2, '', null, 15, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['IStorages'], 'moduleName' => 'SSingleOrders'],
-			[90, 2818, 'ssingleorders_method_payments', 'u_yf_ssingleorders', 1, 16, 'ssingleorders_method_payments', 'FL_METHOD_PAYMENTS', 0, 2, '', '255', 16, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_REDSYS', 'PLL_DOTPAY', 'PLL_TRANSFER', 'PLL_CASH_ON_DELIVERY'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
-			[90, 2826, 'payment_status', 'u_yf_ssingleorders', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 17, 284, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
+				[90, 2792, 'istorageaddressid', 'u_yf_ssingleorders', 1, 10, 'istorageaddressid', 'FL_STORAGE', 0, 2, '', null, 15, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['IStorages'], 'moduleName' => 'SSingleOrders'],
+				[90, 2818, 'ssingleorders_method_payments', 'u_yf_ssingleorders', 1, 16, 'ssingleorders_method_payments', 'FL_METHOD_PAYMENTS', 0, 2, '', '255', 16, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_REDSYS', 'PLL_DOTPAY', 'PLL_TRANSFER', 'PLL_CASH_ON_DELIVERY'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
+				[90, 2826, 'payment_status', 'u_yf_ssingleorders', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 17, 284, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
 
-		];
+				[13,2791,'parentid','vtiger_troubletickets',1,10,'parentid','FL_HELP_DESK_PARENT',0,0,'',null,13,27,1,'V~O',1,0,'BAS',1,'',0,'',null,0,0,0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'HelpDesk'],
+			];
+		}
+
 		foreach ($fields as $field) {
 			$moduleId = App\Module::getModuleId($field['moduleName']);
 			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
@@ -488,7 +957,7 @@ class YetiForceUpdate
 		}
 		$moduleByColumn = (new \App\Db\Query())->select(['vtiger_tab.name', 'vtiger_field.fieldname'])->from('vtiger_field')->innerJoin('vtiger_tab', '`vtiger_field`.`tabid` = vtiger_tab.`tabid`')->where(['columnname' => 'closedtime', 'tablename' => 'vtiger_crmentity'])->createCommand()->queryAllByGroup();
 
-		$modules = ['HelpDesk' => ['response_time'], 'SQuoteEnquiries' => ['response_time'], 'SRequirementsCards' => ['response_time'], 'SCalculations' => ['response_time'], 'SQuotes' => ['response_time'], 'SSingleOrders' => ['response_time'], 'SRecurringOrders' => ['response_time'], 'SVendorEnquiries' => ['response_time'], 'Accounts' => ['active'], 'Contacts' => ['active']];
+		$modules = ['HelpDesk' => ['response_time'], 'SQuoteEnquiries' => ['response_time'], 'SRequirementsCards' => ['response_time'], 'SCalculations' => ['response_time'], 'SQuotes' => ['response_time'], 'SSingleOrders' => ['response_time'], 'SRecurringOrders' => ['response_time'], 'SVendorEnquiries' => ['response_time'], 'Accounts' => ['active'], 'Contacts' => ['active'], 'OSSMailView' => ['rel_mod']];
 		$modules = array_merge_recursive($modules, $moduleByColumn);
 		foreach ($modules as $moduleName => $fields) {
 			$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
@@ -497,15 +966,8 @@ class YetiForceUpdate
 			}
 			foreach ($fields as $fieldName) {
 				if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
-					if ('active' === $fieldName || !$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
-						try {
-							$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
-							$fieldInstance->delete();
-						} catch (\Exception $e) {
-							$message = 'RemoveFields' . __METHOD__ . ': ' . $e->__toString();
-							$this->log($message);
-							\App\Log::error($message);
-						}
+					if (\in_array($fieldName, ['active', 'rel_mod']) || !$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
+						$this->removeField($fieldModel);
 					} else {
 						$this->log('RemoveFields' . __METHOD__ . ': field exists and is in use ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
 					}
@@ -513,6 +975,50 @@ class YetiForceUpdate
 			}
 		}
 
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function removeField($fieldModel, $newName = false)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		try {
+			if (false === $newName) {
+				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
+				$fieldInstance->delete();
+			} else {
+				$db = \App\Db::getInstance();
+				$dbCommand = $db->createCommand();
+
+				$fldModule = $fieldModel->getModuleName();
+				$id = $fieldModel->getId();
+				$fieldname = $fieldModel->getName();
+				$tabId = $fieldModel->getModuleId();
+
+				$dbCommand->delete('a_#__mapped_fields', ['or', ['source' => $id], ['target' => $id]])->execute();
+				$dbCommand->update('vtiger_cvcolumnlist', ['field_name' => $newName], ['field_name' => $fieldname, 'module_name' => $fldModule])->execute();
+				$dbCommand->delete('u_#__cv_condition', ['field_name' => $fieldname, 'module_name' => $fldModule])->execute();
+
+				if ('picklist' === $fieldModel->getFieldDataType() || 'multipicklist' === $fieldModel->getFieldDataType()) {
+					$query = (new \App\Db\Query())->from('vtiger_field')
+						->where(['fieldname' => $fieldname])
+						->andWhere(['in', 'uitype', [15, 16, 33]]);
+					$dataReader = $query->createCommand()->query();
+					if (!$dataReader->count()) {
+						$dbCommand->dropTable('vtiger_' . $fieldname)->execute();
+						if ($db->isTableExists('vtiger_' . $fieldname . '_seq')) {
+							$dbCommand->dropTable('vtiger_' . $fieldname . '_seq')->execute();
+						}
+						$dbCommand->delete('vtiger_picklist', ['name' => $fieldname])->execute();
+					}
+					$dbCommand->delete('vtiger_picklist_dependency', ['and', ['tabid' => $tabId], ['or', ['sourcefield' => $fieldname], ['targetfield' => $fieldname]]])->execute();
+				}
+			}
+		} catch (\Throwable $e) {
+			$message = 'RemoveFields' . __METHOD__ . ': ' . $e->__toString();
+			$this->log($message);
+			\App\Log::error($message);
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -693,36 +1199,36 @@ class YetiForceUpdate
 	private function createConfigFiles()
 	{
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
-		\App\Config::set('module', 'Project', 'defaultGanttColors', [
-			'Project' => [
-				'projectstatus' => [
-					'PLL_PLANNED' => '#7B1FA2',
-					'PLL_IN_PROGRESSING' => '#1976D2',
-					'PLL_IN_APPROVAL' => '#F57C00',
-					'PLL_ON_HOLD' => '#455A64',
-					'PLL_COMPLETED' => '#388E3C',
-					'PLL_CANCELLED' => '#616161',
-				],
-			],
-			'ProjectMilestone' => [
-				'projectmilestone_status' => [
-					'PLL_PLANNED' => '#3F51B5',
-					'PLL_IN_PROGRESSING' => '#2196F3',
-					'PLL_COMPLETED' => '#4CAF50',
-					'PLL_ON_HOLD' => '#607D8B',
-					'PLL_CANCELLED' => '#9E9E9E',
-				],
-			],
-			'ProjectTask' => [
-				'projecttaskstatus' => [
-					'PLL_PLANNED' => '#7986CB',
-					'PLL_IN_PROGRESSING' => '#64B5F6',
-					'PLL_COMPLETED' => '#81C784',
-					'PLL_ON_HOLD' => '#90A4AE',
-					'PLL_CANCELLED' => '#E0E0E0',
-				],
-			]
-		]);
+		// \App\Config::set('module', 'Project', 'defaultGanttColors', [
+		// 	'Project' => [
+		// 		'projectstatus' => [
+		// 			'PLL_PLANNED' => '#7B1FA2',
+		// 			'PLL_IN_PROGRESSING' => '#1976D2',
+		// 			'PLL_IN_APPROVAL' => '#F57C00',
+		// 			'PLL_ON_HOLD' => '#455A64',
+		// 			'PLL_COMPLETED' => '#388E3C',
+		// 			'PLL_CANCELLED' => '#616161',
+		// 		],
+		// 	],
+		// 	'ProjectMilestone' => [
+		// 		'projectmilestone_status' => [
+		// 			'PLL_PLANNED' => '#3F51B5',
+		// 			'PLL_IN_PROGRESSING' => '#2196F3',
+		// 			'PLL_COMPLETED' => '#4CAF50',
+		// 			'PLL_ON_HOLD' => '#607D8B',
+		// 			'PLL_CANCELLED' => '#9E9E9E',
+		// 		],
+		// 	],
+		// 	'ProjectTask' => [
+		// 		'projecttaskstatus' => [
+		// 			'PLL_PLANNED' => '#7986CB',
+		// 			'PLL_IN_PROGRESSING' => '#64B5F6',
+		// 			'PLL_COMPLETED' => '#81C784',
+		// 			'PLL_ON_HOLD' => '#90A4AE',
+		// 			'PLL_CANCELLED' => '#E0E0E0',
+		// 		],
+		// 	]
+		// ]);
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
@@ -732,7 +1238,7 @@ class YetiForceUpdate
 			mkdir($dirPath);
 		}
 		foreach ((new \DirectoryIterator('modules/')) as $item) {
-			if ($item->isDir() && !\in_array($item->getBasename(), ['.', '..'])) {
+			if ($item->isDir() && !$item->isDot()) {
 				$moduleName = $item->getBasename();
 				$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
 				if (file_exists($filePath)) {

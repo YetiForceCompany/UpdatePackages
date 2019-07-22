@@ -80,6 +80,59 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'vtiger_loginhistory' => [
+				'columns' => [
+					'user_name' => $this->stringType(64)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_notification_type' => [
+				'columns' => [
+					'color' => $this->stringType(25),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_ossmailview' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'attachments_exist' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'type' => $this->smallInteger(1)->unsigned(),
+					'verify' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0)
+				],
+				'columns_mysql' => [
+					'attachments_exist' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'type' => $this->tinyInteger(1)->unsigned(),
+					'verify' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_users' => [
+				'columns' => [
+					'user_name' => $this->stringType(64),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'yetiforce_menu' => [
+				'columns' => [
+					'source' => $this->smallInteger(1)->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'source' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__portal_user' => [
+				'columns' => [
+					'istorage' => $this->integer(10),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['fk_u_#__pdf_inv_scheme_crmid', 'u_#__pdf_inv_scheme', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
