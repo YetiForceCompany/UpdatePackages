@@ -59,7 +59,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__auto_record_flow_updater' => [
 				'columns' => [
-					'id' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKey(5)->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'source_module' => $this->smallInteger(5)->notNull(),
 					'target_module' => $this->smallInteger(5)->notNull(),
@@ -77,15 +77,19 @@ class Admin extends \App\Db\Importers\Base
 					['target_module', 'target_module'],
 					['status', 'status'],
 				],
-				'primaryKeys' => [
-					['auto_record_flow_updater_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
 			's_#__batchmethod' => [
 				'columns' => [
 					'method' => $this->stringType(255)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'l_#__batchmethod' => [
+				'columns' => [
+					'method' => $this->stringType(255)->notNull()
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -135,11 +139,39 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'o_yf_access_for_admin' => [
+				'columns' => [
+					'request' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'o_yf_access_for_api' => [
+				'columns' => [
+					'request' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'o_yf_access_for_user' => [
+				'columns' => [
+					'request' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'o_yf_access_to_record' => [
+				'columns' => [
+					'request' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
-			['s_#__auto_record_flow_updater_ibfk_1', 's_#__auto_record_flow_updater', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['s_#__auto_record_flow_updater_ibfk_2', 's_#__auto_record_flow_updater', 'target_module', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_s_#__sla_policy', 's_#__sla_policy', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['s_#__auto_record_flow_updater_ibfk_1', 's_#__auto_record_flow_updater', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['s_#__auto_record_flow_updater_ibfk_2', 's_#__auto_record_flow_updater', 'target_module', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_s_#__sla_policy', 's_#__sla_policy', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
 		];
 	}
 }

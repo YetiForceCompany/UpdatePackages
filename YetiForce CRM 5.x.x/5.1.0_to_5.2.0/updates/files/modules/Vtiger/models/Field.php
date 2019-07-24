@@ -950,35 +950,34 @@ class Vtiger_Field_Model extends vtlib\Field
 	public static function getAdvancedFilterOpsByFieldType()
 	{
 		return [
-			'V' => ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'om', 'wr', 'nwr', 'd'],
-			'N' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny', 'd'],
-			'T' => ['e', 'n', 'l', 'g', 'm', 'h', 'bw', 'b', 'a', 'y', 'ny', 'd'],
-			'I' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny', 'd'],
-			'C' => ['e', 'n', 'y', 'ny', 'd'],
-			'D' => ['e', 'n', 'bw', 'b', 'a', 'y', 'ny', 'd'],
-			'DT' => ['e', 'n', 'bw', 'b', 'a', 'y', 'ny', 'd'],
-			'NN' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny', 'd'],
-			'E' => ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'd'],
+			'V' => ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny', 'om', 'wr', 'nwr'],
+			'N' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny'],
+			'T' => ['e', 'n', 'l', 'g', 'm', 'h', 'bw', 'b', 'a', 'y', 'ny'],
+			'I' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny'],
+			'C' => ['e', 'n', 'y', 'ny'],
+			'D' => ['e', 'n', 'bw', 'b', 'a', 'y', 'ny'],
+			'DT' => ['e', 'n', 'bw', 'b', 'a', 'y', 'ny'],
+			'NN' => ['e', 'n', 'l', 'g', 'm', 'h', 'y', 'ny'],
+			'E' => ['e', 'n', 's', 'ew', 'c', 'k', 'y', 'ny'],
 		];
 	}
 
 	/**
 	 * Function to retrieve field model for specific block and module.
 	 *
-	 * @param vtlib\ModuleBasic   $moduleModel
+	 * @param vtlib\ModuleBasic $moduleModel
 	 *
 	 * @return Vtiger_Field_Model[][]
 	 */
 	public static function getAllForModule(vtlib\ModuleBasic $moduleModel)
 	{
-		if (\App\Cache::has('ModuleFields', $moduleModel->id)) {
-			return \App\Cache::get('ModuleFields', $moduleModel->id);
+		if (\App\Cache::staticHas('ModuleFields', $moduleModel->id)) {
+			return \App\Cache::staticGet('ModuleFields', $moduleModel->id);
 		}
 		$fieldModelList = [];
 		$fieldObjects = parent::getAllForModule($moduleModel);
 		$fieldModelList = [];
-		//if module dont have any fields
-		if (!\is_array($fieldObjects)) {
+		if (!is_array($fieldObjects)) {
 			$fieldObjects = [];
 		}
 		foreach ($fieldObjects as &$fieldObject) {
@@ -988,17 +987,17 @@ class Vtiger_Field_Model extends vtlib\Field
 			Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getId(), $fieldModelObject);
 			Vtiger_Cache::set('field-' . $moduleModel->getId(), $fieldModelObject->getName(), $fieldModelObject);
 		}
-		\App\Cache::save('ModuleFields', $moduleModel->id, $fieldModelList);
+		\App\Cache::staticSave('ModuleFields', $moduleModel->id, $fieldModelList);
 		return $fieldModelList;
 	}
 
 	/**
 	 * Function to get instance.
 	 *
-	 * @param string $value  - fieldname or fieldid
-	 * @param <type> $module - optional - module instance
+	 * @param string|int $value  - fieldname or fieldid
+	 * @param Vtiger_Module_Model|false $module - optional - module instance
 	 *
-	 * @return <Vtiger_Field_Model>
+	 * @return Vtiger_Field_Model|false
 	 */
 	public static function getInstance($value, $module = false)
 	{

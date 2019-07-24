@@ -1,4 +1,5 @@
 <?php
+
 /**
  * YetiForce shop AbstractBaseProduct file.
  *
@@ -22,7 +23,18 @@ abstract class AbstractBaseProduct
 	 * @var string
 	 */
 	public $name;
-
+	/**
+	 * Is the product featured.
+	 *
+	 * @var bool
+	 */
+	public $featured = false;
+	/**
+	 * Product category.
+	 *
+	 * @var string
+	 */
+	public $category = '';
 	/**
 	 * Price table depending on the size of the company.
 	 *
@@ -43,6 +55,27 @@ abstract class AbstractBaseProduct
 	 * @var string
 	 */
 	public $currencyCode = 'EUR';
+
+	/**
+	 * Expiration date.
+	 *
+	 * @var string|null
+	 */
+	public $expirationDate;
+
+	/**
+	 * Paid package.
+	 *
+	 * @var string|null
+	 */
+	public $paidPackage;
+
+	/**
+	 * Verify the product.
+	 *
+	 * @return bool
+	 */
+	abstract protected function verify(): bool;
 
 	/**
 	 * Construct.
@@ -71,7 +104,7 @@ abstract class AbstractBaseProduct
 	 */
 	public function getPrice(): int
 	{
-		return $this->prices[\App\Company::getSize()];
+		return $this->prices[\App\Company::getSize()] ?? 0;
 	}
 
 	/**
@@ -82,6 +115,26 @@ abstract class AbstractBaseProduct
 	public function getLabel(): string
 	{
 		return \App\Language::translate('LBL_SHOP_' . \strtoupper($this->name), 'Settings:YetiForce');
+	}
+
+	/**
+	 * Get product name.
+	 *
+	 * @return string
+	 */
+	public function getName(): string
+	{
+		return $this->name;
+	}
+
+	/**
+	 * Get product description.
+	 *
+	 * @return string
+	 */
+	public function getIntroduction(): string
+	{
+		return \App\Language::translate('LBL_SHOP_' . \strtoupper($this->name) . '_INTRO', 'Settings:YetiForce');
 	}
 
 	/**
@@ -117,5 +170,59 @@ abstract class AbstractBaseProduct
 	public function getPeriodLabel(): string
 	{
 		return 'LBL_PERIOD_OF_MONTH';
+	}
+
+	/**
+	 * Loading configuration.
+	 *
+	 * @param array $config
+	 *
+	 * @return void
+	 */
+	public function loadConfig(array $config)
+	{
+		if (\App\YetiForce\Shop::verifyProductKey($config['key'])) {
+			$this->expirationDate = $config['date'];
+			$this->paidPackage = $config['package'];
+		}
+	}
+
+	/**
+	 * Get variable product.
+	 *
+	 * @return array
+	 */
+	public function getVariable(): array
+	{
+		return [
+			'cmd' => '_xclick-subscriptions',
+			'no_shipping' => 1,
+			'src' => 1,
+			'sra' => 1,
+			't3' => 'M',
+			'p3' => \date('d'),
+			'a3' => $this->getPrice(),
+			'item_name' => $this->name,
+			'currency_code' => $this->currencyCode,
+			'item_number' => 'ccc',
+			'on0' => 'Package',
+			'os0' => \App\Company::getSize(),
+		];
+	}
+
+	/**
+	 * Show alert.
+	 *
+	 * @return string
+	 */
+	public function showAlert(): string
+	{
+		if (strtotime('now') > strtotime($this->expirationDate)) {
+			return 'LBL_SIZE_OF_YOUR_COMPANY_HAS_CHANGED';
+		}
+		if (\App\Company::getSize() !== $this->paidPackage) {
+			return 'LBL_SIZE_OF_YOUR_COMPANY_HAS_CHANGED';
+		}
+		return '';
 	}
 }

@@ -20,6 +20,10 @@ class Donations extends \App\YetiForce\Shop\AbstractBaseProduct
 	 * {@inheritdoc}
 	 */
 	public $pricesType = 'manual';
+	/**
+	 * {@inheritdoc}
+	 */
+	public $featured = true;
 
 	/**
 	 * {@inheritdoc}
@@ -27,5 +31,13 @@ class Donations extends \App\YetiForce\Shop\AbstractBaseProduct
 	public function getPrice(): int
 	{
 		return 5;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function verify(): bool
+	{
+		return true;
 	}
 }

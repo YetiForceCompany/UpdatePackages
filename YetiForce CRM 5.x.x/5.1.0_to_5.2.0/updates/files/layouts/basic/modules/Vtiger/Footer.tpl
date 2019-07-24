@@ -96,6 +96,18 @@
 								</a>
 							</li>
 						{/if}
+						{if !\App\YetiForce\Shop::verify()}
+							<li class="page-item u-cursor-pointer">
+								<a class="page-link text-warning js-popover-tooltip animated flash infinite slower" role="button" data-content="{\App\Language::translate('LBL_YETIFORCE_SHOP_PRODUCT_CANCELED', $MODULE_NAME)}" title="{\App\Language::translate('LBL_YETIFORCE_SHOP')}"
+										{if $USER_MODEL->isAdminUser()}
+											href="index.php?module=YetiForce&parent=Settings&view=Shop"
+										{else}
+											href="#"
+										{/if} >
+									<span class="fas fa-exclamation-triangle fa-2x"></span>
+								</a>
+							</li>
+						{/if}
 						<li class="page-item u-cursor-pointer">
 							<a class="page-link" data-toggle="modal" href="#" role="button"
 							   data-target="#yetiforceDetails">

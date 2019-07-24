@@ -210,7 +210,6 @@ final class Chat
 			->from(['CR' => static::TABLE_NAME['room']['group']])
 			->innerJoin(['CM' => static::TABLE_NAME['message']['group']], 'CM.groupid = CR.groupid')
 			->where(['>', 'CM.id', new \yii\db\Expression('CR.last_message')])
-			->orWhere(['CR.last_message' => null])
 			->groupBy(['CR.groupid', 'CR.userid']);
 		$dataReader = (new Db\Query())
 			->select(['GR.roomid', 'GR.userid', 'recordid' => 'GR.groupid', 'name' => 'VGR.groupname', 'CNT.cnt_new_message'])
@@ -270,6 +269,22 @@ final class Chat
 		}
 		$dataReader->close();
 		return $rows;
+	}
+
+	/**
+	 * Get room last message.
+	 *
+	 * @param int $roomId
+	 *
+	 * @return array
+	 */
+	public static function getRoomLastMessage(int $roomId, string $roomType): array
+	{
+		return (array) (new Db\Query())
+			->from(static::TABLE_NAME['message'][$roomType])
+			->where([$roomType === 'crm' ? 'crmid' : 'groupid' => $roomId])
+			->orderBy(['id' => \SORT_DESC])
+			->one();
 	}
 
 	/**
@@ -817,6 +832,10 @@ final class Chat
 			)->execute();
 			unset($this->room['userid']);
 		}
+		if (static::getCurrentRoom()['recordId'] === $this->recordId) {
+			$defaultRoom = static::getDefaultRoom();
+			static::setCurrentRoom($defaultRoom['roomType'], $defaultRoom['recordId']);
+		}
 	}
 
 	/**
@@ -827,11 +846,12 @@ final class Chat
 	public function addToFavorites()
 	{
 		if (!empty($this->roomType) && !empty($this->recordId)) {
+			$lastMessage = static::getRoomLastMessage($this->recordId, $this->roomType);
 			Db::getInstance()->createCommand()->insert(
 				static::TABLE_NAME['room'][$this->roomType],
 				[
+					'last_message' => isset($lastMessage['id']) ? $lastMessage['id'] : 0,
 					'userid' => $this->userId,
-					'last_message' => null,
 					static::COLUMN_NAME['room'][$this->roomType] => $this->recordId
 				]
 			)->execute();

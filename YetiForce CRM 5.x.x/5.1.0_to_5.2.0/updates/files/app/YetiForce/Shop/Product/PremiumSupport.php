@@ -20,9 +20,21 @@ class PremiumSupport extends \App\YetiForce\Shop\AbstractBaseProduct
 	 * {@inheritdoc}
 	 */
 	public $prices = [
-		's' => 15,
-		'm' => 25,
-		'l' => 50,
-		'xl' => 100,
+		'Micro' => 15,
+		'Small' => 25,
+		'Medium' => 50,
+		'Large' => 100,
 	];
+	/**
+	 * {@inheritdoc}
+	 */
+	public $featured = true;
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function verify(): bool
+	{
+		return true;
+	}
 }

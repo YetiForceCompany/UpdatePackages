@@ -39,7 +39,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__servicecontracts_sla_policy' => [
 				'columns' => [
-					'id' => $this->integer()->primaryKey()->notNull(),
+					'id' => $this->primaryKey(11)->notNull(),
 					'crmid' => $this->integer()->notNull(),
 					'policy_type' => $this->smallInteger(1)->notNull()->defaultValue(0),
 					'sla_policy_id' => $this->integer(),
@@ -56,26 +56,6 @@ class Base extends \App\Db\Importers\Base
 				'index' => [
 					['fk_crmid_idx', 'crmid'],
 					['fk_sla_policy_idx', 'sla_policy_id'],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_faq' => [
-				'columns' => [
-					'subject' => $this->stringType()->defaultValue(''),
-					'content' => $this->text(),
-					'category' => $this->stringType(30)->defaultValue(''),
-					'featured' => $this->smallInteger(1)->defaultValue(0),
-					'introduction' => $this->text(),
-					'knowledgebase_view' => $this->stringType()->defaultValue(''),
-					'accountid' => $this->integer()->unsigned()->defaultValue(0),
-				],
-				'columns_mysql' => [
-					'featured' => $this->tinyInteger(1)->defaultValue(0),
-				],
-				'index' => [
-					['vtiger_faq_accountid_idx', 'accountid'],
-					['search', ['subject', 'content', 'introduction']],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -97,6 +77,8 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_ossmailview' => [
 				'columns' => [
 					'id' => $this->integer(10)->unsigned()->notNull(),
+					'content' => $this->db->getSchema()->createColumnSchemaBuilder('MEDIUMTEXT'),
+					'orginal_mail' => $this->db->getSchema()->createColumnSchemaBuilder('MEDIUMTEXT'),
 					'attachments_exist' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'type' => $this->smallInteger(1)->unsigned(),
 					'verify' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0)
@@ -133,11 +115,89 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__knowledgebase' => [
+				'columns' => [
+					'content' => $this->db->getSchema()->createColumnSchemaBuilder('MEDIUMTEXT'),
+					'featured' => $this->smallInteger(1)->defaultValue(0),
+					'introduction' => $this->text(),
+				],
+				'columns_mysql' => [
+					'featured' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'l_#__username_history' => [
+				'columns' => [
+					'user_name' => $this->stringType(64)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_tab' => [
+				'columns' => [
+					'presence' => $this->smallInteger(3)->unsigned()->notNull()->defaultValue(1),
+					'premium' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__modtracker_inv' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'changes' => $this->text()->notNull(),
+				],
+				'index' => [
+					['fk_1_u_yf_modtracker_inv', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_basic' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'crmid' => $this->integer(10)->unsigned()->notNull(),
+					'module' => $this->stringType(25)->notNull(),
+					'whodid' => $this->integer(10)->unsigned()->notNull(),
+					'changedon' => $this->dateTime()->notNull(),
+					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'last_reviewed_users' => $this->stringType()->notNull()->defaultValue(''),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_detail' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'fieldname' => $this->stringType(50)->notNull()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_relations' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'targetmodule' => $this->stringType(25)->notNull(),
+					'targetid' => $this->integer(10)->unsigned()->notNull()
+				],
+				'index' => [
+					['vtiger_modtracker_relations_id_idx', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
-			['fk_u_#__pdf_inv_scheme_crmid', 'u_#__pdf_inv_scheme', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
-			['fk_crmid_idx', 'u_#__servicecontracts_sla_policy', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
-			['fk_sla_policy_idx', 'u_#__servicecontracts_sla_policy', 'sla_policy_id', 's_#__sla_policy', 'id', 'CASCADE', 'RESTRICT']
+			['fk_u_#__pdf_inv_scheme_crmid', 'u_#__pdf_inv_scheme', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['fk_crmid_idx', 'u_#__servicecontracts_sla_policy', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['fk_sla_policy_idx', 'u_#__servicecontracts_sla_policy', 'sla_policy_id', 's_#__sla_policy', 'id', 'CASCADE', null]
 		];
 	}
 }
