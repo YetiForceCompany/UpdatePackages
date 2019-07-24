@@ -146,53 +146,13 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__modtracker_inv' => [
+			'vtiger_notification_type' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->notNull(),
-					'changes' => $this->text()->notNull(),
-				],
-				'index' => [
-					['fk_1_u_yf_modtracker_inv', 'id'],
+					'color' => $this->stringType(25)
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_basic' => [
-				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
-					'crmid' => $this->integer(10)->unsigned()->notNull(),
-					'module' => $this->stringType(25)->notNull(),
-					'whodid' => $this->integer(10)->unsigned()->notNull(),
-					'changedon' => $this->dateTime()->notNull(),
-					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
-					'last_reviewed_users' => $this->stringType()->notNull()->defaultValue(''),
-				],
-				'columns_mysql' => [
-					'status' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_detail' => [
-				'columns' => [
-					'id' => $this->integer(10)->unsigned()->notNull(),
-					'fieldname' => $this->stringType(50)->notNull()
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_relations' => [
-				'columns' => [
-					'id' => $this->integer(10)->unsigned()->notNull(),
-					'targetmodule' => $this->stringType(25)->notNull(),
-					'targetid' => $this->integer(10)->unsigned()->notNull()
-				],
-				'index' => [
-					['vtiger_modtracker_relations_id_idx', 'id'],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
+			]
 		];
 		$this->foreignKey = [
 			['fk_u_#__pdf_inv_scheme_crmid', 'u_#__pdf_inv_scheme', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],

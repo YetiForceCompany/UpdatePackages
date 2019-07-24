@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 46af284fe479b1824e876fd148083a417f52c0b9
+// last check: 244759dbdb77295578bc308ed7046744446abd66
 /**
  * YetiForceUpdate Class.
  */
@@ -42,6 +42,8 @@ class YetiForceUpdate
 	 */
 	private $importer;
 
+	private $error = false;
+
 	/**
 	 * Constructor.
 	 *
@@ -63,6 +65,9 @@ class YetiForceUpdate
 		$fp = fopen($this->logFile, 'a+');
 		fwrite($fp, $message . PHP_EOL);
 		fclose($fp);
+		if(false !== strpos($message, '[ERROR]')){
+			$this->error = true;
+		}
 	}
 
 	/**
@@ -326,7 +331,7 @@ class YetiForceUpdate
 					if ('payment_status' === $toField) {
 						$dataUpdate = [];
 						foreach (['PLL_AWAITING_PAYMENT' => 'PLL_NOT_PAID', 'PLL_PARTIALLY_PAID' => 'PLL_UNDERPAID', 'PLL_FULLY_PAID' => 'PLL_PAID'] as $oldValue => $newValue) {
-							$dataUpdate[] = [$fieldModel->getTableName(), [$fieldModel->getColumnName() => $newValue], [$fieldModel->getColumnName() => $oldValue]];
+							$dataUpdate[] = [$fieldModel->getTableName(), [$toField => $newValue], [$toField => $oldValue]];
 						}
 						\App\Db\Updater::batchUpdate($dataUpdate);
 					}
@@ -499,7 +504,7 @@ class YetiForceUpdate
 				$dbCommand->createIndex($tableStatusHistory . '_crmid_idx', $tableStatusHistory, 'crmid')->execute();
 				$dbCommand->addForeignKey('fk_1_' . $tableStatusHistory, $tableStatusHistory, 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT')->execute();
 			}
-			$tableName = \App\Fields\Picklist::getPicklistTableName($fieldName);
+			$tableName = 'vtiger_' . $fieldName;
 			$tableSchema = $db->getTableSchema($tableName);
 			if (!isset($tableSchema->columns['record_state'])) {
 				$dbCommand->addColumn($tableName, 'record_state', $schema->createColumnSchemaBuilder(\yii\db\Schema::TYPE_TINYINT, 1)->notNull()->defaultValue(0))->execute();
@@ -513,10 +518,10 @@ class YetiForceUpdate
 					if (!\in_array($moduleName, $modules)) {
 						$modules[] = $moduleName;
 					}
-					\App\EventHandler::update([
+					$dbCommand->update('vtiger_eventhandlers', [
 						'is_active' => 1,
 						'include_modules' => \implode(',', $modules)
-					], $handler['eventhandler_id']);
+					], ['eventhandler_id' => $handler['eventhandler_id']])->execute();
 				}
 			}
 			$this->addFieldsAndBlock($moduleName);
@@ -608,22 +613,31 @@ class YetiForceUpdate
 		];
 		\App\Db\Updater::batchUpdate($data);
 
-		$data = [
+		$data = [['vtiger_settings_field', ['name' => 'LBL_DEFAULT_MODULE_VIEW']]];
+		$links = [
 			['vtiger_links', ['linklabel' => 'Delagated Events/To Dos', 'linktype' => 'DASHBOARDWIDGET', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=AssignedUpcomingCalendarTasks']],
-			['vtiger_links', ['linklabel' => 'Delegated (overdue) Events/ToDos', 'linktype' => 'DASHBOARDWIDGET', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=AssignedOverdueCalendarTasks']],
-			['vtiger_settings_field', ['name' => 'LBL_DEFAULT_MODULE_VIEW']]
+			['vtiger_links', ['linklabel' => 'Delegated (overdue) Events/ToDos', 'linktype' => 'DASHBOARDWIDGET', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=AssignedOverdueCalendarTasks']]
 		];
-		$links = $data;
 		foreach ($links as $linkData) {
 			if ($linkId = (new \App\Db\Query())->select(['linkid'])->from($linkData[0])->where($linkData[1])->scalar()) {
 				$data[] = ['vtiger_module_dashboard', ['linkid' => $linkId]];
 				$data[] = ['vtiger_module_dashboard_widgets', ['linkid' => $linkId]];
 			}
 		}
-		\App\Db\Updater::batchDelete($data);
+		\App\Db\Updater::batchDelete(array_merge($data, $links));
 
 		$serviceContractsId = \App\Module::getModuleId('ServiceContracts');
 		$documentsId = \App\Module::getModuleId('Documents');
+		\App\Db\Updater::batchInsert([
+			['vtiger_settings_blocks',
+				[
+					'label' => 'LBL_HELP',
+					'sequence' => 15,
+					'icon' => 'fas fa-life-ring',
+					'type' => 0
+				], ['label' => 'LBL_HELP']
+			]
+		]);
 		$data = [
 			['vtiger_links',
 				[
@@ -634,14 +648,6 @@ class YetiForceUpdate
 					'linkicon' => '',
 					'sequence' => 0
 				], ['tabid' => App\Module::getModuleId('Home'), 'linklabel' => 'LBL_CREATED_BY_ME_BUT_NOT_MINE_OVERDUE_ACTIVITIES']
-			],
-			['vtiger_settings_blocks',
-				[
-					'label' => 'LBL_HELP',
-					'sequence' => 15,
-					'icon' => 'fas fa-life-ring',
-					'type' => 0
-				], ['label' => 'LBL_HELP']
 			],
 			['vtiger_settings_field',
 				[
@@ -780,7 +786,7 @@ class YetiForceUpdate
 		$newColors = ['PLL_USERS' => '1baee2', 'PLL_SYSTEM' => 'FF9800'];
 		$colors = (new \App\Db\Query())->select(['notification_type', 'color'])->from('vtiger_notification_type')->createCommand()->queryAllByGroup();
 		foreach ($newColors as $label => $color) {
-			if (!isset($colors[$label])) {
+			if (!array_key_exists($label, $colors)) {
 				$this->log("[ERROR] . No required value {$label} in the notification_type field");
 			} elseif (empty($colors[$label])) {
 				$updateData[] = ['vtiger_notification_type', ['color' => $color], ['notification_type' => $label]];
@@ -856,18 +862,87 @@ class YetiForceUpdate
 			$this->importer->logs .= " | Error(8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
 		}
 
-		$this->dropIndex(['u_yf_modtracker_inv' => ['u_yf_modtracker_inv_id_idx']]);
-		$subQuery = (new \App\Db\Query(['id']))->select()->from('vtiger_modtracker_basic');
-		$db->createCommand()->delete('vtiger_modtracker_detail', ['not',['id' => $subQuery]])->execute();
-		$db->createCommand()->delete('vtiger_modtracker_relations', ['not',['id' => $subQuery]])->execute();
-		$db->createCommand()->delete('u_yf_modtracker_inv', ['not',['id' => $subQuery]])->execute();
+		$subQuery = (new \App\Db\Query())->select(['id'])->from('vtiger_modtracker_basic');
+		$db->createCommand()->delete('vtiger_modtracker_detail', ['not', ['id' => $subQuery]])->execute();
+		$db->createCommand()->delete('vtiger_modtracker_relations', ['not', ['id' => $subQuery]])->execute();
+		$db->createCommand()->delete('u_yf_modtracker_inv', ['not', ['id' => $subQuery]])->execute();
+		$this->dropIndex(['u_yf_modtracker_inv' => ['u_yf_modtracker_inv_id_idx'],'vtiger_modtracker_relations'=>['PRIMARY']]);
+		$this->removeForeignKey(['u_yf_modtracker_inv_id_fk' => 'u_yf_modtracker_inv']);
 		$base = (new \App\Db\Importers\Base());
+		$base->tables = [
+			'u_#__modtracker_inv' => [
+				'columns' => [
+					'id' => $base->integer(10)->unsigned()->notNull(),
+					'changes' => $base->text()->notNull(),
+				],
+				'index' => [
+					['fk_1_u_yf_modtracker_inv', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_basic' => [
+				'columns' => [
+					'id' => $base->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'crmid' => $base->integer(10)->unsigned()->notNull(),
+					'module' => $base->stringType(25)->notNull(),
+					'whodid' => $base->integer(10)->unsigned()->notNull(),
+					'changedon' => $base->dateTime()->notNull(),
+					'status' => $base->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'last_reviewed_users' => $base->stringType()->notNull()->defaultValue(''),
+				],
+				'columns_mysql' => [
+					'status' => $base->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_detail' => [
+				'columns' => [
+					'id' => $base->integer(10)->unsigned()->notNull(),
+					'fieldname' => $base->stringType(50)->notNull()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modtracker_relations' => [
+				'columns' => [
+					'id' => $base->integer(10)->unsigned()->notNull(),
+					'targetmodule' => $base->stringType(25)->notNull(),
+					'targetid' => $base->integer(10)->unsigned()->notNull()
+				],
+				'index' => [
+					['vtiger_modtracker_relations_id_idx', 'id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			]
+		];
 		$base->foreignKey = [
 			['fk_1_vtiger_modtracker_detail', 'vtiger_modtracker_detail', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null],
 			['fk_1_vtiger_modtracker_relations', 'vtiger_modtracker_relations', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null],
+			['u_yf_modtracker_inv_id_fk', 'u_yf_modtracker_inv', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null]
 		];
+		$this->importer->updateTables($base);
 		$this->importer->updateForeignKey($base);
 		$this->importer->logs(false);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function removeForeignKey(array $data)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = App\Db::getInstance('admin');
+		foreach ($data as $keyName => $tableName) {
+			$tableSchema = $db->getTableSchema($tableName, true);
+			$keyName = str_replace('#__', $db->tablePrefix, $keyName);
+			if (isset($tableSchema->foreignKeys[$keyName])) {
+				$db->createCommand()->dropForeignKey($keyName, $tableName)->execute();
+			}
+		}
+
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -1144,12 +1219,12 @@ class YetiForceUpdate
 	private function removeField($fieldModel, $newName = false)
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$newName} | " . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$newName} | " . date('Y-m-d H:i:s'));
 		try {
 			if (false === $newName) {
 				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
 				$fieldInstance->delete();
-				if ('vtiger_crmentity' === $fieldModel->getTableName() && !(new \App\Db\Query())->from('vtiger_field')->where(['columnname' => $fieldModel->getColumnName(), ['tablename' => $fieldModel->getTableName()]])->exists()) {
+				if ('vtiger_crmentity' === $fieldModel->getTableName() && !(new \App\Db\Query())->from('vtiger_field')->where(['columnname' => $fieldModel->getColumnName(), 'tablename' => $fieldModel->getTableName()])->exists()) {
 					$this->importer->dropColumns([[$fieldModel->getTableName(), $fieldModel->getColumnName()]]);
 					$this->importer->logs(false);
 				}
@@ -1323,28 +1398,34 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$files = ['user_privileges/module_record_allocation.php','user_privileges/moduleHierarchy.php','user_privileges/sharedOwner.php'];
-		foreach($files as $file){
-			$from = 'user_privileges/'.$file;
-			if(file_exists($files)){
-				$result = rename($from,"app_data/{$file}");
-				if(!$result){
+		$files = ['user_privileges/module_record_allocation.php', 'user_privileges/moduleHierarchy.php', 'user_privileges/sharedOwner.php'];
+		$rootDirectory = ROOT_DIRECTORY . DIRECTORY_SEPARATOR;
+		foreach ($files as $file) {
+			$from = $rootDirectory.'user_privileges/' . $file;
+			if (file_exists($from)) {
+				$result = rename($from, "{$rootDirectory}app_data/{$file}");
+				if (!$result) {
 					$this->log("[ERROR] File transfer error: {$from}");
 				}
-			}else{
+			} else {
 				$this->log("[INFO] Skip move file. File not exists: {$from}");
 			}
 		}
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
+		\App\Cache::clearAll();
+		if($this->error){
+			$this->stopProcess();
+		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-		$this->stopProcess();
 		return true;
 	}
 
 	public function stopProcess()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		\App\Module::createModuleMetaFile();
 		\App\Cache::clear();
 		\App\Cache::clearOpcache();
@@ -1372,8 +1453,9 @@ class YetiForceUpdate
 		ob_end_clean();
 		echo '<div class="modal in" style="display: block;top: 20%;"><div class="modal-dialog"><div class="modal-content"><div class="modal-header">
 		<h4 class="modal-title">' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h4>
-		</div><div class="modal-body">' . \App\Language::translate('LBL_IMPORTED_UPDATE', 'Settings:ModuleManager') .
-			'</div><div class="modal-footer"><a class="btn btn-success" href="index.php?module=LangManagement&parent=Settings&view=Index&block=4&fieldid=53"></span>' . \App\Language::translate('LangManagement', 'Settings:LangManagement') . '<a></div></div></div></div>';
+		</div><div class="modal-body">Some errors appeared during the update.
+		We recommend verifying logs and updating the system once again.</div><div class="modal-footer"></div></div></div></div>';
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		exit;
 	}
 
