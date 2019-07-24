@@ -1,0 +1,64 @@
+{
+  "type": "component",
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
+  "props": {
+    "showing": {
+      "type": "Boolean",
+      "desc": "State - loading or not",
+      "category": "state"
+    },
+    "color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name, for Spinner (unless using the default slot)",
+      "examples": [
+        "16px",
+        "2rem"
+      ],
+      "category": "style",
+      "default": "42px"
+    },
+    "transition-show": {
+      "type": "String",
+      "desc": "One of Quasar's embedded transitions",
+      "examples": [
+        "fade",
+        "slide-down"
+      ],
+      "category": "behavior",
+      "default": "fade"
+    },
+    "transition-hide": {
+      "type": "String",
+      "desc": "One of Quasar's embedded transitions",
+      "examples": [
+        "fade",
+        "slide-down"
+      ],
+      "category": "behavior",
+      "default": "fade"
+    },
+    "dark": {
+      "type": "Boolean",
+      "desc": "Notify the component that the background is a dark color",
+      "category": "style"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Default slot is used for replacing default Spinner; Suggestions: a spinner or text"
+    }
+  }
+}

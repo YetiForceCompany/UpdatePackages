@@ -1,0 +1,38 @@
+{
+  "type": "component",
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
+  "props": {
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name",
+      "examples": [
+        "16px",
+        "2rem"
+      ],
+      "category": "style"
+    },
+    "color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "thickness": {
+      "type": "Number",
+      "desc": "Override value to use for stroke-width",
+      "default": 5,
+      "examples": [
+        "2",
+        "5"
+      ],
+      "category": "style"
+    }
+  }
+}
