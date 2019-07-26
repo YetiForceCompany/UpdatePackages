@@ -524,7 +524,6 @@ class YetiForceUpdate
 					], ['eventhandler_id' => $handler['eventhandler_id']])->execute();
 				}
 			}
-			$this->addFieldsAndBlock($moduleName);
 			$transaction->commit();
 		} catch (\Throwable $ex) {
 			$transaction->rollBack();
@@ -532,56 +531,7 @@ class YetiForceUpdate
 		}
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-	}
 
-	/**
-	 * Add block and fields.
-	 *
-	 * @param string $moduleName
-	 *
-	 * @return void
-	 */
-	private function addFieldsAndBlock(string $moduleName)
-	{
-		$stateTimeFields = [
-			'RangeTime' => [
-				'response_range_time' => 'FL_RESPONSE_RANGE_TIME',
-				'solution_range_time' => 'FL_SOLUTION_RANGE_TIME',
-				'idle_range_time' => 'FL_IDLE_RANGE_TIME',
-				'closing_range_time' => 'FL_CLOSING_RANGE_TIME',
-			],
-			'DateTime' => [
-				'response_datatime' => 'FL_RESPONSE_DATE_TIME',
-				'solution_datatime' => 'FL_SOLUTION_DATE_TIME',
-				'idle_datatime' => 'FL_IDLE_DATE_TIME',
-				'closing_datatime' => 'FL_CLOSING_DATE_TIME',
-				'response_expected' => 'FL_RESPONSE_EXPECTED',
-				'solution_expected' => 'FL_SOLUTION_EXPECTED',
-				'idle_expected' => 'FL_IDLE_DATE_EXPECTED',
-			]
-		];
-		$moduleModel = \Settings_LayoutEditor_Module_Model::getInstanceByName($moduleName);
-		$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => 'BL_RECORD_STATUS_TIMES', 'tabid' => $moduleModel->getId()])->scalar();
-		if (!$blockId) {
-			$blockInstance = new \Settings_LayoutEditor_Block_Model();
-			$blockInstance->set('label', 'BL_RECORD_STATUS_TIMES');
-			$blockId = $blockInstance->save($moduleModel);
-		}
-		$allFields = $moduleModel->getFields();
-		foreach ($stateTimeFields as $type => $fields) {
-			foreach ($fields as $name => $label) {
-				if (!isset($allFields[$name])) {
-					$moduleModel->addField($type, $blockId, [
-						'fieldLabel' => $label,
-						'fieldName' => $name,
-						'fieldTypeList' => 0,
-						'generatedtype' => 1,
-						'displayType' => 2,
-						'helpinfo' => 'Detail'
-					]);
-				}
-			}
-		}
 	}
 
 	private function updateData()
@@ -847,7 +797,7 @@ class YetiForceUpdate
 				$dropTable[] = $tableToRemove;
 			}
 		}
-		$this->importer->dropTable($dropTable);
+		$this->importer->dropTable(array_unique($dropTable));
 
 		// FULLTEXT
 		$this->importer->logs .= "> start updateScheme()\n";
@@ -862,87 +812,14 @@ class YetiForceUpdate
 			$this->importer->logs .= " | Error(8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
 		}
 
-		$subQuery = (new \App\Db\Query())->select(['id'])->from('vtiger_modtracker_basic');
-		$db->createCommand()->delete('vtiger_modtracker_detail', ['not', ['id' => $subQuery]])->execute();
-		$db->createCommand()->delete('vtiger_modtracker_relations', ['not', ['id' => $subQuery]])->execute();
-		$db->createCommand()->delete('u_yf_modtracker_inv', ['not', ['id' => $subQuery]])->execute();
-		$this->dropIndex(['u_yf_modtracker_inv' => ['u_yf_modtracker_inv_id_idx'],'vtiger_modtracker_relations'=>['PRIMARY']]);
-		$this->removeForeignKey(['u_yf_modtracker_inv_id_fk' => 'u_yf_modtracker_inv']);
-		$base = (new \App\Db\Importers\Base());
-		$base->tables = [
-			'u_#__modtracker_inv' => [
-				'columns' => [
-					'id' => $base->integer(10)->unsigned()->notNull(),
-					'changes' => $base->text()->notNull(),
-				],
-				'index' => [
-					['fk_1_u_yf_modtracker_inv', 'id'],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_basic' => [
-				'columns' => [
-					'id' => $base->integer(10)->unsigned()->autoIncrement()->notNull(),
-					'crmid' => $base->integer(10)->unsigned()->notNull(),
-					'module' => $base->stringType(25)->notNull(),
-					'whodid' => $base->integer(10)->unsigned()->notNull(),
-					'changedon' => $base->dateTime()->notNull(),
-					'status' => $base->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
-					'last_reviewed_users' => $base->stringType()->notNull()->defaultValue(''),
-				],
-				'columns_mysql' => [
-					'status' => $base->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_detail' => [
-				'columns' => [
-					'id' => $base->integer(10)->unsigned()->notNull(),
-					'fieldname' => $base->stringType(50)->notNull()
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_modtracker_relations' => [
-				'columns' => [
-					'id' => $base->integer(10)->unsigned()->notNull(),
-					'targetmodule' => $base->stringType(25)->notNull(),
-					'targetid' => $base->integer(10)->unsigned()->notNull()
-				],
-				'index' => [
-					['vtiger_modtracker_relations_id_idx', 'id'],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			]
-		];
-		$base->foreignKey = [
-			['fk_1_vtiger_modtracker_detail', 'vtiger_modtracker_detail', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null],
-			['fk_1_vtiger_modtracker_relations', 'vtiger_modtracker_relations', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null],
-			['u_yf_modtracker_inv_id_fk', 'u_yf_modtracker_inv', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null]
-		];
-		$this->importer->updateTables($base);
-		$this->importer->updateForeignKey($base);
-		$this->importer->logs(false);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-	}
-
-	private function removeForeignKey(array $data)
-	{
-		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-
-		$db = App\Db::getInstance('admin');
-		foreach ($data as $keyName => $tableName) {
-			$tableSchema = $db->getTableSchema($tableName, true);
-			$keyName = str_replace('#__', $db->tablePrefix, $keyName);
-			if (isset($tableSchema->foreignKeys[$keyName])) {
-				$db->createCommand()->dropForeignKey($keyName, $tableName)->execute();
-			}
+		$tableName = 'a_yf_record_converter';
+		$columnScheme = $db->getTableSchema($tableName)->getColumn('id');
+		if(!$columnScheme->autoIncrement){
+			$this->importer->logs .= "  > alter column: {$tableName}:{$columnScheme->name} ... ";
+			$db->createCommand()->alterColumn($tableName, $columnScheme->name, $importerType->smallInteger(10)->autoIncrement()->notNull())->execute();
+			$this->importer->logs .= "done\n";
 		}
-
+		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -1004,7 +881,7 @@ class YetiForceUpdate
 					$remove = true;
 				}
 			} else {
-				$this->log("[ERROR] Column not exists. {$tableName}");
+				$this->log("[ERROR] Column not exists. {$tableName}:{$fieldName}");
 			}
 		} else {
 			$this->log("[ERROR] Table not exists. {$tableName}");
@@ -1077,6 +954,27 @@ class YetiForceUpdate
 				[90, 2826, 'payment_status', 'u_yf_ssingleorders', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 17, 284, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
 
 				[13, 2791, 'parentid', 'vtiger_troubletickets', 1, 10, 'parentid', 'FL_HELP_DESK_PARENT', 0, 0, '', null, 13, 27, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'HelpDesk'],
+				[13,2806,'response_range_time','vtiger_troubletickets',1,308,'response_range_time','FL_RESPONSE_RANGE_TIME',0,2,'',null,0,444,2,'I~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2807,'solution_range_time','vtiger_troubletickets',1,308,'solution_range_time','FL_SOLUTION_RANGE_TIME',0,2,'',null,0,444,2,'I~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2808,'idle_range_time','vtiger_troubletickets',1,308,'idle_range_time','FL_IDLE_RANGE_TIME',0,2,'',null,0,444,2,'I~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2809,'closing_range_time','vtiger_troubletickets',1,308,'closing_range_time','FL_CLOSING_RANGE_TIME',0,2,'',null,0,444,2,'I~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2810,'response_datatime','vtiger_troubletickets',1,79,'response_datatime','FL_RESPONSE_DATE_TIME',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2811,'solution_datatime','vtiger_troubletickets',1,79,'solution_datatime','FL_SOLUTION_DATE_TIME',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2812,'idle_datatime','vtiger_troubletickets',1,79,'idle_datatime','FL_IDLE_DATE_TIME',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2813,'closing_datatime','vtiger_troubletickets',1,79,'closing_datatime','FL_CLOSING_DATE_TIME',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2814,'response_expected','vtiger_troubletickets',1,79,'response_expected','FL_RESPONSE_EXPECTED',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2815,'solution_expected','vtiger_troubletickets',1,79,'solution_expected','FL_SOLUTION_EXPECTED',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
+				[13,2816,'idle_expected','vtiger_troubletickets',1,79,'idle_expected','FL_IDLE_DATE_EXPECTED',0,2,'',null,0,444,2,'DT~O',1,0,'BAS',1,'Detail',0,'',null,0,0,0,
+				'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [],'blockData'=>['label'=>'BL_RECORD_STATUS_TIMES'] ,'moduleName' => 'HelpDesk'],
 				[13, 2829, 'sum_time_subordinate', 'vtiger_troubletickets', 1, 7, 'sum_time_subordinate', 'FL_SUM_TIME_SUBORDINATE', 1, 2, '', '99999999', 14, 27, 10, 'NN~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(10, 2), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'HelpDesk'],
 
 				[34, 2827, 'description', 'vtiger_crmentity', 1, 300, 'description', 'Description', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
@@ -1398,7 +1296,7 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$files = ['user_privileges/module_record_allocation.php', 'user_privileges/moduleHierarchy.php', 'user_privileges/sharedOwner.php'];
+		$files = ['module_record_allocation.php', 'moduleHierarchy.php', 'sharedOwner.php'];
 		$rootDirectory = ROOT_DIRECTORY . DIRECTORY_SEPARATOR;
 		foreach ($files as $file) {
 			$from = $rootDirectory.'user_privileges/' . $file;
@@ -1415,7 +1313,7 @@ class YetiForceUpdate
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
 		\App\Cache::clearAll();
-		if($this->error){
+		if($this->error || false !== stripos($this->importer->logs, ' Error')){
 			$this->stopProcess();
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1461,37 +1359,8 @@ class YetiForceUpdate
 
 	private function createConfigFiles()
 	{
+		\App\Cache::resetOpcache();
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
-		// \App\Config::set('module', 'Project', 'defaultGanttColors', [
-		// 	'Project' => [
-		// 		'projectstatus' => [
-		// 			'PLL_PLANNED' => '#7B1FA2',
-		// 			'PLL_IN_PROGRESSING' => '#1976D2',
-		// 			'PLL_IN_APPROVAL' => '#F57C00',
-		// 			'PLL_ON_HOLD' => '#455A64',
-		// 			'PLL_COMPLETED' => '#388E3C',
-		// 			'PLL_CANCELLED' => '#616161',
-		// 		],
-		// 	],
-		// 	'ProjectMilestone' => [
-		// 		'projectmilestone_status' => [
-		// 			'PLL_PLANNED' => '#3F51B5',
-		// 			'PLL_IN_PROGRESSING' => '#2196F3',
-		// 			'PLL_COMPLETED' => '#4CAF50',
-		// 			'PLL_ON_HOLD' => '#607D8B',
-		// 			'PLL_CANCELLED' => '#9E9E9E',
-		// 		],
-		// 	],
-		// 	'ProjectTask' => [
-		// 		'projecttaskstatus' => [
-		// 			'PLL_PLANNED' => '#7986CB',
-		// 			'PLL_IN_PROGRESSING' => '#64B5F6',
-		// 			'PLL_COMPLETED' => '#81C784',
-		// 			'PLL_ON_HOLD' => '#90A4AE',
-		// 			'PLL_CANCELLED' => '#E0E0E0',
-		// 		],
-		// 	]
-		// ]);
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();

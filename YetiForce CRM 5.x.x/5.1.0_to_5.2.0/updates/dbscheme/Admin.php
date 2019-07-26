@@ -167,6 +167,23 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'i_#__magento_config' => [
+				'columns' => [
+					'name' => $this->stringType(15),
+					'value' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'i_#__magento_record' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'crmid' => $this->integer(10)->unsigned()->notNull(),
+					'type' => $this->stringType(25)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['s_#__auto_record_flow_updater_ibfk_1', 's_#__auto_record_flow_updater', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', null],
