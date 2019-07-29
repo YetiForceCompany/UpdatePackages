@@ -1,0 +1,14 @@
+License: YetiForce Public License 3.0 licenses/License.html
+The update time might be longer depending on the server speed and amount of data in the system.
+Before the update you should disable all cron actions so that none of them are triggered while the system is being updated.
+Log files should be checked after update.
+
+Verify users' access in webservice configuration if you use webservices.
+
+Removed widgets: Delagated Events/To Dos, Delegated (overdue) Events/ToDos
+We modified Accounts, FAQ, Payments In, Services, Products, Invoices, Help Desk, Orders, Knowledge Base, and Service Contracts modules therefore we recommend verifying data, actions and conditions that use fields from these modules, such as filters or workflow actions.
+
+After the update process finishes, please also update all the languages in your system.
+
+Before you begin the update please check the latest server configuration requirements.
+https://gitdeveloper.yetiforce.com/index.php?parent=Settings&module=ConfReport&view=Index&block=14&fieldid=65
