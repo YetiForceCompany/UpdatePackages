@@ -214,6 +214,8 @@ class YetiForceUpdate
 			$dataReader = (new \App\Db\Query())->select(['cvid'])->from('vtiger_customview')->createCommand()->query();
 			while ($row = $dataReader->read()) {
 				$model = CustomView_Record_Model::getInstanceById($row['cvid']);
+				$moduleName = $model->get('entitytype');
+				$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
 				$advfilterlist = [];
 				$dataReaderCondition = (new \App\Db\Query())
 					->from('vtiger_cvadvfilter')
@@ -225,9 +227,12 @@ class YetiForceUpdate
 						'rules' => []
 					];
 					while ($condition = $dataReaderCondition->read()) {
-						$moduleName = $model->get('entitytype');
 						[$tableName, $columnName, $fieldName] = array_pad(explode(':', $condition['columnname']), 3, false);
-						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, Vtiger_Module_Model::getInstance($moduleName));
+						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, $moduleModel);
+						if(!$fieldModel){
+							$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' groupid=1| No field: ' . $fieldName. ' | ' . $moduleName .' | ' .$row['cvid'] );
+							continue;
+						}
 						$value = $condition['value'];
 						if (in_array($fieldModel->getFieldDataType(), [
 							'userCreator', 'userReference', 'picklist', 'tree',
@@ -253,10 +258,12 @@ class YetiForceUpdate
 						'rules' => []
 					];
 					while ($condition = $dataReaderCondition->read()) {
-						$moduleName = $model->get('entitytype');
 						[$tableName, $columnName, $fieldName] = array_pad(explode(':', $condition['columnname']), 3, false);
-						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, Vtiger_Module_Model::getInstance($moduleName));
-
+						$fieldModel = Vtiger_Field_Model::getInstance($fieldName, $moduleModel);
+						if(!$fieldModel){
+							$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' groupid=2| No field:  ' . $fieldName. ' ' . $moduleName);
+							continue;
+						}
 						$value = $condition['value'];
 						if (in_array($fieldModel->getFieldDataType(), [
 							'userCreator', 'userReference', 'picklist', 'tree',
@@ -1832,7 +1839,7 @@ class YetiForceUpdate
 
 		$langCode = (new \App\Db\Query())->select(['prefix'])->from('vtiger_language')->where(['isdefault' => 1])->scalar();
 		AppConfig::set('main', 'default_language', $langCode);
-		
+
 		$skip = ['module', 'component', 'db', 'api', 'sounds'];
 		foreach (array_diff(UpdateConfig::TYPES, $skip) as $type) {
 			(new UpdateConfig($type))->create();
