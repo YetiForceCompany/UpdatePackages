@@ -184,6 +184,19 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			's_#__companies' => [
+				'columns' => [
+					'vat_id' => $this->stringType(30),
+					'address' => $this->stringType(),
+					'post_code' => $this->stringType(20),
+					'country' => $this->stringType(100),
+					'facebook' => $this->stringType(),
+					'twitter' => $this->stringType(),
+					'linkedin' => $this->stringType()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			]
 		];
 		$this->foreignKey = [
 			['s_#__auto_record_flow_updater_ibfk_1', 's_#__auto_record_flow_updater', 'source_module', 'vtiger_tab', 'tabid', 'CASCADE', null],
