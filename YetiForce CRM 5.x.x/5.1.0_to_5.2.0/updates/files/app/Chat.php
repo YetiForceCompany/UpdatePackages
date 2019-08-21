@@ -29,6 +29,7 @@ final class Chat
 	const TABLE_NAME = [
 		'message' => ['crm' => 'u_#__chat_messages_crm', 'group' => 'u_#__chat_messages_group', 'global' => 'u_#__chat_messages_global'],
 		'room' => ['crm' => 'u_#__chat_rooms_crm', 'group' => 'u_#__chat_rooms_group', 'global' => 'u_#__chat_rooms_global'],
+		'room_name' => ['crm' => 'u_#__crmentity_label', 'group' => 'vtiger_groups', 'global' => 'u_#__chat_global']
 	];
 
 	/**
@@ -37,6 +38,7 @@ final class Chat
 	const COLUMN_NAME = [
 		'message' => ['crm' => 'crmid', 'group' => 'groupid', 'global' => 'globalid'],
 		'room' => ['crm' => 'crmid', 'group' => 'groupid', 'global' => 'global_room_id'],
+		'room_name' => ['crm' => 'label', 'group' => 'groupname', 'global' => 'name']
 	];
 
 	/**
@@ -186,7 +188,8 @@ final class Chat
 		$rooms = [];
 		while ($row = $dataReader->read()) {
 			$row['name'] = Language::translate($row['name'], 'Chat');
-			$rooms[] = $row;
+			$row['roomType'] = 'global';
+			$rooms[$row['recordid']] = $row;
 		}
 		$dataReader->close();
 		return $rooms;
@@ -221,6 +224,7 @@ final class Chat
 		while ($row = $dataReader->read()) {
 			if (isset($groups[$row['recordid']])) {
 				$row['isPinned'] = true;
+				$row['roomType'] =  'group';
 				$groups[$row['recordid']] = $row;
 			}
 		}
@@ -228,7 +232,7 @@ final class Chat
 			if (is_string($group)) {
 				$group = ['recordid' => $id, 'name' => $group, 'isPinned' => false];
 			}
-			$rows[] = $group;
+			$rows[$id] = $group;
 		}
 		$dataReader->close();
 		return $rows;
@@ -264,7 +268,8 @@ final class Chat
 			$recordModel = \Vtiger_Record_Model::getInstanceById($row['recordid']);
 			if ($recordModel->isViewable()) {
 				$row['moduleName'] = $recordModel->getModuleName();
-				$rows[] = $row;
+				$row['roomType'] = 'crm';
+				$rows[$row['recordid']] = $row;
 			}
 		}
 		$dataReader->close();
@@ -314,20 +319,22 @@ final class Chat
 	/**
 	 * Rerun the number of new messages.
 	 *
-	 * @return int
+	 * @return array
 	 */
-	public static function getNumberOfNewMessages(): int
+	public static function getNumberOfNewMessages(): array
 	{
 		$numberOfNewMessages = 0;
 		$roomInfo = static::getRoomsByUser();
+		$roomList = [];
 		foreach (['crm', 'group', 'global'] as $roomType) {
-			foreach ($roomInfo[$roomType] as $item) {
-				if (isset($item['cnt_new_message'])) {
-					$numberOfNewMessages += $item['cnt_new_message'];
+			foreach ($roomInfo[$roomType] as $room) {
+				if (!empty($room['cnt_new_message'])) {
+					$numberOfNewMessages += $room['cnt_new_message'];
+					$roomList[$roomType][$room['recordid']]['cnt_new_message'] = $room['cnt_new_message'];
 				}
 			}
 		}
-		return $numberOfNewMessages;
+		return ['roomList' => $roomList, 'amount' => $numberOfNewMessages];
 	}
 
 	/**
@@ -582,12 +589,16 @@ final class Chat
 	 */
 	public function getHistoryByType(string $roomType = 'global', ?int $messageId = null)
 	{
+		$columnMessage = static::COLUMN_NAME['message'][$roomType];
+		$columnRoomName = static::COLUMN_NAME['room_name'][$roomType];
+		$roomNameId = $roomType === 'global' ?  static::COLUMN_NAME['room']['global'] : $columnMessage;
 		$query = (new Db\Query())
 			->select([
 				'id', 'messages', 'userid', 'created',
-				'recordid' => static::COLUMN_NAME['message'][$roomType],
+				'recordid' => "GL.{$columnMessage}", 'room_name' => "RN.{$columnRoomName}"
 			])
 			->from(['GL' => static::TABLE_NAME['message'][$roomType]])
+			->leftJoin(['RN' => static::TABLE_NAME['room_name'][$roomType]], "RN.{$roomNameId} = GL.{$columnMessage}")
 			->where(['userid' => $this->userId])
 			->orderBy(['id' => \SORT_DESC])
 			->limit(\App\Config::module('Chat', 'CHAT_ROWS_LIMIT') + 1);
@@ -606,6 +617,9 @@ final class Chat
 			$row['user_name'] = $userName;
 			$row['role_name'] = $userRoleName;
 			$row['messages'] = static::decodeMessage($row['messages']);
+			if ('global' === $roomType) {
+				$row['room_name'] = Language::translate($row['room_name']);
+			}
 			$rows[] = $row;
 		}
 		return \array_reverse($rows);
@@ -983,5 +997,15 @@ final class Chat
 	private static function decodeMessage(string $message): string
 	{
 		return nl2br(\App\Utils\Completions::decode(\App\Purifier::purifyHtml(\App\Purifier::decodeHtml($message))));
+	}
+
+	/**
+	 * Get chat modules.
+	 *
+	 * @return array
+	 */
+	public static function getChatModules(): array
+	{
+		return array_keys(\App\ModuleHierarchy::getModulesHierarchy());
 	}
 }

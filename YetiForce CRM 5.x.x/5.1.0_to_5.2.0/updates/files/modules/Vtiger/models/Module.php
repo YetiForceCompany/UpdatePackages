@@ -526,14 +526,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 	 */
 	public function getFieldByName($fieldName)
 	{
-		if (!$this->fields) {
-			$this->getFields();
-		}
-		if (isset($this->fields[$fieldName])) {
-			return $this->fields[$fieldName];
-		}
-		App\Log::warning("Field does not exist: $fieldName in {$this->getName()} | " . __METHOD__);
-		return false;
+		return $this->getFields()[$fieldName] ?? false;
 	}
 
 	/**
@@ -1550,6 +1543,7 @@ class Vtiger_Module_Model extends \vtlib\Module
 			$tabId = \App\Module::getModuleId($this->getName());
 			\App\Cache::delete('moduleTabByName', $this->getName());
 			\App\Cache::delete('moduleTabById', $tabId);
+			\App\Cache::delete('moduleTabs', 'all');
 			\App\Cache::staticDelete('module', $this->getName());
 			\App\Cache::staticDelete('module', $tabId);
 			$this->type = $type;

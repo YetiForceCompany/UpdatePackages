@@ -49,7 +49,7 @@ class ConfReport
 	 */
 	public static $stability = [
 		'phpVersion' => ['recommended' => '7.1.x, 7.2.x, 7.3.x', 'type' => 'Version', 'container' => 'env', 'testCli' => true, 'label' => 'PHP'],
-		'protocolVersion' => ['recommended' => '1.x', 'type' => 'Version', 'container' => 'env', 'testCli' => false, 'label' => 'PROTOCOL_VERSION'],
+		'protocolVersion' => ['recommended' => '1.x, 2.0', 'type' => 'Version', 'container' => 'env', 'testCli' => false, 'label' => 'PROTOCOL_VERSION'],
 		'error_reporting' => ['recommended' => 'E_ALL & ~E_NOTICE', 'type' => 'ErrorReporting', 'container' => 'php', 'testCli' => true],
 		'output_buffering' => ['recommended' => 'On', 'type' => 'OnOffInt', 'container' => 'php', 'testCli' => true],
 		'max_execution_time' => ['recommended' => 600, 'type' => 'Greater', 'container' => 'php', 'testCli' => true],
@@ -207,7 +207,7 @@ class ConfReport
 		'opcache.save_comments' => ['recommended' => 0, 'type' => 'Equal', 'container' => 'php', 'testCli' => true],
 		'opcache.file_update_protection' => ['recommended' => 0, 'type' => 'Equal', 'container' => 'php', 'testCli' => true],
 		'opcache.memory_consumption' => ['container' => 'php', 'testCli' => true],
-		'realpath_cache_size' => ['recommended' => '256k', 'type' => 'RealpathCacheSize', 'container' => 'php', 'testCli' => true],
+		'realpath_cache_size' => ['recommended' => '256k', 'type' => 'GreaterMb', 'container' => 'php', 'testCli' => true],
 		'realpath_cache_ttl' => ['recommended' => 600, 'type' => 'Greater', 'container' => 'php', 'testCli' => true],
 		'mysqlnd.collect_statistics' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true],
 		'mysqlnd.collect_memory_statistics' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true],
@@ -244,7 +244,7 @@ class ConfReport
 		'spaceRoot' => ['container' => 'env', 'type' => 'Space', 'testCli' => false, 'label' => 'SPACE_ROOT'],
 		'spaceStorage' => ['container' => 'env', 'type' => 'Space', 'testCli' => false, 'label' => 'SPACE_STORAGE'],
 		'spaceTemp' => ['container' => 'env', 'type' => 'Space', 'testCli' => false, 'label' => 'SPACE_TEMP'],
-		'lastCronStart' => ['container' => 'env', 'testCli' => false, 'label' => 'LAST_CRON_START'],
+		'lastCronStart' => ['container' => 'env', 'testCli' => false, 'label' => 'LAST_CRON_START', 'isHtml' => true],
 		'open_basedir' => ['container' => 'php', 'testCli' => true],
 		'variables_order' => ['container' => 'php', 'testCli' => true],
 		'cacertbundle' => ['recommended' => 'On','container' => 'env', 'type' => 'OnOff', 'testCli' => true, 'label' => 'CACERTBUNDLE'],
@@ -281,7 +281,7 @@ class ConfReport
 		'user_privileges/' => ['type' => 'IsWritable', 'testCli' => true],
 		'user_privileges/tabdata.php' => ['type' => 'IsWritable', 'testCli' => true],
 		'user_privileges/menu_0.php' => ['type' => 'IsWritable', 'testCli' => true],
-		'user_privileges/user_privileges_1.php' => ['type' => 'IsWritable', 'testCli' => true],
+		'user_privileges/user_privileges_1.php' => ['type' => 'IsWritable', 'testCli' => true, 'required'=>false],
 		'cache/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/addressBook/' => ['type' => 'IsWritable', 'testCli' => true],
 		'cache/images/' => ['type' => 'IsWritable', 'testCli' => true],
@@ -309,7 +309,7 @@ class ConfReport
 	 * @var array
 	 */
 	public static $functionalVerification = [
-		'footer' => ['type' => 'Footer',  'testCli' => false, 'label' => 'FOOTER'],
+		'branding' => ['type' => 'Branding',  'testCli' => false, 'label' => 'FOOTER'],
 		'premiumModules' => ['type' => 'PremiumModules',  'testCli' => false, 'label' => 'PREMIUM_MODULES'],
 	];
 	/**
@@ -1003,6 +1003,7 @@ class ConfReport
 			if (!\in_array($item, $value)) {
 				$row['status'] = false;
 				$item = "<b class=\"text-danger\">$item</b>";
+				$row['isHtml'] = true;
 			}
 		}
 		$row['recommended'] = \implode(', ', $recommended);
@@ -1115,30 +1116,8 @@ class ConfReport
 		unset($name);
 		foreach (array_diff(\explode(',', $row['recommended']), \explode(',', $row[$sapi])) as $type) {
 			$row['recommended'] = \str_replace($type, "<b class=\"text-danger\">$type</b>", $row['recommended']);
+			$row['isHtml'] = true;
 		}
-		return $row;
-	}
-
-	/**
-	 * Validate realpath cache size.
-	 *
-	 * @param string $name
-	 * @param array  $row
-	 * @param string $sapi
-	 *
-	 * @return array
-	 */
-	private static function validateRealpathCacheSize(string $name, array $row, string $sapi)
-	{
-		unset($name);
-		$current = realpath_cache_size();
-		$max = \vtlib\Functions::parseBytes($row[$sapi]);
-		$converter = $current / $max;
-		if ($converter > 1) {
-			$row['recommended'] = \vtlib\Functions::showBytes(ceil($converter) * $max);
-			$row['status'] = false;
-		}
-		$row[$sapi] = \vtlib\Functions::showBytes($row[$sapi]);
 		return $row;
 	}
 
@@ -1155,11 +1134,14 @@ class ConfReport
 	{
 		$row['status'] = \App\Fields\File::isWriteable($name);
 		$row[$sapi] = $row['status'] ? 'LBL_YES' : 'LBL_NO';
+		if(isset($row['required']) && $row['required'] === false && !file_exists(\ROOT_DIRECTORY . \DIRECTORY_SEPARATOR .$name)){
+			$row['skip'] = true;
+		}
 		return $row;
 	}
 
 	/**
-	 * Validate footer value.
+	 * Validate branding value.
 	 *
 	 * @param string $name
 	 * @param array  $row
@@ -1167,10 +1149,24 @@ class ConfReport
 	 *
 	 * @return array
 	 */
-	private static function validateFooter(string $name, array $row, string $sapi)
+	private static function validateBranding(string $name, array $row, string $sapi)
 	{
-		unset($name);
+		$view = new \Vtiger_Viewer();
+		$view->assign('APPTITLE', \App\Language::translate('APPTITLE'));
+		$view->assign('YETIFORCE_VERSION', \App\Version::get());
+		$view->assign('MODULE_NAME', 'Base');
+		$view->assign('USER_MODEL', \Users_Record_Model::getCurrentUserModel());
+		$view->assign('ACTIVITY_REMINDER', 0);
+		$view->assign('FOOTER_SCRIPTS', []);
+		$view->assign('SHOW_FOOTER', true);
+		$html = $view->view('Footer.tpl', '', true);
 		$row['status'] = true;
+		$row['only_info'] = true;
+		if( !\App\Config::component('Branding', 'isCustomerBrandingActive') ){
+			$row['status'] = false !== \strpos($html, '&copy; YetiForce.com All rights reserved');
+			$row['status'] = $row['status'] && \App\YetiForce\Shop::check('DisableBranding');
+		}
+		unset($name);
 		$row[$sapi] = \App\Language::translate($row['status'] ? 'LBL_YES' : 'LBL_NO');
 		return $row;
 	}
@@ -1186,6 +1182,7 @@ class ConfReport
 	 */
 	private static function validatePremiumModules(string $name, array $row, string $sapi)
 	{
+		$row['only_info'] = true;
 		$row['status'] = true;
 		$row[$sapi] = \App\Language::translate($row['status'] ? 'LBL_YES' : 'LBL_NO');
 		return $row;

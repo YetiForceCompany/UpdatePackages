@@ -18,6 +18,22 @@ namespace App\YetiForce;
 class Shop
 {
 	/**
+	 * Premium icons.
+	 */
+	const PREMIUM_ICONS = [
+		1 => 'yfi-premium color-red-600',
+		2 => 'yfi-enterprise color-yellow-600',
+		3 => 'yfi-partners color-grey-600'
+	];
+
+	/**
+	 * Product instance cache.
+	 *
+	 * @var \App\YetiForce\Shop\AbstractBaseProduct[]
+	 */
+	public static $productCache = [];
+
+	/**
 	 * Get products.
 	 *
 	 * @param string $state
@@ -49,21 +65,23 @@ class Shop
 	 * @param string $department
 	 * @param string $name
 	 *
-	 * @return \App\YetiForce\Shop\AbstractBaseProduct[]
+	 * @return \App\YetiForce\Shop\AbstractBaseProduct
 	 */
-	public static function getProduct(string $name, string $department): object
+	public static function getProduct(string $name, string $department = ''): Shop\AbstractBaseProduct
 	{
 		if ($department) {
 			$className = "\\App\\YetiForce\\Shop\\Product\\$department\\$name";
 		} else {
 			$className = "\\App\\YetiForce\\Shop\\Product\\$name";
 		}
-		$instance = new $className($name);
-		$config = self::getConfig();
-		if (isset($config[$name]) && $config[$name]['product'] === $name) {
-			$instance->loadConfig($config[$name]);
+		if (isset(self::$productCache[$className])) {
+			return self::$productCache[$className];
 		}
-		return $instance;
+		$instance = new $className($name);
+		if ($config = self::getConfig($name)) {
+			$instance->loadConfig($config);
+		}
+		return self::$productCache[$className] = $instance;
 	}
 
 	/**
@@ -87,22 +105,17 @@ class Shop
 	/**
 	 * Get additional configuration.
 	 *
+	 * @param string $name
+	 *
 	 * @return array
 	 */
-	public static function getConfig(): array
+	public static function getConfig(string $name): array
 	{
-		$rows = [];
-		if (\is_dir(ROOT_DIRECTORY . '/app_data/shop/')) {
-			foreach ((new \DirectoryIterator(ROOT_DIRECTORY . '/app_data/shop/')) as $item) {
-				if (!$item->isDir() && 'php' === $item->getExtension()) {
-					$rows[$item->getBasename('.php')] = require ROOT_DIRECTORY . '/app_data/shop/' . $item->getBasename();
-				}
-			}
+		$config = [];
+		if (\is_dir(ROOT_DIRECTORY . '/app_data/shop/') && \file_exists(ROOT_DIRECTORY . "/app_data/shop/{$name}.php")) {
+			$config = require ROOT_DIRECTORY . "/app_data/shop/{$name}.php";
 		}
-		foreach (\App\YetiForce\Register::getProducts() as  $row) {
-			$rows[$row['product']] = $row;
-		}
-		return $rows;
+		return \App\YetiForce\Register::getProducts()[$name] ?? $config;
 	}
 
 	/**
@@ -153,18 +166,16 @@ class Shop
 	public static function verifyProductKey(string $key): bool
 	{
 		$key = base64_decode($key);
-		$l1 = substr($key, 0, 5);
-		$r1 = substr($key, -2);
-		$m = rtrim(ltrim($key, $l1), $r1);
+		$m = substr(substr($key, 5), 0, -2);
 		$p = substr($m, -5);
-		$m = rtrim($m, $p);
+		$m = substr($m, 0, -5);
 		$d = substr($m, -10);
-		$m = rtrim($m, $d);
+		$m = substr($m, 0, -10);
 		$s = substr($m, -5);
-		$m = rtrim($m, $s);
-		return substr(crc32($m), 2, 5) === $l1
+		$m = substr($m, 0, -5);
+		return substr(crc32($m), 2, 5) === substr($key, 0, 5)
 			&& substr(sha1($d . $p), 5, 5) === $s
-			&& $r1 === substr(sha1(substr(crc32($m), 2, 5) . $m . substr(sha1($d . $p), 5, 5) . $d . $p), 1, 2);
+			&& substr($key, -2) === substr(sha1(substr(crc32($m), 2, 5) . $m . substr(sha1($d . $p), 5, 5) . $d . $p), 1, 2);
 	}
 
 	/**
@@ -180,5 +191,31 @@ class Shop
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Generate cache.
+	 */
+	public static function generateCache()
+	{
+		$content = [];
+		foreach (self::getProducts() as $key => $row) {
+			$content[$key] = $row->verify(false);
+		}
+		\App\Utils::saveToFile(ROOT_DIRECTORY . '/app_data/shop.php', $content, 'Modifying this file will breach the licence terms', 0, true);
+	}
+
+	/**
+	 * Get from cache.
+	 *
+	 * @return bool
+	 */
+	public static function getFromCache()
+	{
+		$content = [];
+		if (\file_exists(ROOT_DIRECTORY . '/app_data/shop.php')) {
+			$content = include ROOT_DIRECTORY . '/app_data/shop.php';
+		}
+		return $content;
 	}
 }

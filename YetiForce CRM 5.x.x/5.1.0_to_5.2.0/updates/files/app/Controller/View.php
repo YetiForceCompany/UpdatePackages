@@ -218,9 +218,11 @@ abstract class View extends Base
 	public function getHeaderCss(\App\Request $request)
 	{
 		return $this->checkAndConvertCssStyles([
-			'~layouts/resources/icons/userIcons.css',
-			'~layouts/resources/icons/adminIcons.css',
+			'~layouts/resources/icons/userIcon.css',
+			'~layouts/resources/icons/adminIcon.css',
 			'~layouts/resources/icons/additionalIcons.css',
+			'~layouts/resources/icons/yfm.css',
+			'~layouts/resources/icons/yfi.css',
 			'~libraries/@fortawesome/fontawesome-free/css/all.css',
 			'~libraries/jquery-ui-dist/jquery-ui.css',
 			'~libraries/select2/dist/css/select2.css',

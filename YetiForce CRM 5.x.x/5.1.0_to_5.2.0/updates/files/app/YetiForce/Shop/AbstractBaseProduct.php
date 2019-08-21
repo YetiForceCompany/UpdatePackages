@@ -73,9 +73,11 @@ abstract class AbstractBaseProduct
 	/**
 	 * Verify the product.
 	 *
+	 * @param bool $cache
+	 *
 	 * @return bool
 	 */
-	abstract protected function verify(): bool;
+	abstract protected function verify($cache = true): bool;
 
 	/**
 	 * Construct.
@@ -197,6 +199,7 @@ abstract class AbstractBaseProduct
 		return [
 			'cmd' => '_xclick-subscriptions',
 			'no_shipping' => 1,
+			'no_note' => 1,
 			'src' => 1,
 			'sra' => 1,
 			't3' => 'M',
@@ -204,7 +207,6 @@ abstract class AbstractBaseProduct
 			'a3' => $this->getPrice(),
 			'item_name' => $this->name,
 			'currency_code' => $this->currencyCode,
-			'item_number' => 'ccc',
 			'on0' => 'Package',
 			'os0' => \App\Company::getSize(),
 		];

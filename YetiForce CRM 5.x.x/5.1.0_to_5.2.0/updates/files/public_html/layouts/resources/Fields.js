@@ -303,19 +303,20 @@ window.App.Fields = {
 			}
 			let timePicker24Hour = true;
 			let timeFormat = 'HH:mm';
-			if (hourFormat !== 24) {
+			if (hourFormat != '24') {
 				timePicker24Hour = false;
 				timeFormat = 'hh:mm A';
 			}
 			const format = dateFormat + ' ' + timeFormat;
+			let isDateRangePicker = elements.data('calendarType') !== 'range';
 			let params = {
 				parentEl: parentElement,
-				singleDatePicker: true,
+				singleDatePicker: isDateRangePicker,
 				showDropdowns: true,
 				timePicker: true,
+				autoUpdateInput: false,
 				timePicker24Hour: timePicker24Hour,
 				timePickerIncrement: 1,
-				autoUpdateInput: true,
 				autoApply: true,
 				opens: 'left',
 				locale: {
@@ -336,7 +337,11 @@ window.App.Fields = {
 				params = $.extend(params, customParams);
 			}
 			elements.daterangepicker(params).on('apply.daterangepicker', function applyDateRangePickerHandler(ev, picker) {
-				$(this).val(picker.startDate.format(format));
+				if (isDateRangePicker) {
+					$(this).val(picker.startDate.format(format));
+				} else {
+					$(this).val(picker.startDate.format(format) + ',' + picker.endDate.format(format));
+				}
 			});
 		}
 	},
@@ -481,6 +486,7 @@ window.App.Fields = {
 				let config = {
 					language: CONFIG.langKey,
 					allowedContent: true,
+					format_tags: 'p;h1;h2;h3;h4;h5;h6;pre;address;div',
 					removeButtons: '',
 					scayt_autoStartup: false,
 					enterMode: CKEDITOR.ENTER_BR,
@@ -497,7 +503,8 @@ window.App.Fields = {
 							}
 						}
 					},
-					extraPlugins: 'colorbutton,pagebreak,colordialog,find,selectall,showblocks,div,print,font,justify,bidi',
+					extraPlugins:
+						'colorbutton,pagebreak,colordialog,find,selectall,showblocks,div,print,font,justify,bidi,ckeditor-image-to-base64',
 					toolbar: 'Full',
 					toolbar_Full: [
 						{
@@ -508,7 +515,7 @@ window.App.Fields = {
 						{ name: 'links', items: ['Link', 'Unlink'] },
 						{
 							name: 'insert',
-							items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
+							items: ['ckeditor-image-to-base64', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
 						},
 						{ name: 'tools', items: ['Maximize', 'ShowBlocks'] },
 						{ name: 'paragraph', items: ['Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv'] },
@@ -1000,6 +1007,43 @@ window.App.Fields = {
 			} else {
 				app.errorLog(new Error(`Unknown select type [${view}]`));
 			}
+		},
+		/**
+		 * Show lazy select based on data passed in js.
+		 *
+		 * @param   {object}  selectElement  jQuery
+		 * @param   {object}  params         contains selectParams object, lazyElements number, data array
+		 */
+		showLazySelect(selectElement, params) {
+			$.fn.select2.amd.require(['select2/data/array', 'select2/utils'], (ArrayData, Utils) => {
+				function CustomData($element, params) {
+					CustomData.__super__.constructor.call(this, $element, params);
+				}
+				Utils.Extend(CustomData, ArrayData);
+				CustomData.prototype.query = (options, callback) => {
+					let results = [];
+					if (options.term && options.term !== '') {
+						results = params.data.filter(e => {
+							return e.text.toUpperCase().indexOf(options.term.toUpperCase()) >= 0;
+						});
+					} else {
+						results = params.data;
+					}
+					if (!('page' in options)) {
+						options.page = 1;
+					}
+					let data = {};
+					data.results = results.slice((options.page - 1) * params.lazyElements, options.page * params.lazyElements);
+					data.pagination = {};
+					data.pagination.more = options.page * params.lazyElements < results.length;
+					callback(data);
+				};
+				params.selectParams = Object.assign(params.selectParams, {
+					ajax: {},
+					dataAdapter: CustomData
+				});
+				this.showSelect2ElementView(selectElement, params.selectParams);
+			});
 		},
 		/**
 		 * Function which will show the select2 element for select boxes . This will use select2 library

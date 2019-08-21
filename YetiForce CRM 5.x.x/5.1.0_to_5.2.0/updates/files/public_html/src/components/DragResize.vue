@@ -14,6 +14,8 @@
       :preventActiveBehavior="true"
       :isActive="active"
       @activated="onActivated"
+      @dragstop="correctCoordinates"
+      @resizestop="correctCoordinates"
       :isResizable="true"
       :isDraggable="!maximized"
       v-on:resizing="resize"
@@ -27,7 +29,7 @@
       :class="[maximized ? 'fit position-sticky' : 'modal-mini', 'overflow-hidden']"
       ref="resize"
     >
-      <div class="fit" @mousedown="onFocusElement($event)" @touchstart="onFocusElement($event)">
+      <div class="fit">
         <slot></slot>
       </div>
     </vue-drag-resize>
@@ -38,9 +40,7 @@
 </template>
 
 <script>
-import VueDragResize from 'vue-drag-resize'
-import { createNamespacedHelpers } from 'vuex'
-const { mapGetters } = createNamespacedHelpers('KnowledgeBase')
+import VueDragResize from '~/node_modules/vue-drag-resize/src/components/vue-drag-resize.vue'
 export default {
   name: 'DragResize',
   components: { VueDragResize },
@@ -74,17 +74,41 @@ export default {
   },
   data() {
     return {
-      active: false
+      active: false,
+      minHeight: 32,
+      minWidth: 120
     }
   },
   methods: {
-    resize(newRect) {
+    resize(newRect, e) {
       this.$emit('update:coordinates', {
         width: newRect.width,
         height: newRect.height,
         top: newRect.top,
         left: newRect.left
       })
+    },
+    correctCoordinates(rect) {
+      let computedRect = Object.assign({}, rect)
+
+      if (rect.width > window.innerWidth) {
+        computedRect.width = window.innerWidth
+        computedRect.left = 0
+      } else if (rect.left + rect.width - this.minWidth < 0) {
+        computedRect.left = this.minWidth - rect.width
+      } else if (rect.width + rect.left > window.innerWidth) {
+        computedRect.left = window.innerWidth - rect.width
+      }
+
+      if (rect.height > window.innerHeight) {
+        computedRect.height = window.innerHeight
+        computedRect.top = 0
+      } else if (rect.top < 0) {
+        computedRect.top = 0
+      } else if (rect.top > window.innerHeight - this.minHeight) {
+        computedRect.top = window.innerHeight - this.minHeight
+      }
+      this.$emit('update:coordinates', computedRect)
     },
     onActivated() {
       const sticks = this.$refs.resize.$el.querySelectorAll('.vdr-stick')
@@ -93,9 +117,6 @@ export default {
           element.style[prop] = this.stickStyle[prop]
         }
       })
-    },
-    onFocusElement(event) {
-      event.target.focus()
     }
   },
   mounted() {

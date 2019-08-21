@@ -18,11 +18,13 @@ class Settings_YetiForce_ProductModal_View extends \App\Controller\ModalSettings
 	/**
 	 * {@inheritdoc}
 	 */
-	public $successBtn = 'LBL_BUY';
-	/**
-	 * {@inheritdoc}
-	 */
 	public $modalSize = 'modal-full';
+	/**
+	 * Header class.
+	 *
+	 * @var string
+	 */
+	public $headerClass = 'modal-header-xl';
 
 	/**
 	 * Set modal title.
@@ -31,9 +33,9 @@ class Settings_YetiForce_ProductModal_View extends \App\Controller\ModalSettings
 	 */
 	public function preProcessAjax(App\Request $request)
 	{
-		$qualifiedModuleName = $request->getModule(false);
-		$this->modalIcon = 'userIcon-Products';
-		$this->pageTitle = \App\Language::translate('LBL_PRODUCT_PREVIEW', $qualifiedModuleName);
+		$this->qualifiedModuleName = $request->getModule(false);
+		$this->modalIcon = 'yfi-prodprouct-preview';
+		$this->pageTitle = \App\Language::translate('LBL_PRODUCT_PREVIEW', $this->qualifiedModuleName);
 		parent::preProcessAjax($request);
 	}
 
@@ -44,12 +46,12 @@ class Settings_YetiForce_ProductModal_View extends \App\Controller\ModalSettings
 	 */
 	public function process(App\Request $request)
 	{
-		$qualifiedModuleName = $request->getModule(false);
-		$productName = $request->getByType('product');
 		$department = $request->isEmpty('department') ? '' : $request->getByType('department');
+		$product = \App\YetiForce\Shop::getProduct($request->getByType('product'), $department);
+		$this->successBtn = $product->expirationDate && !$product->showAlert() ? '' : 'LBL_BUY';
 		$viewer = $this->getViewer($request);
-		$viewer->assign('MODULE', $qualifiedModuleName);
-		$viewer->assign('PRODUCT', \App\YetiForce\Shop::getProduct($productName, $department));
-		$viewer->view('ProductModal.tpl', $qualifiedModuleName);
+		$viewer->assign('MODULE', $this->qualifiedModuleName);
+		$viewer->assign('PRODUCT', $product);
+		$viewer->view('ProductModal.tpl', $this->qualifiedModuleName);
 	}
 }

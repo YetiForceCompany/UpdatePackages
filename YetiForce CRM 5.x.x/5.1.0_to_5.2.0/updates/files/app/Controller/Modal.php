@@ -21,6 +21,12 @@ abstract class Modal extends View
 	 */
 	public $modalSize = 'modal-lg';
 	/**
+	 * Header class.
+	 *
+	 * @var string
+	 */
+	public $headerClass = '';
+	/**
 	 * Modal icon.
 	 *
 	 * @var string
@@ -50,6 +56,12 @@ abstract class Modal extends View
 	 * @var string
 	 */
 	public $dangerBtn = 'LBL_CANCEL';
+	/**
+	 * The name of the footerClass.
+	 *
+	 * @var string
+	 */
+	public $footerClass = '';
 	/**
 	 * Block the window closing.
 	 *
@@ -119,6 +131,7 @@ abstract class Modal extends View
 			$viewer->assign('BTN_SUCCESS', $this->successBtn);
 			$viewer->assign('BTN_SUCCESS_ICON', $this->successBtnIcon);
 			$viewer->assign('BTN_DANGER', $this->dangerBtn);
+			$viewer->assign('FOOTER_CLASS', $this->footerClass);
 			$viewer->view('Modals/Footer.tpl', $request->getModule());
 		}
 	}

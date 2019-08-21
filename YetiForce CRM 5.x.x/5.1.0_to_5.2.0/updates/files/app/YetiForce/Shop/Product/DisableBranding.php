@@ -34,10 +34,10 @@ class DisableBranding extends \App\YetiForce\Shop\AbstractBaseProduct
 	/**
 	 * {@inheritdoc}
 	 */
-	public function verify(): bool
+	public function verify($cache = true): bool
 	{
-		if (\App\Config::performance('LIMITED_INFO_IN_FOOTER')) {
-			return \App\YetiForce\Shop::check('DisableFooter');
+		if (\Config\Components\Branding::$isCustomerBrandingActive) {
+			return \App\YetiForce\Shop::check('DisableBranding');
 		}
 		return true;
 	}

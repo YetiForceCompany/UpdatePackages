@@ -122,8 +122,22 @@
 
 .u-hover-opacity:hover {
 	opacity: 0.5;
-
 	@include u-transition(opacity 275ms ease);
+}
+
+.u-hover-opacity75:hover {
+	opacity: 0.75;
+	@include u-transition(opacity 275ms ease);
+}
+
+.u-bg-white-darken:hover {
+	background-color: darken($white, 10%) !important;
+	@include u-transition(background-color 275ms ease);
+}
+
+.u-bg-light-darken:hover {
+	background-color: darken($light, 10%) !important;
+	@include u-transition(background-color 275ms ease);
 }
 
 .u-word-break-all {
@@ -144,6 +158,10 @@
 
 .u-font-size-100per {
 	font-size: 100% !important;
+}
+
+.u-font-size-26 {
+	font-size: calculate-rem(26px);
 }
 
 .u-font-size-44px {
@@ -257,7 +275,10 @@
 }
 
 .u-w-max-320px {
-	max-width: 320px !important;
+	max-width: calculate-rem(320px) !important;
+}
+.u-w-max-500px {
+	max-width: calculate-rem(500px) !important;
 }
 
 .u-w-1per-45px {

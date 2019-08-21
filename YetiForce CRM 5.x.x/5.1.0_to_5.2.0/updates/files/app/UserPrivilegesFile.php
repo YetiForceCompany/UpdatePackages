@@ -31,7 +31,8 @@ class UserPrivilegesFile
 	 */
 	public static function createUserPrivilegesfile($userid)
 	{
-		$handle = fopen(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'user_privileges/user_privileges_' . $userid . '.php', 'w+');
+		$fileUserPrivileges = ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'user_privileges/user_privileges_' . $userid . '.php';
+		$handle = fopen($fileUserPrivileges, 'w+');
 		if ($handle) {
 			$newBuf = '';
 			$newBuf .= "<?php\n";
@@ -82,6 +83,7 @@ class UserPrivilegesFile
 			PrivilegeFile::createUserPrivilegesFile($userid);
 			\Users_Privileges_Model::clearCache($userid);
 			User::clearCache($userid);
+			\App\Cache::resetFileCache($fileUserPrivileges);
 		}
 	}
 
@@ -97,7 +99,8 @@ class UserPrivilegesFile
 	{
 		\vtlib\Deprecated::checkFileAccessForInclusion('user_privileges/user_privileges_' . $userid . '.php');
 		require 'user_privileges/user_privileges_' . $userid . '.php';
-		$handle = fopen(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'user_privileges/sharing_privileges_' . $userid . '.php', 'w+');
+		$fileUserSharingPrivileges = ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'user_privileges/sharing_privileges_' . $userid . '.php';
+		$handle = fopen($fileUserSharingPrivileges, 'w+');
 		if ($handle) {
 			$newBuf = "<?php\n";
 			$userFocus = \CRMEntity::getInstance('Users');
@@ -154,6 +157,7 @@ class UserPrivilegesFile
 				//Populating Temp Tables
 				static::populateSharingtmptables($userid);
 				User::clearCache($userid);
+				\App\Cache::resetFileCache($fileUserSharingPrivileges);
 			}
 		}
 	}

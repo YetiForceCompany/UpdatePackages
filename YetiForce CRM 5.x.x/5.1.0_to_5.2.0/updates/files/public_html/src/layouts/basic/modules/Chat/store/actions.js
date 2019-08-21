@@ -10,6 +10,13 @@ export default {
 	toggleRightPanel({ commit, getters }) {
 		commit('setRightPanel', !getters['rightPanel'])
 	},
+	toggleRoomSoundNotification({ commit, getters }, { roomType, id }) {
+		if (getters.roomSoundNotificationsOff[roomType].includes(id)) {
+			commit('removeRoomSoundNotificationsOff', { roomType, id })
+		} else {
+			commit('addRoomSoundNotificationsOff', { roomType, id })
+		}
+	},
 	fetchChatConfig({ commit }) {
 		return new Promise((resolve, reject) => {
 			AppConnector.request({
@@ -17,42 +24,59 @@ export default {
 				action: 'ChatAjax',
 				mode: 'getChatConfig'
 			}).done(({ result }) => {
-				commit('setConfig', result)
+				commit('setConfig', result.config)
+				commit('setAmountOfNewMessagesByRoom', result.roomList)
 				resolve(result)
 			})
 		})
 	},
-	fetchRoom(
-		{ commit, getters },
-		options = { id: getters.data.currentRoom.recordId, roomType: getters.data.currentRoom.roomType }
-	) {
+	fetchRoom({ commit }, { id, roomType, recordRoom }) {
 		return new Promise((resolve, reject) => {
 			AppConnector.request({
 				module: 'Chat',
 				action: 'ChatAjax',
 				mode: 'getMessages',
-				recordId: options.id,
-				roomType: options.roomType
+				recordId: id,
+				roomType: roomType,
+				recordRoom: recordRoom
 			}).done(({ result }) => {
-				let tempData = Object.assign({}, getters.data)
-				commit('setData', Object.assign(tempData, result))
+				commit('setData', result)
 				resolve(result)
 			})
 		})
 	},
-	sendMessage({ commit, getters }, text) {
+	fetchRecordRoom({ commit }, id) {
+		return new Promise((resolve, reject) => {
+			AppConnector.request({
+				module: 'Chat',
+				action: 'ChatAjax',
+				mode: 'getRecordRoom',
+				id: id
+			}).done(({ result }) => {
+				commit('setData', result)
+				resolve(result)
+			})
+		})
+	},
+	removeActiveRoom({ commit }, { recordId, roomType }) {
+		commit('unsetActiveRoom', { recordId, roomType })
+	},
+	addActiveRoom({ commit }, { recordId, roomType }) {
+		commit('setActiveRoom', { recordId, roomType })
+	},
+	sendMessage({ commit, getters }, { text, roomType, recordId }) {
+		const lastEntries = getters.data.roomList[roomType][recordId].chatEntries.slice(-1)[0]
 		return new Promise((resolve, reject) => {
 			AppConnector.request({
 				module: 'Chat',
 				action: 'ChatAjax',
 				mode: 'send',
-				roomType: getters.data.currentRoom.roomType,
-				recordId: getters.data.currentRoom.recordId,
+				roomType: roomType,
+				recordId: recordId,
 				message: text,
-				mid:
-					getters.data.chatEntries.slice(-1)[0] !== undefined ? getters.data.chatEntries.slice(-1)[0]['id'] : undefined
+				mid: lastEntries !== undefined ? lastEntries['id'] : undefined
 			}).done(({ result }) => {
-				commit('pushSended', result)
+				commit('pushSended', { result, roomType, recordId })
 				resolve(result)
 			})
 		})
@@ -68,24 +92,24 @@ export default {
 			recordId: room.recordid
 		}).done(_ => {
 			if (mode === 'removeFromFavorites' && roomType === 'crm' && getters.data.currentRoom.roomType === roomType) {
-				dispatch('fetchRoom', { id: undefined, roomType: undefined })
+				dispatch('fetchRoom', { id: undefined, roomType: undefined, recordRoom: false })
 			}
 		})
 	},
-	fetchEarlierEntries({ commit, getters }) {
+	fetchEarlierEntries({ commit }, { chatEntries, roomType, recordId }) {
 		return new Promise((resolve, reject) => {
 			AppConnector.request(
 				{
 					module: 'Chat',
 					action: 'ChatAjax',
 					mode: 'getMoreMessages',
-					lastId: getters.data.chatEntries[0].id,
-					roomType: getters.data.currentRoom.roomType,
-					recordId: getters.data.currentRoom.recordId
+					lastId: chatEntries[0].id,
+					roomType: roomType,
+					recordId: recordId
 				},
 				false
 			).done(({ result }) => {
-				commit('pushOlderEntries', result)
+				commit('pushOlderEntries', { result, roomType, recordId })
 				resolve(result)
 			})
 		})
@@ -94,27 +118,32 @@ export default {
 	 * Search messages.
 	 * @param {jQuery} btn
 	 */
-	fetchSearchData({ commit, getters }, value) {
+	fetchSearchData({ commit }, { value, roomData, showMore }) {
 		return new Promise((resolve, reject) => {
-			const showMoreClicked = getters.isSearchActive && getters.data.showMoreButton
 			AppConnector.request(
 				{
 					module: 'Chat',
 					action: 'ChatAjax',
 					mode: 'search',
 					searchVal: value,
-					mid: showMoreClicked ? getters.data.chatEntries[0].id : null,
-					roomType: getters.data.currentRoom.roomType,
-					recordId: getters.data.currentRoom.recordId
+					mid: showMore ? roomData.searchData.chatEntries[0].id : null,
+					roomType: roomData.roomType,
+					recordId: roomData.recordid
 				},
 				false
 			).done(({ result }) => {
-				if (!showMoreClicked) {
-					let tempData = Object.assign({}, getters.data)
-					commit('setData', Object.assign(tempData, result))
-					commit('setSearchActive')
+				if (!showMore) {
+					commit('setSearchData', {
+						searchData: result,
+						roomType: roomData.roomType,
+						recordId: roomData.recordid
+					})
 				} else {
-					commit('pushOlderEntries', result)
+					commit('pushOlderEntriesToSearch', {
+						searchData: result,
+						roomType: roomData.roomType,
+						recordId: roomData.recordid
+					})
 				}
 				resolve(result)
 			})
@@ -145,29 +174,41 @@ export default {
 				module: 'Chat',
 				action: 'ChatAjax',
 				mode: 'getHistory',
-				mid: showMoreClicked ? getters.data.chatEntries[0].id : null,
+				mid: showMoreClicked ? getters.data.history.chatEntries[0].id : null,
 				groupHistory: groupHistory
 			}).done(({ result }) => {
 				if (!showMoreClicked) {
-					let tempData = Object.assign({}, getters.data)
-					commit('setData', Object.assign(tempData, result))
+					commit('setHistoryData', result)
 				} else {
-					commit('pushOlderEntries', result)
+					commit('pushOlderEntriesToHistory', result)
 				}
 				resolve(result)
 			})
 		})
 	},
 
-	updateAmountOfNewMessages({ commit, getters }, newMessages) {
-		if (newMessages > getters.data.amountOfNewMessages) {
+	updateAmountOfNewMessages({ commit, getters }, { roomList, amount }) {
+		if (amount > getters.data.amountOfNewMessages) {
 			if (getters.isSoundNotification) {
-				app.playSound('CHAT')
+				for (let roomType in roomList) {
+					let played = false
+					for (let room in roomList[roomType]) {
+						if (
+							roomList[roomType][room].cnt_new_message > getters.data.roomList[roomType][room].cnt_new_message &&
+							!getters.roomSoundNotificationsOff[roomType].includes(parseInt(room))
+						) {
+							app.playSound('CHAT')
+							played = true
+							break
+						}
+					}
+					if (played) break
+				}
 			}
 			if (getters.isDesktopNotification && !PNotify.modules.Desktop.checkPermission()) {
 				let message = app.vtranslate('JS_CHAT_NEW_MESSAGE')
 				if (getters.config.showNumberOfNewMessages) {
-					message += ' ' + newMessages
+					message += ' ' + amount
 				}
 				app.showNotify(
 					{
@@ -179,6 +220,9 @@ export default {
 				)
 			}
 		}
-		commit('setAmountOfNewMessages', newMessages)
+		if (amount !== getters.data.amountOfNewMessages && amount !== undefined) {
+			commit('setAmountOfNewMessages', amount)
+			commit('setAmountOfNewMessagesByRoom', roomList)
+		}
 	}
 }

@@ -9,14 +9,30 @@
 * Contributor(s): YetiForce.com
 ********************************************************************************/
 -->*}
-<!DOCTYPE html>
-{strip}
+{if 'test' === \App\Config::main('systemMode')}
+	{$HEADER_MESSAGE}
+	{if $MESSAGE_EXPANDED}
+		{if !empty($MESSAGE['message'])}{$MESSAGE['message']}{/if}
+		{if !empty($MESSAGE['query'])}{$MESSAGE['query']}{/if}
+		{if !empty($MESSAGE['params'])}
+			{implode(',', $MESSAGE['params'])}
+		{/if}
+		{if !empty($MESSAGE['trace'])}
+			{\App\Language::translate($MESSAGE['trace'])}
+		{/if}
+	{else}
+		{$MESSAGE}
+	{/if}
+{else}
+	<!DOCTYPE html>
+	{strip}
 	<html>
 	<head>
 		<title>Yetiforce: {\App\Purifier::encodeHtml($HEADER_MESSAGE)}</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<link rel="stylesheet" href="{\App\Layout::getPublicUrl('layouts/basic/styles/Main.css')}">
+		<link rel="stylesheet" href="{\App\Layout::getPublicUrl('libraries/@fortawesome/fontawesome-free/css/all.css')}">
 	</head>
 	<body class="h-auto bg-color-amber-50">
 	<div class="o-exception-fixed-block container u-white-space-n u-word-break">
@@ -27,10 +43,10 @@
 				</span>
 				<h3 class="align-items-center card-title d-flex justify-content-center">{\App\Purifier::encodeHtml($HEADER_MESSAGE)}</h3>
 			</div>
-			<div class="card-body bg-color-grey-50 js-exception-error">
+			<div class="card-body text-black rd-body bg-color-grey-50 js-exception-error">
 				<p class="card-text u-font-size-19px">{if $MESSAGE_EXPANDED}{\App\Purifier::encodeHtml($MESSAGE['message'])}.{else}{\App\Purifier::encodeHtml($MESSAGE)}{/if}</p>
 			</div>
-			<div class="card-footer d-flex flex-wrap flex-sm-nowrap">
+			<div class="card-footer text-black d-flex flex-wrap flex-sm-nowrap">
 				<a class="btn btn-lg btn-default mr-sm-2 mb-1 mb-sm-0 w-100" role="button"
 				   href="javascript:window.history.back();"><i
 							class="fas fa-chevron-left mr-2"></i>{\App\Language::translate('LBL_GO_BACK')}</a>
@@ -39,34 +55,36 @@
 			</div>
 		</div>
 		{if $MESSAGE_EXPANDED}
-		<div class="my-5 mx-auto card u-w-fit shadow">
-			<div class="card-header">
-				<h5>{\App\Language::translate('LBL_SQL_QUERY')}</h5>
-			</div>
-			<div class="card-body">
-				<pre class="u-white-space-n u-word-break text-black">{$MESSAGE['query']}</pre>
-			</div>
-		</div>
-		{if $MESSAGE['params']}
-			<div class="my-5 mx-auto card u-w-fit shadow">
-				<div class="card-header">
-					<h5>{\App\Language::translate('LBL_SQL_PARAMS')}</h5>
+			{if !empty($MESSAGE['query'])}
+				<div class="my-5 mx-auto card u-w-fit shadow">
+					<div class="card-header">
+						<h5>{\App\Language::translate('LBL_SQL_QUERY')}</h5>
+					</div>
+					<div class="card-body text-black">
+						<pre class="u-white-space-n u-word-break text-black">{$MESSAGE['query']}</pre>
+					</div>
 				</div>
-				<div class="card-body">
-					<pre class="u-white-space-n u-word-break">{implode(',', $MESSAGE['params'])}</pre>
+			{/if}
+			{if !empty($MESSAGE['params'])}
+				<div class="my-5 mx-auto card u-w-fit shadow">
+					<div class="card-header">
+						<h5>{\App\Language::translate('LBL_SQL_PARAMS')}</h5>
+					</div>
+					<div class="card-body text-black">
+						<pre class="u-white-space-n u-word-break">{implode(',', $MESSAGE['params'])}</pre>
+					</div>
 				</div>
-			</div>
-		{/if}
-		{if $MESSAGE['trace']}
-			<div class="my-5 mx-auto card u-w-fit shadow">
-				<div class="card-header">
-					<h5>{\App\Language::translate('LBL_BACKTRACE')}</h5>
+			{/if}
+			{if !empty($MESSAGE['trace'])}
+				<div class="my-5 mx-auto card u-w-fit shadow">
+					<div class="card-header">
+						<h5>{\App\Language::translate('LBL_BACKTRACE')}</h5>
+					</div>
+					<div class="card-body text-black">
+						<pre class="u-white-space-n u-word-break">{\App\Language::translate($MESSAGE['trace'])}</pre>
+					</div>
 				</div>
-				<div class="card-body">
-					<pre class="u-white-space-n u-word-break">{\App\Language::translate($MESSAGE['trace'])}</pre>
-				</div>
-			</div>
-		{/if}
+			{/if}
 		{/if}
 	</div>
 	<script type="text/javascript">
@@ -81,4 +99,5 @@
 	</script>
 	</body>
 	</html>
-{/strip}
+	{/strip}
+{/if}

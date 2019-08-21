@@ -6,27 +6,36 @@ export default {
 		leftPanel: false,
 		rightPanel: false,
 		historyTab: 'crm',
-		isSearchActive: false,
 		tab: 'chat',
 		coordinates: {
 			width: 450,
-			height: Quasar.plugins.Screen.height - 160,
+			height: window.innerHeight - 160,
 			top: 60,
-			left: Quasar.plugins.Screen.width - 450
+			left: window.innerWidth - 450
+		},
+		buttonCoordinates: {
+			top: window.innerHeight - 82,
+			left: window.innerWidth - 62
 		}
 	},
 	local: {
 		isSoundNotification: null,
 		isDesktopNotification: false,
-		sendByEnter: true
+		sendByEnter: true,
+		roomSoundNotificationsOff: {
+			crm: [],
+			global: [],
+			group: []
+		}
 	},
 	data: {
 		amountOfNewMessages: 0,
-		chatEntries: [],
-		currentRoom: {},
 		roomList: {},
-		participants: [],
-		showMoreButton: null
+		currentRoom: {},
+		history: {
+			chatEntries: [],
+			showMoreButton: null
+		}
 	},
 	config: {
 		isChatAllowed: null,
@@ -35,6 +44,7 @@ export default {
 		refreshRoomTime: null,
 		maxLengthMessage: null,
 		refreshTimeGlobal: null,
-		showNumberOfNewMessages: null
+		showNumberOfNewMessages: null,
+		dynamicAddingRooms: null
 	}
 }

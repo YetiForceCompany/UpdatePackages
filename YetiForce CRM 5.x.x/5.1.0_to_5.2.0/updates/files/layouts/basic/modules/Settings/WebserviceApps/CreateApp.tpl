@@ -1,6 +1,6 @@
 {*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
-	<div class="modal-content validationEngineContainer" id="EditView">
+	<div class="validationEngineContainer" id="EditView">
 		<form>
 			<div class="modal-header">
 				{if $RECORD_MODEL}
@@ -54,7 +54,7 @@
 						<select class="select2 typeServer" {if $RECORD_MODEL} disabled {/if}>
 							{foreach from=$TYPES_SERVERS item=TYPE}
 								<option value="{$TYPE}" {if $RECORD_MODEL && $TYPE eq  $RECORD_MODEL->get('type')}selected{/if}>
-									{$TYPE}
+									{\App\Language::translate($TYPE, $QUALIFIED_MODULE)}
 								</option>
 							{/foreach}
 						</select>

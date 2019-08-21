@@ -17,8 +17,12 @@
         class="cursor-pointer js-emoji-trigger"
         @click="emojiPanel = !emojiPanel"
       />
-      <span class="c-completions__item js-completions__users fas fa-user-plus"></span>
-      <span class="c-completions__item js-completions__records fas fa-hashtag"></span>
+      <span class="c-completions__item js-completions__users fas yfi-hash-user">
+        <q-tooltip>{{ translate('JS_CHAT_TAG_USER') }}</q-tooltip>
+      </span>
+      <span class="c-completions__item js-completions__records fas fa-hashtag">
+        <q-tooltip>{{ translate('JS_CHAT_TAG_RECORD') }}</q-tooltip>
+      </span>
     </div>
     <q-separator class="q-my-xs" />
     <div class="d-flex flex-nowrap">
@@ -47,7 +51,13 @@ const Picker = Emoji.Picker
 const { mapGetters, mapActions } = createNamespacedHelpers('Chat')
 export default {
   name: 'ChatMessages',
-  components: { Picker },
+	components: { Picker },
+	props: {
+    roomData: {
+      type: Object,
+      required: true
+    }
+	},
   data() {
     return {
       sending: false,
@@ -72,7 +82,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['miniMode', 'config', 'sendByEnter']),
+    ...mapGetters(['config', 'sendByEnter']),
     containerHeight() {
       if (this.$refs.textContainer !== undefined) return this.$refs.textContainer.clientHeight + 'px'
     }
@@ -84,7 +94,11 @@ export default {
       if (this.sending || !this.$refs.input.innerText.length) return
       if (this.$refs.input.innerText.length < this.config.maxLengthMessage) {
         this.sending = true
-        this.sendMessage(this.$refs.input.innerHTML).then(e => {
+        this.sendMessage({
+					text: this.$refs.input.innerHTML,
+					roomType: this.roomData.roomType,
+					recordId: this.roomData.recordid
+				}).then(e => {
           this.$refs.input.innerText = ''
           this.sending = false
           this.$emit('onSended')

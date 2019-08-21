@@ -38,9 +38,9 @@
         "authors": [
             {
                 "name": "Abraham Williams",
+                "role": "Developer",
                 "email": "abraham@abrah.am",
-                "homepage": "https://abrah.am",
-                "role": "Developer"
+                "homepage": "https://abrah.am"
             }
         ],
         "description": "The most popular PHP library for use with the Twitter OAuth REST API.",
@@ -100,30 +100,30 @@
     },
     {
         "name": "composer/ca-bundle",
-        "version": "1.1.4",
-        "version_normalized": "1.1.4.0",
+        "version": "1.2.3",
+        "version_normalized": "1.2.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/composer/ca-bundle.git",
-            "reference": "558f321c52faeb4828c03e7dc0cfe39a09e09a2d"
+            "reference": "f26a67e397be0e5c00d7c52ec7b5010098e15ce5"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/558f321c52faeb4828c03e7dc0cfe39a09e09a2d",
-            "reference": "558f321c52faeb4828c03e7dc0cfe39a09e09a2d",
+            "url": "https://api.github.com/repos/composer/ca-bundle/zipball/f26a67e397be0e5c00d7c52ec7b5010098e15ce5",
+            "reference": "f26a67e397be0e5c00d7c52ec7b5010098e15ce5",
             "shasum": ""
         },
         "require": {
             "ext-openssl": "*",
             "ext-pcre": "*",
-            "php": "^5.3.2 || ^7.0"
+            "php": "^5.3.2 || ^7.0 || ^8.0"
         },
         "require-dev": {
-            "phpunit/phpunit": "^4.8.35 || ^5.7 || ^6.5",
+            "phpunit/phpunit": "^4.8.35 || ^5.7 || 6.5 - 8",
             "psr/log": "^1.0",
             "symfony/process": "^2.5 || ^3.0 || ^4.0"
         },
-        "time": "2019-01-28T09:30:10+00:00",
+        "time": "2019-08-02T09:05:43+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -393,17 +393,17 @@
     },
     {
         "name": "giggsey/libphonenumber-for-php",
-        "version": "8.10.15",
-        "version_normalized": "8.10.15.0",
+        "version": "8.10.17",
+        "version_normalized": "8.10.17.0",
         "source": {
             "type": "git",
             "url": "https://github.com/giggsey/libphonenumber-for-php.git",
-            "reference": "e67ce0839ba448988d109c6c17718472a5d9ccff"
+            "reference": "528e45db57b3dfa3d89965e52b635c50b285d584"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/e67ce0839ba448988d109c6c17718472a5d9ccff",
-            "reference": "e67ce0839ba448988d109c6c17718472a5d9ccff",
+            "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/528e45db57b3dfa3d89965e52b635c50b285d584",
+            "reference": "528e45db57b3dfa3d89965e52b635c50b285d584",
             "shasum": ""
         },
         "require": {
@@ -420,7 +420,7 @@
             "phpunit/phpunit": "^4.8.36|^5.0",
             "symfony/console": "^2.8|^3.0"
         },
-        "time": "2019-07-15T14:58:27+00:00",
+        "time": "2019-08-15T09:22:06+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -707,17 +707,17 @@
     },
     {
         "name": "illuminate/contracts",
-        "version": "v5.8.29",
-        "version_normalized": "5.8.29.0",
+        "version": "v5.8.33",
+        "version_normalized": "5.8.33.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/contracts.git",
-            "reference": "f6a2633c280b3f0efcd5a6d2d4a975dfa26033e8"
+            "reference": "00fc6afee788fa07c311b0650ad276585f8aef96"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/contracts/zipball/f6a2633c280b3f0efcd5a6d2d4a975dfa26033e8",
-            "reference": "f6a2633c280b3f0efcd5a6d2d4a975dfa26033e8",
+            "url": "https://api.github.com/repos/illuminate/contracts/zipball/00fc6afee788fa07c311b0650ad276585f8aef96",
+            "reference": "00fc6afee788fa07c311b0650ad276585f8aef96",
             "shasum": ""
         },
         "require": {
@@ -725,7 +725,7 @@
             "psr/container": "^1.0",
             "psr/simple-cache": "^1.0"
         },
-        "time": "2019-06-24T11:16:37+00:00",
+        "time": "2019-07-30T13:57:21+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -753,17 +753,17 @@
     },
     {
         "name": "illuminate/support",
-        "version": "v5.8.29",
-        "version_normalized": "5.8.29.0",
+        "version": "v5.8.33",
+        "version_normalized": "5.8.33.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "b60e70c9bd3c6d61cbb4343459755470fd5ad818"
+            "reference": "7aabcab4634a1c7865fa6acb6b1b810cf4b699ea"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/b60e70c9bd3c6d61cbb4343459755470fd5ad818",
-            "reference": "b60e70c9bd3c6d61cbb4343459755470fd5ad818",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/7aabcab4634a1c7865fa6acb6b1b810cf4b699ea",
+            "reference": "7aabcab4634a1c7865fa6acb6b1b810cf4b699ea",
             "shasum": ""
         },
         "require": {
@@ -785,7 +785,7 @@
             "symfony/var-dumper": "Required to use the dd function (^4.2).",
             "vlucas/phpdotenv": "Required to use the env helper (^3.3)."
         },
-        "time": "2019-07-05T17:41:14+00:00",
+        "time": "2019-08-11T12:48:29+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1036,17 +1036,17 @@
     },
     {
         "name": "nesbot/carbon",
-        "version": "2.21.3",
-        "version_normalized": "2.21.3.0",
+        "version": "2.23.1",
+        "version_normalized": "2.23.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/briannesbitt/Carbon.git",
-            "reference": "58bdbbfab17ccd2ec7347b99e997f18232def4dc"
+            "reference": "767617a047e5b8b8b3b0b6023a2650847ed7df02"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/58bdbbfab17ccd2ec7347b99e997f18232def4dc",
-            "reference": "58bdbbfab17ccd2ec7347b99e997f18232def4dc",
+            "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/767617a047e5b8b8b3b0b6023a2650847ed7df02",
+            "reference": "767617a047e5b8b8b3b0b6023a2650847ed7df02",
             "shasum": ""
         },
         "require": {
@@ -1057,12 +1057,12 @@
         "require-dev": {
             "friendsofphp/php-cs-fixer": "^2.14 || ^3.0",
             "kylekatarnls/multi-tester": "^1.1",
-            "phpmd/phpmd": "^2.6",
+            "phpmd/phpmd": "dev-php-7.1-compatibility",
             "phpstan/phpstan": "^0.11",
             "phpunit/phpunit": "^7.5 || ^8.0",
             "squizlabs/php_codesniffer": "^3.4"
         },
-        "time": "2019-07-18T18:47:28+00:00",
+        "time": "2019-08-17T13:57:34+00:00",
         "bin": [
             "bin/carbon"
         ],
@@ -1095,7 +1095,7 @@
                 "homepage": "http://github.com/kylekatarnls"
             }
         ],
-        "description": "A simple API extension for DateTime.",
+        "description": "A API extension for DateTime that supports 281 different languages.",
         "homepage": "http://carbon.nesbot.com",
         "keywords": [
             "date",
@@ -1408,17 +1408,17 @@
     },
     {
         "name": "phpoffice/phpspreadsheet",
-        "version": "1.8.2",
-        "version_normalized": "1.8.2.0",
+        "version": "1.9.0",
+        "version_normalized": "1.9.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-            "reference": "0c1346a1956347590b7db09533966307d20cb7cc"
+            "reference": "8dea03eaf60a349b6097e4bcad11f894668280df"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/0c1346a1956347590b7db09533966307d20cb7cc",
-            "reference": "0c1346a1956347590b7db09533966307d20cb7cc",
+            "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/8dea03eaf60a349b6097e4bcad11f894668280df",
+            "reference": "8dea03eaf60a349b6097e4bcad11f894668280df",
             "shasum": ""
         },
         "require": {
@@ -1437,17 +1437,16 @@
             "ext-zlib": "*",
             "markbaker/complex": "^1.4",
             "markbaker/matrix": "^1.1",
-            "php": "^5.6|^7.0",
+            "php": "^7.1",
             "psr/simple-cache": "^1.0"
         },
         "require-dev": {
-            "doctrine/instantiator": "^1.0.0",
             "dompdf/dompdf": "^0.8.0",
             "friendsofphp/php-cs-fixer": "@stable",
             "jpgraph/jpgraph": "^4.0",
             "mpdf/mpdf": "^7.0.0",
             "phpcompatibility/php-compatibility": "^8.0",
-            "phpunit/phpunit": "^5.7",
+            "phpunit/phpunit": "^7.5",
             "squizlabs/php_codesniffer": "^3.3",
             "tecnickcom/tcpdf": "^6.2"
         },
@@ -1457,7 +1456,7 @@
             "mpdf/mpdf": "Option for rendering PDF with PDF Writer",
             "tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer"
         },
-        "time": "2019-07-08T21:21:25+00:00",
+        "time": "2019-08-17T22:24:35+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1471,12 +1470,6 @@
         ],
         "authors": [
             {
-                "name": "Erik Tilt"
-            },
-            {
-                "name": "Adrien Crivelli"
-            },
-            {
                 "name": "Maarten Balliauw",
                 "homepage": "https://blog.maartenballiauw.be"
             },
@@ -1487,6 +1480,12 @@
             {
                 "name": "Franck Lefevre",
                 "homepage": "https://rootslabs.net"
+            },
+            {
+                "name": "Erik Tilt"
+            },
+            {
+                "name": "Adrien Crivelli"
             }
         ],
         "description": "PHPSpreadsheet - Read, Create and Write Spreadsheet documents in PHP - Spreadsheet engine",
@@ -1914,9 +1913,9 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             }
         ],
         "description": "WebDAV Framework for PHP",
@@ -1971,9 +1970,9 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             }
         ],
         "description": "sabre/event is a library for lightweight event-based programming",
@@ -2035,9 +2034,9 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             }
         ],
         "description": "The sabre/http library provides utilities for dealing with http requests and responses. ",
@@ -2086,9 +2085,9 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             }
         ],
         "description": "Functions for making sense out of URIs.",
@@ -2149,21 +2148,21 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             },
             {
                 "name": "Dominik Tobschall",
+                "role": "Developer",
                 "email": "dominik@fruux.com",
-                "homepage": "http://tobschall.de/",
-                "role": "Developer"
+                "homepage": "http://tobschall.de/"
             },
             {
                 "name": "Ivan Enderlin",
+                "role": "Developer",
                 "email": "ivan.enderlin@hoa-project.net",
-                "homepage": "http://mnt.io/",
-                "role": "Developer"
+                "homepage": "http://mnt.io/"
             }
         ],
         "description": "The VObject library for PHP allows you to easily parse and manipulate iCalendar and vCard objects",
@@ -2243,14 +2242,14 @@
         "authors": [
             {
                 "name": "Evert Pot",
+                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/",
-                "role": "Developer"
+                "homepage": "http://evertpot.com/"
             },
             {
                 "name": "Markus Staab",
-                "email": "markus.staab@redaxo.de",
-                "role": "Developer"
+                "role": "Developer",
+                "email": "markus.staab@redaxo.de"
             }
         ],
         "description": "sabre/xml is an XML library that you may not hate.",
@@ -2483,17 +2482,17 @@
     },
     {
         "name": "symfony/console",
-        "version": "v4.3.2",
-        "version_normalized": "4.3.2.0",
+        "version": "v4.3.3",
+        "version_normalized": "4.3.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/console.git",
-            "reference": "b592b26a24265a35172d8a2094d8b10f22b7cc39"
+            "reference": "8b0ae5742ce9aaa8b0075665862c1ca397d1c1d9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/console/zipball/b592b26a24265a35172d8a2094d8b10f22b7cc39",
-            "reference": "b592b26a24265a35172d8a2094d8b10f22b7cc39",
+            "url": "https://api.github.com/repos/symfony/console/zipball/8b0ae5742ce9aaa8b0075665862c1ca397d1c1d9",
+            "reference": "8b0ae5742ce9aaa8b0075665862c1ca397d1c1d9",
             "shasum": ""
         },
         "require": {
@@ -2525,7 +2524,7 @@
             "symfony/lock": "",
             "symfony/process": ""
         },
-        "time": "2019-06-13T11:03:18+00:00",
+        "time": "2019-07-24T17:13:59+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2560,17 +2559,17 @@
     },
     {
         "name": "symfony/polyfill-mbstring",
-        "version": "v1.11.0",
-        "version_normalized": "1.11.0.0",
+        "version": "v1.12.0",
+        "version_normalized": "1.12.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-mbstring.git",
-            "reference": "fe5e94c604826c35a32fa832f35bd036b6799609"
+            "reference": "b42a2f66e8f1b15ccf25652c3424265923eb4f17"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/fe5e94c604826c35a32fa832f35bd036b6799609",
-            "reference": "fe5e94c604826c35a32fa832f35bd036b6799609",
+            "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/b42a2f66e8f1b15ccf25652c3424265923eb4f17",
+            "reference": "b42a2f66e8f1b15ccf25652c3424265923eb4f17",
             "shasum": ""
         },
         "require": {
@@ -2579,11 +2578,11 @@
         "suggest": {
             "ext-mbstring": "For best performance"
         },
-        "time": "2019-02-06T07:57:58+00:00",
+        "time": "2019-08-06T08:03:45+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "1.11-dev"
+                "dev-master": "1.12-dev"
             }
         },
         "installation-source": "dist",
@@ -2621,27 +2620,27 @@
     },
     {
         "name": "symfony/polyfill-php72",
-        "version": "v1.11.0",
-        "version_normalized": "1.11.0.0",
+        "version": "v1.12.0",
+        "version_normalized": "1.12.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-php72.git",
-            "reference": "ab50dcf166d5f577978419edd37aa2bb8eabce0c"
+            "reference": "04ce3335667451138df4307d6a9b61565560199e"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/ab50dcf166d5f577978419edd37aa2bb8eabce0c",
-            "reference": "ab50dcf166d5f577978419edd37aa2bb8eabce0c",
+            "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/04ce3335667451138df4307d6a9b61565560199e",
+            "reference": "04ce3335667451138df4307d6a9b61565560199e",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2019-02-06T07:57:58+00:00",
+        "time": "2019-08-06T08:03:45+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "1.11-dev"
+                "dev-master": "1.12-dev"
             }
         },
         "installation-source": "dist",
@@ -2678,27 +2677,27 @@
     },
     {
         "name": "symfony/polyfill-php73",
-        "version": "v1.11.0",
-        "version_normalized": "1.11.0.0",
+        "version": "v1.12.0",
+        "version_normalized": "1.12.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-php73.git",
-            "reference": "d1fb4abcc0c47be136208ad9d68bf59f1ee17abd"
+            "reference": "2ceb49eaccb9352bff54d22570276bb75ba4a188"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/d1fb4abcc0c47be136208ad9d68bf59f1ee17abd",
-            "reference": "d1fb4abcc0c47be136208ad9d68bf59f1ee17abd",
+            "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/2ceb49eaccb9352bff54d22570276bb75ba4a188",
+            "reference": "2ceb49eaccb9352bff54d22570276bb75ba4a188",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2019-02-06T07:57:58+00:00",
+        "time": "2019-08-06T08:03:45+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "1.11-dev"
+                "dev-master": "1.12-dev"
             }
         },
         "installation-source": "dist",
@@ -2798,17 +2797,17 @@
     },
     {
         "name": "symfony/translation",
-        "version": "v4.3.2",
-        "version_normalized": "4.3.2.0",
+        "version": "v4.3.3",
+        "version_normalized": "4.3.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/translation.git",
-            "reference": "934ab1d18545149e012aa898cf02e9f23790f7a0"
+            "reference": "4e3e39cc485304f807622bdc64938e4633396406"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/translation/zipball/934ab1d18545149e012aa898cf02e9f23790f7a0",
-            "reference": "934ab1d18545149e012aa898cf02e9f23790f7a0",
+            "url": "https://api.github.com/repos/symfony/translation/zipball/4e3e39cc485304f807622bdc64938e4633396406",
+            "reference": "4e3e39cc485304f807622bdc64938e4633396406",
             "shasum": ""
         },
         "require": {
@@ -2841,7 +2840,7 @@
             "symfony/config": "",
             "symfony/yaml": ""
         },
-        "time": "2019-06-13T11:03:18+00:00",
+        "time": "2019-07-18T10:34:59+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2935,17 +2934,17 @@
     },
     {
         "name": "symfony/var-dumper",
-        "version": "v4.3.2",
-        "version_normalized": "4.3.2.0",
+        "version": "v4.3.3",
+        "version_normalized": "4.3.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/var-dumper.git",
-            "reference": "45d6ef73671995aca565a1aa3d9a432a3ea63f91"
+            "reference": "e4110b992d2cbe198d7d3b244d079c1c58761d07"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/45d6ef73671995aca565a1aa3d9a432a3ea63f91",
-            "reference": "45d6ef73671995aca565a1aa3d9a432a3ea63f91",
+            "url": "https://api.github.com/repos/symfony/var-dumper/zipball/e4110b992d2cbe198d7d3b244d079c1c58761d07",
+            "reference": "e4110b992d2cbe198d7d3b244d079c1c58761d07",
             "shasum": ""
         },
         "require": {
@@ -2968,7 +2967,7 @@
             "ext-intl": "To show region name in time zone dump",
             "symfony/console": "To use the ServerDumpCommand and/or the bin/var-dump-server script"
         },
-        "time": "2019-06-17T17:37:00+00:00",
+        "time": "2019-07-27T06:42:46+00:00",
         "bin": [
             "Resources/bin/var-dump-server"
         ],
@@ -3218,48 +3217,48 @@
         "authors": [
             {
                 "name": "Qiang Xue",
+                "role": "Founder and project lead",
                 "email": "qiang.xue@gmail.com",
-                "homepage": "http://www.yiiframework.com/",
-                "role": "Founder and project lead"
+                "homepage": "http://www.yiiframework.com/"
             },
             {
                 "name": "Alexander Makarov",
+                "role": "Core framework development",
                 "email": "sam@rmcreative.ru",
-                "homepage": "http://rmcreative.ru/",
-                "role": "Core framework development"
+                "homepage": "http://rmcreative.ru/"
             },
             {
                 "name": "Maurizio Domba",
-                "homepage": "http://mdomba.info/",
-                "role": "Core framework development"
+                "role": "Core framework development",
+                "homepage": "http://mdomba.info/"
             },
             {
                 "name": "Carsten Brandt",
+                "role": "Core framework development",
                 "email": "mail@cebe.cc",
-                "homepage": "http://cebe.cc/",
-                "role": "Core framework development"
+                "homepage": "http://cebe.cc/"
             },
             {
                 "name": "Timur Ruziev",
+                "role": "Core framework development",
                 "email": "resurtm@gmail.com",
-                "homepage": "http://resurtm.com/",
-                "role": "Core framework development"
+                "homepage": "http://resurtm.com/"
             },
             {
                 "name": "Paul Klimov",
-                "email": "klimov.paul@gmail.com",
-                "role": "Core framework development"
+                "role": "Core framework development",
+                "email": "klimov.paul@gmail.com"
             },
             {
                 "name": "Dmitry Naumenko",
-                "email": "d.naumenko.a@gmail.com",
-                "role": "Core framework development"
+                "role": "Core framework development",
+                "email": "d.naumenko.a@gmail.com"
             },
             {
                 "name": "Boudewijn Vahrmeijer",
+                "role": "Core framework development",
                 "email": "info@dynasource.eu",
-                "homepage": "http://dynasource.eu",
-                "role": "Core framework development"
+                "homepage": "http://dynasource.eu"
             },
             {
                 "name": "YetiForceCompany",

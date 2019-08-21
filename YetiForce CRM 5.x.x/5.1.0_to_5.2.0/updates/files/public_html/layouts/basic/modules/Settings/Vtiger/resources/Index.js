@@ -27,56 +27,8 @@ $.Class(
 			app.showModalWindow({
 				id: 'iconsModal',
 				url: 'index.php?module=Vtiger&view=IconsModal&parent=Settings',
-				cb: function(container) {
-					App.Fields.Picklist.showSelect2ElementView(container.find('#iconsList'), {
-						templateSelection: function(data) {
-							if (!data.id) {
-								return data.text;
-							}
-							var type = $(data.element).data('type');
-							container.find('.iconName').text(data.id);
-							container.find('#iconName').val(data.id);
-							container.find('#iconType').val(type);
-							if (type === 'icon') {
-								container
-									.find('.iconExample')
-									.html('<span class="' + data.element.value + '" aria-hidden="true"></span>');
-							} else if (type === 'image') {
-								container.find('.iconName').text(data.text);
-								container.find('#iconName').val(data.element.value);
-								container.find('.iconExample').html('<img width="24px" src="' + data.element.value + '"/>');
-							}
-							return data.text;
-						},
-						templateResult: function(data) {
-							if (!data.id) {
-								return data.text;
-							}
-							var type = $(data.element).data('type');
-							var option;
-							if (type === 'icon') {
-								option = $(
-									'<span class="' +
-										data.element.value +
-										'" aria-hidden="true"></span><span> - ' +
-										$(data.element).data('class') +
-										'</span>'
-								);
-							} else if (type === 'image') {
-								option = $(
-									'<img width="24px" src="' +
-										data.element.value +
-										'" title="' +
-										data.text +
-										'" /><span> - ' +
-										data.text +
-										'</span>'
-								);
-							}
-							return option;
-						},
-						closeOnSelect: true
-					});
+				cb: container => {
+					this.registerIconsSelect(container);
 					container.find('[name="saveButton"]').on('click', function(e) {
 						aDeferred.resolve({
 							type: container.find('#iconType').val(),
@@ -88,6 +40,52 @@ $.Class(
 			});
 			return aDeferred.promise();
 		},
+		registerIconsSelect(container) {
+			const params = { module: app.getModuleName(), parent: app.getParentModuleName(), action: 'Icons' };
+			AppConnector.request(params).done(({ result }) => {
+				let id = 0;
+				const data = Object.keys(result).map(key => {
+					if (key.startsWith('img-')) {
+						return { id: id++, text: key.slice(4), key: key, url: result[key], type: 'image' };
+					}
+					return { id: id++, text: result[key], key: key, type: 'icon' };
+				});
+				const selectParams = {
+					templateSelection: function(data) {
+						if (!data.id) {
+							return data.text;
+						}
+						container.find('.iconName').text(data.text);
+						container.find('#iconName').val(data.text);
+						container.find('#iconType').val(data.type);
+						if (data.type === 'icon') {
+							container.find('.iconExample').html(`<span class="${data.text}" aria-hidden="true"></span>`);
+							return $(`<span class="${data.text}" aria-hidden="true"></span><span> - ${data.text}</span>`);
+						} else if (data.type === 'image') {
+							container.find('.iconName').text(data.text);
+							container.find('#iconName').val(data.text);
+							container.find('.iconExample').html(`<img width="24px" src="${data.url}"/>`);
+						}
+						return data.text;
+					},
+					templateResult: function(data) {
+						if (data.loading) {
+							return data.text;
+						}
+						let option;
+						if (data.type === 'icon') {
+							option = $(`<span class="${data.text}" aria-hidden="true"></span><span> - ${data.text}</span>`);
+						} else if (data.type === 'image') {
+							option = $(`<img width="24px" src="${data.url}" title="${data.text}" /><span> - ${data.text}</span>`);
+						}
+						return option;
+					},
+					closeOnSelect: true
+				};
+				const params = { lazyElements: 50, data, selectParams };
+				App.Fields.Picklist.showLazySelect(container.find('#iconsList'), params);
+			});
+		},
 		showWarnings: function() {
 			$('li[data-mode="systemWarnings"] a').click();
 		},
@@ -96,11 +94,11 @@ $.Class(
 		}
 	},
 	{
-		registerDeleteShortCutEvent: function(shortcutsContainer = $('#settingsShortCutsContainer')) {
+		registerDeleteShortCutEvent: function(shortcutsContainer = $('.js-shortcuts')) {
 			shortcutsContainer.on('click', '.unpin', e => {
 				e.preventDefault();
 				var actionEle = $(e.currentTarget);
-				var closestBlock = actionEle.closest('.moduleBlock');
+				var closestBlock = actionEle.closest('.js-shortcut');
 				var fieldId = actionEle.data('id');
 				var shortcutBlockActionUrl = closestBlock.data('actionurl');
 				var actionUrl = shortcutBlockActionUrl + '&pin=false';
@@ -148,7 +146,7 @@ $.Class(
 						parent: 'Settings',
 						view: 'IndexAjax'
 					}).done(data => {
-						const shortcutsContainer = $('#settingsShortCutsContainer');
+						const shortcutsContainer = $('.js-shortcuts');
 						$(data).appendTo(shortcutsContainer);
 						this.updateShortcutsStorage(shortcutsContainer);
 						progressIndicatorElement.progressIndicator({
@@ -191,7 +189,7 @@ $.Class(
 				},
 				zIndex: 99999
 			});
-			const shortcutsContainer = $('#settingsShortCutsContainer');
+			const shortcutsContainer = $('.js-shortcuts');
 			shortcutsContainer.droppable({
 				activeClass: 'ui-state-default',
 				hoverClass: 'ui-state-hover',
@@ -199,7 +197,7 @@ $.Class(
 				drop: function(event, ui) {
 					var url = ui.draggable.attr('href');
 					var isExist = false;
-					$('#settingsShortCutsContainer [id^="shortcut"]').each(function() {
+					$('.js-shortcuts [id^="shortcut"]').each(function() {
 						var shortCutUrl = $(this).data('url');
 						if (shortCutUrl == url) {
 							isExist = true;
@@ -235,6 +233,35 @@ $.Class(
 		},
 		updateShortcutsStorage(container) {
 			Quasar.plugins.LocalStorage.set('yf-settings-shortcuts', container.sortable('toArray'));
+		},
+		registerCollapsiblePanels() {
+			const panels = this.container.find('.js-collapse');
+			if (Quasar.plugins.LocalStorage.has('yf-settings-panels')) {
+				this.setPanels(panels);
+			} else {
+				panels.collapse('show');
+				Quasar.plugins.LocalStorage.set('yf-settings-panels', {
+					'marketplace-collapse': 'shown',
+					'system-monitoring-collapse': 'shown',
+					'my-shortcuts-collapse': 'shown'
+				});
+			}
+			panels.on('hidden.bs.collapse shown.bs.collapse', e => {
+				this.updatePanelsStorage(e.target.id, e.type);
+			});
+		},
+		updatePanelsStorage(id, type) {
+			const panelsStorage = Quasar.plugins.LocalStorage.getItem('yf-settings-panels');
+			panelsStorage[id] = type;
+			Quasar.plugins.LocalStorage.set('yf-settings-panels', panelsStorage);
+		},
+		setPanels(panels) {
+			const panelsStorage = Quasar.plugins.LocalStorage.getItem('yf-settings-panels');
+			for (let item of panels) {
+				if (panelsStorage[item.id] === 'shown') {
+					$(item).collapse('show');
+				}
+			}
 		},
 		loadEditorElement: function() {
 			new App.Fields.Text.Editor($('.js-editor'), {});
@@ -419,12 +446,41 @@ $.Class(
 				thisInstance.registerWarningsAlert();
 			}
 		},
+		registerShopSearch() {
+			this.container
+				.find('.js-shop-search')
+				.on('keyup', e => {
+					let value = $(e.currentTarget)
+						.val()
+						.toLowerCase();
+					this.container.find('.js-product .js-text-search').filter(function() {
+						let item = $(this).closest('.js-product');
+						if (
+							$(this)
+								.text()
+								.toLowerCase()
+								.indexOf(value) > -1
+						) {
+							item.removeClass('d-none');
+						} else {
+							item.addClass('d-none');
+						}
+					});
+				})
+				.on('click', e => {
+					e.stopPropagation();
+				});
+		},
 		registerEvents: function() {
+			this.container = $('.js-dashboard-container');
 			this.registerTabEvents();
 			this.reloadContent();
 			this.registerWarningsAlert();
 			this.registerDeleteShortCutEvent();
 			this.registerAddShortcutDragDropEvent();
+			this.registerCollapsiblePanels();
+			this.registerShopSearch();
+			new window.Settings_YetiForce_Shop_Js().registerEvents();
 		}
 	}
 );

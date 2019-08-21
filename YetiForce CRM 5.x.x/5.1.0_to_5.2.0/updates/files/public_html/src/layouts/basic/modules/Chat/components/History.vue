@@ -11,17 +11,19 @@
       narrow-indicator
       class="text-teal"
     >
-      <q-tab
-        v-for="(room, roomType) of data.roomList"
-        :key="roomType"
-        :name="roomType"
-        :label="translate(`JS_CHAT_ROOM_${roomType.toUpperCase()}`)"
-        :icon="getGroupIcon(roomType)"
-      />
+      <q-tab v-for="(room, roomType) of data.roomList" :key="roomType" :name="roomType">
+        <icon class="q-icon q-tab__icon" size="20px" :icon="getGroupIcon(roomType)" />
+        <span class="q-tab__label">{{ translate(`JS_CHAT_ROOM_${roomType.toUpperCase()}`) }}</span>
+      </q-tab>
     </q-tabs>
     <q-tab-panels v-model="historyTab" animated style="min-height: inherit;" class="chat-panels">
       <q-tab-panel v-for="(room, roomType) of data.roomList" :key="roomType" :name="roomType">
-        <messages @earlierClick="earlierClick" :fetchingEarlier="fetchingEarlier" />
+        <messages
+          @earlierClick="earlierClick"
+          :fetchingEarlier="fetchingEarlier"
+          :header="messageHeader"
+          :roomData="data.history"
+        />
       </q-tab-panel>
     </q-tab-panels>
   </div>
@@ -63,6 +65,14 @@ export default {
       this.fetchHistory({ groupHistory: this.historyTab, showMoreClicked: true }).then(e => {
         this.fetchingEarlier = false
       })
+    },
+    messageHeader(row) {
+      return `
+				<div class="row justify-between${row.userid === this.userId ? ' reverse' : ''}">
+					<div>${row.user_name}</div>
+					<div class="text-teal">${row.room_name}</div>
+				</div>
+			`
     }
   },
   mounted() {

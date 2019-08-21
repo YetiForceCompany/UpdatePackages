@@ -4,7 +4,7 @@
     <q-page>
       <q-tab-panels v-model="tab" animated style="min-height: inherit;" class="chat-panels">
         <q-tab-panel name="chat" style="min-height: inherit;">
-          <chat-tab @onContentLoaded="isLoading = false" />
+          <chat-tab @onContentLoaded="isLoading = false" :roomData="currentRoomData" />
         </q-tab-panel>
         <q-tab-panel name="unread">
           <unread @onContentLoaded="isLoading = false" class="q-pa-md" />
@@ -24,7 +24,7 @@ import ChatTab from './ChatTab.vue'
 import Unread from './Unread.vue'
 import History from './History.vue'
 import { createNamespacedHelpers } from 'vuex'
-const { mapGetters } = createNamespacedHelpers('Chat')
+const { mapGetters, mapActions } = createNamespacedHelpers('Chat')
 
 export default {
   name: 'MainPanel',
@@ -35,12 +35,15 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['tab'])
+    ...mapGetters(['tab', 'currentRoomData'])
   },
   watch: {
     tab() {
       this.isLoading = true
     }
+  },
+  methods: {
+    ...mapActions(['fetchRoom'])
   }
 }
 </script>

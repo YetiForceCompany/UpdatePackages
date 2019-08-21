@@ -81,32 +81,17 @@ class Vtiger_Currency_UIType extends Vtiger_Base_UIType
 	 */
 	public function getDetailViewDisplayValue($value, $recordId, $uiType)
 	{
-		if (72 === $uiType && $recordId) {
-			$moduleName = $this->getFieldModel()->getModuleName();
-			if (!$moduleName) {
-				$moduleName = \App\Record::getType($recordId);
-			}
-			$currencyId = \App\Fields\Currency::getCurrencyByModule($recordId, $moduleName);
+		$moduleName = $this->getFieldModel()->getModuleName();
+		if (!$moduleName) {
+			$moduleName = \App\Record::getType($recordId);
+		}
+		if (72 === $uiType && $recordId && $currencyId = \App\Fields\Currency::getCurrencyByModule($recordId, $moduleName)) {
 			$currencySymbol = \App\Fields\Currency::getById($currencyId)['currency_symbol'];
 		} else {
-			$currencyModal = new CurrencyField($value);
-			$currencyModal->initialize();
-			$currencySymbol = $currencyModal->currencySymbol;
+			$userModel = \App\User::getCurrentUserModel();
+			$currencySymbol = $userModel->getDetail('currency_symbol');
 		}
 		return CurrencyField::appendCurrencySymbol($value, $currencySymbol);
-	}
-
-	/**
-	 * Get currency symbol by record ID.
-	 *
-	 * @param int $recordId
-	 *
-	 * @return string
-	 */
-	public function getSymbolByRecordId(int $recordId): string
-	{
-		$currencyId = \App\Fields\Currency::getCurrencyByModule($recordId, $this->getFieldModel()->getModuleName());
-		return \App\Fields\Currency::getById($currencyId)['currency_symbol'];
 	}
 
 	/**
