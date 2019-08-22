@@ -121,17 +121,19 @@ class YetiForceUpdate
 		$db->createCommand()->checkIntegrity(true)->execute();
 		$this->updateData();
 		$this->updateFields();
-		$this->addBlocks();
 		$this->addFields();
 		$this->setRelations();
 		$this->actionMapp();
 		$this->updateFaq();
+		$this->updateKnowledgeBase();
+		$this->updateNotification();
 		$this->updatePayments();
 		$this->updatePaymentsOut();
 		$this->updateInvoice();
 		$this->updateProducts();
 		$this->updateServices();
 		$this->updateNextData();
+		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -153,6 +155,112 @@ class YetiForceUpdate
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return $dropTable;
+	}
+
+	private function updateNotification()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$importerType = new \App\Db\Importers\Base();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('Notification');
+
+		try {
+			$dataToUpdate = [];
+			$blockId = $this->getBlockId($moduleInstance->getId(), 'LBL_CUSTOM_INFORMATION', ['label' => 'LBL_CUSTOM_INFORMATION']);
+			if ($blockId) {
+				$dataToUpdate[] = ['vtiger_field', ['block' => $blockId], ['fieldname' => ['private', 'smcreatorid', 'shownerid', 'modifiedtime', 'createdtime', 'number'], 'block' => $this->getBlockId($moduleInstance->getId(), 'LBL_NOTIFICATION_INFORMATION')]];
+			}
+			\App\Db\Updater::batchUpdate($dataToUpdate);
+
+			$fields = [
+				[111, 2801, 'category', 'u_yf_notification', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 7, 374, 1, 'V~O', 2, 3, 'BAS', 1, '', 0, '30', '', 0, 0, 0, 'type' => $importerType->stringType(30)->defaultValue(''), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'picklistValues' => [
+					'column' => 'category',
+					'base' => [30, 'Category', \App\Module::getModuleId('Notification'), 0],
+					'data' => [[30, 'Base', 'T1', 'T1', 0, 'Base', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '']]
+				], 'relatedModules' => [], 'moduleName' => 'Notification'],
+			];
+			$this->addFields($fields);
+		} catch (\Throwable $ex) {
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateKnowledgeBase()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$importerType = new \App\Db\Importers\Base();
+		$moduleInstance = \Vtiger_Module_Model::getInstance('KnowledgeBase');
+		$tableName = $moduleInstance->basetable;
+
+		// FULLTEXT
+		$this->importer->logs .= "> start updateScheme()\n";
+		$dbIndexes = $db->getTableKeys($tableName);
+		try {
+			if (!isset($dbIndexes['search']) && 'mysql' === $db->getDriverName()) {
+				$this->importer->logs .= "  > create index: {$tableName} search ... ";
+				$db->createCommand("ALTER TABLE {$tableName} ADD FULLTEXT KEY `search` (`subject`,`content`,`introduction`);")->execute();
+				$this->importer->logs .= "done\n";
+			}
+		} catch (\Throwable $e) {
+			$this->importer->logs .= " | ERROR (8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
+		}
+
+		$dataToUpdate[] = ['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'content', 'tablename' => $tableName]];
+		$blockId = $this->getBlockId($moduleInstance->getId(), 'LBL_CUSTOM_INFORMATION', ['label' => 'LBL_CUSTOM_INFORMATION', 'display_status' => 2]);
+		if ($blockId) {
+			$dataToUpdate[] = ['vtiger_field', ['block' => $blockId], ['fieldname' => ['modifiedtime', 'private', 'shownerid', 'createdtime', 'number', 'smcreatorid'], 'block' => $this->getBlockId($moduleInstance->getId(), 'LBL_KNOWLEDGEBASE_INFORMATION')]];
+		}
+		\App\Db\Updater::batchUpdate($dataToUpdate);
+
+		$fields = [
+			[96, 2789, 'featured', 'u_yf_knowledgebase', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 314, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_KNOWLEDGEBASE_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
+			[96, 2790, 'introduction', 'u_yf_knowledgebase', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 315, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
+		];
+
+		try {
+			$query = (new \App\Db\Query())->select(['columnname', 'tablename'])->from('vtiger_field')
+				->where(['fieldname' => 'introduction', 'tabid' => $moduleInstance->getId()]);
+			$fieldExists = $query->exists();
+			$this->addFields($fields);
+			$fieldModel = $moduleInstance->getFieldByName('description');
+			if ($fieldModel && !$fieldExists && ($fieldInfo = $query->one())) {
+				$descTableName = $fieldModel->getTableName();
+				$descTableColumn = $fieldModel->getColumnName();
+				$newFieldTable = $fieldInfo['tablename'];
+				$newFieldColumn = $fieldInfo['columnname'];
+				$query = "UPDATE {$newFieldTable}
+					INNER JOIN {$descTableName} ON {$descTableName}.crmid = {$newFieldTable}.knowledgebaseid
+					SET {$newFieldTable}.{$newFieldColumn} = {$descTableName}.{$descTableColumn}
+					WHERE {$descTableName}.{$descTableColumn} is not null and {$descTableName}.{$descTableColumn} <> ''";
+				$result = $db->createCommand($query)->execute();
+				if ($result) {
+					$this->log("[Info] Copy data from {$descTableName}.{$descTableColumn} to {$newFieldTable}.{$newFieldColumn} | {$result}");
+				}
+				$this->removeField($fieldModel);
+				$this->removeBlock($moduleInstance->getId(), 'LBL_DESCRIPTION_BLOCK');
+				$this->removeBlock($moduleInstance->getId(), 'LBL_ATTENTION_BLOCK');
+
+				$moduleInstance->setRelatedList($moduleInstance, 'LBL_RELATED_KNOWLEDGE_BASES', 'SELECT', 'getManyToMany');
+				$this->setRelations([
+					['type' => 'add', 'data' => [614,'HelpDesk','KnowledgeBase','getRelatedList',24,'KnowledgeBase',0,'ADD,SELECT',0,0,0,'RelatedTab']],
+					['type' => 'add', 'data' => [611,'KnowledgeBase','HelpDesk','getRelatedList',3,'HelpDesk',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']],
+					['type' => 'add', 'data' => [612,'KnowledgeBase','Project','getRelatedList',4,'Project',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']],
+					['type' => 'add', 'data' => [616,'Project','KnowledgeBase','getRelatedList',15,'KnowledgeBase',0,'ADD,SELECT',0,0,0,'RelatedTab']],
+					['type' => 'update', 'data' => [485,'KnowledgeBase','Documents','getAttachments',2,'Documents',0,'ADD,SELECT',0,0,0,'RelatedTab,DetailBottom']],
+					['type' => 'update', 'data' => [605, 'KnowledgeBase', 'KnowledgeBase', 'getManyToMany', 1, 'LBL_RELATED_KNOWLEDGE_BASES', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
+				]);
+			}
+		} catch (\Throwable $ex) {
+			$this->log('[ERROR] ' . $ex->__toString());
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function updateFaq()
@@ -185,7 +293,7 @@ class YetiForceUpdate
 				'type' => $importerType->stringType(255)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
 
 			'content' => [15, 2795, 'content', 'vtiger_faq', 1, 300, 'content', 'FL_CONTENT', 0, 2, '', '16777215', 1, 442, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
-				'type' => $importerType->db->getSchema()->createColumnSchemaBuilder('MEDIUMTEXT'), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq', 'blockID'=> $this->getBlockId($moduleInstance->getId(), 'LBL_ARTICLE', ['label' => 'LBL_ARTICLE'])],
+				'type' => $importerType->db->getSchema()->createColumnSchemaBuilder('MEDIUMTEXT'), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq', 'blockID' => $this->getBlockId($moduleInstance->getId(), 'LBL_ARTICLE', ['label' => 'LBL_ARTICLE', 'display_status' => 2])],
 
 			'category' => [15, 2796, 'category', 'vtiger_faq', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 3, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, $templateId, null, 0, 0, 0,
 				'type' => $importerType->stringType(30)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
@@ -193,21 +301,20 @@ class YetiForceUpdate
 			'featured' => [15, 2797, 'featured', 'vtiger_faq', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 37, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
 				'type' => $importerType->tinyInteger(1)->defaultValue(0), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq'],
 
-			'introduction' => [15, 2798, 'introduction', 'vtiger_faq', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 442, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,	'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq', 'blockID'=> $this->getBlockId($moduleInstance->getId(), 'LBL_ARTICLE')],
+			'introduction' => [15, 2798, 'introduction', 'vtiger_faq', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 442, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,	'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Faq', 'blockID' => $this->getBlockId($moduleInstance->getId(), 'LBL_ARTICLE')],
 
 			'knowledgebase_view' => [15, 2799, 'knowledgebase_view', 'vtiger_faq', 1, 16, 'knowledgebase_view', 'FL_VIEWS', 0, 2, '', '255', 4, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255)->defaultValue(''), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => ['PLL_PAGE', 'PLL_PRESENTATION'], 'relatedModules' => [], 'moduleName' => 'Faq'],
 
-			'accountid' => [15, 2821, 'accountid', 'vtiger_faq', 1, 10, 'accountid', 'FL_ACCOUNT', 0, 2, '', '4294967295', 8, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0,
-				'type' => $importerType->integer(11)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['Accounts'], 'moduleName' => 'Faq']
+			'accountid' => [15, 2821, 'accountid', 'vtiger_faq', 1, 10, 'accountid', 'FL_ACCOUNT', 0, 2, '', '4294967295', 8, 37, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(11)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_FAQ_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['Accounts'], 'moduleName' => 'Faq']
 		];
 
 		$transaction = $db->beginTransaction();
 		try {
 			$blockId = $this->getBlockId($moduleInstance->getId(), 'LBL_COMMENT_INFORMATION');
-			if($blockId){
+			if ($blockId) {
 				$dataToUpdate = [
 					['vtiger_blocks', ['blocklabel' => 'LBL_CUSTOM_INFORMATION'], ['tabid' => \App\Module::getModuleId('Faq'), 'blocklabel' => 'LBL_COMMENT_INFORMATION']],
-					['vtiger_field', ['block' => $blockId], ['fieldname' => ['modifiedby','modifiedtime','private', 'shownerid','was_read','createdtime','faq_no'], 'block' => $this->getBlockId($moduleInstance->getId(), 'LBL_FAQ_INFORMATION')]],
+					['vtiger_field', ['block' => $blockId], ['fieldname' => ['private', 'was_read', 'shownerid', 'modifiedby', 'modifiedtime', 'createdtime', 'faq_no'], 'block' => $this->getBlockId($moduleInstance->getId(), 'LBL_FAQ_INFORMATION')]],
 					['vtiger_field', ['fieldlabel' => 'FL_STATUS'], ['fieldname' => 'faqstatus', 'tablename' => 'vtiger_faq']],
 				];
 				\App\Db\Updater::batchUpdate($dataToUpdate);
@@ -230,8 +337,8 @@ class YetiForceUpdate
 					$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$toField} {$type};")->execute();
 					$fieldData = $fields[$toField];
 					$data = ['vtiger_field', ['columnname' => $fieldData[2], 'generatedtype' => $fieldData[4], 'uitype' => $fieldData[5], 'fieldname' => $fieldData[6], 'fieldlabel' => $fieldData[7], 'readonly' => $fieldData[8], 'presence' => $fieldData[9], 'defaultvalue' => $fieldData[10], 'maximumlength' => $fieldData[11], 'displaytype' => $fieldData[14], 'typeofdata' => $fieldData[15], 'quickcreate' => $fieldData[16], 'quickcreatesequence' => $fieldData[17], 'info_type' => $fieldData[18], 'masseditable' => $fieldData[19], 'helpinfo' => $fieldData[20], 'summaryfield' => $fieldData[21], 'fieldparams' => $fieldData[22], 'header_field' => $fieldData[23], 'maxlengthtext' => $fieldData[24], 'maxwidthcolumn' => $fieldData[25]],
-					['fieldid' => $fieldModel->getId()]];
-					if(!empty($fieldData['blockID'])){
+						['fieldid' => $fieldModel->getId()]];
+					if (!empty($fieldData['blockID'])) {
 						$data[1]['block'] = $fieldData['blockID'];
 					}
 					\App\Db\Updater::batchUpdate([$data]);
@@ -248,6 +355,16 @@ class YetiForceUpdate
 				$db->createCommand("ALTER TABLE {$tableName} ADD FULLTEXT KEY `search` (`subject`,`content`,`introduction`);")->execute();
 			}
 			$this->dropIndex([$tableName => ['faq_id_idx']]);
+			$this->setRelations([
+				['type' => 'add', 'data' => [619, 'Accounts', 'Faq', 'getDependentsList', 37, 'Faq', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [609, 'Faq', 'HelpDesk', 'getRelatedList', 3, 'HelpDesk', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
+				['type' => 'add', 'data' => [610, 'Faq', 'Project', 'getRelatedList', 4, 'Project', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
+				['type' => 'add', 'data' => [613, 'HelpDesk', 'Faq', 'getRelatedList', 23, 'Faq', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [615, 'Project','Faq','getRelatedList',14,'Faq',0,'ADD,SELECT',0,0,0,'RelatedTab']]
+			]);
+			$moduleModel = Vtiger_Module_Model::getInstance('Faq');
+			$moduleModel->setRelatedList($moduleModel, 'LBL_RELATED_FAQ', 'SELECT', 'getManyToMany');
+
 			$transaction->commit();
 		} catch (\Throwable $ex) {
 			$transaction->rollBack();
@@ -256,10 +373,11 @@ class YetiForceUpdate
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
-	private function getBlockId($moduleId, $blockLabel, $blockData = null )
+
+	private function getBlockId($moduleId, $blockLabel, $blockData = null)
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . " | {$moduleId}, {$blockLabel} ". gettype($blockData) . ' ' . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . " | {$moduleId}, {$blockLabel} " . \gettype($blockData) . ' ' . date('Y-m-d H:i:s'));
 
 		$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => $blockLabel, 'tabid' => $moduleId])->scalar();
 		if (!$blockId && $blockData) {
@@ -274,6 +392,7 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . " | {$blockId}" . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return $blockId;
 	}
+
 	private function updatePayments()
 	{
 		$start = microtime(true);
@@ -317,12 +436,16 @@ class YetiForceUpdate
 			if ($fieldModel = $moduleInstance->getFieldByName($fieldName)) {
 				$fieldData = $fields[$fieldName];
 				unset($fields[$fieldName]);
-				if ((int) $fieldModel->getUIType() === $fieldData[5]) {
+				if ((int) $fieldModel->getUIType() !== $fieldData[5]) {
 					$db->createCommand()->update('vtiger_field', ['uitype' => $fieldData[5], 'typeofdata' => $fieldData[15]], ['fieldid' => $fieldModel->getId()])->execute();
 				}
 			}
 			$this->addFields($fields);
 			\App\EventHandler::registerHandler('EntityAfterSave', 'PaymentsIn_PaymentsInHandler_Handler', $moduleInstance->getName());
+			$this->setRelations([
+				['type' => 'add', 'data' => [617,'SSingleOrders','PaymentsIn','getDependentsList',6,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab']],
+				['type' => 'add', 'data' => [618,'FInvoice','PaymentsIn','getDependentsList',4,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab']]
+			]);
 			$transaction->commit();
 		} catch (\Throwable $ex) {
 			$transaction->rollBack();
@@ -363,11 +486,13 @@ class YetiForceUpdate
 			if ($fieldModel = $moduleInstance->getFieldByName($fieldName)) {
 				$fieldData = $fields[$fieldName];
 				unset($fields[$fieldName]);
-				if ((int) $fieldModel->getUIType() === $fieldData[5]) {
+				if ((int) $fieldModel->getUIType() !== $fieldData[5]) {
 					$db->createCommand()->update('vtiger_field', ['uitype' => $fieldData[5], 'typeofdata' => $fieldData[15]], ['fieldid' => $fieldModel->getId()])->execute();
 				}
 			}
-			$this->addFields($fields);
+			if ($fields) {
+				$this->addFields($fields);
+			}
 			\App\EventHandler::registerHandler('EntityAfterSave', 'PaymentsIn_PaymentsInHandler_Handler', $moduleInstance->getName());
 			$transaction->commit();
 		} catch (\Throwable $ex) {
@@ -482,13 +607,13 @@ class YetiForceUpdate
 		try {
 			$fields = [
 				'purchase' => [
-					35, 2819, 'purchase', 'vtiger_service', 1, 360, 'purchase', 'FL_COST', 0, 2, '', '65535', 4, 92, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+					35, 2819, 'purchase', 'vtiger_service', 1, 360, 'purchase', 'FL_COST', 0, 2, '', '65535', 4, 92, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Services'
 				],
 				'unit_price' => [
-					35, 575, 'unit_price', 'vtiger_service', 1, 360, 'unit_price', 'Price', 0, 0, '', '65535', 1, 92, 1, 'V~O', 2, 2, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+					35, 575, 'unit_price', 'vtiger_service', 1, 360, 'unit_price', 'Price', 0, 0, '', '65535', 1, 92, 1, 'V~O', 2, 2, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Services'
 				],
 				'commissionrate' => [
-					35, 577, 'commissionrate', 'vtiger_service', 1, 365, 'commissionrate', 'Commission Rate', 0, 2, '', '99999', 2, 92, 2, 'NN~O', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(8, 3), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+					35, 577, 'commissionrate', 'vtiger_service', 1, 365, 'commissionrate', 'Commission Rate', 0, 2, '', '99999', 2, 92, 2, 'NN~O', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(8, 3), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Services'
 				],
 			];
 			$this->updateProductAndServiceFiels('Services', $fields);
@@ -628,15 +753,31 @@ class YetiForceUpdate
 		$data = [
 			['vtiger_cron_task', ['handler_file' => 'cron/CardDav.php'], ['handler_file' => 'modules/API/cron/CardDav.php']],
 			['vtiger_cron_task', ['handler_file' => 'cron/CalDav.php'], ['handler_file' => 'modules/API/cron/CalDav.php']],
+			['vtiger_field', ['uitype' => 99], ['fieldname' => 'password', 'tablename' => 'vtiger_osspasswords', 'uitype' => 1]],
+			['vtiger_eventhandlers', ['priority' => 6], ['or',
+				['handler_class' => 'ModTracker_ModTrackerHandler_Handler', 'event_name' => ['EntityChangeState', 'EntityAfterLink', 'EntityAfterSave']],
+				['handler_class' => 'Vtiger_RecordLabelUpdater_Handler', 'event_name' => ['EntityAfterSave']],
+				['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]
+			]],
+			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_SocialMedia_Handler']],
+			['vtiger_field', ['displaytype' => 10], ['or',
+				['fieldname' => 'projectstatus', 'tablename' => 'vtiger_project', 'displaytype' => 1],
+				['fieldname' => 'projectmilestone_status', 'tablename' => 'vtiger_projectmilestone', 'displaytype' => 1]
+			]],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'private', 'tablename' => 'vtiger_crmentity']],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'category_multipicklist', 'tablename' => 'vtiger_products']],
-			['vtiger_field', ['masseditable' => 0], ['fieldname' => ['activitystatus','reapeat','recurrence'], 'tablename' => 'vtiger_activity']],
-			['vtiger_field', ['maximumlength' => '65535'], ['uitype' => [305, 300, 33, 309, 342, 69, 21 ,19], 'maximumlength' => null]],
+			['vtiger_field', ['masseditable' => 0], ['fieldname' => ['activitystatus', 'reapeat', 'recurrence'], 'tablename' => 'vtiger_activity']],
+			['vtiger_field', ['maximumlength' => '65535'], ['or',
+				['uitype' => [305, 300, 33, 309, 342, 69, 21, 19, 311, 315], 'maximumlength' => null],
+				['uitype' => [305, 300, 33, 309, 342, 69, 21, 19, 311, 315], 'maximumlength' => ''],
+				['tablename' => 'vtiger_modcomments', 'fieldname' => 'parents', 'maximumlength' => null],
+				['tablename' => 'vtiger_ossmailview', 'fieldname' => ['bcc_email', 'cc_email', 'from_email', 'from_id', 'reply_to_email', 'subject', 'to_email', 'to_id'], 'maximumlength' => null],
+				['tablename' => 'vtiger_paymentsin', 'fieldname' => 'paymentstitle', 'maximumlength' => null]
+			]],
+			['vtiger_field', ['maximumlength' => '3,64'], ['fieldname' => 'user_name', 'tablename' => 'vtiger_users']],
 			['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'content', 'tablename' => 'vtiger_ossmailview']],
-			['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'content', 'tablename' => 'u_yf_knowledgebase']],
 			['vtiger_field', ['maximumlength' => '16777215'], ['fieldname' => 'orginal_mail', 'tablename' => 'vtiger_ossmailview']],
-			['vtiger_field', ['maximumlength' => '64'], ['fieldname' => 'user_name', 'tablename' => 'vtiger_users']],
 			['vtiger_field', ['summaryfield' => 1], ['fieldname' => 'contract_priority', 'tablename' => 'vtiger_servicecontracts']],
 			['vtiger_field', ['quickcreate' => 1, 'summaryfield' => 1, 'masseditable' => 2], ['fieldname' => 'progress', 'tablename' => 'vtiger_servicecontracts']],
 			['vtiger_settings_blocks', ['sequence' => 16], ['label' => 'LBL_About_YetiForce']],
@@ -649,7 +790,12 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['sequence' => 7], ['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => \App\Module::getModuleId('Campaigns'), 'name' => 'getCampaigns']],
 			['vtiger_relatedlists', ['sequence' => 8], ['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => \App\Module::getModuleId('Assets'), 'name' => 'getDependentsList']],
 			['vtiger_relatedlists', ['sequence' => 9], ['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => \App\Module::getModuleId('OSSSoldServices'), 'name' => 'getDependentsList']],
-			['vtiger_settings_blocks', ['icon' => 'fas fa-home'], ['label'=>'LBL_MENU_SUMMARRY']],
+			['vtiger_settings_blocks', ['icon' => 'fas fa-home'], ['label' => 'LBL_MENU_SUMMARRY']],
+			['vtiger_settings_field', ['sequence' => 8], ['name' => 'LBL_TIMECONTROL_PROCESSES']],
+			['vtiger_settings_field', ['sequence' => 5], ['name' => 'LBL_COLORS']],
+			['vtiger_settings_field', ['sequence' => 6], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']],
+			['vtiger_settings_field', ['sequence' => 5], ['name' => 'License']],
+			['vtiger_settings_field', ['sequence' => 4, 'iconpath' =>'fas fa-shopping-cart text-danger','linkto'=>'index.php?module=YetiForce&parent=Settings&view=Shop'], ['name' => 'LBL_SHOP_YETIFORCE']],
 			['vtiger_settings_field', ['pinned' => 0], []],
 			['vtiger_settings_field', ['pinned' => 1], ['name' => ['LBL_ROLES', 'USERGROUPLIST', 'LBL_FIELDS_ACCESS', 'LBL_PICKLIST_EDITOR', 'LBL_CURRENCY_SETTINGS', 'Scheduler', 'LBL_EDIT_FIELDS', 'LBL_PDF', 'LBL_MENU_BUILDER', 'LBL_ARRANGE_RELATED_TABS', 'Mail Scanner', 'LangManagement', 'Search Setup', 'Widgets', 'LBL_MAIL_SMTP']]],
 		];
@@ -670,7 +816,8 @@ class YetiForceUpdate
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'VTUpdateClosedTime']],
 			['vtiger_links', ['linkurl' => 'modules/ModComments/ModCommentsCommon.js']],
 			['a_#__taxes_config', ['param' => 'active']],
-			['a_#__discounts_config', ['param' => 'active']]
+			['a_#__discounts_config', ['param' => 'active']],
+			['vtiger_eventhandlers', ['handler_class' => 'HelpDesk_TicketRangeTime_Handler']]
 		];
 		$links = [
 			['vtiger_links', ['linklabel' => 'Delagated Events/To Dos', 'linktype' => 'DASHBOARDWIDGET', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=AssignedUpcomingCalendarTasks']],
@@ -732,6 +879,32 @@ class YetiForceUpdate
 					'pinned' => 0,
 					'admin_access' => null
 				], ['name' => 'LBL_SYSTEM_WARNINGS']
+			],
+			['vtiger_settings_field',
+				[
+					'blockid' => (new \App\Db\Query())->select(['blockid'])->from('vtiger_settings_blocks')->where(['label' => 'LBL_PROCESSES'])->scalar(),
+					'name' => 'LBL_SLA_POLICY',
+					'iconpath' => 'fas fa-door-open',
+					'description' => 'LBL_SLA_POLICY',
+					'linkto' => 'index.php?module=SlaPolicy&parent=Settings&view=List',
+					'sequence' => 7,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null
+				], ['name' => 'LBL_SLA_POLICY']
+			],
+			['vtiger_settings_field',
+				[
+					'blockid' => (new \App\Db\Query())->select(['blockid'])->from('vtiger_settings_blocks')->where(['label' => 'LBL_CALENDAR_LABELS_COLORS'])->scalar(),
+					'name' => 'LBL_BUSINESS_HOURS',
+					'iconpath' => 'fas fa-business-time',
+					'description' => 'LBL_BUSINESS_HOURS_DESCRIPTION',
+					'linkto' => 'index.php?module=BusinessHours&parent=Settings&view=List',
+					'sequence' => 4,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null
+				], ['name' => 'LBL_BUSINESS_HOURS_DESCRIPTION']
 			],
 			['vtiger_widgets',
 				[
@@ -810,7 +983,6 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-
 	public function addMissingInserts()
 	{
 		$start = microtime(true);
@@ -818,12 +990,12 @@ class YetiForceUpdate
 
 		$db = \App\Db::getInstance();
 		$moduleWithData = (new \App\Db\Query())->select(['vtiger_tab.name'])->from('vtiger_crmentity')->innerJoin('vtiger_tab', 'vtiger_crmentity.setype = vtiger_tab.name')->where(['vtiger_tab.isentitytype' => 1])->distinct()->column();
-		foreach($moduleWithData as $moduleName){
+		foreach ($moduleWithData as $moduleName) {
 			$focus = \CRMEntity::getInstance($moduleName);
 			$baseTable = $focus->table_name;
 			$baseIndex = $focus->table_index;
-			foreach($focus->tab_name as $relatedTable){
-				if($relatedTable === $baseTable || $relatedTable === 'vtiger_crmentity'){
+			foreach ($focus->tab_name as $relatedTable) {
+				if ($relatedTable === $baseTable || 'vtiger_crmentity' === $relatedTable) {
 					continue;
 				}
 				try {
@@ -832,8 +1004,8 @@ class YetiForceUpdate
 						SELECT {$baseTable}.{$baseIndex} FROM {$baseTable}
 						WHERE {$baseTable}.{$baseIndex} NOT IN (SELECT {$relatedTable}.{$relatedTableIndex} FROM {$relatedTable})";
 					$result = $db->createCommand($query)->execute();
-					if($result){
-						$this->log("[Info] Added {$result} missing inserts in {$relatedTable}");
+					if ($result) {
+						$this->log("[Info] Added {$result} missing inserts in {$relatedTable} from {$moduleName}");
 					}
 				} catch (\Throwable $e) {
 					$message = '[ERROR] ' . __METHOD__ . ': ' . $e->__toString();
@@ -861,25 +1033,35 @@ class YetiForceUpdate
 		$workflowTask[] = [141, 72, 'It sums up all open sales orders', 'O:21:"SumFieldFromDependent":9:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:72;s:7:"summary";s:32:"It sums up all open sales orders";s:6:"active";b:1;s:7:"trigger";N;s:11:"targetField";s:36:"accountid::Accounts::sum_open_orders";s:11:"sourceField";s:9:"sum_gross";s:10:"conditions";a:2:{s:9:"condition";s:2:"OR";s:5:"rules";a:2:{i:0;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"e";s:5:"value";s:76:"PLL_DRAFT##PLL_IN_REALIZATION##PLL_FOR_VERIFICATION##PLL_AWAITING_SIGNATURES";}i:1;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"y";s:5:"value";s:0:"";}}}}'];
 
 		foreach ($workflow as $record) {
-			$workflowId = (new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['module_name' => $record[1], 'summary' => $record[2]])->scalar();
-			if (!$workflowId) {
-				$newWorkflow = $workflowManager->newWorkFlow($record[1]);
-				$newWorkflow->description = $record[2];
-				$newWorkflow->test = $record[3];
-				$newWorkflow->executionCondition = $record[4];
-				$newWorkflow->defaultworkflow = $record[5];
-				$newWorkflow->type = $record[6];
-				$newWorkflow->filtersavedinnew = $record[7];
-				$workflowManager->save($newWorkflow);
-				$workflowId = $newWorkflow->id;
-			}
-			foreach ($workflowTask as $indexTask) {
-				if ($indexTask[1] === $record[0] && !(new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['workflow_id' => $workflowId, 'summary' => $indexTask[2]])->exists()) {
-					$task = $taskManager->unserializeTask($indexTask[3]);
-					$task->id = '';
-					$task->workflowId = $workflowId;
-					$taskManager->saveTask($task);
+			try {
+				$workflowId = (new \App\Db\Query())->select(['workflow_id'])
+								->from('com_vtiger_workflows')
+								->where(['module_name' => $record[1], 'summary' => $record[2]])->scalar();
+				if (!$workflowId) {
+					$newWorkflow = $workflowManager->newWorkFlow($record[1]);
+					$newWorkflow->description = $record[2];
+					$newWorkflow->test = $record[3];
+					$newWorkflow->executionCondition = $record[4];
+					$newWorkflow->defaultworkflow = $record[5];
+					$newWorkflow->type = $record[6];
+					$newWorkflow->filtersavedinnew = $record[7];
+					$workflowManager->save($newWorkflow);
+					$workflowId = $newWorkflow->id;
+					$this->logs("[INFO] Create workflow {$record[1]} {$record[2]}");
 				}
+				foreach ($workflowTask as $indexTask) {
+					if ($indexTask[1] === $record[0] &&
+						!(new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId, 'summary' => $indexTask[2]])->exists()
+						) {
+						$task = $taskManager->unserializeTask($indexTask[3]);
+						$task->id = '';
+						$task->workflowId = $workflowId;
+						$taskManager->saveTask($task);
+						$this->logs("[INFO] Create workflow task {$indexTask[1]} {$indexTask[2]}");
+					}
+				}
+			} catch (\Throwable $e) {
+				$this->logs("[ERROR] {$e->getMessage()} in {$e->getTraceAsString()}");
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -983,20 +1165,13 @@ class YetiForceUpdate
 				$dropTable[] = $tableToRemove;
 			}
 		}
-		$this->importer->dropTable(array_unique($dropTable));
 
-		// FULLTEXT
-		$this->importer->logs .= "> start updateScheme()\n";
-		$dbIndexes = $db->getTableKeys('u_#__knowledgebase');
-		try {
-			if (!isset($dbIndexes['search']) && 'mysql' === $db->getDriverName()) {
-				$this->importer->logs .= '  > create index: u_#__knowledgebase search ... ';
-				$db->createCommand('ALTER TABLE u_yf_knowledgebase ADD FULLTEXT KEY `search` (`subject`,`content`,`introduction`);')->execute();
-				$this->importer->logs .= "done\n";
-			}
-		} catch (\Throwable $e) {
-			$this->importer->logs .= " | ERROR (8) [{$e->getMessage()}] in  \n{$e->getTraceAsString()} !!!\n";
+		if (!(new \App\Db\Query())->from('vtiger_field')->where(['tablename' => 'vtiger_inventoryproductrel'])->exists()) {
+			$dropTable[] = 'vtiger_inventoryproductrel';
+			$dropTable[] = 'vtiger_inventoryproductrel_seq';
 		}
+
+		$this->importer->dropTable(array_unique($dropTable));
 
 		$tableName = 'a_yf_record_converter';
 		$columnScheme = $db->getTableSchema($tableName)->getColumn('id');
@@ -1167,34 +1342,6 @@ class YetiForceUpdate
 	}
 
 	/**
-	 * Add blocks.
-	 */
-	public function addBlocks()
-	{
-		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$columns = ['blockid', 'tabid', 'label', 'sequence', 'showtitle', 'visible', 'increateview', 'ineditview', 'indetailview', 'display_status', 'iscustom'];
-		$blocksModules = [
-			'KnowledgeBase' => [
-				[438, 96, 'LBL_CUSTOM_INFORMATION', 2, 0, 0, 0, 0, 0, 1, 1]
-			]
-		];
-		foreach ($blocksModules as $moduleName => $blocks) {
-			$module = \Vtiger_Module_Model::getInstance($moduleName);
-			foreach ($blocks as $block) {
-				$blockData = array_combine($columns, $block);
-				unset($blockData['blockid'],$blockData['tabid']);
-				$blockInstance = new \vtlib\Block();
-				foreach ($blockData as $key => $value) {
-					$blockInstance->{$key} = $value;
-				}
-				$module->addBlock($blockInstance);
-			}
-		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
-	}
-
-	/**
 	 * Add fields.
 	 *
 	 * @param mixed $fields
@@ -1206,30 +1353,21 @@ class YetiForceUpdate
 		$importerType = new \App\Db\Importers\Base();
 		if (empty($fields)) {
 			$fields = [
-				[29, 2784, 'default_search_module', 'vtiger_users', 1, 301, 'default_search_module', 'FL_DEFAULT_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(25), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'display_status' => 1], 'moduleName' => 'Users'],
+				[29, 2784, 'default_search_module', 'vtiger_users', 1, 301, 'default_search_module', 'FL_DEFAULT_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(25), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'display_status' => 2], 'moduleName' => 'Users'],
 				[29, 2785, 'default_search_override', 'vtiger_users', 1, 56, 'default_search_override', 'FL_OVERRIDE_SEARCH_MODULE', 0, 2, '', null, 0, 437, 1, 'V~O', 1, 0, 'BAS', 1, 'Edit,Detail,PreferenceDetail', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_GLOBAL_SEARCH_SETTINGS', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
-				[29,2831,'primary_phone','vtiger_users',1,11,'primary_phone','FL_PRIMARY_PHONE',0,2,'','50',13,77,1,'V~O',1,0,'BAS',1,'',0,'',null,0,0,0, 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_USERLOGIN_ROLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
+				[29, 2831, 'primary_phone', 'vtiger_users', 1, 11, 'primary_phone', 'FL_PRIMARY_PHONE', 0, 2, '', '50', 13, 77, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_USERLOGIN_ROLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
 
-				[6,2788,'pricebook_id','vtiger_account',1,10,'pricebook_id','FL_PRICEBOOK',0,2,'',null,1,439,1,'V~O',1,0,'BAS',1,'',0,'',null,0,0,0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_ACCOUNT_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['PriceBooks'], 'moduleName' => 'Accounts'],
-				[6, 2793, 'check_stock_levels', 'vtiger_account', 1, 56, 'check_stock_levels', 'FL_CHECK_STOCK_LEVELS', 0, 2, '', '-128,127', 0, 439, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'blockData' => ['label' => 'LBL_FOR_THE_PORTAL'], 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
+				[6, 2788, 'pricebook_id', 'vtiger_account', 1, 10, 'pricebook_id', 'FL_PRICEBOOK', 0, 2, '', null, 1, 439, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'blockData' => ['label' => 'LBL_FOR_THE_PORTAL', 'display_status' => 2], 'picklistValues' => [], 'relatedModules' => ['PriceBooks'], 'moduleName' => 'Accounts'],
+				[6, 2793, 'check_stock_levels', 'vtiger_account', 1, 56, 'check_stock_levels', 'FL_CHECK_STOCK_LEVELS', 0, 2, '', '-128,127', 0, 439, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
 				[6, 2800, 'sum_open_orders', 'vtiger_account', 1, 71, 'sum_open_orders', 'FL_SUM_ORDERS', 0, 2, '', '9999999999999999999', 2, 439, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
 				[6, 2822, 'taxes', 'vtiger_account', 1, 303, 'taxes', 'FL_TAXES', 0, 2, '', '65535', 11, 198, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FINANSIAL_SUMMARY', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Accounts'],
 				[6, 2823, 'accounts_available_taxes', 'vtiger_account', 1, 33, 'accounts_available_taxes', 'FL_AVAILABLE_TAXES', 0, 2, '', '65535', 3, 439, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_FOR_THE_PORTAL', 'picklistValues' => ['LBL_REGIONAL_TAX', 'LBL_GROUP_TAX'], 'relatedModules' => [], 'moduleName' => 'Accounts'],
-
-				[96, 2789, 'featured', 'u_yf_knowledgebase', 1, 56, 'featured', 'FL_FEATURED', 0, 2, '', '-128,127', 6, 314, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_KNOWLEDGEBASE_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
-				[96, 2790, 'introduction', 'u_yf_knowledgebase', 1, 300, 'introduction', 'FL_INTRODUCTION', 0, 2, '', '65535', 2, 315, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_ARTICLE', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'KnowledgeBase'],
-
-				[111, 2801, 'category', 'u_yf_notification', 1, 302, 'category', 'FL_CATEGORY', 0, 2, '', '30', 7, 374, 1, 'V~O', 2, 3, 'BAS', 1, '', 0, '30', '', 0, 0, 0, 'type' => $importerType->stringType(30)->defaultValue(''), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'picklistValues' => [
-					'column' => 'category',
-					'base' => [30, 'Category', \App\Module::getModuleId('Notification'), 0],
-					'data' => [[30, 'Base', 'T1', 'T1', 0, 'Base', '{"loaded":"1","opened":false,"selected":false,"disabled":false}', '']]
-				], 'relatedModules' => [], 'moduleName' => 'Notification'],
 
 				[90, 2792, 'istorageaddressid', 'u_yf_ssingleorders', 1, 10, 'istorageaddressid', 'FL_STORAGE', 0, 2, '', null, 15, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['IStorages'], 'moduleName' => 'SSingleOrders'],
 				[90, 2818, 'ssingleorders_method_payments', 'u_yf_ssingleorders', 1, 16, 'ssingleorders_method_payments', 'FL_METHOD_PAYMENTS', 0, 2, '', '255', 16, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_REDSYS', 'PLL_DOTPAY', 'PLL_TRANSFER', 'PLL_CASH_ON_DELIVERY'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
 				[90, 2826, 'payment_status', 'u_yf_ssingleorders', 1, 15, 'payment_status', 'FL_PAYMENT_STATUS', 1, 2, 'PLL_NOT_PAID', '255', 17, 284, 10, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID'], 'relatedModules' => [], 'moduleName' => 'SSingleOrders'],
 
-				[13, 2791, 'parentid', 'vtiger_troubletickets', 1, 10, 'parentid', 'FL_HELP_DESK_PARENT', 0, 0, '', null, 13, 27, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'HelpDesk'],
+				[13, 2791, 'parentid', 'vtiger_troubletickets', 1, 10, 'parentid', 'FL_HELP_DESK_PARENT', 0, 0, '', null, 13, 27, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['HelpDesk'], 'moduleName' => 'HelpDesk'],
 				[13, 2806, 'response_range_time', 'vtiger_troubletickets', 1, 308, 'response_range_time', 'FL_RESPONSE_RANGE_TIME', 0, 2, '', null, 0, 444, 2, 'I~O', 1, 0, 'BAS', 1, 'Detail', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'BL_RECORD_STATUS_TIMES'], 'moduleName' => 'HelpDesk'],
 				[13, 2807, 'solution_range_time', 'vtiger_troubletickets', 1, 308, 'solution_range_time', 'FL_SOLUTION_RANGE_TIME', 0, 2, '', null, 0, 444, 2, 'I~O', 1, 0, 'BAS', 1, 'Detail', 0, '', null, 0, 0, 0,
 					'type' => $importerType->integer(11), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'BL_RECORD_STATUS_TIMES'], 'moduleName' => 'HelpDesk'],
@@ -1253,8 +1391,8 @@ class YetiForceUpdate
 					'type' => $importerType->dateTime(), 'blockLabel' => 'BL_RECORD_STATUS_TIMES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'BL_RECORD_STATUS_TIMES'], 'moduleName' => 'HelpDesk'],
 				[13, 2829, 'sum_time_subordinate', 'vtiger_troubletickets', 1, 7, 'sum_time_subordinate', 'FL_SUM_TIME_SUBORDINATE', 1, 2, '', '99999999', 14, 27, 10, 'NN~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->decimal(10, 2), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'HelpDesk'],
 
-				[34, 2827, 'description', 'vtiger_crmentity', 1, 300, 'description', 'Description', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
-				[34, 2828, 'attention', 'vtiger_crmentity', 1, 300, 'attention', 'Attention', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_DESCRIPTION_INFORMATION'], 'moduleName' => 'ServiceContracts'],
+				[34, 2827, 'description', 'vtiger_crmentity', 1, 300, 'description', 'Description', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_DESCRIPTION_INFORMATION', 'blockData' => ['label' => 'LBL_DESCRIPTION_INFORMATION'], 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
+				[34, 2828, 'attention', 'vtiger_crmentity', 1, 300, 'attention', 'Attention', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_DESCRIPTION_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
 			];
 		}
 
@@ -1315,7 +1453,7 @@ class YetiForceUpdate
 				$fieldInstance->setPicklistValues($field['picklistValues']);
 			}
 			if ($field['relatedModules'] && 10 == $field[5]) {
-				$fieldInstance->setRelatedModules($field['relatedModules']); //setRelatedList
+				$fieldInstance->setRelatedModules($field['relatedModules']);
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1376,7 +1514,7 @@ class YetiForceUpdate
 		}
 		$moduleByColumn = (new \App\Db\Query())->select(['vtiger_tab.name', 'vtiger_field.fieldname'])->from('vtiger_field')->innerJoin('vtiger_tab', '`vtiger_field`.`tabid` = vtiger_tab.`tabid`')->where(['columnname' => 'closedtime', 'tablename' => 'vtiger_crmentity'])->createCommand()->queryAllByGroup();
 
-		$modules = ['HelpDesk' => ['response_time', 'report_time'], 'SQuoteEnquiries' => ['response_time'], 'SRequirementsCards' => ['response_time'], 'SCalculations' => ['response_time'], 'SQuotes' => ['response_time'], 'SSingleOrders' => ['response_time'], 'SRecurringOrders' => ['response_time'], 'SVendorEnquiries' => ['response_time'], 'Accounts' => ['active'], 'Contacts' => ['active'], 'OSSMailView' => ['rel_mod'],'KnowledgeBase'=>['attention', 'description']];
+		$modules = ['HelpDesk' => ['response_time', 'report_time'], 'SQuoteEnquiries' => ['response_time'], 'SRequirementsCards' => ['response_time'], 'SCalculations' => ['response_time'], 'SQuotes' => ['response_time'], 'SSingleOrders' => ['response_time'], 'SRecurringOrders' => ['response_time'], 'SVendorEnquiries' => ['response_time'], 'Accounts' => ['active'], 'Contacts' => ['active'], 'OSSMailView' => ['rel_mod'], 'KnowledgeBase' => ['attention']];
 		$modules = array_merge_recursive($modules, $moduleByColumn);
 		foreach ($modules as $moduleName => $fields) {
 			$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
@@ -1448,6 +1586,23 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function removeBlock($moduleId, $blockName)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | {$moduleId},{$blockName} | " . date('Y-m-d H:i:s'));
+
+		$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['vtiger_blocks.tabid' => $moduleId, 'blocklabel' => $blockName])->scalar();
+		if ($blockId && (new \App\Db\Query())->from('vtiger_field')->where(['tabid' => $moduleId, 'block' => $blockId])->exists()) {
+			$this->log(__METHOD__ . '[WARNING] Could not delete block, fields exist');
+		} elseif (!$blockId) {
+			$this->log(__METHOD__ . '[INFO] Block not exists');
+		} else {
+			\Vtiger_Block_Model::getInstance($blockId)->delete(false);
+		}
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
 	private function isExistsValueForField($moduleName, $fieldName)
 	{
 		$queryGenerator = new \App\QueryGenerator($moduleName);
@@ -1458,43 +1613,41 @@ class YetiForceUpdate
 		return $queryGenerator->createQuery()->exists();
 	}
 
-	private function setRelations()
+	private function setRelations($ralations = null)
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$dbCommand = \App\Db::getInstance()->createCommand();
 
-		$moduleModel = Vtiger_Module_Model::getInstance('HelpDesk');
-		if ($fieldModel = $moduleModel->getFieldByName('pssold_id')) {
-			$modules = ['OutsourcedProducts', 'OSSOutsourcedServices'];
-			$fieldModel->setRelatedModules($modules);
-			foreach ($modules as $module) {
-				Vtiger_Module_Model::getInstance($module)->setRelatedList($moduleModel, $moduleModel->getName(), 'ADD', 'getDependentsList');
+		if (null === $ralations) {
+			$moduleModel = Vtiger_Module_Model::getInstance('HelpDesk');
+			if ($fieldModel = $moduleModel->getFieldByName('pssold_id')) {
+				$modules = ['OutsourcedProducts', 'OSSOutsourcedServices'];
+				$fieldModel->setRelatedModules($modules);
+				foreach ($modules as $module) {
+					Vtiger_Module_Model::getInstance($module)->setRelatedList($moduleModel, $moduleModel->getName(), 'ADD', 'getDependentsList');
+				}
 			}
+
+			$ralations = [
+				['type' => 'add', 'data' => [599, 'SSalesProcesses', 'FInvoice', 'getDependentsList', 24, 'FInvoice', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [600, 'Project', 'FInvoice', 'getDependentsList', 13, 'FInvoice', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [601, 'ServiceContracts', 'Assets', 'getRelatedList', 8, 'Assets', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [602, 'ServiceContracts', 'OSSSoldServices', 'getRelatedList', 9, 'OSSSoldServices', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [603, 'Assets', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [604, 'OSSSoldServices', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'update', 'data' => [605, 'OSSSoldServices', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, 'ADD', 0, 0, 0, 'RelatedTab'], 'where'=>['tabid' => \App\Module::getModuleId('OSSSoldServices'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
+				['type' => 'update', 'data' => [59,'Vendors','Products','getDependentsList',2,'Products',0,'add',0,0,0,'RelatedTab'], 'where'=>['tabid' => \App\Module::getModuleId('Vendors'), 'related_tabid' => \App\Module::getModuleId('Products'), 'name' => 'getProducts']],
+				['type' => 'add', 'data' => [620, 'Contacts', 'HelpDesk', 'getRelatedList', 4, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab']]
+			];
 		}
-		$moduleModel = Vtiger_Module_Model::getInstance('Faq');
-		$moduleModel->setRelatedList($moduleModel, 'LBL_RELATED_FAQ', 'SELECT', 'getManyToMany');
 
-		$moduleModel = Vtiger_Module_Model::getInstance('KnowledgeBase');
-		$moduleModel->setRelatedList($moduleModel, 'LBL_RELATED_KNOWLEDGE_BASES', 'SELECT', 'getManyToMany');
-
-		$ralations = [
-			['type' => 'add', 'data' => [599, 'SSalesProcesses', 'FInvoice', 'getDependentsList', 24, 'FInvoice', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
-			['type' => 'add', 'data' => [600, 'Project', 'FInvoice', 'getDependentsList', 13, 'FInvoice', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
-			['type' => 'add', 'data' => [601, 'ServiceContracts', 'Assets', 'getRelatedList', 8, 'Assets', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
-			['type' => 'add', 'data' => [602, 'ServiceContracts', 'OSSSoldServices', 'getRelatedList', 9, 'OSSSoldServices', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
-			['type' => 'add', 'data' => [603, 'Assets', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
-			['type' => 'add', 'data' => [604, 'OSSSoldServices', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
-			['type' => 'update', 'data' => [605, 'KnowledgeBase', 'KnowledgeBase', 'getManyToMany', 1, 'LBL_RELATED_KNOWLEDGE_BASES', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
-			['type' => 'add', 'data' => [620, 'Contacts', 'HelpDesk', 'getRelatedList', 4, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab']],
-			// ['type' => 'add', 'data' => [606, 'OutsourcedProducts', 'HelpDesk', 'getDependentsList', 2, 'HelpDesk', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
-			// ['type' => 'add', 'data' => [607, 'OSSOutsourcedServices', 'HelpDesk', 'getDependentsList', 2, 'HelpDesk', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
-		];
 		foreach ($ralations as $relation) {
 			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType] = $relation['data'];
 			$tabid = \App\Module::getModuleId($moduleName);
 			$relTabid = \App\Module::getModuleId($relModuleName);
-			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name])->exists();
+			$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
+			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
 			if (!$isExists && 'add' === $relation['type']) {
 				$dbCommand->insert('vtiger_relatedlists', [
 					'tabid' => $tabid,
@@ -1510,6 +1663,7 @@ class YetiForceUpdate
 					'view_type' => $viewType
 				])->execute();
 			} elseif ($isExists && 'update' === $relation['type']) {
+				$where = $relation['where'] ?? $where;
 				$dbCommand->update('vtiger_relatedlists', [
 					'name' => $name,
 					'sequence' => $sequence,
@@ -1520,7 +1674,7 @@ class YetiForceUpdate
 					'creator_detail' => $creatorDetail,
 					'relation_comment' => $relationComment,
 					'view_type' => $viewType
-				], ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name])->execute();
+				], $where)->execute();
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1536,7 +1690,7 @@ class YetiForceUpdate
 		$inventoryModules = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['type' => 1])->column();
 		$actions = [
 			['type' => 'add', 'name' => 'RecordPdfInventory', 'tabsData' => $inventoryModules],
-			['type' => 'add', 'name' => 'SetQtyProducts', 'tabsData' => (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' =>['Products','IStorages']])->column()]
+			['type' => 'add', 'name' => 'SetQtyProducts', 'tabsData' => (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => ['Products', 'IStorages']])->column()]
 		];
 		$db = \App\Db::getInstance();
 		foreach ($actions as $action) {
