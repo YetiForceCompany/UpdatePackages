@@ -230,6 +230,7 @@ class Tribute {
             let items = this.search.filter(this.current.mentionText, values, {
                 pre: this.current.collection.searchOpts.pre || '<span>',
                 post: this.current.collection.searchOpts.post || '</span>',
+                skip: this.current.collection.searchOpts.skip,
                 extract: (el) => {
                     if (typeof this.current.collection.lookup === 'string') {
                         return el[this.current.collection.lookup]
@@ -251,10 +252,10 @@ class Tribute {
             if (!items.length) {
                 let noMatchEvent = new CustomEvent('tribute-no-match', { detail: this.menu })
                 this.current.element.dispatchEvent(noMatchEvent)
-                if (!this.current.collection.noMatchTemplate) {
+                if ( typeof this.current.collection.noMatchTemplate === 'function' && !this.current.collection.noMatchTemplate() || !this.current.collection.noMatchTemplate) {
                     this.hideMenu()
                 } else {
-                    ul.innerHTML = this.current.collection.noMatchTemplate()
+                    typeof this.current.collection.noMatchTemplate === 'function' ? ul.innerHTML = this.current.collection.noMatchTemplate() : ul.innerHTML = this.current.collection.noMatchTemplate
                 }
 
                 return
@@ -271,8 +272,7 @@ class Tribute {
                 let li = this.range.getDocument().createElement('li')
                 li.setAttribute('data-index', index)
                 li.addEventListener('mousemove', (e) => {
-                  let li = e.target;
-                  let index = li.getAttribute('data-index')
+                    let [li, index] = this._findLiTarget(e.target)
                     if (e.movementY !== 0) {
                         this.events.setActiveLi(index)
                     }
@@ -291,6 +291,14 @@ class Tribute {
         } else {
             processValues(this.current.collection.values)
         }
+    }
+
+    _findLiTarget(el) {
+        if (!el) return []
+        const index = el.getAttribute('data-index');
+        return !index ?
+            this._findLiTarget(el.parentNode) :
+            [el, index]
     }
 
     showMenuForCollection(element, collectionIndex) {

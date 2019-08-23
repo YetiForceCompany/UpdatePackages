@@ -196,6 +196,16 @@ class Admin extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
+			],
+			's_#__mail_smtp' => [
+				'columns' => [
+					'confirm_reading_to' => $this->stringType(),
+					'priority' => $this->stringType(),
+					'organization' => $this->stringType(),
+					'unsubscribe' => $this->stringType()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
 			]
 		];
 		$this->foreignKey = [

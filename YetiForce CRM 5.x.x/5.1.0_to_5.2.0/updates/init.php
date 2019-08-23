@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 195ece7b31ccfd4e861ec70a6fcc3e56c1d767a3
+// last check: d49025b9b689eb96a765f07e5e8aae5f47f57050
 /**
  * YetiForceUpdate Class.
  */
@@ -355,15 +355,18 @@ class YetiForceUpdate
 				$db->createCommand("ALTER TABLE {$tableName} ADD FULLTEXT KEY `search` (`subject`,`content`,`introduction`);")->execute();
 			}
 			$this->dropIndex([$tableName => ['faq_id_idx']]);
+
+			$moduleModel = Vtiger_Module_Model::getInstance('Faq');
+			$moduleModel->setRelatedList($moduleModel, 'LBL_RELATED_FAQ', 'SELECT', 'getManyToMany');
 			$this->setRelations([
 				['type' => 'add', 'data' => [619, 'Accounts', 'Faq', 'getDependentsList', 37, 'Faq', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
 				['type' => 'add', 'data' => [609, 'Faq', 'HelpDesk', 'getRelatedList', 3, 'HelpDesk', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 				['type' => 'add', 'data' => [610, 'Faq', 'Project', 'getRelatedList', 4, 'Project', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 				['type' => 'add', 'data' => [613, 'HelpDesk', 'Faq', 'getRelatedList', 23, 'Faq', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
-				['type' => 'add', 'data' => [615, 'Project','Faq','getRelatedList',14,'Faq',0,'ADD,SELECT',0,0,0,'RelatedTab']]
+				['type' => 'add', 'data' => [615, 'Project','Faq','getRelatedList',14,'Faq',0,'ADD,SELECT',0,0,0,'RelatedTab']],
+				['type' => 'add', 'data' => [89,'Faq','Documents','getAttachments',1,'Documents',0,'add,select',0,0,0,'RelatedTab,DetailBottom']],
+				['type' => 'update', 'data' => [608,'Faq','Faq','getManyToMany',2,'LBL_RELATED_FAQ',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']]
 			]);
-			$moduleModel = Vtiger_Module_Model::getInstance('Faq');
-			$moduleModel->setRelatedList($moduleModel, 'LBL_RELATED_FAQ', 'SELECT', 'getManyToMany');
 
 			$transaction->commit();
 		} catch (\Throwable $ex) {
@@ -387,6 +390,25 @@ class YetiForceUpdate
 			}
 			\Vtiger_Module_Model::getInstance($moduleId)->addBlock($blockInstance);
 			$blockId = $blockInstance->id;
+			foreach ($blockData as $key => $value) {
+				if($blockInstance->{$key} !== $value){
+					$blockInstance->{$key} = $value;
+					$update = true;
+				}
+			}
+			if(!empty($update)){
+				\App\Db::getInstance()->createCommand()->update(\vtlib\Block::$baseTable, [
+					'blocklabel' => $blockInstance->label,
+					'sequence' => $blockInstance->sequence,
+					'show_title' => $blockInstance->showtitle,
+					'visible' => $blockInstance->visible,
+					'create_view' => $blockInstance->increateview,
+					'edit_view' => $blockInstance->ineditview,
+					'detail_view' => $blockInstance->indetailview,
+					'display_status' => $blockInstance->display_status,
+					'iscustom' => $blockInstance->iscustom,
+				], ['blockid'=>$blockId])->execute();
+			}
 		}
 
 		$this->log(__METHOD__ . " | {$blockId}" . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1047,7 +1069,7 @@ class YetiForceUpdate
 					$newWorkflow->filtersavedinnew = $record[7];
 					$workflowManager->save($newWorkflow);
 					$workflowId = $newWorkflow->id;
-					$this->logs("[INFO] Create workflow {$record[1]} {$record[2]}");
+					$this->log("[INFO] Create workflow {$record[1]} {$record[2]}");
 				}
 				foreach ($workflowTask as $indexTask) {
 					if ($indexTask[1] === $record[0] &&
@@ -1057,11 +1079,11 @@ class YetiForceUpdate
 						$task->id = '';
 						$task->workflowId = $workflowId;
 						$taskManager->saveTask($task);
-						$this->logs("[INFO] Create workflow task {$indexTask[1]} {$indexTask[2]}");
+						$this->log("[INFO] Create workflow task {$indexTask[1]} {$indexTask[2]}");
 					}
 				}
 			} catch (\Throwable $e) {
-				$this->logs("[ERROR] {$e->getMessage()} in {$e->getTraceAsString()}");
+				$this->log("[ERROR] {$e->getMessage()} in {$e->getTraceAsString()}");
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1662,7 +1684,7 @@ class YetiForceUpdate
 					'relation_comment' => $relationComment,
 					'view_type' => $viewType
 				])->execute();
-			} elseif ($isExists && 'update' === $relation['type']) {
+			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
 				$where = $relation['where'] ?? $where;
 				$dbCommand->update('vtiger_relatedlists', [
 					'name' => $name,
