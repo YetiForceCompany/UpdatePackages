@@ -932,7 +932,7 @@ class YetiForceUpdate
 				['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]
 			]],
 			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_SocialMedia_Handler']],
-			['vtiger_field', ['displaytype' => 10], ['or',
+			['vtiger_field', ['displaytype' => 1], ['or',
 				['fieldname' => 'projectstatus', 'tablename' => 'vtiger_project', 'displaytype' => 1],
 				['fieldname' => 'projectmilestone_status', 'tablename' => 'vtiger_projectmilestone', 'displaytype' => 1]
 			]],
