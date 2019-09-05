@@ -1,8 +1,8 @@
 /* MaterialDesignIcons.com */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/materialdesignicons-webfont.eot?v=3.9.97");
-  src: url("../fonts/materialdesignicons-webfont.eot?#iefix&v=3.9.97") format("embedded-opentype"), url("../fonts/materialdesignicons-webfont.woff2?v=3.9.97") format("woff2"), url("../fonts/materialdesignicons-webfont.woff?v=3.9.97") format("woff"), url("../fonts/materialdesignicons-webfont.ttf?v=3.9.97") format("truetype");
+  src: url("../fonts/materialdesignicons-webfont.eot?v=4.2.95");
+  src: url("../fonts/materialdesignicons-webfont.eot?#iefix&v=4.2.95") format("embedded-opentype"), url("../fonts/materialdesignicons-webfont.woff2?v=4.2.95") format("woff2"), url("../fonts/materialdesignicons-webfont.woff?v=4.2.95") format("woff"), url("../fonts/materialdesignicons-webfont.ttf?v=4.2.95") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -16,6 +16,10 @@
   line-height: inherit;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.mdi-ab-testing::before {
+  content: "\F001C";
 }
 
 .mdi-access-point::before {
@@ -90,6 +94,10 @@
   content: "\F933";
 }
 
+.mdi-account-box-multiple-outline::before {
+  content: "\F002C";
+}
+
 .mdi-account-box-outline::before {
   content: "\F007";
 }
@@ -100,6 +108,14 @@
 
 .mdi-account-card-details-outline::before {
   content: "\FD87";
+}
+
+.mdi-account-cash::before {
+  content: "\F00C2";
+}
+
+.mdi-account-cash-outline::before {
+  content: "\F00C3";
 }
 
 .mdi-account-check::before {
@@ -144,6 +160,10 @@
 
 .mdi-account-edit::before {
   content: "\F6BB";
+}
+
+.mdi-account-edit-outline::before {
+  content: "\F001D";
 }
 
 .mdi-account-group::before {
@@ -302,6 +322,10 @@
   content: "\F935";
 }
 
+.mdi-adobe-acrobat::before {
+  content: "\FFBD";
+}
+
 .mdi-air-conditioner::before {
   content: "\F01B";
 }
@@ -314,6 +338,10 @@
   content: "\FD88";
 }
 
+.mdi-air-humidifier::before {
+  content: "\F00C4";
+}
+
 .mdi-air-purifier::before {
   content: "\FD20";
 }
@@ -324,6 +352,10 @@
 
 .mdi-airballoon::before {
   content: "\F01C";
+}
+
+.mdi-airballoon-outline::before {
+  content: "\F002D";
 }
 
 .mdi-airplane::before {
@@ -982,6 +1014,18 @@
   content: "\F02C";
 }
 
+.mdi-alphabetical-off::before {
+  content: "\F002E";
+}
+
+.mdi-alphabetical-variant::before {
+  content: "\F002F";
+}
+
+.mdi-alphabetical-variant-off::before {
+  content: "\F0030";
+}
+
 .mdi-altimeter::before {
   content: "\F5D7";
 }
@@ -1078,8 +1122,20 @@
   content: "\FA8F";
 }
 
+.mdi-ansible::before {
+  content: "\F00C5";
+}
+
 .mdi-anvil::before {
   content: "\F89A";
+}
+
+.mdi-apache-kafka::before {
+  content: "\F0031";
+}
+
+.mdi-api::before {
+  content: "\F00C6";
 }
 
 .mdi-apple::before {
@@ -1134,6 +1190,14 @@
   content: "\FD8A";
 }
 
+.mdi-approximately-equal::before {
+  content: "\FFBE";
+}
+
+.mdi-approximately-equal-box::before {
+  content: "\FFBF";
+}
+
 .mdi-apps::before {
   content: "\F03B";
 }
@@ -1148,6 +1212,14 @@
 
 .mdi-archive::before {
   content: "\F03C";
+}
+
+.mdi-arm-flex::before {
+  content: "\F008F";
+}
+
+.mdi-arm-flex-outline::before {
+  content: "\F0090";
 }
 
 .mdi-arrange-bring-forward::before {
@@ -1726,6 +1798,10 @@
   content: "\F804";
 }
 
+.mdi-azure-devops::before {
+  content: "\F0091";
+}
+
 .mdi-babel::before {
   content: "\FA24";
 }
@@ -1742,8 +1818,12 @@
   content: "\FF57";
 }
 
-.mdi-baby-buggy::before {
+.mdi-baby-carriage::before {
   content: "\F68E";
+}
+
+.mdi-baby-carriage-off::before {
+  content: "\FFC0";
 }
 
 .mdi-baby-face::before {
@@ -2186,8 +2266,48 @@
   content: "\F097";
 }
 
+.mdi-bed-double::before {
+  content: "\F0092";
+}
+
+.mdi-bed-double-outline::before {
+  content: "\F0093";
+}
+
 .mdi-bed-empty::before {
   content: "\F89F";
+}
+
+.mdi-bed-king::before {
+  content: "\F0094";
+}
+
+.mdi-bed-king-outline::before {
+  content: "\F0095";
+}
+
+.mdi-bed-queen::before {
+  content: "\F0096";
+}
+
+.mdi-bed-queen-outline::before {
+  content: "\F0097";
+}
+
+.mdi-bed-single::before {
+  content: "\F0098";
+}
+
+.mdi-bed-single-outline::before {
+  content: "\F0099";
+}
+
+.mdi-bee::before {
+  content: "\FFC1";
+}
+
+.mdi-bee-flower::before {
+  content: "\FFC2";
 }
 
 .mdi-beer::before {
@@ -2270,8 +2390,16 @@
   content: "\F0A2";
 }
 
+.mdi-bicycle::before {
+  content: "\F00C7";
+}
+
 .mdi-bike::before {
   content: "\F0A3";
+}
+
+.mdi-billboard::before {
+  content: "\F0032";
 }
 
 .mdi-billiards::before {
@@ -2324,6 +2452,10 @@
 
 .mdi-blinds::before {
   content: "\F0AC";
+}
+
+.mdi-blinds-open::before {
+  content: "\F0033";
 }
 
 .mdi-block-helper::before {
@@ -2400,6 +2532,10 @@
 
 .mdi-book::before {
   content: "\F0BA";
+}
+
+.mdi-book-information-variant::before {
+  content: "\F009A";
 }
 
 .mdi-book-lock::before {
@@ -2644,6 +2780,18 @@
 
 .mdi-border-vertical::before {
   content: "\F0D2";
+}
+
+.mdi-bottle-soda::before {
+  content: "\F009B";
+}
+
+.mdi-bottle-soda-classic::before {
+  content: "\F009C";
+}
+
+.mdi-bottle-soda-outline::before {
+  content: "\F009D";
 }
 
 .mdi-bottle-wine::before {
@@ -2910,6 +3058,18 @@
   content: "\F79F";
 }
 
+.mdi-bus-stop::before {
+  content: "\F0034";
+}
+
+.mdi-bus-stop-covered::before {
+  content: "\F0035";
+}
+
+.mdi-bus-stop-uncovered::before {
+  content: "\F0036";
+}
+
 .mdi-cached::before {
   content: "\F0E8";
 }
@@ -2956,6 +3116,10 @@
 
 .mdi-calendar-blank::before {
   content: "\F0EE";
+}
+
+.mdi-calendar-blank-multiple::before {
+  content: "\F009E";
 }
 
 .mdi-calendar-blank-outline::before {
@@ -3262,6 +3426,14 @@
   content: "\F10B";
 }
 
+.mdi-car-2-plus::before {
+  content: "\F0037";
+}
+
+.mdi-car-3-plus::before {
+  content: "\F0038";
+}
+
 .mdi-car-back::before {
   content: "\FDFE";
 }
@@ -3286,12 +3458,28 @@
   content: "\FD3B";
 }
 
+.mdi-car-brake-retarder::before {
+  content: "\F0039";
+}
+
+.mdi-car-child-seat::before {
+  content: "\FFC3";
+}
+
+.mdi-car-clutch::before {
+  content: "\F003A";
+}
+
 .mdi-car-connected::before {
   content: "\F10D";
 }
 
 .mdi-car-convertible::before {
   content: "\F7A6";
+}
+
+.mdi-car-coolant-level::before {
+  content: "\F003B";
 }
 
 .mdi-car-cruise-control::before {
@@ -3308,6 +3496,10 @@
 
 .mdi-car-door::before {
   content: "\FB47";
+}
+
+.mdi-car-door-lock::before {
+  content: "\F00C8";
 }
 
 .mdi-car-electric::before {
@@ -3362,6 +3554,18 @@
   content: "\F7A9";
 }
 
+.mdi-car-seat::before {
+  content: "\FFC4";
+}
+
+.mdi-car-seat-cooler::before {
+  content: "\FFC5";
+}
+
+.mdi-car-seat-heater::before {
+  content: "\FFC6";
+}
+
 .mdi-car-shift-pattern::before {
   content: "\FF5D";
 }
@@ -3382,8 +3586,20 @@
   content: "\FD40";
 }
 
+.mdi-car-turbocharger::before {
+  content: "\F003C";
+}
+
 .mdi-car-wash::before {
   content: "\F10E";
+}
+
+.mdi-car-windshield::before {
+  content: "\F003D";
+}
+
+.mdi-car-windshield-outline::before {
+  content: "\F003E";
 }
 
 .mdi-caravan::before {
@@ -3422,6 +3638,14 @@
   content: "\FB52";
 }
 
+.mdi-card-search::before {
+  content: "\F009F";
+}
+
+.mdi-card-search-outline::before {
+  content: "\F00A0";
+}
+
 .mdi-card-text::before {
   content: "\FB53";
 }
@@ -3440,6 +3664,10 @@
 
 .mdi-cards-diamond::before {
   content: "\F8CE";
+}
+
+.mdi-cards-diamond-outline::before {
+  content: "\F003F";
 }
 
 .mdi-cards-heart::before {
@@ -3530,7 +3758,7 @@
   content: "\FCD0";
 }
 
-.mdi-cash-usd::before {
+.mdi-cash-usd-outline::before {
   content: "\F117";
 }
 
@@ -3540,6 +3768,10 @@
 
 .mdi-cast::before {
   content: "\F118";
+}
+
+.mdi-cast-audio::before {
+  content: "\F0040";
 }
 
 .mdi-cast-connected::before {
@@ -3630,6 +3862,10 @@
   content: "\F94F";
 }
 
+.mdi-cellphone-play::before {
+  content: "\F0041";
+}
+
 .mdi-cellphone-screenshot::before {
   content: "\FA34";
 }
@@ -3696,6 +3932,10 @@
 
 .mdi-chart-bell-curve::before {
   content: "\FC2C";
+}
+
+.mdi-chart-bell-curve-cumulative::before {
+  content: "\FFC7";
 }
 
 .mdi-chart-bubble::before {
@@ -4278,6 +4518,14 @@
   content: "\F5CE";
 }
 
+.mdi-clock-check::before {
+  content: "\FFC8";
+}
+
+.mdi-clock-check-outline::before {
+  content: "\FFC9";
+}
+
 .mdi-clock-digital::before {
   content: "\FEB4";
 }
@@ -4438,6 +4686,14 @@
   content: "\F815";
 }
 
+.mdi-coach-lamp::before {
+  content: "\F0042";
+}
+
+.mdi-coat-rack::before {
+  content: "\F00C9";
+}
+
 .mdi-code-array::before {
   content: "\F168";
 }
@@ -4502,6 +4758,10 @@
   content: "\F176";
 }
 
+.mdi-coffee-maker::before {
+  content: "\F00CA";
+}
+
 .mdi-coffee-off::before {
   content: "\FFCA";
 }
@@ -4526,7 +4786,7 @@
   content: "\F8D5";
 }
 
-.mdi-coin::before {
+.mdi-coin-outline::before {
   content: "\F178";
 }
 
@@ -4658,6 +4918,14 @@
   content: "\F186";
 }
 
+.mdi-comment-quote::before {
+  content: "\F0043";
+}
+
+.mdi-comment-quote-outline::before {
+  content: "\F0044";
+}
+
 .mdi-comment-remove::before {
   content: "\F5DE";
 }
@@ -4708,6 +4976,10 @@
 
 .mdi-compass-outline::before {
   content: "\F18C";
+}
+
+.mdi-concourse-ci::before {
+  content: "\F00CB";
 }
 
 .mdi-console::before {
@@ -4850,6 +5122,10 @@
   content: "\F198";
 }
 
+.mdi-coolant-temperature::before {
+  content: "\F3C8";
+}
+
 .mdi-copyright::before {
   content: "\F5E6";
 }
@@ -4895,7 +5171,7 @@
 }
 
 .mdi-credit-card::before {
-  content: "\F19B";
+  content: "\F0010";
 }
 
 .mdi-credit-card-clock::before {
@@ -4907,34 +5183,86 @@
 }
 
 .mdi-credit-card-marker::before {
+  content: "\F6A7";
+}
+
+.mdi-credit-card-marker-outline::before {
   content: "\FD9A";
 }
 
+.mdi-credit-card-minus::before {
+  content: "\FFCC";
+}
+
+.mdi-credit-card-minus-outline::before {
+  content: "\FFCD";
+}
+
 .mdi-credit-card-multiple::before {
+  content: "\F0011";
+}
+
+.mdi-credit-card-multiple-outline::before {
   content: "\F19C";
 }
 
 .mdi-credit-card-off::before {
+  content: "\F0012";
+}
+
+.mdi-credit-card-off-outline::before {
   content: "\F5E4";
 }
 
+.mdi-credit-card-outline::before {
+  content: "\F19B";
+}
+
 .mdi-credit-card-plus::before {
+  content: "\F0013";
+}
+
+.mdi-credit-card-plus-outline::before {
   content: "\F675";
 }
 
 .mdi-credit-card-refund::before {
+  content: "\F0014";
+}
+
+.mdi-credit-card-refund-outline::before {
   content: "\FAA7";
 }
 
+.mdi-credit-card-remove::before {
+  content: "\FFCE";
+}
+
+.mdi-credit-card-remove-outline::before {
+  content: "\FFCF";
+}
+
 .mdi-credit-card-scan::before {
+  content: "\F0015";
+}
+
+.mdi-credit-card-scan-outline::before {
   content: "\F19D";
 }
 
 .mdi-credit-card-settings::before {
+  content: "\F0016";
+}
+
+.mdi-credit-card-settings-outline::before {
   content: "\F8D6";
 }
 
 .mdi-credit-card-wireless::before {
+  content: "\F801";
+}
+
+.mdi-credit-card-wireless-outline::before {
   content: "\FD48";
 }
 
@@ -5048,10 +5376,6 @@
 
 .mdi-currency-btc::before {
   content: "\F1AC";
-}
-
-.mdi-currency-chf::before {
-  content: "\F7B8";
 }
 
 .mdi-currency-cny::before {
@@ -5246,6 +5570,22 @@
   content: "\F76C";
 }
 
+.mdi-decimal::before {
+  content: "\F00CC";
+}
+
+.mdi-decimal-comma::before {
+  content: "\F00CD";
+}
+
+.mdi-decimal-comma-decrease::before {
+  content: "\F00CE";
+}
+
+.mdi-decimal-comma-increase::before {
+  content: "\F00CF";
+}
+
 .mdi-decimal-decrease::before {
   content: "\F1BE";
 }
@@ -5256,6 +5596,14 @@
 
 .mdi-delete::before {
   content: "\F1C0";
+}
+
+.mdi-delete-alert::before {
+  content: "\F00D0";
+}
+
+.mdi-delete-alert-outline::before {
+  content: "\F00D1";
 }
 
 .mdi-delete-circle::before {
@@ -5280,6 +5628,14 @@
 
 .mdi-delete-forever-outline::before {
   content: "\FB65";
+}
+
+.mdi-delete-off::before {
+  content: "\F00D2";
+}
+
+.mdi-delete-off-outline::before {
+  content: "\F00D3";
 }
 
 .mdi-delete-outline::before {
@@ -5350,6 +5706,10 @@
   content: "\F1C7";
 }
 
+.mdi-devices::before {
+  content: "\FFD0";
+}
+
 .mdi-dialpad::before {
   content: "\F61C";
 }
@@ -5402,27 +5762,27 @@
   content: "\F1CF";
 }
 
-.mdi-dice-d10::before {
+.mdi-dice-d10-outline::before {
   content: "\F76E";
 }
 
-.mdi-dice-d12::before {
+.mdi-dice-d12-outline::before {
   content: "\F866";
 }
 
-.mdi-dice-d20::before {
+.mdi-dice-d20-outline::before {
   content: "\F5EA";
 }
 
-.mdi-dice-d4::before {
+.mdi-dice-d4-outline::before {
   content: "\F5EB";
 }
 
-.mdi-dice-d6::before {
+.mdi-dice-d6-outline::before {
   content: "\F5EC";
 }
 
-.mdi-dice-d8::before {
+.mdi-dice-d8-outline::before {
   content: "\F5ED";
 }
 
@@ -5534,6 +5894,22 @@
   content: "\F698";
 }
 
+.mdi-dock-bottom::before {
+  content: "\F00D4";
+}
+
+.mdi-dock-left::before {
+  content: "\F00D5";
+}
+
+.mdi-dock-right::before {
+  content: "\F00D6";
+}
+
+.mdi-dock-window::before {
+  content: "\F00D7";
+}
+
 .mdi-docker::before {
   content: "\F867";
 }
@@ -5570,6 +5946,18 @@
   content: "\FD4B";
 }
 
+.mdi-domain-plus::before {
+  content: "\F00D8";
+}
+
+.mdi-domain-remove::before {
+  content: "\F00D9";
+}
+
+.mdi-domino-mask::before {
+  content: "\F0045";
+}
+
 .mdi-donkey::before {
   content: "\F7C1";
 }
@@ -5580,6 +5968,10 @@
 
 .mdi-door-closed::before {
   content: "\F81A";
+}
+
+.mdi-door-closed-lock::before {
+  content: "\F00DA";
 }
 
 .mdi-door-open::before {
@@ -5636,6 +6028,14 @@
 
 .mdi-download-network-outline::before {
   content: "\FC42";
+}
+
+.mdi-download-off::before {
+  content: "\F00DB";
+}
+
+.mdi-download-off-outline::before {
+  content: "\F00DC";
 }
 
 .mdi-download-outline::before {
@@ -5766,6 +6166,10 @@
   content: "\FEBC";
 }
 
+.mdi-electron-framework::before {
+  content: "\F0046";
+}
+
 .mdi-elephant::before {
   content: "\F7C5";
 }
@@ -5840,6 +6244,10 @@
 
 .mdi-email-multiple-outline::before {
   content: "\FF05";
+}
+
+.mdi-email-newsletter::before {
+  content: "\FFD1";
 }
 
 .mdi-email-open::before {
@@ -6094,6 +6502,10 @@
   content: "\F204";
 }
 
+.mdi-excavator::before {
+  content: "\F0047";
+}
+
 .mdi-exclamation::before {
   content: "\F205";
 }
@@ -6112,6 +6524,14 @@
 
 .mdi-expand-all-outline::before {
   content: "\FAB4";
+}
+
+.mdi-expansion-card::before {
+  content: "\F8AD";
+}
+
+.mdi-expansion-card-variant::before {
+  content: "\FFD2";
 }
 
 .mdi-exponent::before {
@@ -6148,6 +6568,14 @@
 
 .mdi-eye-circle-outline::before {
   content: "\FB71";
+}
+
+.mdi-eye-minus::before {
+  content: "\F0048";
+}
+
+.mdi-eye-minus-outline::before {
+  content: "\F0049";
 }
 
 .mdi-eye-off::before {
@@ -6202,8 +6630,20 @@
   content: "\F644";
 }
 
+.mdi-face-profile-woman::before {
+  content: "\F00A1";
+}
+
 .mdi-face-recognition::before {
   content: "\FC57";
+}
+
+.mdi-face-woman::before {
+  content: "\F00A2";
+}
+
+.mdi-face-woman-outline::before {
+  content: "\F00A3";
 }
 
 .mdi-facebook::before {
@@ -6286,6 +6726,10 @@
   content: "\F73A";
 }
 
+.mdi-file-account-outline::before {
+  content: "\F004A";
+}
+
 .mdi-file-alert::before {
   content: "\FA4A";
 }
@@ -6318,6 +6762,10 @@
   content: "\F215";
 }
 
+.mdi-file-chart-outline::before {
+  content: "\F004B";
+}
+
 .mdi-file-check::before {
   content: "\F216";
 }
@@ -6328,6 +6776,18 @@
 
 .mdi-file-cloud::before {
   content: "\F217";
+}
+
+.mdi-file-cloud-outline::before {
+  content: "\F004C";
+}
+
+.mdi-file-code::before {
+  content: "\F22E";
+}
+
+.mdi-file-code-outline::before {
+  content: "\F004D";
 }
 
 .mdi-file-compare::before {
@@ -6430,8 +6890,20 @@
   content: "\F21C";
 }
 
+.mdi-file-excel-box-outline::before {
+  content: "\F004E";
+}
+
+.mdi-file-excel-outline::before {
+  content: "\F004F";
+}
+
 .mdi-file-export::before {
   content: "\F21D";
+}
+
+.mdi-file-export-outline::before {
+  content: "\F0050";
 }
 
 .mdi-file-eye::before {
@@ -6466,16 +6938,32 @@
   content: "\F220";
 }
 
+.mdi-file-import-outline::before {
+  content: "\F0051";
+}
+
 .mdi-file-lock::before {
   content: "\F221";
+}
+
+.mdi-file-lock-outline::before {
+  content: "\F0052";
 }
 
 .mdi-file-move::before {
   content: "\FAB8";
 }
 
+.mdi-file-move-outline::before {
+  content: "\F0053";
+}
+
 .mdi-file-multiple::before {
   content: "\F222";
+}
+
+.mdi-file-multiple-outline::before {
+  content: "\F0054";
 }
 
 .mdi-file-music::before {
@@ -6498,12 +6986,20 @@
   content: "\F226";
 }
 
+.mdi-file-pdf-box-outline::before {
+  content: "\FFD3";
+}
+
 .mdi-file-pdf-outline::before {
   content: "\FE7D";
 }
 
 .mdi-file-percent::before {
   content: "\F81D";
+}
+
+.mdi-file-percent-outline::before {
+  content: "\F0055";
 }
 
 .mdi-file-plus::before {
@@ -6522,6 +7018,14 @@
   content: "\F228";
 }
 
+.mdi-file-powerpoint-box-outline::before {
+  content: "\F0056";
+}
+
+.mdi-file-powerpoint-outline::before {
+  content: "\F0057";
+}
+
 .mdi-file-presentation-box::before {
   content: "\F229";
 }
@@ -6530,8 +7034,16 @@
   content: "\F86E";
 }
 
+.mdi-file-question-outline::before {
+  content: "\F0058";
+}
+
 .mdi-file-remove::before {
   content: "\FB74";
+}
+
+.mdi-file-remove-outline::before {
+  content: "\F0059";
 }
 
 .mdi-file-replace::before {
@@ -6546,6 +7058,10 @@
   content: "\F670";
 }
 
+.mdi-file-restore-outline::before {
+  content: "\F005A";
+}
+
 .mdi-file-search::before {
   content: "\FC58";
 }
@@ -6556,6 +7072,42 @@
 
 .mdi-file-send::before {
   content: "\F22A";
+}
+
+.mdi-file-send-outline::before {
+  content: "\F005B";
+}
+
+.mdi-file-settings::before {
+  content: "\F00A4";
+}
+
+.mdi-file-settings-outline::before {
+  content: "\F00A5";
+}
+
+.mdi-file-settings-variant::before {
+  content: "\F00A6";
+}
+
+.mdi-file-settings-variant-outline::before {
+  content: "\F00A7";
+}
+
+.mdi-file-star::before {
+  content: "\F005C";
+}
+
+.mdi-file-star-outline::before {
+  content: "\F005D";
+}
+
+.mdi-file-swap::before {
+  content: "\FFD4";
+}
+
+.mdi-file-swap-outline::before {
+  content: "\FFD5";
 }
 
 .mdi-file-table::before {
@@ -6572,6 +7124,10 @@
 
 .mdi-file-undo::before {
   content: "\F8DB";
+}
+
+.mdi-file-undo-outline::before {
+  content: "\F005E";
 }
 
 .mdi-file-upload::before {
@@ -6598,8 +7154,12 @@
   content: "\F22D";
 }
 
-.mdi-file-xml::before {
-  content: "\F22E";
+.mdi-file-word-box-outline::before {
+  content: "\F005F";
+}
+
+.mdi-file-word-outline::before {
+  content: "\F0060";
 }
 
 .mdi-film::before {
@@ -6648,6 +7208,10 @@
 
 .mdi-filter-variant::before {
   content: "\F236";
+}
+
+.mdi-filter-variant-remove::before {
+  content: "\F0061";
 }
 
 .mdi-finance::before {
@@ -6730,6 +7294,10 @@
   content: "\FB75";
 }
 
+.mdi-flag-minus-outline::before {
+  content: "\F00DD";
+}
+
 .mdi-flag-outline::before {
   content: "\F23D";
 }
@@ -6738,8 +7306,16 @@
   content: "\FB76";
 }
 
+.mdi-flag-plus-outline::before {
+  content: "\F00DE";
+}
+
 .mdi-flag-remove::before {
   content: "\FB77";
+}
+
+.mdi-flag-remove-outline::before {
+  content: "\F00DF";
 }
 
 .mdi-flag-triangle::before {
@@ -6834,6 +7410,14 @@
   content: "\F8DC";
 }
 
+.mdi-floor-lamp-dual::before {
+  content: "\F0062";
+}
+
+.mdi-floor-lamp-variant::before {
+  content: "\F0063";
+}
+
 .mdi-floor-plan::before {
   content: "\F820";
 }
@@ -6926,8 +7510,24 @@
   content: "\F24E";
 }
 
+.mdi-folder-home::before {
+  content: "\F00E0";
+}
+
+.mdi-folder-home-outline::before {
+  content: "\F00E1";
+}
+
 .mdi-folder-image::before {
   content: "\F24F";
+}
+
+.mdi-folder-information::before {
+  content: "\F00E2";
+}
+
+.mdi-folder-information-outline::before {
+  content: "\F00E3";
 }
 
 .mdi-folder-key::before {
@@ -7018,12 +7618,36 @@
   content: "\F968";
 }
 
+.mdi-folder-settings::before {
+  content: "\F00A8";
+}
+
+.mdi-folder-settings-outline::before {
+  content: "\F00A9";
+}
+
+.mdi-folder-settings-variant::before {
+  content: "\F00AA";
+}
+
+.mdi-folder-settings-variant-outline::before {
+  content: "\F00AB";
+}
+
 .mdi-folder-star::before {
   content: "\F69C";
 }
 
 .mdi-folder-star-outline::before {
   content: "\FB7B";
+}
+
+.mdi-folder-swap::before {
+  content: "\FFD6";
+}
+
+.mdi-folder-swap-outline::before {
+  content: "\FFD7";
 }
 
 .mdi-folder-sync::before {
@@ -7044,6 +7668,14 @@
 
 .mdi-folder-upload::before {
   content: "\F259";
+}
+
+.mdi-folder-zip::before {
+  content: "\F6EA";
+}
+
+.mdi-folder-zip-outline::before {
+  content: "\F7B8";
 }
 
 .mdi-font-awesome::before {
@@ -7262,6 +7894,18 @@
   content: "\FB1B";
 }
 
+.mdi-format-letter-ends-with::before {
+  content: "\FFD8";
+}
+
+.mdi-format-letter-matches::before {
+  content: "\FFD9";
+}
+
+.mdi-format-letter-starts-with::before {
+  content: "\FFDA";
+}
+
 .mdi-format-line-spacing::before {
   content: "\F278";
 }
@@ -7282,6 +7926,10 @@
   content: "\FDAC";
 }
 
+.mdi-format-list-bulleted-triangle::before {
+  content: "\FECF";
+}
+
 .mdi-format-list-bulleted-type::before {
   content: "\F27A";
 }
@@ -7300,10 +7948,6 @@
 
 .mdi-format-list-numbered-rtl::before {
   content: "\FCE9";
-}
-
-.mdi-format-list-triangle::before {
-  content: "\FECF";
 }
 
 .mdi-format-overline::before {
@@ -7366,12 +8010,32 @@
   content: "\F284";
 }
 
+.mdi-format-text-rotation-angle-down::before {
+  content: "\FFDB";
+}
+
+.mdi-format-text-rotation-angle-up::before {
+  content: "\FFDC";
+}
+
 .mdi-format-text-rotation-down::before {
   content: "\FD4F";
 }
 
+.mdi-format-text-rotation-down-vertical::before {
+  content: "\FFDD";
+}
+
 .mdi-format-text-rotation-none::before {
   content: "\FD50";
+}
+
+.mdi-format-text-rotation-up::before {
+  content: "\FFDE";
+}
+
+.mdi-format-text-rotation-vertical::before {
+  content: "\FFDF";
 }
 
 .mdi-format-text-variant::before {
@@ -7494,6 +8158,30 @@
   content: "\F291";
 }
 
+.mdi-fruit-cherries::before {
+  content: "\F0064";
+}
+
+.mdi-fruit-citrus::before {
+  content: "\F0065";
+}
+
+.mdi-fruit-grapes::before {
+  content: "\F0066";
+}
+
+.mdi-fruit-grapes-outline::before {
+  content: "\F0067";
+}
+
+.mdi-fruit-pineapple::before {
+  content: "\F0068";
+}
+
+.mdi-fruit-watermelon::before {
+  content: "\F0069";
+}
+
 .mdi-fuel::before {
   content: "\F7C9";
 }
@@ -7512,6 +8200,14 @@
 
 .mdi-function-variant::before {
   content: "\F870";
+}
+
+.mdi-furigana-horizontal::before {
+  content: "\F00AC";
+}
+
+.mdi-furigana-vertical::before {
+  content: "\F00AD";
 }
 
 .mdi-fuse::before {
@@ -7870,6 +8566,10 @@
   content: "\F822";
 }
 
+.mdi-golf-tee::before {
+  content: "\F00AE";
+}
+
 .mdi-gondola::before {
   content: "\F685";
 }
@@ -7884,10 +8584,6 @@
 
 .mdi-google-adwords::before {
   content: "\FC63";
-}
-
-.mdi-google-allo::before {
-  content: "\F801";
 }
 
 .mdi-google-analytics::before {
@@ -7970,6 +8666,10 @@
   content: "\F5F5";
 }
 
+.mdi-google-my-business::before {
+  content: "\F006A";
+}
+
 .mdi-google-nearby::before {
   content: "\F2B9";
 }
@@ -8014,16 +8714,20 @@
   content: "\F2BF";
 }
 
-.mdi-gpu::before {
-  content: "\F8AD";
-}
-
 .mdi-gradient::before {
   content: "\F69F";
 }
 
 .mdi-grain::before {
   content: "\FD58";
+}
+
+.mdi-graph::before {
+  content: "\F006B";
+}
+
+.mdi-graph-outline::before {
+  content: "\F006C";
 }
 
 .mdi-graphql::before {
@@ -8164,6 +8868,14 @@
 
 .mdi-harddisk::before {
   content: "\F2CA";
+}
+
+.mdi-harddisk-plus::before {
+  content: "\F006D";
+}
+
+.mdi-harddisk-remove::before {
+  content: "\F006E";
 }
 
 .mdi-hat-fedora::before {
@@ -8422,6 +9134,10 @@
   content: "\F7D1";
 }
 
+.mdi-home-circle-outline::before {
+  content: "\F006F";
+}
+
 .mdi-home-city::before {
   content: "\FCF1";
 }
@@ -8551,7 +9267,15 @@
 }
 
 .mdi-hospital::before {
+  content: "\F0017";
+}
+
+.mdi-hospital-box::before {
   content: "\F2E0";
+}
+
+.mdi-hospital-box-outline::before {
+  content: "\F0018";
 }
 
 .mdi-hospital-building::before {
@@ -8666,6 +9390,10 @@
   content: "\FF1A";
 }
 
+.mdi-id-card::before {
+  content: "\FFE0";
+}
+
 .mdi-identifier::before {
   content: "\FF1B";
 }
@@ -8692,6 +9420,10 @@
 
 .mdi-image-area-close::before {
   content: "\F2EC";
+}
+
+.mdi-image-auto-adjust::before {
+  content: "\FFE1";
 }
 
 .mdi-image-broken::before {
@@ -8846,6 +9578,10 @@
   content: "\F2FF";
 }
 
+.mdi-instrument-triangle::before {
+  content: "\F0070";
+}
+
 .mdi-internet-explorer::before {
   content: "\F300";
 }
@@ -8878,8 +9614,16 @@
   content: "\F978";
 }
 
+.mdi-island::before {
+  content: "\F0071";
+}
+
 .mdi-itunes::before {
   content: "\F676";
+}
+
+.mdi-iv-bag::before {
+  content: "\F00E4";
 }
 
 .mdi-jabber::before {
@@ -8966,6 +9710,10 @@
   content: "\F30B";
 }
 
+.mdi-key-wireless::before {
+  content: "\FFE2";
+}
+
 .mdi-keyboard::before {
   content: "\F30C";
 }
@@ -9004,6 +9752,10 @@
 
 .mdi-keyboard-settings-outline::before {
   content: "\F9F9";
+}
+
+.mdi-keyboard-space::before {
+  content: "\F0072";
 }
 
 .mdi-keyboard-tab::before {
@@ -9270,6 +10022,10 @@
   content: "\F7D5";
 }
 
+.mdi-led-strip-variant::before {
+  content: "\F0073";
+}
+
 .mdi-led-variant-off::before {
   content: "\F32E";
 }
@@ -9310,16 +10066,16 @@
   content: "\FF21";
 }
 
-.mdi-library-plus::before {
-  content: "\F334";
-}
-
 .mdi-library-shelves::before {
   content: "\FB85";
 }
 
 .mdi-library-video::before {
   content: "\FCF5";
+}
+
+.mdi-license::before {
+  content: "\FFE3";
 }
 
 .mdi-lifebuoy::before {
@@ -9382,6 +10138,10 @@
   content: "\FCF9";
 }
 
+.mdi-link-lock::before {
+  content: "\F00E5";
+}
+
 .mdi-link-off::before {
   content: "\F338";
 }
@@ -9422,6 +10182,14 @@
   content: "\F771";
 }
 
+.mdi-location-enter::before {
+  content: "\FFE4";
+}
+
+.mdi-location-exit::before {
+  content: "\FFE5";
+}
+
 .mdi-lock::before {
   content: "\F33E";
 }
@@ -9440,6 +10208,14 @@
 
 .mdi-lock-open-outline::before {
   content: "\F340";
+}
+
+.mdi-lock-open-variant::before {
+  content: "\FFE6";
+}
+
+.mdi-lock-open-variant-outline::before {
+  content: "\FFE7";
 }
 
 .mdi-lock-outline::before {
@@ -9498,16 +10274,16 @@
   content: "\F344";
 }
 
-.mdi-loop::before {
-  content: "\F6EA";
-}
-
 .mdi-loupe::before {
   content: "\F345";
 }
 
 .mdi-lumx::before {
   content: "\F346";
+}
+
+.mdi-lungs::before {
+  content: "\F00AF";
 }
 
 .mdi-lyft::before {
@@ -9758,6 +10534,26 @@
   content: "\FC72";
 }
 
+.mdi-math-integral::before {
+  content: "\FFE8";
+}
+
+.mdi-math-integral-box::before {
+  content: "\FFE9";
+}
+
+.mdi-math-log::before {
+  content: "\F00B0";
+}
+
+.mdi-math-norm::before {
+  content: "\FFEA";
+}
+
+.mdi-math-norm-box::before {
+  content: "\FFEB";
+}
+
 .mdi-math-sin::before {
   content: "\FC73";
 }
@@ -9874,12 +10670,20 @@
   content: "\F364";
 }
 
+.mdi-message-lock::before {
+  content: "\FFEC";
+}
+
 .mdi-message-outline::before {
   content: "\F365";
 }
 
 .mdi-message-plus::before {
   content: "\F653";
+}
+
+.mdi-message-plus-outline::before {
+  content: "\F00E6";
 }
 
 .mdi-message-processing::before {
@@ -9904,6 +10708,10 @@
 
 .mdi-message-text::before {
   content: "\F369";
+}
+
+.mdi-message-text-lock::before {
+  content: "\FFED";
 }
 
 .mdi-message-text-outline::before {
@@ -10134,6 +10942,10 @@
   content: "\FF85";
 }
 
+.mdi-moped::before {
+  content: "\F00B1";
+}
+
 .mdi-more::before {
   content: "\F37B";
 }
@@ -10180,6 +10992,14 @@
 
 .mdi-movie::before {
   content: "\F381";
+}
+
+.mdi-movie-open::before {
+  content: "\FFEE";
+}
+
+.mdi-movie-open-outline::before {
+  content: "\FFEF";
 }
 
 .mdi-movie-outline::before {
@@ -10410,6 +11230,10 @@
   content: "\FC79";
 }
 
+.mdi-network-router::before {
+  content: "\F00B2";
+}
+
 .mdi-network-strength-1::before {
   content: "\F8F3";
 }
@@ -10470,6 +11294,22 @@
   content: "\FF2A";
 }
 
+.mdi-newspaper-variant::before {
+  content: "\F0023";
+}
+
+.mdi-newspaper-variant-multiple::before {
+  content: "\F0024";
+}
+
+.mdi-newspaper-variant-multiple-outline::before {
+  content: "\F0025";
+}
+
+.mdi-newspaper-variant-outline::before {
+  content: "\F0026";
+}
+
 .mdi-nfc::before {
   content: "\F396";
 }
@@ -10516,10 +11356,6 @@
 
 .mdi-note::before {
   content: "\F39A";
-}
-
-.mdi-note-circle::before {
-  content: "\FEDB";
 }
 
 .mdi-note-multiple::before {
@@ -10642,12 +11478,32 @@
   content: "\FC7D";
 }
 
+.mdi-numeric-10::before {
+  content: "\F000A";
+}
+
 .mdi-numeric-10-box::before {
   content: "\FF9A";
 }
 
+.mdi-numeric-10-box-multiple::before {
+  content: "\F000B";
+}
+
+.mdi-numeric-10-box-multiple-outline::before {
+  content: "\F000C";
+}
+
 .mdi-numeric-10-box-outline::before {
   content: "\FF9B";
+}
+
+.mdi-numeric-10-circle::before {
+  content: "\F000D";
+}
+
+.mdi-numeric-10-circle-outline::before {
+  content: "\F000E";
 }
 
 .mdi-numeric-2::before {
@@ -10874,6 +11730,10 @@
   content: "\FC8D";
 }
 
+.mdi-numeric-9-plus::before {
+  content: "\F000F";
+}
+
 .mdi-numeric-9-plus-box::before {
   content: "\F3BF";
 }
@@ -10896,6 +11756,10 @@
 
 .mdi-numeric-9-plus-circle-outline::before {
   content: "\FC8F";
+}
+
+.mdi-numeric-negative-1::before {
+  content: "\F0074";
 }
 
 .mdi-nut::before {
@@ -10950,8 +11814,12 @@
   content: "\FF36";
 }
 
+.mdi-oil-level::before {
+  content: "\F0075";
+}
+
 .mdi-oil-temperature::before {
-  content: "\F3C8";
+  content: "\F0019";
 }
 
 .mdi-omega::before {
@@ -11014,8 +11882,16 @@
   content: "\F3D0";
 }
 
+.mdi-outdoor-lamp::before {
+  content: "\F0076";
+}
+
 .mdi-outlook::before {
   content: "\FCFE";
+}
+
+.mdi-overscan::before {
+  content: "\F0027";
 }
 
 .mdi-owl::before {
@@ -11110,6 +11986,10 @@
   content: "\F8B4";
 }
 
+.mdi-palm-tree::before {
+  content: "\F0077";
+}
+
 .mdi-pan::before {
   content: "\FB90";
 }
@@ -11202,6 +12082,10 @@
   content: "\F3E3";
 }
 
+.mdi-party-popper::before {
+  content: "\F0078";
+}
+
 .mdi-passport::before {
   content: "\F7E2";
 }
@@ -11256,6 +12140,22 @@
 
 .mdi-peace::before {
   content: "\F883";
+}
+
+.mdi-peanut::before {
+  content: "\F001E";
+}
+
+.mdi-peanut-off::before {
+  content: "\F001F";
+}
+
+.mdi-peanut-off-outline::before {
+  content: "\F0021";
+}
+
+.mdi-peanut-outline::before {
+  content: "\F0020";
 }
 
 .mdi-pen::before {
@@ -11398,6 +12298,10 @@
   content: "\F3F3";
 }
 
+.mdi-phone-cancel::before {
+  content: "\F00E7";
+}
+
 .mdi-phone-classic::before {
   content: "\F602";
 }
@@ -11520,6 +12424,14 @@
 
 .mdi-pig::before {
   content: "\F401";
+}
+
+.mdi-pig-variant::before {
+  content: "\F0028";
+}
+
+.mdi-piggy-bank::before {
+  content: "\F0029";
 }
 
 .mdi-pill::before {
@@ -11690,6 +12602,10 @@
   content: "\F416";
 }
 
+.mdi-plus-box-multiple::before {
+  content: "\F334";
+}
+
 .mdi-plus-box-outline::before {
   content: "\F703";
 }
@@ -11792,6 +12708,14 @@
 
 .mdi-popcorn::before {
   content: "\F422";
+}
+
+.mdi-post::before {
+  content: "\F002A";
+}
+
+.mdi-post-outline::before {
+  content: "\F002B";
 }
 
 .mdi-postage-stamp::before {
@@ -11910,6 +12834,10 @@
   content: "\FE40";
 }
 
+.mdi-printer-pos::before {
+  content: "\F0079";
+}
+
 .mdi-printer-settings::before {
   content: "\F706";
 }
@@ -11960,6 +12888,10 @@
 
 .mdi-projector-screen::before {
   content: "\F42F";
+}
+
+.mdi-protocol::before {
+  content: "\FFF9";
 }
 
 .mdi-publish::before {
@@ -12326,10 +13258,6 @@
   content: "\F99A";
 }
 
-.mdi-restore-clock::before {
-  content: "\F6A7";
-}
-
 .mdi-rewind::before {
   content: "\F45F";
 }
@@ -12386,6 +13314,10 @@
   content: "\F462";
 }
 
+.mdi-robber::before {
+  content: "\F007A";
+}
+
 .mdi-robot::before {
   content: "\F6A8";
 }
@@ -12416,6 +13348,46 @@
 
 .mdi-rollupjs::before {
   content: "\FB9C";
+}
+
+.mdi-roman-numeral-1::before {
+  content: "\F00B3";
+}
+
+.mdi-roman-numeral-10::before {
+  content: "\F00BC";
+}
+
+.mdi-roman-numeral-2::before {
+  content: "\F00B4";
+}
+
+.mdi-roman-numeral-3::before {
+  content: "\F00B5";
+}
+
+.mdi-roman-numeral-4::before {
+  content: "\F00B6";
+}
+
+.mdi-roman-numeral-5::before {
+  content: "\F00B7";
+}
+
+.mdi-roman-numeral-6::before {
+  content: "\F00B8";
+}
+
+.mdi-roman-numeral-7::before {
+  content: "\F00B9";
+}
+
+.mdi-roman-numeral-8::before {
+  content: "\F00BA";
+}
+
+.mdi-roman-numeral-9::before {
+  content: "\F00BB";
 }
 
 .mdi-room-service::before {
@@ -12470,6 +13442,10 @@
   content: "\F46A";
 }
 
+.mdi-routes-clock::before {
+  content: "\F007B";
+}
+
 .mdi-rowing::before {
   content: "\F608";
 }
@@ -12500,6 +13476,10 @@
 
 .mdi-ruler-square::before {
   content: "\FC9E";
+}
+
+.mdi-ruler-square-compass::before {
+  content: "\FEDB";
 }
 
 .mdi-run::before {
@@ -12576,6 +13556,10 @@
 
 .mdi-scale-bathroom::before {
   content: "\F473";
+}
+
+.mdi-scale-off::before {
+  content: "\F007C";
 }
 
 .mdi-scanner::before {
@@ -12656,6 +13640,10 @@
 
 .mdi-seal::before {
   content: "\F47A";
+}
+
+.mdi-seal-variant::before {
+  content: "\FFFA";
 }
 
 .mdi-search-web::before {
@@ -12756,6 +13744,10 @@
 
 .mdi-select-off::before {
   content: "\F488";
+}
+
+.mdi-select-place::before {
+  content: "\FFFB";
 }
 
 .mdi-selection::before {
@@ -12880,6 +13872,14 @@
 
 .mdi-settings-outline::before {
   content: "\F8BA";
+}
+
+.mdi-settings-transfer::before {
+  content: "\F007D";
+}
+
+.mdi-settings-transfer-outline::before {
+  content: "\F007E";
 }
 
 .mdi-shape::before {
@@ -13050,6 +14050,14 @@
   content: "\FD76";
 }
 
+.mdi-shield-sun::before {
+  content: "\F007F";
+}
+
+.mdi-shield-sun-outline::before {
+  content: "\F0080";
+}
+
 .mdi-ship-wheel::before {
   content: "\F832";
 }
@@ -13128,6 +14136,18 @@
 
 .mdi-sign-direction::before {
   content: "\F780";
+}
+
+.mdi-sign-direction-minus::before {
+  content: "\F0022";
+}
+
+.mdi-sign-direction-plus::before {
+  content: "\FFFD";
+}
+
+.mdi-sign-direction-remove::before {
+  content: "\FFFE";
 }
 
 .mdi-sign-text::before {
@@ -13212,6 +14232,10 @@
 
 .mdi-silverware::before {
   content: "\F4A3";
+}
+
+.mdi-silverware-clean::before {
+  content: "\FFFF";
 }
 
 .mdi-silverware-fork::before {
@@ -13342,6 +14366,14 @@
   content: "\F90A";
 }
 
+.mdi-slash-forward::before {
+  content: "\F0000";
+}
+
+.mdi-slash-forward-box::before {
+  content: "\F0001";
+}
+
 .mdi-sleep::before {
   content: "\F4B2";
 }
@@ -13356,6 +14388,22 @@
 
 .mdi-slope-uphill::before {
   content: "\FE60";
+}
+
+.mdi-smart-card::before {
+  content: "\F00E8";
+}
+
+.mdi-smart-card-outline::before {
+  content: "\F00E9";
+}
+
+.mdi-smart-card-reader::before {
+  content: "\F00EA";
+}
+
+.mdi-smart-card-reader-outline::before {
+  content: "\F00EB";
 }
 
 .mdi-smog::before {
@@ -13416,6 +14464,10 @@
 
 .mdi-solar-power::before {
   content: "\FA71";
+}
+
+.mdi-soldering-iron::before {
+  content: "\F00BD";
 }
 
 .mdi-solid::before {
@@ -13590,6 +14642,14 @@
   content: "\FADF";
 }
 
+.mdi-sprinkler::before {
+  content: "\F0081";
+}
+
+.mdi-sprinkler-variant::before {
+  content: "\F0082";
+}
+
 .mdi-sprout::before {
   content: "\FE49";
 }
@@ -13655,6 +14715,10 @@
 }
 
 .mdi-stadium::before {
+  content: "\F001A";
+}
+
+.mdi-stadium-variant::before {
   content: "\F71F";
 }
 
@@ -13770,6 +14834,10 @@
   content: "\F4DA";
 }
 
+.mdi-stomach::before {
+  content: "\F00BE";
+}
+
 .mdi-stop::before {
   content: "\F4DB";
 }
@@ -13788,6 +14856,10 @@
 
 .mdi-store-24-hour::before {
   content: "\F4DD";
+}
+
+.mdi-storefront::before {
+  content: "\F00EC";
 }
 
 .mdi-stove::before {
@@ -13874,6 +14946,14 @@
   content: "\FBA9";
 }
 
+.mdi-swap-horizontal-circle::before {
+  content: "\F0002";
+}
+
+.mdi-swap-horizontal-circle-outline::before {
+  content: "\F0003";
+}
+
 .mdi-swap-horizontal-variant::before {
   content: "\F8C0";
 }
@@ -13884,6 +14964,14 @@
 
 .mdi-swap-vertical-bold::before {
   content: "\FBAA";
+}
+
+.mdi-swap-vertical-circle::before {
+  content: "\F0004";
+}
+
+.mdi-swap-vertical-circle-outline::before {
+  content: "\F0005";
 }
 
 .mdi-swap-vertical-variant::before {
@@ -13950,6 +15038,10 @@
   content: "\FA17";
 }
 
+.mdi-table-chair::before {
+  content: "\F0083";
+}
+
 .mdi-table-column::before {
   content: "\F834";
 }
@@ -13972,6 +15064,10 @@
 
 .mdi-table-edit::before {
   content: "\F4F0";
+}
+
+.mdi-table-eye::before {
+  content: "\F00BF";
 }
 
 .mdi-table-large::before {
@@ -14102,6 +15198,10 @@
   content: "\FD16";
 }
 
+.mdi-tanker-truck::before {
+  content: "\F0006";
+}
+
 .mdi-tape-measure::before {
   content: "\FB28";
 }
@@ -14206,6 +15306,10 @@
   content: "\F508";
 }
 
+.mdi-terraform::before {
+  content: "\F0084";
+}
+
 .mdi-terrain::before {
   content: "\F509";
 }
@@ -14246,6 +15350,10 @@
   content: "\F50B";
 }
 
+.mdi-textarea::before {
+  content: "\F00C0";
+}
+
 .mdi-textbox::before {
   content: "\F60E";
 }
@@ -14256,6 +15364,10 @@
 
 .mdi-texture::before {
   content: "\F50C";
+}
+
+.mdi-texture-box::before {
+  content: "\F0007";
 }
 
 .mdi-theater::before {
@@ -14282,8 +15394,16 @@
   content: "\FE63";
 }
 
+.mdi-thermometer-high::before {
+  content: "\F00ED";
+}
+
 .mdi-thermometer-lines::before {
   content: "\F510";
+}
+
+.mdi-thermometer-low::before {
+  content: "\F00EE";
 }
 
 .mdi-thermometer-minus::before {
@@ -14434,6 +15554,10 @@
   content: "\F520";
 }
 
+.mdi-toaster::before {
+  content: "\F0085";
+}
+
 .mdi-toaster-oven::before {
   content: "\FCAF";
 }
@@ -14464,6 +15588,10 @@
 
 .mdi-toolbox-outline::before {
   content: "\F9AC";
+}
+
+.mdi-tools::before {
+  content: "\F0086";
 }
 
 .mdi-tooltip::before {
@@ -14578,12 +15706,20 @@
   content: "\F52D";
 }
 
+.mdi-tram-side::before {
+  content: "\F0008";
+}
+
 .mdi-transcribe::before {
   content: "\F52E";
 }
 
 .mdi-transcribe-close::before {
   content: "\F52F";
+}
+
+.mdi-transfer::before {
+  content: "\F0087";
 }
 
 .mdi-transfer-down::before {
@@ -14730,6 +15866,10 @@
   content: "\F726";
 }
 
+.mdi-trumpet::before {
+  content: "\F00C1";
+}
+
 .mdi-tshirt-crew::before {
   content: "\FA7A";
 }
@@ -14822,6 +15962,14 @@
   content: "\F548";
 }
 
+.mdi-ufo::before {
+  content: "\F00EF";
+}
+
+.mdi-ufo-outline::before {
+  content: "\F00F0";
+}
+
 .mdi-ultra-high-definition::before {
   content: "\F7F8";
 }
@@ -14906,12 +16054,32 @@
   content: "\FCB4";
 }
 
+.mdi-upload-off::before {
+  content: "\F00F1";
+}
+
+.mdi-upload-off-outline::before {
+  content: "\F00F2";
+}
+
 .mdi-upload-outline::before {
   content: "\FE67";
 }
 
 .mdi-usb::before {
   content: "\F553";
+}
+
+.mdi-valve::before {
+  content: "\F0088";
+}
+
+.mdi-valve-closed::before {
+  content: "\F0089";
+}
+
+.mdi-valve-open::before {
+  content: "\F008A";
 }
 
 .mdi-van-passenger::before {
@@ -14980,6 +16148,10 @@
 
 .mdi-vector-line::before {
   content: "\F55E";
+}
+
+.mdi-vector-link::before {
+  content: "\F0009";
 }
 
 .mdi-vector-point::before {
@@ -15052,6 +16224,14 @@
 
 .mdi-video-account::before {
   content: "\F918";
+}
+
+.mdi-video-check::before {
+  content: "\F008B";
+}
+
+.mdi-video-check-outline::before {
+  content: "\F008C";
 }
 
 .mdi-video-image::before {
@@ -15444,6 +16624,14 @@
 
 .mdi-water-pump-off::before {
   content: "\FFB0";
+}
+
+.mdi-water-well::before {
+  content: "\F008D";
+}
+
+.mdi-water-well-outline::before {
+  content: "\F008E";
 }
 
 .mdi-watermark::before {
@@ -15952,6 +17140,10 @@
 
 .mdi-zip-box::before {
   content: "\F5C4";
+}
+
+.mdi-zip-box-outline::before {
+  content: "\F001B";
 }
 
 .mdi-zip-disk::before {

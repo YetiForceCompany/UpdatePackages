@@ -21,7 +21,7 @@
   },
   "q-avatar/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-avatar/font-size": {
     "type": "string",
@@ -151,6 +151,10 @@
     "type": "string",
     "description": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix"
   },
+  "q-btn/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-btn/ripple": {
     "type": "boolean|object",
     "description": "Configure material ripple (disable it by setting it to 'false' or supply a config object)"
@@ -206,10 +210,6 @@
   "q-btn/glossy": {
     "type": "boolean",
     "description": "Applies a glossy effect"
-  },
-  "q-btn/size": {
-    "type": "string",
-    "description": "Button size name or a CSS unit including unit name"
   },
   "q-btn/fab": {
     "type": "boolean",
@@ -275,6 +275,10 @@
     "type": "boolean",
     "description": "Controls Menu show/hidden state; Either use this property (along with a listener for 'input' event) OR use v-model directive"
   },
+  "q-btn-dropdown/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-btn-dropdown/ripple": {
     "type": "boolean|object",
     "description": "Configure material ripple (disable it by setting it to 'false' or supply a config object)"
@@ -330,10 +334,6 @@
   "q-btn-dropdown/glossy": {
     "type": "boolean",
     "description": "Applies a glossy effect"
-  },
-  "q-btn-dropdown/size": {
-    "type": "string",
-    "description": "Button size name or a CSS unit including unit name"
   },
   "q-btn-dropdown/fab": {
     "type": "boolean",
@@ -831,6 +831,10 @@
     "type": "boolean",
     "description": "Put component in disabled mode"
   },
+  "q-circular-progress/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-circular-progress/value": {
     "type": "number",
     "description": "Current progress (must be between min/max)"
@@ -854,10 +858,6 @@
   "q-circular-progress/track-color": {
     "type": "string",
     "description": "Color name for the track of the component from the Quasar Color Palette"
-  },
-  "q-circular-progress/size": {
-    "type": "string",
-    "description": "Size in CSS units, including unit name"
   },
   "q-circular-progress/font-size": {
     "type": "string",
@@ -1459,6 +1459,10 @@
     "type": "string|number",
     "description": "Specify a max length of model"
   },
+  "q-field/item-aligned": {
+    "type": "boolean",
+    "description": "Match inner content alignments to QItem"
+  },
   "q-form/autofocus": {
     "type": "boolean",
     "description": "Focus first focusable element on initial component render"
@@ -1471,6 +1475,10 @@
     "type": "boolean",
     "description": "Do not try to focus on first component when resetting form"
   },
+  "q-icon/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-icon/name": {
     "type": "string",
     "description": "Name of the icon, following Quasar convention"
@@ -1478,10 +1486,6 @@
   "q-icon/color": {
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
-  },
-  "q-icon/size": {
-    "type": "string",
-    "description": "Size in CSS units, including unit name"
   },
   "q-icon/left": {
     "type": "boolean",
@@ -1539,11 +1543,19 @@
     "type": "string",
     "description": "Size in CSS units, including unit name, for default Spinner (unless using a 'loading' slot)"
   },
+  "q-img/no-default-spinner": {
+    "type": "boolean",
+    "description": "Do not display the default spinner when loading images (unless you are specifying one through the 'loading' slot)"
+  },
   "q-infinite-scroll/offset": {
     "type": "number",
     "description": "Offset (pixels) to bottom of Infinite Scroll container from which the component should start loading more content in advance"
   },
-  "q-infinite-scroll/scrollTarget": {
+  "q-infinite-scroll/debounce": {
+    "type": "string|number",
+    "description": "Debounce amount (in milliseconds)"
+  },
+  "q-infinite-scroll/scroll-target": {
     "type": "element|string",
     "description": "CSS selector or DOM element to be used as scroll container instead of the auto detected one"
   },
@@ -1555,6 +1567,10 @@
     "type": "boolean",
     "description": "Scroll area should behave like a messenger - starting scrolled to bottom and loading when reaching the top"
   },
+  "q-inner-loading/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name, or standard size name (xs|sm|md|lg|xl), for the inner Spinner (unless using the default slot)"
+  },
   "q-inner-loading/showing": {
     "type": "boolean",
     "description": "State - loading or not"
@@ -1562,10 +1578,6 @@
   "q-inner-loading/color": {
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
-  },
-  "q-inner-loading/size": {
-    "type": "string",
-    "description": "Size in CSS units, including unit name, for Spinner (unless using the default slot)"
   },
   "q-inner-loading/transition-show": {
     "type": "string",
@@ -1747,6 +1759,10 @@
     "type": "array|string|object",
     "description": "Style definitions to be attributed to the underlying input tag"
   },
+  "q-knob/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-knob/value": {
     "type": "number",
     "description": "Any number to indicate the given value of the knob. Either use this property (along with a listener for 'input' event) OR use the v-model directive"
@@ -1774,10 +1790,6 @@
   "q-knob/track-color": {
     "type": "string",
     "description": "Color name for the track of the component from the Quasar Color Palette"
-  },
-  "q-knob/size": {
-    "type": "string",
-    "description": "Size in CSS units, including unit name"
   },
   "q-knob/font-size": {
     "type": "string",
@@ -1829,7 +1841,7 @@
   },
   "q-drawer/mini-width": {
     "type": "number",
-    "description": "Width of drawer (in pixels) when in mini-mode"
+    "description": "Width of drawer (in pixels) when in mini mode"
   },
   "q-drawer/mini-to-overlay": {
     "type": "boolean",
@@ -1857,7 +1869,7 @@
   },
   "q-drawer/show-if-above": {
     "type": "boolean",
-    "description": "Force drawer to be shown on screen on initial render if the layout width is above breakpoint"
+    "description": "Force drawer to be shown on screen on initial render if the layout width is above breakpoint, regardless of v-model; This is the default behavior when SSR is taken over by client on initial render"
   },
   "q-drawer/content-class": {
     "type": "array|string|object",
@@ -1891,6 +1903,10 @@
     "type": "boolean",
     "description": "Adds a default shadow to the footer"
   },
+  "q-footer/height-hint": {
+    "type": "number|string ",
+    "description": "When using SSR, you can optionally hint of the height (in pixels) of the QFooter"
+  },
   "q-header/value": {
     "type": "boolean",
     "description": "Model of the component defining if it is shown or hidden to the user; Either use this property (along with a listener for 'input' event) OR use v-model directive"
@@ -1910,6 +1926,10 @@
   "q-header/elevated": {
     "type": "boolean",
     "description": "Adds a default shadow to the header"
+  },
+  "q-header/height-hint": {
+    "type": "number|string ",
+    "description": "When using SSR, you can optionally hint of the height (in pixels) of the QHeader"
   },
   "q-layout/view": {
     "type": "string",
@@ -1938,6 +1958,10 @@
   "q-page-sticky/expand": {
     "type": "boolean",
     "description": "By default the component shrinks to content's size; By using this prop you make the component fully expand horizontally or vertically, based on 'position' prop"
+  },
+  "q-linear-progress/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-linear-progress/value": {
     "type": "number",
@@ -2227,6 +2251,10 @@
     "type": "boolean|string",
     "description": "Configure a target element to trigger component toggle; 'true' means it enables the parent DOM element, 'false' means it disables attaching events to any DOM elements; By using a String (CSS selector) it attaches the events to the specified DOM element (if it exists)"
   },
+  "q-menu/no-parent-event": {
+    "type": "boolean",
+    "description": "Skips attaching events to the target DOM element (that trigger the element to get shown)"
+  },
   "q-menu/context-menu": {
     "type": "boolean",
     "description": "Allows the component to behave like a context menu, which opens with a right mouse click (or long tap on mobile)"
@@ -2263,10 +2291,6 @@
     "type": "array",
     "description": "An array of two numbers to offset the menu horizontally and vertically in pixels"
   },
-  "q-menu/no-parent-event": {
-    "type": "boolean",
-    "description": "Skips attaching events to the target DOM element (that trigger the menu to get shown)"
-  },
   "q-menu/touch-position": {
     "type": "boolean",
     "description": "Allows for the target position to be set by the mouse position, when the target of the menu is either clicked or touched"
@@ -2278,6 +2302,10 @@
   "q-menu/auto-close": {
     "type": "boolean",
     "description": "Allows any click/tap in the menu to close it; Useful instead of attaching events to each menu item that should close the menu on click/tap"
+  },
+  "q-menu/separate-close-popup": {
+    "type": "boolean",
+    "description": "Separate from parent menu, marking it as a separate closing point for v-close-popup (without this, chained menus close all together)"
   },
   "q-menu/square": {
     "type": "boolean",
@@ -2479,21 +2507,9 @@
     "type": "string",
     "description": "Override Cancel button label"
   },
-  "q-popup-edit/persistent": {
-    "type": "boolean",
-    "description": "Avoid Popup closing by hitting ESC key or by clicking/tapping outside of the Popup"
-  },
   "q-popup-edit/color": {
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
-  },
-  "q-popup-edit/content-class": {
-    "type": "string",
-    "description": "Class definitions to be attributed to the content"
-  },
-  "q-popup-edit/content-style": {
-    "type": "array|string|object",
-    "description": "Style definitions to be attributed to the content"
   },
   "q-popup-edit/validate": {
     "type": "function",
@@ -2503,9 +2519,65 @@
     "type": "boolean",
     "description": "Put component in disabled mode"
   },
+  "q-popup-edit/fit": {
+    "type": "boolean",
+    "description": "Allows the menu to match at least the full width of its target"
+  },
+  "q-popup-edit/cover": {
+    "type": "boolean",
+    "description": "Allows the menu to cover its target. When used, the 'self' and 'fit' props are no longer effective"
+  },
+  "q-popup-edit/anchor": {
+    "type": "string",
+    "description": "Two values setting the starting position or anchor point of the menu relative to its target"
+  },
+  "q-popup-edit/self": {
+    "type": "string",
+    "description": "Two values setting the menu's own position relative to its target"
+  },
+  "q-popup-edit/offset": {
+    "type": "array",
+    "description": "An array of two numbers to offset the menu horizontally and vertically in pixels"
+  },
+  "q-popup-edit/touch-position": {
+    "type": "boolean",
+    "description": "Allows for the target position to be set by the mouse position, when the target of the menu is either clicked or touched"
+  },
+  "q-popup-edit/persistent": {
+    "type": "boolean",
+    "description": "Avoid menu closing by hitting ESC key or by clicking/tapping outside of the Popup"
+  },
+  "q-popup-edit/separate-close-popup": {
+    "type": "boolean",
+    "description": "Separate from parent menu, marking it as a separate closing point for v-close-popup (without this, chained menus close all together)"
+  },
+  "q-popup-edit/square": {
+    "type": "boolean",
+    "description": "Forces menu to have squared borders"
+  },
+  "q-popup-edit/max-height": {
+    "type": "string",
+    "description": "The maximimum height of the menu; Size in CSS units, including unit name"
+  },
+  "q-popup-edit/max-width": {
+    "type": "string",
+    "description": "The maximimum width of the menu; Size in CSS units, including unit name"
+  },
+  "q-popup-edit/content-class": {
+    "type": "string",
+    "description": "Class definitions to be attributed to the content"
+  },
+  "q-popup-edit/content-style": {
+    "type": "array|string|object",
+    "description": "Style definitions to be attributed to the content"
+  },
   "q-popup-proxy/target": {
     "type": "boolean|string",
     "description": "Configure a target element to trigger component toggle; 'true' means it enables the parent DOM element, 'false' means it disables attaching events to any DOM elements; By using a String (CSS selector) it attaches the events to the specified DOM element (if it exists)"
+  },
+  "q-popup-proxy/no-parent-event": {
+    "type": "boolean",
+    "description": "Skips attaching events to the target DOM element (that trigger the element to get shown)"
   },
   "q-popup-proxy/context-menu": {
     "type": "boolean",
@@ -2595,7 +2667,7 @@
     "type": "boolean",
     "description": "User can drag range instead of just the two thumbs"
   },
-  "q-range/drag-range-only": {
+  "q-range/drag-only-range": {
     "type": "boolean",
     "description": "User can drag only the range instead and NOT the two thumbs"
   },
@@ -2611,13 +2683,25 @@
     "type": "string",
     "description": "Color name for labels background from the Quasar Color Palette; Applies to both labels, unless specific label color props are used"
   },
+  "q-range/label-text-color": {
+    "type": "string",
+    "description": "Color name for labels text from the Quasar Color Palette; Applies to both labels, unless specific label text color props are used"
+  },
   "q-range/left-label-color": {
     "type": "string",
     "description": "Color name for left label background from the Quasar Color Palette"
   },
+  "q-range/left-label-text-color": {
+    "type": "string",
+    "description": "Color name for left label text from the Quasar Color Palette"
+  },
   "q-range/right-label-color": {
     "type": "string",
     "description": "Color name for right label background from the Quasar Color Palette"
+  },
+  "q-range/right-label-text-color": {
+    "type": "string",
+    "description": "Color name for right label text from the Quasar Color Palette"
   },
   "q-range/left-label-value": {
     "type": "string|number",
@@ -2659,6 +2743,10 @@
     "type": "number|string",
     "description": "Tabindex HTML attribute value"
   },
+  "q-rating/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
+  },
   "q-rating/value": {
     "type": "number",
     "description": "Model of the component; Either use this property (along with a listener for 'input' event) OR use v-model directive"
@@ -2668,16 +2756,16 @@
     "description": "Number of icons to display"
   },
   "q-rating/icon": {
-    "type": "string",
-    "description": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix"
+    "type": "string|array",
+    "description": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix; If an array is provided each rating value will use the corresponding icon in the array (0 based)"
+  },
+  "q-rating/icon-selected": {
+    "type": "string|array",
+    "description": "Icon name following Quasar convention to be used when selected (optional); make sure you have the icon library installed unless you are using 'img:' prefix; If an array is provided each rating value will use the corresponding icon in the array (0 based)"
   },
   "q-rating/color": {
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
-  },
-  "q-rating/size": {
-    "type": "string",
-    "description": "Size in CSS units, including unit name"
   },
   "q-rating/no-reset": {
     "type": "boolean",
@@ -2710,6 +2798,26 @@
   "q-scroll-area/horizontal": {
     "type": "boolean",
     "description": "Register for horizontal scroll instead of vertical (which is default)"
+  },
+  "q-select/virtual-scroll-horizontal": {
+    "type": "boolean",
+    "description": "Make virtual list work in horizontal mode"
+  },
+  "q-select/virtual-scroll-slice-size": {
+    "type": "number",
+    "description": "Number of options to render in the virtual list"
+  },
+  "q-select/virtual-scroll-item-size": {
+    "type": "number",
+    "description": "Default size in pixels (height if vertical, width if horizontal) of an option; This value is used for rendering the initial list; Try to use a value close to the minimum size of an item"
+  },
+  "q-select/virtual-scroll-sticky-size-start": {
+    "type": "number",
+    "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the start of the list; A correct value will improve scroll precision"
+  },
+  "q-select/virtual-scroll-sticky-size-end": {
+    "type": "number",
+    "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision"
   },
   "q-select/error": {
     "type": "boolean",
@@ -2853,7 +2961,7 @@
   },
   "q-select/options": {
     "type": "array",
-    "description": "Available options that the user can select from"
+    "description": "Available options that the user can select from. For best performance freeze the list of options."
   },
   "q-select/option-value": {
     "type": "function|string",
@@ -2901,7 +3009,7 @@
   },
   "q-select/options-sanitize": {
     "type": "boolean",
-    "description": "Force use of textContent instead of innerHTML to render options; Use it when the options might be unsafe (from user input); Does NOT applies when using 'option' slot!"
+    "description": "Force use of textContent instead of innerHTML to render options; Use it when the options might be unsafe (from user input); Does NOT apply when using 'option' slot!"
   },
   "q-select/popup-content-class": {
     "type": "string",
@@ -2941,11 +3049,15 @@
   },
   "q-select/transition-show": {
     "type": "string",
-    "description": "Transition when showing the menu; One of Quasar's embedded transitions; Works only if \"options-cover\" is not used"
+    "description": "Transition when showing the menu/dialog; One of Quasar's embedded transitions"
   },
   "q-select/transition-hide": {
     "type": "string",
-    "description": "Transition when hiding the menu; One of Quasar's embedded transitions; Works only if \"options-cover\" is not used"
+    "description": "Transition when hiding the menu/dialog; One of Quasar's embedded transitions"
+  },
+  "q-select/behavior": {
+    "type": "string",
+    "description": "Overrides the default dynamic mode of showing as menu on desktop and dialog on mobiles"
   },
   "q-separator/dark": {
     "type": "boolean",
@@ -3003,6 +3115,10 @@
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
   },
+  "q-slider/label-text-color": {
+    "type": "string",
+    "description": "Color name for component from the Quasar Color Palette"
+  },
   "q-slider/label-value": {
     "type": "string|number",
     "description": "Override default label value"
@@ -3041,7 +3157,7 @@
   },
   "q-spinner/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner/color": {
     "type": "string",
@@ -3053,7 +3169,7 @@
   },
   "q-spinner-audio/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-audio/color": {
     "type": "string",
@@ -3061,7 +3177,7 @@
   },
   "q-spinner-ball/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-ball/color": {
     "type": "string",
@@ -3069,7 +3185,7 @@
   },
   "q-spinner-bars/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-bars/color": {
     "type": "string",
@@ -3077,7 +3193,7 @@
   },
   "q-spinner-comment/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-comment/color": {
     "type": "string",
@@ -3085,7 +3201,7 @@
   },
   "q-spinner-cube/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-cube/color": {
     "type": "string",
@@ -3093,7 +3209,7 @@
   },
   "q-spinner-dots/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-dots/color": {
     "type": "string",
@@ -3101,7 +3217,7 @@
   },
   "q-spinner-facebook/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-facebook/color": {
     "type": "string",
@@ -3109,7 +3225,7 @@
   },
   "q-spinner-gears/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-gears/color": {
     "type": "string",
@@ -3117,7 +3233,7 @@
   },
   "q-spinner-grid/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-grid/color": {
     "type": "string",
@@ -3125,7 +3241,7 @@
   },
   "q-spinner-hearts/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-hearts/color": {
     "type": "string",
@@ -3133,7 +3249,7 @@
   },
   "q-spinner-hourglass/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-hourglass/color": {
     "type": "string",
@@ -3141,7 +3257,7 @@
   },
   "q-spinner-infinity/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-infinity/color": {
     "type": "string",
@@ -3149,7 +3265,7 @@
   },
   "q-spinner-ios/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-ios/color": {
     "type": "string",
@@ -3157,7 +3273,7 @@
   },
   "q-spinner-oval/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-oval/color": {
     "type": "string",
@@ -3165,7 +3281,7 @@
   },
   "q-spinner-pie/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-pie/color": {
     "type": "string",
@@ -3173,7 +3289,7 @@
   },
   "q-spinner-puff/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-puff/color": {
     "type": "string",
@@ -3181,7 +3297,7 @@
   },
   "q-spinner-radio/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-radio/color": {
     "type": "string",
@@ -3189,7 +3305,7 @@
   },
   "q-spinner-rings/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-rings/color": {
     "type": "string",
@@ -3197,7 +3313,7 @@
   },
   "q-spinner-tail/size": {
     "type": "string",
-    "description": "Size in CSS units, including unit name"
+    "description": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)"
   },
   "q-spinner-tail/color": {
     "type": "string",
@@ -4134,5 +4250,45 @@
   "q-video/src": {
     "type": "string",
     "description": "The source url to display in an iframe"
+  },
+  "q-virtual-scroll/virtual-scroll-horizontal": {
+    "type": "boolean",
+    "description": "Make virtual list work in horizontal mode"
+  },
+  "q-virtual-scroll/virtual-scroll-slice-size": {
+    "type": "number",
+    "description": "Number of options to render in the virtual list"
+  },
+  "q-virtual-scroll/virtual-scroll-item-size": {
+    "type": "number",
+    "description": "Default size in pixels (height if vertical, width if horizontal) of an option; This value is used for rendering the initial list; Try to use a value close to the minimum size of an item"
+  },
+  "q-virtual-scroll/virtual-scroll-sticky-size-start": {
+    "type": "number",
+    "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the start of the list; A correct value will improve scroll precision"
+  },
+  "q-virtual-scroll/virtual-scroll-sticky-size-end": {
+    "type": "number",
+    "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision"
+  },
+  "q-virtual-scroll/type": {
+    "type": "string",
+    "description": "The type of content: list (default) or table"
+  },
+  "q-virtual-scroll/items": {
+    "type": "array",
+    "description": "Available list items that will be passed to the scoped slot; For best performance freeze the list of items; Required if 'itemsFn' is not supplied"
+  },
+  "q-virtual-scroll/items-size": {
+    "type": "string|number",
+    "description": "Number of available items in the list; Required and used only if 'itemsFn' is provided"
+  },
+  "q-virtual-scroll/items-fn": {
+    "type": "function",
+    "description": "Function to return the scope for the items to be displayed; Should return an array for items starting from 'from' index for size length"
+  },
+  "q-virtual-scroll/scroll-target": {
+    "type": "element|string",
+    "description": "CSS selector or DOM element to be used as scroll container instead of the component's own container"
   }
 }

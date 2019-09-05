@@ -57,7 +57,7 @@
       "desc": "User can drag range instead of just the two thumbs",
       "category": "content"
     },
-    "drag-range-only": {
+    "drag-only-range": {
       "type": "Boolean",
       "desc": "User can drag only the range instead and NOT the two thumbs",
       "category": "content"
@@ -85,6 +85,15 @@
       ],
       "category": "labels"
     },
+    "label-text-color": {
+      "type": "String",
+      "desc": "Color name for labels text from the Quasar Color Palette; Applies to both labels, unless specific label text color props are used",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "labels"
+    },
     "left-label-color": {
       "type": "String",
       "desc": "Color name for left label background from the Quasar Color Palette",
@@ -94,9 +103,27 @@
       ],
       "category": "labels"
     },
+    "left-label-text-color": {
+      "type": "String",
+      "desc": "Color name for left label text from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "labels"
+    },
     "right-label-color": {
       "type": "String",
       "desc": "Color name for right label background from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "labels"
+    },
+    "right-label-text-color": {
+      "type": "String",
+      "desc": "Color name for right label text from the Quasar Color Palette",
       "examples": [
         "primary",
         "teal-10"

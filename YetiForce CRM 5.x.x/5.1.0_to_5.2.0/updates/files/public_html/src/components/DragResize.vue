@@ -26,7 +26,9 @@
       :y="coordinates.top"
       :w="coordinates.width"
       :h="coordinates.height"
-      :class="[maximized ? 'fit position-sticky' : 'modal-mini', 'overflow-hidden']"
+      :minh="minHeight"
+      :minw="minWidth"
+      :class="[maximized ? 'fit position-static' : 'modal-mini', 'overflow-hidden']"
       ref="resize"
     >
       <div class="fit">
@@ -41,8 +43,10 @@
 
 <script>
 import VueDragResize from '~/node_modules/vue-drag-resize/src/components/vue-drag-resize.vue'
+import { keepElementInWindow } from '~/mixins/DragResize'
 export default {
   name: 'DragResize',
+  mixins: [keepElementInWindow],
   components: { VueDragResize },
   props: {
     maximized: {
@@ -75,8 +79,10 @@ export default {
   data() {
     return {
       active: false,
-      minHeight: 32,
-      minWidth: 120
+      minHeight: 300,
+      minWidth: 300,
+      minVisibleHeight: 32,
+      minVisibleWidth: 120
     }
   },
   methods: {
@@ -94,8 +100,8 @@ export default {
       if (rect.width > window.innerWidth) {
         computedRect.width = window.innerWidth
         computedRect.left = 0
-      } else if (rect.left + rect.width - this.minWidth < 0) {
-        computedRect.left = this.minWidth - rect.width
+      } else if (rect.left + rect.width - this.minVisibleWidth < 0) {
+        computedRect.left = this.minVisibleWidth - rect.width
       } else if (rect.width + rect.left > window.innerWidth) {
         computedRect.left = window.innerWidth - rect.width
       }
@@ -105,8 +111,8 @@ export default {
         computedRect.top = 0
       } else if (rect.top < 0) {
         computedRect.top = 0
-      } else if (rect.top > window.innerHeight - this.minHeight) {
-        computedRect.top = window.innerHeight - this.minHeight
+      } else if (rect.top > window.innerHeight - this.minVisibleHeight) {
+        computedRect.top = window.innerHeight - this.minVisibleHeight
       }
       this.$emit('update:coordinates', computedRect)
     },

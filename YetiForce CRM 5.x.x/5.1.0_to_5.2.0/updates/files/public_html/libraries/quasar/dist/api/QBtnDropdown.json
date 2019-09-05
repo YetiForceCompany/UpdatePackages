@@ -9,6 +9,17 @@
         "v-model=\"menuState\""
       ]
     },
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)",
+      "examples": [
+        "16px",
+        "2rem",
+        "xs",
+        "md"
+      ],
+      "category": "style"
+    },
     "ripple": {
       "type": [
         "Boolean",
@@ -120,20 +131,6 @@
     "glossy": {
       "type": "Boolean",
       "desc": "Applies a glossy effect",
-      "category": "style"
-    },
-    "size": {
-      "type": "String",
-      "desc": "Button size name or a CSS unit including unit name",
-      "examples": [
-        "xs",
-        "sm",
-        "md",
-        "lg",
-        "xl",
-        "25px",
-        "2rem"
-      ],
       "category": "style"
     },
     "fab": {

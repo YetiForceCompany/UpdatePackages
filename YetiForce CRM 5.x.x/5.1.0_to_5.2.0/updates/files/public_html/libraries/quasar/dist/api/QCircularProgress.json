@@ -6,6 +6,17 @@
     }
   },
   "props": {
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)",
+      "examples": [
+        "16px",
+        "2rem",
+        "xs",
+        "md"
+      ],
+      "category": "style"
+    },
     "value": {
       "type": "Number",
       "default": 0,
@@ -62,15 +73,6 @@
       "examples": [
         "primary",
         "teal-10"
-      ],
-      "category": "style"
-    },
-    "size": {
-      "type": "String",
-      "desc": "Size in CSS units, including unit name",
-      "examples": [
-        "16px",
-        "2rem"
       ],
       "category": "style"
     },

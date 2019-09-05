@@ -6,6 +6,17 @@
     }
   },
   "props": {
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)",
+      "examples": [
+        "16px",
+        "2rem",
+        "xs",
+        "md"
+      ],
+      "category": "style"
+    },
     "value": {
       "type": "Number",
       "desc": "Progress value (0.0 < x < 1.0)",

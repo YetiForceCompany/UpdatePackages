@@ -222,11 +222,18 @@
               "type": "Any",
               "desc": "Use custom dialog component; use along with 'root' prop where possible; if using this prop, all others described here will be supplied to your custom component"
             },
+            "parent": {
+              "type": "Object",
+              "desc": "Required if using 'component' prop and you need access to vuex store, router and so on; Specify Vue parent component",
+              "examples": [
+                "parent: this"
+              ]
+            },
             "root": {
               "type": "Object",
-              "desc": "Required if using 'component' prop and you need access to vuex store, router and so on; Specify root of your App",
+              "desc": "Deprecated alias for parent",
               "examples": [
-                "root: this.$root"
+                "root: this"
               ]
             }
           },

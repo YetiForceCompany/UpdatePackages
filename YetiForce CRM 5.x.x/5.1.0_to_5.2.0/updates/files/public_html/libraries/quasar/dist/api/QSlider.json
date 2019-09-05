@@ -59,6 +59,15 @@
       ],
       "category": "style"
     },
+    "label-text-color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
     "label-value": {
       "type": [
         "String",

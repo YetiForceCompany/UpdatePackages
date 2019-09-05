@@ -152,6 +152,20 @@ class Base extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
+			],
+			'com_vtiger_workflows' => [
+				'columns' => [
+					'params' => $this->text()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_field' => [
+				'columns' => [
+					'tabindex' => $this->smallInteger(5)->notNull()->defaultValue(0)
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
 			]
 		];
 		$this->foreignKey = [

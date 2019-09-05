@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: d49025b9b689eb96a765f07e5e8aae5f47f57050
+// last check: 24f1938e6fb41d0ca965012d920ffd98c4b0bee1
 /**
  * YetiForceUpdate Class.
  */
@@ -137,6 +137,105 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function records()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
+		$id = (new \App\Db\Query())->select(['emailtemplatesid'])->from('u_yf_emailtemplates')->where(['sys_name' => 'YetiPortalForgotPassword'])->scalar();
+		if ($id) {
+			$record = \Vtiger_Record_Model::getInstanceById($id, 'EmailTemplates');
+			$record->set('name', 'Notify the contact about the new account in the portal');
+			$record->set('email_template_type', 'PLL_RECORD');
+			$record->set('module_name', 'Contacts');
+			$record->set('subject', 'Welcome to the YetiForce Client Portal!');
+			$record->set('content', '<table border="0" style="width:100%;font-family:Arial, \'Sans-serif\';border:1px solid #ccc;border-width:1px 2px 2px 1px;background-color:#fff;">
+			<tr>
+				<td style="background-color:#f6f6f6;color:#888;border-bottom:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
+					<h3 style="padding:0 0 6px 0;margin:0;font-family:Arial, \'Sans-serif\';font-size:16px;font-weight:bold;color:#222;"><span> Welcome to the YetiForce Client Portal! </span></h3>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div style="padding:2px;">
+						<table border="0">
+							<tr>
+								<td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">Dear $(params : login)$,<br />
+									Your account has been created successfully. Below are your username and password:<br /><br />
+				Portal address:	$(params : acceptable_url)$<br />
+							Your username: $(params : login)$<br />
+									Your password: $(params : password)$
+								</td>
+							</tr>
+							<tr>
+								<td style="padding:0 1em 10px 0;font-family:Arial, \'Sans-serif\';font-size:13px;color:#888;white-space:nowrap;">
+									Please log in to access all of the Portal features.<br /><br />
+									If you have any questions or need any assistance, please send us an email to help@yetiforce.com.
+								</td>
+							</tr>
+						</table>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td style="background-color:#f6f6f6;color:#888;border-top:1px solid #ccc;font-family:Arial, \'Sans-serif\';font-size:11px;">
+					<div style="float:right;">
+						$(organization : 1|logo|40)$
+					</div>
+					<p>
+						<span style="font-size:12px;">
+							$(translate : LBL_EMAIL_TEMPLATE_FOOTER)$
+						</span>
+					</p>
+				</td>
+			</tr>
+		</table>');
+			$record->set('email_template_priority', 1);
+			$record->setHandlerExceptions(['disableHandlers' => true]);
+			$record->save();
+			$db->createCommand()
+				->update('u_yf_emailtemplates', [
+					'sys_name' => 'YetiPortalRegister',
+				], ['emailtemplatesid' => $record->getId()])
+				->execute();
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function removeRoleFromPicklist($fieldsName)
+	{
+		$start = microtime(true);
+		$cache = implode(',', $fieldsName);
+		$this->log(__METHOD__ . " | {$cache} |" . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
+		$dbCommand = $db->createCommand();
+		foreach ($fieldsName as $fieldName) {
+			$count = (new \App\Db\Query())->from('vtiger_field')->where(['uitype' => 15, 'fieldname' => $fieldName])->count();
+			if (1 === $count) {
+				$tableName = "vtiger_{$fieldName}";
+				$tableScheme = $db->getTableSchema($tableName);
+				if ($tableScheme && $tableScheme->getColumn('picklist_valueid')) {
+					try {
+						$picklistId = (new \App\Db\Query())->from('vtiger_picklist')->select(['picklistid'])->where(['name' => $fieldName])->scalar();
+						$this->importer->dropColumns([[$tableName, 'picklist_valueid']]);
+						$dbCommand->update('vtiger_field', ['uitype' => 16], ['uitype' => 15, 'fieldname' => $fieldName])->execute();
+						$dbCommand->delete('vtiger_picklist', ['picklistid' => $picklistId])->execute();
+						$dbCommand->delete('vtiger_role2picklist', ['picklistid' => $picklistId])->execute();
+					} catch (\Throwable $ex) {
+						$this->log('[ERROR] ' . $ex->__toString());
+					}
+				} else {
+					$this->log("[ERROR] data inconsistency {$tableName}");
+				}
+			} elseif ($count > 1) {
+				$this->log("[ERROR] the field type cannot be changed because the item is shared {$tableName}");
+			} else {
+				$this->log("[INFO] No data to modify {$fieldName}");
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
 	private function dropTableIfNotUse(string $tableName, array $conditions, bool $drop = false)
 	{
 		$start = microtime(true);
@@ -248,11 +347,11 @@ class YetiForceUpdate
 
 				$moduleInstance->setRelatedList($moduleInstance, 'LBL_RELATED_KNOWLEDGE_BASES', 'SELECT', 'getManyToMany');
 				$this->setRelations([
-					['type' => 'add', 'data' => [614,'HelpDesk','KnowledgeBase','getRelatedList',24,'KnowledgeBase',0,'ADD,SELECT',0,0,0,'RelatedTab']],
-					['type' => 'add', 'data' => [611,'KnowledgeBase','HelpDesk','getRelatedList',3,'HelpDesk',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']],
-					['type' => 'add', 'data' => [612,'KnowledgeBase','Project','getRelatedList',4,'Project',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']],
-					['type' => 'add', 'data' => [616,'Project','KnowledgeBase','getRelatedList',15,'KnowledgeBase',0,'ADD,SELECT',0,0,0,'RelatedTab']],
-					['type' => 'update', 'data' => [485,'KnowledgeBase','Documents','getAttachments',2,'Documents',0,'ADD,SELECT',0,0,0,'RelatedTab,DetailBottom']],
+					['type' => 'add', 'data' => [614, 'HelpDesk', 'KnowledgeBase', 'getRelatedList', 24, 'KnowledgeBase', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
+					['type' => 'add', 'data' => [611, 'KnowledgeBase', 'HelpDesk', 'getRelatedList', 3, 'HelpDesk', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
+					['type' => 'add', 'data' => [612, 'KnowledgeBase', 'Project', 'getRelatedList', 4, 'Project', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
+					['type' => 'add', 'data' => [616, 'Project', 'KnowledgeBase', 'getRelatedList', 15, 'KnowledgeBase', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
+					['type' => 'update', 'data' => [485, 'KnowledgeBase', 'Documents', 'getAttachments', 2, 'Documents', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 					['type' => 'update', 'data' => [605, 'KnowledgeBase', 'KnowledgeBase', 'getManyToMany', 1, 'LBL_RELATED_KNOWLEDGE_BASES', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 				]);
 			}
@@ -319,7 +418,6 @@ class YetiForceUpdate
 				];
 				\App\Db\Updater::batchUpdate($dataToUpdate);
 			}
-
 			$tableName = $moduleInstance->basetable;
 			foreach ($mapp as $fromField => $toField) {
 				$data = [];
@@ -363,9 +461,9 @@ class YetiForceUpdate
 				['type' => 'add', 'data' => [609, 'Faq', 'HelpDesk', 'getRelatedList', 3, 'HelpDesk', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 				['type' => 'add', 'data' => [610, 'Faq', 'Project', 'getRelatedList', 4, 'Project', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']],
 				['type' => 'add', 'data' => [613, 'HelpDesk', 'Faq', 'getRelatedList', 23, 'Faq', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
-				['type' => 'add', 'data' => [615, 'Project','Faq','getRelatedList',14,'Faq',0,'ADD,SELECT',0,0,0,'RelatedTab']],
-				['type' => 'add', 'data' => [89,'Faq','Documents','getAttachments',1,'Documents',0,'add,select',0,0,0,'RelatedTab,DetailBottom']],
-				['type' => 'update', 'data' => [608,'Faq','Faq','getManyToMany',2,'LBL_RELATED_FAQ',0,'SELECT',0,0,0,'RelatedTab,DetailBottom']]
+				['type' => 'add', 'data' => [615, 'Project', 'Faq', 'getRelatedList', 14, 'Faq', 0, 'ADD,SELECT', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [89, 'Faq', 'Documents', 'getAttachments', 1, 'Documents', 0, 'add,select', 0, 0, 0, 'RelatedTab,DetailBottom']],
+				['type' => 'update', 'data' => [608, 'Faq', 'Faq', 'getManyToMany', 2, 'LBL_RELATED_FAQ', 0, 'SELECT', 0, 0, 0, 'RelatedTab,DetailBottom']]
 			]);
 
 			$transaction->commit();
@@ -391,12 +489,12 @@ class YetiForceUpdate
 			\Vtiger_Module_Model::getInstance($moduleId)->addBlock($blockInstance);
 			$blockId = $blockInstance->id;
 			foreach ($blockData as $key => $value) {
-				if($blockInstance->{$key} !== $value){
+				if ($blockInstance->{$key} !== $value) {
 					$blockInstance->{$key} = $value;
 					$update = true;
 				}
 			}
-			if(!empty($update)){
+			if (!empty($update)) {
 				\App\Db::getInstance()->createCommand()->update(\vtlib\Block::$baseTable, [
 					'blocklabel' => $blockInstance->label,
 					'sequence' => $blockInstance->sequence,
@@ -407,7 +505,7 @@ class YetiForceUpdate
 					'detail_view' => $blockInstance->indetailview,
 					'display_status' => $blockInstance->display_status,
 					'iscustom' => $blockInstance->iscustom,
-				], ['blockid'=>$blockId])->execute();
+				], ['blockid' => $blockId])->execute();
 			}
 		}
 
@@ -465,9 +563,20 @@ class YetiForceUpdate
 			$this->addFields($fields);
 			\App\EventHandler::registerHandler('EntityAfterSave', 'PaymentsIn_PaymentsInHandler_Handler', $moduleInstance->getName());
 			$this->setRelations([
-				['type' => 'add', 'data' => [617,'SSingleOrders','PaymentsIn','getDependentsList',6,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab']],
-				['type' => 'add', 'data' => [618,'FInvoice','PaymentsIn','getDependentsList',4,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab']]
+				['type' => 'add', 'data' => [617, 'SSingleOrders', 'PaymentsIn', 'getDependentsList', 6, 'PaymentsIn', 0, 'ADD', 0, 0, 0, 'RelatedTab']],
+				['type' => 'add', 'data' => [618, 'FInvoice', 'PaymentsIn', 'getDependentsList', 4, 'PaymentsIn', 0, 'ADD', 0, 0, 0, 'RelatedTab']]
 			]);
+			$statusField = $moduleInstance->getFieldByName('paymentsin_status');
+			$fieldValues = \App\Fields\Picklist::getValuesName($statusField->getName());
+			$picklistMapp = ['Created' => 'PLL_CREATED', 'Denied' => 'PLL_DENIED', 'Paid' => 'PLL_PAID'];
+			foreach ($picklistMapp as $oldValue => $newValue) {
+				if (!\in_array($oldValue, $fieldValues)) {
+					continue;
+				}
+				$tableName = "vtiger_{$statusField->getName()}";
+				$db->createCommand()->update($tableName, [$statusField->getName() => $newValue], [$statusField->getName() => $oldValue])->execute();
+				$db->createCommand()->update($statusField->getTableName(), [$statusField->getColumnName() => $newValue], [$statusField->getColumnName() => $oldValue])->execute();
+			}
 			$transaction->commit();
 		} catch (\Throwable $ex) {
 			$transaction->rollBack();
@@ -589,9 +698,24 @@ class YetiForceUpdate
 
 		$transaction = $db->beginTransaction();
 		try {
+			$moduleInstance = \Vtiger_Module_Model::getInstance('Products');
+			$fieldModel = $moduleInstance->getFieldByName('category_multipicklist');
+			$treeData = [];
+			foreach (['Hardware', 'Software', 'CRM Applications', 'Antivirus', 'Backup'] as $value) {
+				$treeData[] = [0, $value, 'T1', 'T1', 0, $value, '{"loaded":"1","opened":false,"selected":false,"disabled":false}', ''];
+			}
+			$tree = [
+				'column' => $fieldModel->getColumnName(),
+				'base' => [30, 'LBL_MULTICATEGORY', $moduleInstance->getId(), 0],
+				'data' => $treeData
+			];
+			if ($fieldModel && !$fieldModel->isActiveField()) {
+				$templateId = $this->setTree($tree);
+				$db->createCommand()->update('vtiger_field', ['presence' => 2, 'fieldparams' => $templateId], ['fieldid' => $fieldModel->getId()])->execute();
+			}
 			$fields = [
 				'category_multipicklist' => [
-					14, 2357, 'category_multipicklist', 'vtiger_products', 1, 309, 'category_multipicklist', 'LBL_CATEGORY_MULTIPICKLIST', 0, 2, null, '65535', 31, 31, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '31', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRODUCT_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
+					14, 2357, 'category_multipicklist', 'vtiger_products', 1, 309, 'category_multipicklist', 'LBL_CATEGORY_MULTIPICKLIST', 0, 2, null, '65535', 31, 31, 1, 'V~O', 1, null, 'BAS', 1, '', 0, '31', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRODUCT_INFORMATION', 'picklistValues' => $tree, 'relatedModules' => [], 'moduleName' => 'Products'
 				],
 				'purchase' => [
 					14, 2817, 'purchase', 'vtiger_products', 1, 360, 'purchase', 'FL_PURCHASE', 0, 2, '', '65535', 6, 32, 1, 'V~O', 2, 3, 'BAS', 0, '', 1, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_PRICING_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Products'
@@ -697,11 +821,21 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
 		$this->addPicklistValues();
 		$this->statusActivate('HelpDesk', 'ticketstatus');
 		\App\EventHandler::registerHandler('EntityAfterSave', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
 		\App\EventHandler::registerHandler('EntityAfterDelete', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
 		\App\EventHandler::registerHandler('EntityChangeState', 'Vtiger_RecordFlowUpdater_Handler', 'Project,ProjectMilestone,ProjectTask');
+		$data = [
+			['vtiger_payment_status', ['presence' => 0], ['presence' => 1, 'payment_status' => ['PLL_NOT_PAID', 'PLL_UNDERPAID', 'PLL_PAID', 'PLL_OVERPAID']]]
+		];
+		\App\Db\Updater::batchUpdate($data);
+
+		$subQuery = (new \App\Db\Query())->select(['fieldname'])->from('vtiger_field')->where(['uitype' => [15, 33]]);
+		$dbCommand->delete('vtiger_picklist', ['not in', 'name', $subQuery])->execute();
+		$subQuery = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist');
+		$dbCommand->delete('vtiger_role2picklist', ['not in', 'picklistid', $subQuery])->execute();
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -755,6 +889,22 @@ class YetiForceUpdate
 					], ['eventhandler_id' => $handler['eventhandler_id']])->execute();
 				}
 			}
+			if ('ticketstatus' === $fieldName) {
+				$dataUpdate = [
+					'Open' => ['record_state' => 0, 'time_counting' => 1],
+					'In Progress' => ['record_state' => 0, 'time_counting' => 2],
+					'Wait For Response' => ['record_state' => 0, 'time_counting' => 3],
+					'Closed' => ['record_state' => 2, 'time_counting' => 0],
+					'Answered' => ['record_state' => 0, 'time_counting' => 2],
+					'Rejected' => ['record_state' => 2, 'time_counting' => 0],
+					'PLL_SUBMITTED_COMMENTS' => ['record_state' => 0, 'time_counting' => 2],
+					'PLL_FOR_APPROVAL' => ['record_state' => 0, 'time_counting' => 2],
+					'PLL_TO_CLOSE' => ['record_state' => 0, 'time_counting' => 2]
+				];
+				foreach ($dataUpdate as $name => $data) {
+					$dbCommand->update($tableName, $data, [$fieldName => $name])->execute();
+				}
+			}
 			$transaction->commit();
 		} catch (\Throwable $ex) {
 			$transaction->rollBack();
@@ -788,7 +938,6 @@ class YetiForceUpdate
 			]],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 			['vtiger_field', ['presence' => 2], ['fieldname' => 'private', 'tablename' => 'vtiger_crmentity']],
-			['vtiger_field', ['presence' => 2], ['fieldname' => 'category_multipicklist', 'tablename' => 'vtiger_products']],
 			['vtiger_field', ['masseditable' => 0], ['fieldname' => ['activitystatus', 'reapeat', 'recurrence'], 'tablename' => 'vtiger_activity']],
 			['vtiger_field', ['maximumlength' => '65535'], ['or',
 				['uitype' => [305, 300, 33, 309, 342, 69, 21, 19, 311, 315], 'maximumlength' => null],
@@ -817,9 +966,17 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['sequence' => 5], ['name' => 'LBL_COLORS']],
 			['vtiger_settings_field', ['sequence' => 6], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']],
 			['vtiger_settings_field', ['sequence' => 5], ['name' => 'License']],
-			['vtiger_settings_field', ['sequence' => 4, 'iconpath' =>'fas fa-shopping-cart text-danger','linkto'=>'index.php?module=YetiForce&parent=Settings&view=Shop'], ['name' => 'LBL_SHOP_YETIFORCE']],
+			['vtiger_settings_field', ['sequence' => 4, 'iconpath' => 'fas fa-shopping-cart text-danger', 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Shop'], ['name' => 'LBL_SHOP_YETIFORCE']],
 			['vtiger_settings_field', ['pinned' => 0], []],
 			['vtiger_settings_field', ['pinned' => 1], ['name' => ['LBL_ROLES', 'USERGROUPLIST', 'LBL_FIELDS_ACCESS', 'LBL_PICKLIST_EDITOR', 'LBL_CURRENCY_SETTINGS', 'Scheduler', 'LBL_EDIT_FIELDS', 'LBL_PDF', 'LBL_MENU_BUILDER', 'LBL_ARRANGE_RELATED_TABS', 'Mail Scanner', 'LangManagement', 'Search Setup', 'Widgets', 'LBL_MAIL_SMTP']]],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-users-2'], ['name' => 'LBL_USERS', 'iconpath' => 'adminIcon-user']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-modules-2'], ['name' => 'VTLIB_LBL_MODULE_MANAGER', 'iconpath' => 'adminIcon-modules-installation']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-workflows-2'], ['name' => 'LBL_LIST_WORKFLOWS', 'iconpath' => 'adminIcon-triggers']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-system-warnings-2'], ['name' => 'LBL_SYSTEM_WARNINGS', 'iconpath' => 'fas fa-exclamation-triangle']],
+			['vtiger_field', ['presence' => 2, 'displaytype' => 1, 'uitype' => 15], ['fieldname' => 'salutationtype', 'tablename' => 'vtiger_contactdetails']],
+			['vtiger_field', ['uitype' => 1], ['fieldname' => 'firstname', 'tablename' => 'vtiger_contactdetails']],
+			['vtiger_field', ['displaytype' => 2], ['displaytype' => 1, 'uitype' => 4]],
+			['vtiger_contract_status', ['presence' => 0], ['presence' => 1, 'contract_status' => 'In Progress']],
 		];
 		\App\Db\Updater::batchUpdate($data);
 
@@ -928,6 +1085,19 @@ class YetiForceUpdate
 					'admin_access' => null
 				], ['name' => 'LBL_BUSINESS_HOURS_DESCRIPTION']
 			],
+			['vtiger_settings_field',
+				[
+					'blockid' => (new \App\Db\Query())->select(['blockid'])->from('vtiger_settings_blocks')->where(['label' => 'LBL_SECURITY_MANAGEMENT'])->scalar(),
+					'name' => 'LBL_VULNERABILITIES',
+					'iconpath' => 'yfi yfi-security-errors-2',
+					'description' => 'LBL_VULNERABILITIES_DESCRIPTION',
+					'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Vulnerabilities',
+					'sequence' => 7,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null
+				], ['name' => 'LBL_VULNERABILITIES']
+			],
 			['vtiger_widgets',
 				[
 					'tabid' => $serviceContractsId,
@@ -986,6 +1156,31 @@ class YetiForceUpdate
 					'sequence' => 4,
 					'data' => '{"relatedmodule":"ModComments","limit":5}'
 				], ['tabid' => $serviceContractsId, 'type' => 'Comments']
+			],
+			['vtiger_ssingleorders_source',
+				[
+					'ssingleorders_source' => 'PLL_PORTAL',
+					'sortorderid' => 1,
+					'presence' => 1
+				], ['ssingleorders_source' => 'PLL_PORTAL']
+			],
+			['vtiger_ws_fieldtype',
+				[
+					'uitype' => 319,
+					'fieldtype' => 'multiDomain'
+				], ['fieldtype' => 'multiDomain']
+			],
+			['vtiger_ws_fieldtype',
+				[
+					'uitype' => 360,
+					'fieldtype' => 'multiCurrency'
+				], ['fieldtype' => 'multiCurrency']
+			],
+			['vtiger_ws_fieldtype',
+				[
+					'uitype' => 365,
+					'fieldtype' => 'advPercentage'
+				], ['fieldtype' => 'advPercentage']
 			]
 		];
 
@@ -1001,6 +1196,43 @@ class YetiForceUpdate
 
 		$this->addWorflows();
 		$this->addMissingInserts();
+		$this->updateCVConditions();
+		$this->records();
+
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function updateCVConditions()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$dataReader = (new \App\Db\Query())->select(['value', 'id', 'field_name', 'module_name'])->from('u_yf_cv_condition')->where(['operator' => 'bw'])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			if (!\App\Module::getModuleId($row['module_name'])) {
+				$this->log("[ERROR] Module not exists: {$row['module_name']}");
+				continue;
+			}
+			$field = \Vtiger_Module_Model::getInstance($row['module_name'])->getFieldByName($row['field_name']);
+			if (!$field) {
+				$this->log("[ERROR] Field not exists: {$row['module_name']}:{$row['field_name']}");
+				continue;
+			}
+			if ('datetime' === $field->getFieldDataType() && strpos($row['value'], ',')) {
+				$values = explode(',', $row['value']);
+				foreach ($values as $key => &$data) {
+					if (false === strpos($data, ' ')) {
+						$data .= 0 === $key ? ' 00:00:00' : ' 23:59:59';
+					}
+				}
+				$values = implode(',', $values);
+				if ($values !== $row['value']) {
+					$dbCommand->update('u_yf_cv_condition', ['value' => $values], ['id' => $row['id']])->execute();
+				}
+			}
+		}
+		$dataReader->close();
 
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -1049,16 +1281,16 @@ class YetiForceUpdate
 		$workflowManager = new VTWorkflowManager();
 		$taskManager = new VTTaskManager();
 
-		$workflow[] = [71, 'SSingleOrders', 'It sums up all open sales orders', [], 3, null, 'basic', 6, null, null, null, null, null, null];
-		$workflow[] = [72, 'SSingleOrders', 'It sums up all open sales orders', [], 5, null, 'basic', 6, null, null, null, null, null, null];
+		$workflow[] = [71, 'SSingleOrders', 'It sums up all open sales orders', '[]', 3, null, 'basic', 6, null, null, null, null, null, null];
+		$workflow[] = [72, 'SSingleOrders', 'It sums up all open sales orders', '[]', 5, null, 'basic', 6, null, null, null, null, null, null];
 		$workflowTask[] = [140, 71, 'It sums up all open sales orders', 'O:21:"SumFieldFromDependent":10:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:71;s:7:"summary";s:32:"It sums up all open sales orders";s:6:"active";b:1;s:7:"trigger";N;s:11:"targetField";s:36:"accountid::Accounts::sum_open_orders";s:11:"sourceField";s:9:"sum_gross";s:10:"conditions";a:2:{s:9:"condition";s:2:"OR";s:5:"rules";a:2:{i:0;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"e";s:5:"value";s:76:"PLL_DRAFT##PLL_IN_REALIZATION##PLL_FOR_VERIFICATION##PLL_AWAITING_SIGNATURES";}i:1;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"y";s:5:"value";s:0:"";}}}s:2:"id";i:140;}'];
 		$workflowTask[] = [141, 72, 'It sums up all open sales orders', 'O:21:"SumFieldFromDependent":9:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:72;s:7:"summary";s:32:"It sums up all open sales orders";s:6:"active";b:1;s:7:"trigger";N;s:11:"targetField";s:36:"accountid::Accounts::sum_open_orders";s:11:"sourceField";s:9:"sum_gross";s:10:"conditions";a:2:{s:9:"condition";s:2:"OR";s:5:"rules";a:2:{i:0;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"e";s:5:"value";s:76:"PLL_DRAFT##PLL_IN_REALIZATION##PLL_FOR_VERIFICATION##PLL_AWAITING_SIGNATURES";}i:1;a:3:{s:9:"fieldname";s:34:"SSingleOrders:ssingleorders_status";s:8:"operator";s:1:"y";s:5:"value";s:0:"";}}}}'];
 
 		foreach ($workflow as $record) {
 			try {
 				$workflowId = (new \App\Db\Query())->select(['workflow_id'])
-								->from('com_vtiger_workflows')
-								->where(['module_name' => $record[1], 'summary' => $record[2]])->scalar();
+					->from('com_vtiger_workflows')
+					->where(['module_name' => $record[1], 'summary' => $record[2], 'execution_condition' => $record[4]])->scalar();
 				if (!$workflowId) {
 					$newWorkflow = $workflowManager->newWorkFlow($record[1]);
 					$newWorkflow->description = $record[2];
@@ -1099,10 +1331,11 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$updateData = [];
 		$fields = [
-			'timecontrol_type' => ['OSSTimeControl', 'PLL_UNPAID_LEAVE', ['color' => '#5E666C']],
-			'timecontrol_type' => ['OSSTimeControl', 'PLL_SICK_LEAVE', ['color' => '#9900FF']]
+			['OSSTimeControl', 'PLL_UNPAID_LEAVE', ['color' => '#5E666C'], 'timecontrol_type'],
+			['OSSTimeControl', 'PLL_SICK_LEAVE', ['color' => '#9900FF'], 'timecontrol_type']
 		];
-		foreach ($fields as $fieldName => $info) {
+		foreach ($fields as $info) {
+			$fieldName = $info[3];
 			$moduleModel = Settings_Picklist_Module_Model::getInstance($info[0]);
 			$fieldModel = Settings_Picklist_Field_Model::getInstance($fieldName, $moduleModel);
 			$picklistValues = $fieldModel->getPicklistValues(true);
@@ -1254,7 +1487,7 @@ class YetiForceUpdate
 		$this->importer->updateTables($base);
 		$base->db->getSchema()->getTableSchema('u_yf_modtracker_inv', true);
 		$this->importer->updateForeignKey($base);
-
+		$this->removeRoleFromPicklist(['activitytype', 'defaultactivitytype']);
 		$this->importer->logs(false);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -1489,7 +1722,7 @@ class YetiForceUpdate
 		$db = \App\Db::getInstance();
 		$dbCommand = $db->createCommand();
 		$skipCheckData = false;
-		$templateId = (new \App\Db\Query())->select(['templateid'])->from('vtiger_trees_templates')->where(['module' => $tree['base'][2]])->scalar();
+		$templateId = (new \App\Db\Query())->select(['templateid'])->from('vtiger_trees_templates')->where(['module' => $tree['base'][2], 'name' => $tree['base'][1]])->scalar();
 		if (!$templateId) {
 			$dbCommand->insert('vtiger_trees_templates', [
 				'name' => $tree['base'][1],
@@ -1597,6 +1830,21 @@ class YetiForceUpdate
 					}
 					$dbCommand->delete('vtiger_picklist_dependency', ['and', ['tabid' => $tabId], ['or', ['sourcefield' => $fieldname], ['targetfield' => $fieldname]]])->execute();
 				}
+				$entityFieldInfo = \App\Module::getEntityInfo($fldModule);
+				$fieldsName = $entityFieldInfo['fieldnameArr'];
+				$searchColumns = $entityFieldInfo['searchcolumnArr'];
+				if (\in_array($fieldname, $fieldsName) || \in_array($fieldname, $searchColumns)) {
+					if (false !== ($key = array_search($fieldname, $fieldsName))) {
+						$fieldsName[$key] = $newName;
+					}
+					if (false !== ($key = array_search($fieldname, $searchColumns))) {
+						$searchColumns[$key] = $newName;
+					}
+					$dbCommand->update('vtiger_entityname',['fieldname' => implode(',', $fieldsName), 'searchcolumn' => implode(',', $searchColumns)],
+					['modulename' => $entityFieldInfo['modulename']])->execute();
+					\App\Cache::delete('ModuleEntityById', $tabId);
+					\App\Cache::delete('ModuleEntityByName', $fldModule);
+				}
 			}
 		} catch (\Throwable $e) {
 			$message = '[ERROR] ' . __METHOD__ . ': ' . $e->__toString();
@@ -1658,8 +1906,8 @@ class YetiForceUpdate
 				['type' => 'add', 'data' => [602, 'ServiceContracts', 'OSSSoldServices', 'getRelatedList', 9, 'OSSSoldServices', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
 				['type' => 'add', 'data' => [603, 'Assets', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
 				['type' => 'add', 'data' => [604, 'OSSSoldServices', 'ServiceContracts', 'getRelatedList', 3, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab']],
-				['type' => 'update', 'data' => [605, 'OSSSoldServices', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, 'ADD', 0, 0, 0, 'RelatedTab'], 'where'=>['tabid' => \App\Module::getModuleId('OSSSoldServices'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
-				['type' => 'update', 'data' => [59,'Vendors','Products','getDependentsList',2,'Products',0,'add',0,0,0,'RelatedTab'], 'where'=>['tabid' => \App\Module::getModuleId('Vendors'), 'related_tabid' => \App\Module::getModuleId('Products'), 'name' => 'getProducts']],
+				['type' => 'update', 'data' => [605, 'OSSSoldServices', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, 'ADD', 0, 0, 0, 'RelatedTab'], 'where' => ['tabid' => \App\Module::getModuleId('OSSSoldServices'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
+				['type' => 'update', 'data' => [59, 'Vendors', 'Products', 'getDependentsList', 2, 'Products', 0, 'add', 0, 0, 0, 'RelatedTab'], 'where' => ['tabid' => \App\Module::getModuleId('Vendors'), 'related_tabid' => \App\Module::getModuleId('Products'), 'name' => 'getProducts']],
 				['type' => 'add', 'data' => [620, 'Contacts', 'HelpDesk', 'getRelatedList', 4, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab']]
 			];
 		}
@@ -1757,10 +2005,17 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-		$files = ['module_record_allocation.php', 'moduleHierarchy.php', 'sharedOwner.php'];
+		$files = [
+			'module_record_allocation.php' => 'user_privileges',
+			'moduleHierarchy.php' => 'user_privileges',
+			'sharedOwner.php' => 'user_privileges',
+			'owners_colors.php' => 'user_privileges',
+			'cron.php' => 'user_privileges',
+			'registration.php' => 'cache'
+		];
 		$rootDirectory = ROOT_DIRECTORY . DIRECTORY_SEPARATOR;
-		foreach ($files as $file) {
-			$from = $rootDirectory . 'user_privileges/' . $file;
+		foreach ($files as $file => $dir) {
+			$from = $rootDirectory . $dir . DIRECTORY_SEPARATOR . $file;
 			if (file_exists($from)) {
 				$result = rename($from, "{$rootDirectory}app_data/{$file}");
 				if (!$result) {

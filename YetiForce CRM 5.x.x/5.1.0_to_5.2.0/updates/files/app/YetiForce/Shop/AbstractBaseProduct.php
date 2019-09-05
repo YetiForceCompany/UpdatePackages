@@ -43,7 +43,7 @@ abstract class AbstractBaseProduct
 	public $prices = [];
 
 	/**
-	 * Price type (table,manual).
+	 * Price type (table,manual,selection).
 	 *
 	 * @var string
 	 */
@@ -69,6 +69,13 @@ abstract class AbstractBaseProduct
 	 * @var string|null
 	 */
 	public $paidPackage;
+
+	/**
+	 * Custom Fields.
+	 *
+	 * @var array
+	 */
+	public $customFields = [];
 
 	/**
 	 * Verify the product.
@@ -106,7 +113,7 @@ abstract class AbstractBaseProduct
 	 */
 	public function getPrice(): int
 	{
-		return $this->prices[\App\Company::getSize()] ?? 0;
+		return $this->prices[\App\Company::getSize()] ?? $this->prices[0] ?? 0;
 	}
 
 	/**
@@ -152,14 +159,16 @@ abstract class AbstractBaseProduct
 	/**
 	 * Get product image.
 	 *
+	 * @param string $pathPrefix
+	 *
 	 * @return string
 	 */
-	public function getImage(): ?string
+	public function getImage($pathPrefix = ''): ?string
 	{
 		$filePath = null;
 		$file = 'modules/Settings/YetiForce/' . $this->name . '.png';
 		if (\file_exists(\ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'public_html' . \DIRECTORY_SEPARATOR . $file)) {
-			$filePath = \App\Layout::getPublicUrl($file, true);
+			$filePath = \App\Layout::getPublicUrl($pathPrefix . $file, true);
 		}
 		return $filePath;
 	}
@@ -196,7 +205,8 @@ abstract class AbstractBaseProduct
 	 */
 	public function getVariable(): array
 	{
-		return [
+		$productSelection = 'selection' === $this->pricesType;
+		$data = [
 			'cmd' => '_xclick-subscriptions',
 			'no_shipping' => 1,
 			'no_note' => 1,
@@ -204,12 +214,37 @@ abstract class AbstractBaseProduct
 			'sra' => 1,
 			't3' => 'M',
 			'p3' => \date('d'),
-			'a3' => $this->getPrice(),
 			'item_name' => $this->name,
 			'currency_code' => $this->currencyCode,
-			'on0' => 'Package',
-			'os0' => \App\Company::getSize(),
+			'on0' => 'Package'
 		];
+		if (!$productSelection) {
+			$data['os0'] = \App\Company::getSize();
+		}
+		if ('manual' !== $this->pricesType && !$productSelection) {
+			$data['a3'] = $this->getPrice();
+		}
+		return array_merge($data, \App\YetiForce\Shop::getVariablePayments($this->isCustom()));
+	}
+
+	/**
+	 * Get product custom fields.
+	 *
+	 * @return array
+	 */
+	public function getCustomFields(): array
+	{
+		return $this->customFields;
+	}
+
+	/**
+	 * Is custom fields.
+	 *
+	 * @return bool
+	 */
+	public function isCustom(): bool
+	{
+		return !empty($this->customFields);
 	}
 
 	/**

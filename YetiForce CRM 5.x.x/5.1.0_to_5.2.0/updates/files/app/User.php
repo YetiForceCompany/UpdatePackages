@@ -427,6 +427,21 @@ class User
 	}
 
 	/**
+	 * Function gets user ID by user full name.
+	 *
+	 * @param string $fullName
+	 *
+	 * @return int
+	 */
+	public static function getUserIdByFullName(string $fullName): int
+	{
+		$instance = \App\Fields\Owner::getInstance();
+		$instance->showRoleName = false;
+		$users = array_column($instance->initUsers(), 'id', 'fullName');
+		return $users[$fullName] ?? 0;
+	}
+
+	/**
 	 * Get user image details.
 	 *
 	 * @throws \App\Exceptions\AppException
@@ -467,5 +482,20 @@ class User
 			return [];
 		}
 		return $userModel->getImage();
+	}
+
+	/**
+	 * Get number of users.
+	 *
+	 * @return int
+	 */
+	public static function getNumberOfUsers(): int
+	{
+		if (Cache::has('NumberOfUsers', '')) {
+			return Cache::get('NumberOfUsers', '');
+		}
+		$count = (new Db\Query())->from('vtiger_users')->where(['status' => 'Active'])->andWhere(['<>', 'id', 1])->count();
+		Cache::save('NumberOfUsers', '', $count, Cache::LONG);
+		return $count;
 	}
 }

@@ -1,6 +1,47 @@
 {
   "type": "component",
   "props": {
+    "virtual-scroll-horizontal": {
+      "type": "Boolean",
+      "desc": "Make virtual list work in horizontal mode",
+      "category": "behavior"
+    },
+    "virtual-scroll-slice-size": {
+      "type": "Number",
+      "desc": "Number of options to render in the virtual list",
+      "default": "30",
+      "examples": [
+        ":virtual-scroll-slice-size=\"60\""
+      ],
+      "category": "virtual-scroll"
+    },
+    "virtual-scroll-item-size": {
+      "type": "Number",
+      "desc": "Default size in pixels (height if vertical, width if horizontal) of an option; This value is used for rendering the initial list; Try to use a value close to the minimum size of an item",
+      "default": "24",
+      "examples": [
+        ":virtual-scroll-item-size=\"48\""
+      ],
+      "category": "virtual-scroll"
+    },
+    "virtual-scroll-sticky-size-start": {
+      "type": "Number",
+      "desc": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the start of the list; A correct value will improve scroll precision",
+      "default": "0",
+      "examples": [
+        ":virtual-scroll-sticky-size-start=\"48\""
+      ],
+      "category": "virtual-scroll"
+    },
+    "virtual-scroll-sticky-size-end": {
+      "type": "Number",
+      "desc": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision",
+      "default": "0",
+      "examples": [
+        ":virtual-scroll-sticky-size-end=\"48\""
+      ],
+      "category": "virtual-scroll"
+    },
     "error": {
       "type": "Boolean",
       "desc": "Does field have validation errors?",
@@ -230,7 +271,7 @@
     },
     "options": {
       "type": "Array",
-      "desc": "Available options that the user can select from",
+      "desc": "Available options that the user can select from. For best performance freeze the list of options.",
       "default": "[]",
       "examples": [
         ":options=\"[ 'BMW', 'Samsung Phone' ]\"",
@@ -335,7 +376,7 @@
     "options-sanitize": {
       "type": "Boolean",
       "default": "false",
-      "desc": "Force use of textContent instead of innerHTML to render options; Use it when the options might be unsafe (from user input); Does NOT applies when using 'option' slot!",
+      "desc": "Force use of textContent instead of innerHTML to render options; Use it when the options might be unsafe (from user input); Does NOT apply when using 'option' slot!",
       "category": "options"
     },
     "popup-content-class": {
@@ -408,7 +449,7 @@
     },
     "transition-show": {
       "type": "String",
-      "desc": "Transition when showing the menu; One of Quasar's embedded transitions; Works only if \"options-cover\" is not used",
+      "desc": "Transition when showing the menu/dialog; One of Quasar's embedded transitions",
       "examples": [
         "fade",
         "slide-down"
@@ -418,13 +459,24 @@
     },
     "transition-hide": {
       "type": "String",
-      "desc": "Transition when hiding the menu; One of Quasar's embedded transitions; Works only if \"options-cover\" is not used",
+      "desc": "Transition when hiding the menu/dialog; One of Quasar's embedded transitions",
       "examples": [
         "fade",
         "slide-down"
       ],
       "category": "behavior",
       "default": "fade"
+    },
+    "behavior": {
+      "type": "String",
+      "desc": "Overrides the default dynamic mode of showing as menu on desktop and dialog on mobiles",
+      "values": [
+        "default",
+        "menu",
+        "dialog"
+      ],
+      "default": "default",
+      "category": "behavior"
     }
   },
   "slots": {
@@ -457,6 +509,12 @@
     },
     "selected": {
       "desc": "Override default selection slot; Suggestion: QChip"
+    },
+    "before-options": {
+      "desc": "Template slot for the elements that should be rendered before the list of options"
+    },
+    "after-options": {
+      "desc": "Template slot for the elements that should be rendered after the list of options"
     }
   },
   "scopedSlots": {
@@ -584,6 +642,46 @@
     }
   },
   "events": {
+    "virtual-scroll": {
+      "desc": "Emitted when the virtual scroll occurs",
+      "params": {
+        "details": {
+          "type": "Object",
+          "desc": "Object of properties on the new scroll position",
+          "definition": {
+            "index": {
+              "type": "Number",
+              "desc": "Index of the list item that was scrolled into view (0 based)",
+              "examples": [
+                30
+              ]
+            },
+            "from": {
+              "type": "Number",
+              "desc": "The index of the first list item that is rendered (0 based)",
+              "examples": [
+                10
+              ]
+            },
+            "to": {
+              "type": "Number",
+              "desc": "The index of the last list item that is rendered (0 based)",
+              "examples": [
+                50
+              ]
+            },
+            "direction": {
+              "type": "String",
+              "desc": "Direction of change",
+              "values": [
+                "increase",
+                "decrease"
+              ]
+            }
+          }
+        }
+      }
+    },
     "input": {
       "desc": "Emitted when component's model changes; Is also used by v-model",
       "params": {
@@ -707,6 +805,23 @@
     }
   },
   "methods": {
+    "scrollTo": {
+      "desc": "Scroll the virtual scroll list to the item with the specified index (0 based)",
+      "params": {
+        "index": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "The index of the list item (0 based)",
+          "required": true,
+          "examples": [
+            "1",
+            23
+          ]
+        }
+      }
+    },
     "resetValidation": {
       "desc": "Reset validation status"
     },

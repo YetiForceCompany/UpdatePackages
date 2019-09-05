@@ -217,6 +217,12 @@
         }
       },
       "desc": "Triggers component to toggle between show/hide"
+    },
+    "focus": {
+      "desc": "Focus dialog; if you have content with autofocus attribute, it will directly focus it"
+    },
+    "shake": {
+      "desc": "Shakes dialog"
     }
   }
 }

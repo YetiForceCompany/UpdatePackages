@@ -1,5 +1,5 @@
 /*!
- * Quasar Framework v1.0.5
+ * Quasar Framework v1.1.0
  * (c) 2016-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -979,7 +979,7 @@ input[type='search']::-webkit-search-decoration
   > .q-btn-item:not(:last-child)
     border-top-right-radius 0
     border-bottom-right-radius 0
-  > .q-btn-item + .q-btn-item
+  > .q-btn-item:not(:first-child)
     border-top-left-radius 0
     border-bottom-left-radius 0
   &--push
@@ -1001,6 +1001,8 @@ input[type='search']::-webkit-search-decoration
     > .q-btn-item
       box-shadow none
   &--outline
+    > .q-separator
+      display none
     > .q-btn-item + .q-btn-item
       border-left 0
     > .q-btn-item:not(:last-child)
@@ -1295,7 +1297,7 @@ body.desktop
       .q-checkbox__inner:before
         transform scale3d(1, 1, 1)
     &--dense:focus:not(.disabled) .q-checkbox__inner:before
-      transform scale3d(2, 2, 2)
+      transform scale3d(1.5, 1.5, 1.5)
   .q-table--dense .q-checkbox--dense:focus:not(.disabled) .q-checkbox__inner:before
     transform scale3d(1.4, 1.4, 1.4)
 $chip-height = 32px
@@ -1605,6 +1607,8 @@ body.desktop .q-chip--clickable:focus
       text-align center
     &--out
       opacity .18
+    &--fill
+      visibility hidden
   &__calendar-days-container
     height 75%
   &__calendar-days > div
@@ -1939,6 +1943,9 @@ body.desktop .q-chip--clickable:focus
     z-index -1
     pointer-events all
     background $dimmed-background
+body.platform-ios, body.platform-android:not(.cordova)
+  .q-dialog__inner--minimized > div
+    max-height calc(100vh - 108px)
 body.q-ios-padding .q-dialog__inner
   padding-top $ios-statusbar-height !important
   padding-top env(safe-area-inset-top) !important
@@ -2163,11 +2170,20 @@ $field-transition = .36s cubic-bezier(.4,0,.2,1)
   &__suffix
     padding-left 4px
   &--readonly, &--disabled
-    .q-field__control
-      pointer-events none
     .q-placeholder 
       opacity 1 !important
+  &--readonly
+    &.q-field--labeled
+      .q-field__native
+        cursor default
+    &.q-field--float
+      .q-field__native
+        cursor text
   &--disabled
+    .q-field__inner
+      cursor not-allowed
+    .q-field__control
+      pointer-events none
     .q-field__control > div
       opacity .6 !important
       &, * 
@@ -2186,16 +2202,16 @@ $field-transition = .36s cubic-bezier(.4,0,.2,1)
     transform-origin left top
     transition transform $field-transition, right $field-transition
   &--float .q-field__label
-    transform translate3d(0, -40%, 0) scale3d(.75, .75, .75)
+    transform translate3d(0, -40%, 0) scale3d(.75, .75, 1)
     right calc(-100% / 3)
   .q-field__native, .q-select__input
     &:-webkit-autofill
       -webkit-animation-name q-autofill
       -webkit-animation-fill-mode both
     &:-webkit-autofill + .q-field__label
-      transform translate3d(0, -40%, 0) scale3d(.75, .75, .75)
+      transform translate3d(0, -40%, 0) scale3d(.75, .75, 1)
     &[type="number"]:invalid + .q-field__label
-      transform translate3d(0, -40%, 0) scale3d(.75, .75, .75)
+      transform translate3d(0, -40%, 0) scale3d(.75, .75, 1)
     &:invalid
       box-shadow none
   &--focused
@@ -2372,12 +2388,12 @@ $field-transition = .36s cubic-bezier(.4,0,.2,1)
     .q-avatar
       font-size 24px
     &.q-field--float .q-field__label
-      transform translate3d(0, -30%, 0) scale3d(.75, .75, .75)
+      transform translate3d(0, -30%, 0) scale3d(.75, .75, 1)
     .q-field__native, .q-select__input
       &:-webkit-autofill + .q-field__label
-        transform translate3d(0, -30%, 0) scale3d(.75, .75, .75)
+        transform translate3d(0, -30%, 0) scale3d(.75, .75, 1)
       &[type="number"]:invalid + .q-field__label
-        transform translate3d(0, -30%, 0) scale3d(.75, .75, .75)
+        transform translate3d(0, -30%, 0) scale3d(.75, .75, 1)
   &--borderless, &--standard
     .q-field__bottom,
     &.q-field--dense .q-field__control
@@ -2466,8 +2482,6 @@ $field-transition = .36s cubic-bezier(.4,0,.2,1)
     resize vertical
     padding-top 17px
     min-height 52px
-  &.q-field--readonly .q-field__native
-    pointer-events auto
   &.q-field--labeled
     .q-field__control-container
       padding-top 26px
@@ -2818,7 +2832,8 @@ body.q-ios-padding
   &--bordered
     border 1px solid $separator-color
   &--separator
-    > .q-item-type + .q-item-type
+    > .q-item-type + .q-item-type,
+    > .q-virtual-scroll__content > .q-item-type + .q-item-type
       border-top 1px solid $separator-color
   &--padding
     padding 8px 0
@@ -2826,7 +2841,8 @@ body.q-ios-padding
   min-height 32px
   padding 2px 16px
 .q-list--dark.q-list--separator
-  > .q-item-type + .q-item-type
+  > .q-item-type + .q-item-type,
+  > .q-virtual-scroll__content > .q-item-type + .q-item-type
     border-top-color $separator-dark-color
 .q-list--dark, .q-item--dark
   color white
@@ -3007,7 +3023,7 @@ body.desktop
       .q-radio__inner:before
         transform scale3d(1, 1, 1)
     &--dense:focus:not(.disabled) .q-radio__inner:before
-      transform scale3d(2, 2, 2)
+      transform scale3d(1.5, 1.5, 1.5)
 .q-rating
   color $rating-grade-color
   vertical-align middle
@@ -3070,6 +3086,15 @@ body.desktop
       padding-left 4px
   &__dropdown-icon
     cursor pointer
+  &.q-field--readonly
+    .q-field__control, .q-select__dropdown-icon
+      cursor default
+    &.q-field--labeled
+      .q-select__input
+        cursor default
+    &.q-field--float
+      .q-select__input
+        cursor text
   &__dialog
     width 90vw !important
     max-width 90vw !important
@@ -3083,23 +3108,21 @@ body.desktop
   &__menu--dark
     color white
     background $grey-9
-  &__options
-    &--content
-      position relative
-      background-color inherit
-    &--padding
-      background linear-gradient(
-        transparent,
-        transparent 20%,
-        rgba(128, 128, 128, .03) 20%,
-        rgba(128, 128, 128, .08) 50%,
-        rgba(128, 128, 128, .03) 80%,
-        transparent 80%,
-        transparent
-      )
-      background-size 100% 50px
-body.platform-ios .q-select__dialog
-  max-height 50vh !important
+body.mobile:not(.cordova) .q-select__dialog
+  max-height calc(100vh - 108px) !important
+body.platform-android
+  &.cordova .q-dialog__inner--top .q-select__dialog
+    max-height calc(100vh - 24px) !important
+  &:not(.cordova) .q-dialog__inner--top .q-select__dialog
+    max-height calc(100vh - 80px) !important
+body.platform-ios
+  &.cordova .q-dialog__inner--top
+    > div
+      border-radius $generic-border-radius
+    .q-select__dialog--focused
+      max-height 47vh !important
+  &:not(.cordova) .q-dialog__inner--top .q-select__dialog--focused
+    max-height 50vh !important
 .q-separator
   border none
   background $separator-color
@@ -3365,6 +3388,7 @@ body.platform-ios .q-select__dialog
       cursor pointer
     &--active, &--done
       color $primary
+      color var(--q-color-primary)
       .q-stepper__dot, .q-stepper__label
         text-shadow 0 0 0 currentColor
     &--disabled
@@ -3374,6 +3398,7 @@ body.platform-ios .q-select__dialog
         color rgba(0, 0, 0, .32)
     &--error
       color $negative
+      color var(--q-color-negative)
       .q-stepper__dot
         background transparent !important
         span
@@ -4119,9 +4144,10 @@ body.desktop
       opacity .12
       transform scale3d(0, 0, 0)
       transition transform $option-focus-transition
-    &:focus:not(.disabled)
-      .q-toggle__thumb:before
-        transform scale3d(2, 2, 2)
+    &:focus:not(.disabled) .q-toggle__thumb:before
+      transform scale3d(2, 2, 2)
+    &--dense:focus:not(.disabled) .q-toggle__thumb:before
+      transform scale3d(1.5, 1.5, 1.5)
 .q-toolbar
   position relative
   padding $toolbar-padding
@@ -4380,6 +4406,46 @@ img
   iframe, object, embed
     width 100%
     height 100%
+.q-virtual-scroll
+  &:focus
+    outline none
+  &__padding
+    background linear-gradient(
+      transparent,
+      transparent 20%,
+      rgba(128, 128, 128, .03) 20%,
+      rgba(128, 128, 128, .08) 50%,
+      rgba(128, 128, 128, .03) 80%,
+      transparent 80%,
+      transparent
+    )
+    background-size 100% 50px
+  &--horizontal
+    display flex
+    flex-direction row
+    flex-wrap nowrap
+    align-items stretch
+    .q-virtual-scroll
+      &__content
+        display flex
+        flex-direction row
+        flex-wrap nowrap
+      &__padding,
+      &__content,
+      &__content > *
+        flex 0 0 auto
+      &__padding
+        background linear-gradient(
+          to left,
+          transparent,
+          transparent 20%,
+          rgba(128, 128, 128, .03) 20%,
+          rgba(128, 128, 128, .08) 50%,
+          rgba(128, 128, 128, .03) 80%,
+          transparent 80%,
+          transparent
+        )
+        background-size 50px 100%
 .q-ripple
   position absolute
   top 0
@@ -5858,6 +5924,8 @@ fg($name, $size)
     justify-content space-between
   &around
     justify-content space-around
+  &evenly
+    justify-content space-evenly
 .items-
   &start
     align-items flex-start
@@ -5946,7 +6014,9 @@ for $name, $size in $sizes
     color inherit
     opacity .7
 .q-body--fullscreen-mixin, .q-body--prevent-scroll
-  overflow hidden !important
+  position fixed !important
+.q-body--force-scrollbar
+  overflow-y scroll
 .q-no-input-spinner
   -moz-appearance textfield !important
   &::-webkit-outer-spin-button,
@@ -6477,22 +6547,35 @@ fe(selector, name, noProc, i = '')
   return unquote(join(',', fr(selector, '', i) fr(selector, name, i)))
 ie_style = @block
   
-  .q-toolbar:after
-    content ''
-    display block
-    min-height inherit
-    font-size 0
+  .row, .flex
+    &:after
+      content ''
+      display block
+      font-size 0
+      min-height inherit
+  .q-notification,
+  .q-banner,
+  .q-field__native, .q-field__control
+    &:after
+      min-height 0 !important
+  .q-item
+    &:after
+      min-height 32px !important
+  .q-list--dense > .q-item, .q-item--dense
+    &:after
+      min-height 24px !important
   
   .q-btn__content
   .q-time__content
   .q-toolbar__title
   .q-menu .q-item__section--main
     flex-basis auto
+  .q-banner__content,
+  .q-notification__message
+    flex-basis 0 !important
   .q-tab__content
     flex-basis auto
     min-width 100%
-  .row, .flex
-    min-height 0%
   .column
     min-width 0%
   for $name, $size in $sizes
@@ -6563,6 +6646,8 @@ ie_style = @block
       .q-field__bottom--stale
         .q-field__messages
           left 0
+    &--float .q-field__label
+      max-width 100%
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none)
   {ie_style}
 @supports (-ms-ime-align:auto)

@@ -253,13 +253,6 @@ class Vtiger_Field_Model extends vtlib\Field
 					case 54:
 						$fieldDataType = 'multiowner';
 						break;
-					case 55:
-						if ('salutationtype' === $this->getName()) {
-							$fieldDataType = 'picklist';
-						} elseif ('firstname' === $this->getName()) {
-							$fieldDataType = 'salutation';
-						}
-						break;
 					case 64:
 						$fieldDataType = 'referenceSubProcessSL';
 						break;
@@ -483,10 +476,7 @@ class Vtiger_Field_Model extends vtlib\Field
 
 	public function isRoleBased()
 	{
-		if (15 === $this->get('uitype') || 33 === $this->get('uitype') || (55 === $this->get('uitype') && 'salutationtype' === $this->getFieldName())) {
-			return true;
-		}
-		return false;
+		return 15 === $this->get('uitype') || 33 === $this->get('uitype');
 	}
 
 	/**
@@ -665,7 +655,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	public function isEditable()
 	{
 		$displayType = $this->get('displaytype');
-		if (!$this->isWritable() || (1 !== $displayType && 10 !== $displayType) || true === $this->isReadOnly() || 4 === $this->get('uitype')) {
+		if (!$this->isWritable() || (1 !== $displayType && 10 !== $displayType) || true === $this->isReadOnly()) {
 			return false;
 		}
 		return true;
@@ -678,7 +668,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	 */
 	public function isAjaxEditable()
 	{
-		$ajaxRestrictedFields = ['4', '72', '10', '300', '51', '59'];
+		$ajaxRestrictedFields = ['72', '10', '300', '51', '59'];
 		if (!$this->isEditable() || \in_array($this->get('uitype'), $ajaxRestrictedFields) || !$this->getUITypeModel()->isAjaxEditable() || 10 === (int) $this->get('displaytype')) {
 			return false;
 		}
@@ -843,6 +833,7 @@ class Vtiger_Field_Model extends vtlib\Field
 		$this->fieldInfo['maxlengthtext'] = $this->get('maxlengthtext');
 		$this->fieldInfo['maximumlength'] = $this->get('maximumlength');
 		$this->fieldInfo['maxwidthcolumn'] = $this->get('maxwidthcolumn');
+		$this->fieldInfo['tabindex'] = $this->get('tabindex');
 		$this->fieldInfo['defaultvalue'] = $this->getDefaultFieldValue();
 		$this->fieldInfo['type'] = $fieldDataType;
 		$this->fieldInfo['name'] = $this->get('name');
@@ -977,7 +968,7 @@ class Vtiger_Field_Model extends vtlib\Field
 		$fieldModelList = [];
 		$fieldObjects = parent::getAllForModule($moduleModel);
 		$fieldModelList = [];
-		if (!is_array($fieldObjects)) {
+		if (!\is_array($fieldObjects)) {
 			$fieldObjects = [];
 		}
 		foreach ($fieldObjects as &$fieldObject) {
@@ -994,7 +985,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	/**
 	 * Function to get instance.
 	 *
-	 * @param string|int $value  - fieldname or fieldid
+	 * @param string|int                $value  - fieldname or fieldid
 	 * @param Vtiger_Module_Model|false $module - optional - module instance
 	 *
 	 * @return Vtiger_Field_Model|false
@@ -1238,7 +1229,7 @@ class Vtiger_Field_Model extends vtlib\Field
 		1 === $this->get('generatedtype') ? $generatedType = 1 : $generatedType = 2;
 		$db->createCommand()->update('vtiger_field', ['typeofdata' => $this->get('typeofdata'), 'presence' => $this->get('presence'), 'quickcreate' => $this->get('quickcreate'),
 			'masseditable' => $this->get('masseditable'), 'header_field' => $this->get('header_field'), 'maxlengthtext' => $this->get('maxlengthtext'),
-			'maxwidthcolumn' => $this->get('maxwidthcolumn'), 'defaultvalue' => $this->get('defaultvalue'), 'summaryfield' => $this->get('summaryfield'),
+			'maxwidthcolumn' => $this->get('maxwidthcolumn'), 'tabindex' => $this->get('tabindex'), 'defaultvalue' => $this->get('defaultvalue'), 'summaryfield' => $this->get('summaryfield'),
 			'displaytype' => $this->get('displaytype'), 'helpinfo' => $this->get('helpinfo'), 'generatedtype' => $generatedType,
 			'fieldparams' => $this->get('fieldparams'),
 		], ['fieldid' => $this->get('id')])->execute();
@@ -1356,7 +1347,7 @@ class Vtiger_Field_Model extends vtlib\Field
 	 */
 	public function isCalculateField()
 	{
-		return $this->isCalculateField && in_array($this->getUIType(), [71, 7, 317]);
+		return $this->isCalculateField && \in_array($this->getUIType(), [71, 7, 317]);
 	}
 
 	/**
@@ -1568,5 +1559,34 @@ class Vtiger_Field_Model extends vtlib\Field
 			$this->set($key, $value);
 		}
 		return $this;
+	}
+
+	/**
+	 * TabIndex last sequence number.
+	 *
+	 * @var int
+	 */
+	public static $tabIndexLastSeq = 0;
+	/**
+	 * TabIndex default sequence number.
+	 *
+	 * @var int
+	 */
+	public static $tabIndexDefaultSeq = 0;
+
+	/**
+	 * Get TabIndex.
+	 *
+	 * @return int
+	 */
+	public function getTabIndex(): int
+	{
+		$tabindex = 0;
+		if (0 !== $this->get('tabindex')) {
+			$tabindex = $this->get('tabindex');
+		} elseif (self::$tabIndexLastSeq) {
+			$tabindex = self::$tabIndexLastSeq;
+		}
+		return $tabindex + self::$tabIndexDefaultSeq;
 	}
 }

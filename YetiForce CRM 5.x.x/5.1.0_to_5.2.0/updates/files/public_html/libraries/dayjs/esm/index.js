@@ -412,7 +412,7 @@ function () {
   };
 
   _proto.toJSON = function toJSON() {
-    return this.toISOString();
+    return this.isValid() ? this.toISOString() : null;
   };
 
   _proto.toISOString = function toISOString() {

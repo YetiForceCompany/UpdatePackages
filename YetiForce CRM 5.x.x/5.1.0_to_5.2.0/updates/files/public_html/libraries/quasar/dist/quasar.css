@@ -1,5 +1,5 @@
 /*
- * Quasar Framework v1.0.5
+ * Quasar Framework v1.1.0
  * (c) 2016-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -500,7 +500,7 @@ a.q-btn {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-.q-btn-group > .q-btn-item + .q-btn-item {
+.q-btn-group > .q-btn-item:not(:first-child) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -531,6 +531,9 @@ a.q-btn {
 .q-btn-group--outline > .q-btn-item,
 .q-btn-group--unelevated > .q-btn-item {
   box-shadow: none;
+}
+.q-btn-group--outline > .q-separator {
+  display: none;
 }
 .q-btn-group--outline > .q-btn-item + .q-btn-item {
   border-left: 0;
@@ -902,7 +905,7 @@ body.desktop .q-checkbox:focus:not(.disabled) .q-checkbox__inner:before {
   transform: scale3d(1, 1, 1);
 }
 body.desktop .q-checkbox--dense:focus:not(.disabled) .q-checkbox__inner:before {
-  transform: scale3d(2, 2, 2);
+  transform: scale3d(1.5, 1.5, 1.5);
 }
 body.desktop .q-table--dense .q-checkbox--dense:focus:not(.disabled) .q-checkbox__inner:before {
   transform: scale3d(1.4, 1.4, 1.4);
@@ -1278,6 +1281,9 @@ body.desktop .q-chip--clickable:focus {
 }
 .q-date__calendar-item--out {
   opacity: 0.18;
+}
+.q-date__calendar-item--fill {
+  visibility: hidden;
 }
 .q-date__calendar-days-container {
   height: 75%;
@@ -1836,6 +1842,10 @@ body.desktop .q-chip--clickable:focus {
   pointer-events: all;
   background: rgba(0,0,0,0.4);
 }
+body.platform-ios .q-dialog__inner--minimized > div,
+body.platform-android:not(.cordova) .q-dialog__inner--minimized > div {
+  max-height: calc(100vh - 108px);
+}
 body.q-ios-padding .q-dialog__inner {
   padding-top: 20px !important;
   padding-top: env(safe-area-inset-top) !important;
@@ -2124,13 +2134,21 @@ body.q-ios-padding .q-dialog__inner > div {
 .q-field__suffix {
   padding-left: 4px;
 }
-.q-field--readonly .q-field__control,
-.q-field--disabled .q-field__control {
-  pointer-events: none;
-}
 .q-field--readonly .q-placeholder,
 .q-field--disabled .q-placeholder {
   opacity: 1 !important;
+}
+.q-field--readonly.q-field--labeled .q-field__native {
+  cursor: default;
+}
+.q-field--readonly.q-field--float .q-field__native {
+  cursor: text;
+}
+.q-field--disabled .q-field__inner {
+  cursor: not-allowed;
+}
+.q-field--disabled .q-field__control {
+  pointer-events: none;
 }
 .q-field--disabled .q-field__control > div {
   opacity: 0.6 !important;
@@ -2154,7 +2172,7 @@ body.q-ios-padding .q-dialog__inner > div {
   transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1), right 0.36s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .q-field--float .q-field__label {
-  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 1);
   right: calc(-100% / 3);
 }
 .q-field .q-field__native:-webkit-autofill,
@@ -2164,11 +2182,11 @@ body.q-ios-padding .q-dialog__inner > div {
 }
 .q-field .q-field__native:-webkit-autofill + .q-field__label,
 .q-field .q-select__input:-webkit-autofill + .q-field__label {
-  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 1);
 }
 .q-field .q-field__native[type="number"]:invalid + .q-field__label,
 .q-field .q-select__input[type="number"]:invalid + .q-field__label {
-  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -40%, 0) scale3d(0.75, 0.75, 1);
 }
 .q-field .q-field__native:invalid,
 .q-field .q-select__input:invalid {
@@ -2406,15 +2424,15 @@ body.q-ios-padding .q-dialog__inner > div {
   font-size: 24px;
 }
 .q-field--dense.q-field--float .q-field__label {
-  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 1);
 }
 .q-field--dense .q-field__native:-webkit-autofill + .q-field__label,
 .q-field--dense .q-select__input:-webkit-autofill + .q-field__label {
-  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 1);
 }
 .q-field--dense .q-field__native[type="number"]:invalid + .q-field__label,
 .q-field--dense .q-select__input[type="number"]:invalid + .q-field__label {
-  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 0.75);
+  transform: translate3d(0, -30%, 0) scale3d(0.75, 0.75, 1);
 }
 .q-field--borderless .q-field__bottom,
 .q-field--standard .q-field__bottom,
@@ -2530,9 +2548,6 @@ body.q-ios-padding .q-dialog__inner > div {
   resize: vertical;
   padding-top: 17px;
   min-height: 52px;
-}
-.q-textarea.q-field--readonly .q-field__native {
-  pointer-events: auto;
 }
 .q-textarea.q-field--labeled .q-field__control-container {
   padding-top: 26px;
@@ -2989,7 +3004,8 @@ body.q-ios-padding .q-layout--standard .q-drawer--top-padding .q-drawer__content
 .q-list--bordered {
   border: 1px solid rgba(0,0,0,0.12);
 }
-.q-list--separator > .q-item-type + .q-item-type {
+.q-list--separator > .q-item-type + .q-item-type,
+.q-list--separator > .q-virtual-scroll__content > .q-item-type + .q-item-type {
   border-top: 1px solid rgba(0,0,0,0.12);
 }
 .q-list--padding {
@@ -3000,7 +3016,8 @@ body.q-ios-padding .q-layout--standard .q-drawer--top-padding .q-drawer__content
   min-height: 32px;
   padding: 2px 16px;
 }
-.q-list--dark.q-list--separator > .q-item-type + .q-item-type {
+.q-list--dark.q-list--separator > .q-item-type + .q-item-type,
+.q-list--dark.q-list--separator > .q-virtual-scroll__content > .q-item-type + .q-item-type {
   border-top-color: rgba(255,255,255,0.48);
 }
 .q-list--dark,
@@ -3231,7 +3248,7 @@ body.desktop .q-radio:focus:not(.disabled) .q-radio__inner:before {
   transform: scale3d(1, 1, 1);
 }
 body.desktop .q-radio--dense:focus:not(.disabled) .q-radio__inner:before {
-  transform: scale3d(2, 2, 2);
+  transform: scale3d(1.5, 1.5, 1.5);
 }
 .q-rating {
   color: #ffeb3b;
@@ -3315,6 +3332,16 @@ body.desktop .q-radio--dense:focus:not(.disabled) .q-radio__inner:before {
 .q-select__dropdown-icon {
   cursor: pointer;
 }
+.q-select.q-field--readonly .q-field__control,
+.q-select.q-field--readonly .q-select__dropdown-icon {
+  cursor: default;
+}
+.q-select.q-field--readonly.q-field--labeled .q-select__input {
+  cursor: default;
+}
+.q-select.q-field--readonly.q-field--float .q-select__input {
+  cursor: text;
+}
 .q-select__dialog {
   width: 90vw !important;
   max-width: 90vw !important;
@@ -3331,15 +3358,22 @@ body.desktop .q-radio--dense:focus:not(.disabled) .q-radio__inner:before {
   color: #fff;
   background: #424242;
 }
-.q-select__options--content {
-  position: relative;
-  background-color: inherit;
+body.mobile:not(.cordova) .q-select__dialog {
+  max-height: calc(100vh - 108px) !important;
 }
-.q-select__options--padding {
-  background: linear-gradient(transparent, transparent 20%, rgba(128,128,128,0.03) 20%, rgba(128,128,128,0.08) 50%, rgba(128,128,128,0.03) 80%, transparent 80%, transparent);
-  background-size: 100% 50px;
+body.platform-android.cordova .q-dialog__inner--top .q-select__dialog {
+  max-height: calc(100vh - 24px) !important;
 }
-body.platform-ios .q-select__dialog {
+body.platform-android:not(.cordova) .q-dialog__inner--top .q-select__dialog {
+  max-height: calc(100vh - 80px) !important;
+}
+body.platform-ios.cordova .q-dialog__inner--top > div {
+  border-radius: 4px;
+}
+body.platform-ios.cordova .q-dialog__inner--top .q-select__dialog--focused {
+  max-height: 47vh !important;
+}
+body.platform-ios:not(.cordova) .q-dialog__inner--top .q-select__dialog--focused {
   max-height: 50vh !important;
 }
 .q-separator {
@@ -3655,6 +3689,7 @@ body.desktop .q-slider.q-slider--editable:hover .q-slider__pin {
 .q-stepper__tab--active,
 .q-stepper__tab--done {
   color: #027be3;
+  color: var(--q-color-primary);
 }
 .q-stepper__tab--active .q-stepper__dot,
 .q-stepper__tab--done .q-stepper__dot,
@@ -3670,6 +3705,7 @@ body.desktop .q-slider.q-slider--editable:hover .q-slider__pin {
 }
 .q-stepper__tab--error {
   color: #c10015;
+  color: var(--q-color-negative);
 }
 .q-stepper__tab--error .q-stepper__dot {
   background: transparent !important;
@@ -4661,6 +4697,9 @@ body.desktop .q-toggle__thumb:before {
 body.desktop .q-toggle:focus:not(.disabled) .q-toggle__thumb:before {
   transform: scale3d(2, 2, 2);
 }
+body.desktop .q-toggle--dense:focus:not(.disabled) .q-toggle__thumb:before {
+  transform: scale3d(1.5, 1.5, 1.5);
+}
 .q-toolbar {
   position: relative;
   padding: 0 12px;
@@ -4993,6 +5032,33 @@ img.avatar {
 .q-video embed {
   width: 100%;
   height: 100%;
+}
+.q-virtual-scroll:focus {
+  outline: none;
+}
+.q-virtual-scroll__padding {
+  background: linear-gradient(transparent, transparent 20%, rgba(128,128,128,0.03) 20%, rgba(128,128,128,0.08) 50%, rgba(128,128,128,0.03) 80%, transparent 80%, transparent);
+  background-size: 100% 50px;
+}
+.q-virtual-scroll--horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.q-virtual-scroll--horizontal .q-virtual-scroll__content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+.q-virtual-scroll--horizontal .q-virtual-scroll__padding,
+.q-virtual-scroll--horizontal .q-virtual-scroll__content,
+.q-virtual-scroll--horizontal .q-virtual-scroll__content > * {
+  flex: 0 0 auto;
+}
+.q-virtual-scroll--horizontal .q-virtual-scroll__padding {
+  background: linear-gradient(to left, transparent, transparent 20%, rgba(128,128,128,0.03) 20%, rgba(128,128,128,0.08) 50%, rgba(128,128,128,0.03) 80%, transparent 80%, transparent);
+  background-size: 50px 100%;
 }
 .q-ripple {
   position: absolute;
@@ -7227,6 +7293,9 @@ body.q-ios-padding .q-notifications__list--bottom {
 .justify-around {
   justify-content: space-around;
 }
+.justify-evenly {
+  justify-content: space-evenly;
+}
 .items-start {
   align-items: flex-start;
 }
@@ -8860,7 +8929,10 @@ body.q-ios-padding .q-notifications__list--bottom {
 }
 .q-body--fullscreen-mixin,
 .q-body--prevent-scroll {
-  overflow: hidden !important;
+  position: fixed !important;
+}
+.q-body--force-scrollbar {
+  overflow-y: scroll;
 }
 .q-no-input-spinner {
   -moz-appearance: textfield !important;
@@ -9984,11 +10056,25 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   opacity: 0.22;
 }
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-  .q-toolbar:after {
+  .row:after,
+  .flex:after {
     content: '';
     display: block;
-    min-height: inherit;
     font-size: 0;
+    min-height: inherit;
+  }
+  .q-notification:after,
+  .q-banner:after,
+  .q-field__native:after,
+  .q-field__control:after {
+    min-height: 0 !important;
+  }
+  .q-item:after {
+    min-height: 32px !important;
+  }
+  .q-list--dense > .q-item:after,
+  .q-item--dense:after {
+    min-height: 24px !important;
   }
   .q-btn__content,
   .q-time__content,
@@ -9996,13 +10082,13 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   .q-menu .q-item__section--main {
     flex-basis: auto;
   }
+  .q-banner__content,
+  .q-notification__message {
+    flex-basis: 0 !important;
+  }
   .q-tab__content {
     flex-basis: auto;
     min-width: 100%;
-  }
-  .row,
-  .flex {
-    min-height: 0%;
   }
   .column {
     min-width: 0%;
@@ -10064,6 +10150,9 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   .q-field--standard .q-field__bottom--stale .q-field__messages {
     left: 0;
   }
+  .q-field--float .q-field__label {
+    max-width: 100%;
+  }
 }
 @media screen and (-ms-high-contrast: active) and (min-width: 0), (-ms-high-contrast: none) and (min-width: 0) {
   .row > .col,
@@ -10103,11 +10192,25 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   }
 }
 @supports (-ms-ime-align: auto) {
-  .q-toolbar:after {
+  .row:after,
+  .flex:after {
     content: '';
     display: block;
-    min-height: inherit;
     font-size: 0;
+    min-height: inherit;
+  }
+  .q-notification:after,
+  .q-banner:after,
+  .q-field__native:after,
+  .q-field__control:after {
+    min-height: 0 !important;
+  }
+  .q-item:after {
+    min-height: 32px !important;
+  }
+  .q-list--dense > .q-item:after,
+  .q-item--dense:after {
+    min-height: 24px !important;
   }
   .q-btn__content,
   .q-time__content,
@@ -10115,13 +10218,13 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   .q-menu .q-item__section--main {
     flex-basis: auto;
   }
+  .q-banner__content,
+  .q-notification__message {
+    flex-basis: 0 !important;
+  }
   .q-tab__content {
     flex-basis: auto;
     min-width: 100%;
-  }
-  .row,
-  .flex {
-    min-height: 0%;
   }
   .column {
     min-width: 0%;
@@ -10219,6 +10322,9 @@ body.desktop .q-manual-focusable--focused > .q-focus-helper {
   .q-field--borderless .q-field__bottom--stale .q-field__messages,
   .q-field--standard .q-field__bottom--stale .q-field__messages {
     left: 0;
+  }
+  .q-field--float .q-field__label {
+    max-width: 100%;
   }
 }
 @-webkit-keyframes q-circular-progress-circle {

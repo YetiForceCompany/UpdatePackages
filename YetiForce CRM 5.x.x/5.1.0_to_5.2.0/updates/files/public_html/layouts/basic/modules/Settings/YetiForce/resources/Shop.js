@@ -9,8 +9,9 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 	/**
 	 * Constructor.
 	 */
-	constructor() {
+	constructor(modalUrl = 'index.php?module=YetiForce&parent=Settings') {
 		this.container = $('.js-products-container');
+		this.modalUrl = modalUrl;
 	}
 	/**
 	 * Register events.
@@ -18,6 +19,35 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 	registerEvents() {
 		this.registerProductModalClick();
 		this.registerBuyModalClick();
+		this.registerShopSearch();
+	}
+	/**
+	 * Register events.
+	 */
+	registerShopSearch() {
+		let searchField = this.container.find('.js-shop-search');
+		searchField = searchField.length ? searchField : $('.js-shop-search');
+		searchField.on('keyup', e => {
+				let value = $(e.currentTarget)
+					.val()
+					.toLowerCase();
+				this.container.find('.js-product .js-text-search').filter(function() {
+					let item = $(this).closest('.js-product');
+					if (
+						$(this)
+							.text()
+							.toLowerCase()
+							.indexOf(value) > -1
+					) {
+						item.removeClass('d-none');
+					} else {
+						item.addClass('d-none');
+					}
+				});
+			})
+			.on('click', e => {
+				e.stopPropagation();
+			});
 	}
 	/**
 	 * Register product modal click.
@@ -38,7 +68,7 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 	showProductModal(productName, department) {
 		app.showModalWindow(
 			null,
-			`index.php?module=YetiForce&parent=Settings&view=ProductModal&product=${productName}&department=${department}`,
+			`${this.modalUrl}&view=ProductModal&product=${productName}&department=${department}`,
 			modalContainer => {
 				modalContainer.find('.js-modal__save').on('click', _ => {
 					app.hideModalWindow();
@@ -67,9 +97,7 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 	showBuyModal(productName, department) {
 		app.showModalWindow(
 			null,
-			`index.php?module=YetiForce&parent=Settings&view=BuyModal&product=${productName}${
-				department ? '&department=' + department : ''
-			}`,
+			`${this.modalUrl}&view=BuyModal&product=${productName}${department ? '&department=' + department : ''}`,
 			this.registerBuyModalEvents.bind(this)
 		);
 	}
@@ -83,6 +111,9 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 		if (companyForm.length) {
 			companyForm.validationEngine(app.validationEngineOptions);
 			companyForm.find('[data-inputmask]').inputmask();
+		}
+		if (buyForm.length) {
+			buyForm.validationEngine(app.validationEngineOptions);
 		}
 	}
 	registerBuyModalForms(companyForm, buyForm) {
@@ -111,8 +142,34 @@ window.Settings_YetiForce_Shop_Js = class Settings_YetiForce_Shop_Js {
 				app.formAlignmentAfterValidation(companyForm);
 			}
 		} else {
-			buyForm.submit();
-			app.hideModalWindow();
+			if (buyForm.validationEngine('validate') === true) {
+				this.updateCustomData(buyForm);
+				buyForm.submit();
+				app.hideModalWindow();
+			} else {
+				app.formAlignmentAfterValidation(buyForm);
+			}
+		}
+	}
+	/**
+	 * Update custom data.
+	 */
+	updateCustomData(buyForm) {
+		let customField = buyForm.find('.js-custom-data');
+		let priceBySize = buyForm.find('.js-price-by-size');
+		if (customField.length) {
+			let customFields = buyForm.find('.js-custom-field');
+			customFields.each((i, el) => {
+				let field = $(el);
+				customField.val(
+					`${customField.val()}${field.data('name')}:${field.val()}${customFields.length - 1 !== i ? '|' : ''}`
+				);
+			});
+		}
+		if (priceBySize.length) {
+			priceBySize
+				.siblings('.js-price-by-size-input')
+				.val(priceBySize.find(`option[value="${priceBySize.val()}"]`).data('os0'));
 		}
 	}
 	/**

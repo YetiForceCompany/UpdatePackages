@@ -74,6 +74,7 @@
   },
   "q-btn": {
     "attributes": [
+      "size",
       "ripple",
       "type",
       "to",
@@ -88,7 +89,6 @@
       "rounded",
       "push",
       "glossy",
-      "size",
       "fab",
       "fab-mini",
       "color",
@@ -110,6 +110,7 @@
   "q-btn-dropdown": {
     "attributes": [
       "value",
+      "size",
       "ripple",
       "type",
       "to",
@@ -124,7 +125,6 @@
       "rounded",
       "push",
       "glossy",
-      "size",
       "fab",
       "fab-mini",
       "color",
@@ -308,13 +308,13 @@
   },
   "q-circular-progress": {
     "attributes": [
+      "size",
       "value",
       "min",
       "max",
       "color",
       "center-color",
       "track-color",
-      "size",
       "font-size",
       "thickness",
       "angle",
@@ -504,7 +504,8 @@
       "disable",
       "readonly",
       "autofocus",
-      "maxlength"
+      "maxlength",
+      "item-aligned"
     ],
     "description": ""
   },
@@ -518,9 +519,9 @@
   },
   "q-icon": {
     "attributes": [
+      "size",
       "name",
       "color",
-      "size",
       "left",
       "right"
     ],
@@ -539,14 +540,16 @@
       "ratio",
       "transition",
       "spinner-color",
-      "spinner-size"
+      "spinner-size",
+      "no-default-spinner"
     ],
     "description": ""
   },
   "q-infinite-scroll": {
     "attributes": [
       "offset",
-      "scrollTarget",
+      "debounce",
+      "scroll-target",
       "disable",
       "reverse"
     ],
@@ -554,9 +557,9 @@
   },
   "q-inner-loading": {
     "attributes": [
+      "size",
       "showing",
       "color",
-      "size",
       "transition-show",
       "transition-hide",
       "dark"
@@ -612,6 +615,7 @@
   },
   "q-knob": {
     "attributes": [
+      "size",
       "value",
       "min",
       "max",
@@ -619,7 +623,6 @@
       "color",
       "center-color",
       "track-color",
-      "size",
       "font-size",
       "thickness",
       "angle",
@@ -657,7 +660,8 @@
       "value",
       "reveal",
       "bordered",
-      "elevated"
+      "elevated",
+      "height-hint"
     ],
     "description": ""
   },
@@ -667,7 +671,8 @@
       "reveal",
       "reveal-offset",
       "bordered",
-      "elevated"
+      "elevated",
+      "height-hint"
     ],
     "description": ""
   },
@@ -699,6 +704,7 @@
   },
   "q-linear-progress": {
     "attributes": [
+      "size",
       "value",
       "buffer",
       "color",
@@ -806,6 +812,7 @@
   "q-menu": {
     "attributes": [
       "target",
+      "no-parent-event",
       "context-menu",
       "content-class",
       "content-style",
@@ -815,10 +822,10 @@
       "anchor",
       "self",
       "offset",
-      "no-parent-event",
       "touch-position",
       "persistent",
       "auto-close",
+      "separate-close-popup",
       "square",
       "no-refocus",
       "no-focus",
@@ -909,18 +916,29 @@
       "buttons",
       "label-set",
       "label-cancel",
-      "persistent",
       "color",
-      "content-class",
-      "content-style",
       "validate",
-      "disable"
+      "disable",
+      "fit",
+      "cover",
+      "anchor",
+      "self",
+      "offset",
+      "touch-position",
+      "persistent",
+      "separate-close-popup",
+      "square",
+      "max-height",
+      "max-width",
+      "content-class",
+      "content-style"
     ],
     "description": ""
   },
   "q-popup-proxy": {
     "attributes": [
       "target",
+      "no-parent-event",
       "context-menu",
       "value",
       "breakpoint"
@@ -958,12 +976,15 @@
       "max",
       "step",
       "drag-range",
-      "drag-range-only",
+      "drag-only-range",
       "color",
       "label",
       "label-color",
+      "label-text-color",
       "left-label-color",
+      "left-label-text-color",
       "right-label-color",
+      "right-label-text-color",
       "left-label-value",
       "right-label-value",
       "label-always",
@@ -979,11 +1000,12 @@
   },
   "q-rating": {
     "attributes": [
+      "size",
       "value",
       "max",
       "icon",
+      "icon-selected",
       "color",
-      "size",
       "no-reset",
       "readonly",
       "disable"
@@ -1002,6 +1024,11 @@
   },
   "q-select": {
     "attributes": [
+      "virtual-scroll-horizontal",
+      "virtual-scroll-slice-size",
+      "virtual-scroll-item-size",
+      "virtual-scroll-sticky-size-start",
+      "virtual-scroll-sticky-size-end",
       "error",
       "error-message",
       "no-error-icon",
@@ -1060,7 +1087,8 @@
       "emit-value",
       "input-debounce",
       "transition-show",
-      "transition-hide"
+      "transition-hide",
+      "behavior"
     ],
     "description": ""
   },
@@ -1090,6 +1118,7 @@
       "color",
       "label",
       "label-color",
+      "label-text-color",
       "label-value",
       "label-always",
       "markers",
@@ -1595,6 +1624,21 @@
   "q-video": {
     "attributes": [
       "src"
+    ],
+    "description": ""
+  },
+  "q-virtual-scroll": {
+    "attributes": [
+      "virtual-scroll-horizontal",
+      "virtual-scroll-slice-size",
+      "virtual-scroll-item-size",
+      "virtual-scroll-sticky-size-start",
+      "virtual-scroll-sticky-size-end",
+      "type",
+      "items",
+      "items-size",
+      "items-fn",
+      "scroll-target"
     ],
     "description": ""
   }

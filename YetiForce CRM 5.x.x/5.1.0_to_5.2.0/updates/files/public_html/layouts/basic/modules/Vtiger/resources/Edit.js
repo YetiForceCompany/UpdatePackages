@@ -980,11 +980,15 @@ $.Class(
 			sourcePickListElements.trigger('change');
 		},
 		registerLeavePageWithoutSubmit: function(form) {
-			if(typeof CKEDITOR !== 'undefined' && typeof CKEDITOR.instances !== 'undefined' && Object.keys(CKEDITOR.instances).length) {
+			if (
+				typeof CKEDITOR !== 'undefined' &&
+				typeof CKEDITOR.instances !== 'undefined' &&
+				Object.keys(CKEDITOR.instances).length
+			) {
 				CKEDITOR.on('instanceReady', function(e) {
 					let initialFormData = form.serialize();
 					window.onbeforeunload = function(e) {
-						if(initialFormData != form.serialize() && form.data('submit') != 'true') {
+						if (initialFormData != form.serialize() && form.data('submit') != 'true') {
 							return app.vtranslate('JS_CHANGES_WILL_BE_LOST');
 						}
 					};
@@ -992,7 +996,7 @@ $.Class(
 			} else {
 				let initialFormData = form.serialize();
 				window.onbeforeunload = function(e) {
-					if(initialFormData != form.serialize() && form.data('submit') != 'true') {
+					if (initialFormData != form.serialize() && form.data('submit') != 'true') {
 						return app.vtranslate('JS_CHANGES_WILL_BE_LOST');
 					}
 				};
@@ -1105,16 +1109,13 @@ $.Class(
 					let search = $(item);
 					let container = search.closest('.js-block-content');
 					let input = search.find('.js-autoload-address');
-					search.find('.js-select-operator').on('click', function(e) {
-						input.data('type', $(this).data('type'));
-					});
 					input.autocomplete({
 						source: function(request, response) {
 							AppConnector.request({
 								module: app.getModuleName(),
 								action: 'Fields',
 								mode: 'findAddress',
-								type: input.data('type'),
+								type: search.find('.js-select-operator').val(),
 								value: request.term
 							})
 								.done(function(requestData) {
@@ -1332,22 +1333,43 @@ $.Class(
 					thisInstance.checkSubProcessModulesList($(e.currentTarget));
 				});
 		},
-		registerFocusFirstField: function(container) {
+		registerFocusFirstField: function(container, afterTimeout) {
+			let elementToFocus, elementToFocusTabindex;
+			if (afterTimeout === undefined && container.closest('.js-modal-container').length) {
+				setTimeout(_ => {
+					this.registerFocusFirstField(container, true);
+				}, 500);
+				return;
+			}
 			container
-				.find('.fieldValue input.form-control:not([type=hidden],[type=checkbox],.dateField,.clockPicker)')
-				.each(function(n, e) {
+				.find(
+					'.fieldValue input.form-control:not([type=hidden],.dateField,.clockPicker), .fieldValue input[type=checkbox], .select2-selection.form-control'
+				)
+				.each(function(i, e) {
 					let element = $(e);
 					if (!element.prop('readonly') && !element.prop('disabled')) {
 						element = element.get(0);
-						if (element.type !== 'number') {
+						if (element.type !== 'number' && element.type !== 'checkbox' && element.value !== undefined) {
 							let elemLen = element.value.length;
 							element.selectionStart = elemLen;
 							element.selectionEnd = elemLen;
 						}
-						element.focus();
-						return false;
+						if (i === 0 || !elementToFocus) {
+							elementToFocus = element;
+						}
+						let tabindex = $(element).attr('tabindex');
+						if (tabindex > 0 && elementToFocusTabindex === undefined) {
+							elementToFocusTabindex = tabindex;
+							return;
+						}
+
+						if (tabindex > 0 && tabindex < elementToFocusTabindex) {
+							elementToFocusTabindex = tabindex;
+							elementToFocus = element;
+						}
 					}
 				});
+			elementToFocus.focus();
 		},
 		registerCopyValue: function(container) {
 			container.find('.fieldValue [data-copy-to-field]').on('change', function(e) {
@@ -1399,8 +1421,7 @@ $.Class(
 		},
 		registerEvents: function() {
 			var editViewForm = this.getForm();
-			var statusToProceed = this.proceedRegisterEvents();
-			if (!statusToProceed) {
+			if (!this.proceedRegisterEvents()) {
 				return;
 			}
 			this.registerInventoryController(editViewForm);
@@ -1415,6 +1436,7 @@ $.Class(
 			this.registerValidationsFields(editViewForm);
 			this.registerReferenceCreate(editViewForm);
 			this.registerAutoloadAddress();
+			editViewForm.find('.js-form-submit-btn').prop('disabled', false);
 			//this.triggerDisplayTypeEvent();
 		}
 	}

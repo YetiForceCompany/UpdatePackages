@@ -30,7 +30,7 @@ class Donations extends \App\YetiForce\Shop\AbstractBaseProduct
 	 */
 	public function getPrice(): int
 	{
-		return 5;
+		return \App\User::getNumberOfUsers();
 	}
 
 	/**

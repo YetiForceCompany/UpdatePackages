@@ -1,5 +1,5 @@
 /*
- * Quasar Framework v1.0.5
+ * Quasar Framework v1.1.0
  * (c) 2016-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -304,6 +304,9 @@
   }
   .justify-xs-around {
     justify-content: space-around;
+  }
+  .justify-xs-evenly {
+    justify-content: space-evenly;
   }
   .items-xs-start {
     align-items: flex-start;
@@ -1035,6 +1038,9 @@
   }
   .justify-sm-around {
     justify-content: space-around;
+  }
+  .justify-sm-evenly {
+    justify-content: space-evenly;
   }
   .items-sm-start {
     align-items: flex-start;
@@ -1909,6 +1915,9 @@
   }
   .justify-md-around {
     justify-content: space-around;
+  }
+  .justify-md-evenly {
+    justify-content: space-evenly;
   }
   .items-md-start {
     align-items: flex-start;
@@ -2926,6 +2935,9 @@
   }
   .justify-lg-around {
     justify-content: space-around;
+  }
+  .justify-lg-evenly {
+    justify-content: space-evenly;
   }
   .items-lg-start {
     align-items: flex-start;
@@ -4086,6 +4098,9 @@
   }
   .justify-xl-around {
     justify-content: space-around;
+  }
+  .justify-xl-evenly {
+    justify-content: space-evenly;
   }
   .items-xl-start {
     align-items: flex-start;

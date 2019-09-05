@@ -91,11 +91,15 @@ export default (function (o, c, d) {
     return fromTo(input, withoutSuffix, this);
   };
 
+  var makeNow = function makeNow(thisDay) {
+    return thisDay.$u ? d.utc() : d();
+  };
+
   proto.toNow = function (withoutSuffix) {
-    return this.to(d(), withoutSuffix);
+    return this.to(makeNow(this), withoutSuffix);
   };
 
   proto.fromNow = function (withoutSuffix) {
-    return this.from(d(), withoutSuffix);
+    return this.from(makeNow(this), withoutSuffix);
   };
 });

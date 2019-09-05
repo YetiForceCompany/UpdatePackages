@@ -80,7 +80,7 @@ window.App.Fields = {
 		 * @param {boolean} registerForAddon
 		 * @param {object} customParams
 		 */
-		register(parentElement, registerForAddon, customParams, clasName = 'dateField') {
+		register(parentElement, registerForAddon, customParams, className = 'dateField') {
 			if (typeof parentElement === 'undefined') {
 				parentElement = $('body');
 			} else {
@@ -89,8 +89,8 @@ window.App.Fields = {
 			if (typeof registerForAddon === 'undefined') {
 				registerForAddon = true;
 			}
-			let elements = $('.' + clasName, parentElement);
-			if (parentElement.hasClass(clasName)) {
+			let elements = $('.' + className, parentElement);
+			if (parentElement.hasClass(className)) {
 				elements = parentElement;
 			}
 			if (elements.length === 0) {
@@ -103,7 +103,7 @@ window.App.Fields = {
 					// which is stopping from getting focus to input element
 					$(e.currentTarget)
 						.closest('.date')
-						.find('input.' + clasName)
+						.find('input.' + className)
 						.get(0)
 						.focus();
 				});
@@ -134,15 +134,22 @@ window.App.Fields = {
 				weekStart: CONFIG.firstDayOfWeekNo,
 				autoclose: true,
 				todayHighlight: true,
-				format: format,
-				enableOnReadonly: false
+				format: format
 			};
 			if (typeof customParams !== 'undefined') {
 				params = $.extend(params, customParams);
 			}
 			elements.each((index, element) => {
-				$(element).datepicker($.extend(true, params, $(element).data('params')));
+				$(element).datepicker(
+					$.extend(
+						true,
+						Object.assign(params, { enableOnReadonly: !element.hasAttribute('readonly') }),
+						$(element).data('params')
+					)
+				);
 			});
+			App.Fields.Utils.hideMobileKeyboard(elements);
+			return elements;
 		},
 
 		/**
@@ -229,9 +236,9 @@ window.App.Fields = {
 						.focus();
 				});
 			elements.each((index, element) => {
-				let currentParams = $.extend(true, params, $(element).data('params'));
-				$(element)
-					.daterangepicker(currentParams)
+				let el = $(element);
+				let currentParams = $.extend(true, params, el.data('params'));
+				el.daterangepicker(currentParams)
 					.on('apply.daterangepicker', function(ev, picker) {
 						$(this).val(
 							picker.startDate.format(currentParams.locale.format) +
@@ -245,7 +252,12 @@ window.App.Fields = {
 					})
 					.on('showCalendar.daterangepicker', (ev, picker) => {
 						this.positionPicker(ev, picker);
+						picker.container.addClass('js-visible');
+					})
+					.on('hide.daterangepicker', (ev, picker) => {
+						picker.container.removeClass('js-visible');
 					});
+				App.Fields.Utils.registerMobileDateRangePicker(el);
 			});
 		},
 		positionPicker(ev, picker) {
@@ -342,6 +354,9 @@ window.App.Fields = {
 				} else {
 					$(this).val(picker.startDate.format(format) + ',' + picker.endDate.format(format));
 				}
+			});
+			elements.each((index, element) => {
+				App.Fields.Utils.registerMobileDateRangePicker($(element));
 			});
 		}
 	},
@@ -504,7 +519,7 @@ window.App.Fields = {
 						}
 					},
 					extraPlugins:
-						'colorbutton,pagebreak,colordialog,find,selectall,showblocks,div,print,font,justify,bidi,ckeditor-image-to-base64',
+						'colorbutton,pagebreak,colordialog,find,selectall,showblocks,div,print,font,justify,bidi,ckeditor-image-to-base',
 					toolbar: 'Full',
 					toolbar_Full: [
 						{
@@ -515,7 +530,7 @@ window.App.Fields = {
 						{ name: 'links', items: ['Link', 'Unlink'] },
 						{
 							name: 'insert',
-							items: ['ckeditor-image-to-base64', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
+							items: ['ckeditor-image-to-base', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
 						},
 						{ name: 'tools', items: ['Maximize', 'ShowBlocks'] },
 						{ name: 'paragraph', items: ['Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv'] },
@@ -774,9 +789,7 @@ window.App.Fields = {
 								<span class="${icon}"></span>
 							</div>`;
 				if (params.image !== undefined && params.image !== '') {
-					avatar = `<div class="c-img__completion__container"><img src="${
-						params.image
-					}" class="c-img__completion mr-2" alt=${params.label}" title="${params.label}"></div>`;
+					avatar = `<div class="c-img__completion__container"><img src="${params.image}" class="c-img__completion mr-2" alt=${params.label}" title="${params.label}"></div>`;
 				}
 				return `<div data-id="${params.id}" class="row no-gutters">
 							${avatar}
@@ -1042,6 +1055,7 @@ window.App.Fields = {
 					ajax: {},
 					dataAdapter: CustomData
 				});
+				selectElement.removeClass('js-lazy-select');
 				this.showSelect2ElementView(selectElement, params.selectParams);
 			});
 		},
@@ -1057,6 +1071,16 @@ window.App.Fields = {
 			if ($(selectElement).length > 1) {
 				return $(selectElement).each((index, element) => {
 					this.showSelect2ElementView($(element).eq(0), params);
+				});
+			}
+			if (selectElement.hasClass('js-lazy-select')) {
+				let items = $.map(selectElement.data('fieldinfo').picklistvalues, function(val, key) {
+					return { id: key, text: val };
+				});
+				return App.Fields.Picklist.showLazySelect(selectElement, {
+					lazyElements: 50,
+					data: items,
+					selectParams: params
 				});
 			}
 			params = this.registerParams(selectElement, params);
@@ -2179,6 +2203,25 @@ window.App.Fields = {
 				let price = this.getField().getNumberFromValue() * parentElem.find('.js-conversion-rate').getNumberFromValue();
 				$('.js-converted-price', parentElem).val(App.Fields.Double.formatToDisplay(price));
 			});
+		}
+	},
+	Utils: {
+		registerMobileDateRangePicker(element) {
+			this.hideMobileKeyboard(element);
+			if ($(window).width() < app.breakpoints.sm) {
+				element
+					.on('showCalendar.daterangepicker', (ev, picker) => {
+						picker.container.addClass('js-visible');
+					})
+					.on('hide.daterangepicker', (ev, picker) => {
+						picker.container.removeClass('js-visible');
+					});
+			}
+		},
+		hideMobileKeyboard(element) {
+			if ($(window).width() < app.breakpoints.sm) {
+				element.attr('readonly', 'true').addClass('bg-white');
+			}
 		}
 	}
 };

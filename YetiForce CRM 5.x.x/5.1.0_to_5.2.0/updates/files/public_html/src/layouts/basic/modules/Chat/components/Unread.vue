@@ -7,15 +7,15 @@
           {{ translate(`JS_CHAT_ROOM_${roomType.toUpperCase()}`) }}
         </div>
         <div v-for="(room, roomName) in rooms" :key="roomName">
-          <div class="text-info full-width flex">
+          <a @click="showChatRoom(room[0].recordid, roomType)" class="text-info full-width flex" href="#">
             {{ roomName }}
-          </div>
+          </a>
           <q-chat-message
             v-for="message in room"
             :key="message.id"
             :name="message.user_name"
             :stamp="message.created"
-            :avatar="message.img"
+            :avatar="message.image"
             :text="[message.messages]"
             :bg-color="message.color"
             size="8"
@@ -30,7 +30,7 @@
 <script>
 import NoResults from 'components/NoResults.vue'
 import { createNamespacedHelpers } from 'vuex'
-const { mapActions } = createNamespacedHelpers('Chat')
+const { mapActions, mapMutations } = createNamespacedHelpers('Chat')
 
 export default {
   name: 'Unread',
@@ -79,7 +79,16 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['fetchUnread'])
+    ...mapActions(['fetchUnread', 'fetchRoom']),
+    ...mapMutations(['setTab']),
+    showChatRoom(recordid, roomType) {
+      this.fetchRoom({
+        id: recordid,
+        roomType: roomType
+      }).then(_ => {
+        this.setTab('chat')
+      })
+    }
   },
   mounted() {
     this.fetchUnread().then(result => {

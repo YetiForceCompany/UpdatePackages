@@ -7,6 +7,7 @@
       native
       :title="translate('JS_CHAT_PICK_EMOJI')"
       emoji="point_up"
+      :data="emojiIndex"
       :i18n="emojiTranslations"
       :style="{ position: 'absolute', bottom: containerHeight }"
     />
@@ -26,9 +27,9 @@
     </div>
     <q-separator class="q-my-xs" />
     <div class="d-flex flex-nowrap">
-      <div class="o-chat__message-block">
+      <div class="full-width">
         <div
-          class="u-font-size-13px js-completions o-chat__form-control full-height"
+          class="u-font-size-13px js-completions full-height u-outline-none"
           contenteditable="true"
           data-completions-buttons="true"
           :placeholder="translate('JS_CHAT_MESSAGE')"
@@ -46,18 +47,21 @@
 </template>
 <script>
 import Emoji from 'emoji-mart-vue-fast'
+import data from '~/node_modules/emoji-mart-vue-fast/data/all'
 import { createNamespacedHelpers } from 'vuex'
 const Picker = Emoji.Picker
+const EmojiIndex = Emoji.EmojiIndex
 const { mapGetters, mapActions } = createNamespacedHelpers('Chat')
+let emojiIndex = new EmojiIndex(data)
 export default {
   name: 'ChatMessages',
-	components: { Picker },
-	props: {
+  components: { Picker },
+  props: {
     roomData: {
       type: Object,
       required: true
     }
-	},
+  },
   data() {
     return {
       sending: false,
@@ -78,7 +82,8 @@ export default {
           flags: this.translate('JS_EMOJI_FLAGS'),
           custom: this.translate('JS_EMOJI_CUSTOM')
         }
-      }
+      },
+      emojiIndex: emojiIndex
     }
   },
   computed: {
@@ -95,10 +100,10 @@ export default {
       if (this.$refs.input.innerText.length < this.config.maxLengthMessage) {
         this.sending = true
         this.sendMessage({
-					text: this.$refs.input.innerHTML,
-					roomType: this.roomData.roomType,
-					recordId: this.roomData.recordid
-				}).then(e => {
+          text: this.$refs.input.innerHTML,
+          roomType: this.roomData.roomType,
+          recordId: this.roomData.recordid
+        }).then(e => {
           this.$refs.input.innerText = ''
           this.sending = false
           this.$emit('onSended')

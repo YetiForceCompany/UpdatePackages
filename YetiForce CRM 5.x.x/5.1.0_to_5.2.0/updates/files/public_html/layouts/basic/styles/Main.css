@@ -13124,6 +13124,22 @@ a.text-dark:hover, a.text-dark:focus {
     background-image: url(../../../libraries/flag-icon-css/flags//1x1/xk.svg); }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+@media (max-width: 767.98px) {
+  .daterangepicker.show-calendar.js-visible {
+    display: flex;
+    height: calc(100vh - 3.125rem) !important;
+    width: 100vw !important;
+    top: 3.125rem !important;
+    left: 0 !important;
+    position: fixed;
+    overflow: scroll;
+    -webkit-overflow-scrolling: touch;
+    z-index: 9999999999999999999999 !important; }
+    .daterangepicker.show-calendar.js-visible .drp-buttons {
+      position: fixed;
+      text-align: center;
+      width: 100%;
+      bottom: 16px; } }
 .select2-selection {
   padding-top: 0.2rem; }
   .select2-selection .o-filter-actions {
@@ -13229,6 +13245,17 @@ header .c-header__btn__container .select2-selection {
 .conditionRow .select2-container--bootstrap4 {
   display: inline-block;
   vertical-align: middle; }
+
+.select2-container--bootstrap .select2-selection--multiple .select2-selection__choice + .select2-search--inline .select2-search__field {
+  min-width: 0;
+  padding: 0; }
+
+.select2-container--open .select2-selection {
+  border-color: #5bb1ff !important; }
+.select2-container--open.select2-container--below .select2-selection {
+  border-bottom-right-radius: 0 !important; }
+.select2-container--open.select2-container--above .select2-selection {
+  border-top-right-radius: 0 !important; }
 
 .leaflet-popup-content {
   width: 62px; }
@@ -14760,10 +14787,6 @@ textarea {
 .highlightBackgroundColor {
   background: #eeeff2 !important; }
 
-.contentsBackground {
-  background: #fff;
-  border: 1px solid #ddd; }
-
 .alignMiddle,
 .tableMiddle td,
 .tableMiddle th {
@@ -16290,6 +16313,9 @@ ul.tweets li {
 .u-font-size-50px {
   font-size: 3.125rem; }
 
+.u-font-size-120px {
+  font-size: 7.5rem; }
+
 .u-font-weight-50 {
   font-weight: 50 !important; }
 
@@ -17126,6 +17152,9 @@ ul.tweets li {
 .u-w-max-320px {
   max-width: 20rem !important; }
 
+.u-w-max-430px {
+  max-width: 26.875rem !important; }
+
 .u-w-max-500px {
   max-width: 31.25rem !important; }
 
@@ -17232,6 +17261,9 @@ ul.tweets li {
 @media only screen and (max-width: 575px) {
   .u-border-bottom-0-sm {
     border-bottom: none !important; } }
+.u-outline-none {
+  outline: none; }
+
 .u-bg-twilight, .select2-selection__rendered[title="Twilight"] {
   background-color: #404952 !important;
   color: #fff; }
@@ -17242,6 +17274,9 @@ ul.tweets li {
 .u-bg-gray {
   background-color: #d1d1db !important;
   color: #000 !important; }
+
+.u-text-gray {
+  color: #d1d1db !important; }
 
 .u-rotate-90 {
   transform: rotate(0.75turn);
@@ -17773,6 +17808,10 @@ ul.tweets li {
 .text-navy {
   color: #202c40 !important; }
 
+.u-img-invert {
+  filter: invert(100%);
+  -webkit-filter: invert(100%); }
+
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .basePanel,
 .bodyContents,
@@ -18200,6 +18239,19 @@ input[type="checkbox"][disabled] {
     padding: 0 20px;
     background-color: inherit; }
 
+.c-mds-input .input-group-append,
+.c-mds-input .input-group-prepend {
+  border-bottom: 1px solid #ced4da; }
+.c-mds-input .form-control {
+  border-radius: 0px !important;
+  border-top: 0px !important;
+  border-left: 0px !important;
+  border-right: 0px !important; }
+  .c-mds-input .form-control:focus {
+    box-shadow: none; }
+    .c-mds-input .form-control:focus + .input-group-append, .c-mds-input .form-control:focus ~ .input-group-append, .c-mds-input .form-control:focus + .input-group-prepend, .c-mds-input .form-control:focus ~ .input-group-prepend {
+      border-color: #5bb1ff !important; }
+
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
 .btn-default {
   color: #212529;
@@ -18336,7 +18388,7 @@ input[type="checkbox"][disabled] {
   border-color: #dee2e6; }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
-input[type=checkbox] {
+input[type="checkbox"] {
   border: 1px solid rgba(0, 0, 0, 0.54);
   width: 17px;
   transition: 0.25s;
@@ -18348,9 +18400,9 @@ input[type=checkbox] {
   border-radius: 3px;
   border-color: #d7d7d7; }
 
-input[type=checkbox]:checked::after,
-.checkbox input[type=checkbox]:checked::after,
-.checkbox-inline input[type=checkbox]:checked::after {
+input[type="checkbox"]:checked::after,
+.checkbox input[type="checkbox"]:checked::after,
+.checkbox-inline input[type="checkbox"]:checked::after {
   box-sizing: border-box;
   -webkit-transform: rotate(45deg);
   transform: rotate(45deg);
@@ -18365,20 +18417,20 @@ input[type=checkbox]:checked::after,
   border-style: solid;
   border-top: 0;
   border-left: 0;
-  content: ''; }
+  content: ""; }
 
-input[type=checkbox]:checked {
+input[type="checkbox"]:checked {
   background-color: #4a5364;
   border-color: #384150; }
 
-.bootstrap-switch input[type='radio'], .bootstrap-switch input[type='checkbox'] {
+.bootstrap-switch input[type="radio"],
+.bootstrap-switch input[type="checkbox"] {
   opacity: 0 !important; }
 
-input[type=checkbox]:checked:disabled {
+input[type="checkbox"]:checked:disabled {
   opacity: 0.35; }
 
-input[type=checkbox]:focus {
-  outline: none;
+input[type="checkbox"]:focus {
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.075), 0 0 2px #384150; }
 
 input[type="radio"] {
@@ -18402,7 +18454,7 @@ input[type="radio"]:checked:disabled {
 
 input[type="radio"]:before {
   margin: 6px 0 0 6px;
-  content: '';
+  content: "";
   display: block;
   height: 0;
   width: 0;
@@ -18471,28 +18523,31 @@ input[type="radio"]:checked:before {
   width: 100%;
   overflow-x: hidden; }
 
+.o-vtiger-index-container .mainBody {
+  background-color: #f3f3f3; }
+
 .c-btn-fixed {
   bottom: 2rem; }
 
-.basePanel[class$="_KnowledgeBase"] .contentsDiv {
+.container-fluid[class$='-knowledgebase-container'] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 2rem); }
 
 .user-info--active .mainBody,
 .user-info--active .c-btn-fixed {
   bottom: calc(2rem + 1rem); }
-.user-info--active .basePanel[class$="_KnowledgeBase"] .contentsDiv {
+.user-info--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
   min-height: calc(100vh - 3.125rem - calc(2rem + 1rem)); }
 
 .limited-footer--active .mainBody,
 .limited-footer--active .c-btn-fixed {
   bottom: 1rem; }
-.limited-footer--active .basePanel[class$="_KnowledgeBase"] .contentsDiv {
+.limited-footer--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 1rem); }
 
 .user-info--active.limited-footer--active .mainBody,
 .user-info--active.limited-footer--active .c-btn-fixed {
   bottom: 2rem; }
-.user-info--active.limited-footer--active .basePanel[class$="_KnowledgeBase"] .contentsDiv {
+.user-info--active.limited-footer--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 2rem); }
 
 @media (max-width: 767.98px) {
@@ -18500,12 +18555,12 @@ input[type="radio"]:checked:before {
   .c-btn-fixed {
     bottom: 1rem; }
 
-  .basePanel[class$="_KnowledgeBase"] .contentsDiv {
+  .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
     min-height: calc(100vh - 3.125rem - 1rem); }
 
   .user-info--active .mainBody {
     bottom: 2rem; }
-  .user-info--active .basePanel[class$="_KnowledgeBase"] .contentsDiv {
+  .user-info--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
     min-height: calc(100vh - 3.125rem - 2rem); } }
 .massEditTable th + th,
 .massEditTable td + td,
@@ -19422,12 +19477,12 @@ body > .o-exception-fixed-block {
     padding-right: 1rem !important; } }
 
 @media (min-width: 992px) {
-  .basePanel[class*="_Calendar"] .mainBody {
+  .container-fluid[class*='-calendar-container'] .mainBody {
     overflow: hidden; } }
 .hideToggleSiteBarRightButton {
   right: 0 !important; }
 
-.basePanel:not(.Calendar_CalendarExtended) .toggleSiteBarRightButton {
+.container-fluid:not(.o-calendar-calendarextended-container) .basePanel .toggleSiteBarRightButton {
   background: #f8f9fa;
   font-weight: bold;
   padding: 15px 0 !important;
@@ -20677,14 +20732,21 @@ td.fieldValue input, td.fieldValue .input-group {
   display: inline-block; }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
-.o-small-product__container {
-  min-height: 8.125rem; }
-.o-small-product__img {
-  max-width: 30%;
-  min-width: 5rem; }
+.o-small-product {
+  height: 100%;
+  cursor: pointer; }
+  .o-small-product__container {
+    min-height: 8.125rem;
+    height: 100%; }
+  .o-small-product__img {
+    max-width: 30%;
+    min-width: 5rem; }
+  .o-small-product__partner-img img {
+    max-width: 57%;
+    min-width: 5rem; }
 
 .o-buy-modal__img {
-  max-height: 13.75rem; }
+  max-height: 11.25rem; }
 
 .o-shop__nav__item {
   display: flex;

@@ -115,6 +115,7 @@ const map = {
   "QUploaderAddTrigger": "src/components/uploader/QUploaderAddTrigger.js",
   "QUploaderBase": "src/components/uploader/QUploaderBase.js",
   "QVideo": "src/components/video/QVideo.js",
+  "QVirtualScroll": "src/components/virtual-scroll/QVirtualScroll.js",
   "ClosePopup": "src/directives/ClosePopup.js",
   "GoBack": "src/directives/GoBack.js",
   "Ripple": "src/directives/Ripple.js",

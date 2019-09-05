@@ -80,6 +80,10 @@
               "examples": [
                 "my-class"
               ]
+            },
+            "ignoreDefaults": {
+              "type": "Boolean",
+              "desc": "Ignore the default configuration (set by setDefaults()) for this instance only"
             }
           }
         }

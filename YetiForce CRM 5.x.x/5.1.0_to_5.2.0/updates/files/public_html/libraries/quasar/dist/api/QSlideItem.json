@@ -91,5 +91,10 @@
         }
       }
     }
+  },
+  "methods": {
+    "reset": {
+      "desc": "Reset to initial state (not swiped to left or right side)"
+    }
   }
 }

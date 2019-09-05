@@ -87,19 +87,26 @@ class Shop
 	/**
 	 * Get variable payments.
 	 *
+	 * @param bool $isCustom
+	 *
 	 * @return array
 	 */
-	public static function getVariablePayments(): array
+	public static function getVariablePayments($isCustom = false): array
 	{
-		return [
+		$crmData = [];
+		if (!$isCustom) {
+			$crmData = [
+				'return' => \Config\Main::$site_URL . 'index.php?module=YetiForce&parent=Settings&view=Shop&status=success',
+				'cancel_return' => \Config\Main::$site_URL . 'index.php?module=YetiForce&parent=Settings&view=Shop&status=fail',
+				'custom' => \App\YetiForce\Register::getInstanceKey() . '|' . \App\YetiForce\Register::getCrmKey()
+			];
+		}
+		return array_merge([
 			'business' => 'paypal-facilitator@yetiforce.com',
 			'rm' => 2,
-			'return' => \Config\Main::$site_URL . 'index.php?module=YetiForce&parent=Settings&view=Shop&status=success',
-			'cancel_return' => \Config\Main::$site_URL . 'index.php?module=YetiForce&parent=Settings&view=Shop&status=fail',
 			'notify_url' => 'https://api.yetiforce.com/shop',
 			'image_url' => 'https://public.yetiforce.com/shop/logo.png',
-			'custom' => \App\YetiForce\Register::getInstanceKey() . '|' . \App\YetiForce\Register::getCrmKey(),
-		];
+		], $crmData);
 	}
 
 	/**
@@ -115,7 +122,7 @@ class Shop
 		if (\is_dir(ROOT_DIRECTORY . '/app_data/shop/') && \file_exists(ROOT_DIRECTORY . "/app_data/shop/{$name}.php")) {
 			$config = require ROOT_DIRECTORY . "/app_data/shop/{$name}.php";
 		}
-		return \App\YetiForce\Register::getProducts()[$name] ?? $config;
+		return \App\YetiForce\Register::getProducts($name) ?? $config;
 	}
 
 	/**
@@ -137,7 +144,7 @@ class Shop
 		if ($productDetails) {
 			$status = self::verifyProductKey($productDetails['key']);
 			if ($status) {
-				$status = strtotime('now') < strtotime($productDetails['date']);
+				$status = strtotime(date('Y-m-d')) <= strtotime($productDetails['date']);
 			}
 			if ($status) {
 				$status = \App\Company::getSize() === $productDetails['package'];
