@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 24f1938e6fb41d0ca965012d920ffd98c4b0bee1
+// last check: 7fb498e44be26b17ba150584fd4da6330e075cec
 /**
  * YetiForceUpdate Class.
  */
@@ -798,9 +798,9 @@ class YetiForceUpdate
 					$dataReader = (new \App\Db\Query())->select(['currency_id', $index])->from($tableName)->createCommand()->query();
 					while ($row = $dataReader->read()) {
 						$currencyData = [];
-						$dataReaderRel = (new \App\Db\Query())->select(['currency_id', 'actual_price'])->from('vtiger_productcurrencyrel')->where(['productid' => $row[$index]])->createCommand()->query();
+						$dataReaderRel = (new \App\Db\Query())->select(['currencyid', 'actual_price'])->from('vtiger_productcurrencyrel')->where(['productid' => $row[$index]])->createCommand()->query();
 						while ($rowRel = $dataReaderRel->read()) {
-							$currencyData['currencies'][(int) $rowRel['currency_id']]['price'] = $rowRel['actual_price'];
+							$currencyData['currencies'][(int) $rowRel['currencyid']]['price'] = $rowRel['actual_price'];
 						}
 						if ($currencyData) {
 							$currencyData['currencyId'] = (int) $row['currency_id'];
@@ -846,6 +846,7 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
 		if (!($fieldModel = $moduleModel->getFieldByName($fieldName))) {
+			$this->log("[ERROR] field not exists {$moduleName}:{$fieldName}");
 			return false;
 		}
 		$db = \App\Db::getInstance();
@@ -904,6 +905,8 @@ class YetiForceUpdate
 				foreach ($dataUpdate as $name => $data) {
 					$dbCommand->update($tableName, $data, [$fieldName => $name])->execute();
 				}
+				$dbCommand->delete('u_yf_picklist_close_state', ['<>', 'fieldid', $fieldModel->getId()])->execute();
+				\App\Cache::delete('getLockStatus', $moduleModel->getId());
 			}
 			$transaction->commit();
 		} catch (\Throwable $ex) {

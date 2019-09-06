@@ -8,7 +8,9 @@ function initPasteEvent(editorInstance) {
   }
 
   editorInstance.on('contentDom', function() {
-    var editableElement = editorInstance.editable ? editorInstance.editable() : editorInstance.document;
+    var editableElement = editorInstance.editable
+      ? editorInstance.editable()
+      : editorInstance.document;
     editableElement.on('paste', onPaste, null, { editor: editorInstance });
   });
 }
@@ -52,20 +54,23 @@ function readImageAsBase64(item, editor) {
   reader.readAsDataURL(file);
 }
 
-CKEDITOR.plugins.add('ckeditor-image-to-base64', {
+CKEDITOR.plugins.add('ckeditor-image-to-base', {
   requires: 'dialog',
-  icons: 'ckeditor-image-to-base64',
+  icons: 'ckeditor-image-to-base',
   hidpi: true,
   init: function(editorInstance) {
     initPasteEvent(editorInstance);
-    var pluginName = 'ckeditor-image-to-base64-dialog';
-    editorInstance.ui.addToolbarGroup('ckeditor-image-to-base64', 'insert');
-    editorInstance.ui.addButton('ckeditor-image-to-base64', {
+    var pluginName = 'ckeditor-image-to-base-dialog';
+    editorInstance.ui.addToolbarGroup('ckeditor-image-to-base', 'insert');
+    editorInstance.ui.addButton('ckeditor-image-to-base', {
       label: editorInstance.lang.common.image,
       command: pluginName,
       toolbar: 'insert'
     });
-    CKEDITOR.dialog.add(pluginName, this.path + 'dialogs/ckeditor-image-to-base64.js');
+    CKEDITOR.dialog.add(
+      pluginName,
+      this.path + 'dialogs/ckeditor-image-to-base.js'
+    );
     editorInstance.addCommand(
       pluginName,
       new CKEDITOR.dialogCommand(pluginName, {
@@ -79,7 +84,11 @@ CKEDITOR.plugins.add('ckeditor-image-to-base64', {
       })
     );
     editorInstance.on('doubleclick', function(evt) {
-      if (evt.data.element && !evt.data.element.isReadOnly() && evt.data.element.getName() === 'img') {
+      if (
+        evt.data.element &&
+        !evt.data.element.isReadOnly() &&
+        evt.data.element.getName() === 'img'
+      ) {
         evt.data.dialog = pluginName;
         editorInstance.getSelection().selectElement(evt.data.element);
       }
@@ -88,7 +97,7 @@ CKEDITOR.plugins.add('ckeditor-image-to-base64', {
       editorInstance.addMenuGroup('imageToBase64Group');
       editorInstance.addMenuItem('imageToBase64Item', {
         label: editorInstance.lang.common.image,
-        icon: this.path + 'icons/ckeditor-image-to-base64.png',
+        icon: this.path + 'icons/ckeditor-image-to-base.png',
         command: pluginName,
         group: 'imageToBase64Group'
       });

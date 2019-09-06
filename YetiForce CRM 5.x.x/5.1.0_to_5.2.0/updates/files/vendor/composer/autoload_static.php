@@ -86,31 +86,31 @@ class ComposerStaticInitYT
     );
 
     public static $prefixLengthsPsr4 = array (
-        'y' =>
+        'y' => 
         array (
             'yii\\' => 4,
         ),
-        'v' =>
+        'v' => 
         array (
             'vtlib\\' => 6,
         ),
-        'l' =>
+        'l' => 
         array (
             'libphonenumber\\' => 15,
         ),
-        'i' =>
+        'i' => 
         array (
             'includes\\' => 9,
         ),
-        'Y' =>
+        'Y' => 
         array (
             'YetiForcePDF\\' => 13,
         ),
-        'T' =>
+        'T' => 
         array (
             'Tests\\' => 6,
         ),
-        'S' =>
+        'S' => 
         array (
             'Symfony\\Polyfill\\Php72\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
@@ -128,12 +128,12 @@ class ComposerStaticInitYT
             'Sabre\\CardDAV\\' => 14,
             'Sabre\\CalDAV\\' => 13,
         ),
-        'R' =>
+        'R' => 
         array (
             'Recurr\\Test\\' => 12,
             'Recurr\\' => 7,
         ),
-        'P' =>
+        'P' => 
         array (
             'Psr\\SimpleCache\\' => 16,
             'Psr\\Log\\' => 8,
@@ -144,16 +144,16 @@ class ComposerStaticInitYT
             'ParseCsv\\' => 9,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
-        'M' =>
+        'M' => 
         array (
             'Matrix\\' => 7,
         ),
-        'I' =>
+        'I' => 
         array (
             'Illuminate\\Support\\' => 19,
             'Illuminate\\Contracts\\' => 21,
         ),
-        'G' =>
+        'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
@@ -161,21 +161,21 @@ class ComposerStaticInitYT
             'Google\\Authenticator\\' => 21,
             'Giggsey\\Locale\\' => 15,
         ),
-        'F' =>
+        'F' => 
         array (
             'FontLib\\' => 8,
         ),
-        'E' =>
+        'E' => 
         array (
             'Exception\\' => 10,
         ),
-        'D' =>
+        'D' => 
         array (
             'Doctrine\\Common\\Inflector\\' => 26,
             'Doctrine\\Common\\Collections\\' => 28,
             'DebugBar\\' => 9,
         ),
-        'C' =>
+        'C' => 
         array (
             'CsrfMagic\\' => 10,
             'Cron\\' => 5,
@@ -184,7 +184,7 @@ class ComposerStaticInitYT
             'Complex\\' => 8,
             'Carbon\\' => 7,
         ),
-        'A' =>
+        'A' => 
         array (
             'App\\' => 4,
             'Api\\' => 4,
@@ -193,245 +193,245 @@ class ComposerStaticInitYT
     );
 
     public static $prefixDirsPsr4 = array (
-        'yii\\' =>
+        'yii\\' => 
         array (
             0 => __DIR__ . '/..' . '/yetiforce/yii2',
         ),
-        'vtlib\\' =>
+        'vtlib\\' => 
         array (
             0 => __DIR__ . '/../..' . '/vtlib/Vtiger',
         ),
-        'libphonenumber\\' =>
+        'libphonenumber\\' => 
         array (
             0 => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src',
         ),
-        'includes\\' =>
+        'includes\\' => 
         array (
             0 => __DIR__ . '/../..' . '/include',
         ),
-        'YetiForcePDF\\' =>
+        'YetiForcePDF\\' => 
         array (
             0 => __DIR__ . '/..' . '/yetiforce/yetiforcepdf/lib',
         ),
-        'Tests\\' =>
+        'Tests\\' => 
         array (
             0 => __DIR__ . '/../..' . '/tests',
         ),
-        'Symfony\\Polyfill\\Php72\\' =>
+        'Symfony\\Polyfill\\Php72\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php72',
         ),
-        'Symfony\\Polyfill\\Mbstring\\' =>
+        'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
         ),
-        'Symfony\\Contracts\\Translation\\' =>
+        'Symfony\\Contracts\\Translation\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/translation-contracts',
         ),
-        'Symfony\\Component\\VarDumper\\' =>
+        'Symfony\\Component\\VarDumper\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/var-dumper',
         ),
-        'Symfony\\Component\\Translation\\' =>
+        'Symfony\\Component\\Translation\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/translation',
         ),
-        'Sonata\\GoogleAuthenticator\\' =>
+        'Sonata\\GoogleAuthenticator\\' => 
         array (
             0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
         ),
-        'Sabre\\Xml\\' =>
+        'Sabre\\Xml\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/xml/lib',
         ),
-        'Sabre\\VObject\\' =>
+        'Sabre\\VObject\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/vobject/lib',
         ),
-        'Sabre\\Uri\\' =>
+        'Sabre\\Uri\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/uri/lib',
         ),
-        'Sabre\\HTTP\\' =>
+        'Sabre\\HTTP\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/http/lib',
         ),
-        'Sabre\\Event\\' =>
+        'Sabre\\Event\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/event/lib',
         ),
-        'Sabre\\DAV\\' =>
+        'Sabre\\DAV\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/dav/lib/DAV',
         ),
-        'Sabre\\DAVACL\\' =>
+        'Sabre\\DAVACL\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL',
         ),
-        'Sabre\\CardDAV\\' =>
+        'Sabre\\CardDAV\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/dav/lib/CardDAV',
         ),
-        'Sabre\\CalDAV\\' =>
+        'Sabre\\CalDAV\\' => 
         array (
             0 => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV',
         ),
-        'Recurr\\Test\\' =>
+        'Recurr\\Test\\' => 
         array (
             0 => __DIR__ . '/..' . '/simshaun/recurr/tests',
         ),
-        'Recurr\\' =>
+        'Recurr\\' => 
         array (
             0 => __DIR__ . '/..' . '/simshaun/recurr/src/Recurr',
         ),
-        'Psr\\SimpleCache\\' =>
+        'Psr\\SimpleCache\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/simple-cache/src',
         ),
-        'Psr\\Log\\' =>
+        'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
         ),
-        'Psr\\Http\\Message\\' =>
+        'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
-        'Psr\\Container\\' =>
+        'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
-        'PhpOffice\\PhpSpreadsheet\\' =>
+        'PhpOffice\\PhpSpreadsheet\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
         ),
-        'ParseCsv\\extensions\\' =>
+        'ParseCsv\\extensions\\' => 
         array (
             0 => __DIR__ . '/..' . '/parsecsv/php-parsecsv/src/extensions',
         ),
-        'ParseCsv\\' =>
+        'ParseCsv\\' => 
         array (
             0 => __DIR__ . '/..' . '/parsecsv/php-parsecsv/src',
         ),
-        'PHPMailer\\PHPMailer\\' =>
+        'PHPMailer\\PHPMailer\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
-        'Matrix\\' =>
+        'Matrix\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
         ),
-        'Illuminate\\Support\\' =>
+        'Illuminate\\Support\\' => 
         array (
             0 => __DIR__ . '/..' . '/illuminate/support',
         ),
-        'Illuminate\\Contracts\\' =>
+        'Illuminate\\Contracts\\' => 
         array (
             0 => __DIR__ . '/..' . '/illuminate/contracts',
         ),
-        'GuzzleHttp\\Psr7\\' =>
+        'GuzzleHttp\\Psr7\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
         ),
-        'GuzzleHttp\\Promise\\' =>
+        'GuzzleHttp\\Promise\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
         ),
-        'GuzzleHttp\\' =>
+        'GuzzleHttp\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
         ),
-        'Google\\Authenticator\\' =>
+        'Google\\Authenticator\\' => 
         array (
             0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
         ),
-        'Giggsey\\Locale\\' =>
+        'Giggsey\\Locale\\' => 
         array (
             0 => __DIR__ . '/..' . '/giggsey/locale/src',
         ),
-        'FontLib\\' =>
+        'FontLib\\' => 
         array (
             0 => __DIR__ . '/..' . '/phenx/php-font-lib/src/FontLib',
         ),
-        'Exception\\' =>
+        'Exception\\' => 
         array (
             0 => __DIR__ . '/../..' . '/include/exceptions',
         ),
-        'Doctrine\\Common\\Inflector\\' =>
+        'Doctrine\\Common\\Inflector\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/inflector/lib/Doctrine/Common/Inflector',
         ),
-        'Doctrine\\Common\\Collections\\' =>
+        'Doctrine\\Common\\Collections\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/collections/lib/Doctrine/Common/Collections',
         ),
-        'DebugBar\\' =>
+        'DebugBar\\' => 
         array (
             0 => __DIR__ . '/..' . '/yetiforce/debugbar/src/DebugBar',
         ),
-        'CsrfMagic\\' =>
+        'CsrfMagic\\' => 
         array (
             0 => __DIR__ . '/..' . '/yetiforce/csrf-magic/src',
         ),
-        'Cron\\' =>
+        'Cron\\' => 
         array (
             0 => __DIR__ . '/../..' . '/cron',
         ),
-        'Config\\' =>
+        'Config\\' => 
         array (
             0 => __DIR__ . '/../..' . '/config',
         ),
-        'Composer\\CaBundle\\' =>
+        'Composer\\CaBundle\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/ca-bundle/src',
         ),
-        'Complex\\' =>
+        'Complex\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
-        'Carbon\\' =>
+        'Carbon\\' => 
         array (
             0 => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon',
         ),
-        'App\\' =>
+        'App\\' => 
         array (
             0 => __DIR__ . '/../..' . '/app',
         ),
-        'Api\\' =>
+        'Api\\' => 
         array (
             0 => __DIR__ . '/../..' . '/api/webservice',
         ),
-        'Abraham\\TwitterOAuth\\' =>
+        'Abraham\\TwitterOAuth\\' => 
         array (
             0 => __DIR__ . '/..' . '/abraham/twitteroauth/src',
         ),
     );
 
     public static $prefixesPsr0 = array (
-        'S' =>
+        'S' => 
         array (
-            'Sabberworm\\CSS' =>
+            'Sabberworm\\CSS' => 
             array (
                 0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/lib',
             ),
         ),
-        'R' =>
+        'R' => 
         array (
-            'Requests' =>
+            'Requests' => 
             array (
                 0 => __DIR__ . '/..' . '/rmccue/requests/library',
             ),
         ),
-        'M' =>
+        'M' => 
         array (
-            'Milon\\Barcode' =>
+            'Milon\\Barcode' => 
             array (
                 0 => __DIR__ . '/..' . '/milon/barcode/src',
             ),
         ),
-        'H' =>
+        'H' => 
         array (
-            'HTMLPurifier' =>
+            'HTMLPurifier' => 
             array (
                 0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
             ),
@@ -865,55 +865,11 @@ class ComposerStaticInitYT
         'Complex\\Complex' => __DIR__ . '/..' . '/markbaker/complex/classes/src/Complex.php',
         'Complex\\Exception' => __DIR__ . '/..' . '/markbaker/complex/classes/src/Exception.php',
         'Composer\\CaBundle\\CaBundle' => __DIR__ . '/..' . '/composer/ca-bundle/src/CaBundle.php',
-        'Config\\Api' => __DIR__ . '/../..' . '/config/Api.php',
-        'Config\\Components\\AddressFinder' => __DIR__ . '/../..' . '/config/Components/AddressFinder.php',
-        'Config\\Components\\Backup' => __DIR__ . '/../..' . '/config/Components/Backup.php',
-        'Config\\Components\\Branding' => __DIR__ . '/../..' . '/config/Components/Branding.php',
-        'Config\\Components\\Dav' => __DIR__ . '/../..' . '/config/Components/Dav.php',
-        'Config\\Components\\Export' => __DIR__ . '/../..' . '/config/Components/Export.php',
-        'Config\\Components\\Magento' => __DIR__ . '/../..' . '/config/Components/Magento.php',
-        'Config\\Components\\Mail' => __DIR__ . '/../..' . '/config/Components/Mail.php',
-        'Config\\Components\\Social' => __DIR__ . '/../..' . '/config/Components/Social.php',
-        'Config\\Components\\YetiForce' => __DIR__ . '/../..' . '/config/Components/YetiForce.php',
         'Config\\Db' => __DIR__ . '/../..' . '/config/Db.php',
         'Config\\Debug' => __DIR__ . '/../..' . '/config/Debug.php',
-        'Config\\Developer' => __DIR__ . '/../..' . '/config/Developer.php',
         'Config\\Main' => __DIR__ . '/../..' . '/config/Main.php',
-        'Config\\Modules\\Accounts' => __DIR__ . '/../..' . '/config/Modules/Accounts.php',
-        'Config\\Modules\\Assets' => __DIR__ . '/../..' . '/config/Modules/Assets.php',
-        'Config\\Modules\\Calendar' => __DIR__ . '/../..' . '/config/Modules/Calendar.php',
-        'Config\\Modules\\Chat' => __DIR__ . '/../..' . '/config/Modules/Chat.php',
-        'Config\\Modules\\Competition' => __DIR__ . '/../..' . '/config/Modules/Competition.php',
-        'Config\\Modules\\Contacts' => __DIR__ . '/../..' . '/config/Modules/Contacts.php',
-        'Config\\Modules\\FInvoice' => __DIR__ . '/../..' . '/config/Modules/FInvoice.php',
-        'Config\\Modules\\Faq' => __DIR__ . '/../..' . '/config/Modules/Faq.php',
-        'Config\\Modules\\HelpDesk' => __DIR__ . '/../..' . '/config/Modules/HelpDesk.php',
-        'Config\\Modules\\Home' => __DIR__ . '/../..' . '/config/Modules/Home.php',
-        'Config\\Modules\\IStorages' => __DIR__ . '/../..' . '/config/Modules/IStorages.php',
-        'Config\\Modules\\Import' => __DIR__ . '/../..' . '/config/Modules/Import.php',
-        'Config\\Modules\\KnowledgeBase' => __DIR__ . '/../..' . '/config/Modules/KnowledgeBase.php',
-        'Config\\Modules\\Leads' => __DIR__ . '/../..' . '/config/Modules/Leads.php',
-        'Config\\Modules\\ModComments' => __DIR__ . '/../..' . '/config/Modules/ModComments.php',
-        'Config\\Modules\\ModTracker' => __DIR__ . '/../..' . '/config/Modules/ModTracker.php',
-        'Config\\Modules\\MultiCompany' => __DIR__ . '/../..' . '/config/Modules/MultiCompany.php',
-        'Config\\Modules\\Notification' => __DIR__ . '/../..' . '/config/Modules/Notification.php',
-        'Config\\Modules\\OSSMail' => __DIR__ . '/../..' . '/config/Modules/OSSMail.php',
-        'Config\\Modules\\OSSMailScanner' => __DIR__ . '/../..' . '/config/Modules/OSSMailScanner.php',
-        'Config\\Modules\\OSSSoldServices' => __DIR__ . '/../..' . '/config/Modules/OSSSoldServices.php',
-        'Config\\Modules\\OSSTimeControl' => __DIR__ . '/../..' . '/config/Modules/OSSTimeControl.php',
-        'Config\\Modules\\OpenStreetMap' => __DIR__ . '/../..' . '/config/Modules/OpenStreetMap.php',
-        'Config\\Modules\\Project' => __DIR__ . '/../..' . '/config/Modules/Project.php',
-        'Config\\Modules\\RecycleBin' => __DIR__ . '/../..' . '/config/Modules/RecycleBin.php',
-        'Config\\Modules\\Reservations' => __DIR__ . '/../..' . '/config/Modules/Reservations.php',
-        'Config\\Modules\\SQuotes' => __DIR__ . '/../..' . '/config/Modules/SQuotes.php',
-        'Config\\Modules\\SSalesProcesses' => __DIR__ . '/../..' . '/config/Modules/SSalesProcesses.php',
-        'Config\\Modules\\Users' => __DIR__ . '/../..' . '/config/Modules/Users.php',
         'Config\\Performance' => __DIR__ . '/../..' . '/config/Performance.php',
-        'Config\\Relation' => __DIR__ . '/../..' . '/config/Relation.php',
-        'Config\\Search' => __DIR__ . '/../..' . '/config/Search.php',
         'Config\\Security' => __DIR__ . '/../..' . '/config/Security.php',
-        'Config\\SecurityKeys' => __DIR__ . '/../..' . '/config/SecurityKeys.php',
-        'Config\\Sounds' => __DIR__ . '/../..' . '/config/Sounds.php',
         'CsrfMagic\\Csrf' => __DIR__ . '/..' . '/yetiforce/csrf-magic/src/Csrf.php',
         'DebugBar\\Bridge\\CacheCacheCollector' => __DIR__ . '/..' . '/yetiforce/debugbar/src/DebugBar/Bridge/CacheCacheCollector.php',
         'DebugBar\\Bridge\\DoctrineCollector' => __DIR__ . '/..' . '/yetiforce/debugbar/src/DebugBar/Bridge/DoctrineCollector.php',

@@ -2085,9 +2085,9 @@
         "authors": [
             {
                 "name": "Evert Pot",
-                "role": "Developer",
                 "email": "me@evertpot.com",
-                "homepage": "http://evertpot.com/"
+                "homepage": "http://evertpot.com/",
+                "role": "Developer"
             }
         ],
         "description": "Functions for making sense out of URIs.",
