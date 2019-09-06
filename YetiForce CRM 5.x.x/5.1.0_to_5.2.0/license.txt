@@ -8,4 +8,6 @@ Verify users' access in webservice configuration if you use webservices.
 Removed widgets: Delagated Events/To Dos, Delegated (overdue) Events/ToDos
 We modified Accounts, FAQ, Payments In, Services, Products, Invoices, Help Desk, Orders, Knowledge Base, and Service Contracts modules therefore we recommend verifying data, actions and conditions that use fields from these modules, such as filters or workflow actions.
 
+Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation
+
 After the update process finishes, please also update all the languages in your system.
