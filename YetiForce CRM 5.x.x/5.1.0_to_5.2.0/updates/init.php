@@ -842,11 +842,9 @@ class YetiForceUpdate
 		$dbCommand->update('s_yf_address_finder_config', ['name' => 'active'], ['name' => 'nominatim'])->execute();
 		if (!(new \App\Db\Query())->from('s_yf_address_finder_config')->where(['name' => 'default_provider', 'type' => 'global'])->exists()) {
 			$val = '';
-			$type = (new \App\Db\Query())->select(['type'])->from('s_yf_address_finder_config')->where(['name' => 'nominatim', 'val' => '1'])->scalar();
-			if ('google_map_api' === $type) {
-				$val = 'GoogleGeocode';
-			} elseif ('opencage_data' === $type) {
-				$val = 'OpenCageGeocoder';
+			$type = (new \App\Db\Query())->select(['type'])->from('s_yf_address_finder_config')->where(['name' => 'active', 'val' => '1'])->scalar();
+			if (!empty($type)) {
+				$val = $type;
 			}
 			$dbCommand->insert('s_yf_address_finder_config', ['type' => 'global', 'name' => 'default_provider', 'val' => $val])->execute();
 		}
