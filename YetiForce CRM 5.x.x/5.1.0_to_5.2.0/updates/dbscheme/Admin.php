@@ -206,6 +206,13 @@ class Admin extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
+			],
+			's_#__address_finder_config' => [
+				'columns' => [
+					'id' =>  $this->smallInteger(4)->unsigned()->autoIncrement()->notNull()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
 			]
 		];
 		$this->foreignKey = [

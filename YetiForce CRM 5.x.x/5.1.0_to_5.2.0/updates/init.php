@@ -837,6 +837,13 @@ class YetiForceUpdate
 		$subQuery = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist');
 		$dbCommand->delete('vtiger_role2picklist', ['not in', 'picklistid', $subQuery])->execute();
 
+		$dbCommand->update('s_yf_address_finder_config', ['type' => 'GoogleGeocode'], ['type' => 'google_map_api'])->execute();
+		$dbCommand->update('s_yf_address_finder_config', ['type' => 'OpenCageGeocoder'], ['type' => 'opencage_data'])->execute();
+		$dbCommand->update('s_yf_address_finder_config', ['name' => 'active'], ['name' => 'nominatim'])->execute();
+		if (!(new \App\Db\Query())->from('s_yf_address_finder_config')->where(['name' => 'default_provider', 'type' => 'global'])->exists()) {
+			$dbCommand->insert('s_yf_address_finder_config', ['type' => 'global', 'name' => 'default_provider'])->execute();
+		}
+
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -2010,7 +2017,6 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$files = [
 			'module_record_allocation.php' => 'user_privileges',
-			'moduleHierarchy.php' => 'user_privileges',
 			'sharedOwner.php' => 'user_privileges',
 			'owners_colors.php' => 'user_privileges',
 			'cron.php' => 'user_privileges',
