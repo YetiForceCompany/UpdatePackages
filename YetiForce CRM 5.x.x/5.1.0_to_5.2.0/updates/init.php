@@ -1390,6 +1390,7 @@ class YetiForceUpdate
 
 		$importerType = new \App\Db\Importers\Base();
 		$db->createCommand()->alterColumn('s_#__auto_record_flow_updater', 'id', $importerType->smallInteger(5)->unsigned()->autoIncrement()->notNull())->execute();
+		$db->createCommand()->alterColumn('s_yf_address_finder_config', 'id', $importerType->smallInteger(4)->unsigned()->autoIncrement()->notNull())->execute();
 
 		$dropTable = [];
 		$dropCustomTables = [
