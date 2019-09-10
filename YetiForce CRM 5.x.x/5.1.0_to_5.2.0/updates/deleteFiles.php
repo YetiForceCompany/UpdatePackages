@@ -96,4 +96,5 @@ return [
 	'vendor',
 	'public_html/vendor',
 	'public_html/libraries',
+	'public_html/layouts/basic/modules/Settings/SLAPolicy',
 ];
