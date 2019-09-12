@@ -1,0 +1,9 @@
+License: YetiForce Public License 3.0 licenses/License.html
+
+- Improved sending an email from a record
+- Improved replying to a HelpDesk
+- Fixed comparison of float values
+- Fixed a problem with saving clockPicker selected value
+- Fixed incorrect column types
+- Fixed minor bugs in chat
+- and other
