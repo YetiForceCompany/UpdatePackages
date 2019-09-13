@@ -13140,6 +13140,13 @@ a.text-dark:hover, a.text-dark:focus {
       text-align: center;
       width: 100%;
       bottom: 16px; } }
+@media (min-width: 576px) {
+  .daterangepicker.show-ranges {
+    max-height: 300px;
+    overflow-y: scroll; }
+
+  .daterangepicker.show-ranges.ltr .drp-calendar {
+    border-bottom: 1px solid #ddd; } }
 .select2-selection {
   padding-top: 0.2rem; }
   .select2-selection .o-filter-actions {
@@ -13441,9 +13448,6 @@ label.btn[class*="btn-outline-"]:not(.active) {
 
 .modal-footer {
   border-top: none; }
-
-.modal-content {
-  border: none; }
 
 .modal-header-icon {
   margin-right: 0.5rem; }
@@ -16317,6 +16321,45 @@ ul.tweets li {
 .u-font-size-120px {
   font-size: 7.5rem; }
 
+.u-fs-xs {
+  font-size: 0.75rem; }
+
+.u-fs-sm {
+  font-size: 0.875rem; }
+
+.u-fs-lg {
+  font-size: 1.33rem; }
+
+.u-fs-1x {
+  font-size: 1rem; }
+
+.u-fs-2x {
+  font-size: 2rem; }
+
+.u-fs-3x {
+  font-size: 3rem; }
+
+.u-fs-4x {
+  font-size: 4rem; }
+
+.u-fs-5x {
+  font-size: 5rem; }
+
+.u-fs-6x {
+  font-size: 6rem; }
+
+.u-fs-7x {
+  font-size: 7rem; }
+
+.u-fs-8x {
+  font-size: 8rem; }
+
+.u-fs-9x {
+  font-size: 9rem; }
+
+.u-fs-10x {
+  font-size: 10rem; }
+
 .u-font-weight-50 {
   font-weight: 50 !important; }
 
@@ -18250,7 +18293,9 @@ input[type="checkbox"][disabled] {
   border-right: 0px !important; }
   .c-mds-input .form-control:focus {
     box-shadow: none; }
-    .c-mds-input .form-control:focus + .input-group-append, .c-mds-input .form-control:focus ~ .input-group-append, .c-mds-input .form-control:focus + .input-group-prepend, .c-mds-input .form-control:focus ~ .input-group-prepend {
+    .c-mds-input .form-control:focus + .input-group-append,
+    .c-mds-input .form-control:focus ~ .input-group-append, .c-mds-input .form-control:focus + .input-group-prepend,
+    .c-mds-input .form-control:focus ~ .input-group-prepend {
       border-color: #5bb1ff !important; }
 
 /* {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
@@ -18530,25 +18575,25 @@ input[type="radio"]:checked:before {
 .c-btn-fixed {
   bottom: 2rem; }
 
-.container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 2rem); }
 
 .user-info--active .mainBody,
 .user-info--active .c-btn-fixed {
   bottom: calc(2rem + 1rem); }
-.user-info--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+.user-info--active .container-fluid[class$="-knowledgebase-container"] .contentsDiv {
   min-height: calc(100vh - 3.125rem - calc(2rem + 1rem)); }
 
 .limited-footer--active .mainBody,
 .limited-footer--active .c-btn-fixed {
   bottom: 1rem; }
-.limited-footer--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+.limited-footer--active .container-fluid[class$="-knowledgebase-container"] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 1rem); }
 
 .user-info--active.limited-footer--active .mainBody,
 .user-info--active.limited-footer--active .c-btn-fixed {
   bottom: 2rem; }
-.user-info--active.limited-footer--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+.user-info--active.limited-footer--active .container-fluid[class$="-knowledgebase-container"] .contentsDiv {
   min-height: calc(100vh - 3.125rem - 2rem); }
 
 @media (max-width: 767.98px) {
@@ -18556,12 +18601,12 @@ input[type="radio"]:checked:before {
   .c-btn-fixed {
     bottom: 1rem; }
 
-  .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+  .container-fluid[class$="-knowledgebase-container"] .contentsDiv {
     min-height: calc(100vh - 3.125rem - 1rem); }
 
   .user-info--active .mainBody {
     bottom: 2rem; }
-  .user-info--active .container-fluid[class$='-knowledgebase-container'] .contentsDiv {
+  .user-info--active .container-fluid[class$="-knowledgebase-container"] .contentsDiv {
     min-height: calc(100vh - 3.125rem - 2rem); } }
 .massEditTable th + th,
 .massEditTable td + td,
@@ -20700,6 +20745,8 @@ td.fieldValue input, td.fieldValue .input-group {
   font-weight: bold; }
   .c-side-block--left {
     left: -8px; }
+    .c-side-block--left.d-block + .floatThead-wrapper .floatThead-container {
+      display: none; }
   .c-side-block--right {
     right: -8px;
     background: #0072da;
