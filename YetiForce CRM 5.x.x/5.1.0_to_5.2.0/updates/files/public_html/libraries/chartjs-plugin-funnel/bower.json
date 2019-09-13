@@ -1,0 +1,23 @@
+{
+  "name": "chartjs-plugin-funnel",
+  "description": "The funnel plugin for Chart.js",
+  "main": "dist/chart.funnel.js",
+  "authors": [
+    "Jone Casper & YetiForce"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "Chart.js",
+    "Chartjs",
+    "funnel",
+    "plugin"
+  ],
+  "homepage": "https://github.com/YetiForceCompany/chartjs-plugin-funnel",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "type": "component",
+  "props": {
+    "fullscreen": {
+      "type": "Boolean",
+      "sync": true,
+      "desc": "Fullscreen mode",
+      "examples": [
+        ":fullscreen.sync=\"isFullscreen\""
+      ],
+      "category": "behavior"
+    },
+    "value": {
+      "type": "Any",
+      "desc": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive",
+      "examples": [
+        "v-model=\"panelName\""
+      ],
+      "category": "model"
+    },
+    "keep-alive": {
+      "type": "Boolean",
+      "desc": "Equivalent to using Vue's native <keep-alive> component on the content",
+      "category": "behavior"
+    },
+    "animated": {
+      "type": "Boolean",
+      "desc": "Enable transitions between panel (also see 'transition-prev' and 'transition-next' props)",
+      "category": "behavior"
+    },
+    "infinite": {
+      "type": "Boolean",
+      "desc": "Makes component appear as infinite (when reaching last panel, next one will become the first one)",
+      "category": "behavior"
+    },
+    "swipeable": {
+      "type": "Boolean",
+      "desc": "Enable swipe events (may interfere with content's touch/mouse events)",
+      "category": "behavior"
+    },
+    "transition-prev": {
+      "type": "String",
+      "desc": "One of Quasar's embedded transitions (has effect only if 'animated' prop is set)",
+      "examples": [
+        "fade",
+        "slide-down"
+      ],
+      "category": "behavior",
+      "default": "fade"
+    },
+    "transition-next": {
+      "type": "String",
+      "desc": "One of Quasar's embedded transitions (has effect only if 'animated' prop is set)",
+      "examples": [
+        "fade",
+        "slide-down"
+      ],
+      "category": "behavior",
+      "default": "fade"
+    },
+    "height": {
+      "type": "String",
+      "desc": "Height of Carousel in CSS units, including unit name",
+      "examples": [
+        "16px",
+        "2rem"
+      ],
+      "category": "style"
+    },
+    "padding": {
+      "type": "Boolean",
+      "desc": "Applies a default padding to each slide, according to the usage of 'arrows' and 'navigation' props",
+      "category": "content"
+    },
+    "control-color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "autoplay": {
+      "type": [
+        "Number",
+        "Boolean"
+      ],
+      "desc": "Jump to next slide at fixed time intervals (in milliseconds); 'false' disables autoplay, 'true' enables it for 5000ms intervals",
+      "default": false,
+      "examples": [
+        ":autoplay=\"2500\"",
+        true,
+        false
+      ],
+      "category": "behavior"
+    },
+    "arrows": {
+      "type": "Boolean",
+      "desc": "Show navigation arrow buttons",
+      "category": "content"
+    },
+    "prev-icon": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content"
+    },
+    "next-icon": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content"
+    },
+    "navigation": {
+      "type": "Boolean",
+      "desc": "Show navigation dots",
+      "category": "content"
+    },
+    "navigation-icon": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention; make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content"
+    },
+    "thumbnails": {
+      "type": "Boolean",
+      "desc": "Show thumbnails",
+      "category": "content"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Suggestion: QCarouselSlide"
+    },
+    "control": {
+      "desc": "Slot specific for QCarouselControl"
+    }
+  },
+  "events": {
+    "input": {
+      "desc": "Emitted when component's model changes (current panel name); Is also used by v-model",
+      "params": {
+        "value": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "New current panel name",
+          "examples": [
+            "dashboard"
+          ]
+        }
+      }
+    },
+    "before-transition": {
+      "desc": "Emitted before transitioning to a new panel",
+      "params": {
+        "newVal": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "Panel name towards transition is going",
+          "examples": [
+            "dashboard"
+          ]
+        },
+        "oldVal": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "Panel name from which transition is happening",
+          "examples": [
+            "dashboard"
+          ]
+        }
+      }
+    },
+    "transition": {
+      "desc": "Emitted after component transitioned to a new panel",
+      "params": {
+        "newVal": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "Panel name towards transition has occurred",
+          "examples": [
+            "dashboard"
+          ]
+        },
+        "oldVal": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "Panel name from which transition has happened",
+          "examples": [
+            "dashboard"
+          ]
+        }
+      }
+    }
+  },
+  "methods": {
+    "toggleFullscreen": {
+      "desc": "Toggle the view to be fullscreen or not fullscreen"
+    },
+    "setFullscreen": {
+      "desc": "Enter the fullscreen view"
+    },
+    "exitFullscreen": {
+      "desc": "Leave the fullscreen view"
+    },
+    "next": {
+      "desc": "Go to next panel"
+    },
+    "previous": {
+      "desc": "Go to previous panel"
+    },
+    "goTo": {
+      "desc": "Go to specific panel",
+      "params": {
+        "panelName": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "Panel's name, which may be a String or Number; Number does not refers to panel index, but to its name, which may be an Integer",
+          "required": true,
+          "examples": [
+            "dashboard"
+          ]
+        }
+      }
+    }
+  }
+}
