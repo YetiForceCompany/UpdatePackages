@@ -111,6 +111,19 @@ class YetiForceUpdate
 		}
 		$this->importer->refreshSchema();
 		$db->createCommand()->checkIntegrity(true)->execute();
+
+		$rows = (new \App\Db\Query())->from('s_#__companies')->where(['type' => 1])->one();
+		if (!$rows) {
+			$rows = (new \App\Db\Query())->from('s_#__companies')->one();
+		}
+		if ($rows) {
+			$configFile = new \App\ConfigFile('component', 'Branding');
+			$configFile->set('footerName', $rows['name']);
+			$configFile->set('urlLinkedIn', $rows['linkedin']);
+			$configFile->set('urlTwitter', $rows['twitter']);
+			$configFile->set('urlFacebook', $rows['facebook']);
+			$configFile->create();
+		}
 		return true;
 	}
 

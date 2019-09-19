@@ -49,7 +49,7 @@ class ConfReport
 	 */
 	public static $stability = [
 		'phpVersion' => ['recommended' => '7.1.x, 7.2.x, 7.3.x', 'type' => 'Version', 'container' => 'env', 'testCli' => true, 'label' => 'PHP'],
-		'protocolVersion' => ['recommended' => '1.x, 2.0', 'type' => 'Version', 'container' => 'env', 'testCli' => false, 'label' => 'PROTOCOL_VERSION'],
+		'protocolVersion' => ['recommended' => '1.x, 2.0', 'type' => 'Version', 'container' => 'env', 'testCli' => false, 'Install' => false, 'label' => 'PROTOCOL_VERSION'],
 		'error_reporting' => ['recommended' => 'E_ALL & ~E_NOTICE', 'type' => 'ErrorReporting', 'container' => 'php', 'testCli' => true],
 		'output_buffering' => ['recommended' => 'On', 'type' => 'OnOffInt', 'container' => 'php', 'testCli' => true],
 		'max_execution_time' => ['recommended' => 600, 'type' => 'Greater', 'container' => 'php', 'testCli' => true],
@@ -622,6 +622,9 @@ class ConfReport
 				break;
 			}
 		}
+		if ((isset(\App\Process::$requestMode) && 'Install' === \App\Process::$requestMode) && isset($row['Install']) && !$row['Install']) {
+			$row['mode'] = 'skipParam';
+		}
 		return $row;
 	}
 
@@ -1162,9 +1165,8 @@ class ConfReport
 		$view->assign('SHOW_FOOTER', true);
 		$html = $view->view('Footer.tpl', '', true);
 		$row['status'] = true;
-		if (!\App\Config::component('Branding', 'isCustomerBrandingActive')) {
-			$row['status'] = false !== \strpos($html, '&copy; YetiForce.com All rights reserved');
-			$row['status'] = $row['status'] && \App\YetiForce\Shop::check('DisableBranding');
+		if (!\App\YetiForce\Shop::check('YetiForceDisableBranding')) {
+			$row['status'] = false !== \strpos($html, '&copy; YetiForce.com All rights reserved') || !empty(\App\Config::component('Branding', 'footerName'));
 		}
 		unset($name);
 		$row[$sapi] = \App\Language::translate($row['status'] ? 'LBL_YES' : 'LBL_NO');
