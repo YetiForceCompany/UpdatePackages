@@ -111,7 +111,14 @@ class YetiForceUpdate
 		}
 		$this->importer->refreshSchema();
 		$db->createCommand()->checkIntegrity(true)->execute();
+		return true;
+	}
 
+	/**
+	 * Postupdate.
+	 */
+	public function postupdate()
+	{
 		$rows = (new \App\Db\Query())->from('s_#__companies')->where(['type' => 1])->one();
 		if (!$rows) {
 			$rows = (new \App\Db\Query())->from('s_#__companies')->one();
@@ -124,14 +131,6 @@ class YetiForceUpdate
 			$configFile->set('urlFacebook', $rows['facebook']);
 			$configFile->create();
 		}
-		return true;
-	}
-
-	/**
-	 * Postupdate.
-	 */
-	public function postupdate()
-	{
 		return true;
 	}
 }
