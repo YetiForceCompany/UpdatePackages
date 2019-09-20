@@ -103,6 +103,18 @@ class YetiForceUpdate
 					$db->createCommand()->update('vtiger_field', ['maximumlength' => '1.0E+26'], ['fieldid' => $row['fieldid']])->execute();
 				}
 			}
+			$db->createCommand()
+				->insert('s_#__address_finder_config', [
+					'val' => 'YetiForceGeocoder',
+					'type' => 1,
+					'name' => 'active'
+				])
+				->execute();
+			$db->createCommand()
+				->update('s_yf_address_finder_config', [
+					'val' => 'YetiForceGeocoder',
+				], ['type' => 'global', 'name' => 'default_provider'])
+				->execute();
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -110,6 +122,7 @@ class YetiForceUpdate
 			throw $ex;
 		}
 		$this->importer->refreshSchema();
+
 		$db->createCommand()->checkIntegrity(true)->execute();
 		return true;
 	}
