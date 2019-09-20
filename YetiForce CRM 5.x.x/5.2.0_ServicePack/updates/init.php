@@ -119,6 +119,16 @@ class YetiForceUpdate
 	 */
 	public function postupdate()
 	{
+		if (file_exists(ROOT_DIRECTORY . '/custom/languages/')) {
+			foreach ((new \DirectoryIterator(ROOT_DIRECTORY . '/custom/languages/')) as $file) {
+				if ($file->isDir() && !$file->isDot() && file_exists($file->getPathname() . '/HelpInfo.json')) {
+					if (!file_exists($file->getPathname() . '/Other')) {
+						mkdir($file->getPathname() . '/Other', 0755, true);
+					}
+					rename($file->getPathname() . '/HelpInfo.json', $file->getPathname() . '/Other/HelpInfo.json');
+				}
+			}
+		}
 		$rows = (new \App\Db\Query())->from('s_#__companies')->where(['type' => 1])->one();
 		if (!$rows) {
 			$rows = (new \App\Db\Query())->from('s_#__companies')->one();
@@ -131,6 +141,7 @@ class YetiForceUpdate
 			$configFile->set('urlFacebook', $rows['facebook']);
 			$configFile->create();
 		}
+		(new \App\ConfigFile('developer'))->create();
 		return true;
 	}
 }
