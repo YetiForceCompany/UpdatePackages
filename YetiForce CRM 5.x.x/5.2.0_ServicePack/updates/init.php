@@ -155,6 +155,9 @@ class YetiForceUpdate
 			$configFile->create();
 		}
 		(new \App\ConfigFile('developer'))->create();
+		\vtlib\Functions::recurseDelete('cache/templates_c');
+		\App\Cache::clear();
+		\App\Cache::resetOpcache();
 		return true;
 	}
 }
