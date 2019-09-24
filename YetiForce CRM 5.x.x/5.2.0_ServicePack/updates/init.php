@@ -156,6 +156,7 @@ class YetiForceUpdate
 		}
 		(new \App\ConfigFile('developer'))->create();
 		\vtlib\Functions::recurseDelete('cache/templates_c');
+		\vtlib\Functions::recurseDelete('layouts/basic/modules/Users/Header.tpl');
 		\App\Cache::clear();
 		\App\Cache::resetOpcache();
 		return true;
