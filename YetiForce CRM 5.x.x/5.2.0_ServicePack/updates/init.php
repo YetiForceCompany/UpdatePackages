@@ -103,6 +103,18 @@ class YetiForceUpdate
 					$db->createCommand()->update('vtiger_field', ['maximumlength' => '1.0E+26'], ['fieldid' => $row['fieldid']])->execute();
 				}
 			}
+			$db->createCommand()
+				->insert('s_#__address_finder_config', [
+					'val' => 'YetiForceGeocoder',
+					'type' => 1,
+					'name' => 'active'
+				])
+				->execute();
+			$db->createCommand()
+				->update('s_yf_address_finder_config', [
+					'val' => 'YetiForceGeocoder',
+				], ['type' => 'global', 'name' => 'default_provider'])
+				->execute();
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -110,6 +122,7 @@ class YetiForceUpdate
 			throw $ex;
 		}
 		$this->importer->refreshSchema();
+
 		$db->createCommand()->checkIntegrity(true)->execute();
 		return true;
 	}
@@ -119,6 +132,16 @@ class YetiForceUpdate
 	 */
 	public function postupdate()
 	{
+		if (file_exists(ROOT_DIRECTORY . '/custom/languages/')) {
+			foreach ((new \DirectoryIterator(ROOT_DIRECTORY . '/custom/languages/')) as $file) {
+				if ($file->isDir() && !$file->isDot() && file_exists($file->getPathname() . '/HelpInfo.json')) {
+					if (!file_exists($file->getPathname() . '/Other')) {
+						mkdir($file->getPathname() . '/Other', 0755, true);
+					}
+					rename($file->getPathname() . '/HelpInfo.json', $file->getPathname() . '/Other/HelpInfo.json');
+				}
+			}
+		}
 		$rows = (new \App\Db\Query())->from('s_#__companies')->where(['type' => 1])->one();
 		if (!$rows) {
 			$rows = (new \App\Db\Query())->from('s_#__companies')->one();
@@ -131,6 +154,11 @@ class YetiForceUpdate
 			$configFile->set('urlFacebook', $rows['facebook']);
 			$configFile->create();
 		}
+		(new \App\ConfigFile('developer'))->create();
+		\vtlib\Functions::recurseDelete('cache/templates_c');
+		\vtlib\Functions::recurseDelete('layouts/basic/modules/Users/Header.tpl');
+		\App\Cache::clear();
+		\App\Cache::resetOpcache();
 		return true;
 	}
 }

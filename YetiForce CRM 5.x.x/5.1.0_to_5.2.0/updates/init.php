@@ -2040,6 +2040,16 @@ class YetiForceUpdate
 				$this->log("[INFO] Skip move file. File not exists: {$from}");
 			}
 		}
+		if (file_exists(ROOT_DIRECTORY . '/custom/languages/')) {
+			foreach ((new \DirectoryIterator(ROOT_DIRECTORY . '/custom/languages/')) as $file) {
+				if ($file->isDir() && !$file->isDot() && file_exists($file->getPathname() . '/HelpInfo.json')) {
+					if (!file_exists($file->getPathname() . '/Other')) {
+						mkdir($file->getPathname() . '/Other', 0755, true);
+					}
+					rename($file->getPathname() . '/HelpInfo.json', $file->getPathname() . '/Other/HelpInfo.json');
+				}
+			}
+		}
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
 		$this->createConfigFiles();
