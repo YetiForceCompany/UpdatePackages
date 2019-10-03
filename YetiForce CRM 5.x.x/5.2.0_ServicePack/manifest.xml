@@ -1,9 +1,9 @@
 <?xml version='1.0'?>
 <module>
 	<name>YetiForce CRM 5.2 Service Pack</name>
-	<label>YetiForce CRM 5.2 Service Pack v12</label>
+	<label>YetiForce CRM 5.2 Service Pack v13</label>
 	<type>update</type>
-	<version>12</version>
+	<version>13</version>
 	<from_version>5.2.0</from_version>
 	<to_version>5.2.0</to_version>
 	<dependencies>
