@@ -648,7 +648,7 @@ final class Chat
 	 *
 	 * @return array|false
 	 */
-	private static function getDefaultRoom()
+	public static function getDefaultRoom()
 	{
 		if (Cache::has('Chat', 'DefaultRoom')) {
 			return Cache::get('Chat', 'DefaultRoom');
