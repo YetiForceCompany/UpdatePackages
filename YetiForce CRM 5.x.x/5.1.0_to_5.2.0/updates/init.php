@@ -806,7 +806,7 @@ class YetiForceUpdate
 							$currencyData['currencyId'] = (int) $row['currency_id'];
 						}
 						$dataReaderRel->close();
-						$db->createCommand()->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row['productid']])->execute();
+						$db->createCommand()->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row[$index]])->execute();
 					}
 					$dataReader->close();
 					$this->importer->dropColumns([[$tableName, 'currency_id']]);
