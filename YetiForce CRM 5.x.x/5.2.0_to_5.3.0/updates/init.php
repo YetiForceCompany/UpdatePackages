@@ -153,6 +153,8 @@ class YetiForceUpdate
 
 		$this->importer->refreshSchema();
 		$this->importer->logs(false);
+
+		$this->createConfigFiles();
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -171,7 +173,7 @@ class YetiForceUpdate
 
 		$menuRecordModel = new \Settings_Menu_Record_Model();
 		$menuRecordModel->refreshMenuFiles();
-		$this->createConfigFiles();
+
 		\App\Cache::clearAll();
 		\App\Cache::clear();
 		\App\Cache::clearOpcache();
@@ -743,6 +745,7 @@ class YetiForceUpdate
 
 		\vtlib\Functions::recurseDelete('app_data/LanguagesUpdater.json');
 		\vtlib\Functions::recurseDelete('app_data/SystemUpdater.json');
+		\vtlib\Functions::recurseDelete('app_data/cron.php');
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
@@ -900,31 +903,64 @@ class YetiForceUpdate
 		exit;
 	}
 
+	/**
+	 * Generating the current configuration.
+	 *
+	 * @return void
+	 */
 	private function createConfigFiles()
 	{
+		$changeConfiguration = [
+			'base' => [
+				'sounds' => [
+					'CHAT' => 'sound_2.mp3',
+				]
+			],
+			'module' => [
+				'ModTracker' => [
+					'TEASER_TEXT_LENGTH' => 100,
+				]
+			]
+		];
 		\App\Cache::resetOpcache();
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
-		$skip = ['module', 'component'];
-		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
-			(new \App\ConfigFile($type))->create();
+		$configTemplates = 'config/ConfigTemplates.php';
+		if (file_exists(__DIR__ . '/files/' . $configTemplates)) {
+			copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
+			foreach (array_diff(\App\ConfigFile::TYPES, ['module', 'component']) as $type) {
+				$configFile = new \App\ConfigFile($type);
+				if (isset($changeConfiguration['base'][$type])) {
+					foreach ($changeConfiguration['base'][$type] as $key => $value) {
+						$configFile->set($key, $value);
+					}
+				}
+				$configFile->create();
+			}
 		}
-		$dirPath = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Modules';
-		if (!is_dir($dirPath)) {
-			mkdir($dirPath);
-		}
-		foreach ((new \DirectoryIterator('modules/')) as $item) {
+		foreach ((new \DirectoryIterator(__DIR__ . '/files/modules/')) as $item) {
 			if ($item->isDir() && !$item->isDot()) {
 				$moduleName = $item->getBasename();
-				$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
-				if (file_exists($filePath)) {
+				$configTemplates = "modules/{$moduleName}/ConfigTemplate.php";
+				if (file_exists(__DIR__ . '/files/' . $configTemplates)) {
+					copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
 					(new \App\ConfigFile('module', $moduleName))->create();
+					$configFile = new \App\ConfigFile('module', $moduleName);
+					if (isset($changeConfiguration['module'][$moduleName])) {
+						foreach ($changeConfiguration['module'][$moduleName] as $key => $value) {
+							$configFile->set($key, $value);
+						}
+					}
+					$configFile->create();
 				}
 			}
 		}
-		$path = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
-		$componentsData = require_once "$path";
-		foreach ($componentsData as $component => $data) {
-			(new \App\ConfigFile('component', $component))->create();
+		$configTemplates = 'config/Components/ConfigTemplates.php';
+		if (file_exists(__DIR__ . '/files/' . $configTemplates)) {
+			copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
+			$componentsData = require_once ROOT_DIRECTORY . '/' . $configTemplates;
+			foreach ($componentsData as $component => $data) {
+				(new \App\ConfigFile('component', $component))->create();
+			}
 		}
 	}
 

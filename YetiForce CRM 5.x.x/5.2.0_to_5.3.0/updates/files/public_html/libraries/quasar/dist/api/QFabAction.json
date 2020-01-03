@@ -1,0 +1,125 @@
+{
+  "type": "component",
+  "meta": {
+    "docsUrl": "https://v1.quasar.dev/layout/floating-action-button"
+  },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
+  "props": {
+    "disable": {
+      "type": "Boolean",
+      "desc": "Put component in disabled mode",
+      "category": "state"
+    },
+    "icon": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "required": true
+    },
+    "type": {
+      "type": "String",
+      "desc": "Define the button HTML DOM type",
+      "default": "a",
+      "values": [
+        "a",
+        "submit",
+        "button",
+        "reset"
+      ],
+      "category": "general"
+    },
+    "outline": {
+      "type": "Boolean",
+      "desc": "Use 'outline' design for Fab button",
+      "category": "style"
+    },
+    "push": {
+      "type": "Boolean",
+      "desc": "Use 'push' design for Fab button",
+      "category": "style"
+    },
+    "flat": {
+      "type": "Boolean",
+      "desc": "Use 'flat' design for Fab button",
+      "category": "style"
+    },
+    "color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "text-color": {
+      "type": "String",
+      "desc": "Overrides text color (if needed); Color name from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "glossy": {
+      "type": "Boolean",
+      "desc": "Apply the glossy effect over the button",
+      "category": "style"
+    },
+    "to": {
+      "type": [
+        "String",
+        "Object"
+      ],
+      "desc": "Equivalent to Vue Router <router-link> 'to' property",
+      "examples": [
+        "/home/dashboard",
+        ":to=\"{ name: 'my-route-name' }\""
+      ],
+      "category": "router"
+    },
+    "replace": {
+      "type": "Boolean",
+      "desc": "Equivalent to Vue Router <router-link> 'replace' property",
+      "category": "router"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Suggestion for this slot: QTooltip"
+    }
+  },
+  "events": {
+    "click": {
+      "desc": "Emitted when user clicks/taps on the component",
+      "params": {
+        "evt": {
+          "type": "Object",
+          "desc": "JS event object",
+          "required": true
+        }
+      }
+    }
+  },
+  "methods": {
+    "click": {
+      "desc": "Emulate click on QFabAction",
+      "params": {
+        "evt": {
+          "type": "Object",
+          "desc": "JS event object"
+        }
+      }
+    }
+  }
+}

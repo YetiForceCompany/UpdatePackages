@@ -1,0 +1,393 @@
+{
+  "type": "plugin",
+  "meta": {
+    "docsUrl": "https://v1.quasar.dev/quasar-plugins/notify"
+  },
+  "injection": "$q.notify",
+  "quasarConfOptions": {
+    "propName": "notify",
+    "definition": {
+      "color": {
+        "type": "String",
+        "desc": "Color name for component from the Quasar Color Palette",
+        "examples": [
+          "primary",
+          "teal-10"
+        ],
+        "category": "style"
+      },
+      "textColor": {
+        "type": "String",
+        "desc": "Color name for component from the Quasar Color Palette",
+        "examples": [
+          "primary",
+          "teal-10"
+        ],
+        "category": "style"
+      },
+      "message": {
+        "type": "String",
+        "desc": "The content of your message",
+        "examples": [
+          "John Doe pinged you"
+        ]
+      },
+      "caption": {
+        "type": "String",
+        "desc": "The content of your optional caption",
+        "examples": [
+          "5 minutes ago"
+        ],
+        "addedIn": "v1.5.5"
+      },
+      "html": {
+        "type": "Boolean",
+        "desc": "Render message as HTML; This can lead to XSS attacks, so make sure that you sanitize the message first"
+      },
+      "icon": {
+        "type": "String",
+        "desc": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix",
+        "examples": [
+          "map",
+          "ion-add",
+          "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+          "img:statics/path/to/some_image.png"
+        ],
+        "category": "content"
+      },
+      "avatar": {
+        "type": "String",
+        "desc": "URL to an avatar/image; Suggestion: use statics folder",
+        "examples": [
+          "(statics folder) statics/img/something.png",
+          "(relative path format) require('./my_img.jpg')",
+          "(URL) https://some-site.net/some-img.gif"
+        ]
+      },
+      "position": {
+        "type": "String",
+        "desc": "Window side/corner to stick to",
+        "default": "bottom",
+        "values": [
+          "top-left",
+          "top-right",
+          "bottom-left",
+          "bottom-right",
+          "top",
+          "bottom",
+          "left",
+          "right",
+          "center"
+        ],
+        "examples": [
+          "top-right"
+        ]
+      },
+      "classes": {
+        "type": "String",
+        "desc": "Add CSS class(es) to the notification for easier customization",
+        "examples": [
+          "my-notif-class"
+        ]
+      },
+      "timeout": {
+        "type": "Number",
+        "desc": "Amount of time to display (in milliseconds)",
+        "default": 5000,
+        "examples": [
+          2500
+        ]
+      },
+      "closeBtn": {
+        "type": "String",
+        "desc": "Convenient way to add a dismiss button with a specific label, without using the 'actions' convoluted prop",
+        "examples": [
+          "Close me"
+        ]
+      },
+      "multiLine": {
+        "type": "Boolean",
+        "desc": "Put notification into multi-line mode; If this prop isn't used and more than one 'action' is specified then notification goes into multi-line mode by default"
+      }
+    }
+  },
+  "methods": {
+    "create": {
+      "tsInjectionPoint": true,
+      "desc": "Creates a notification; Same as calling $q.notify(...)",
+      "params": {
+        "opts": {
+          "type": [
+            "Object",
+            "String"
+          ],
+          "desc": "For syntax, check quasar.conf options parameters",
+          "definition": {
+            "color": {
+              "type": "String",
+              "desc": "Color name for component from the Quasar Color Palette",
+              "examples": [
+                "primary",
+                "teal-10"
+              ],
+              "category": "style"
+            },
+            "textColor": {
+              "type": "String",
+              "desc": "Color name for component from the Quasar Color Palette",
+              "examples": [
+                "primary",
+                "teal-10"
+              ],
+              "category": "style"
+            },
+            "message": {
+              "type": "String",
+              "desc": "The content of your message",
+              "examples": [
+                "John Doe pinged you"
+              ],
+              "required": true
+            },
+            "caption": {
+              "type": "String",
+              "desc": "The content of your optional caption",
+              "examples": [
+                "5 minutes ago"
+              ],
+              "addedIn": "v1.5.5"
+            },
+            "html": {
+              "type": "Boolean",
+              "desc": "Render message as HTML; This can lead to XSS attacks, so make sure that you sanitize the message first"
+            },
+            "icon": {
+              "type": "String",
+              "desc": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix",
+              "examples": [
+                "map",
+                "ion-add",
+                "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+                "img:statics/path/to/some_image.png"
+              ],
+              "category": "content"
+            },
+            "avatar": {
+              "type": "String",
+              "desc": "URL to an avatar/image; Suggestion: use statics folder",
+              "examples": [
+                "(statics folder) statics/img/something.png",
+                "(relative path format) require('./my_img.jpg')",
+                "(URL) https://some-site.net/some-img.gif"
+              ]
+            },
+            "position": {
+              "type": "String",
+              "desc": "Window side/corner to stick to",
+              "default": "bottom",
+              "values": [
+                "top-left",
+                "top-right",
+                "bottom-left",
+                "bottom-right",
+                "top",
+                "bottom",
+                "left",
+                "right",
+                "center"
+              ],
+              "examples": [
+                "top-right"
+              ]
+            },
+            "classes": {
+              "type": "String",
+              "desc": "Add CSS class(es) to the notification for easier customization",
+              "examples": [
+                "my-notif-class"
+              ]
+            },
+            "timeout": {
+              "type": "Number",
+              "desc": "Amount of time to display (in milliseconds)",
+              "default": 5000,
+              "examples": [
+                2500
+              ]
+            },
+            "actions": {
+              "type": "Array",
+              "desc": "Notification actions (buttons); If a 'handler' is specified or not, clicking/tapping on the button will also close the notification; Also check 'closeBtn' convenience prop",
+              "examples": [
+                "[ { label: 'Show', handler: (Function) }, { icon: 'map', handler: (Function), color: 'yellow' }, { label: 'Learn more', noDismiss: true, handler: (Function) } ]"
+              ]
+            },
+            "onDismiss": {
+              "type": "Function",
+              "desc": "Function to call when notification gets dismissed",
+              "params": null,
+              "returns": null,
+              "examples": [
+                "() => { console.log('Dismissed') }"
+              ]
+            },
+            "closeBtn": {
+              "type": "String",
+              "desc": "Convenience way to add a dismiss button with a specific label, without using the 'actions' convoluted prop",
+              "examples": [
+                "Close me"
+              ]
+            },
+            "multiLine": {
+              "type": "Boolean",
+              "desc": "Put notification into multi-line mode; If this prop isn't used and more than one 'action' is specified then notification goes into multi-line mode by default"
+            },
+            "ignoreDefaults": {
+              "type": "Boolean",
+              "desc": "Ignore the default configuration (set by setDefaults()) for this instance only",
+              "addedIn": "v1.1.0"
+            }
+          },
+          "required": true
+        }
+      },
+      "returns": {
+        "type": "Function",
+        "desc": "Calling this function hides the notification",
+        "params": null,
+        "returns": null
+      }
+    },
+    "setDefaults": {
+      "desc": "Merge options into the default ones",
+      "params": {
+        "opts": {
+          "type": "Object",
+          "desc": "For syntax, check quasar.conf options parameters",
+          "definition": {
+            "color": {
+              "type": "String",
+              "desc": "Color name for component from the Quasar Color Palette",
+              "examples": [
+                "primary",
+                "teal-10"
+              ],
+              "category": "style"
+            },
+            "textColor": {
+              "type": "String",
+              "desc": "Color name for component from the Quasar Color Palette",
+              "examples": [
+                "primary",
+                "teal-10"
+              ],
+              "category": "style"
+            },
+            "message": {
+              "type": "String",
+              "desc": "The content of your message",
+              "examples": [
+                "John Doe pinged you"
+              ],
+              "required": true
+            },
+            "caption": {
+              "type": "String",
+              "desc": "The content of your optional caption",
+              "examples": [
+                "5 minutes ago"
+              ],
+              "addedIn": "v1.5.5"
+            },
+            "html": {
+              "type": "Boolean",
+              "desc": "Render message as HTML; This can lead to XSS attacks, so make sure that you sanitize the message first"
+            },
+            "icon": {
+              "type": "String",
+              "desc": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix",
+              "examples": [
+                "map",
+                "ion-add",
+                "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+                "img:statics/path/to/some_image.png"
+              ],
+              "category": "content"
+            },
+            "avatar": {
+              "type": "String",
+              "desc": "URL to an avatar/image; Suggestion: use statics folder",
+              "examples": [
+                "(statics folder) statics/img/something.png",
+                "(relative path format) require('./my_img.jpg')",
+                "(URL) https://some-site.net/some-img.gif"
+              ]
+            },
+            "position": {
+              "type": "String",
+              "desc": "Window side/corner to stick to",
+              "default": "bottom",
+              "values": [
+                "top-left",
+                "top-right",
+                "bottom-left",
+                "bottom-right",
+                "top",
+                "bottom",
+                "left",
+                "right",
+                "center"
+              ],
+              "examples": [
+                "top-right"
+              ]
+            },
+            "classes": {
+              "type": "String",
+              "desc": "Add CSS class(es) to the notification for easier customization",
+              "examples": [
+                "my-notif-class"
+              ]
+            },
+            "timeout": {
+              "type": "Number",
+              "desc": "Amount of time to display (in milliseconds)",
+              "default": 5000,
+              "examples": [
+                2500
+              ]
+            },
+            "actions": {
+              "type": "Array",
+              "desc": "Notification actions (buttons); If a 'handler' is specified or not, clicking/tapping on the button will also close the notification; Also check 'closeBtn' convenience prop",
+              "examples": [
+                "[ { label: 'Show', handler: (Function) }, { icon: 'map', handler: (Function), color: 'yellow' } ]"
+              ]
+            },
+            "onDismiss": {
+              "type": "Function",
+              "desc": "Function to call when notification gets dismissed",
+              "params": null,
+              "returns": null,
+              "examples": [
+                "() => { console.log('Dismissed') }"
+              ]
+            },
+            "closeBtn": {
+              "type": "String",
+              "desc": "Convenience way to add a dismiss button with a specific label, without using the 'actions' convoluted prop",
+              "examples": [
+                "Close me"
+              ]
+            },
+            "multiLine": {
+              "type": "Boolean",
+              "desc": "Put notification into multi-line mode; If this prop isn't used and more than one 'action' is specified then notification goes into multi-line mode by default"
+            }
+          },
+          "required": true
+        }
+      }
+    }
+  }
+}

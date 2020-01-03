@@ -1,0 +1,21 @@
+{
+  "name": "fontawesome-web",
+  "version": "5.0.2",
+  "description": "Font Awesome Web Fonts with CSS. Get vector icons and social logos on your website with Font Awesome, the web’s most popular icon set and toolkit.",
+  "keywords": [
+    "font",
+    "awesome",
+    "fontawesome",
+    "icon",
+    "font",
+    "bootstrap",
+    "web"
+  ],
+  "homepage": "http://fontawesome.io/",
+  "author": {
+    "name": "Dave Gandy",
+    "email": "dave@fontawesome.io",
+    "web": "http://twitter.com/davegandy"
+  },
+  "license": "(OFL-1.1 AND MIT)"
+}

@@ -188,7 +188,7 @@ class Base
 	}
 
 	/**
-	 * Creates a tinyint column. Available only in MySql.
+	 * Creates a tiny int column. Available only in MySql.
 	 *
 	 * @param int $length column size or precision definition
 	 *
