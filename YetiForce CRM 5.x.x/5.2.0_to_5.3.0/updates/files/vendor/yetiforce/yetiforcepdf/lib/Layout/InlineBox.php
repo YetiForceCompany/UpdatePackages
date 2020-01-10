@@ -250,9 +250,11 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 	/**
 	 * Measure width.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		$style = $this->getStyle();
 		if ($this->parentWidth === $this->getParent()->getDimensions()->getWidth() && $this->getDimensions()->getWidth() !== null) {
@@ -265,7 +267,7 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 		$width = '0';
 		if ($this->isForMeasurement()) {
 			foreach ($this->getChildren() as $child) {
-				$child->measureWidth();
+				$child->measureWidth($afterPageDividing);
 				$width = Math::add($width, $child->getDimensions()->getOuterWidth());
 			}
 		}
@@ -278,12 +280,14 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 	/**
 	 * Measure height.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureHeight()
+	public function measureHeight(bool $afterPageDividing = false)
 	{
 		foreach ($this->getChildren() as $child) {
-			$child->measureHeight();
+			$child->measureHeight($afterPageDividing);
 		}
 		$this->getDimensions()->setHeight(Math::add($this->getStyle()->getLineHeight(), $this->getStyle()->getVerticalPaddingsWidth()));
 		$this->applyStyleHeight();
@@ -293,9 +297,11 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		$rules = $this->getStyle()->getRules();
 		$parent = $this->getParent();
@@ -320,7 +326,7 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 		$this->getOffset()->setLeft($left);
 		$this->getOffset()->setTop($top);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 		return $this;
 	}
@@ -328,16 +334,18 @@ class InlineBox extends ElementBox implements BoxInterface, BuildTreeInterface, 
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		$parent = $this->getParent();
 		$this->getCoordinates()->setX(Math::add($parent->getCoordinates()->getX(), $this->getOffset()->getLeft()));
 		$parent = $this->getClosestLineBox();
 		$this->getCoordinates()->setY(Math::add($parent->getCoordinates()->getY(), $this->getOffset()->getTop()));
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 		return $this;
 	}

@@ -276,14 +276,16 @@ class LineBox extends Box implements BoxInterface
 	/**
 	 * Measure width.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		$this->clearStyles();
 		$width = '0';
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 			$width = Math::add($width, $child->getDimensions()->getOuterWidth());
 		}
 		$this->getDimensions()->setWidth($width);
@@ -293,16 +295,18 @@ class LineBox extends Box implements BoxInterface
 	/**
 	 * Measure height.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureHeight()
+	public function measureHeight(bool $afterPageDividing = false)
 	{
 		if (!$this->isForMeasurement() || $this->isEmpty()) {
 			$this->getDimensions()->setHeight('0');
 			return $this;
 		}
 		foreach ($this->getChildren() as $child) {
-			$child->measureHeight();
+			$child->measureHeight($afterPageDividing);
 		}
 		$lineHeight = $this->getStyle()->getMaxLineHeight();
 		$this->getDimensions()->setHeight($lineHeight);
@@ -338,9 +342,11 @@ class LineBox extends Box implements BoxInterface
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		$parent = $this->getParent();
 		$parentStyle = $parent->getStyle();
@@ -354,7 +360,7 @@ class LineBox extends Box implements BoxInterface
 		$this->getOffset()->setTop($top);
 		$this->getOffset()->setLeft($left);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 
 		return $this;
@@ -363,9 +369,11 @@ class LineBox extends Box implements BoxInterface
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		if (!$this->isRenderable()) {
 			return $this;
@@ -374,7 +382,7 @@ class LineBox extends Box implements BoxInterface
 		$this->getCoordinates()->setX(Math::add($parent->getCoordinates()->getX(), $this->getOffset()->getLeft()));
 		$this->getCoordinates()->setY(Math::add($parent->getCoordinates()->getY(), $this->getOffset()->getTop()));
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 
 		return $this;

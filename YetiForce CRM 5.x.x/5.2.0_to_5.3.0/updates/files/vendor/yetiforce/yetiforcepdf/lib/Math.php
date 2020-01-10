@@ -37,7 +37,7 @@ class Math
 	 *
 	 * @var int
 	 */
-	public static $highScale = 12;
+	public static $highScale = 6;
 
 	/**
 	 * Set more accurate calculation.

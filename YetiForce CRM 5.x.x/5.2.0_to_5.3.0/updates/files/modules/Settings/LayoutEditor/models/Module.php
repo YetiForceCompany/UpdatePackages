@@ -357,11 +357,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			case 'Integer':
 				$fieldLength = $params['fieldLength'];
 				$uitype = 7;
-				if ($fieldLength > 10) {
-					$type = $importerType->bigInteger($fieldLength)->defaultValue(0);
-				} else {
-					$type = $importerType->integer($fieldLength)->defaultValue(0);
-				}
+				$type = $importerType->integer($fieldLength)->defaultValue(0);
 				$uichekdata = 'I~O';
 				break;
 			case 'Related1M':
@@ -515,7 +511,7 @@ class Settings_LayoutEditor_Module_Model extends Vtiger_Module_Model
 			'id', 'seq', 'header_type', 'header_class',
 			'module', 'parent', 'action', 'mode', 'view', 'selected_ids',
 			'excluded_ids', 'search_params', 'search_key', 'page', 'operator',
-			'source_module', 'viewname', 'sortorder', 'orderby', 'inventory', 'private'
+			'source_module', 'viewname', 'sortorder', 'orderby', 'inventory', 'private', 'src_record', 'relationId', 'relation_id'
 		]);
 	}
 

@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
-// last check: 7fb498e44be26b17ba150584fd4da6330e075cec
+// last check: 7e9c346c9c1f75a43b3efcc7809928c3265f9034
 /**
  * YetiForceUpdate Class.
  */
@@ -226,7 +226,7 @@ class YetiForceUpdate
 				$fieldInstance->maximumlength = 65535;
 				$fieldInstance->uitype = $uiType;
 				$fieldInstance->typeofdata = 'V~O';
-				$fieldInstance->displaytype = 1;
+				$fieldInstance->displaytype = 2;
 				$blockInstance->addField($fieldInstance);
 				++$i;
 			}
@@ -324,6 +324,7 @@ class YetiForceUpdate
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
 			['vtiger_module_dashboard',  ['and', ['<>', 'blockid', 0],  ['NOT IN',  'blockid', (new \App\Db\Query())->select(['id'])->from('vtiger_module_dashboard_blocks')]]],
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
+			['yetiforce_proc_marketing',  ['type' => 'lead',  'param' => 'currentuser_status']]
 		]);
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);

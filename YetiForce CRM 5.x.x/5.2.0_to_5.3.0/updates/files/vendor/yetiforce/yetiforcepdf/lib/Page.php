@@ -1176,7 +1176,7 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 		$removeSource = !$tableBox->hasChildren() || !$tableBox->containContent();
 		$removeSource = $removeSource || ($tableBox->getFirstChild() instanceof TableHeaderGroupBox && count($tableBox->getChildren()) === 1);
 		if ($removeSource) {
-			$tableWrapperBox->getParent()->removeChild($tableWrapperBox)->setRenderable(false)->setForMeasurement(false);
+			$tableWrapperBox->setDisplayable(false)->setRenderable(false)->setForMeasurement(false);
 		}
 		return $newTableWrapperBox;
 	}
@@ -1275,8 +1275,9 @@ class Page extends \YetiForcePDF\Objects\Basic\DictionaryObject
 			$newBox->appendChild($clonedBox->getParent()->removeChild($clonedBox));
 		}
 		$this->getBox()->getStyle()->fixDomTree();
-		$this->getBox()->measureHeight(true)->measureOffset()->alignText()->measurePosition();
+		$this->getBox()->measureHeight(true)->measureOffset(true)->alignText()->measurePosition(true);
 		$newBox->layout(true);
+		$newBox->getStyle()->fixDomTree();
 		$this->document->setCurrentPage($newPage);
 		if (Math::comp($newBox->getDimensions()->getHeight(), $this->getDimensions()->getHeight()) > 0 && $level < 1024) {
 			$newPage->breakOverflow(++$level);

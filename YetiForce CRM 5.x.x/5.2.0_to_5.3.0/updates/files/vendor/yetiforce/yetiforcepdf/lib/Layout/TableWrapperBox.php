@@ -24,6 +24,11 @@ class TableWrapperBox extends BlockBox
 {
 	/**
 	 * We shouldn't append block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -31,6 +36,11 @@ class TableWrapperBox extends BlockBox
 
 	/**
 	 * We shouldn't append table wrapper here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendTableWrapperBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -38,6 +48,11 @@ class TableWrapperBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline block box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBlockBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -45,6 +60,11 @@ class TableWrapperBox extends BlockBox
 
 	/**
 	 * We shouldn't append inline box here.
+	 *
+	 * @param mixed $childDomElement
+	 * @param mixed $element
+	 * @param mixed $style
+	 * @param mixed $parentBlock
 	 */
 	public function appendInlineBox($childDomElement, $element, $style, $parentBlock)
 	{
@@ -79,11 +99,11 @@ class TableWrapperBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		$this->applyStyleWidth();
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 		}
 		return $this;
 	}
@@ -98,10 +118,10 @@ class TableWrapperBox extends BlockBox
 		}
 		$maxHeight = '0';
 		foreach ($this->getChildren() as $child) {
-			$child->measureHeight();
+			$child->measureHeight($afterPageDividing);
 		}
 		foreach ($this->getChildren() as $child) {
-			$child->measureHeight();
+			$child->measureHeight($afterPageDividing);
 			$maxHeight = Math::max($maxHeight, $child->getDimensions()->getHeight());
 		}
 		$style = $this->getStyle();

@@ -7,11 +7,12 @@
     "html",
     "html to pdf"
   ],
-  "homepage": "http://yetiforce.com",
+  "homepage": "https://github.com/YetiForceCompany/YetiForcePDF",
   "authors": [
     {
-      "name": "Rafal Pospiech",
-      "email": "r.pospiech@yetiforce.com"
+      "name": "YetiForceCompany",
+      "email": "info@yetiforce.com",
+      "homepage": "https://yetiforce.com/"
     }
   ],
   "require": {
@@ -26,7 +27,7 @@
     "phenx/php-font-lib": "^0.5.1",
     "guzzlehttp/guzzle": "^6.3",
     "composer/ca-bundle": "^1.1",
-    "milon/barcode": "^5.3",
+    "milon/barcode": "^6.0.0",
     "sabberworm/php-css-parser": "^8.3"
   },
   "autoload": {

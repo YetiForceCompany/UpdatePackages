@@ -791,6 +791,7 @@ class TableBox extends BlockBox
 						$columnStyle = $column->getStyle();
 						$cellStyle = $column->getFirstChild()->getStyle();
 						if ($columnStyle->getRules('border-collapse') === 'collapse' && $rowIndex + $i === count($this->getChildren())) {
+							// TODO: store original border widths inside cell
 							$cellStyle->setRule('border-bottom-width', $cellStyle->getRules('border-top-width'));
 						}
 						$toDisposition = Math::sub($colInnerHeight, $cellHeight);
@@ -818,7 +819,7 @@ class TableBox extends BlockBox
 			}
 		}
 		foreach ($toRemove as $remove) {
-			$remove->getParent()->removeChild($remove)->setRenderable(false)->setForMeasurement(false);
+			$remove->setDisplayable(false)->setRenderable(false)->setForMeasurement(false);
 		}
 
 		return $this;
@@ -1197,14 +1198,14 @@ class TableBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		if ($this->parentWidth === $this->getParent()->getParent()->getDimensions()->getWidth()) {
 			return $this;
 		}
 		$this->parentWidth = $this->getParent()->getParent()->getDimensions()->getWidth();
 		foreach ($this->getCells() as $cell) {
-			$cell->measureWidth();
+			$cell->measureWidth($afterPageDividing);
 		}
 		$step = 0;
 		$this->setUpSizingTypes();
@@ -1250,7 +1251,7 @@ class TableBox extends BlockBox
 			return $this;
 		}
 		foreach ($this->getCells() as $cell) {
-			$cell->measureHeight();
+			$cell->measureHeight($afterPageDividing);
 		}
 		$style = $this->getStyle();
 		$maxRowHeights = [];
@@ -1321,6 +1322,9 @@ class TableBox extends BlockBox
 				$row->getDimensions()->setHeight(Math::add($maxRowHeights[$rowGroupIndex][$rowIndex], $rowStyle->getVerticalBordersWidth(), $rowStyle->getVerticalPaddingsWidth()));
 				$rowGroupHeight = Math::add($rowGroupHeight, $row->getDimensions()->getHeight());
 				foreach ($row->getChildren() as $column) {
+					if ($column->getRowSpan() > 1 && $afterPageDividing) {
+						continue;
+					}
 					$column->getDimensions()->setHeight($row->getDimensions()->getInnerHeight());
 					$cell = $column->getFirstChild();
 					$cellStyle = $cell->getStyle();
@@ -1366,7 +1370,7 @@ class TableBox extends BlockBox
 					$cell->getDimensions()->setHeight($height);
 				}
 			}
-			if ($row->getStyle()->getRules('border-collapse') === 'separate') {
+			if (isset($row) && $row->getStyle()->getRules('border-collapse') === 'separate') {
 				$rowGroupHeight = Math::add($rowGroupHeight, $row->getStyle()->getRules('border-spacing'));
 			}
 			$rowGroup->getDimensions()->setHeight($rowGroupHeight);
@@ -1386,11 +1390,11 @@ class TableBox extends BlockBox
 	{
 		foreach ($this->getChildren() as $rowGroup) {
 			if (!$rowGroup->containContent() || !$rowGroup->hasChildren()) {
-				$this->removeChild($rowGroup)->setRenderable(false)->setForMeasurement(false);
+				$this->removeChild($rowGroup);
 			} else {
 				foreach ($rowGroup->getChildren() as $row) {
 					if (!$row->containContent() || !$row->hasChildren()) {
-						$rowGroup->removeChild($row)->setRenderable(false)->setForMeasurement(false);
+						$rowGroup->removeChild($row);
 					}
 				}
 			}

@@ -115,11 +115,12 @@ class Image
 		JPEG = IMAGETYPE_JPEG,
 		PNG = IMAGETYPE_PNG,
 		GIF = IMAGETYPE_GIF,
-		WEBP = 18; // IMAGETYPE_WEBP is available as of PHP 7.1
+		WEBP = IMAGETYPE_WEBP,
+		BMP = IMAGETYPE_BMP;
 
 	public const EMPTY_GIF = "GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;";
 
-	private const FORMATS = [self::JPEG => 'jpeg', self::PNG => 'png', self::GIF => 'gif', self::WEBP => 'webp'];
+	private const FORMATS = [self::JPEG => 'jpeg', self::PNG => 'png', self::GIF => 'gif', self::WEBP => 'webp', self::BMP => 'bmp'];
 
 	/** @var resource */
 	private $image;
@@ -506,9 +507,9 @@ class Image
 	 */
 	public function toString(int $type = self::JPEG, int $quality = null): string
 	{
-		ob_start(function () {});
-		$this->output($type, $quality);
-		return ob_get_clean();
+		return Helpers::capture(function () use ($type, $quality) {
+			$this->output($type, $quality);
+		});
 	}
 
 
@@ -569,11 +570,15 @@ class Image
 				$success = @imagewebp($this->image, $file, $quality); // @ is escalated to exception
 				break;
 
+			case self::BMP:
+				$success = @imagebmp($this->image, $file); // @ is escalated to exception
+				break;
+
 			default:
 				throw new Nette\InvalidArgumentException("Unsupported image type '$type'.");
 		}
 		if (!$success) {
-			throw new ImageException(error_get_last()['message'] ?: 'Unknown error');
+			throw new ImageException(Helpers::getLastError() ?: 'Unknown error');
 		}
 	}
 

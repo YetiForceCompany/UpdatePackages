@@ -103,7 +103,6 @@ class DNS2D {
         $svg = '<' . '?' . 'xml version="1.0" standalone="no"' . '?' . '>' . "\n";
         $svg .= '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' . "\n";
         $svg .= '<svg width="' . round(($this->barcode_array['num_cols'] * $w), 3) . '" height="' . round(($this->barcode_array['num_rows'] * $h), 3) . '" version="1.1" xmlns="http://www.w3.org/2000/svg">' . "\n";
-        $svg .= "\t" . '<desc>' . strtr($this->barcode_array['code'], $repstr) . '</desc>' . "\n";
         $svg .= "\t" . '<g id="elements" fill="' . $color . '" stroke="none">' . "\n";
         // print barcode elements
         $y = 0;
@@ -252,7 +251,9 @@ class DNS2D {
      * @protected
      */
     protected function getBarcodePNGUri($code, $type, $w = 3, $h = 3, $color = array(0, 0, 0)) {
-        return url($this->getBarcodePNGPath($code, $type, $w, $h, $color));
+        $path = $this->getBarcodePNGPath($code, $type, $w, $h, $color);
+        // Replace backslash (Windows) with forward slashes, to make it compatible with url().
+        return url(str_replace('\\', '/', $path));
     }
 
     /**

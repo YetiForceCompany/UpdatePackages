@@ -28,7 +28,7 @@ class WatermarkBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		if (!$this->isRenderable()) {
 			return $this;
@@ -39,7 +39,7 @@ class WatermarkBox extends BlockBox
 		$this->getDimensions()->setWidth($width);
 		$this->applyStyleWidth();
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 		}
 		$this->divideLines();
 		return $this;
@@ -59,7 +59,7 @@ class WatermarkBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		if (!$this->isRenderable()) {
 			return $this;
@@ -72,7 +72,7 @@ class WatermarkBox extends BlockBox
 		$this->getOffset()->setTop($top);
 		$this->getOffset()->setLeft($left);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 		return $this;
 	}
@@ -80,7 +80,7 @@ class WatermarkBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		if (!$this->isRenderable()) {
 			return $this;
@@ -93,7 +93,7 @@ class WatermarkBox extends BlockBox
 		$left = Math::sub(Math::div($pageWidth, '2'), Math::div($boxWidth, '2'));
 		$this->getCoordinates()->setX($left)->setY($top);
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 		return $this;
 	}

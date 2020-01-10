@@ -85,23 +85,27 @@ class DNS1D {
      * @return string SVG code.
      * @protected
      */
-    protected function getBarcodeSVG($code, $type, $w = 2, $h = 30, $color = 'black') {
+    protected function getBarcodeSVG($code, $type, $w = 2, $h = 30, $color = 'black', $showCode = true, $inline = false) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
         $this->setBarcode($code, $type);
         // replace table for special characters
         $repstr = array("\0" => '', '&' => '&amp;', '<' => '&lt;', '>' => '&gt;');
-        $svg = '<' . '?' . 'xml version="1.0" standalone="no"' . '?' . '>' . "\n";
-        $svg .= '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' . "\n";
+		if (!$inline)
+		{
+			$svg = '<' . '?' . 'xml version="1.0" standalone="no"' . '?' . '>' . "\n";
+			$svg .= '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' . "\n";
+		}
         $svg .= '<svg width="' . round(($this->barcode_array['maxw'] * $w), 3) . '" height="' . $h . '" version="1.1" xmlns="http://www.w3.org/2000/svg">' . "\n";
-        $svg .= "\t" . '<desc>' . strtr($this->barcode_array['code'], $repstr) . '</desc>' . "\n";
         $svg .= "\t" . '<g id="bars" fill="' . $color . '" stroke="none">' . "\n";
         // print bars
         $x = 0;
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
+	    if($showCode)
+                $bh -= 12;
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -109,6 +113,9 @@ class DNS1D {
             }
             $x += $bw;
         }
+	if($showCode)
+            $svg .= "\t" .'<text x="'. (round(($this->barcode_array['maxw'] * $w), 3)/2)  .'" text-anchor="middle"  y="'.  ($bh + 12) .'" id="code" fill="' . $color . '" font-size ="12px" >'. $code .'</text>'. "\n";
+
         $svg .= "\t" . '</g>' . "\n";
         $svg .= '</svg>' . "\n";
         return $svg;
@@ -124,7 +131,7 @@ class DNS1D {
      * @return string HTML code.
      * @protected
      */
-    protected function getBarcodeHTML($code, $type, $w = 2, $h = 30, $color = 'black') {
+    protected function getBarcodeHTML($code, $type, $w = 2, $h = 30, $color = 'black', $showCode =false) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
@@ -136,6 +143,8 @@ class DNS1D {
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
+	    if($showCode)
+                $bh -= 12 ;
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -143,6 +152,9 @@ class DNS1D {
             }
             $x += $bw;
         }
+	if($showCode)
+            $html .= '<div style="position:absolute;bottom:0; text-align:center; width:' . ($this->barcode_array['maxw'] * $w) . 'px;  font-size: 0.6vw;">'. $code .'</div>';
+
         $html .= '</div>' . "\n";
         return $html;
     }
@@ -157,7 +169,7 @@ class DNS1D {
      * @return image or false in case of error.
      * @protected
      */
-    protected function getBarcodePNG($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0)) {
+    protected function getBarcodePNG($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0), $showCode = false) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
@@ -188,6 +200,8 @@ class DNS1D {
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
+	    if($showCode)
+            	$bh -= imagefontheight(3) ;
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -200,6 +214,18 @@ class DNS1D {
             $x += $bw;
         }
         ob_start();
+
+	// Add Code String in bottom
+        if($showCode)
+        	if ($imagick) {
+		    $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
+		    $bar->annotation( 10 , $h - $bh +10 , $code );
+		} else {
+		    $width_text = imagefontwidth(3) * strlen($code);
+		    $height_text = imagefontheight(3);
+		    imagestring($png, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
+
+		}
         // get image out put
         if ($imagick) {
             $png->drawimage($bar);
@@ -234,7 +260,7 @@ class DNS1D {
      * @return path or false in case of error.
      * @protected
      */
-    protected function getBarcodePNGPath($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0)) {
+    protected function getBarcodePNGPath($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0), $showCode = false) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
@@ -265,6 +291,9 @@ class DNS1D {
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
+
+	    if($showCode)
+                 $bh -= imagefontheight(3) ;
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -276,6 +305,16 @@ class DNS1D {
             }
             $x += $bw;
         }
+	if($showCode)
+            if ($imagick) {
+                $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
+                $bar->annotation( 10 , $h - $bh +10 , $code );
+            } else {
+                $width_text = imagefontwidth(3) * strlen($code);
+                $height_text = imagefontheight(3);
+                imagestring($png, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
+            }
+
         $file_name= Str::slug($code);
         $save_file = $this->checkfile($this->store_path . $file_name . ".png");
 
@@ -303,7 +342,9 @@ class DNS1D {
      * @protected
      */
     protected function getBarcodePNGUri($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0)) {
-        return url($this->getBarcodePNGPath($code, $type, $w, $h, $color));
+        $path = $this->getBarcodePNGPath($code, $type, $w, $h, $color);
+        // Replace backslash (Windows) with forward slashes, to make it compatible with url().
+        return url(str_replace('\\', '/', $path));
     }
 
     /**
@@ -1388,6 +1429,10 @@ class DNS1D {
      * @protected
      */
     protected function barcode_eanupc($code, $len = 13) {
+        if (!ctype_digit($code)) {
+            throw new \InvalidArgumentException('Code must be digit. get ' . $code);
+        }
+
         $upce = false;
         if ($len == 6) {
             $len = 12; // UPC-A

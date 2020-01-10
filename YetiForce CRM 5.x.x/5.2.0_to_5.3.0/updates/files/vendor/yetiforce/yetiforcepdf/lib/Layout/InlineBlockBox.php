@@ -23,17 +23,19 @@ class InlineBlockBox extends BlockBox
 	/**
 	 * Measure width.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 		}
 		$this->divideLines();
 		$maxWidth = '0';
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 			$outerWidth = $child->getDimensions()->getOuterWidth();
 			$maxWidth = Math::max($maxWidth, $outerWidth);
 		}
@@ -66,9 +68,11 @@ class InlineBlockBox extends BlockBox
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		$rules = $this->getStyle()->getRules();
 		$parent = $this->getParent();
@@ -84,7 +88,7 @@ class InlineBlockBox extends BlockBox
 		$this->getOffset()->setLeft($left);
 		$this->getOffset()->setTop($top);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 		return $this;
 	}
@@ -92,9 +96,11 @@ class InlineBlockBox extends BlockBox
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		$parent = $this->getParent();
 		$this->getCoordinates()->setX(Math::add($parent->getCoordinates()->getX(), $this->getOffset()->getLeft()));
@@ -104,7 +110,7 @@ class InlineBlockBox extends BlockBox
 			$this->getCoordinates()->setY($this->getClosestLineBox()->getCoordinates()->getY());
 		}
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 		return $this;
 	}

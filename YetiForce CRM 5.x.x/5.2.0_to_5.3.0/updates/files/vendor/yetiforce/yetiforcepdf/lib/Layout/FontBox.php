@@ -52,7 +52,7 @@ class FontBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		return $this;
 	}
@@ -68,7 +68,7 @@ class FontBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		return $this;
 	}
@@ -76,7 +76,7 @@ class FontBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		return $this;
 	}

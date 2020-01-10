@@ -11,12 +11,26 @@
     ],
     "require": {
         "php": ">=5.6.0",
-        "illuminate/support": "5.*"
+        "illuminate/support": "5.*|~6"
     },
     "autoload": {
         "psr-0": {
             "Milon\\Barcode": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Milon\\Barcode\\BarcodeServiceProvider"
+            ],
+            "aliases": {
+                "DNS1D": "Milon\\Barcode\\Facades\\DNS1DFacade",
+                "DNS2D": "Milon\\Barcode\\Facades\\DNS2DFacade"
+            }
+        }
+    }
 }

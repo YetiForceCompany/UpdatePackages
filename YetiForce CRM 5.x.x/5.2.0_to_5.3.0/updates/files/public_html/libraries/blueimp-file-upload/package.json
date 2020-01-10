@@ -1,6 +1,6 @@
 {
   "name": "blueimp-file-upload",
-  "version": "10.6.0",
+  "version": "10.7.0",
   "title": "jQuery File Upload",
   "description": "File Upload widget with multiple file selection, drag&drop support, progress bar, validation and preview images, audio and video for jQuery. Supports cross-domain, chunked and resumable file uploads. Works with any server-side platform (Google App Engine, PHP, Python, Ruby on Rails, Java, etc.) that supports standard HTML form file uploads.",
   "keywords": [
@@ -87,7 +87,7 @@
     "lint": "stylelint '**/*.css' && eslint .",
     "unit": "docker-compose run --rm mocha",
     "wdio": "docker-compose run --rm wdio",
-    "test": "npm run lint && npm run unit && npm run wdio && npm run wdio -- firefox",
+    "test": "npm run lint && npm run unit && npm run wdio && npm run wdio -- firefox.js",
     "posttest": "docker-compose down -v",
     "preversion": "npm test",
     "postversion": "git push --tags origin master && npm publish"

@@ -190,6 +190,13 @@ class Style extends \YetiForcePDF\Base
 	protected $rules = [];
 
 	/**
+	 * Initial rules because rules may change during the rearrangement.
+	 *
+	 * @var array
+	 */
+	protected $initialRules = [];
+
+	/**
 	 * Default styles for certain elements.
 	 *
 	 * @var array
@@ -1301,13 +1308,13 @@ class Style extends \YetiForcePDF\Base
 	{
 		if ($this->getElement()) {
 			if ($this->box instanceof TableCellBox) {
-				$parentStyle = $this->getParent();
-				if ($parentStyle->getRules('border-collapse') !== 'collapse') {
-					$padding = $parentStyle->getRules('border-spacing');
-					$parentStyle->setRule('padding-top', $padding);
-					$parentStyle->setRule('padding-right', $padding);
-					$parentStyle->setRule('padding-bottom', $padding);
-					$parentStyle->setRule('padding-left', $padding);
+				$tableWrapperStyle = $this->getParent();
+				if ($tableWrapperStyle->getRules('border-collapse') !== 'collapse') {
+					$padding = $tableWrapperStyle->getRules('border-spacing');
+					$tableWrapperStyle->setRule('padding-top', $padding);
+					$tableWrapperStyle->setRule('padding-right', $padding);
+					$tableWrapperStyle->setRule('padding-bottom', $padding);
+					$tableWrapperStyle->setRule('padding-left', $padding);
 				}
 			}
 		}
@@ -1467,6 +1474,7 @@ class Style extends \YetiForcePDF\Base
 			$finalRules['margin-right'] = '0';
 		}
 		$this->rules = $finalRules;
+		$this->setInitialRules($finalRules);
 		$this->parsed = true;
 		unset($finalRules, $rules, $rulesParsed, $default, $inherited, $class, $inline, $inlineTemp);
 		return $this;
@@ -1475,11 +1483,9 @@ class Style extends \YetiForcePDF\Base
 	/**
 	 * Fix tables.
 	 *
-	 * @param bool $removeBottomBorders
-	 *
 	 * @return $this
 	 */
-	public function fixTables(bool $removeBottomBorders)
+	public function fixTables()
 	{
 		$box = $this->getBox();
 		if ($box->wasCut()) {
@@ -1522,8 +1528,10 @@ class Style extends \YetiForcePDF\Base
 								Math::max($cellBorders[2], $cellStyle->getRules('border-bottom-width')),
 								Math::max($cellBorders[3], $cellStyle->getRules('border-left-width')),
 							];
-							if ($rowIndex + $column->getRowSpan() < $rowsCount && $removeBottomBorders) {
+							if ($rowIndex + $column->getRowSpan() < $rowsCount) {
 								$cellStyle->setRule('border-bottom-width', '0');
+							} elseif (Math::comp($cellStyle->getRules('border-bottom-width'), '0') === 0) {
+								$cellStyle->setRule('border-bottom-width', $this->getInitialRules('border-bottom-width'));
 							}
 							if ($columnIndex + $column->getColSpan() < $columnsCount) {
 								$cellStyle->setRule('border-right-width', '0');
@@ -1537,18 +1545,18 @@ class Style extends \YetiForcePDF\Base
 						}
 					}
 					if ($boxStyle->getRules('border-collapse') === 'collapse') {
-						$parentStyle = $box->getParent()->getStyle();
-						if (Math::comp($cellBorders[0], $parentStyle->getRules('border-top-width')) >= 0) {
-							$parentStyle->setRule('border-top-width', '0');
+						$tableWrapperStyle = $box->getParent()->getStyle();
+						if (Math::comp($cellBorders[0], $tableWrapperStyle->getRules('border-top-width')) >= 0) {
+							$tableWrapperStyle->setRule('border-top-width', '0');
 						}
-						if (Math::comp($cellBorders[1], $parentStyle->getRules('border-right-width')) >= 0) {
-							$parentStyle->setRule('border-right-width', '0');
+						if (Math::comp($cellBorders[1], $tableWrapperStyle->getRules('border-right-width')) >= 0) {
+							$tableWrapperStyle->setRule('border-right-width', '0');
 						}
-						if (Math::comp($cellBorders[2], $parentStyle->getRules('border-bottom-width')) >= 0) {
-							$parentStyle->setRule('border-bottom-width', '0');
+						if (Math::comp($cellBorders[2], $tableWrapperStyle->getRules('border-bottom-width')) >= 0) {
+							$tableWrapperStyle->setRule('border-bottom-width', '0');
 						}
-						if (Math::comp($cellBorders[3], $parentStyle->getRules('border-left-width')) >= 0) {
-							$parentStyle->setRule('border-left-width', '0');
+						if (Math::comp($cellBorders[3], $tableWrapperStyle->getRules('border-left-width')) >= 0) {
+							$tableWrapperStyle->setRule('border-left-width', '0');
 						}
 					}
 				}
@@ -1558,7 +1566,7 @@ class Style extends \YetiForcePDF\Base
 				if ($boxStyle->getRules('border-collapse') === 'collapse') {
 					$rowsCount = count($rows) - 1;
 					foreach ($rows as $rowIndex => $row) {
-						if ($rowIndex < $rowsCount && $removeBottomBorders) {
+						if ($rowIndex < $rowsCount) {
 							$row->getStyle()->setRule('border-bottom-width', '0');
 						}
 					}
@@ -1581,25 +1589,22 @@ class Style extends \YetiForcePDF\Base
 			}
 		}
 		unset($rowGroup, $boxes, $rows, $columns);
-
 		return $this;
 	}
 
 	/**
 	 * Fix dom tree - after dom tree is parsed we must clean up or add some rules.
 	 *
-	 * @param bool $removeBottomBorders
-	 *
 	 * @return $this
 	 */
-	public function fixDomTree(bool $removeBottomBorders = true)
+	public function fixDomTree()
 	{
 		if ($this->getBox()->wasCut()) {
 			return $this;
 		}
 		foreach ($this->box->getChildren() as $childBox) {
-			$childBox->getStyle()->fixTables($removeBottomBorders);
-			$childBox->getStyle()->fixDomTree($removeBottomBorders);
+			$childBox->getStyle()->fixTables();
+			$childBox->getStyle()->fixDomTree();
 		}
 
 		return $this;
@@ -1750,5 +1755,37 @@ class Style extends \YetiForcePDF\Base
 		if ($this->element) {
 			$this->element = clone $this->element;
 		}
+	}
+
+	/**
+	 * Get initial rules because rules may change during the rearrangement.
+	 *
+	 * @param string $ruleName
+	 *
+	 * @return array
+	 */
+	public function getInitialRules(string $ruleName = '')
+	{
+		if ($ruleName && isset($this->initialRules[$ruleName])) {
+			return $this->initialRules[$ruleName];
+		}
+		if ($ruleName) {
+			return null;
+		}
+		return $this->initialRules;
+	}
+
+	/**
+	 * Set initial rules because rules may change during the rearrangement.
+	 *
+	 * @param array $initialRules
+	 *
+	 * @return self
+	 */
+	public function setInitialRules(array $initialRules)
+	{
+		$this->initialRules = $initialRules;
+
+		return $this;
 	}
 }

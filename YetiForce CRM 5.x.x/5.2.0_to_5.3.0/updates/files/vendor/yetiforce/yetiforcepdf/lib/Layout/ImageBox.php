@@ -25,7 +25,7 @@ class ImageBox extends InlineBlockBox
 	 *
 	 * @return $this
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		$style = $this->getStyle();
 		if ($style->getRules('width') === 'auto') {

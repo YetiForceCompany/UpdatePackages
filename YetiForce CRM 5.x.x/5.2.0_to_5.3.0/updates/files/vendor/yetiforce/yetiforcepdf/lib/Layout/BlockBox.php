@@ -388,9 +388,11 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	/**
 	 * Measure width of this block.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		$dimensions = $this->getDimensions();
 		$parent = $this->getParent();
@@ -406,7 +408,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 				$this->applyStyleWidth();
 				if ($oldWidth !== $this->getDimensions()->getWidth()) {
 					foreach ($this->getChildren() as $child) {
-						$child->measureWidth();
+						$child->measureWidth($afterPageDividing);
 					}
 					$this->divideLines();
 				}
@@ -415,7 +417,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			}
 			// if parent doesn't have a width specified
 			foreach ($this->getChildren() as $child) {
-				$child->measureWidth();
+				$child->measureWidth($afterPageDividing);
 			}
 			$this->divideLines();
 			$maxWidth = '0';
@@ -435,7 +437,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			$dimensions->setWidth($width);
 			$this->applyStyleWidth();
 			foreach ($this->getChildren() as $child) {
-				$child->measureWidth();
+				$child->measureWidth($afterPageDividing);
 			}
 			$this->divideLines();
 		}
@@ -593,9 +595,11 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	/**
 	 * Offset elements.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		if ($this->wasCut() === \YetiForcePDF\Page::CUT_BELOW) {
 			return $this;
@@ -623,7 +627,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$this->getOffset()->setTop($top);
 		$this->getOffset()->setLeft($left);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 
 		return $this;
@@ -632,9 +636,11 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 	/**
 	 * Position.
 	 *
+	 * @param bool $afterPageDividing
+	 *
 	 * @return $this
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		if ($this->wasCut() === \YetiForcePDF\Page::CUT_BELOW) {
 			return $this;
@@ -648,7 +654,7 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 		$this->getCoordinates()->setX($x);
 		$this->getCoordinates()->setY($y);
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 
 		return $this;
@@ -667,9 +673,9 @@ class BlockBox extends ElementBox implements BoxInterface, AppendChildInterface,
 			$this->measureWidth();
 		}
 		$this->measureHeight($afterPageDividing);
-		$this->measureOffset();
+		$this->measureOffset($afterPageDividing);
 		$this->alignText();
-		$this->measurePosition();
+		$this->measurePosition($afterPageDividing);
 
 		return $this;
 	}

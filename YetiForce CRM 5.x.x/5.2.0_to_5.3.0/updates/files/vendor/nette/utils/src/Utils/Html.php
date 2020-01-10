@@ -258,7 +258,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, IHtmlString
 
 
 	/**
-	 * Static factory.
+	 * Constructs new HTML element.
 	 * @param  array|string $attrs element's attributes or plain text content
 	 * @return static
 	 */
@@ -282,6 +282,51 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, IHtmlString
 		}
 
 		return $el;
+	}
+
+
+	/**
+	 * Returns an object representing HTML text.
+	 */
+	public static function fromHtml(string $html): self
+	{
+		return (new static)->setHtml($html);
+	}
+
+
+	/**
+	 * Returns an object representing plain text.
+	 */
+	public static function fromText(string $text): self
+	{
+		return (new static)->setText($text);
+	}
+
+
+	/**
+	 * Converts to HTML.
+	 */
+	final public function toHtml(): string
+	{
+		return $this->render();
+	}
+
+
+	/**
+	 * Converts to plain text.
+	 */
+	final public function toText(): string
+	{
+		return $this->getText();
+	}
+
+
+	/**
+	 * Converts given HTML code to plain text.
+	 */
+	public static function htmlToText(string $html): string
+	{
+		return html_entity_decode(strip_tags($html), ENT_QUOTES, 'UTF-8');
 	}
 
 
@@ -535,7 +580,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, IHtmlString
 	 */
 	final public function getText(): string
 	{
-		return html_entity_decode(strip_tags($this->getHtml()), ENT_QUOTES, 'UTF-8');
+		return self::htmlToText($this->getHtml());
 	}
 
 

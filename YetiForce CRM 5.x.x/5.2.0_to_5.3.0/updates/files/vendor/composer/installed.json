@@ -710,29 +710,29 @@
     },
     {
         "name": "illuminate/contracts",
-        "version": "v5.8.36",
-        "version_normalized": "5.8.36.0",
+        "version": "v6.8.0",
+        "version_normalized": "6.8.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/contracts.git",
-            "reference": "00fc6afee788fa07c311b0650ad276585f8aef96"
+            "reference": "484727dc42f1c9dbffb2182f6fb0d01ca1aba556"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/contracts/zipball/00fc6afee788fa07c311b0650ad276585f8aef96",
-            "reference": "00fc6afee788fa07c311b0650ad276585f8aef96",
+            "url": "https://api.github.com/repos/illuminate/contracts/zipball/484727dc42f1c9dbffb2182f6fb0d01ca1aba556",
+            "reference": "484727dc42f1c9dbffb2182f6fb0d01ca1aba556",
             "shasum": ""
         },
         "require": {
-            "php": "^7.1.3",
+            "php": "^7.2",
             "psr/container": "^1.0",
             "psr/simple-cache": "^1.0"
         },
-        "time": "2019-07-30T13:57:21+00:00",
+        "time": "2019-12-06T13:40:59+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "5.8-dev"
+                "dev-master": "6.0-dev"
             }
         },
         "installation-source": "dist",
@@ -756,43 +756,43 @@
     },
     {
         "name": "illuminate/support",
-        "version": "v5.8.36",
-        "version_normalized": "5.8.36.0",
+        "version": "v6.8.0",
+        "version_normalized": "6.8.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "df4af6a32908f1d89d74348624b57e3233eea247"
+            "reference": "1536bbc476208a022805cb5b95ab72094d6d1b42"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/df4af6a32908f1d89d74348624b57e3233eea247",
-            "reference": "df4af6a32908f1d89d74348624b57e3233eea247",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/1536bbc476208a022805cb5b95ab72094d6d1b42",
+            "reference": "1536bbc476208a022805cb5b95ab72094d6d1b42",
             "shasum": ""
         },
         "require": {
             "doctrine/inflector": "^1.1",
             "ext-json": "*",
             "ext-mbstring": "*",
-            "illuminate/contracts": "5.8.*",
-            "nesbot/carbon": "^1.26.3 || ^2.0",
-            "php": "^7.1.3"
+            "illuminate/contracts": "^6.0",
+            "nesbot/carbon": "^2.0",
+            "php": "^7.2"
         },
         "conflict": {
             "tightenco/collect": "<5.5.33"
         },
         "suggest": {
-            "illuminate/filesystem": "Required to use the composer class (5.8.*).",
+            "illuminate/filesystem": "Required to use the composer class (^6.0).",
             "moontoast/math": "Required to use ordered UUIDs (^1.1).",
             "ramsey/uuid": "Required to use Str::uuid() (^3.7).",
-            "symfony/process": "Required to use the composer class (^4.2).",
-            "symfony/var-dumper": "Required to use the dd function (^4.2).",
-            "vlucas/phpdotenv": "Required to use the env helper (^3.3)."
+            "symfony/process": "Required to use the composer class (^4.3.4).",
+            "symfony/var-dumper": "Required to use the dd function (^4.3.4).",
+            "vlucas/phpdotenv": "Required to use the Env class and env helper (^3.3)."
         },
-        "time": "2019-12-12T14:16:47+00:00",
+        "time": "2019-12-12T14:16:31+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "5.8-dev"
+                "dev-master": "6.0-dev"
             }
         },
         "installation-source": "dist",
@@ -987,25 +987,36 @@
     },
     {
         "name": "milon/barcode",
-        "version": "5.3.6",
-        "version_normalized": "5.3.6.0",
+        "version": "6.0.2",
+        "version_normalized": "6.0.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/milon/barcode.git",
-            "reference": "ca2f3efbf46142ff7f7afe3b0f3660ea4a067576"
+            "reference": "71454ba6d4ec3c70103379afb0376f51d0bf17ce"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/milon/barcode/zipball/ca2f3efbf46142ff7f7afe3b0f3660ea4a067576",
-            "reference": "ca2f3efbf46142ff7f7afe3b0f3660ea4a067576",
+            "url": "https://api.github.com/repos/milon/barcode/zipball/71454ba6d4ec3c70103379afb0376f51d0bf17ce",
+            "reference": "71454ba6d4ec3c70103379afb0376f51d0bf17ce",
             "shasum": ""
         },
         "require": {
-            "illuminate/support": "5.*",
+            "illuminate/support": "5.*|~6",
             "php": ">=5.6.0"
         },
-        "time": "2017-07-28T00:33:38+00:00",
+        "time": "2019-09-17T07:40:26+00:00",
         "type": "library",
+        "extra": {
+            "laravel": {
+                "providers": [
+                    "Milon\\Barcode\\BarcodeServiceProvider"
+                ],
+                "aliases": {
+                    "DNS1D": "Milon\\Barcode\\Facades\\DNS1DFacade",
+                    "DNS2D": "Milon\\Barcode\\Facades\\DNS2DFacade"
+                }
+            }
+        },
         "installation-source": "dist",
         "autoload": {
             "psr-0": {
@@ -1110,28 +1121,29 @@
     },
     {
         "name": "nette/php-generator",
-        "version": "v3.3.1",
-        "version_normalized": "3.3.1.0",
+        "version": "v3.3.2",
+        "version_normalized": "3.3.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/nette/php-generator.git",
-            "reference": "4240fd7adf499138c07b814ef9b9a6df9f6d7187"
+            "reference": "facde285ba959366e7eee09c7f198f2d9ef176ca"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/nette/php-generator/zipball/4240fd7adf499138c07b814ef9b9a6df9f6d7187",
-            "reference": "4240fd7adf499138c07b814ef9b9a6df9f6d7187",
+            "url": "https://api.github.com/repos/nette/php-generator/zipball/facde285ba959366e7eee09c7f198f2d9ef176ca",
+            "reference": "facde285ba959366e7eee09c7f198f2d9ef176ca",
             "shasum": ""
         },
         "require": {
-            "nette/utils": "^2.4.2 || ~3.0.0",
+            "nette/utils": "^2.4.2 || ^3.0",
             "php": ">=7.1"
         },
         "require-dev": {
             "nette/tester": "^2.0",
+            "phpstan/phpstan": "^0.12",
             "tracy/tracy": "^2.3"
         },
-        "time": "2019-11-22T11:12:11+00:00",
+        "time": "2020-01-03T19:49:13+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1160,7 +1172,7 @@
                 "homepage": "https://nette.org/contributors"
             }
         ],
-        "description": "🐘 Nette PHP Generator: generates neat PHP code for you. Supports new PHP 7.3 features.",
+        "description": "🐘 Nette PHP Generator: generates neat PHP code for you. Supports new PHP 7.4 features.",
         "homepage": "https://nette.org",
         "keywords": [
             "code",
@@ -1171,17 +1183,17 @@
     },
     {
         "name": "nette/utils",
-        "version": "v3.0.3",
-        "version_normalized": "3.0.3.0",
+        "version": "v3.1.0",
+        "version_normalized": "3.1.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/nette/utils.git",
-            "reference": "f1b5ce0fae07f13e066e64f9a8f59e53b8f4982e"
+            "reference": "d6cd63d77dd9a85c3a2fae707e1255e44c2bc182"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/nette/utils/zipball/f1b5ce0fae07f13e066e64f9a8f59e53b8f4982e",
-            "reference": "f1b5ce0fae07f13e066e64f9a8f59e53b8f4982e",
+            "url": "https://api.github.com/repos/nette/utils/zipball/d6cd63d77dd9a85c3a2fae707e1255e44c2bc182",
+            "reference": "d6cd63d77dd9a85c3a2fae707e1255e44c2bc182",
             "shasum": ""
         },
         "require": {
@@ -1201,11 +1213,11 @@
             "ext-tokenizer": "to use Nette\\Utils\\Reflection::getUseStatements()",
             "ext-xml": "to use Strings::length() etc. when mbstring is not available"
         },
-        "time": "2019-12-27T03:47:50+00:00",
+        "time": "2020-01-03T18:13:31+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "3.0-dev"
+                "dev-master": "3.1-dev"
             }
         },
         "installation-source": "dist",
@@ -2887,17 +2899,17 @@
     },
     {
         "name": "yetiforce/yetiforcepdf",
-        "version": "0.1.27",
-        "version_normalized": "0.1.27.0",
+        "version": "0.1.28",
+        "version_normalized": "0.1.28.0",
         "source": {
             "type": "git",
             "url": "https://github.com/YetiForceCompany/YetiForcePDF.git",
-            "reference": "611122c27877e1d8b0fd8713c89816eaa2f6c22f"
+            "reference": "9b8385dca99108fcf53b7373bb0cdcd09366a57b"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/YetiForceCompany/YetiForcePDF/zipball/611122c27877e1d8b0fd8713c89816eaa2f6c22f",
-            "reference": "611122c27877e1d8b0fd8713c89816eaa2f6c22f",
+            "url": "https://api.github.com/repos/YetiForceCompany/YetiForcePDF/zipball/9b8385dca99108fcf53b7373bb0cdcd09366a57b",
+            "reference": "9b8385dca99108fcf53b7373bb0cdcd09366a57b",
             "shasum": ""
         },
         "require": {
@@ -2910,12 +2922,12 @@
             "ext-mbstring": "*",
             "ext-zlib": "*",
             "guzzlehttp/guzzle": "^6.3",
-            "milon/barcode": "^5.3",
+            "milon/barcode": "^6.0.0",
             "phenx/php-font-lib": "^0.5.1",
             "php": ">=7.1",
             "sabberworm/php-css-parser": "^8.3"
         },
-        "time": "2019-05-06T08:25:18+00:00",
+        "time": "2020-01-03T15:03:42+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2926,12 +2938,13 @@
         "notification-url": "https://packagist.org/downloads/",
         "authors": [
             {
-                "name": "Rafal Pospiech",
-                "email": "r.pospiech@yetiforce.com"
+                "name": "YetiForceCompany",
+                "email": "info@yetiforce.com",
+                "homepage": "https://yetiforce.com/"
             }
         ],
         "description": "Library that generate pdf files from html.",
-        "homepage": "http://yetiforce.com",
+        "homepage": "https://github.com/YetiForceCompany/YetiForcePDF",
         "keywords": [
             "html",
             "html to pdf",

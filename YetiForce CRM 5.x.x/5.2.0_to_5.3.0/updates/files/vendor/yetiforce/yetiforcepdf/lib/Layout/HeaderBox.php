@@ -28,7 +28,7 @@ class HeaderBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureWidth()
+	public function measureWidth(bool $afterPageDividing = false)
 	{
 		if (!$this->isDisplayable()) {
 			return $this;
@@ -39,7 +39,7 @@ class HeaderBox extends BlockBox
 		$this->getDimensions()->setWidth($width);
 		$this->applyStyleWidth();
 		foreach ($this->getChildren() as $child) {
-			$child->measureWidth();
+			$child->measureWidth($afterPageDividing);
 		}
 		$this->divideLines();
 		return $this;
@@ -53,13 +53,13 @@ class HeaderBox extends BlockBox
 		if (!$this->isDisplayable()) {
 			return $this;
 		}
-		return parent::measureHeight();
+		return parent::measureHeight($afterPageDividing);
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measureOffset()
+	public function measureOffset(bool $afterPageDividing = false)
 	{
 		if (!$this->isDisplayable()) {
 			return $this;
@@ -72,7 +72,7 @@ class HeaderBox extends BlockBox
 		$this->getOffset()->setTop($top);
 		$this->getOffset()->setLeft($left);
 		foreach ($this->getChildren() as $child) {
-			$child->measureOffset();
+			$child->measureOffset($afterPageDividing);
 		}
 		return $this;
 	}
@@ -80,7 +80,7 @@ class HeaderBox extends BlockBox
 	/**
 	 * {@inheritdoc}
 	 */
-	public function measurePosition()
+	public function measurePosition(bool $afterPageDividing = false)
 	{
 		if (!$this->isDisplayable()) {
 			return $this;
@@ -89,7 +89,7 @@ class HeaderBox extends BlockBox
 		$marginLeft = $this->getStyle()->getRules('margin-left');
 		$this->getCoordinates()->setX($marginLeft)->setY($marginTop);
 		foreach ($this->getChildren() as $child) {
-			$child->measurePosition();
+			$child->measurePosition($afterPageDividing);
 		}
 		return $this;
 	}
