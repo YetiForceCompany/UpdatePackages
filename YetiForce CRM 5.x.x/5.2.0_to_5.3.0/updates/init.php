@@ -8,7 +8,7 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
-// last check: 7e9c346c9c1f75a43b3efcc7809928c3265f9034
+// last check: 39b9a90bcd1c2dfc913d412bbb7813ebaf9ffb0d
 /**
  * YetiForceUpdate Class.
  */
@@ -312,7 +312,7 @@ class YetiForceUpdate
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'response_expected', 'tablename' => 'vtiger_troubletickets']],
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'solution_expected', 'tablename' => 'vtiger_troubletickets']],
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'multicompanyid', 'tablename' => 'vtiger_ossemployees']],
-			['vtiger_field', ['maximumlength' => '99999999'], ['columnname' => 'weight', 'tablename' => 'vtiger_products']],
+			['vtiger_field', ['maximumlength' => '99999999'], ['columnname' => 'weight', 'tablename' => 'vtiger_products']]
 		]);
 
 		\App\Db\Updater::batchInsert([
@@ -932,7 +932,7 @@ class YetiForceUpdate
 				$configFile = new \App\ConfigFile($type);
 				if (isset($changeConfiguration['base'][$type])) {
 					foreach ($changeConfiguration['base'][$type] as $key => $value) {
-						$configFile->set($key, $value);
+						\App\Config::set($type, $key, $value);
 					}
 				}
 				$configFile->create();

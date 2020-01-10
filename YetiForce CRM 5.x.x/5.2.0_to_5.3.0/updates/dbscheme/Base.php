@@ -28,7 +28,7 @@ class Base extends \App\Db\Importers\Base
 					'handler_class' => $this->stringType(100)->after('name'),
 				],
 				'index' => [
-					['handler_class', 'handler_class'],
+					['handler_class', 'handler_class', true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

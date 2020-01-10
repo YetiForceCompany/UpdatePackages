@@ -32,7 +32,7 @@ class Webservice extends \App\Db\Importers\Base
 					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
 				],
 				'index' => [
-					['user_uq', ['server_id', 'token']],
+					['user_uq', ['server_id', 'token'], true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -76,7 +76,7 @@ class Webservice extends \App\Db\Importers\Base
 					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
 				],
 				'index' => [
-					['user_name', 'user_name'],
+					['user_name', 'user_name', true],
 					['user_name_2', ['user_name', 'status']],
 					['server_id', 'server_id'],
 				],
