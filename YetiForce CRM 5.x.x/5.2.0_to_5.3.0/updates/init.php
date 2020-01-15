@@ -143,6 +143,7 @@ class YetiForceUpdate
 		$db->createCommand()->checkIntegrity(true)->execute();
 		$this->data();
 		$this->menu();
+		$this->links();
 		$this->blocks();
 		$this->addFields();
 		$this->updateUsersFields();
@@ -435,6 +436,23 @@ class YetiForceUpdate
 			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_GUI', 5, 0, 0, 0, 0, 0, 2, 0, 'fas fa-layer-group']],
 			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_AUTOMATION', 10, 0, 0, 0, 0, 0, 2, 0, 'fas fa-fan']],
 		], ['blocklabel', 'sequence', 'show_title', 'visible', 'create_view', 'edit_view', 'detail_view', 'display_status', 'iscustom', 'icon']);
+
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
+	private function links()
+	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+
+		$dataReader = (new \App\Db\Query())->from('vtiger_links')->where(['linktype' => ['HEADERSCRIPT', 'HEADERCSS']])
+			->createCommand()->query();
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		while ($row = $dataReader->read()) {
+			if (\in_array(strtolower(substr($row['linkurl'], -3)), ['.js', '.css']) && '~' !== substr($row['linkurl'], 0, 1)) {
+				$dbCommand->update('vtiger_links', ['linkurl' => '~' . $row['linkurl']], ['linkid' => $row['linkid']])->execute();
+			}
+		}
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
