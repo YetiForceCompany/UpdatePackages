@@ -7,6 +7,7 @@
  * @copyright YetiForce Sp. z o.o.
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 // last check: 39b9a90bcd1c2dfc913d412bbb7813ebaf9ffb0d
 /**
@@ -318,8 +319,9 @@ class YetiForceUpdate
 		]);
 
 		\App\Db\Updater::batchInsert([
-			['s_yf_address_finder_config', ['name' => 'active', 'type' => 'YetiForceGeocoder', 'val' => 1]],
-			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler', 'is_active' => 1, 'include_modules' => 'ApprovalsRegister', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('ApprovalsRegister')]],
+			['s_yf_address_finder_config', ['name' => 'active', 'type' => 'YetiForceGeocoder', 'val' => 1], ['type' => 'YetiForceGeocoder']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler', 'is_active' => 1, 'include_modules' => 'ApprovalsRegister', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('ApprovalsRegister')], ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler']],
+			['vtiger_links', ['tabid' => \App\Module::getModuleId('Home'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_UPDATES', 'linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates'], ['linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates']],
 		]);
 
 		\App\Db\Updater::batchDelete([
