@@ -158,6 +158,7 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'time_start' => $this->time(),
 					'time_end' => $this->time(),
+					'deleted' => $this->tinyInteger(1)->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -181,10 +182,231 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'reports_to_id' => $this->integer(10)->unsigned(),
 					'currency_id' => $this->integer(10)->notNull()->defaultValue(1),
+					'no_of_currency_decimals' => $this->stringType(200),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'com_vtiger_workflows' => [
+				'columns' => [
+					'defaultworkflow' => $this->tinyInteger(1),
+					'filtersavedinnew' => $this->tinyInteger(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_currency' => [
+				'columns' => [
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_currency_info' => [
+				'columns' => [
+					'deleted' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_customview' => [
+				'columns' => [
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_def_org_share' => [
+				'columns' => [
+					'permission' => $this->tinyInteger(5)->unsigned()->notNull(),
+					'editstatus' => $this->tinyInteger(5)->unsigned()->notNull(),
+				],
+				'index' => [
+					['fk_1_def_org_share_tabid', 'tabid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_fieldmodulerel' => [
+				'columns' => [
+					'fieldid' => $this->integer(10)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_import_maps' => [
+				'columns' => [
+					'has_header' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+					'deleted' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_import_maps' => [
+				'columns' => [
+					'userid' => $this->integer(10),
+					'agent' => $this->stringType(500),
+				],
+				'index' => [
+					['userid', 'userid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_modentity_num' => [
+				'columns' => [
+					'tabid' => $this->smallInteger(5)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_org_share_action_mapping' => [
+				'columns' => [
+					'share_action_id' => $this->tinyInteger(5)->unsigned()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_priority' => [
+				'columns' => [
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile2globalpermissions' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile2tab' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'tabid' => $this->smallInteger(5)->notNull(),
+					'permissions' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'index' => [
+					['fk_1_profile2tab_tabid', 'tabid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile2standardpermissions' => [
+				'columns' => [
+					'tabid' => $this->smallInteger(5)->notNull(),
+				],
+				'index' => [
+					['fk_1_profile2field_tabid', 'tabid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile2field' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'visible' => $this->tinyInteger(1)->unsigned()->notNull(),
+					'readonly' => $this->tinyInteger(1)->unsigned()->notNull(),
+				],
+				'index' => [
+					['fk_1_profile2field_fieldid', 'fieldid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_profile2utility' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'activityid' => $this->smallInteger(5)->unsigned()->notNull(),
+					'permission' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0)
+				],
+				'index' => [
+					['fk_1_profile2utility_activityid', 'activityid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_relatedlists' => [
+				'columns' => [
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_relatedlists_fields' => [
+				'columns' => [
+					'fieldid' => $this->integer(10)->notNull(),
+				],
+				'index' => [
+					['fk_1_relatedlists_fields_fieldid', 'fieldid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_reservations' => [
+				'columns' => [
+					'deleted' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_role2profile' => [
+				'columns' => [
+					'profileid' => $this->smallInteger(5)->unsigned()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_rss' => [
+				'columns' => [
+					'starred' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_trees_templates' => [
+				'columns' => [
+					'access' => $this->tinyInteger(1)->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_users_last_import' => [
+				'columns' => [
+					'deleted' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'yetiforce_currencyupdate_banks' => [
+				'columns' => [
+					'active' => $this->tinyInteger(1)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+		];
+		$this->foreignKey = [
+			['fk_vtiger_campaigncampaignid', 'vtiger_campaign', 'campaignid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
+			['fk_1_def_org_share_tabid', 'vtiger_def_org_share', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['vtiger_fieldmodulerel_ibfk_1', 'vtiger_fieldmodulerel', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
+			['fk_1_modentity_num_tabid', 'vtiger_modentity_num', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2field_fieldid', 'vtiger_profile2field', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
+			['fk_2_profile2field_tabid', 'vtiger_profile2field', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2stand_profileid', 'vtiger_profile2standardpermissions', 'profileid', 'vtiger_profile', 'profileid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2stand_tabid', 'vtiger_profile2standardpermissions', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2tab_tabid', 'vtiger_profile2tab', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2utility_activityid', 'vtiger_profile2utility', 'activityid', 'vtiger_actionmapping', 'actionid', 'CASCADE', 'RESTRICT'],
+			['fk_1_profile2utility_tabid', 'vtiger_profile2utility', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
+			['fk_1_relatedlists_fields_fieldid', 'vtiger_relatedlists_fields', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
 		];
 	}
 

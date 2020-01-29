@@ -127,12 +127,13 @@ class YetiForceUpdate
 			$this->updateWidgets();
 			$this->dropColumns();
 			$this->indexes();
-			$this->changeColumnType();
+			$this->changePresence();
 			$this->changeColumnType();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 
 			// $this->importer->dropTable(['vtiger_vendorcontactrel', 'vtiger_seticketsrel']);
+			$this->importer->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -743,6 +744,7 @@ class YetiForceUpdate
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$this->importer->dropIndexes([
 			'vtiger_relatedlists' => ['tabid', 'tabid_2'],
+			'vtiger_campaign' => ['campaign_campaignid_idx'],
 		]);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
@@ -752,7 +754,11 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$this->importer->dropColumns([
-			['vtiger_cron_task', 'handler_file']
+			['vtiger_cron_task', 'handler_file'],
+			['vtiger_leaddetails', 'assignleadchk'],
+			['vtiger_leadsubdetails', 'callornot'],
+			['vtiger_leadsubdetails', 'readornot'],
+			['vtiger_leadsubdetails', 'empct'],
 		]);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
@@ -767,6 +773,57 @@ class YetiForceUpdate
 		\vtlib\Functions::recurseDelete('app_data/cron.php');
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
+	private function changePresence()
+	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+
+		$counter = 0;
+		$importerType = new \App\Db\Importers\Base();
+		$schema = $importerType->db->getSchema();
+		$dbCommand = $importerType->db->createCommand();
+		$tables = $importerType->db->createCommand("SHOW TABLES LIKE '%_invfield';")->queryColumn();
+		foreach ($tables as $tableName) {
+			if (!$importerType->db->isTableExists($tableName)) {
+				$this->log("[WARNING] table does not exist: $tableName");
+				continue;
+			}
+			$tableSchema = $schema->getTableSchema($tableName);
+			if ($column = $tableSchema->getColumn('presence')) {
+				if ('tinyint(1) unsigned' !== $column->dbType || 0 !== $column->defaultValue || false !== $column->allowNull) {
+					$data[$tableName]['presence'] = $importerType->tinyInteger(1)->unsigned()->notNull()->defaultValue(0);
+				}
+			}
+		}
+		$tables = (new \App\Db\Query())->distinct(['fieldname'])->select(['fieldname'])->from('vtiger_field')->where(['uitype' => [15, 16, 33, 115]])->column();
+		foreach ($tables as $tableName) {
+			$tableName = "vtiger_{$tableName}";
+			if (!$importerType->db->isTableExists($tableName)) {
+				$this->log("[WARNING] table does not exist: $tableName");
+				continue;
+			}
+			$tableSchema = $schema->getTableSchema($tableName);
+			if ($column = $tableSchema->getColumn('presence')) {
+				if ('tinyint(1) unsigned' !== $column->dbType || 1 !== $column->defaultValue || false !== $column->allowNull) {
+					$data[$tableName]['presence'] = $importerType->tinyInteger(1)->unsigned()->notNull()->defaultValue(1);
+				}
+			}
+		}
+		foreach ($data as $tableName => $columns) {
+			foreach ($columns as $columnName => $column) {
+				try {
+					$dbCommand->alterColumn($tableName, $columnName, $column)->execute();
+					++$counter;
+				} catch (\Throwable $e) {
+					$this->log("[ERROR] Alter column, table: {$tableName}, column: {$columnName} , query error: {$e->__toString()}");
+				}
+			}
+		}
+
+		$this->importer->refreshSchema();
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min. [updated: ' . $counter . ']', false);
 	}
 
 	private function changeColumnType()
@@ -820,6 +877,7 @@ class YetiForceUpdate
 				'paymentsvalue' => $importerType->decimal(28, 8),
 			],
 			'vtiger_campaign' => [
+				'campaignid' => $importerType->integer(10)->notNull()->first(),
 				'expectedrevenue' => $importerType->decimal(28, 8),
 				'budgetcost' => $importerType->decimal(28, 8),
 				'actualcost' => $importerType->decimal(28, 8),
@@ -827,16 +885,16 @@ class YetiForceUpdate
 				'actualroi' => $importerType->decimal(28, 8),
 			],
 			'vtiger_ossmailview' => [
+				'date' => $importerType->dateTime()->after('content'),
 				'from_email' => $importerType->stringType(),
 				'content' => $importerType->mediumText()->after('reply_to_email'),
+				'attachments_exist' => $importerType->tinyInteger(1)->unsigned()->notNull()->defaultValue(0)->after('type'),
 				'id' => $importerType->integer(10)->unsigned()->null()->after('attachments_exist'),
 				'mbox' => $importerType->stringType(100)->after('id'),
 				'cid' => $importerType->char(64)->after('date'),
 				'rc_user' => $importerType->integer(10)->unsigned()->after('mbox'),
-				'attachments_exist' => $importerType->tinyInteger(1)->unsigned()->notNull()->defaultValue(0)->after('type'),
 				'from_id' => $importerType->text()->null()->after('rc_user'),
 				'to_id' => $importerType->text()->null()->after('from_id'),
-				'date' => $importerType->dateTime()->after('content'),
 				'uid' => $importerType->stringType(255)->after('cid'),
 			],
 		];
