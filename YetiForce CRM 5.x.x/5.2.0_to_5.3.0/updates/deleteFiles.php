@@ -66,4 +66,11 @@ return [
 	'vendor',
 	'public_html/vendor',
 	'public_html/libraries',
+	'app/YetiForce/Status.php',
+	'layouts/basic/modules/Settings/YetiForce/Status.tpl',
+	'modules/Settings/YetiForce/actions/Status.php',
+	'modules/Settings/YetiForce/views/Status.php',
+	'public_html/layouts/basic/modules/Settings/YetiForce/resources/Status.js',
+	'public_html/layouts/basic/modules/Settings/YetiForce/resources/Status.min.js',
+	'public_html/layouts/basic/modules/Settings/YetiForce/resources/Status.min.js.map'
 ];

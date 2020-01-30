@@ -349,7 +349,7 @@ var App = (window.App = {
 			 * @param   {string}  html
 			 * @param   {object}  params
 			 */
-			showModal(params = {}) {
+			showModal(params = {}, element) {
 				const self = this;
 				params['view'] = 'QuickEditModal';
 				AppConnector.request(params).done(function(html) {
@@ -366,7 +366,7 @@ var App = (window.App = {
 						if (typeof params.callbackPostShown !== 'undefined') {
 							params.callbackPostShown(form, params);
 						}
-						self.registerPostLoadEvents(form, params);
+						self.registerPostLoadEvents(form, params, element);
 					});
 				});
 			},
@@ -378,7 +378,7 @@ var App = (window.App = {
 			 *
 			 * @return  {boolean}
 			 */
-			registerPostLoadEvents(form, params) {
+			registerPostLoadEvents(form, params, element) {
 				const submitSuccessCallback = params.callbackFunction || function() {};
 				form.on('submit', e => {
 					const form = $(e.currentTarget);
@@ -431,7 +431,7 @@ var App = (window.App = {
 									listInstance.getListViewRecords();
 								}
 								submitSuccessCallback(data);
-								app.event.trigger('QuickEdit.AfterSaveFinal', data, form);
+								app.event.trigger('QuickEdit.AfterSaveFinal', data, form, element);
 								progress.progressIndicator({ mode: 'hide' });
 								if (data.success) {
 									Vtiger_Helper_Js.showPnotify({
@@ -461,8 +461,14 @@ var App = (window.App = {
 			 */
 			save(form) {
 				const aDeferred = $.Deferred();
-				const quickCreateSaveUrl = form.serializeFormData();
-				AppConnector.request(quickCreateSaveUrl).done(
+				let formData = new FormData(form[0]);
+				AppConnector.request({
+					url: 'index.php',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false
+				}).done(
 					data => {
 						aDeferred.resolve(data);
 					},
@@ -1971,7 +1977,7 @@ var app = (window.app = {
 			if (element.data('editFields')) {
 				data.editFields = element.data('editFields');
 			}
-			App.Components.QuickEdit.showModal(data);
+			App.Components.QuickEdit.showModal(data, element);
 		});
 	},
 	registerModal: function(container) {

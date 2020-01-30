@@ -10,11 +10,17 @@
 ********************************************************************************/
 -->*}
 {strip}
+{if $WIDTHTYPE eq 'narrow'}
+	{assign var=WIDTHTYPE_GROUP value='input-group-sm'}
+{elseif $WIDTHTYPE eq 'wide'}
+	{assign var=WIDTHTYPE_GROUP value='input-group-lg'}
+{else}
+	{assign var=WIDTHTYPE_GROUP value=''}
+{/if}
 <div class='verticalScroll'>
 	<div class='editViewContainer'>
 		<form class="form-horizontal recordEditView" id="EditView" name="EditView" method="post" action="index.php"
 			  enctype="multipart/form-data">
-			{assign var=WIDTHTYPE value=$USER_MODEL->get('rowheight')}
 			{if !empty($PICKIST_DEPENDENCY_DATASOURCE)}
 				<input type="hidden" name="picklistDependency" value='{\App\Purifier::encodeHtml($PICKIST_DEPENDENCY_DATASOURCE)}'/>
 			{/if}
@@ -140,13 +146,6 @@
 											{/if}
 											{\App\Language::translate($FIELD_MODEL->getFieldLabel(), $QUALIFIED_MODULE_NAME)}
 										</label>
-									{if $WIDTHTYPE eq 'narrow'}
-										{assign var=WIDTHTYPE_GROUP value='input-group-sm'}
-									{elseif $WIDTHTYPE eq 'wide'} 
-										{assign var=WIDTHTYPE_GROUP value='input-group-lg'}
-									{else}
-										{assign var=WIDTHTYPE_GROUP value=''}
-									{/if}
 										<div class="{$WIDTHTYPE} {$WIDTHTYPE_GROUP} w-100 {if $FIELD_MODEL->getUIType() neq "300"} col-lg-12 col-xl-9 {/if} fieldValue" {if $FIELD_MODEL->getUIType() eq '20'} colspan="3" {assign var=COUNTER value=$COUNTER+1}{elseif $FIELD_MODEL->getUIType() eq '300'} colspan="4" {assign var=COUNTER value=$COUNTER+1} {/if}>
 											{if $FIELD_MODEL->getUIType() eq "300"}
 												<label class="u-text-small-bold">{if $FIELD_MODEL->isMandatory() eq true}
