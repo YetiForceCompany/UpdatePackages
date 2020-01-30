@@ -992,12 +992,26 @@ class YetiForceUpdate
 		$changeConfiguration = [
 			'base' => [
 				'sounds' => [
-					'CHAT' => 'sound_2.mp3',
+					'CHAT' => 'sound_2.mp3'
+				],
+				'security' => [
+					'loginSessionRegenerate' => \App\Config::security('loginSessionRegenerate', \App\Config::main('session_regenerate_id')),
+					'forceHttpsRedirection' => \App\Config::security('forceHttpsRedirection', \App\Config::main('forceSSL')),
+					'csrfActive' => \App\Config::security('csrfActive', \App\Config::main('csrfProtection')),
+					'forceUrlRedirection' => \App\Config::security('forceUrlRedirection', \App\Config::main('forceRedirect')),
+					'hpkpKeysHeader' => \App\Config::security('hpkpKeysHeader', \App\Config::security('HPKP_KEYS')),
+					'cspHeaderActive' => \App\Config::security('cspHeaderActive', \App\Config::security('CSP_ACTIVE')),
+					'purifierAllowedDomains' => \App\Config::security('purifierAllowedDomains', \App\Config::security('PURIFIER_ALLOWED_DOMAINS'))
 				]
 			],
 			'module' => [
 				'ModTracker' => [
-					'TEASER_TEXT_LENGTH' => 100,
+					'TEASER_TEXT_LENGTH' => 100
+				]
+			],
+			'component' => [
+				'YetiForce' => [
+					'watchdogUrl' => \App\Config::component('YetiForce', 'watchdogUrl', \App\Config::component('YetiForce', 'statusUrl'))
 				]
 			]
 		];
@@ -1009,8 +1023,9 @@ class YetiForceUpdate
 			foreach (array_diff(\App\ConfigFile::TYPES, ['module', 'component']) as $type) {
 				$configFile = new \App\ConfigFile($type);
 				if (isset($changeConfiguration['base'][$type])) {
+					$configFile = new \YetiForceUpdateConfigFile($type);
 					foreach ($changeConfiguration['base'][$type] as $key => $value) {
-						\App\Config::set($type, $key, $value);
+						$configFile->set($key, $value);
 					}
 				}
 				$configFile->create();
@@ -1038,7 +1053,13 @@ class YetiForceUpdate
 			copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
 			$componentsData = require_once ROOT_DIRECTORY . '/' . $configTemplates;
 			foreach ($componentsData as $component => $data) {
-				(new \App\ConfigFile('component', $component))->create();
+				$configFile = new \App\ConfigFile('component', $component);
+				if (isset($changeConfiguration['component'][$component])) {
+					foreach ($changeConfiguration['component'][$component] as $key => $value) {
+						$configFile->set($key, $value);
+					}
+				}
+				$configFile->create();
 			}
 		}
 	}
@@ -1198,5 +1219,20 @@ class YetiForceUpdate
 		}
 		\Settings_SharingAccess_Module_Model::recalculateSharingRules();
 		return $i;
+	}
+}
+
+/**
+ * Class to change configuration in file.
+ */
+class YetiForceUpdateConfigFile extends \App\ConfigFile
+{
+	/**
+	 * {@inheritdoc}
+	 */
+	public function set($key, $value)
+	{
+		$this->value[$key] = $value;
+		return $this->value;
 	}
 }
