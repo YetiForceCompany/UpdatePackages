@@ -657,7 +657,7 @@ class Importer
 									$column->set('type', 'integer')->set('autoIncrement', true)->notNull();
 									$primaryKey = true;
 								}
-								foreach ($schema->findForeignKeyToColumn($tableName, $columnName) as $sourceTableName => $fks) {
+								foreach ($this->findForeignKeyToColumn($schema, $tableName, $columnName) as $sourceTableName => $fks) {
 									foreach ($fks as $keyName => $fk) {
 										$this->logs .= "  > foreign key must be removed and added in postUpdate: $tableName:$columnName <> $sourceTableName:{$fk['sourceColumn']} FK:{$keyName}\n";
 										$importer->foreignKey[] = [$keyName, $sourceTableName, $fk['sourceColumn'], $tableName, $columnName, 'CASCADE', 'RESTRICT'];
@@ -804,7 +804,7 @@ class Importer
 			$keyName = $importer->db->quoteSql($key[0]);
 			$sourceTableName = $importer->db->quoteSql($key[1]);
 			$destTableName = $importer->db->quoteSql($key[3]);
-			$tableSchema = $schema->getTableSchema($sourceTableName);
+			$tableSchema = $schema->getTableSchema($sourceTableName, true);
 			foreach ($tableSchema->foreignKeys as $dbForeignKey) {
 				if ($destTableName === $dbForeignKey[0] && isset($dbForeignKey[$key[2]]) && $key[4] === $dbForeignKey[$key[2]]) {
 					$add = false;
@@ -839,5 +839,30 @@ class Importer
 		foreach ($this->importers as &$importer) {
 			$importer->db->createCommand()->checkIntegrity($check)->execute();
 		}
+	}
+
+	/**
+	 * Find foreign keys to column.
+	 *
+	 * @param string $findTableName
+	 * @param string $findColumnName
+	 * @param mixed  $self
+	 *
+	 * @return array
+	 */
+	public function findForeignKeyToColumn($self, string $findTableName, string $findColumnName)
+	{
+		$foreignKeys = [];
+		foreach ($self->getTableNames() as $tableName) {
+			$tableSchema = $self->getTableSchema($tableName);
+			if ($tableSchema->foreignKeys) {
+				foreach ($tableSchema->foreignKeys as $name => $value) {
+					if ($findTableName === $value[0] && ($key = array_search($findColumnName, $value))) {
+						$foreignKeys[$tableName][$name] = ['sourceColumn' => $key];
+					}
+				}
+			}
+		}
+		return $foreignKeys;
 	}
 }

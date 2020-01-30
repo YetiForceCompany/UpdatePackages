@@ -99,7 +99,7 @@ class YetiForceUpdate
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package. Please have a look at the list of errors:' . PHP_EOL . PHP_EOL . $error;
 			return false;
 		}
-		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
+		copy(__DIR__ . '/TempImporter.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
 		copy(__DIR__ . '/files/vtlib/Vtiger/Block.php', ROOT_DIRECTORY . '/vtlib/Vtiger/Block.php');
@@ -114,11 +114,10 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
-		$db = \App\Db::getInstance();
-		$db->createCommand()->checkIntegrity(false)->execute();
+		$this->importer = new \App\Db\Importer();
 		try {
-			$this->importer = new \App\Db\Importer();
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
+			$this->importer->checkIntegrity(false);
 			$this->importer->updateScheme();
 			$this->importer->importData();
 			$this->importer->postUpdate();
@@ -132,8 +131,6 @@ class YetiForceUpdate
 			$this->changeColumnType();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
-
-			// $this->importer->dropTable(['vtiger_vendorcontactrel', 'vtiger_seticketsrel']);
 			$this->importer->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
@@ -142,7 +139,7 @@ class YetiForceUpdate
 			throw $ex;
 		}
 		$this->importer->refreshSchema();
-		$db->createCommand()->checkIntegrity(true)->execute();
+		$this->importer->checkIntegrity(true);
 		$this->data();
 		$this->menu();
 		$this->links();
