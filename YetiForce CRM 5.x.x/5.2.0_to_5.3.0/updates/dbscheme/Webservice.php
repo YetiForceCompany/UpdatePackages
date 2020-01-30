@@ -61,7 +61,6 @@ class Webservice extends \App\Db\Importers\Base
 					'server_id' => $this->integer(10)->unsigned()->notNull(),
 					'status' => $this->smallInteger(1)->notNull()->defaultValue(0),
 					'user_name' => $this->stringType(50)->notNull(),
-					'password_h' => $this->stringType(200),
 					'password_t' => $this->stringType(200),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(1),
 					'login_time' => $this->dateTime(),

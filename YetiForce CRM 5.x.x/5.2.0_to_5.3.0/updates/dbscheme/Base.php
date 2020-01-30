@@ -43,6 +43,7 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_relatedlists' => [
 				'columns' => [
 					'field_name' => $this->stringType(50),
+					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
 				],
 				'index' => [
 					['related_tabid', 'related_tabid'],
@@ -174,6 +175,7 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'time_start' => $this->time(),
 					'time_end' => $this->time(),
+					'deleted' => $this->tinyInteger(1)->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -242,7 +244,7 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'vtiger_import_maps' => [
+			'vtiger_loginhistory' => [
 				'columns' => [
 					'userid' => $this->integer(10),
 					'agent' => $this->stringType(500),
@@ -263,13 +265,6 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_org_share_action_mapping' => [
 				'columns' => [
 					'share_action_id' => $this->tinyInteger(5)->unsigned()->notNull(),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_priority' => [
-				'columns' => [
-					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -334,26 +329,12 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'vtiger_relatedlists' => [
-				'columns' => [
-					'presence' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'vtiger_relatedlists_fields' => [
 				'columns' => [
 					'fieldid' => $this->integer(10)->notNull(),
 				],
 				'index' => [
 					['fk_1_relatedlists_fields_fieldid', 'fieldid'],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_reservations' => [
-				'columns' => [
-					'deleted' => $this->tinyInteger(1)->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
