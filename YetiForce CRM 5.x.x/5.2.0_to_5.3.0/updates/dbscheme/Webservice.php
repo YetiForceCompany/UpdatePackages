@@ -109,9 +109,9 @@ class Webservice extends \App\Db\Importers\Base
 			],
 		];
 		$this->foreignKey = [
-			['w_#__manage_consents_user_fk1', 'w_#__manage_consents_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', 'RESTRICT'],
-			['w_#__portal_session_ibfk_1', 'w_#__portal_session', 'user_id', 'w_#__portal_user', 'id', 'CASCADE', 'RESTRICT'],
-			['w_#__portal_user_ibfk_1', 'w_#__portal_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', 'RESTRICT'],
+			['w_#__manage_consents_user_fk1', 'w_#__manage_consents_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', null],
+			['w_#__portal_session_ibfk_1', 'w_#__portal_session', 'user_id', 'w_#__portal_user', 'id', 'CASCADE', null],
+			['w_#__portal_user_ibfk_1', 'w_#__portal_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', null],
 		];
 	}
 }

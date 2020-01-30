@@ -39,7 +39,7 @@ class Log extends \App\Db\Importers\Base
 			],
 			'o_#__access_for_user' => [
 				'columns' => [
-					'agent' => $this->stringType(500)->notNull(),
+					'agent' => $this->stringType(500),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

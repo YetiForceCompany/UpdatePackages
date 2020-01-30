@@ -376,18 +376,18 @@ class Base extends \App\Db\Importers\Base
 			],
 		];
 		$this->foreignKey = [
-			['fk_vtiger_campaigncampaignid', 'vtiger_campaign', 'campaignid', 'vtiger_crmentity', 'crmid', 'CASCADE', 'RESTRICT'],
-			['fk_1_def_org_share_tabid', 'vtiger_def_org_share', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['vtiger_fieldmodulerel_ibfk_1', 'vtiger_fieldmodulerel', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
-			['fk_1_modentity_num_tabid', 'vtiger_modentity_num', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2field_fieldid', 'vtiger_profile2field', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
-			['fk_2_profile2field_tabid', 'vtiger_profile2field', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2stand_profileid', 'vtiger_profile2standardpermissions', 'profileid', 'vtiger_profile', 'profileid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2stand_tabid', 'vtiger_profile2standardpermissions', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2tab_tabid', 'vtiger_profile2tab', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2utility_activityid', 'vtiger_profile2utility', 'activityid', 'vtiger_actionmapping', 'actionid', 'CASCADE', 'RESTRICT'],
-			['fk_1_profile2utility_tabid', 'vtiger_profile2utility', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', 'RESTRICT'],
-			['fk_1_relatedlists_fields_fieldid', 'vtiger_relatedlists_fields', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', 'RESTRICT'],
+			['fk_vtiger_campaigncampaignid', 'vtiger_campaign', 'campaignid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['fk_1_def_org_share_tabid', 'vtiger_def_org_share', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['vtiger_fieldmodulerel_ibfk_1', 'vtiger_fieldmodulerel', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['fk_1_modentity_num_tabid', 'vtiger_modentity_num', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_1_profile2field_fieldid', 'vtiger_profile2field', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['fk_2_profile2field_tabid', 'vtiger_profile2field', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_1_profile2stand_profileid', 'vtiger_profile2standardpermissions', 'profileid', 'vtiger_profile', 'profileid', 'CASCADE', null],
+			['fk_1_profile2stand_tabid', 'vtiger_profile2standardpermissions', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_1_profile2tab_tabid', 'vtiger_profile2tab', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_1_profile2utility_activityid', 'vtiger_profile2utility', 'activityid', 'vtiger_actionmapping', 'actionid', 'CASCADE', null],
+			['fk_1_profile2utility_tabid', 'vtiger_profile2utility', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['fk_1_relatedlists_fields_fieldid', 'vtiger_relatedlists_fields', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
 		];
 	}
 

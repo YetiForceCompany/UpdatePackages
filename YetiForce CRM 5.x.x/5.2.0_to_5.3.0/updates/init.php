@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 39b9a90bcd1c2dfc913d412bbb7813ebaf9ffb0d
+// last check: 9cb0562664cd35834ac047f0a87594a9e6ee10e3
 /**
  * YetiForceUpdate Class.
  */
@@ -115,6 +115,7 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$this->importer = new \App\Db\Importer();
+		$this->preUpdateScheme();
 		try {
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
@@ -156,6 +157,16 @@ class YetiForceUpdate
 
 		$this->createConfigFiles();
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	/**
+	 * PreUpdateScheme.
+	 */
+	public function preUpdateScheme()
+	{
+		$db = \App\Db::getInstance();
+		$subQuery = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['vtiger_crmentity.setype' => 'Campaigns']);
+		$db->createCommand()->delete('vtiger_campaign', ['not in', 'campaignid', $subQuery])->execute();
 	}
 
 	/**
@@ -312,13 +323,15 @@ class YetiForceUpdate
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'response_expected', 'tablename' => 'vtiger_troubletickets']],
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'solution_expected', 'tablename' => 'vtiger_troubletickets']],
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'multicompanyid', 'tablename' => 'vtiger_ossemployees']],
-			['vtiger_field', ['maximumlength' => '99999999'], ['columnname' => 'weight', 'tablename' => 'vtiger_products']]
+			['vtiger_field', ['maximumlength' => '99999999'], ['columnname' => 'weight', 'tablename' => 'vtiger_products']],
+			['vtiger_settings_field', ['name' => 'LBL_YETIFORCE_WATCHDOG_HEADER', 'description' => 'LBL_YETIFORCE_WATCHDOG_DESC', 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Watchdog'], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']]
 		]);
 
 		\App\Db\Updater::batchInsert([
 			['s_yf_address_finder_config', ['name' => 'active', 'type' => 'YetiForceGeocoder', 'val' => 1], ['type' => 'YetiForceGeocoder']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler', 'is_active' => 1, 'include_modules' => 'ApprovalsRegister', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('ApprovalsRegister')], ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler']],
 			['vtiger_links', ['tabid' => \App\Module::getModuleId('Home'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_UPDATES', 'linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates'], ['linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates']],
+			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'VTEmailReport', 'label' => 'LBL_EMAIL_REPORT', 'classname' => 'VTEmailReport', 'classpath' => 'modules/com_vtiger_workflow/tasks/VTEmailReport.php', 'templatepath' => 'com_vtiger_workflow/taskforms/VTEmailTemplateTask.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'VTEmailReport']],
 		]);
 
 		\App\Db\Updater::batchDelete([
@@ -328,7 +341,42 @@ class YetiForceUpdate
 			['yetiforce_proc_marketing',  ['type' => 'lead',  'param' => 'currentuser_status']]
 		]);
 
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$dataReader = (new \App\Db\Query())->select(['id', 'conditions'])->from('u_yf_servicecontracts_sla_policy')->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			if (!\App\Json::isEmpty($row['conditions'])) {
+				$conditions = \App\Json::decode($row['conditions']);
+				$this->parseConditions($conditions);
+				$dbCommand->update('u_yf_servicecontracts_sla_policy', ['conditions' => \App\Json::encode($conditions)], ['id' => $row['id']])->execute();
+			}
+		}
+
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
+	/**
+	 * Parse conditions.
+	 *
+	 * @param array $rule
+	 * @param mixed $condition
+	 */
+	private function parseConditions(&$condition)
+	{
+		foreach ($condition['rules'] as &$rule) {
+			if (isset($rule['rules'])) {
+				$this->parseConditions($rule);
+			} else {
+				if (!empty($rule['fieldname'])) {
+					$nameParts = explode(':', $rule['fieldname']);
+					$moduleName = $nameParts[0];
+					if (\App\Module::getModuleId($moduleName)) {
+						$nameParts[0] = $nameParts[1];
+						$nameParts[1] = $moduleName;
+						$rule['fieldname'] = implode(':', $nameParts);
+					}
+				}
+			}
+		}
 	}
 
 	private function updateUsersFields()
@@ -568,7 +616,7 @@ class YetiForceUpdate
 				//[34, 2828, 'attention', 'vtiger_crmentity', 1, 300, 'attention', 'Attention', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_DESCRIPTION_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
 				[29, 2899, 'mail_scanner_actions', 'vtiger_users', 1, 322, 'mail_scanner_actions', 'FL_MAIL_SCANNER_ACTIONS', 0, 2, '', '65535', 1, 452, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_USER_MAIL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
 				[29, 2900, 'mail_scanner_fields', 'vtiger_users', 1, 323, 'mail_scanner_fields', 'FL_MAIL_SCANNER_FIELDS', 0, 2, '', '65535', 3, 452, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_USER_MAIL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
-				[4, 2901, 'approvals', 'vtiger_contactdetails', 1, 321, 'approvals', 'FL_APPROVALS', 0, 2, '', '65535', 12, 5, 3, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Contacts']
+				[4, 2901, 'approvals', 'vtiger_contactdetails', 1, 321, 'approvals', 'FL_APPROVALS', 0, 2, '', '65535', 12, 5, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '{"module":"Approvals"}', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Contacts']
 			];
 		}
 
@@ -758,6 +806,7 @@ class YetiForceUpdate
 			['vtiger_leadsubdetails', 'callornot'],
 			['vtiger_leadsubdetails', 'readornot'],
 			['vtiger_leadsubdetails', 'empct'],
+			['w_#__portal_user', 'password_h'],
 		]);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
@@ -884,9 +933,9 @@ class YetiForceUpdate
 				'actualroi' => $importerType->decimal(28, 8),
 			],
 			'vtiger_ossmailview' => [
+				'content' => $importerType->mediumText()->after('reply_to_email'),
 				'date' => $importerType->dateTime()->after('content'),
 				'from_email' => $importerType->stringType(),
-				'content' => $importerType->mediumText()->after('reply_to_email'),
 				'attachments_exist' => $importerType->tinyInteger(1)->unsigned()->notNull()->defaultValue(0)->after('type'),
 				'id' => $importerType->integer(10)->unsigned()->null()->after('attachments_exist'),
 				'mbox' => $importerType->stringType(100)->after('id'),
