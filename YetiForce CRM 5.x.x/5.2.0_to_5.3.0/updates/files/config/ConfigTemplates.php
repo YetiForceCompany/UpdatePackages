@@ -712,6 +712,11 @@ return [
 			'description' => 'Parameter defining how fields are displayed in quick create. Available values: blocks,standard',
 			'validationValues' => ['blocks', 'standard']
 		],
+		'REPORT_RECORD_NUMBERS' => [
+			'default' => 10,
+			'description' => 'Value how much records can be show in report mail',
+			'validation' => '\App\Validator::naturalNumber'
+		],
 	],
 	'relation' => [
 		'COMMENT_MAX_LENGTH' => [
@@ -934,6 +939,11 @@ return [
 				$arg = func_get_arg(0);
 				return \in_array($arg, \Users_Totp_Authmethod::ALLOWED_USER_AUTHY_MODE);
 			}
+		],
+		'whitelistIp2fa' => [
+			'default' => [],
+			'description' => "IP address whitelisting.\nAllow access without 2FA.",
+			'validation' => '\App\Validator::ip'
 		],
 		'CACHE_LIFETIME_SENSIOLABS_SECURITY_CHECKER' => [
 			'default' => 3600,
