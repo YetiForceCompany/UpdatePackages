@@ -130,6 +130,7 @@ class YetiForceUpdate
 			$this->indexes();
 			$this->changePresence();
 			$this->changeColumnType();
+			$this->updateCountry();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 			$this->importer->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
@@ -505,6 +506,36 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
+	private function updateCountry()
+	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+
+		$importerType = new \App\Db\Importers\Base();
+		$schema = $importerType->db->getSchema();
+		$dbCommand = $importerType->db->createCommand();
+
+		$fields = (new \App\Db\Query())->select(['tablename', 'columnname', 'maximumlength', 'fieldid'])->from('vtiger_field')->where(['uitype' => 35])->all();
+		foreach ($fields as $field) {
+			if (!$importerType->db->isTableExists($field['tablename'])) {
+				$this->log("[WARNING] table does not exist: {$field['tablename']}");
+				continue;
+			}
+			$tableSchema = $schema->getTableSchema($field['tablename']);
+			if ($column = $tableSchema->getColumn($field['columnname'])) {
+				if ('varchar(255)' !== $column->dbType) {
+					$dbCommand->alterColumn($field['tablename'], $field['columnname'], $importerType->stringType(255))->execute();
+				}
+				if ('255' != $field['maximumlength']) {
+					$dbCommand->update('vtiger_field', ['maximumlength' => '255'], ['fieldid' => $field['fieldid']])->execute();
+				}
+			} else {
+				$this->log("[WARNING] column does not exist: {$field['tablename']} | {$field['columnname']}");
+			}
+		}
+
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
 	private function menu()
 	{
 		$start = microtime(true);
