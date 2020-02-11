@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 9cb0562664cd35834ac047f0a87594a9e6ee10e3
+// last check: 60c5100187c733b058bfd531b9293b7a2ee5c2cb
 /**
  * YetiForceUpdate Class.
  */
@@ -61,7 +61,6 @@ class YetiForceUpdate
 	 * Logs.
 	 *
 	 * @param string $message
-	 * @param bool   $eol
 	 */
 	public function log($message, bool $eol = true)
 	{
@@ -142,11 +141,12 @@ class YetiForceUpdate
 		}
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
-		$this->data();
-		$this->menu();
 		$this->links();
 		$this->blocks();
 		$this->addFields();
+		$this->addModules(['Locations', 'Occurrences']);
+		$this->menu();
+		$this->data();
 		$this->updateUsersFields();
 		$this->updateWorkflowTaskSumFieldFromDependent();
 		$this->createdUserId(2);
@@ -325,7 +325,9 @@ class YetiForceUpdate
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'solution_expected', 'tablename' => 'vtiger_troubletickets']],
 			['vtiger_field', ['summaryfield' => 1], ['columnname' => 'multicompanyid', 'tablename' => 'vtiger_ossemployees']],
 			['vtiger_field', ['maximumlength' => '99999999'], ['columnname' => 'weight', 'tablename' => 'vtiger_products']],
-			['vtiger_settings_field', ['name' => 'LBL_YETIFORCE_WATCHDOG_HEADER', 'description' => 'LBL_YETIFORCE_WATCHDOG_DESC', 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Watchdog'], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']]
+			['vtiger_settings_field', ['name' => 'LBL_YETIFORCE_WATCHDOG_HEADER', 'description' => 'LBL_YETIFORCE_WATCHDOG_DESC', 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Watchdog'], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']],
+			['vtiger_occurrences_status', ['presence' => 0], ['occurrences_status' => 'PLL_CANCELLED']],
+			['vtiger_occurrences_status', ['presence' => 0], ['occurrences_status' => 'PLL_ARCHIVED']],
 		]);
 
 		\App\Db\Updater::batchInsert([
@@ -333,6 +335,7 @@ class YetiForceUpdate
 			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler', 'is_active' => 1, 'include_modules' => 'ApprovalsRegister', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('ApprovalsRegister')], ['event_name' => 'EntityAfterSave', 'handler_class' => 'ApprovalsRegister_Approvals_Handler']],
 			['vtiger_links', ['tabid' => \App\Module::getModuleId('Home'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_UPDATES', 'linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates'], ['linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'VTEmailReport', 'label' => 'LBL_EMAIL_REPORT', 'classname' => 'VTEmailReport', 'classpath' => 'modules/com_vtiger_workflow/tasks/VTEmailReport.php', 'templatepath' => 'com_vtiger_workflow/taskforms/VTEmailTemplateTask.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'VTEmailReport']],
+			['vtiger_eventhandlers', ['event_name' => 'EditViewPreSave', 'handler_class' => 'Contacts_DuplicateEmail_Handler', 'is_active' => 1, 'include_modules' => 'Contacts', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Contacts')], ['event_name' => 'EditViewPreSave', 'handler_class' => 'Contacts_DuplicateEmail_Handler']],
 		]);
 
 		\App\Db\Updater::batchDelete([
@@ -536,6 +539,7 @@ class YetiForceUpdate
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
+
 	private function menu()
 	{
 		$start = microtime(true);
@@ -1113,6 +1117,9 @@ class YetiForceUpdate
 				$moduleName = $item->getBasename();
 				$configTemplates = "modules/{$moduleName}/ConfigTemplate.php";
 				if (file_exists(__DIR__ . '/files/' . $configTemplates)) {
+					if (!is_dir(ROOT_DIRECTORY . '/modules/' . $moduleName)) {
+						mkdir(ROOT_DIRECTORY . '/modules/' . $moduleName, 0755, true);
+					}
 					copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
 					(new \App\ConfigFile('module', $moduleName))->create();
 					$configFile = new \App\ConfigFile('module', $moduleName);
@@ -1232,7 +1239,7 @@ class YetiForceUpdate
 				\App\Log::warning("[Warning] Type not found: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} |type:{$type}|{$column->type}|{$column->dbType}", __METHOD__);
 				++$typeNotFound;
 			} elseif ($field['maximumlength'] != $range) {
-				if (\in_array($field['uitype'], [1, 2, 7, 10, 16, 52,53, 56, 71, 72, 120, 156, 300, 308, 317])) {
+				if (\in_array($field['uitype'], [1, 2, 7, 10, 16, 52, 53, 56, 71, 72, 120, 156, 300, 308, 317])) {
 					$update = true;
 				} else {
 					$this->log("[Warning] Requires verification: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} <> {$range} |type:{$type}|{$column->type}|{$column->dbType}");

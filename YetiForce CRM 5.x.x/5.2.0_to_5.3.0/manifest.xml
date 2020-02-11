@@ -13,11 +13,4 @@
 	<license>
 		<file>license.txt</file>
 	</license>
-	<parameters>
-		<parameter>
-			<name>updateMailTemplates</name>
-			<lable>Update email templates</lable>
-			<type>checkbox</type>
-		</parameter>
-	</parameters>
 </module>

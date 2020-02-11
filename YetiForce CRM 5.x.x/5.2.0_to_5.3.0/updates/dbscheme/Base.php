@@ -374,6 +374,29 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__relations_members_entity' => [
+				'columns' => [
+					'crmid' => $this->integer(10),
+					'relcrmid' => $this->integer(10),
+					'status_rel' => $this->stringType(225),
+					'comment_rel' => $this->text(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_status_rel' => [
+				'columns' => [
+					'status_relid' => $this->integer(),
+					'status_rel' => $this->stringType(),
+					'presence' => $this->smallInteger(1),
+					'sortorderid' => $this->smallInteger(),
+				],
+				'columns_mysql' => [
+					'presence' => $this->tinyInteger(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['fk_vtiger_campaigncampaignid', 'vtiger_campaign', 'campaignid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
