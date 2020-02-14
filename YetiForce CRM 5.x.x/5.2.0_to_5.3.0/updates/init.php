@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 60c5100187c733b058bfd531b9293b7a2ee5c2cb
+// last check: cf0368156c82e6643c13a677a9678fb2b2cabc91
 /**
  * YetiForceUpdate Class.
  */
@@ -61,6 +61,7 @@ class YetiForceUpdate
 	 * Logs.
 	 *
 	 * @param string $message
+	 * @param bool   $eol
 	 */
 	public function log($message, bool $eol = true)
 	{

@@ -1,2 +1,4 @@
 updates/files/public_html/layouts/resources/colors/*
 updates/files/tests/*
+.sonarlint/
+.history/
