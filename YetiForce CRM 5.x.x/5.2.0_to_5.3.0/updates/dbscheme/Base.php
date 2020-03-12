@@ -397,6 +397,38 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__occurrences' => [
+				'columns' => [
+					'occurrences_status' => $this->stringType(),
+					'occurrences_type' => $this->stringType(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__openstreetmap' => [
+				'columns' => [
+					'crmid' => $this->integer(10)->notNull(),
+					'lat' => $this->decimal('10,7')->notNull(),
+					'lon' => $this->decimal('10,7')->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__openstreetmap_address_updater' => [
+				'columns' => [
+					'crmid' => $this->integer(10)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__relations_members_entity' => [
+				'index' => [
+					['u_yf_relations_members_entity_crmid_idx', 'crmid'],
+					['u_yf_relations_members_entity_relcrmid_idx', 'relcrmid'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['fk_vtiger_campaigncampaignid', 'vtiger_campaign', 'campaignid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
@@ -411,6 +443,12 @@ class Base extends \App\Db\Importers\Base
 			['fk_1_profile2utility_activityid', 'vtiger_profile2utility', 'activityid', 'vtiger_actionmapping', 'actionid', 'CASCADE', null],
 			['fk_1_profile2utility_tabid', 'vtiger_profile2utility', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
 			['fk_1_relatedlists_fields_fieldid', 'vtiger_relatedlists_fields', 'fieldid', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['u_#__openstreetmap_ibfk_1', 'u_#__openstreetmap', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['u_#__openstreetmap_record_updater_ibfk_1', 'u_#__openstreetmap_record_updater', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['u_#__relations_members_entity_crmid_fk', 'u_#__relations_members_entity', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['u_#__relations_members_entity_relcrmid_fk', 'u_#__relations_members_entity', 'relcrmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['vtiger_crmentityrel_crmid_fk', 'vtiger_crmentityrel', 'crmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['vtiger_crmentityrel_relcrmid_fk', 'vtiger_crmentityrel', 'relcrmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
 		];
 	}
 

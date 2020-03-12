@@ -30,6 +30,15 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'a_#__pdf' => [
+				'columns' => [
+					'header_content' => $this->mediumText(),
+					'body_content' => $this->mediumText(),
+					'footer_content' => $this->mediumText(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 	}
 }
