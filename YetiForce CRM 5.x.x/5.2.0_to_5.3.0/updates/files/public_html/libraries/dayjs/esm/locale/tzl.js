@@ -1,3 +1,4 @@
+// Talossan [tzl]
 import dayjs from '../index';
 var locale = {
   name: 'tzl',

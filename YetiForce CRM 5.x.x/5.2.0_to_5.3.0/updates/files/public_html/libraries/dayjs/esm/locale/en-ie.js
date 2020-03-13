@@ -1,3 +1,4 @@
+// English (Ireland) [en-ie]
 import dayjs from '../index';
 var locale = {
   name: 'en-ie',

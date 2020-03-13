@@ -6,6 +6,7 @@
   "injection": "$q.cookies",
   "methods": {
     "get": {
+      "tsType": "CookiesGetMethodType",
       "desc": "Get cookie",
       "params": {
         "name": {
@@ -18,8 +19,11 @@
         }
       },
       "returns": {
-        "type": "String",
-        "desc": "Cookie value",
+        "type": [
+          "String",
+          "null"
+        ],
+        "desc": "Cookie value; Returns null if cookie not found",
         "examples": [
           "john12"
         ]
@@ -61,12 +65,18 @@
             "expires": {
               "type": [
                 "Number",
-                "String"
+                "String",
+                "Date"
               ],
-              "desc": "Cookie expires detail; If specified as Number, then the unit is days",
+              "desc": "Cookie expires detail; If specified as Number, then the unit is days; If specified as String, it can either be raw stringified date or in Xd Xh Xm Xs format (see examples)",
               "examples": [
                 30,
-                "Wed, 13 Jan 2021 22:23:01 GMT"
+                "Wed, 13 Jan 2021 22:23:01 GMT",
+                "1d",
+                "15m",
+                "13d",
+                "1d 15m",
+                "1d 3h 5m 3s"
               ]
             },
             "path": {

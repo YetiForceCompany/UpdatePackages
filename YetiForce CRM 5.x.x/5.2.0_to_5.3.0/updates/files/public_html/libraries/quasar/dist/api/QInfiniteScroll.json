@@ -3,6 +3,11 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/infinite-scroll"
   },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
   "props": {
     "offset": {
       "type": "Number",
@@ -32,12 +37,15 @@
         "Element",
         "String"
       ],
-      "desc": "CSS selector or DOM element to be used as scroll container instead of the auto detected one",
+      "desc": "CSS selector or DOM element to be used as a custom scroll container instead of the auto detected one",
       "examples": [
         ":scroll-target=\"$refs.scrollTarget\"",
-        "scroll-target=\"scroll-target\""
+        "scroll-target=\".scroll-target-class\"",
+        "scroll-target=\"#scroll-target-id\"",
+        "scroll-target=\"body\""
       ],
-      "category": "behavior"
+      "category": "behavior",
+      "addedIn": "v1.8.0"
     },
     "disable": {
       "type": "Boolean",

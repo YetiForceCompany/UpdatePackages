@@ -1,3 +1,4 @@
+// Irish or Irish Gaelic [ga]
 import dayjs from '../index';
 var locale = {
   name: 'ga',

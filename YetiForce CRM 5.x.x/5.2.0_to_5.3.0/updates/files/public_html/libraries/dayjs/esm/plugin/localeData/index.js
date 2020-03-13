@@ -3,7 +3,7 @@ export default (function (o, c, dayjs) {
   var proto = c.prototype;
 
   var getShort = function getShort(ins, target, full, num) {
-    var locale = ins.$locale();
+    var locale = ins.name ? ins : ins.$locale();
 
     if (!locale[target]) {
       return locale[full].map(function (f) {
@@ -12,6 +12,10 @@ export default (function (o, c, dayjs) {
     }
 
     return locale[target];
+  };
+
+  var getDayjsLocaleObject = function getDayjsLocaleObject() {
+    return dayjs.Ls[dayjs.locale()];
   };
 
   var localeData = function localeData() {
@@ -44,11 +48,46 @@ export default (function (o, c, dayjs) {
   };
 
   dayjs.localeData = function () {
-    var localeObject = dayjs.Ls[dayjs.locale()];
+    var localeObject = getDayjsLocaleObject();
     return {
       firstDayOfWeek: function firstDayOfWeek() {
         return localeObject.weekStart || 0;
+      },
+      weekdays: function weekdays() {
+        return dayjs.weekdays();
+      },
+      weekdaysShort: function weekdaysShort() {
+        return dayjs.weekdaysShort();
+      },
+      weekdaysMin: function weekdaysMin() {
+        return dayjs.weekdaysMin();
+      },
+      months: function months() {
+        return dayjs.months();
+      },
+      monthsShort: function monthsShort() {
+        return dayjs.monthsShort();
       }
     };
+  };
+
+  dayjs.months = function () {
+    return getDayjsLocaleObject().months;
+  };
+
+  dayjs.monthsShort = function () {
+    return getShort(getDayjsLocaleObject(), 'monthsShort', 'months', 3);
+  };
+
+  dayjs.weekdays = function () {
+    return getDayjsLocaleObject().weekdays;
+  };
+
+  dayjs.weekdaysShort = function () {
+    return getShort(getDayjsLocaleObject(), 'weekdaysShort', 'weekdays', 3);
+  };
+
+  dayjs.weekdaysMin = function () {
+    return getShort(getDayjsLocaleObject(), 'weekdaysMin', 'weekdays', 2);
   };
 });

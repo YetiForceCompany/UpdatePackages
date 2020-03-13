@@ -32,6 +32,8 @@ use InvalidArgumentException;
  */
 trait Creator
 {
+    use ObjectInitialisation;
+
     /**
      * The errors that can occur.
      *
@@ -50,6 +52,10 @@ trait Creator
      */
     public function __construct($time = null, $tz = null)
     {
+        if ($time instanceof DateTimeInterface) {
+            $time = $this->constructTimezoneFromDateTime($time, $tz)->format('Y-m-d H:i:s.u');
+        }
+
         if (is_int($time)) {
             $time = "@$time";
         }
@@ -72,7 +78,9 @@ trait Creator
             setlocale(LC_NUMERIC, 'C');
         }
 
-        parent::__construct($time ?: 'now', static::safeCreateDateTimeZone($tz));
+        parent::__construct($time ?: 'now', static::safeCreateDateTimeZone($tz) ?: null);
+
+        $this->constructedObjectId = spl_object_hash($this);
 
         if (isset($locale)) {
             setlocale(LC_NUMERIC, $locale);
@@ -82,9 +90,42 @@ trait Creator
     }
 
     /**
+     * Get timezone from a datetime instance.
+     *
+     * @param DateTimeInterface        $date
+     * @param DateTimeZone|string|null $tz
+     *
+     * @return DateTimeInterface
+     */
+    private function constructTimezoneFromDateTime(DateTimeInterface $date, &$tz)
+    {
+        if ($tz !== null) {
+            $safeTz = static::safeCreateDateTimeZone($tz);
+
+            if ($safeTz) {
+                return $date->setTimezone($safeTz);
+            }
+
+            return $date;
+        }
+
+        $tz = $date->getTimezone();
+
+        return $date;
+    }
+
+    /**
+     * Update constructedObjectId on cloned.
+     */
+    public function __clone()
+    {
+        $this->constructedObjectId = spl_object_hash($this);
+    }
+
+    /**
      * Create a Carbon instance from a DateTime one.
      *
-     * @param \DateTimeInterface $date
+     * @param DateTimeInterface $date
      *
      * @return static
      */
@@ -99,7 +140,13 @@ trait Creator
         $instance = new static($date->format('Y-m-d H:i:s.u'), $date->getTimezone());
 
         if ($date instanceof CarbonInterface || $date instanceof Options) {
-            $instance->settings($date->getSettings());
+            $settings = $date->getSettings();
+
+            if (!$date->hasLocalTranslator()) {
+                unset($settings['locale']);
+            }
+
+            $instance->settings($settings);
         }
 
         return $instance;

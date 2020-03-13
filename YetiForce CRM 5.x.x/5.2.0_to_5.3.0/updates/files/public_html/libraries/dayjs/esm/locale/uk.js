@@ -1,4 +1,28 @@
+// Ukrainian [uk]
 import dayjs from '../index';
+
+function plural(word, num) {
+  var forms = word.split('_');
+  return num % 10 === 1 && num % 100 !== 11 ? forms[0] : num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20) ? forms[1] : forms[2]; // eslint-disable-line
+}
+
+function relativeTimeWithPlural(number, withoutSuffix, key) {
+  var format = {
+    ss: withoutSuffix ? 'секунда_секунди_секунд' : 'секунду_секунди_секунд',
+    mm: withoutSuffix ? 'хвилина_хвилини_хвилин' : 'хвилину_хвилини_хвилин',
+    hh: withoutSuffix ? 'година_години_годин' : 'годину_години_годин',
+    dd: 'день_дні_днів',
+    MM: 'місяць_місяці_місяців',
+    yy: 'рік_роки_років'
+  };
+
+  if (key === 'm') {
+    return withoutSuffix ? 'хвилина' : 'хвилину';
+  }
+
+  return number + " " + plural(format[key], +number);
+}
+
 var locale = {
   name: 'uk',
   weekdays: 'неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота'.split('_'),
@@ -8,19 +32,19 @@ var locale = {
   monthsShort: 'сiч_лют_бер_квiт_трав_черв_лип_серп_вер_жовт_лист_груд'.split('_'),
   weekStart: 1,
   relativeTime: {
-    future: 'через %s',
+    future: 'за %s',
     past: '%s тому',
     s: 'декілька секунд',
-    m: 'хвилина',
-    mm: '%d хвилин',
-    h: 'година',
-    hh: '%d годин',
+    m: relativeTimeWithPlural,
+    mm: relativeTimeWithPlural,
+    h: 'годину',
+    hh: relativeTimeWithPlural,
     d: 'день',
-    dd: '%d днів',
+    dd: relativeTimeWithPlural,
     M: 'місяць',
-    MM: '%d місяців',
+    MM: relativeTimeWithPlural,
     y: 'рік',
-    yy: '%d роки'
+    yy: relativeTimeWithPlural
   },
   ordinal: function ordinal(n) {
     return n;

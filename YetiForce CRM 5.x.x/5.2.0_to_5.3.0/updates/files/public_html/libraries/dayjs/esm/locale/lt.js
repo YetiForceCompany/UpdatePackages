@@ -1,3 +1,4 @@
+// Lithuanian [lt]
 import dayjs from '../index';
 var locale = {
   name: 'lt',

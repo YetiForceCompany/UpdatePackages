@@ -1,3 +1,4 @@
+// Hebrew [he]
 import dayjs from '../index';
 var locale = {
   name: 'he',

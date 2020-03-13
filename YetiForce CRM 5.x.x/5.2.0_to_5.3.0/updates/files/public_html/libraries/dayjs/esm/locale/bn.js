@@ -1,3 +1,4 @@
+// Bengali [bn]
 import dayjs from '../index';
 var locale = {
   name: 'bn',

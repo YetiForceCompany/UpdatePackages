@@ -1,3 +1,4 @@
+// Arabic (Lybia) [ar-ly]
 import dayjs from '../index';
 var locale = {
   name: 'ar-ly',

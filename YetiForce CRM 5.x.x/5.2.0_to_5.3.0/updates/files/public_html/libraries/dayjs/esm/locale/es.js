@@ -1,3 +1,4 @@
+// Spanish [es]
 import dayjs from '../index';
 var locale = {
   name: 'es',

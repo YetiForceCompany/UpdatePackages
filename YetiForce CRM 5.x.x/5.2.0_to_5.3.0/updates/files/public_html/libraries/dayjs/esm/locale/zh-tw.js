@@ -1,3 +1,4 @@
+// Chinese (Taiwan) [zh-tw]
 import dayjs from '../index';
 var locale = {
   name: 'zh-tw',

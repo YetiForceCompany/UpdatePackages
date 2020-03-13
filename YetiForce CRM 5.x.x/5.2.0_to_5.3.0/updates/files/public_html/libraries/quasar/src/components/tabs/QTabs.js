@@ -4,7 +4,7 @@ import QIcon from '../icon/QIcon.js'
 import QResizeObserver from '../resize-observer/QResizeObserver.js'
 import TimeoutMixin from '../../mixins/timeout.js'
 
-import { stop } from '../../utils/event.js'
+import { stop, noop } from '../../utils/event.js'
 import { slot } from '../../utils/slot.js'
 import { cache } from '../../utils/vm.js'
 
@@ -292,14 +292,14 @@ export default Vue.extend({
         let offset = this.vertical === true ? newPos.top - top : newPos.left - left
 
         if (offset < 0) {
-          this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += offset
+          this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += Math.floor(offset)
           this.__updateArrows()
           return
         }
 
         offset += this.vertical === true ? newPos.height - height : newPos.width - width
         if (offset > 0) {
-          this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += offset
+          this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += Math.ceil(offset)
           this.__updateArrows()
         }
       }
@@ -370,7 +370,7 @@ export default Vue.extend({
     this.buffer = []
 
     if (this.$q.platform.is.desktop !== true) {
-      this.__updateArrows = () => {}
+      this.__updateArrows = noop
     }
   },
 

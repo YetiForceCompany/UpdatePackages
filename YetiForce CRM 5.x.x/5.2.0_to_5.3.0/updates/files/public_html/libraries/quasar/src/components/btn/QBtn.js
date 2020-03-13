@@ -6,7 +6,7 @@ import QSpinner from '../spinner/QSpinner.js'
 import BtnMixin from '../../mixins/btn.js'
 
 import { mergeSlot } from '../../utils/slot.js'
-import { stop, prevent, stopAndPrevent, listenOpts } from '../../utils/event.js'
+import { stop, prevent, stopAndPrevent, listenOpts, noop } from '../../utils/event.js'
 import { getTouchTarget } from '../../utils/touch.js'
 import { isKeyCode } from '../../utils/key-composition.js'
 
@@ -16,6 +16,8 @@ let
   touchTarget = void 0,
   keyboardTarget = void 0,
   mouseTarget = void 0
+
+const iconAttrs = { role: 'img', 'aria-hidden': 'true' }
 
 export default Vue.extend({
   name: 'QBtn',
@@ -36,7 +38,7 @@ export default Vue.extend({
       return this.ripple === false
         ? false
         : Object.assign(
-          { keyCodes: [] },
+          { keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ] },
           this.ripple === true ? {} : this.ripple
         )
     },
@@ -45,6 +47,16 @@ export default Vue.extend({
       const val = Math.max(0, Math.min(100, this.percentage))
       if (val > 0) {
         return { transition: 'transform 0.6s', transform: `translateX(${val - 100}%)` }
+      }
+    },
+
+    onLoadingEvents () {
+      return {
+        mousedown: this.__onLoadingEvt,
+        touchstart: this.__onLoadingEvt,
+        click: this.__onLoadingEvt,
+        keydown: this.__onLoadingEvt,
+        keyup: this.__onLoadingEvt
       }
     }
   },
@@ -84,7 +96,20 @@ export default Vue.extend({
           this.$el.addEventListener('blur', onClickCleanup, passiveCapture)
         }
 
-        this.hasRouterLink === true && stopAndPrevent(e)
+        if (this.hasRouterLink === true) {
+          if (
+            e.ctrlKey === true ||
+            e.shiftKey === true ||
+            e.altKey === true ||
+            e.metaKey === true
+          ) {
+            // if it has meta keys, let vue-router link
+            // handle this by its own
+            return
+          }
+
+          stopAndPrevent(e)
+        }
       }
 
       const go = () => {
@@ -94,7 +119,7 @@ export default Vue.extend({
         // to the same route that the user is currently at
         // https://github.com/vuejs/vue-router/issues/2872
         if (res !== void 0 && typeof res.catch === 'function') {
-          res.catch(() => {})
+          res.catch(noop)
         }
       }
 
@@ -125,11 +150,19 @@ export default Vue.extend({
     __onTouchstart (e) {
       if (touchTarget !== this.$el) {
         touchTarget !== void 0 && this.__cleanup()
-        touchTarget = e.target
-        const target = getTouchTarget(touchTarget)
+        touchTarget = this.$el
+        const target = this.touchTargetEl = getTouchTarget(e.target)
         target.addEventListener('touchcancel', this.__onPressEnd, passiveCapture)
         target.addEventListener('touchend', this.__onPressEnd, passiveCapture)
       }
+
+      // avoid duplicated mousedown event
+      // triggering another early ripple
+      this.avoidMouseRipple = true
+      clearTimeout(this.mouseTimer)
+      this.mouseTimer = setTimeout(() => {
+        this.avoidMouseRipple = false
+      }, 200)
 
       this.$emit('touchstart', e)
     },
@@ -142,6 +175,7 @@ export default Vue.extend({
         document.addEventListener('mouseup', this.__onPressEnd, passiveCapture)
       }
 
+      e.qSkipRipple = this.avoidMouseRipple === true
       this.$emit('mousedown', e)
     },
 
@@ -183,10 +217,10 @@ export default Vue.extend({
       }
 
       if (touchTarget === this.$el) {
-        const target = getTouchTarget(touchTarget)
+        const target = this.touchTargetEl
         target.removeEventListener('touchcancel', this.__onPressEnd, passiveCapture)
         target.removeEventListener('touchend', this.__onPressEnd, passiveCapture)
-        touchTarget = void 0
+        touchTarget = this.touchTargetEl = void 0
       }
 
       if (mouseTarget === this.$el) {
@@ -201,6 +235,11 @@ export default Vue.extend({
       }
 
       this.$el !== void 0 && this.$el.classList.remove('q-btn--active')
+    },
+
+    __onLoadingEvt (evt) {
+      stopAndPrevent(evt)
+      evt.qSkipRipple = true
     }
   },
 
@@ -234,12 +273,13 @@ export default Vue.extend({
       data.directives = [{
         name: 'ripple',
         value: this.computedRipple,
-        modifiers: { center: this.isRound }
+        modifiers: { center: this.round }
       }]
     }
 
     this.icon !== void 0 && inner.push(
       h(QIcon, {
+        attrs: iconAttrs,
         props: { name: this.icon, left: this.stack === false && this.hasLabel === true }
       })
     )
@@ -250,9 +290,10 @@ export default Vue.extend({
 
     inner = mergeSlot(inner, this, 'default')
 
-    if (this.iconRight !== void 0 && this.isRound === false) {
+    if (this.iconRight !== void 0 && this.round === false) {
       inner.push(
         h(QIcon, {
+          attrs: iconAttrs,
           props: { name: this.iconRight, right: this.stack === false && this.hasLabel === true }
         })
       )
@@ -266,17 +307,22 @@ export default Vue.extend({
       })
     ]
 
-    this.loading === true && this.percentage !== void 0 && child.push(
-      h('div', {
-        staticClass: 'q-btn__progress absolute-full overflow-hidden'
-      }, [
+    if (this.loading === true) {
+      // stop propagation and ripple
+      data.on = this.onLoadingEvents
+
+      this.percentage !== void 0 && child.push(
         h('div', {
-          staticClass: 'q-btn__progress-indicator fit',
-          class: this.darkPercentage === true ? 'q-btn__progress--dark' : '',
-          style: this.percentageStyle
-        })
-      ])
-    )
+          staticClass: 'q-btn__progress absolute-full overflow-hidden'
+        }, [
+          h('div', {
+            staticClass: 'q-btn__progress-indicator fit',
+            class: this.darkPercentage === true ? 'q-btn__progress--dark' : '',
+            style: this.percentageStyle
+          })
+        ])
+      )
+    }
 
     child.push(
       h('div', {

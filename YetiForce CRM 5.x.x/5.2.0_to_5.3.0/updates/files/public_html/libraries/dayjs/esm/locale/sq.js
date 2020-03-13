@@ -1,3 +1,4 @@
+// Albanian [sq]
 import dayjs from '../index';
 var locale = {
   name: 'sq',

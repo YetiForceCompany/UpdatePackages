@@ -1,3 +1,4 @@
+// German [de]
 import dayjs from '../index';
 var locale = {
   name: 'de',

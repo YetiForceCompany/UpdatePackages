@@ -61,6 +61,7 @@ export default (function (o, c, d) {
     var Tl = T.length;
     var result;
     var out;
+    var isFuture;
 
     for (var i = 0; i < Tl; i += 1) {
       var t = T[i];
@@ -70,17 +71,25 @@ export default (function (o, c, d) {
       }
 
       var abs = Math.round(Math.abs(result));
+      isFuture = result > 0;
 
       if (abs <= t.r || !t.r) {
         if (abs === 1 && i > 0) t = T[i - 1]; // 1 minutes -> a minute
 
-        out = loc[t.l].replace('%d', abs);
+        var format = loc[t.l];
+
+        if (typeof format === 'string') {
+          out = format.replace('%d', abs);
+        } else {
+          out = format(abs, withoutSuffix, t.l, isFuture);
+        }
+
         break;
       }
     }
 
     if (withoutSuffix) return out;
-    return (result > 0 ? loc.future : loc.past).replace('%s', out);
+    return (isFuture ? loc.future : loc.past).replace('%s', out);
   };
 
   proto.to = function (input, withoutSuffix) {

@@ -9,6 +9,17 @@
     }
   },
   "props": {
+    "tag": {
+      "type": "String",
+      "desc": "HTML tag to render",
+      "default": "div",
+      "category": "content",
+      "examples": [
+        "div",
+        "form"
+      ],
+      "addedIn": "v1.8.4"
+    },
     "dark": {
       "type": "Boolean",
       "desc": "Notify the component that the background is a dark color",

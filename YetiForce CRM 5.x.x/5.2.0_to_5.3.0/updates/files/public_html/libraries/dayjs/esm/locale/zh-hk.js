@@ -1,3 +1,4 @@
+// Chinese (Hong Kong) [zh-hk]
 import dayjs from '../index';
 var locale = {
   name: 'zh-hk',

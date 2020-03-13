@@ -194,15 +194,29 @@ export default Vue.extend({
       )
     }
 
+    if (this.name !== void 0 && this.disable !== true) {
+      this.__injectFormInput(child, 'push')
+    }
+
+    const track = [
+      h('div', {
+        staticClass: 'q-slider__track absolute',
+        style: this.trackStyle
+      })
+    ]
+
+    this.markers === true && track.push(
+      h('div', {
+        staticClass: 'q-slider__track-markers absolute-full fit',
+        style: this.markerStyle
+      })
+    )
+
     return h('div', {
       staticClass: this.value === null ? ' q-slider--no-value' : '',
       attrs: {
-        role: 'slider',
-        'aria-valuemin': this.min,
-        'aria-valuemax': this.max,
+        ...this.attrs,
         'aria-valuenow': this.value,
-        'data-step': this.step,
-        'aria-disabled': this.disable,
         tabindex: this.computedTabindex
       },
       class: this.classes,
@@ -219,19 +233,9 @@ export default Vue.extend({
         }
       }]) : null
     }, [
-      h('div', { staticClass: 'q-slider__track-container absolute overflow-hidden' }, [
-        h('div', {
-          staticClass: 'q-slider__track absolute',
-          style: this.trackStyle
-        }),
-
-        this.markers === true
-          ? h('div', {
-            staticClass: 'q-slider__track-markers absolute-full fit',
-            style: this.markerStyle
-          })
-          : null
-      ]),
+      h('div', {
+        staticClass: 'q-slider__track-container absolute'
+      }, track),
 
       h('div', {
         staticClass: 'q-slider__thumb-container absolute non-selectable',

@@ -31,13 +31,26 @@ function update (el, ctx, { modifiers, value }) {
     ctx.observer !== void 0 && ctx.observer.unobserve(el)
 
     ctx.observer = new IntersectionObserver(([ entry ]) => {
-      const res = ctx.handler(entry, ctx.observer)
+      if (typeof ctx.handler === 'function') {
+        // if observed element is part of a vue transition
+        // then we need to be careful...
+        if (
+          entry.rootBounds === null &&
+          (el.__vue__ !== void 0 ? el.__vue__._inactive !== true : document.body.contains(el) === true)
+        ) {
+          ctx.observer.unobserve(el)
+          ctx.observer.observe(el)
+          return
+        }
 
-      if (
-        res === false ||
-        (ctx.once === true && entry.isIntersecting === true)
-      ) {
-        destroy(el)
+        const res = ctx.handler(entry, ctx.observer)
+
+        if (
+          res === false ||
+          (ctx.once === true && entry.isIntersecting === true)
+        ) {
+          destroy(el)
+        }
       }
     }, cfg)
 

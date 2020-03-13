@@ -1,3 +1,4 @@
+// Armenian [hy-am]
 import dayjs from '../index';
 var locale = {
   name: 'hy-am',

@@ -1,3 +1,4 @@
+// Italian [it]
 import dayjs from '../index';
 var locale = {
   name: 'it',

@@ -1,3 +1,4 @@
+// Serbian Cyrillic [sr-cyrl]
 import dayjs from '../index';
 var locale = {
   name: 'sr-cyrl',

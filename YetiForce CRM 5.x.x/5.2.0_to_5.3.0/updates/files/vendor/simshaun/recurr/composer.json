@@ -8,8 +8,8 @@
 	"authors": [
 		{
 			"name": "Shaun Simmons",
-			"email": "shaun@envysphere.com",
-			"homepage": "http://envysphere.com"
+			"email": "shaun@shaun.pub",
+			"homepage": "https://shaun.pub"
 		}
 	],
 	"require": {
@@ -21,7 +21,11 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Recurr\\": "src/Recurr/",
+			"Recurr\\": "src/Recurr/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
 			"Recurr\\Test\\": "tests/"
 		}
 	},

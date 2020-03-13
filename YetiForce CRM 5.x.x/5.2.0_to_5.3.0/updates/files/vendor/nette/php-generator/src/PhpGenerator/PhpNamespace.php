@@ -118,9 +118,7 @@ final class PhpNamespace
 	}
 
 
-	/**
-	 * @return string[]
-	 */
+	/** @return string[] */
 	public function getUses(): array
 	{
 		return $this->uses;
@@ -152,9 +150,7 @@ final class PhpNamespace
 	}
 
 
-	/**
-	 * @return static
-	 */
+	/** @return static */
 	public function add(ClassType $class): self
 	{
 		$name = $class->getName();
@@ -176,19 +172,17 @@ final class PhpNamespace
 
 	public function addInterface(string $name): ClassType
 	{
-		return $this->addClass($name)->setType(ClassType::TYPE_INTERFACE);
+		return $this->addClass($name)->setInterface();
 	}
 
 
 	public function addTrait(string $name): ClassType
 	{
-		return $this->addClass($name)->setType(ClassType::TYPE_TRAIT);
+		return $this->addClass($name)->setTrait();
 	}
 
 
-	/**
-	 * @return ClassType[]
-	 */
+	/** @return ClassType[] */
 	public function getClasses(): array
 	{
 		return $this->classes;

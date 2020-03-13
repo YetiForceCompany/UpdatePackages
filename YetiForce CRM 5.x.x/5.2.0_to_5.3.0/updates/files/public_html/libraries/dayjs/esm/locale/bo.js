@@ -1,3 +1,4 @@
+// Tibetan [bo]
 import dayjs from '../index';
 var locale = {
   name: 'bo',

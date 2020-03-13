@@ -3,15 +3,30 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/pull-to-refresh"
   },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
   "props": {
     "color": {
       "type": "String",
-      "desc": "Color name for component from the Quasar Color Palette",
+      "desc": "Color name for the icon from the Quasar Color Palette",
       "examples": [
         "primary",
         "teal-10"
       ],
       "category": "style"
+    },
+    "bg-color": {
+      "type": "String",
+      "desc": "Color name for background of the icon container from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style",
+      "addedIn": "v1.9.5"
     },
     "icon": {
       "type": "String",
@@ -33,6 +48,21 @@
       "type": "Boolean",
       "desc": "Put component in disabled mode",
       "category": "state"
+    },
+    "scroll-target": {
+      "type": [
+        "Element",
+        "String"
+      ],
+      "desc": "CSS selector or DOM element to be used as a custom scroll container instead of the auto detected one",
+      "examples": [
+        ":scroll-target=\"$refs.scrollTarget\"",
+        "scroll-target=\".scroll-target-class\"",
+        "scroll-target=\"#scroll-target-id\"",
+        "scroll-target=\"body\""
+      ],
+      "category": "behavior",
+      "addedIn": "v1.8.0"
     }
   },
   "slots": {

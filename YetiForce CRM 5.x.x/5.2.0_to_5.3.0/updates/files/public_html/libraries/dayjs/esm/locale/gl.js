@@ -1,3 +1,4 @@
+// Galician [gl]
 import dayjs from '../index';
 var locale = {
   name: 'gl',

@@ -14,6 +14,8 @@ const components = {
   toggle: QToggle
 }
 
+const typeValues = Object.keys(components)
+
 export default Vue.extend({
   name: 'QOptionGroup',
 
@@ -30,14 +32,18 @@ export default Vue.extend({
       }
     },
 
+    name: String,
+
     type: {
       default: 'radio',
-      validator: v => ['radio', 'checkbox', 'toggle'].includes(v)
+      validator: v => typeValues.includes(v)
     },
 
     color: String,
     keepColor: Boolean,
     dense: Boolean,
+
+    size: String,
 
     leftLabel: Boolean,
     inline: Boolean,
@@ -50,7 +56,28 @@ export default Vue.extend({
     },
 
     model () {
-      return Array.isArray(this.value) ? this.value.slice() : this.value
+      return Array.isArray(this.value)
+        ? this.value.slice()
+        : this.value
+    },
+
+    classes () {
+      return 'q-option-group q-gutter-x-sm' +
+        (this.inline === true ? ' q-option-group--inline' : '')
+    },
+
+    attrs () {
+      if (this.type === 'radio') {
+        const attrs = {
+          role: 'radiogroup'
+        }
+
+        if (this.disable === true) {
+          attrs['aria-disabled'] = ''
+        }
+
+        return attrs
+      }
     }
   },
 
@@ -68,20 +95,22 @@ export default Vue.extend({
         console.error('q-option-group: model should not be array')
       }
     }
-    else if (!isArray) {
+    else if (isArray === false) {
       console.error('q-option-group: model should be array in your case')
     }
   },
 
   render (h) {
     return h('div', {
-      staticClass: 'q-option-group q-gutter-x-sm',
-      class: this.inline ? 'q-option-group--inline' : null
+      class: this.classes,
+      attrs: this.attrs,
+      on: this.$listeners
     }, this.options.map(opt => h('div', [
       h(this.component, {
         props: {
           value: this.value,
           val: opt.value,
+          name: this.name || opt.name,
           disable: this.disable || opt.disable,
           label: opt.label,
           leftLabel: this.leftLabel || opt.leftLabel,
@@ -89,6 +118,7 @@ export default Vue.extend({
           checkedIcon: opt.checkedIcon,
           uncheckedIcon: opt.uncheckedIcon,
           dark: opt.dark || this.isDark,
+          size: opt.size || this.size,
           dense: this.dense,
           keepColor: opt.keepColor || this.keepColor
         },

@@ -1,3 +1,4 @@
+// Serbian [sr]
 import dayjs from '../index';
 var locale = {
   name: 'sr',

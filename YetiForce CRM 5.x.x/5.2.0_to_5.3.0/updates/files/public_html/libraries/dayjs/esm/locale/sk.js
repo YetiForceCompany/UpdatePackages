@@ -1,3 +1,4 @@
+// Slovak [sk]
 import dayjs from '../index';
 var locale = {
   name: 'sk',

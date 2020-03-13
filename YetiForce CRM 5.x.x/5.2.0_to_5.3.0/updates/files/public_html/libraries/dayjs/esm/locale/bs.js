@@ -1,3 +1,4 @@
+// Bosnian [bs]
 import dayjs from '../index';
 var locale = {
   name: 'bs',

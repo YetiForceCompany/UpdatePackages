@@ -1,3 +1,4 @@
+// Hindi [hi]
 import dayjs from '../index';
 var locale = {
   name: 'hi',

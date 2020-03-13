@@ -44,6 +44,11 @@ export default Vue.extend({
 
     input: Boolean,
 
+    iconPrev: String,
+    iconNext: String,
+    iconFirst: String,
+    iconLast: String,
+
     toFn: Function,
 
     boundaryLinks: {
@@ -76,11 +81,11 @@ export default Vue.extend({
   },
 
   watch: {
-    min (value) {
+    min () {
       this.model = this.value
     },
 
-    max (value) {
+    max () {
       this.model = this.value
     }
   },
@@ -122,12 +127,20 @@ export default Vue.extend({
 
     icons () {
       const ico = [
-        this.$q.iconSet.pagination.first,
-        this.$q.iconSet.pagination.prev,
-        this.$q.iconSet.pagination.next,
-        this.$q.iconSet.pagination.last
+        this.iconFirst || this.$q.iconSet.pagination.first,
+        this.iconPrev || this.$q.iconSet.pagination.prev,
+        this.iconNext || this.$q.iconSet.pagination.next,
+        this.iconLast || this.$q.iconSet.pagination.last
       ]
       return this.$q.lang.rtl === true ? ico.reverse() : ico
+    },
+
+    attrs () {
+      if (this.disable === true) {
+        return {
+          'aria-disabled': ''
+        }
+      }
     }
   },
 
@@ -335,6 +348,7 @@ export default Vue.extend({
     return h('div', {
       staticClass: 'q-pagination row no-wrap items-center',
       class: { disabled: this.disable },
+      attrs: this.attrs,
       on: this.$listeners
     }, [
       contentStart,

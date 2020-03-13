@@ -1,3 +1,4 @@
+// Scottish Gaelic [gd]
 import dayjs from '../index';
 var locale = {
   name: 'gd',

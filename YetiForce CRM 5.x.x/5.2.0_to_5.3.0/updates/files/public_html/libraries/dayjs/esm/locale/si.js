@@ -1,3 +1,4 @@
+// Sinhalese [si]
 import dayjs from '../index';
 var locale = {
   name: 'si',

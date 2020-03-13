@@ -1,3 +1,4 @@
+// English (New Zealand) [en-nz]
 import dayjs from '../index';
 var locale = {
   name: 'en-nz',

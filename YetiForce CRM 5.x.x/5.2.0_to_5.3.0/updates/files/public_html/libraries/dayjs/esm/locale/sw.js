@@ -1,3 +1,4 @@
+// Swahili [sw]
 import dayjs from '../index';
 var locale = {
   name: 'sw',

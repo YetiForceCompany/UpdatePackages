@@ -123,6 +123,21 @@
       ],
       "category": "position"
     },
+    "scroll-target": {
+      "type": [
+        "Element",
+        "String"
+      ],
+      "desc": "CSS selector or DOM element to be used as a custom scroll container instead of the auto detected one",
+      "examples": [
+        ":scroll-target=\"$refs.scrollTarget\"",
+        "scroll-target=\".scroll-target-class\"",
+        "scroll-target=\"#scroll-target-id\"",
+        "scroll-target=\"body\""
+      ],
+      "category": "behavior",
+      "addedIn": "v1.8.0"
+    },
     "target": {
       "type": [
         "Boolean",
@@ -154,6 +169,16 @@
         ":delay=\"550\""
       ],
       "category": "behavior"
+    },
+    "hide-delay": {
+      "type": "Number",
+      "desc": "Configure Tooltip to disappear with delay",
+      "default": 0,
+      "examples": [
+        ":hide-delay=\"650\""
+      ],
+      "category": "behavior",
+      "addedIn": "v1.9.5"
     }
   },
   "slots": {

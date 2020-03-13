@@ -163,8 +163,8 @@ export function extractDate (str, mask, dateLocale) {
   )
 }
 
-export function __splitDate (str, mask, dateLocale, calendar) {
-  const date = {
+export function __splitDate (str, mask, dateLocale, calendar, defaultModel) {
+  const date = Object.assign({
     year: null,
     month: null,
     day: null,
@@ -174,7 +174,7 @@ export function __splitDate (str, mask, dateLocale, calendar) {
     millisecond: null,
     dateHash: null,
     timeHash: null
-  }
+  }, defaultModel)
 
   if (
     str === void 0 ||
@@ -365,16 +365,23 @@ export function getWeekOfYear (date) {
   return 1 + Math.floor(weekDiff)
 }
 
+function getDayIdentifier (date) {
+  return date.getFullYear() * 10000 + date.getMonth() * 100 + date.getDate()
+}
+
+function getDateIdentifier (date, onlyDate /* = false */) {
+  const d = new Date(date)
+  return onlyDate === true ? getDayIdentifier(d) : d.getTime()
+}
+
 export function isBetweenDates (date, from, to, opts = {}) {
-  let
-    d1 = new Date(from).getTime(),
-    d2 = new Date(to).getTime(),
-    cur = new Date(date).getTime()
+  const
+    d1 = getDateIdentifier(from, opts.onlyDate),
+    d2 = getDateIdentifier(to, opts.onlyDate),
+    cur = getDateIdentifier(date, opts.onlyDate)
 
-  opts.inclusiveFrom && d1--
-  opts.inclusiveTo && d2++
-
-  return cur > d1 && cur < d2
+  return (cur > d1 || (opts.inclusiveFrom === true && cur === d1)) &&
+    (cur < d2 || (opts.inclusiveTo === true && cur === d2))
 }
 
 export function addToDate (date, mod) {

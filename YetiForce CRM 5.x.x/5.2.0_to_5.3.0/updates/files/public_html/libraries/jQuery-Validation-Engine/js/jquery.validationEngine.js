@@ -1,5 +1,5 @@
 /*
- * Inline Form Validation Engine 2.6.2, jQuery plugin
+ * Inline Form Validation Engine 3.1.1 v2, jQuery plugin
  *
  * Copyright(c) 2010, Cedric Dugas
  * http://www.position-absolute.com
@@ -17,9 +17,9 @@
 	var methods = {
 
 		/**
-		* Kind of the constructor, called before any action
-		* @param {Map} user options
-		*/
+		 * Kind of the constructor, called before any action
+		 * @param options
+		 */
 		init: function(options) {
 			var form = this;
 			if (!form.data('jqv') || form.data('jqv') == null ) {
@@ -200,9 +200,12 @@
 		},
 		/**
 		* Closes form error prompts, CAN be invidual
+		* Fixed issue (hide) hiding all error prompts?!
+		* (https://github.com/posabsolute/jQuery-Validation-Engine/issues/966)
 		*/
 		hide: function() {
 			 var form = $(this).closest('form, .validationEngineContainer');
+			 var field = $(this).attr("id");
 			 var options = form.data('jqv');
 			 // No option, take default one
 			 if (!options)
@@ -211,12 +214,12 @@
 			 var closingtag;
 
 			 if(form.is("form") || form.hasClass("validationEngineContainer")) {
-				 closingtag = "parentForm"+methods._getClassName($(form).attr("id"));
+				 closingtag = methods._getClassName(field) +"formError";
 			 } else {
-				 closingtag = methods._getClassName($(form).attr("id")) +"formError";
+				 closingtag = "parentForm"+methods._getClassName(field);
 			 }
 			 $('.'+closingtag).fadeTo(fadeDuration, 0, function() {
-				 $(this).closest('.formError').remove();
+				 $('.'+closingtag).remove();
 			 });
 			 return this;
 		 },
@@ -779,7 +782,7 @@
 				field = form.find("#" + options.usePrefix + jqSelector);
 				if (field.length <= 0) {
 					field = form.find("#" + jqSelector + options.useSuffix);
-				}
+}
 			}
 
 			if (options.isError && options.showPrompts){

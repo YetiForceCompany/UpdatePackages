@@ -1,4 +1,45 @@
+// Finnish [fi]
 import dayjs from '../index';
+
+function relativeTimeFormatter(number, withoutSuffix, key, isFuture) {
+  var past = {
+    s: 'muutama sekunti',
+    m: 'minuutti',
+    mm: '%d minuuttia',
+    h: 'tunti',
+    hh: '%d tuntia',
+    d: 'päivä',
+    dd: '%d päivää',
+    M: 'kuukausi',
+    MM: '%d kuukautta',
+    y: 'vuosi',
+    yy: '%d vuotta',
+    numbers: 'nolla_yksi_kaksi_kolme_neljä_viisi_kuusi_seitsemän_kahdeksan_yhdeksän'.split('_')
+  };
+  var future = {
+    s: 'muutaman sekunnin',
+    m: 'minuutin',
+    mm: '%d minuutin',
+    h: 'tunnin',
+    hh: '%d tunnin',
+    d: 'päivän',
+    dd: '%d päivän',
+    M: 'kuukauden',
+    MM: '%d kuukauden',
+    y: 'vuoden',
+    yy: '%d vuoden',
+    numbers: 'nollan_yhden_kahden_kolmen_neljän_viiden_kuuden_seitsemän_kahdeksan_yhdeksän'.split('_')
+  };
+  var words = isFuture && !withoutSuffix ? future : past;
+  var result = words[key];
+
+  if (number < 10) {
+    return result.replace('%d', words.numbers[number]);
+  }
+
+  return result.replace('%d', number);
+}
+
 var locale = {
   name: 'fi',
   // Finnish
@@ -14,41 +55,20 @@ var locale = {
     return n + ".";
   },
   weekStart: 1,
-
-  /*
-   * This relativeTime is currently configured for having proper past
-   * tense forms since Finnish needs a separate version for future tense
-   * and I think past tense is a more common use case for this kind of
-   * library.
-   *
-   * Doing this properly requires this issue to be fixed:
-   * https://github.com/iamkun/dayjs/issues/302
-   */
   relativeTime: {
-    future: '%s kuluttua',
+    future: '%s päästä',
     past: '%s sitten',
-    s: 'muutama sekunti',
-    // for past tense
-    m: 'minuutti',
-    // for past tense
-    mm: '%d minuuttia',
-    // for past tense
-    h: 'tunti',
-    // for past tense
-    hh: '%d tuntia',
-    // for past tense
-    d: 'päivä',
-    // for past tense
-    dd: '%d päivää',
-    // for past tense
-    M: 'kuukausi',
-    // for past tense
-    MM: '%d kuukautta',
-    // for past tense
-    y: 'vuosi',
-    // for past tense
-    yy: '%d vuotta' // for past tense
-
+    s: relativeTimeFormatter,
+    m: relativeTimeFormatter,
+    mm: relativeTimeFormatter,
+    h: relativeTimeFormatter,
+    hh: relativeTimeFormatter,
+    d: relativeTimeFormatter,
+    dd: relativeTimeFormatter,
+    M: relativeTimeFormatter,
+    MM: relativeTimeFormatter,
+    y: relativeTimeFormatter,
+    yy: relativeTimeFormatter
   },
   formats: {
     LT: 'HH.mm',

@@ -1,3 +1,4 @@
+// Montenegrin [me]
 import dayjs from '../index';
 var locale = {
   name: 'me',

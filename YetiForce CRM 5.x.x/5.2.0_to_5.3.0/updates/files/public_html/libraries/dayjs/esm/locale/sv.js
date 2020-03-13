@@ -1,3 +1,4 @@
+// Swedish [sv]
 import dayjs from '../index';
 var locale = {
   name: 'sv',

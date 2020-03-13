@@ -37,7 +37,7 @@ final class Dumper
 
 	private function dumpVar(&$var, array $parents = [], int $level = 0, int $column = 0): string
 	{
-		if ($var instanceof PhpLiteral) {
+		if ($var instanceof Literal) {
 			return ltrim(Nette\Utils\Strings::indent(trim((string) $var), $level), "\t");
 
 		} elseif ($var === null) {
@@ -97,9 +97,10 @@ final class Dumper
 		$outWrapped = "\n$space";
 		$parents[] = $var;
 		$counter = 0;
+		$hideKeys = is_int(($tmp = array_keys($var))[0]) && $tmp === range($tmp[0], $tmp[0] + count($var) - 1);
 
 		foreach ($var as $k => &$v) {
-			$keyPart = $k === $counter ? '' : $this->dumpVar($k) . ' => ';
+			$keyPart = $hideKeys && $k === $counter ? '' : $this->dumpVar($k) . ' => ';
 			$counter = is_int($k) ? max($k + 1, $counter) : $counter;
 			$outInline .= ($outInline === '' ? '' : ', ') . $keyPart;
 			$outInline .= $this->dumpVar($v, $parents, 0, $column + strlen($outInline));
@@ -128,8 +129,8 @@ final class Dumper
 		if ((new \ReflectionObject($var))->isAnonymous()) {
 			throw new Nette\InvalidArgumentException('Cannot dump anonymous class.');
 
-		} elseif (in_array($class, ['DateTime', 'DateTimeImmutable'], true)) {
-			return $this->format("new $class(?, new DateTimeZone(?))", $var->format('Y-m-d H:i:s.u'), $var->getTimeZone()->getName());
+		} elseif (in_array($class, [\DateTime::class, \DateTimeImmutable::class], true)) {
+			return $this->format("new \\$class(?, new \\DateTimeZone(?))", $var->format('Y-m-d H:i:s.u'), $var->getTimeZone()->getName());
 		}
 
 		$arr = (array) $var;
@@ -158,9 +159,9 @@ final class Dumper
 
 		array_pop($parents);
 		$out .= $space;
-		return $class === 'stdClass'
+		return $class === \stdClass::class
 			? "(object) [$out]"
-			: __CLASS__ . "::createObject('$class', [$out])";
+			: '\\' . __CLASS__ . "::createObject('$class', [$out])";
 	}
 
 
@@ -189,7 +190,7 @@ final class Dumper
 
 			} else { // $  ->  ::
 				$arg = array_shift($args);
-				if ($arg instanceof PhpLiteral || !Helpers::isIdentifier($arg)) {
+				if ($arg instanceof Literal || !Helpers::isIdentifier($arg)) {
 					$arg = '{' . $this->dumpVar($arg) . '}';
 				}
 				$res .= substr($token, 0, -1) . $arg;

@@ -27,7 +27,7 @@ function autoEscape(txt, opts) {
 }
 
 function alignDigits(buffer, digits, opts, force) {
-	if (digits > 0 && (!opts.digitsOptional || force)) {
+	if (buffer.length > 0 && digits > 0 && (!opts.digitsOptional || force)) {
 		var radixPosition = $.inArray(opts.radixPoint, buffer);
 		if (radixPosition === -1) {
 			buffer.push(opts.radixPoint);
@@ -422,7 +422,7 @@ Inputmask.extendAliases({
 
 					//make the initialValue a valid javascript number for the parsefloat
 					initialValue = initialValue.replace(Inputmask.escapeRegex(radixPoint), ".");
-					if (isFinite(initialValue)) {
+					if (!isNaN(parseFloat(initialValue))) {
 						initialValue = (opts.roundingFN(parseFloat(initialValue) * digitsFactor) / digitsFactor).toFixed(digits);
 					}
 					initialValue = initialValue.toString().replace(".", radixPoint);
@@ -534,7 +534,7 @@ Inputmask.extendAliases({
 						return false;
 				}
 			}
-			if (!e.shiftKey && (e.keyCode === keyCode.DELETE || e.keyCode === keyCode.BACKSPACE || e.keyCode === keyCode.BACKSPACE_SAFARI)) {
+			if (!e.shiftKey && (e.keyCode === keyCode.DELETE || e.keyCode === keyCode.BACKSPACE || e.keyCode === keyCode.BACKSPACE_SAFARI) && caretPos.begin !== buffer.length) {
 				if (buffer[e.keyCode === keyCode.DELETE ? caretPos.begin - 1 : caretPos.end] === opts.negationSymbol.front) {
 					bffr = buffer.slice().reverse();
 					if (opts.negationSymbol.front !== "") bffr.shift();

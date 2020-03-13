@@ -1,5 +1,5 @@
 /*!
- * Quasar Framework v1.5.11
+ * Quasar Framework v1.9.9
  * (c) 2015-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -10,19 +10,18 @@
   (global = global || self, global.Quasar = factory(global.Vue));
 }(this, (function (Vue) { 'use strict';
 
-  if (Vue === void 0) {
-    console.error('[ Quasar ] Vue is required to run. Please add a script tag for it before loading Quasar.')
-    return
-  }
-  Vue = Vue && Vue.hasOwnProperty('default') ? Vue['default'] : Vue;
+  Vue = Vue && Object.prototype.hasOwnProperty.call(Vue, 'default') ? Vue['default'] : Vue;
 
-  var version = "1.5.11";
+  var version = "1.9.9";
 
   /* eslint-disable no-useless-escape */
 
   var isSSR = typeof window === 'undefined';
   var fromSSR = false;
   var onSSR = isSSR;
+
+  var iosEmulated = false;
+  var iosCorrection;
 
   function getMatch (userAgent, platformMatch) {
     var match = /(edge|edga|edgios)\/([\w.]+)/.exec(userAgent) ||
@@ -64,6 +63,29 @@
       /(bb)/.exec(userAgent) ||
       /(blackberry)/.exec(userAgent) ||
       []
+  }
+
+  var hasTouch = isSSR === false
+    ? 'ontouchstart' in window || window.navigator.maxTouchPoints > 0
+    : false;
+
+  function applyIosCorrection (is) {
+    var obj;
+
+    iosCorrection = { is: Object.assign({}, is) };
+
+    delete is.mac;
+    delete is.desktop;
+
+    var platform = Math.min(window.innerHeight, window.innerWidth) > 414
+      ? 'ipad'
+      : 'iphone';
+
+    Object.assign(is, ( obj = {
+      mobile: true,
+      ios: true,
+      platform: platform
+    }, obj[ platform ] = true, obj ));
   }
 
   function getPlatform (userAgent) {
@@ -212,6 +234,21 @@
         browser.nativeMobile = true;
         browser.nativeMobileWrapper = 'cordova';
       }
+      else if (
+        hasTouch === true &&
+        browser.desktop === true &&
+        browser.mac === true &&
+        browser.safari === true
+      ) {
+        /*
+         * Correction needed for iOS since the default
+         * setting on iPad is to request desktop view; if we have
+         * touch support and the user agent says it's a
+         * desktop, we infer that it's an iPhone/iPad with desktop view
+         * so we must fix the false positives
+         */
+        applyIosCorrection(browser);
+      }
 
       fromSSR = browser.nativeMobile === void 0 &&
         browser.electron === void 0 &&
@@ -247,9 +284,7 @@
       userAgent: userAgent,
       is: getPlatform(userAgent),
       has: {
-        touch: (function () { return 'ontouchstart' in window ||
-          window.navigator.maxTouchPoints > 0; }
-        )(),
+        touch: hasTouch,
         webStorage: (function () {
           try {
             if (window.localStorage) {
@@ -282,7 +317,7 @@
         // must match with server-side before
         // client taking over in order to prevent
         // hydration errors
-        Object.assign(this, client, ssrClient);
+        Object.assign(this, client, iosCorrection, ssrClient);
 
         // takeover should increase accuracy for
         // the rest of the props; we also avoid
@@ -290,6 +325,7 @@
         queues.takeover.push(function (q) {
           onSSR = fromSSR = false;
           Object.assign(q.platform, client);
+          iosCorrection = void 0;
         });
 
         // we need to make platform reactive
@@ -312,6 +348,10 @@
         {userAgent: userAgent,
         is: getPlatform(userAgent)})
     };
+  }
+  else {
+    iosEmulated = client.is.ios === true &&
+      window.navigator.vendor.toLowerCase().indexOf('apple') === -1;
   }
 
   var listenOpts = {
@@ -336,6 +376,8 @@
     window.removeEventListener('qtest', null, opts);
   }
   catch (e) {}
+
+  function noop () {}
 
   function leftClick (e) {
     return e.button === 0
@@ -511,6 +553,7 @@
   }
 
   var SIZE_LIST = ['sm', 'md', 'lg', 'xl'];
+  var passive = listenOpts.passive;
 
   var Screen = {
     width: 0,
@@ -543,8 +586,8 @@
     lg: false,
     xl: false,
 
-    setSizes: function setSizes () {},
-    setDebounce: function setDebounce () {},
+    setSizes: noop,
+    setDebounce: noop,
 
     install: function install ($q, queues, cfg) {
       var this$1 = this;
@@ -640,11 +683,11 @@
         };
 
         this$1.setDebounce = function (delay) {
-          updateEvt !== void 0 && target.removeEventListener('resize', updateEvt, listenOpts.passive);
+          updateEvt !== void 0 && target.removeEventListener('resize', updateEvt, passive);
           updateEvt = delay > 0
             ? debounce(update, delay)
             : update;
-          target.addEventListener('resize', updateEvt, listenOpts.passive);
+          target.addEventListener('resize', updateEvt, passive);
         };
 
         this$1.setDebounce(updateDebounce);
@@ -700,7 +743,7 @@
           q.dark.set(dark);
         });
 
-        this.set = function () {};
+        this.set = noop;
         return
       }
 
@@ -767,13 +810,21 @@
 
   var History = {
     __history: [],
-    add: function () {},
-    remove: function () {},
+    add: noop,
+    remove: noop,
 
-    install: function install ($q, cfg) {
+    install: function install (cfg) {
       var this$1 = this;
 
-      if (isSSR === true || $q.platform.is.cordova !== true) {
+      if (isSSR === true) {
+        return
+      }
+
+      var ref = client.is;
+      var cordova = ref.cordova;
+      var capacitor = ref.capacitor;
+
+      if (cordova !== true && capacitor !== true) {
         return
       }
 
@@ -790,26 +841,34 @@
         }
       };
 
-      var exit = cfg.cordova === void 0 || cfg.cordova.backButtonExit !== false;
+      var fn = function () {
+        if (this$1.__history.length) {
+          var entry = this$1.__history[this$1.__history.length - 1];
 
-      document.addEventListener('deviceready', function () {
-        document.addEventListener('backbutton', function () {
-          if (this$1.__history.length) {
-            var entry = this$1.__history[this$1.__history.length - 1];
+          if (entry.condition() === true) {
+            this$1.__history.pop();
+            entry.handler();
+          }
+        }
+        else if (exit && window.location.hash === '#/') {
+          navigator.app.exitApp();
+        }
+        else {
+          window.history.back();
+        }
+      };
 
-            if (entry.condition() === true) {
-              this$1.__history.pop();
-              entry.handler();
-            }
-          }
-          else if (exit && window.location.hash === '#/') {
-            navigator.app.exitApp();
-          }
-          else {
-            window.history.back();
-          }
-        }, false);
-      });
+      var prop = cordova === true ? 'cordova' : 'capacitor';
+      var exit = cfg[prop] === void 0 || cfg[prop].backButtonExit !== false;
+
+      if (cordova === true) {
+        document.addEventListener('deviceready', function () {
+          document.addEventListener('backbutton', fn, false);
+        });
+      }
+      else {
+        window.Capacitor.Plugins.App.addListener('backButton', fn);
+      }
     }
   };
 
@@ -1150,26 +1209,33 @@
     }
   }
 
-  var reRGBA = /^\s*rgb(a)?\s*\((\s*(\d+)\s*,\s*?){2}(\d+)\s*,?\s*([01]?\.?\d*?)?\s*\)\s*$/;
+  var reRGBA = /^rgb(a)?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?([01]?\.?\d*?)?\)$/;
 
-  function textToRgb (color) {
-    if (typeof color !== 'string') {
+  function textToRgb (str) {
+    if (typeof str !== 'string') {
       throw new TypeError('Expected a string')
     }
 
+    var color = str.replace(/ /g, '');
+
     var m = reRGBA.exec(color);
-    if (m) {
-      var rgb = {
-        r: Math.min(255, parseInt(m[2], 10)),
-        g: Math.min(255, parseInt(m[3], 10)),
-        b: Math.min(255, parseInt(m[4], 10))
-      };
-      if (m[1]) {
-        rgb.a = Math.min(1, parseFloat(m[5]));
-      }
-      return rgb
+
+    if (m === null) {
+      return hexToRgb(color)
     }
-    return hexToRgb(color)
+
+    var rgb = {
+      r: Math.min(255, parseInt(m[2], 10)),
+      g: Math.min(255, parseInt(m[3], 10)),
+      b: Math.min(255, parseInt(m[4], 10))
+    };
+
+    if (m[1]) {
+      var alpha = parseFloat(m[5]);
+      rgb.a = Math.min(1, isNaN(alpha) === true ? 1 : alpha) * 100;
+    }
+
+    return rgb
   }
 
   /* works as darken if percent < 0 */
@@ -1223,6 +1289,58 @@
     return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
   }
 
+  function blend (fgColor, bgColor) {
+    if (typeof fgColor !== 'string' && (!fgColor || fgColor.r === void 0)) {
+      throw new TypeError('Expected a string or a {r, g, b[, a]} object as fgColor')
+    }
+
+    if (typeof bgColor !== 'string' && (!bgColor || bgColor.r === void 0)) {
+      throw new TypeError('Expected a string or a {r, g, b[, a]} object as bgColor')
+    }
+
+    var
+      rgb1 = typeof fgColor === 'string' ? textToRgb(fgColor) : fgColor,
+      r1 = rgb1.r / 255,
+      g1 = rgb1.g / 255,
+      b1 = rgb1.b / 255,
+      a1 = rgb1.a !== void 0 ? rgb1.a / 100 : 1,
+      rgb2 = typeof bgColor === 'string' ? textToRgb(bgColor) : bgColor,
+      r2 = rgb2.r / 255,
+      g2 = rgb2.g / 255,
+      b2 = rgb2.b / 255,
+      a2 = rgb2.a !== void 0 ? rgb2.a / 100 : 1,
+      a = a1 + a2 * (1 - a1),
+      r = Math.round(((r1 * a1 + r2 * a2 * (1 - a1)) / a) * 255),
+      g = Math.round(((g1 * a1 + g2 * a2 * (1 - a1)) / a) * 255),
+      b = Math.round(((b1 * a1 + b2 * a2 * (1 - a1)) / a) * 255);
+
+    var ret = { r: r, g: g, b: b, a: Math.round(a * 100) };
+    return typeof fgColor === 'string'
+      ? rgbToHex(ret)
+      : ret
+  }
+
+  function changeAlpha (color, offset) {
+    if (typeof color !== 'string') {
+      throw new TypeError('Expected a string as color')
+    }
+
+    if (offset === void 0 || offset < -1 || offset > 1) {
+      throw new TypeError('Expected offset to be between -1 and 1')
+    }
+
+    var ref = textToRgb(color);
+    var r = ref.r;
+    var g = ref.g;
+    var b = ref.b;
+    var a = ref.a;
+    var alpha = a !== void 0 ? a / 100 : 0;
+
+    return rgbToHex({
+      r: r, g: g, b: b, a: Math.round(Math.min(1, Math.max(0, alpha + offset)) * 100)
+    })
+  }
+
   function setBrand (color, value, element) {
     if ( element === void 0 ) element = document.body;
 
@@ -1261,6 +1379,8 @@
     lighten: lighten,
     luminosity: luminosity,
     brightness: brightness,
+    blend: blend,
+    changeAlpha: changeAlpha,
     setBrand: setBrand,
     getBrand: getBrand
   };
@@ -1334,27 +1454,26 @@
     return cls
   }
 
-  function clientApply (cls) {
-    if (client.is.ie === true && client.is.versionNumber === 11) {
-      cls.forEach(function (c) { return document.body.classList.add(c); });
-    }
-    else {
-      document.body.classList.add.apply(document.body.classList, cls);
-    }
-  }
-
   // SSR takeover corrections
   function clientUpdate () {
-    var cls = [];
+    var classes = document.body.className;
+    var newCls = classes;
 
-    if (client.has.touch === true) {
-      document.body.classList.remove('no-touch');
-      cls.push('touch');
+    if (iosCorrection !== void 0) {
+      newCls = newCls.replace('desktop', 'platform-ios mobile');
     }
 
-    client.within.iframe === true && cls.push('within-iframe');
+    if (client.has.touch === true) {
+      newCls = newCls.replace('no-touch', 'touch');
+    }
 
-    cls.length > 0 && clientApply(cls);
+    if (client.within.iframe === true) {
+      newCls += ' within-iframe';
+    }
+
+    if (classes !== newCls) {
+      document.body.className = newCls;
+    }
   }
 
   function setColors (brand) {
@@ -1382,24 +1501,32 @@
             ctx.ssr.Q_BODY_CLASSES = cls.join(' ');
           }
         });
+
+        return
+      }
+
+      if (fromSSR === true) {
+        clientUpdate();
       }
       else {
-        if (fromSSR === true) {
-          clientUpdate();
+        var cls = getBodyClasses(client, cfg);
+
+        if (client.is.ie === true && client.is.versionNumber === 11) {
+          cls.forEach(function (c) { return document.body.classList.add(c); });
         }
         else {
-          clientApply(getBodyClasses(client, cfg));
+          document.body.classList.add.apply(document.body.classList, cls);
         }
-
-        cfg.brand !== void 0 && setColors(cfg.brand);
-
-        if (client.is.ios === true) {
-          // needed for iOS button active state
-          document.body.addEventListener('touchstart', function () {});
-        }
-
-        window.addEventListener('keydown', onKeyDownComposition, true);
       }
+
+      cfg.brand !== void 0 && setColors(cfg.brand);
+
+      if (client.is.ios === true) {
+        // needed for iOS button active state
+        document.body.addEventListener('touchstart', noop);
+      }
+
+      window.addEventListener('keydown', onKeyDownComposition, true);
     }
   };
 
@@ -1433,8 +1560,9 @@
     carousel: {
       left: 'chevron_left',
       right: 'chevron_right',
-      navigationIcon: 'lens',
-      thumbnails: 'view_carousel'
+      up: 'keyboard_arrow_up',
+      down: 'keyboard_arrow_down',
+      navigationIcon: 'lens'
     },
     chip: {
       remove: 'cancel',
@@ -1567,7 +1695,8 @@
   };
 
   var $q = {
-    version: version
+    version: version,
+    config: {}
   };
 
   function install (Vue, opts) {
@@ -1576,14 +1705,14 @@
     if (this.__qInstalled === true) { return }
     this.__qInstalled = true;
 
-    var cfg = opts.config || {};
+    var cfg = $q.config = Object.freeze(opts.config || {});
 
     // required plugins
     Platform.install($q, queues);
     Body.install(queues, cfg);
     Dark.install($q, queues, cfg);
     Screen.install($q, queues, cfg);
-    History.install($q, cfg);
+    History.install(cfg);
     lang.install($q, queues, opts.lang);
     iconSet.install($q, opts.iconSet);
 
@@ -1769,9 +1898,7 @@
       position: {
         type: String,
         default: 'top',
-        validator: function validator (val) {
-          return ['top', 'right', 'bottom', 'left'].includes(val)
-        }
+        validator: function (val) { return ['top', 'right', 'bottom', 'left'].includes(val); }
       },
       size: {
         type: String,
@@ -1826,6 +1953,19 @@
 
       sizeProp: function sizeProp () {
         return this.horizontal ? 'height' : 'width'
+      },
+
+      attrs: function attrs () {
+        return this.onScreen === true
+          ? {
+            role: 'progressbar',
+            'aria-valuemin': 0,
+            'aria-valuemax': 100,
+            'aria-valuenow': this.progress
+          }
+          : {
+            'aria-hidden': 'true'
+          }
       }
     },
 
@@ -1920,7 +2060,8 @@
     render: function render (h) {
       return h('div', {
         class: this.classes,
-        style: this.style
+        style: this.style,
+        attrs: this.attrs
       })
     }
   });
@@ -1933,16 +2074,29 @@
     xl: 46
   };
 
-  var SizeMixin = {
-    props: {
-      size: String
-    },
+  function getSizeMixin (sizes) {
+    return {
+      props: {
+        size: String
+      },
 
-    computed: {
-      sizeStyle: function sizeStyle () {
-        if (this.size !== void 0) {
-          return { fontSize: this.size in sizes ? ((sizes[this.size]) + "px") : this.size }
+      computed: {
+        sizeStyle: function sizeStyle () {
+          if (this.size !== void 0) {
+            return { fontSize: this.size in sizes ? ((sizes[this.size]) + "px") : this.size }
+          }
         }
+      }
+    }
+  }
+
+  var SizeMixin = getSizeMixin(sizes);
+
+  var TagMixin = {
+    props: {
+      tag: {
+        type: String,
+        default: 'div'
       }
     }
   };
@@ -1987,9 +2141,13 @@
   var QIcon = Vue.extend({
     name: 'QIcon',
 
-    mixins: [ SizeMixin ],
+    mixins: [ SizeMixin, TagMixin ],
 
     props: {
+      tag: {
+        default: 'i'
+      },
+
       name: String,
       color: String,
       left: Boolean,
@@ -1997,21 +2155,25 @@
     },
 
     computed: {
+      classes: function classes () {
+        // "notranslate" class is for Google Translate
+        // to avoid tampering with Material Icons ligature font
+        return 'q-icon notranslate' +
+          (this.left === true ? ' on-left' : '') +
+          (this.right === true ? ' on-right' : '') +
+          (this.color !== void 0 ? (" text-" + (this.color)) : '')
+      },
+
       type: function type () {
         var cls;
         var icon = this.name;
 
         if (!icon) {
           return {
-            cls: void 0,
-            content: void 0
+            none: true,
+            cls: this.classes
           }
         }
-
-        var commonCls = 'q-icon' +
-          (this.left === true ? ' on-left' : '') +
-          (this.right === true ? ' on-right' : '') +
-          (this.color !== void 0 ? (" text-" + (this.color)) : '');
 
         if (this.$q.iconMapFn !== void 0) {
           var res = this.$q.iconMapFn(icon);
@@ -2021,7 +2183,7 @@
             }
             else {
               return {
-                cls: res.cls + ' ' + commonCls,
+                cls: res.cls + ' ' + this.classes,
                 content: res.content !== void 0
                   ? res.content
                   : ' '
@@ -2030,17 +2192,27 @@
           }
         }
 
+        if (icon.startsWith('M') === true) {
+          var cfg = icon.split('|');
+          return {
+            svg: true,
+            cls: this.classes,
+            path: cfg[0],
+            viewBox: cfg[1] !== void 0 ? cfg[1] : '0 0 24 24'
+          }
+        }
+
         if (icon.startsWith('img:') === true) {
           return {
             img: true,
-            cls: commonCls,
+            cls: this.classes,
             src: icon.substring(4)
           }
         }
 
         var content = ' ';
 
-        if (/^fa[s|r|l|b|d]{0,1} /.test(icon) || icon.startsWith('icon-') === true) {
+        if (/^[l|f]a[s|r|l|b|d]{0,1} /.test(icon) || icon.startsWith('icon-') === true) {
           cls = icon;
         }
         else if (icon.startsWith('bt-') === true) {
@@ -2084,28 +2256,46 @@
         }
 
         return {
-          cls: cls + ' ' + commonCls,
+          cls: cls + ' ' + this.classes,
           content: content
         }
       }
     },
 
     render: function render (h) {
-      if (this.type.img === true) {
-        return h('img', {
-          staticClass: this.type.cls,
-          style: this.sizeStyle,
-          on: this.$listeners,
-          attrs: { src: this.type.src }
-        })
-      }
-
-      return h('i', {
-        staticClass: this.type.cls,
+      var data = {
+        class: this.type.cls,
         style: this.sizeStyle,
         on: this.$listeners,
-        attrs: { 'aria-hidden': true }
-      }, mergeSlot([ this.type.content ], this, 'default'))
+        attrs: {
+          'aria-hidden': 'true',
+          role: 'presentation'
+        }
+      };
+
+      if (this.type.none === true) {
+        return h(this.tag, data, slot(this, 'default'))
+      }
+
+      if (this.type.img === true) {
+        data.attrs.src = this.type.src;
+        return h('img', data)
+      }
+
+      if (this.type.svg === true) {
+        data.attrs.focusable = 'false'; /* needed for IE11 */
+        data.attrs.viewBox = this.type.viewBox;
+
+        return h('svg', data, mergeSlot([
+          h('path', {
+            attrs: { d: this.type.path }
+          })
+        ], this, 'default'))
+      }
+
+      return h(this.tag, data, mergeSlot([
+        this.type.content
+      ], this, 'default'))
     }
   });
 
@@ -2199,6 +2389,13 @@
           (text !== void 0 ? (" text-" + text) : '') +
           (this.floating === true ? ' q-badge--floating' : '') +
           (this.transparent === true ? ' q-badge--transparent' : '')
+      },
+
+      attrs: function attrs () {
+        return {
+          role: 'alert',
+          'aria-label': this.label
+        }
       }
     },
 
@@ -2206,6 +2403,7 @@
       return h('div', {
         style: this.style,
         class: this.classes,
+        attrs: this.attrs,
         on: this.$listeners
       }, this.label !== void 0 ? [ this.label ] : slot(this, 'default'))
     }
@@ -2227,6 +2425,8 @@
       }
     }
   };
+
+  var attrs = { role: 'alert' };
 
   var QBanner = Vue.extend({
     name: 'QBanner',
@@ -2266,10 +2466,13 @@
           'q-banner--dark q-dark': this.isDark,
           'rounded-borders': this.rounded
         },
+        attrs: attrs,
         on: this.$listeners
       }, child)
     }
   });
+
+  var attrs$1 = { role: 'toolbar' };
 
   var QBar = Vue.extend({
     name: 'QBar',
@@ -2291,6 +2494,7 @@
       return h('div', {
         staticClass: 'q-bar row no-wrap items-center',
         class: this.classes,
+        attrs: attrs$1,
         on: this.$listeners
       }, slot(this, 'default'))
     }
@@ -2617,289 +2821,7 @@
     ready: ready
   };
 
-  function showRipple (evt, el, ctx, forceCenter) {
-    ctx.modifiers.stop === true && stop(evt);
-
-    var ref = ctx.modifiers;
-    var center = ref.center;
-    var color = ref.color;
-    center = center === true || forceCenter === true;
-
-    var
-      node = document.createElement('span'),
-      innerNode = document.createElement('span'),
-      pos = position(evt);
-    var ref$1 = el.getBoundingClientRect();
-    var left = ref$1.left;
-    var top = ref$1.top;
-    var width = ref$1.width;
-    var height = ref$1.height;
-    var diameter = Math.sqrt(width * width + height * height),
-      radius = diameter / 2,
-      centerX = ((width - diameter) / 2) + "px",
-      x = center ? centerX : ((pos.left - left - radius) + "px"),
-      centerY = ((height - diameter) / 2) + "px",
-      y = center ? centerY : ((pos.top - top - radius) + "px");
-
-    innerNode.className = 'q-ripple__inner';
-    css(innerNode, {
-      height: (diameter + "px"),
-      width: (diameter + "px"),
-      transform: ("translate3d(" + x + ", " + y + ", 0) scale3d(0.2, 0.2, 1)"),
-      opacity: 0
-    });
-
-    node.className = "q-ripple" + (color ? ' text-' + color : '');
-    node.setAttribute('dir', 'ltr');
-    node.appendChild(innerNode);
-    el.appendChild(node);
-
-    var abort = function () {
-      node.remove();
-      clearTimeout(timer);
-    };
-    ctx.abort.push(abort);
-
-    var timer = setTimeout(function () {
-      innerNode.classList.add('q-ripple__inner--enter');
-      innerNode.style.transform = "translate3d(" + centerX + ", " + centerY + ", 0) scale3d(1, 1, 1)";
-      innerNode.style.opacity = 0.2;
-
-      timer = setTimeout(function () {
-        innerNode.classList.remove('q-ripple__inner--enter');
-        innerNode.classList.add('q-ripple__inner--leave');
-        innerNode.style.opacity = 0;
-
-        timer = setTimeout(function () {
-          node.remove();
-          ctx.abort.splice(ctx.abort.indexOf(abort), 1);
-        }, 275);
-      }, 250);
-    }, 50);
-  }
-
-  function updateCtx (ctx, ref) {
-    var value = ref.value;
-    var modifiers = ref.modifiers;
-    var arg = ref.arg;
-
-    ctx.enabled = value !== false;
-
-    if (ctx.enabled === true) {
-      ctx.modifiers = Object(value) === value
-        ? {
-          stop: value.stop === true || modifiers.stop === true,
-          center: value.center === true || modifiers.center === true,
-          color: value.color || arg,
-          keyCodes: [].concat(value.keyCodes || 13)
-        }
-        : {
-          stop: modifiers.stop,
-          center: modifiers.center,
-          color: arg,
-          keyCodes: [13]
-        };
-    }
-  }
-
-  var Ripple = {
-    name: 'ripple',
-
-    inserted: function inserted (el, binding) {
-      var ctx = {
-        modifiers: {},
-        abort: [],
-
-        click: function click (evt) {
-          // on ENTER in form IE emits a PointerEvent with negative client cordinates
-          if (ctx.enabled === true && (client.is.ie !== true || evt.clientX >= 0)) {
-            showRipple(evt, el, ctx, evt.qKeyEvent === true);
-          }
-        },
-
-        keyup: function keyup (evt) {
-          if (ctx.enabled === true && isKeyCode(evt, ctx.modifiers.keyCodes) === true) {
-            showRipple(evt, el, ctx, true);
-          }
-        }
-      };
-
-      updateCtx(ctx, binding);
-
-      if (el.__qripple) {
-        el.__qripple_old = el.__qripple;
-      }
-
-      el.__qripple = ctx;
-      el.addEventListener('click', ctx.click, listenOpts.passive);
-      el.addEventListener('keyup', ctx.keyup, listenOpts.passive);
-    },
-
-    update: function update (el, binding) {
-      el.__qripple !== void 0 && updateCtx(el.__qripple, binding);
-    },
-
-    unbind: function unbind (el) {
-      var ctx = el.__qripple_old || el.__qripple;
-      if (ctx !== void 0) {
-        ctx.abort.forEach(function (fn) { fn(); });
-        el.removeEventListener('click', ctx.click, listenOpts.passive);
-        el.removeEventListener('keyup', ctx.keyup, listenOpts.passive);
-        delete el[el.__qripple_old ? '__qripple_old' : '__qripple'];
-      }
-    }
-  };
-
-  var RippleMixin = {
-    directives: {
-      Ripple: Ripple
-    },
-
-    props: {
-      ripple: {
-        type: [Boolean, Object],
-        default: true
-      }
-    }
-  };
-
-  var sizes$1 = {
-    xs: 8,
-    sm: 10,
-    md: 14,
-    lg: 20,
-    xl: 24
-  };
-
-  var BtnMixin = {
-    mixins: [ RippleMixin, AlignMixin ],
-
-    props: {
-      type: String,
-      to: [Object, String],
-      replace: Boolean,
-
-      label: [Number, String],
-      icon: String,
-      iconRight: String,
-
-      round: Boolean,
-      outline: Boolean,
-      flat: Boolean,
-      unelevated: Boolean,
-      rounded: Boolean,
-      push: Boolean,
-      glossy: Boolean,
-
-      size: String,
-      fab: Boolean,
-      fabMini: Boolean,
-
-      color: String,
-      textColor: String,
-      noCaps: Boolean,
-      noWrap: Boolean,
-      dense: Boolean,
-
-      tabindex: [Number, String],
-
-      align: { default: 'center' },
-      stack: Boolean,
-      stretch: Boolean,
-      loading: {
-        type: Boolean,
-        default: null
-      },
-      disable: Boolean
-    },
-
-    computed: {
-      style: function style () {
-        if (this.fab === false && this.fabMini === false && this.size) {
-          return {
-            fontSize: this.size in sizes$1 ? ((sizes$1[this.size]) + "px") : this.size
-          }
-        }
-      },
-
-      isRound: function isRound () {
-        return this.round === true || this.fab === true || this.fabMini === true
-      },
-
-      isActionable: function isActionable () {
-        return this.disable !== true && this.loading !== true
-      },
-
-      computedTabIndex: function computedTabIndex () {
-        return this.isActionable === true ? this.tabindex || 0 : -1
-      },
-
-      hasRouterLink: function hasRouterLink () {
-        return this.disable !== true && this.to !== void 0 && this.to !== null && this.to !== ''
-      },
-
-      isLink: function isLink () {
-        return this.type === 'a' || this.hasRouterLink === true
-      },
-
-      design: function design () {
-        if (this.flat === true) { return 'flat' }
-        if (this.outline === true) { return 'outline' }
-        if (this.push === true) { return 'push' }
-        if (this.unelevated === true) { return 'unelevated' }
-        return 'standard'
-      },
-
-      attrs: function attrs () {
-        var att = { tabindex: this.computedTabIndex };
-        if (this.type !== 'a') {
-          att.type = this.type || 'button';
-        }
-        if (this.hasRouterLink === true) {
-          att.href = this.$router.resolve(this.to).href;
-        }
-        if (this.disable === true) {
-          att.disabled = true;
-        }
-        return att
-      },
-
-      classes: function classes () {
-        var colors;
-
-        if (this.color !== void 0) {
-          if (this.flat === true || this.outline === true) {
-            colors = "text-" + (this.textColor || this.color);
-          }
-          else {
-            colors = "bg-" + (this.color) + " text-" + (this.textColor || 'white');
-          }
-        }
-        else if (this.textColor) {
-          colors = "text-" + (this.textColor);
-        }
-
-        return "q-btn--" + (this.design) + " q-btn--" + (this.isRound === true ? 'round' : 'rectangle') +
-          (colors !== void 0 ? ' ' + colors : '') +
-          (this.isActionable === true ? ' q-btn--actionable q-focusable q-hoverable' : (this.disable === true ? ' disabled' : '')) +
-          (this.fab === true ? ' q-btn--fab' : (this.fabMini === true ? ' q-btn--fab-mini' : '')) +
-          (this.noCaps === true ? ' q-btn--no-uppercase' : '') +
-          (this.noWrap === true ? '' : ' q-btn--wrap') + // this is for IE11
-          (this.rounded === true && this.isRound !== true ? ' q-btn--rounded' : '') +
-          (this.dense === true ? ' q-btn--dense' : '') +
-          (this.stretch === true ? ' no-border-radius self-stretch' : '') +
-          (this.glossy === true ? ' glossy' : '')
-      },
-
-      innerClasses: function innerClasses () {
-        return this.alignClass + (this.stack === true ? ' column' : ' row') +
-          (this.noWrap === true ? ' no-wrap text-no-wrap' : '') +
-          (this.loading === true ? ' q-btn__content--hidden' : '')
-      }
-    }
-  };
-
-  var directions = ['left', 'right', 'up', 'down', 'horizontal', 'vertical'];
+  var directions = [ 'left', 'right', 'up', 'down', 'horizontal', 'vertical' ];
 
   var modifiersAll = {
     left: true,
@@ -2949,10 +2871,14 @@
     var modifiers = ref.modifiers;
 
     if (oldValue !== value) {
+      typeof value !== 'function' && ctx.end();
       ctx.handler = value;
     }
 
-    if (directions.some(function (direction) { return modifiers[direction] !== ctx.modifiers[direction]; })) {
+    if (
+      ctx.modifiers.mouseAllDir !== modifiers.mouseAllDir ||
+      directions.some(function (direction) { return modifiers[direction] !== ctx.modifiers[direction]; })
+    ) {
       ctx.modifiers = modifiers;
       ctx.direction = getModifierDirections(modifiers);
     }
@@ -2961,12 +2887,9 @@
   function addEvt (ctx, target, events) {
     target += 'Evt';
 
-    if (ctx[target] !== void 0) {
-      ctx[target] = ctx[target].concat(events);
-    }
-    else {
-      ctx[target] = events;
-    }
+    ctx[target] = ctx[target] !== void 0
+      ? ctx[target].concat(events)
+      : events;
 
     events.forEach(function (evt) {
       evt[0].addEventListener(evt[1], ctx[evt[2]], listenOpts[evt[3]]);
@@ -2984,13 +2907,349 @@
     }
   }
 
-  var getTouchTarget = isSSR === false && (
+  var getTouchTarget = isSSR === false && iosEmulated !== true && (
     client.is.ios === true ||
-    (client.is.mac === true && client.has.touch === true) || // is desktop view requested iOS
     window.navigator.vendor.toLowerCase().indexOf('apple') > -1
   )
     ? function () { return document; }
     : function (target) { return target; };
+
+  function shouldStart (evt, ctx) {
+    return ctx.event === void 0 &&
+      evt.target !== void 0 &&
+      evt.target.draggable !== true &&
+      typeof ctx.handler === 'function' &&
+      evt.target.nodeName.toUpperCase() !== 'INPUT' &&
+      (evt.qClonedBy === void 0 || evt.qClonedBy.indexOf(ctx.uid) === -1)
+  }
+
+  function throttle (fn, limit) {
+    if ( limit === void 0 ) limit = 250;
+
+    var wait = false, result;
+
+    return function (/* ...args */) {
+      if (wait === false) {
+        wait = true;
+        setTimeout(function () { wait = false; }, limit);
+        result = fn.apply(this, arguments);
+      }
+
+      return result
+    }
+  }
+
+  function showRipple (evt, el, ctx, forceCenter) {
+    ctx.modifiers.stop === true && stop(evt);
+
+    var ref = ctx.modifiers;
+    var center = ref.center;
+    var color = ref.color;
+    center = center === true || forceCenter === true;
+
+    var
+      node = document.createElement('span'),
+      innerNode = document.createElement('span'),
+      pos = position(evt);
+    var ref$1 = el.getBoundingClientRect();
+    var left = ref$1.left;
+    var top = ref$1.top;
+    var width = ref$1.width;
+    var height = ref$1.height;
+    var diameter = Math.sqrt(width * width + height * height),
+      radius = diameter / 2,
+      centerX = ((width - diameter) / 2) + "px",
+      x = center ? centerX : ((pos.left - left - radius) + "px"),
+      centerY = ((height - diameter) / 2) + "px",
+      y = center ? centerY : ((pos.top - top - radius) + "px");
+
+    innerNode.className = 'q-ripple__inner';
+    css(innerNode, {
+      height: (diameter + "px"),
+      width: (diameter + "px"),
+      transform: ("translate3d(" + x + "," + y + ",0) scale3d(.2,.2,1)"),
+      opacity: 0
+    });
+
+    node.className = "q-ripple" + (color ? ' text-' + color : '');
+    node.setAttribute('dir', 'ltr');
+    node.appendChild(innerNode);
+    el.appendChild(node);
+
+    var abort = function () {
+      node.remove();
+      clearTimeout(timer);
+    };
+    ctx.abort.push(abort);
+
+    var timer = setTimeout(function () {
+      innerNode.classList.add('q-ripple__inner--enter');
+      innerNode.style.transform = "translate3d(" + centerX + "," + centerY + ",0) scale3d(1,1,1)";
+      innerNode.style.opacity = 0.2;
+
+      timer = setTimeout(function () {
+        innerNode.classList.remove('q-ripple__inner--enter');
+        innerNode.classList.add('q-ripple__inner--leave');
+        innerNode.style.opacity = 0;
+
+        timer = setTimeout(function () {
+          node.remove();
+          ctx.abort.splice(ctx.abort.indexOf(abort), 1);
+        }, 275);
+      }, 250);
+    }, 50);
+  }
+
+  function updateCtx (ctx, ref) {
+    var value = ref.value;
+    var modifiers = ref.modifiers;
+    var arg = ref.arg;
+
+    ctx.enabled = value !== false;
+
+    if (ctx.enabled === true) {
+      var cfg = Object.assign({}, $q.config.ripple, modifiers, value);
+      ctx.modifiers = {
+        early: cfg.early === true,
+        stop: cfg.stop === true,
+        center: cfg.center === true,
+        color: cfg.color || arg,
+        keyCodes: [].concat(cfg.keyCodes || 13)
+      };
+    }
+  }
+
+  var Ripple = {
+    name: 'ripple',
+
+    inserted: function inserted (el, binding) {
+      var ctx = {
+        modifiers: {},
+        abort: [],
+
+        start: function start (evt) {
+          if (
+            ctx.enabled === true &&
+            evt.qSkipRipple !== true &&
+            // on ENTER in form IE emits a PointerEvent with negative client cordinates
+            (client.is.ie !== true || evt.clientX >= 0) &&
+            (
+              ctx.modifiers.early === true
+                ? ['mousedown', 'touchstart'].includes(evt.type) === true
+                : evt.type === 'click'
+            )
+          ) {
+            showRipple(evt, el, ctx, evt.qKeyEvent === true);
+          }
+        },
+
+        keystart: throttle(function (evt) {
+          if (
+            ctx.enabled === true &&
+            evt.qSkipRipple !== true &&
+            isKeyCode(evt, ctx.modifiers.keyCodes) === true &&
+            evt.type === ("key" + (ctx.modifiers.early === true ? 'down' : 'up'))
+          ) {
+            showRipple(evt, el, ctx, true);
+          }
+        }, 300)
+      };
+
+      updateCtx(ctx, binding);
+
+      if (el.__qripple) {
+        el.__qripple_old = el.__qripple;
+      }
+
+      el.__qripple = ctx;
+
+      addEvt(ctx, 'main', [
+        [ el, 'mousedown', 'start', 'passive' ],
+        [ el, 'touchstart', 'start', 'passive' ],
+        [ el, 'click', 'start', 'passive' ],
+        [ el, 'keydown', 'keystart', 'passive' ],
+        [ el, 'keyup', 'keystart', 'passive' ]
+      ]);
+    },
+
+    update: function update (el, binding) {
+      el.__qripple !== void 0 && updateCtx(el.__qripple, binding);
+    },
+
+    unbind: function unbind (el) {
+      var ctx = el.__qripple_old || el.__qripple;
+      if (ctx !== void 0) {
+        ctx.abort.forEach(function (fn) { fn(); });
+        cleanEvt(ctx, 'main');
+        delete el[el.__qripple_old ? '__qripple_old' : '__qripple'];
+      }
+    }
+  };
+
+  var RippleMixin = {
+    directives: {
+      Ripple: Ripple
+    },
+
+    props: {
+      ripple: {
+        type: [Boolean, Object],
+        default: true
+      }
+    }
+  };
+
+  var BtnMixin = {
+    mixins: [
+      RippleMixin,
+      AlignMixin,
+      getSizeMixin({
+        xs: 8,
+        sm: 10,
+        md: 14,
+        lg: 20,
+        xl: 24
+      })
+    ],
+
+    props: {
+      type: String,
+      to: [Object, String],
+      replace: Boolean,
+
+      label: [Number, String],
+      icon: String,
+      iconRight: String,
+
+      round: Boolean,
+      outline: Boolean,
+      flat: Boolean,
+      unelevated: Boolean,
+      rounded: Boolean,
+      push: Boolean,
+      glossy: Boolean,
+
+      size: String,
+      fab: Boolean,
+      fabMini: Boolean,
+
+      color: String,
+      textColor: String,
+      noCaps: Boolean,
+      noWrap: Boolean,
+      dense: Boolean,
+
+      tabindex: [Number, String],
+
+      align: { default: 'center' },
+      stack: Boolean,
+      stretch: Boolean,
+      loading: {
+        type: Boolean,
+        default: null
+      },
+      disable: Boolean
+    },
+
+    computed: {
+      style: function style () {
+        if (this.fab === false && this.fabMini === false) {
+          return this.sizeStyle
+        }
+      },
+
+      isRounded: function isRounded () {
+        return this.rounded === true || this.fab === true || this.fabMini === true
+      },
+
+      isActionable: function isActionable () {
+        return this.disable !== true && this.loading !== true
+      },
+
+      computedTabIndex: function computedTabIndex () {
+        return this.isActionable === true ? this.tabindex || 0 : -1
+      },
+
+      hasRouterLink: function hasRouterLink () {
+        return this.disable !== true && this.to !== void 0 && this.to !== null && this.to !== ''
+      },
+
+      isLink: function isLink () {
+        return this.type === 'a' || this.hasRouterLink === true
+      },
+
+      design: function design () {
+        if (this.flat === true) { return 'flat' }
+        if (this.outline === true) { return 'outline' }
+        if (this.push === true) { return 'push' }
+        if (this.unelevated === true) { return 'unelevated' }
+        return 'standard'
+      },
+
+      attrs: function attrs () {
+        var attrs = { tabindex: this.computedTabIndex };
+
+        if (this.type !== 'a') {
+          attrs.type = this.type || 'button';
+        }
+
+        if (this.hasRouterLink === true) {
+          attrs.href = this.$router.resolve(this.to).href;
+          attrs.role = 'link';
+        }
+        else {
+          attrs.role = this.type === 'a' ? 'link' : 'button';
+        }
+
+        if (this.loading === true && this.percentage !== void 0) {
+          attrs.role = 'progressbar';
+          attrs['aria-valuemin'] = 0;
+          attrs['aria-valuemax'] = 100;
+          attrs['aria-valuenow'] = this.computedPercentage;
+        }
+
+        if (this.disable === true) {
+          attrs.disabled = '';
+          attrs['aria-disabled'] = '';
+        }
+
+        return attrs
+      },
+
+      classes: function classes () {
+        var colors;
+
+        if (this.color !== void 0) {
+          if (this.flat === true || this.outline === true) {
+            colors = "text-" + (this.textColor || this.color);
+          }
+          else {
+            colors = "bg-" + (this.color) + " text-" + (this.textColor || 'white');
+          }
+        }
+        else if (this.textColor) {
+          colors = "text-" + (this.textColor);
+        }
+
+        return "q-btn--" + (this.design) + " " +
+          "q-btn--" + (this.round === true ? 'round' : ("rectangle" + (this.isRounded === true ? ' q-btn--rounded' : ''))) +
+          (colors !== void 0 ? ' ' + colors : '') +
+          (this.isActionable === true ? ' q-btn--actionable q-focusable q-hoverable' : (this.disable === true ? ' disabled' : '')) +
+          (this.fab === true ? ' q-btn--fab' : (this.fabMini === true ? ' q-btn--fab-mini' : '')) +
+          (this.noCaps === true ? ' q-btn--no-uppercase' : '') +
+          (this.noWrap === true ? '' : ' q-btn--wrap') + // this is for IE11
+          (this.dense === true ? ' q-btn--dense' : '') +
+          (this.stretch === true ? ' no-border-radius self-stretch' : '') +
+          (this.glossy === true ? ' glossy' : '')
+      },
+
+      innerClasses: function innerClasses () {
+        return this.alignClass + (this.stack === true ? ' column' : ' row') +
+          (this.noWrap === true ? ' no-wrap text-no-wrap' : '') +
+          (this.loading === true ? ' q-btn__content--hidden' : '')
+      }
+    }
+  };
 
   var passiveCapture = listenOpts.passiveCapture;
 
@@ -2998,6 +3257,8 @@
     touchTarget = void 0,
     keyboardTarget = void 0,
     mouseTarget = void 0;
+
+  var iconAttrs = { role: 'img', 'aria-hidden': 'true' };
 
   var QBtn = Vue.extend({
     name: 'QBtn',
@@ -3018,7 +3279,7 @@
         return this.ripple === false
           ? false
           : Object.assign(
-            { keyCodes: [] },
+            { keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ] },
             this.ripple === true ? {} : this.ripple
           )
       },
@@ -3027,6 +3288,16 @@
         var val = Math.max(0, Math.min(100, this.percentage));
         if (val > 0) {
           return { transition: 'transform 0.6s', transform: ("translateX(" + (val - 100) + "%)") }
+        }
+      },
+
+      onLoadingEvents: function onLoadingEvents () {
+        return {
+          mousedown: this.__onLoadingEvt,
+          touchstart: this.__onLoadingEvt,
+          click: this.__onLoadingEvt,
+          keydown: this.__onLoadingEvt,
+          keyup: this.__onLoadingEvt
         }
       }
     },
@@ -3068,7 +3339,20 @@
             this.$el.addEventListener('blur', onClickCleanup, passiveCapture);
           }
 
-          this.hasRouterLink === true && stopAndPrevent(e);
+          if (this.hasRouterLink === true) {
+            if (
+              e.ctrlKey === true ||
+              e.shiftKey === true ||
+              e.altKey === true ||
+              e.metaKey === true
+            ) {
+              // if it has meta keys, let vue-router link
+              // handle this by its own
+              return
+            }
+
+            stopAndPrevent(e);
+          }
         }
 
         var go = function () {
@@ -3078,7 +3362,7 @@
           // to the same route that the user is currently at
           // https://github.com/vuejs/vue-router/issues/2872
           if (res !== void 0 && typeof res.catch === 'function') {
-            res.catch(function () {});
+            res.catch(noop);
           }
         };
 
@@ -3107,13 +3391,23 @@
       },
 
       __onTouchstart: function __onTouchstart (e) {
+        var this$1 = this;
+
         if (touchTarget !== this.$el) {
           touchTarget !== void 0 && this.__cleanup();
-          touchTarget = e.target;
-          var target = getTouchTarget(touchTarget);
+          touchTarget = this.$el;
+          var target = this.touchTargetEl = getTouchTarget(e.target);
           target.addEventListener('touchcancel', this.__onPressEnd, passiveCapture);
           target.addEventListener('touchend', this.__onPressEnd, passiveCapture);
         }
+
+        // avoid duplicated mousedown event
+        // triggering another early ripple
+        this.avoidMouseRipple = true;
+        clearTimeout(this.mouseTimer);
+        this.mouseTimer = setTimeout(function () {
+          this$1.avoidMouseRipple = false;
+        }, 200);
 
         this.$emit('touchstart', e);
       },
@@ -3126,6 +3420,7 @@
           document.addEventListener('mouseup', this.__onPressEnd, passiveCapture);
         }
 
+        e.qSkipRipple = this.avoidMouseRipple === true;
         this.$emit('mousedown', e);
       },
 
@@ -3167,10 +3462,10 @@
         }
 
         if (touchTarget === this.$el) {
-          var target = getTouchTarget(touchTarget);
+          var target = this.touchTargetEl;
           target.removeEventListener('touchcancel', this.__onPressEnd, passiveCapture);
           target.removeEventListener('touchend', this.__onPressEnd, passiveCapture);
-          touchTarget = void 0;
+          touchTarget = this.touchTargetEl = void 0;
         }
 
         if (mouseTarget === this.$el) {
@@ -3185,6 +3480,11 @@
         }
 
         this.$el !== void 0 && this.$el.classList.remove('q-btn--active');
+      },
+
+      __onLoadingEvt: function __onLoadingEvt (evt) {
+        stopAndPrevent(evt);
+        evt.qSkipRipple = true;
       }
     },
 
@@ -3216,12 +3516,13 @@
         data.directives = [{
           name: 'ripple',
           value: this.computedRipple,
-          modifiers: { center: this.isRound }
+          modifiers: { center: this.round }
         }];
       }
 
       this.icon !== void 0 && inner.push(
         h(QIcon, {
+          attrs: iconAttrs,
           props: { name: this.icon, left: this.stack === false && this.hasLabel === true }
         })
       );
@@ -3232,9 +3533,10 @@
 
       inner = mergeSlot(inner, this, 'default');
 
-      if (this.iconRight !== void 0 && this.isRound === false) {
+      if (this.iconRight !== void 0 && this.round === false) {
         inner.push(
           h(QIcon, {
+            attrs: iconAttrs,
             props: { name: this.iconRight, right: this.stack === false && this.hasLabel === true }
           })
         );
@@ -3248,17 +3550,22 @@
         })
       ];
 
-      this.loading === true && this.percentage !== void 0 && child.push(
-        h('div', {
-          staticClass: 'q-btn__progress absolute-full overflow-hidden'
-        }, [
+      if (this.loading === true) {
+        // stop propagation and ripple
+        data.on = this.onLoadingEvents;
+
+        this.percentage !== void 0 && child.push(
           h('div', {
-            staticClass: 'q-btn__progress-indicator fit',
-            class: this.darkPercentage === true ? 'q-btn__progress--dark' : '',
-            style: this.percentageStyle
-          })
-        ])
-      );
+            staticClass: 'q-btn__progress absolute-full overflow-hidden'
+          }, [
+            h('div', {
+              staticClass: 'q-btn__progress-indicator fit',
+              class: this.darkPercentage === true ? 'q-btn__progress--dark' : '',
+              style: this.percentageStyle
+            })
+          ])
+        );
+      }
 
       child.push(
         h('div', {
@@ -3339,7 +3646,6 @@
   var AnchorMixin = {
     props: {
       target: {
-        type: [Boolean, String],
         default: true
       },
       noParentEvent: Boolean,
@@ -3479,22 +3785,32 @@
       },
 
       __pickAnchorEl: function __pickAnchorEl () {
-        if (this.target && typeof this.target === 'string') {
-          var el = document.querySelector(this.target);
-          if (el !== null) {
-            this.anchorEl = el;
+        if (this.target === false || this.target === '') {
+          this.anchorEl = void 0;
+        }
+        else if (this.target === true) {
+          this.__setAnchorEl(this.parentEl);
+        }
+        else {
+          var el = this.target;
+
+          if (typeof this.target === 'string') {
+            try {
+              el = document.querySelector(this.target);
+            }
+            catch (err) {
+              el = void 0;
+            }
+          }
+
+          if (el !== void 0 && el !== null) {
+            this.anchorEl = el._isVue === true && el.$el !== void 0 ? el.$el : el;
             this.__configureAnchorEl();
           }
           else {
             this.anchorEl = void 0;
             console.error(("Anchor: target \"" + (this.target) + "\" not found"), this);
           }
-        }
-        else if (this.target !== false) {
-          this.__setAnchorEl(this.parentEl);
-        }
-        else {
-          this.anchorEl = void 0;
         }
       },
 
@@ -3520,7 +3836,7 @@
         typeof this.__unconfigureScrollTarget === 'function'
       ) {
         this.noParentEventWatcher = this.$watch('noParentEvent', function () {
-          if (this$1.scrollTarget !== void 0) {
+          if (this$1.__scrollTarget !== void 0) {
             this$1.__unconfigureScrollTarget();
             this$1.__configureScrollTarget();
           }
@@ -3607,7 +3923,7 @@
       },
 
       $route: function $route () {
-        this.hideOnRouteChange === true && this.hide();
+        this.hideOnRouteChange === true && this.showing === true && this.hide();
       }
     },
 
@@ -3901,7 +4217,8 @@
   function globalHandler (evt) {
     clearTimeout(timer);
 
-    if (evt.type === 'focusin') {
+    // prevent autofocus on body resulting from blur
+    if (evt.type === 'focusin' && evt.target.hasAttribute('tabindex') === true) {
       timer = setTimeout(function () {
         execHandlers(handlers.focus, evt);
       }, 200);
@@ -3958,8 +4275,7 @@
       el.__qclickoutside = ctx;
 
       if (handlers.click.length === 0) {
-        // use click to be able to prevent click in handler
-        document.addEventListener('click', globalHandler, notPassiveCapture);
+        document.addEventListener('mousedown', globalHandler, notPassiveCapture);
         document.addEventListener('touchstart', globalHandler, notPassiveCapture);
         document.addEventListener('focusin', globalHandler, passiveCapture$1);
       }
@@ -4000,7 +4316,7 @@
 
         if (handlers.click.length === 0) {
           clearTimeout(timer);
-          document.removeEventListener('click', globalHandler, notPassiveCapture);
+          document.removeEventListener('mousedown', globalHandler, notPassiveCapture);
           document.removeEventListener('touchstart', globalHandler, notPassiveCapture);
           document.removeEventListener('focusin', globalHandler, passiveCapture$1);
         }
@@ -4010,8 +4326,30 @@
     }
   };
 
-  function getScrollTarget (el) {
-    return el.closest('.scroll,.scroll-y,.overflow-auto') || window
+  var scrollTargets = isSSR === false
+    ? [ null, document, document.body, document.scrollingElement, document.documentElement ]
+    : [];
+
+  function getScrollTarget (el, target) {
+    if (typeof target === 'string') {
+      try {
+        target = document.querySelector(target);
+      }
+      catch (err) {
+        target = void 0;
+      }
+    }
+
+    if (target === void 0 || target === null) {
+      target = el.closest('.scroll,.scroll-y,.overflow-auto');
+    }
+    else if (target._isVue === true && target.$el !== void 0) {
+      target = target.$el;
+    }
+
+    return scrollTargets.includes(target)
+      ? window
+      : target
   }
 
   function getScrollHeight (el) {
@@ -4037,6 +4375,8 @@
   }
 
   function animScrollTo (el, to, duration) {
+    if ( duration === void 0 ) duration = 0;
+
     var pos = getScrollPosition(el);
 
     if (duration <= 0) {
@@ -4056,6 +4396,8 @@
   }
 
   function animHorizontalScrollTo (el, to, duration) {
+    if ( duration === void 0 ) duration = 0;
+
     var pos = getHorizontalScrollPosition(el);
 
     if (duration <= 0) {
@@ -4076,7 +4418,7 @@
 
   function setScroll (scrollTarget, offset) {
     if (scrollTarget === window) {
-      window.scrollTo(0, offset);
+      window.scrollTo(window.pageXOffset || window.scrollX || document.body.scrollLeft || 0, offset);
       return
     }
     scrollTarget.scrollTop = offset;
@@ -4084,7 +4426,7 @@
 
   function setHorizontalScroll (scrollTarget, offset) {
     if (scrollTarget === window) {
-      window.scrollTo(offset, 0);
+      window.scrollTo(offset, window.pageYOffset || window.scrollY || document.body.scrollTop || 0);
       return
     }
     scrollTarget.scrollLeft = offset;
@@ -4297,17 +4639,19 @@
   // cfg: { el, anchorEl, anchorOrigin, selfOrigin, offset, absoluteOffset, cover, fit, maxHeight, maxWidth }
   function setPosition (cfg) {
     if (client.is.ios === true && window.visualViewport !== void 0) {
-      var elStyle = document.body.style;
+      // uses the q-position-engine CSS class
+
+      var el = document.body.style;
       var ref = window.visualViewport;
       var left = ref.offsetLeft;
       var top = ref.offsetTop;
 
       if (left !== vpLeft) {
-        elStyle.setProperty('--q-vp-left', left + 'px');
+        el.setProperty('--q-pe-left', left + 'px');
         vpLeft = left;
       }
       if (top !== vpTop) {
-        elStyle.setProperty('--q-vp-top', top + 'px');
+        el.setProperty('--q-pe-top', top + 'px');
         vpTop = top;
       }
     }
@@ -4315,33 +4659,40 @@
     var anchorProps;
 
     // scroll position might change
-    // if max-height changes, so we
+    // if max-height/-width changes, so we
     // need to restore it after we calculate
     // the new positioning
-    var scrollTop = cfg.el.scrollTop;
-
-    cfg.el.style.maxHeight = cfg.maxHeight;
-    cfg.el.style.maxWidth = cfg.maxWidth;
+    var ref$1 = cfg.el;
+    var scrollLeft = ref$1.scrollLeft;
+    var scrollTop = ref$1.scrollTop;
 
     if (cfg.absoluteOffset === void 0) {
       anchorProps = getAnchorProps(cfg.anchorEl, cfg.cover === true ? [0, 0] : cfg.offset);
     }
     else {
-      var ref$1 = cfg.anchorEl.getBoundingClientRect();
-      var anchorTop = ref$1.top;
-      var anchorLeft = ref$1.left;
+      var ref$2 = cfg.anchorEl.getBoundingClientRect();
+      var anchorTop = ref$2.top;
+      var anchorLeft = ref$2.left;
       var top$1 = anchorTop + cfg.absoluteOffset.top,
         left$1 = anchorLeft + cfg.absoluteOffset.left;
 
       anchorProps = { top: top$1, left: left$1, width: 1, height: 1, right: left$1 + 1, center: top$1, middle: left$1, bottom: top$1 + 1 };
     }
 
+    var elStyle = {
+      maxHeight: cfg.maxHeight,
+      maxWidth: cfg.maxWidth,
+      visibility: 'visible'
+    };
+
     if (cfg.fit === true || cfg.cover === true) {
-      cfg.el.style.minWidth = anchorProps.width + 'px';
+      elStyle.minWidth = anchorProps.width + 'px';
       if (cfg.cover === true) {
-        cfg.el.style.minHeight = anchorProps.height + 'px';
+        elStyle.minHeight = anchorProps.height + 'px';
       }
     }
+
+    Object.assign(cfg.el.style, elStyle);
 
     var
       targetProps = getTargetProps(cfg.el),
@@ -4352,19 +4703,34 @@
 
     applyBoundaries(props, anchorProps, targetProps, cfg.anchorOrigin, cfg.selfOrigin);
 
-    cfg.el.style.top = Math.max(0, Math.floor(props.top)) + 'px';
-    cfg.el.style.left = Math.max(0, Math.floor(props.left)) + 'px';
+    elStyle = {
+      top: Math.floor(props.top) + 'px',
+      left: Math.floor(props.left) + 'px'
+    };
 
     if (props.maxHeight !== void 0) {
-      cfg.el.style.maxHeight = Math.floor(props.maxHeight) + 'px';
+      elStyle.maxHeight = Math.floor(props.maxHeight) + 'px';
+
+      if (anchorProps.height > props.maxHeight) {
+        elStyle.minHeight = elStyle.maxHeight;
+      }
     }
     if (props.maxWidth !== void 0) {
-      cfg.el.style.maxWidth = Math.floor(props.maxWidth) + 'px';
+      elStyle.maxWidth = Math.floor(props.maxWidth) + 'px';
+
+      if (anchorProps.width > props.maxWidth) {
+        elStyle.minWidth = elStyle.maxWidth;
+      }
     }
+
+    Object.assign(cfg.el.style, elStyle);
 
     // restore scroll position
     if (cfg.el.scrollTop !== scrollTop) {
       cfg.el.scrollTop = scrollTop;
+    }
+    if (cfg.el.scrollLeft !== scrollLeft) {
+      cfg.el.scrollLeft = scrollLeft;
     }
   }
 
@@ -4374,12 +4740,12 @@
       currentWidth = targetProps.right,
       margin = getScrollbarWidth(),
       innerHeight = window.innerHeight - margin,
-      innerWidth = window.innerWidth - margin;
+      innerWidth = document.body.clientWidth;
 
     if (props.top < 0 || props.top + currentHeight > innerHeight) {
       if (selfOrigin.vertical === 'center') {
         props.top = anchorProps[anchorOrigin.vertical] > innerHeight / 2
-          ? innerHeight - currentHeight
+          ? Math.max(0, innerHeight - currentHeight)
           : 0;
         props.maxHeight = Math.min(currentHeight, innerHeight);
       }
@@ -4394,9 +4760,10 @@
         props.top = Math.max(0, anchorY - currentHeight);
       }
       else {
-        props.top = anchorOrigin.vertical === 'center'
+        props.top = Math.max(0, anchorOrigin.vertical === 'center'
           ? anchorProps.center
-          : (anchorOrigin.vertical === selfOrigin.vertical ? anchorProps.top : anchorProps.bottom);
+          : (anchorOrigin.vertical === selfOrigin.vertical ? anchorProps.top : anchorProps.bottom)
+        );
         props.maxHeight = Math.min(currentHeight, innerHeight - props.top);
       }
     }
@@ -4405,7 +4772,7 @@
       props.maxWidth = Math.min(currentWidth, innerWidth);
       if (selfOrigin.horizontal === 'middle') {
         props.left = anchorProps[anchorOrigin.horizontal] > innerWidth / 2
-          ? innerWidth - currentWidth
+          ? Math.max(0, innerWidth - currentWidth)
           : 0;
       }
       else if (anchorProps[anchorOrigin.horizontal] > innerWidth / 2) {
@@ -4419,9 +4786,10 @@
         props.left = Math.max(0, anchorX - props.maxWidth);
       }
       else {
-        props.left = anchorOrigin.horizontal === 'middle'
+        props.left = Math.max(0, anchorOrigin.horizontal === 'middle'
           ? anchorProps.middle
-          : (anchorOrigin.horizontal === selfOrigin.horizontal ? anchorProps.left : anchorProps.right);
+          : (anchorOrigin.horizontal === selfOrigin.horizontal ? anchorProps.left : anchorProps.right)
+        );
         props.maxWidth = Math.min(currentWidth, innerWidth - props.left);
       }
     }
@@ -4460,6 +4828,10 @@
       offset: {
         type: Array,
         validator: validateOffset
+      },
+
+      scrollTarget: {
+        default: void 0
       },
 
       touchPosition: Boolean,
@@ -4571,6 +4943,7 @@
             this$1.__portal.$el.click();
           }
 
+          this$1.updatePosition();
           this$1.$emit('show', evt);
         }, 300);
       },
@@ -4617,16 +4990,16 @@
       },
 
       __unconfigureScrollTarget: function __unconfigureScrollTarget () {
-        if (this.scrollTarget !== void 0) {
-          this.__changeScrollEvent(this.scrollTarget);
-          this.scrollTarget = void 0;
+        if (this.__scrollTarget !== void 0) {
+          this.__changeScrollEvent(this.__scrollTarget);
+          this.__scrollTarget = void 0;
         }
       },
 
       __configureScrollTarget: function __configureScrollTarget () {
-        if (this.anchorEl !== void 0) {
-          this.scrollTarget = getScrollTarget(this.anchorEl);
-          this.__changeScrollEvent(this.scrollTarget, this.updatePosition);
+        if (this.anchorEl !== void 0 || this.scrollTarget !== void 0) {
+          this.__scrollTarget = getScrollTarget(this.anchorEl, this.scrollTarget);
+          this.__changeScrollEvent(this.__scrollTarget, this.updatePosition);
         }
       },
 
@@ -4643,7 +5016,7 @@
       },
 
       updatePosition: function updatePosition () {
-        if (this.__portal === void 0) {
+        if (this.anchorEl === void 0 || this.__portal === void 0) {
           return
         }
 
@@ -4701,7 +5074,7 @@
         }, [
           this.showing === true ? h('div', {
             ref: 'inner',
-            staticClass: 'q-menu scroll' + this.menuClass,
+            staticClass: 'q-menu q-position-engine scroll' + this.menuClass,
             class: this.contentClass,
             style: this.contentStyle,
             attrs: Object.assign({}, {tabindex: -1},
@@ -4747,6 +5120,7 @@
       cover: Boolean,
       persistent: Boolean,
       autoClose: Boolean,
+
       menuAnchor: {
         type: String,
         default: 'bottom right'
@@ -4755,6 +5129,7 @@
         type: String,
         default: 'top right'
       },
+      menuOffset: Array,
 
       disableMainBtn: Boolean,
       disableDropdown: Boolean
@@ -4776,6 +5151,7 @@
       var this$1 = this;
 
       var label = slot(this, 'label', []);
+      var attrs = { 'aria-expanded': this.showing === true ? 'true' : 'false', 'aria-haspopup': true };
 
       var Arrow = [
         h(QIcon, {
@@ -4800,6 +5176,7 @@
             autoClose: this.autoClose,
             anchor: this.menuAnchor,
             self: this.menuSelf,
+            offset: this.menuOffset,
             contentClass: this.contentClass,
             contentStyle: this.contentStyle,
             separateClosePopup: true
@@ -4832,6 +5209,7 @@
             {disable: this.disable === true || this.disableMainBtn === true,
             noWrap: true,
             round: false}),
+          attrs: attrs,
           on: cache(this, 'nonSpl', {
             click: function (e) {
               this$1.$emit('click', e);
@@ -4871,6 +5249,7 @@
 
         h(QBtn, {
           staticClass: 'q-btn-dropdown__arrow-container',
+          attrs: attrs,
           props: {
             disable: this.disable === true || this.disableDropdown === true,
             outline: this.outline,
@@ -4906,10 +5285,51 @@
     }
   });
 
+  var FormMixin = {
+    props: {
+      name: String
+    },
+
+    computed: {
+      formAttrs: function formAttrs () {
+        return {
+          type: 'hidden',
+          name: this.name,
+          value: this.value
+        }
+      }
+    },
+
+    methods: {
+      __injectFormInput: function __injectFormInput (child, action, className) {
+        child[action](
+          this.$createElement('input', {
+            staticClass: 'hidden',
+            class: className,
+            attrs: this.formAttrs,
+            domProps: this.formDomProps
+          })
+        );
+      }
+    }
+  };
+
+  var FormFieldMixin = {
+    props: {
+      name: String
+    },
+
+    computed: {
+      nameProp: function nameProp () {
+        return this.name || this.for
+      }
+    }
+  };
+
   var QBtnToggle = Vue.extend({
     name: 'QBtnToggle',
 
-    mixins: [ RippleMixin ],
+    mixins: [ RippleMixin, FormMixin ],
 
     props: {
       value: {
@@ -4957,10 +5377,18 @@
     },
 
     computed: {
-      val: function val () {
+      hasActiveValue: function hasActiveValue () {
         var this$1 = this;
 
-        return this.options.map(function (opt) { return opt.value === this$1.value; })
+        return this.options.find(function (opt) { return opt.value === this$1.value; }) !== void 0
+      },
+
+      formAttrs: function formAttrs () {
+        return {
+          type: 'hidden',
+          name: this.name,
+          value: this.value
+        }
       }
     },
 
@@ -4983,30 +5411,16 @@
     render: function render (h) {
       var this$1 = this;
 
-      return h(QBtnGroup, {
-        staticClass: 'q-btn-toggle',
-        props: {
-          outline: this.outline,
-          flat: this.flat,
-          rounded: this.rounded,
-          push: this.push,
-          stretch: this.stretch,
-          unelevated: this.unelevated,
-          glossy: this.glossy,
-          spread: this.spread
-        },
-        on: this.$listeners
-      },
-      this.options.map(
-        function (opt, i) { return h(QBtn, {
+      var child = this.options.map(function (opt, i) {
+        return h(QBtn, {
           key: i,
           on: { click: function () { return this$1.__set(opt.value, opt); } },
           props: {
             disable: this$1.disable || opt.disable,
             label: opt.label,
             // Colors come from the button specific options first, then from general props
-            color: this$1.val[i] === true ? opt.toggleColor || this$1.toggleColor : opt.color || this$1.color,
-            textColor: this$1.val[i] === true ? opt.toggleTextColor || this$1.toggleTextColor : opt.textColor || this$1.textColor,
+            color: opt.value === this$1.value ? opt.toggleColor || this$1.toggleColor : opt.color || this$1.color,
+            textColor: opt.value === this$1.value ? opt.toggleTextColor || this$1.toggleTextColor : opt.textColor || this$1.textColor,
             icon: opt.icon,
             iconRight: opt.iconRight,
             noCaps: this$1.noCaps === true || opt.noCaps === true,
@@ -5023,15 +5437,34 @@
             tabindex: opt.tabindex,
             stretch: this$1.stretch
           }
-        }, opt.slot !== void 0 ? slot(this$1, opt.slot) : void 0); }
-      ))
+        }, opt.slot !== void 0 ? slot(this$1, opt.slot) : void 0)
+      });
+
+      if (this.name !== void 0 && this.disable !== true && this.hasActiveValue === true) {
+        this.__injectFormInput(child, 'push');
+      }
+
+      return h(QBtnGroup, {
+        staticClass: 'q-btn-toggle',
+        props: {
+          outline: this.outline,
+          flat: this.flat,
+          rounded: this.rounded,
+          push: this.push,
+          stretch: this.stretch,
+          unelevated: this.unelevated,
+          glossy: this.glossy,
+          spread: this.spread
+        },
+        on: this.$listeners
+      }, child)
     }
   });
 
   var QCard = Vue.extend({
     name: 'QCard',
 
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, TagMixin ],
 
     props: {
       square: Boolean,
@@ -5039,15 +5472,19 @@
       bordered: Boolean
     },
 
+    computed: {
+      classes: function classes () {
+        return 'q-card' +
+          (this.isDark === true ? ' q-card--dark q-dark' : '') +
+          (this.bordered === true ? ' q-card--bordered' : '') +
+          (this.square === true ? ' q-card--square no-border-radius' : '') +
+          (this.flat === true ? ' q-card--flat no-shadow' : '')
+      }
+    },
+
     render: function render (h) {
-      return h('div', {
-        staticClass: 'q-card',
-        class: {
-          'q-card--dark q-dark': this.isDark,
-          'q-card--bordered': this.bordered,
-          'q-card--square no-border-radius': this.square,
-          'q-card--flat no-shadow': this.flat
-        },
+      return h(this.tag, {
+        class: this.classes,
         on: this.$listeners
       }, slot(this, 'default'))
     }
@@ -5056,9 +5493,22 @@
   var QCardSection = Vue.extend({
     name: 'QCardSection',
 
+    mixins: [ TagMixin ],
+
+    props: {
+      horizontal: Boolean
+    },
+
+    computed: {
+      classes: function classes () {
+        return 'q-card__section ' +
+          "q-card__section--" + (this.horizontal === true ? 'horiz row no-wrap' : 'vert')
+      }
+    },
+
     render: function render (h) {
-      return h('div', {
-        staticClass: 'q-card__section',
+      return h(this.tag, {
+        class: this.classes,
         on: this.$listeners
       }, slot(this, 'default'))
     }
@@ -5126,15 +5576,10 @@
         modifiers: modifiers,
         direction: getModifierDirections(modifiers),
 
-        noop: function noop () {},
+        noop: noop,
 
         mouseStart: function mouseStart (evt) {
-          if (
-            ctx.event === void 0 &&
-            evt.target !== void 0 &&
-            evt.target.draggable !== true &&
-            leftClick(evt)
-          ) {
+          if (shouldStart(evt, ctx) && leftClick(evt)) {
             addEvt(ctx, 'temp', [
               [ document, 'mousemove', 'move', ("notPassive" + mouseCapture) ],
               [ document, 'mouseup', 'end', 'notPassiveCapture' ]
@@ -5144,11 +5589,7 @@
         },
 
         touchStart: function touchStart (evt) {
-          if (
-            ctx.event === void 0 &&
-            evt.target !== void 0 &&
-            evt.target.draggable !== true
-          ) {
+          if (shouldStart(evt, ctx)) {
             var target = getTouchTarget(evt.target);
             addEvt(ctx, 'temp', [
               [ target, 'touchmove', 'move', 'notPassiveCapture' ],
@@ -5275,6 +5716,19 @@
               document.body.classList.add('no-pointer-events');
               document.body.classList.add('non-selectable');
               clearSelection();
+
+              ctx.styleCleanup = function (withDelay) {
+                ctx.styleCleanup = void 0;
+
+                document.body.classList.remove('non-selectable');
+
+                var remove = function () {
+                  document.body.classList.remove('no-pointer-events');
+                };
+
+                if (withDelay === true) { setTimeout(remove, 50); }
+                else { remove(); }
+              };
             }
 
             ctx.handler({
@@ -5301,17 +5755,8 @@
 
           cleanEvt(ctx, 'temp');
           client.is.firefox === true && preventDraggable(el, false);
-
-          if (ctx.event.dir !== false) {
-            stopAndPrevent(evt);
-
-            if (ctx.event.mouse === true) {
-              setTimeout(function () {
-                document.body.classList.remove('no-pointer-events');
-              }, 50);
-              document.body.classList.remove('non-selectable');
-            }
-          }
+          ctx.styleCleanup !== void 0 && ctx.styleCleanup(true);
+          evt !== void 0 && ctx.event.dir !== false && stopAndPrevent(evt);
 
           ctx.event = void 0;
         }
@@ -5327,17 +5772,14 @@
         [ el, 'mousedown', 'mouseStart', ("passive" + mouseCapture) ]
       ]);
 
-      if (client.has.touch === true) {
-        addEvt(ctx, 'main', [
-          [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ],
-          [ el, 'touchmove', 'noop', "notPassiveCapture" ]
-        ]);
-      }
+      client.has.touch === true && addEvt(ctx, 'main', [
+        [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ],
+        [ el, 'touchmove', 'noop', "notPassiveCapture" ]
+      ]);
     },
 
     update: function update (el, binding) {
-      var ctx = el.__qtouchswipe;
-      ctx !== void 0 && updateModifiers(ctx, binding);
+      el.__qtouchswipe !== void 0 && updateModifiers(el.__qtouchswipe, binding);
     },
 
     unbind: function unbind (el) {
@@ -5348,11 +5790,7 @@
         cleanEvt(ctx, 'temp');
 
         client.is.firefox === true && preventDraggable(el, false);
-
-        if (ctx.event !== void 0 && ctx.event.dir !== false && ctx.event.mouse === true) {
-          document.body.classList.remove('no-pointer-events');
-          document.body.classList.remove('non-selectable');
-        }
+        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
 
         delete el[el.__qtouchswipe_old ? '__qtouchswipe_old' : '__qtouchswipe'];
       }
@@ -5386,15 +5824,10 @@
       animated: Boolean,
       infinite: Boolean,
       swipeable: Boolean,
+      vertical: Boolean,
 
-      transitionPrev: {
-        type: String,
-        default: 'slide-right'
-      },
-      transitionNext: {
-        type: String,
-        default: 'slide-left'
-      },
+      transitionPrev: String,
+      transitionNext: String,
 
       keepAlive: Boolean
     },
@@ -5408,12 +5841,13 @@
 
     computed: {
       panelDirectives: function panelDirectives () {
-        if (this.swipeable) {
+        if (this.swipeable === true) {
           return [{
             name: 'touch-swipe',
             value: this.__swipe,
             modifiers: {
-              horizontal: true,
+              horizontal: this.vertical !== true,
+              vertical: this.vertical,
               mouse: true
             }
           }]
@@ -5424,6 +5858,14 @@
         return typeof this.value === 'string' || typeof this.value === 'number'
           ? this.value
           : String(this.value)
+      },
+
+      transitionPrevComputed: function transitionPrevComputed () {
+        return this.transitionPrev || ("slide-" + (this.vertical === true ? 'down' : 'right'))
+      },
+
+      transitionNextComputed: function transitionNextComputed () {
+        return this.transitionNext || ("slide-" + (this.vertical === true ? 'up' : 'left'))
       }
     },
 
@@ -5499,7 +5941,7 @@
 
       __updatePanelTransition: function __updatePanelTransition (direction) {
         var val = direction !== 0 && this.animated === true && this.panelIndex !== -1
-          ? 'q-transition--' + (direction === -1 ? this.transitionPrev : this.transitionNext)
+          ? 'q-transition--' + (direction === -1 ? this.transitionPrevComputed : this.transitionNextComputed)
           : null;
 
         if (this.panelTransition !== val) {
@@ -5540,7 +5982,8 @@
       },
 
       __swipe: function __swipe (evt) {
-        this.__go((this.$q.lang.rtl === true ? -1 : 1) * (evt.direction === 'left' ? 1 : -1));
+        var dir = this.vertical === true ? 'up' : 'left';
+        this.__go((this.$q.lang.rtl === true ? -1 : 1) * (evt.direction === dir ? 1 : -1));
       },
 
       __updatePanelIndex: function __updatePanelIndex () {
@@ -5698,26 +6141,126 @@
     }
   };
 
+  var
+    hasMap = typeof Map === 'function',
+    hasSet = typeof Set === 'function',
+    hasArrayBuffer = typeof ArrayBuffer === 'function';
+
   function isDeepEqual (a, b) {
     if (a === b) {
       return true
     }
 
-    if (a instanceof Date && b instanceof Date) {
-      return a.getTime() === b.getTime()
+    if (a !== null && b !== null && typeof a === 'object' && typeof b === 'object') {
+      if (a.constructor !== b.constructor) {
+        return false
+      }
+
+      var length, i, keys;
+
+      if (a.constructor === Array) {
+        length = a.length;
+
+        if (length !== b.length) {
+          return false
+        }
+
+        for (i = length; i-- !== 0;) {
+          if (isDeepEqual(a[i], b[i]) !== true) {
+            return false
+          }
+        }
+
+        return true
+      }
+
+      if (hasMap === true && a.constructor === Map) {
+        if (a.size !== b.size) {
+          return false
+        }
+
+        i = a.entries().next();
+        while (i.done !== true) {
+          if (b.has(i.value[0]) !== true) {
+            return false
+          }
+          i = i.next();
+        }
+
+        i = a.entries().next();
+        while (i.done !== true) {
+          if (isDeepEqual(i.value[1], b.get(i.value[0])) !== true) {
+            return false
+          }
+          i = i.next();
+        }
+
+        return true
+      }
+
+      if (hasSet === true && a.constructor === Set) {
+        if (a.size !== b.size) {
+          return false
+        }
+
+        i = a.entries().next();
+        while (i.done !== true) {
+          if (b.has(i.value[0]) !== true) {
+            return false
+          }
+          i = i.next();
+        }
+
+        return true
+      }
+
+      if (hasArrayBuffer === true && a.buffer != null && a.buffer.constructor === ArrayBuffer) {
+        length = a.length;
+
+        if (length !== b.length) {
+          return false
+        }
+
+        for (i = length; i-- !== 0;) {
+          if (a[i] !== b[i]) {
+            return false
+          }
+        }
+
+        return true
+      }
+
+      if (a.constructor === RegExp) {
+        return a.source === b.source && a.flags === b.flags
+      }
+
+      if (a.valueOf !== Object.prototype.valueOf) {
+        return a.valueOf() === b.valueOf()
+      }
+
+      if (a.toString !== Object.prototype.toString) {
+        return a.toString() === b.toString()
+      }
+
+      keys = Object.keys(a);
+      length = keys.length;
+
+      if (length !== Object.keys(b).length) {
+        return false
+      }
+
+      for (i = length; i-- !== 0;) {
+        var key = keys[i];
+        if (isDeepEqual(a[key], b[key]) !== true) {
+          return false
+        }
+      }
+
+      return true
     }
 
-    if (a !== Object(a) || b !== Object(b)) {
-      return false
-    }
-
-    var props = Object.keys(a);
-
-    if (props.length !== Object.keys(b).length) {
-      return false
-    }
-
-    return props.every(function (prop) { return isDeepEqual(a[prop], b[prop]); })
+    // true if both NaN, false otherwise
+    return a !== a && b !== b // eslint-disable-line no-self-compare
   }
 
   function isDate (v) {
@@ -5737,14 +6280,14 @@
       height: String,
       padding: Boolean,
 
-      transitionPrev: {
-        default: 'fade'
+      controlType: {
+        type: String,
+        validator: function (v) { return [ 'regular', 'flat', 'outline', 'push', 'unelevated' ].includes(v); },
+        default: 'flat'
       },
-      transitionNext: {
-        default: 'fade'
-      },
-
       controlColor: String,
+      controlTextColor: String,
+
       autoplay: [Number, Boolean],
 
       arrows: Boolean,
@@ -5752,6 +6295,10 @@
       nextIcon: String,
 
       navigation: Boolean,
+      navigationPosition: {
+        type: String,
+        validator: function (v) { return ['top', 'right', 'bottom', 'left'].includes(v); }
+      },
       navigationIcon: String,
 
       thumbnails: Boolean
@@ -5766,28 +6313,53 @@
         }
       },
 
+      direction: function direction () {
+        return this.vertical === true ? 'vertical' : 'horizontal'
+      },
+
       classes: function classes () {
-        return {
-          fullscreen: this.inFullscreen,
-          'q-carousel--arrows': this.padding === true && this.arrows === true,
-          'q-carousel--navigation': this.padding === true && this.navigation === true,
-          'q-carousel--dark q-dark': this.isDark
-        }
+        return "q-carousel q-panel-parent q-carousel--with" + (this.padding === true ? '' : 'out') + "-padding" +
+          (this.inFullscreen === true ? ' fullscreen' : '') +
+          (this.isDark === true ? ' q-carousel--dark q-dark' : '') +
+          (this.arrows === true ? (" q-carousel--arrows-" + (this.direction)) : '') +
+          (this.navigation === true ? (" q-carousel--navigation-" + (this.navigationPositionComputed)) : '')
       },
 
       arrowIcons: function arrowIcons () {
         var ico = [
-          this.prevIcon || this.$q.iconSet.carousel.left,
-          this.nextIcon || this.$q.iconSet.carousel.right
+          this.prevIcon || this.$q.iconSet.carousel[this.vertical === true ? 'up' : 'left'],
+          this.nextIcon || this.$q.iconSet.carousel[this.vertical === true ? 'down' : 'right']
         ];
 
-        return this.$q.lang.rtl === true
+        return this.vertical === false && this.$q.lang.rtl === true
           ? ico.reverse()
           : ico
       },
 
       navIcon: function navIcon () {
         return this.navigationIcon || this.$q.iconSet.carousel.navigationIcon
+      },
+
+      navigationPositionComputed: function navigationPositionComputed () {
+        return this.navigationPosition || (this.vertical === true ? 'right' : 'bottom')
+      },
+
+      controlProps: function controlProps () {
+        var obj;
+
+        return ( obj = {
+          color: this.controlColor,
+          textColor: this.controlTextColor,
+          round: true
+        }, obj[this.controlType] = true, obj.dense = true, obj )
+      },
+
+      transitionPrevComputed: function transitionPrevComputed () {
+        return this.transitionPrev || "fade"
+      },
+
+      transitionNextComputed: function transitionNextComputed () {
+        return this.transitionNext || "fade"
       }
     },
 
@@ -5819,8 +6391,9 @@
 
       __getNavigationContainer: function __getNavigationContainer (h, type, mapping) {
         return h('div', {
-          staticClass: 'q-carousel__control q-carousel__navigation no-wrap absolute flex scroll-x q-carousel__navigation--' + type,
-          class: this.controlColor ? ("text-" + (this.controlColor)) : null
+          class: 'q-carousel__control q-carousel__navigation no-wrap absolute flex' +
+            " q-carousel__navigation--" + type + " q-carousel__navigation--" + (this.navigationPositionComputed) +
+            (this.controlColor !== void 0 ? (" text-" + (this.controlColor)) : '')
         }, [
           h('div', {
             staticClass: 'q-carousel__navigation-inner flex no-wrap justify-center'
@@ -5833,43 +6406,31 @@
 
         var node = [];
 
-        this.arrows === true && node.push(
-          h(QBtn, {
-            staticClass: 'q-carousel__control q-carousel__prev-arrow absolute',
-            props: { size: 'lg', color: this.controlColor, icon: this.arrowIcons[0], round: true, flat: true, dense: true },
-            on: cache(this, 'prev', { click: this.previous })
-          }),
-          h(QBtn, {
-            staticClass: 'q-carousel__control q-carousel__next-arrow absolute',
-            props: { size: 'lg', color: this.controlColor, icon: this.arrowIcons[1], round: true, flat: true, dense: true },
-            on: cache(this, 'next', { click: this.next })
-          })
-        );
-
         if (this.navigation === true) {
           node.push(this.__getNavigationContainer(h, 'buttons', function (panel) {
             var name = panel.componentOptions.propsData.name;
 
             return h(QBtn, {
               key: name,
-              staticClass: 'q-carousel__navigation-icon',
-              class: { 'q-carousel__navigation-icon--active': name === this$1.value },
-              props: {
+              class: ("q-carousel__navigation-icon q-carousel__navigation-icon--" + (name === this$1.value ? '' : 'in') + "active"),
+              props: Object.assign({
                 icon: this$1.navIcon,
-                round: true,
-                flat: true,
                 size: 'sm'
-              },
+              }, this$1.controlProps),
               on: cache(this$1, 'nav#' + name, { click: function () { this$1.goTo(name); } })
             })
           }));
         }
         else if (this.thumbnails === true) {
+          var color = this.controlColor !== void 0
+            ? (" text-" + (this.controlColor))
+            : '';
+
           node.push(this.__getNavigationContainer(h, 'thumbnails', function (panel) {
             var slide = panel.componentOptions.propsData;
 
             return h('img', {
-              class: { 'q-carousel__thumbnail--active': slide.name === this$1.value },
+              class: "q-carousel__thumbnail q-carousel__thumbnail--" + (slide.name === this$1.value ? '' : 'in') + "active" + color,
               attrs: {
                 src: slide.imgSrc
               },
@@ -5879,14 +6440,35 @@
           }));
         }
 
+        if (this.arrows === true) {
+          node.push(
+            h('div', {
+              staticClass: ("q-carousel__control q-carousel__arrow q-carousel__prev-arrow q-carousel__prev-arrow--" + (this.direction) + " absolute flex flex-center")
+            }, [
+              h(QBtn, {
+                props: Object.assign({ icon: this.arrowIcons[0] }, this.controlProps),
+                on: cache(this, 'prev', { click: this.previous })
+              })
+            ]),
+            h('div', {
+              staticClass: ("q-carousel__control q-carousel__arrow q-carousel__next-arrow q-carousel__next-arrow--" + (this.direction) + " absolute flex flex-center")
+            }, [
+              h(QBtn, {
+                props: Object.assign({ icon: this.arrowIcons[1] }, this.controlProps),
+                on: cache(this, 'next', { click: this.next })
+              })
+            ])
+          );
+        }
+
         return mergeSlot(node, this, 'control')
       },
 
       __renderPanels: function __renderPanels (h) {
         return h('div', {
-          staticClass: 'q-carousel q-panel-parent',
           style: this.style,
-          class: this.classes
+          class: this.classes,
+          on: this.$listeners
         }, [
           h('div', {
             staticClass: 'q-carousel__slides-container',
@@ -5939,11 +6521,17 @@
     props: {
       position: {
         type: String,
-        default: 'bottom-right'
+        default: 'bottom-right',
+        validator: function (v) { return [
+          'top-right', 'top-left',
+          'bottom-right', 'bottom-left',
+          'top', 'right', 'bottom', 'left'
+        ].includes(v); }
       },
       offset: {
         type: Array,
-        default: function () { return [18, 18]; }
+        default: function () { return [18, 18]; },
+        validator: function (v) { return v.length === 2; }
       }
     },
 
@@ -5990,28 +6578,28 @@
 
     computed: {
       textClass: function textClass () {
-        if (this.textColor) {
-          return ("text-" + (this.textColor))
-        }
+        return "q-message-text-content q-message-text-content--" + (this.op) +
+          (this.textColor !== void 0 ? (" text-" + (this.textColor)) : '')
       },
 
       messageClass: function messageClass () {
-        if (this.bgColor) {
-          return ("text-" + (this.bgColor))
-        }
+        return "q-message-text q-message-text--" + (this.op) +
+          (this.bgColor !== void 0 ? (" text-" + (this.bgColor)) : '')
+      },
+
+      containerClass: function containerClass () {
+        return "q-message-container row items-end no-wrap" +
+          (this.sent === true ? ' reverse' : '')
       },
 
       sizeClass: function sizeClass () {
-        if (this.size) {
+        if (this.size !== void 0) {
           return ("col-" + (this.size))
         }
       },
 
-      classes: function classes () {
-        return {
-          'q-message-sent': this.sent,
-          'q-message-received': !this.sent
-        }
+      op: function op () {
+        return this.sent === true ? 'sent' : 'received'
       }
     },
 
@@ -6028,13 +6616,9 @@
 
           return h('div', {
           key: index,
-          staticClass: 'q-message-text',
           class: this$1.messageClass
         }, [
-          h('span', {
-            staticClass: 'q-message-text-content',
-            class: this$1.textClass
-          }, [
+          h('div', { class: this$1.textClass }, [
             h('div', { domProps: ( obj = {}, obj[domPropText] = msg, obj ) }),
             this$1.stamp
               ? h('div', {
@@ -6052,20 +6636,15 @@
 
         var content = uniqueSlot(this, 'default', []);
 
-        if (this.stamp !== void 0) {
-          content.push(
-            h('div', {
-              staticClass: 'q-message-stamp',
-              domProps: ( obj = {}, obj[this.stampSanitize === true ? 'textContent' : 'innerHTML'] = this.stamp, obj )
-            })
-          );
-        }
+        this.stamp !== void 0 && content.push(
+          h('div', {
+            staticClass: 'q-message-stamp',
+            domProps: ( obj = {}, obj[this.stampSanitize === true ? 'textContent' : 'innerHTML'] = this.stamp, obj )
+          })
+        );
 
-        return h('div', {
-          staticClass: 'q-message-text',
-          class: this.messageClass
-        }, [
-          h('span', {
+        return h('div', { class: this.messageClass }, [
+          h('div', {
             staticClass: 'q-message-text-content',
             class: this.textClass
           }, content)
@@ -6076,61 +6655,115 @@
     render: function render (h) {
       var obj, obj$1;
 
-      return h('div', {
-        staticClass: 'q-message',
-        class: this.classes
-      }, [
-        this.label
-          ? h('div', {
-            staticClass: 'q-message-label text-center',
-            domProps: ( obj = {}, obj[this.labelSanitize === true ? 'textContent' : 'innerHTML'] = this.label, obj )
+      var container = [];
+
+      if (this.$scopedSlots.avatar !== void 0) {
+        container.push(this.$scopedSlots.avatar());
+      }
+      else if (this.avatar !== void 0) {
+        container.push(
+          h('img', {
+            class: ("q-message-avatar q-message-avatar--" + (this.op)),
+            attrs: { src: this.avatar, 'aria-hidden': 'true' }
           })
-          : null,
+        );
+      }
 
+      var msg = [];
+
+      this.name !== void 0 && msg.push(
         h('div', {
-          staticClass: 'q-message-container row items-end no-wrap'
-        }, [
-          this.$scopedSlots.avatar !== void 0
-            ? this.$scopedSlots.avatar()
-            : (
-              this.avatar !== void 0
-                ? h('img', {
-                  staticClass: 'q-message-avatar',
-                  attrs: { src: this.avatar }
-                })
-                : null
-            ),
+          class: ("q-message-name q-message-name--" + (this.op)),
+          domProps: ( obj = {}, obj[this.nameSanitize === true ? 'textContent' : 'innerHTML'] = this.name, obj )
+        })
+      );
 
-          h('div', { class: this.sizeClass }, [
-            this.name !== void 0
-              ? h('div', {
-                staticClass: 'q-message-name',
-                domProps: ( obj$1 = {}, obj$1[this.nameSanitize === true ? 'textContent' : 'innerHTML'] = this.name, obj$1 )
-              })
-              : null,
+      this.text !== void 0 && msg.push(
+        this.__getText(h)
+      );
 
-            this.text !== void 0 ? this.__getText(h) : null,
-            this.$scopedSlots.default !== void 0 ? this.__getMessage(h) : null
-          ])
-        ])
-      ])
+      this.$scopedSlots.default !== void 0 && msg.push(
+        this.__getMessage(h)
+      );
+
+      container.push(
+        h('div', { class: this.sizeClass }, msg)
+      );
+
+      var child = [];
+
+      this.label && child.push(
+        h('div', {
+          staticClass: 'q-message-label text-center',
+          domProps: ( obj$1 = {}, obj$1[this.labelSanitize === true ? 'textContent' : 'innerHTML'] = this.label, obj$1 )
+        })
+      );
+
+      child.push(
+        h('div', { class: this.containerClass }, container)
+      );
+
+      return h('div', {
+        class: ("q-message q-message-" + (this.op)),
+        on: this.$listeners
+      }, child)
     }
   });
 
+  var OptionSizeMixin = getSizeMixin({
+    xs: 30,
+    sm: 35,
+    md: 40,
+    lg: 50,
+    xl: 60
+  });
+
+  var RefocusTargetMixin = {
+    computed: {
+      __refocusTargetEl: function __refocusTargetEl () {
+        if (this.disable !== true) {
+          return this.$createElement('span', {
+            ref: 'refocusTarget',
+            staticClass: 'no-outline',
+            attrs: { tabindex: -1 }
+          })
+        }
+      }
+    },
+
+    methods: {
+      __refocusTarget: function __refocusTarget (e) {
+        if (e !== void 0 && e.type.indexOf('key') === 0) {
+          if (document.activeElement !== this.$el && this.$el.contains(document.activeElement) === true) {
+            this.$el.focus();
+          }
+        }
+        else if ((e === void 0 || this.$el.contains(e.target) === true) && this.$refs.refocusTarget !== void 0) {
+          this.$refs.refocusTarget.focus();
+        }
+      }
+    }
+  };
+
   var CheckboxMixin = {
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, OptionSizeMixin, FormMixin, RefocusTargetMixin ],
 
     props: {
       value: {
-        required: true
+        required: true,
+        default: null
       },
       val: {},
 
       trueValue: { default: true },
       falseValue: { default: false },
 
+      toggleIndeterminate: Boolean,
+      indeterminateValue: { default: null },
+
       label: String,
       leftLabel: Boolean,
+      fontSize: String,
 
       color: String,
       keepColor: Boolean,
@@ -6142,15 +6775,20 @@
 
     computed: {
       isTrue: function isTrue () {
-        return this.modelIsArray
+        return this.modelIsArray === true
           ? this.index > -1
           : this.value === this.trueValue
       },
 
       isFalse: function isFalse () {
-        return this.modelIsArray
+        return this.modelIsArray === true
           ? this.index === -1
           : this.value === this.falseValue
+      },
+
+      isIndeterminate: function isIndeterminate () {
+        return this.value === this.indeterminateValue &&
+          this.value !== this.falseValue
       },
 
       index: function index () {
@@ -6165,12 +6803,72 @@
 
       computedTabindex: function computedTabindex () {
         return this.disable === true ? -1 : this.tabindex || 0
+      },
+
+      labelStyle: function labelStyle () {
+        if (this.fontSize !== void 0) {
+          return { fontSize: this.fontSize }
+        }
+      },
+
+      classes: function classes () {
+        return "q-" + (this.type) + " cursor-pointer no-outline row inline no-wrap items-center" +
+          (this.disable === true ? ' disabled' : '') +
+          (this.isDark === true ? (" q-" + (this.type) + "--dark") : '') +
+          (this.dense === true ? (" q-" + (this.type) + "--dense") : '') +
+          (this.leftLabel === true ? ' reverse' : '')
+      },
+
+      innerClass: function innerClass () {
+        var state = this.isTrue === true ? 'truthy' : (this.isFalse === true ? 'falsy' : 'indet');
+        var color = this.color !== void 0 && (
+          this.keepColor === true ||
+          (this.type === 'toggle' ? this.isTrue === true : this.isFalse !== true)
+        )
+          ? (" text-" + (this.color))
+          : '';
+
+        return ("q-" + (this.type) + "__inner--" + state + color)
+      },
+
+      formAttrs: function formAttrs () {
+        var prop = { type: 'checkbox' };
+
+        this.name !== void 0 && Object.assign(prop, {
+          checked: this.isTrue,
+          name: this.name,
+          value: this.modelIsArray === true
+            ? this.val
+            : this.trueValue
+        });
+
+        return prop
+      },
+
+      attrs: function attrs () {
+        var attrs = {
+          tabindex: this.computedTabindex,
+          role: 'checkbox',
+          'aria-label': this.label,
+          'aria-checked': this.isIndeterminate === true
+            ? 'mixed'
+            : this.isTrue === true ? 'true' : 'false'
+        };
+
+        if (this.disable === true) {
+          attrs['aria-disabled'] = '';
+        }
+
+        return attrs
       }
     },
 
     methods: {
       toggle: function toggle (e) {
-        e !== void 0 && stopAndPrevent(e);
+        if (e !== void 0) {
+          stopAndPrevent(e);
+          this.__refocusTarget(e);
+        }
 
         if (this.disable === true) {
           return
@@ -6213,6 +6911,48 @@
           this.toggle(e);
         }
       }
+    },
+
+    render: function render (h) {
+      var inner = this.__getInner(h);
+
+      this.disable !== true && this.__injectFormInput(
+        inner,
+        'unshift',
+        ("q-" + (this.type) + "__native absolute q-ma-none q-pa-none invisible")
+      );
+
+      var child = [
+        h('div', {
+          staticClass: ("q-" + (this.type) + "__inner relative-position no-pointer-events"),
+          class: this.innerClass,
+          style: this.sizeStyle
+        }, inner)
+      ];
+
+      if (this.__refocusTargetEl !== void 0) {
+        child.push(this.__refocusTargetEl);
+      }
+
+      var label = this.label !== void 0
+        ? mergeSlot([ this.label ], this, 'default')
+        : slot(this, 'default');
+
+      label !== void 0 && child.push(
+        h('div', {
+          staticClass: ("q-" + (this.type) + "__label q-anchor--skip")
+        }, label)
+      );
+
+      return h('div', {
+        class: this.classes,
+        attrs: this.attrs,
+        on: cache(this, 'inpExt', {
+          click: this.toggle,
+          keydown: this.__onKeydown,
+          keyup: this.__onKeyup
+        })
+      }, child)
     }
   };
 
@@ -6221,110 +6961,55 @@
 
     mixins: [ CheckboxMixin ],
 
-    props: {
-      toggleIndeterminate: Boolean,
-      indeterminateValue: { default: null }
-    },
+    methods: {
+      __getInner: function __getInner (h) {
+        return [
+          h('div', {
+            staticClass: 'q-checkbox__bg absolute'
+          }, [
+            h('svg', {
+              staticClass: 'q-checkbox__svg fit absolute-full',
+              attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24' }
+            }, [
+              h('path', {
+                staticClass: 'q-checkbox__truthy',
+                attrs: {
+                  fill: 'none',
+                  d: 'M1.73,12.91 8.1,19.28 22.79,4.59'
+                }
+              }),
 
-    computed: {
-      isIndeterminate: function isIndeterminate () {
-        return this.value === void 0 || this.value === this.indeterminateValue
-      },
-
-      classes: function classes () {
-        return {
-          'disabled': this.disable,
-          'q-checkbox--dark': this.isDark,
-          'q-checkbox--dense': this.dense,
-          'reverse': this.leftLabel
-        }
-      },
-
-      innerClass: function innerClass () {
-        if (this.isTrue === true) {
-          return 'q-checkbox__inner--active' +
-            (this.color !== void 0 ? ' text-' + this.color : '')
-        }
-        else if (this.isIndeterminate === true) {
-          return 'q-checkbox__inner--indeterminate' +
-            (this.color !== void 0 ? ' text-' + this.color : '')
-        }
-        else if (this.keepColor === true && this.color !== void 0) {
-          return 'text-' + this.color
-        }
+              h('path', {
+                staticClass: 'q-checkbox__indet',
+                attrs: {
+                  d: 'M4,14H20V10H4'
+                }
+              })
+            ])
+          ])
+        ]
       }
     },
 
-    render: function render (h) {
-      var content = [
-        h('div', {
-          staticClass: 'q-checkbox__bg absolute'
-        }, [
-          h('svg', {
-            staticClass: 'q-checkbox__check fit absolute-full',
-            attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24' }
-          }, [
-            h('path', {
-              attrs: {
-                fill: 'none',
-                d: 'M1.73,12.91 8.1,19.28 22.79,4.59'
-              }
-            })
-          ]),
-
-          h('div', { staticClass: 'q-checkbox__check-indet absolute' })
-        ])
-      ];
-
-      this.disable !== true && content.unshift(
-        h('input', {
-          staticClass: 'q-checkbox__native q-ma-none q-pa-none invisible',
-          attrs: { type: 'checkbox' }
-        })
-      );
-
-      var child = [
-        h('div', {
-          staticClass: 'q-checkbox__inner relative-position no-pointer-events',
-          class: this.innerClass
-        }, content)
-      ];
-
-      var label = this.label !== void 0
-        ? mergeSlot([ this.label ], this, 'default')
-        : slot(this, 'default');
-
-      label !== void 0 && child.push(
-        h('div', {
-          staticClass: 'q-checkbox__label q-anchor--skip'
-        }, label)
-      );
-
-      return h('div', {
-        staticClass: 'q-checkbox cursor-pointer no-outline row inline no-wrap items-center',
-        class: this.classes,
-        attrs: { tabindex: this.computedTabindex },
-        on: cache(this, 'inpExt', {
-          click: this.toggle,
-          keydown: this.__onKeydown,
-          keyup: this.__onKeyup
-        })
-      }, child)
+    created: function created () {
+      this.type = 'checkbox';
     }
   });
-
-  var sizes$2 = {
-    xs: 8,
-    sm: 10,
-    md: 14,
-    lg: 20,
-    xl: 24
-  };
 
   var QChip = Vue.extend({
     name: 'QChip',
 
-    mixins: [ RippleMixin, SizeMixin, DarkMixin ],
+    mixins: [
+      RippleMixin,
+      DarkMixin,
+      getSizeMixin({
+        xs: 8,
+        sm: 10,
+        md: 14,
+        lg: 20,
+        xl: 24
+      })
+    ],
 
     model: {
       event: 'remove'
@@ -6349,8 +7034,6 @@
         default: null
       },
 
-      size: String,
-
       square: Boolean,
       outline: Boolean,
       clickable: Boolean,
@@ -6369,14 +7052,6 @@
           : this.textColor;
 
         return ( obj = {}, obj[("bg-" + (this.color))] = this.outline === false && this.color !== void 0, obj[("text-" + text + " q-chip--colored")] = text, obj.disabled = this.disable, obj['q-chip--dense'] = this.dense, obj['q-chip--outline'] = this.outline, obj['q-chip--selected'] = this.selected, obj['q-chip--clickable cursor-pointer non-selectable q-hoverable'] = this.isClickable, obj['q-chip--square'] = this.square, obj['q-chip--dark q-dark'] = this.isDark, obj )
-      },
-
-      style: function style () {
-        if (this.size !== void 0) {
-          return {
-            fontSize: this.size in sizes$2 ? ((sizes$2[this.size]) + "px") : this.size
-          }
-        }
       },
 
       hasLeftIcon: function hasLeftIcon () {
@@ -6426,12 +7101,12 @@
         );
 
         var label = this.label !== void 0
-          ? [ this.label ]
+          ? [ h('div', { staticClass: 'ellipsis' }, [ this.label ]) ]
           : void 0;
 
         child.push(
           h('div', {
-            staticClass: 'q-chip__content row no-wrap items-center q-anchor--skip'
+            staticClass: 'q-chip__content col row no-wrap items-center q-anchor--skip'
           }, mergeSlotSafely(label, this, 'default'))
         );
 
@@ -6464,7 +7139,7 @@
       var data = {
         staticClass: 'q-chip row inline no-wrap items-center',
         class: this.classes,
-        style: this.style
+        style: this.sizeStyle
       };
 
       this.isClickable === true && Object.assign(data, {
@@ -6473,7 +7148,9 @@
           click: this.__onClick,
           keyup: this.__onKeyup
         }),
-        directives: [{ name: 'ripple', value: this.ripple }]
+        directives: cache(this, 'dir#' + this.ripple, [
+          { name: 'ripple', value: this.ripple }
+        ])
       });
 
       return h('div', data, this.__getContent(h))
@@ -6561,6 +7238,15 @@
 
       strokeWidth: function strokeWidth () {
         return this.thickness / 2 * this.viewBox
+      },
+
+      attrs: function attrs () {
+        return {
+          role: 'progressbar',
+          'aria-valuemin': this.min,
+          'aria-valuemax': this.max,
+          'aria-valuenow': this.indeterminate === true ? void 0 : this.value
+        }
       }
     },
 
@@ -6590,18 +7276,40 @@
     },
 
     render: function render (h) {
-      return h('div', {
-        staticClass: 'q-circular-progress',
-        'class': ("q-circular-progress--" + (this.indeterminate === true ? 'in' : '') + "determinate"),
-        style: this.sizeStyle,
-        on: this.$listeners,
-        attrs: {
-          'role': 'progressbar',
-          'aria-valuemin': this.min,
-          'aria-valuemax': this.max,
-          'aria-valuenow': this.indeterminate !== true ? this.value : null
-        }
-      }, [
+      var svgChild = [];
+
+      this.centerColor !== void 0 && this.centerColor !== 'transparent' && svgChild.push(
+        h('circle', {
+          staticClass: 'q-circular-progress__center',
+          class: ("text-" + (this.centerColor)),
+          attrs: {
+            fill: 'currentColor',
+            r: radius - this.strokeWidth / 2,
+            cx: this.viewBox,
+            cy: this.viewBox
+          }
+        })
+      );
+
+      this.trackColor !== void 0 && this.trackColor !== 'transparent' && svgChild.push(
+        this.__getCircle(h, {
+          cls: 'track',
+          thickness: this.strokeWidth,
+          offset: 0,
+          color: this.trackColor
+        })
+      );
+
+      svgChild.push(
+        this.__getCircle(h, {
+          cls: 'circle',
+          thickness: this.strokeWidth,
+          offset: this.strokeDashOffset,
+          color: this.color
+        })
+      );
+
+      var child = [
         h('svg', {
           staticClass: 'q-circular-progress__svg',
           style: this.svgStyle,
@@ -6609,40 +7317,23 @@
             focusable: 'false' /* needed for IE11 */,
             viewBox: this.viewBoxAttr
           }
-        }, [
-          this.centerColor !== void 0 && this.centerColor !== 'transparent' ? h('circle', {
-            staticClass: 'q-circular-progress__center',
-            class: ("text-" + (this.centerColor)),
-            attrs: {
-              fill: 'currentColor',
-              r: radius - this.strokeWidth / 2,
-              cx: this.viewBox,
-              cy: this.viewBox
-            }
-          }) : null,
+        }, svgChild)
+      ];
 
-          this.trackColor !== void 0 && this.trackColor !== 'transparent' ? this.__getCircle(h, {
-            cls: 'track',
-            thickness: this.strokeWidth,
-            offset: 0,
-            color: this.trackColor
-          }) : null,
+      this.showValue === true && child.push(
+        h('div', {
+          staticClass: 'q-circular-progress__text absolute-full row flex-center content-center',
+          style: { fontSize: this.fontSize }
+        }, this.$scopedSlots.default !== void 0 ? this.$scopedSlots.default() : [ h('div', [ this.value ]) ])
+      );
 
-          this.__getCircle(h, {
-            cls: 'circle',
-            thickness: this.strokeWidth,
-            offset: this.strokeDashOffset,
-            color: this.color
-          })
-        ]),
-
-        this.showValue === true
-          ? h('div', {
-            staticClass: 'q-circular-progress__text absolute-full row flex-center content-center',
-            style: { fontSize: this.fontSize }
-          }, this.$scopedSlots.default !== void 0 ? this.$scopedSlots.default() : [ h('div', [ this.value ]) ])
-          : null
-      ])
+      return h('div', {
+        staticClass: 'q-circular-progress',
+        class: ("q-circular-progress--" + (this.indeterminate === true ? 'in' : '') + "determinate"),
+        style: this.sizeStyle,
+        on: this.$listeners,
+        attrs: this.attrs
+      }, mergeSlotSafely(child, this, 'internal'))
     }
   });
 
@@ -6677,22 +7368,6 @@
   var patterns = {
     testPattern: testPattern
   };
-
-  function throttle (fn, limit) {
-    if ( limit === void 0 ) limit = 250;
-
-    var wait = false, result;
-
-    return function (/* ...args */) {
-      if (wait === false) {
-        wait = true;
-        setTimeout(function () { wait = false; }, limit);
-        result = fn.apply(this, arguments);
-      }
-
-      return result
-    }
-  }
 
   function getChanges (evt, ctx, isFinal) {
     var
@@ -6835,16 +7510,10 @@
         modifiers: modifiers,
         direction: getModifierDirections(modifiers),
 
-        noop: function noop () {},
+        noop: noop,
 
         mouseStart: function mouseStart (evt) {
-          if (
-            ctx.event === void 0 &&
-            evt.target !== void 0 &&
-            evt.target.draggable !== true &&
-            leftClick(evt) === true &&
-            (evt.qClonedBy === void 0 || evt.qClonedBy.indexOf(ctx.uid) === -1)
-          ) {
+          if (shouldStart(evt, ctx) && leftClick(evt)) {
             addEvt(ctx, 'temp', [
               [ document, 'mousemove', 'move', 'notPassiveCapture' ],
               [ document, 'mouseup', 'end', 'passiveCapture' ]
@@ -6855,49 +7524,56 @@
         },
 
         touchStart: function touchStart (evt) {
-          if (
-            ctx.event === void 0 &&
-            evt.target !== void 0 &&
-            evt.target.draggable !== true &&
-            (evt.qClonedBy === void 0 || evt.qClonedBy.indexOf(ctx.uid) === -1)
-          ) {
+          if (shouldStart(evt, ctx)) {
             var target = getTouchTarget(evt.target);
+
             addEvt(ctx, 'temp', [
               [ target, 'touchmove', 'move', 'notPassiveCapture' ],
               [ target, 'touchcancel', 'end', 'passiveCapture' ],
               [ target, 'touchend', 'end', 'passiveCapture' ]
             ]);
+
             ctx.start(evt);
           }
         },
 
         start: function start (evt, mouseEvent) {
           client.is.firefox === true && preventDraggable(el, true);
+          ctx.lastEvt = evt;
 
           var pos = position(evt);
 
-          // stop propagation so possible upper v-touch-pan don't catch this as well
-          if (
-            (mouseEvent === true && modifiers.mouseAllDir === true) ||
-            (mouseEvent !== true && modifiers.stop === true)
-          ) {
-            var clone = evt.type.indexOf('mouse') > -1
-              ? new MouseEvent(evt.type, evt)
-              : new TouchEvent(evt.type, evt);
+          /*
+           * Stop propagation so possible upper v-touch-pan don't catch this as well;
+           * If we're not the target (based on modifiers), we'll re-emit the event later
+           */
+          if (mouseEvent === true || modifiers.stop === true) {
+            /*
+             * are we directly switching to detected state?
+             * clone event only otherwise
+             */
+            if (
+              ctx.direction.all !== true &&
+              (mouseEvent !== true || ctx.direction.mouseAllDir !== true)
+            ) {
+              var clone = evt.type.indexOf('mouse') > -1
+                ? new MouseEvent(evt.type, evt)
+                : new TouchEvent(evt.type, evt);
 
-            evt.defaultPrevented === true && prevent(clone);
-            evt.cancelBubble === true && stop(clone);
+              evt.defaultPrevented === true && prevent(clone);
+              evt.cancelBubble === true && stop(clone);
 
-            clone.qClonedBy = evt.qClonedBy === void 0
-              ? [ctx.uid]
-              : evt.qClonedBy.concat(ctx.uid);
-            clone.qKeyEvent = evt.qKeyEvent;
-            clone.qClickOutside = evt.qClickOutside;
+              clone.qClonedBy = evt.qClonedBy === void 0
+                ? [ctx.uid]
+                : evt.qClonedBy.concat(ctx.uid);
+              clone.qKeyEvent = evt.qKeyEvent;
+              clone.qClickOutside = evt.qClickOutside;
 
-            ctx.initialEvent = {
-              target: evt.target,
-              event: clone
-            };
+              ctx.initialEvent = {
+                target: evt.target,
+                event: clone
+              };
+            }
 
             stop(evt);
           }
@@ -6920,6 +7596,34 @@
             return
           }
 
+          ctx.lastEvt = evt;
+
+          var isMouseEvt = ctx.event.mouse === true;
+          var start = function () {
+            handleEvent(evt, isMouseEvt);
+
+            document.documentElement.style.cursor = 'grabbing';
+            isMouseEvt === true && document.body.classList.add('no-pointer-events');
+            document.body.classList.add('non-selectable');
+            clearSelection();
+
+            ctx.styleCleanup = function (withDelay) {
+              ctx.styleCleanup = void 0;
+
+              document.documentElement.style.cursor = '';
+              document.body.classList.remove('non-selectable');
+
+              if (isMouseEvt === true) {
+                var remove = function () {
+                  document.body.classList.remove('no-pointer-events');
+                };
+
+                if (withDelay === true) { setTimeout(remove, 50); }
+                else { remove(); }
+              }
+            };
+          };
+
           if (ctx.event.detected === true) {
             ctx.event.isFirst !== true && handleEvent(evt, ctx.event.mouse);
 
@@ -6932,13 +7636,10 @@
                 ctx.end(evt);
               }
               else {
-                if (ctx.event.isFirst === true) {
-                  handleEvent(evt, ctx.event.mouse);
-                  document.documentElement.style.cursor = 'grabbing';
-                  ctx.event.mouse === true && document.body.classList.add('no-pointer-events');
-                  document.body.classList.add('non-selectable');
-                  clearSelection();
+                if (ctx.styleCleanup === void 0 && ctx.event.isFirst === true) {
+                  start();
                 }
+
                 ctx.event.lastX = payload.position.left;
                 ctx.event.lastY = payload.position.top;
                 ctx.event.lastDir = synthetic === true ? void 0 : payload.direction;
@@ -6949,7 +7650,11 @@
             return
           }
 
-          if (ctx.direction.all === true) {
+          if (
+            ctx.direction.all === true ||
+            (isMouseEvt === true && ctx.modifiers.mouseAllDir === true)
+          ) {
+            start();
             ctx.event.detected = true;
             ctx.move(evt);
             return
@@ -6962,23 +7667,21 @@
             absX = Math.abs(distX),
             absY = Math.abs(distY);
 
-          if (absX === absY) {
-            return
-          }
-
-          if (
-            (ctx.direction.horizontal === true && absX > absY) ||
-            (ctx.direction.vertical === true && absX < absY) ||
-            (ctx.direction.up === true && absX < absY && distY < 0) ||
-            (ctx.direction.down === true && absX < absY && distY > 0) ||
-            (ctx.direction.left === true && absX > absY && distX < 0) ||
-            (ctx.direction.right === true && absX > absY && distX > 0)
-          ) {
-            ctx.event.detected = true;
-            ctx.move(evt);
-          }
-          else if (ctx.event.mouse !== true || modifiers.mouseAllDir !== true || (Date.now() - ctx.event.time) > 200) {
-            ctx.end(evt, true);
+          if (absX !== absY) {
+            if (
+              (ctx.direction.horizontal === true && absX > absY) ||
+              (ctx.direction.vertical === true && absX < absY) ||
+              (ctx.direction.up === true && absX < absY && distY < 0) ||
+              (ctx.direction.down === true && absX < absY && distY > 0) ||
+              (ctx.direction.left === true && absX > absY && distX < 0) ||
+              (ctx.direction.right === true && absX > absY && distX > 0)
+            ) {
+              ctx.event.detected = true;
+              ctx.move(evt);
+            }
+            else {
+              ctx.end(evt, true);
+            }
           }
         },
 
@@ -6989,30 +7692,21 @@
 
           cleanEvt(ctx, 'temp');
           client.is.firefox === true && preventDraggable(el, false);
+          ctx.styleCleanup !== void 0 && ctx.styleCleanup(true);
 
-          document.documentElement.style.cursor = '';
-          document.body.classList.remove('non-selectable');
-
-          if (ctx.event.detected === true && ctx.event.mouse === true) {
-            setTimeout(function () {
-              document.body.classList.remove('no-pointer-events');
-            }, 50);
+          if (abort === true) {
+            if (ctx.event.detected !== true && ctx.initialEvent !== void 0) {
+              ctx.initialEvent.target.dispatchEvent(ctx.initialEvent.event);
+            }
           }
-
-          if (
-            abort !== true &&
-            ctx.event.detected === true &&
-            ctx.event.isFirst !== true
-          ) {
-            ctx.handler(getChanges(evt, ctx, true).payload);
-          }
-
-          if (abort === true && ctx.event.detected !== true && ctx.initialEvent !== void 0) {
-            ctx.initialEvent.target.dispatchEvent(ctx.initialEvent.event);
+          else if (ctx.event.detected === true) {
+            ctx.event.isFirst === true && ctx.handler(getChanges(evt === void 0 ? ctx.lastEvt : evt, ctx).payload);
+            ctx.handler(getChanges(evt === void 0 ? ctx.lastEvt : evt, ctx, true).payload);
           }
 
           ctx.event = void 0;
           ctx.initialEvent = void 0;
+          ctx.lastEvt = void 0;
         }
       };
 
@@ -7033,8 +7727,7 @@
     },
 
     update: function update (el, binding) {
-      var ctx = el.__qtouchpan;
-      ctx !== void 0 && updateModifiers(ctx, binding);
+      el.__qtouchpan !== void 0 && updateModifiers(el.__qtouchpan, binding);
     },
 
     unbind: function unbind (el) {
@@ -7045,13 +7738,7 @@
         cleanEvt(ctx, 'temp');
 
         client.is.firefox === true && preventDraggable(el, false);
-
-        document.documentElement.style.cursor = '';
-        document.body.classList.remove('non-selectable');
-
-        if (ctx.event !== void 0 && ctx.event.detected === true && ctx.event.mouse === true) {
-          document.body.classList.remove('no-pointer-events');
-        }
+        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
 
         delete el[el.__qtouchpan_old ? '__qtouchpan_old' : '__qtouchpan'];
       }
@@ -7085,7 +7772,7 @@
   }
 
   var SliderMixin = {
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, FormMixin ],
 
     directives: {
       TouchPan: TouchPan
@@ -7179,6 +7866,22 @@
 
       horizProp: function horizProp () {
         return this.isReversed === true ? 'right' : 'left'
+      },
+
+      attrs: function attrs () {
+        var attrs = {
+          role: 'slider',
+          'aria-valuemin': this.min,
+          'aria-valuemax': this.max,
+          'aria-orientation': 'horizontal',
+          'data-step': this.step
+        };
+
+        if (this.disable === true) {
+          attrs['aria-disabled'] = '';
+        }
+
+        return attrs
       }
     },
 
@@ -7222,6 +7925,7 @@
         else if (event.isFirst) {
           this.dragging = this.__getDragging(event.evt);
           this.__updatePosition(event.evt);
+          this.__updateValue();
           this.active = true;
         }
         else {
@@ -7236,6 +7940,7 @@
 
       __activate: function __activate (evt) {
         this.__updatePosition(evt, this.__getDragging(evt));
+        this.__updateValue();
 
         this.preventFocus = true;
         this.active = true;
@@ -7454,17 +8159,29 @@
         );
       }
 
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(child, 'push');
+      }
+
+      var track = [
+        h('div', {
+          staticClass: 'q-slider__track absolute',
+          style: this.trackStyle
+        })
+      ];
+
+      this.markers === true && track.push(
+        h('div', {
+          staticClass: 'q-slider__track-markers absolute-full fit',
+          style: this.markerStyle
+        })
+      );
+
       return h('div', {
         staticClass: this.value === null ? ' q-slider--no-value' : '',
-        attrs: {
-          role: 'slider',
-          'aria-valuemin': this.min,
-          'aria-valuemax': this.max,
-          'aria-valuenow': this.value,
-          'data-step': this.step,
-          'aria-disabled': this.disable,
-          tabindex: this.computedTabindex
-        },
+        attrs: Object.assign({}, this.attrs,
+          {'aria-valuenow': this.value,
+          tabindex: this.computedTabindex}),
         class: this.classes,
         on: this.events,
         directives: this.editable === true ? cache(this, 'dir', [{
@@ -7479,19 +8196,9 @@
           }
         }]) : null
       }, [
-        h('div', { staticClass: 'q-slider__track-container absolute overflow-hidden' }, [
-          h('div', {
-            staticClass: 'q-slider__track absolute',
-            style: this.trackStyle
-          }),
-
-          this.markers === true
-            ? h('div', {
-              staticClass: 'q-slider__track-markers absolute-full fit',
-              style: this.markerStyle
-            })
-            : null
-        ]),
+        h('div', {
+          staticClass: 'q-slider__track-container absolute'
+        }, track),
 
         h('div', {
           staticClass: 'q-slider__thumb-container absolute non-selectable',
@@ -7599,7 +8306,7 @@
           tabindex: -1, // fix for Firefox
           type: 'text/html',
           data: this.url,
-          'aria-hidden': true
+          'aria-hidden': 'true'
         },
         on: cache(this, 'load', {
           load: this.__onObjLoad
@@ -7942,14 +8649,14 @@
           var offset = this.vertical === true ? newPos$1.top - top : newPos$1.left - left;
 
           if (offset < 0) {
-            this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += offset;
+            this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += Math.floor(offset);
             this.__updateArrows();
             return
           }
 
           offset += this.vertical === true ? newPos$1.height - height : newPos$1.width - width;
           if (offset > 0) {
-            this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += offset;
+            this.$refs.content[this.vertical === true ? 'scrollTop' : 'scrollLeft'] += Math.ceil(offset);
             this.__updateArrows();
           }
         }
@@ -8022,7 +8729,7 @@
       this.buffer = [];
 
       if (this.$q.platform.is.desktop !== true) {
-        this.__updateArrows = function () {};
+        this.__updateArrows = noop;
       }
     },
 
@@ -8092,7 +8799,7 @@
     inject: {
       tabs: {
         default: function default$1 () {
-          console.error('QTab/QRouteTab components need to be child of QTabsBar');
+          console.error('QTab/QRouteTab components need to be child of QTabs');
         }
       },
       __activateTab: {},
@@ -8229,11 +8936,17 @@
 
     mixins: [ DarkMixin, PanelParentMixin ],
 
+    computed: {
+      classes: function classes () {
+        return 'q-tab-panels q-panel-parent' +
+          (this.isDark === true ? ' q-tab-panels--dark q-dark' : '')
+      }
+    },
+
     methods: {
       __renderPanels: function __renderPanels (h) {
         return h('div', {
-          staticClass: 'q-tab-panels q-panel-parent',
-          class: this.isDark === true ? 'q-tab-panels--dark q-dark' : '',
+          class: this.classes,
           directives: this.panelDirectives,
           on: this.$listeners
         }, this.__getPanelContent(h))
@@ -8270,7 +8983,7 @@
   var QColor = Vue.extend({
     name: 'QColor',
 
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, FormMixin ],
 
     directives: {
       TouchPan: TouchPan
@@ -8355,13 +9068,24 @@
       },
 
       isHex: function isHex () {
-        return this.value === void 0 || this.value === null || this.value === '' || this.value.startsWith('#')
+        return this.value === void 0 ||
+          this.value === null ||
+          this.value === '' ||
+          this.value.startsWith('#')
       },
 
       isOutputHex: function isOutputHex () {
         return this.forceHex !== null
           ? this.forceHex
           : this.isHex
+      },
+
+      formAttrs: function formAttrs () {
+        return {
+          type: 'hidden',
+          name: this.name,
+          value: this.model[ this.isOutputHex === true ? 'hex' : 'rgb' ]
+        }
       },
 
       hasAlpha: function hasAlpha () {
@@ -8420,6 +9144,15 @@
           (this.flat === true ? ' q-color-picker--flat no-shadow' : '') +
           (this.disable === true ? ' disabled' : '') +
           (this.isDark === true ? ' q-color-picker--dark q-dark' : '')
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return { 'aria-disabled': '' }
+        }
+        if (this.readonly === true) {
+          return { 'aria-readonly': '' }
+        }
       }
     },
 
@@ -8430,6 +9163,10 @@
     render: function render (h) {
       var child = [ this.__getContent(h) ];
 
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(child, 'push');
+      }
+
       this.noHeader !== true && child.unshift(
         this.__getHeader(h)
       );
@@ -8438,7 +9175,11 @@
         this.__getFooter(h)
       );
 
-      return h('div', { class: this.classes }, child)
+      return h('div', {
+        class: this.classes,
+        attrs: this.attrs,
+        on: this.$listeners
+      }, child)
     },
 
     methods: {
@@ -8495,6 +9236,7 @@
                   input: function (evt) {
                     this$1.__updateErrorIcon(this$1.__onEditorChange(evt) === true);
                   },
+                  change: stop,
                   blur: function (evt) {
                     this$1.__onEditorChange(evt, true) === true && this$1.$forceUpdate();
                     this$1.__updateErrorIcon(false);
@@ -8592,7 +9334,10 @@
             style: this.spectrumStyle,
             class: { readonly: this.editable !== true },
             on: this.editable === true
-              ? cache(this, 'spectrT', { click: this.__spectrumClick })
+              ? cache(this, 'spectrT', {
+                click: this.__spectrumClick,
+                mousedown: this.__activate
+              })
               : null,
             directives: this.editable === true
               ? cache(this, 'spectrDir', [{
@@ -8648,8 +9393,8 @@
                     thumbPath: thumbPath
                   },
                   on: cache(this, 'alphaSlide', {
-                    input: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'a', 100); },
-                    change: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'a', 100, true); }
+                    input: function (value) { return this$1.__onNumericChange(value, 'a', 100); },
+                    change: function (value) { return this$1.__onNumericChange(value, 'a', 100, void 0, true); }
                   })
                 })
               ])
@@ -8674,8 +9419,8 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'rSlide', {
-                input: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'r', 255); },
-                change: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'r', 255, true); }
+                input: function (value) { return this$1.__onNumericChange(value, 'r', 255); },
+                change: function (value) { return this$1.__onNumericChange(value, 'r', 255, void 0, true); }
               })
             }),
             h('input', {
@@ -8687,8 +9432,9 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'rIn', {
-                input: function (evt) { return this$1.__onNumericChange(evt, 'r', 255); },
-                blur: function (evt) { return this$1.__onNumericChange(evt, 'r', 255, true); }
+                input: function (evt) { return this$1.__onNumericChange(evt.target.value, 'r', 255, evt); },
+                change: stop,
+                blur: function (evt) { return this$1.__onNumericChange(evt.target.value, 'r', 255, evt, true); }
               })
             })
           ]),
@@ -8705,8 +9451,8 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'gSlide', {
-                input: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'g', 255); },
-                change: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'g', 255, true); }
+                input: function (value) { return this$1.__onNumericChange(value, 'g', 255); },
+                change: function (value) { return this$1.__onNumericChange(value, 'g', 255, void 0, true); }
               })
             }),
             h('input', {
@@ -8718,8 +9464,9 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'gIn', {
-                input: function (evt) { return this$1.__onNumericChange(evt, 'g', 255); },
-                blur: function (evt) { return this$1.__onNumericChange(evt, 'g', 255, true); }
+                input: function (evt) { return this$1.__onNumericChange(evt.target.value, 'g', 255, evt); },
+                change: stop,
+                blur: function (evt) { return this$1.__onNumericChange(evt.target.value, 'g', 255, evt, true); }
               })
             })
           ]),
@@ -8736,8 +9483,8 @@
                 dark: this.isDark
               },
               on: cache(this, 'bSlide', {
-                input: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'b', 255); },
-                change: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'b', 255, true); }
+                input: function (value) { return this$1.__onNumericChange(value, 'b', 255); },
+                change: function (value) { return this$1.__onNumericChange(value, 'b', 255, void 0, true); }
               })
             }),
             h('input', {
@@ -8749,8 +9496,9 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'bIn', {
-                input: function (evt) { return this$1.__onNumericChange(evt, 'b', 255); },
-                blur: function (evt) { return this$1.__onNumericChange(evt, 'b', 255, true); }
+                input: function (evt) { return this$1.__onNumericChange(evt.target.value, 'b', 255, evt); },
+                change: stop,
+                blur: function (evt) { return this$1.__onNumericChange(evt.target.value, 'b', 255, evt, true); }
               })
             })
           ]),
@@ -8765,8 +9513,8 @@
                 dark: this.isDark
               },
               on: cache(this, 'aSlide', {
-                input: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'a', 100); },
-                change: function (value) { return this$1.__onNumericChange({ target: { value: value } }, 'a', 100, true); }
+                input: function (value) { return this$1.__onNumericChange(value, 'a', 100); },
+                change: function (value) { return this$1.__onNumericChange(value, 'a', 100, void 0, true); }
               })
             }),
             h('input', {
@@ -8778,8 +9526,9 @@
                 readonly: this.editable !== true
               },
               on: cache(this, 'aIn', {
-                input: function (evt) { return this$1.__onNumericChange(evt, 'a', 100); },
-                blur: function (evt) { return this$1.__onNumericChange(evt, 'a', 100, true); }
+                input: function (evt) { return this$1.__onNumericChange(evt.target.value, 'a', 100, evt); },
+                change: stop,
+                blur: function (evt) { return this$1.__onNumericChange(evt.target.value, 'a', 100, evt, true); }
               })
             })
           ]) : null
@@ -8794,7 +9543,7 @@
             staticClass: 'row items-center q-color-picker__palette-rows',
             class: this.editable === true
               ? 'q-color-picker__palette-rows--editable'
-              : null
+              : ''
           }, this.computedPalette.map(function (color) { return h('div', {
             staticClass: 'q-color-picker__cube col-auto',
             style: { backgroundColor: color },
@@ -8851,16 +9600,18 @@
         this.__update(rgb, change);
       },
 
-      __onNumericChange: function __onNumericChange (evt, formatModel, max, change) {
-        if (!/^[0-9]+$/.test(evt.target.value)) {
+      __onNumericChange: function __onNumericChange (value, formatModel, max, evt, change) {
+        evt !== void 0 && stop(evt);
+
+        if (!/^[0-9]+$/.test(value)) {
           change && this.$forceUpdate();
           return
         }
 
-        var val = Math.floor(Number(evt.target.value));
+        var val = Math.floor(Number(value));
 
         if (val < 0 || val > max) {
-          change && this.$forceUpdate();
+          change === true && this.$forceUpdate();
           return
         }
 
@@ -8882,7 +9633,7 @@
 
         this.__update(rgb, change);
 
-        if (change !== true && evt.target.selectionEnd !== void 0) {
+        if (evt !== void 0 && change !== true && evt.target.selectionEnd !== void 0) {
           var index = evt.target.selectionEnd;
           this.$nextTick(function () {
             evt.target.setSelectionRange(index, index);
@@ -8893,6 +9644,8 @@
       __onEditorChange: function __onEditorChange (evt, change) {
         var rgb;
         var inp = evt.target.value;
+
+        stop(evt);
 
         if (this.topView === 'hex') {
           if (
@@ -9016,7 +9769,9 @@
       __updateErrorIcon: function __updateErrorIcon (val) {
         // we MUST avoid vue triggering a render,
         // so manually changing this
-        this.$refs.errorIcon.$el.style.opacity = val ? 1 : 0;
+        if (this.$refs.errorIcon !== void 0) {
+          this.$refs.errorIcon.$el.style.opacity = val ? 1 : 0;
+        }
       },
 
       __parseModel: function __parseModel (v) {
@@ -9028,7 +9783,7 @@
               : this.formatModel.indexOf('a') > -1
           );
 
-        if (v === null || v === void 0 || v === '' || testPattern.anyColor(v) !== true) {
+        if (typeof v !== 'string' || v.length === 0 || testPattern.anyColor(v.replace(/ /g, '')) !== true) {
           return {
             h: 0,
             s: 0,
@@ -9080,6 +9835,13 @@
           evt.pageX - window.pageXOffset,
           evt.pageY - window.pageYOffset,
           true
+        );
+      },
+
+      __activate: function __activate (evt) {
+        this.__onSpectrumChange(
+          evt.pageX - window.pageXOffset,
+          evt.pageY - window.pageYOffset
         );
       }
     }
@@ -9357,7 +10119,7 @@
   }
 
   var DateTimeMixin = {
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, FormMixin ],
 
     props: {
       value: {
@@ -9632,8 +10394,8 @@
     )
   }
 
-  function __splitDate (str, mask, dateLocale, calendar) {
-    var date = {
+  function __splitDate (str, mask, dateLocale, calendar, defaultModel) {
+    var date = Object.assign({
       year: null,
       month: null,
       day: null,
@@ -9643,7 +10405,7 @@
       millisecond: null,
       dateHash: null,
       timeHash: null
-    };
+    }, defaultModel);
 
     if (
       str === void 0 ||
@@ -9838,18 +10600,25 @@
     return 1 + Math.floor(weekDiff)
   }
 
+  function getDayIdentifier (date) {
+    return date.getFullYear() * 10000 + date.getMonth() * 100 + date.getDate()
+  }
+
+  function getDateIdentifier (date, onlyDate /* = false */) {
+    var d = new Date(date);
+    return onlyDate === true ? getDayIdentifier(d) : d.getTime()
+  }
+
   function isBetweenDates (date, from, to, opts) {
     if ( opts === void 0 ) opts = {};
 
     var
-      d1 = new Date(from).getTime(),
-      d2 = new Date(to).getTime(),
-      cur = new Date(date).getTime();
+      d1 = getDateIdentifier(from, opts.onlyDate),
+      d2 = getDateIdentifier(to, opts.onlyDate),
+      cur = getDateIdentifier(date, opts.onlyDate);
 
-    opts.inclusiveFrom && d1--;
-    opts.inclusiveTo && d2++;
-
-    return cur > d1 && cur < d2
+    return (cur > d1 || (opts.inclusiveFrom === true && cur === d1)) &&
+      (cur < d2 || (opts.inclusiveTo === true && cur === d2))
   }
 
   function addToDate (date, mod) {
@@ -10415,13 +11184,12 @@
     computed: {
       classes: function classes () {
         var type = this.landscape === true ? 'landscape' : 'portrait';
-        return "q-date--" + type + " q-date--" + type + "-" + (this.minimal === true ? 'minimal' : 'standard') +
+        return "q-date q-date--" + type + " q-date--" + type + "-" + (this.minimal === true ? 'minimal' : 'standard') +
           (this.isDark === true ? ' q-date--dark q-dark' : '') +
           (this.bordered === true ? " q-date--bordered" : '') +
           (this.square === true ? " q-date--square no-border-radius" : '') +
           (this.flat === true ? " q-date--flat no-shadow" : '') +
-          (this.readonly === true && this.disable !== true ? ' q-date--readonly' : '') +
-          (this.disable === true ? ' disabled' : '')
+          (this.disable === true ? ' disabled' : (this.readonly === true ? ' q-date--readonly' : ''))
       },
 
       headerTitle: function headerTitle () {
@@ -10588,6 +11356,15 @@
         }
 
         return res
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return { 'aria-disabled': '' }
+        }
+        if (this.readonly === true) {
+          return { 'aria-readonly': '' }
+        }
       }
     },
 
@@ -11101,9 +11878,13 @@
         h('div', { staticClass: 'q-date__actions' }, def)
       );
 
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(content, 'push');
+      }
+
       return h('div', {
-        staticClass: 'q-date',
         class: this.classes,
+        attrs: this.attrs,
         on: this.$listeners
       }, [
         this.__getHeader(h),
@@ -11386,9 +12167,8 @@
       position: {
         type: String,
         default: 'standard',
-        validator: function validator (val) {
-          return val === 'standard' || ['top', 'bottom', 'left', 'right'].includes(val)
-        }
+        validator: function (val) { return val === 'standard' ||
+          ['top', 'bottom', 'left', 'right'].includes(val); }
       },
 
       transitionShow: String,
@@ -11643,7 +12423,7 @@
 
       __renderPortal: function __renderPortal (h) {
         var on = Object.assign({}, this.$listeners,
-          // stop propagating this events from children
+          // stop propagating these events from children
           {input: stop,
           'popup-show': stop,
           'popup-hide': stop});
@@ -11694,15 +12474,6 @@
   });
 
   var duration = 150;
-
-  var directiveTemplate = {
-    name: 'touch-pan',
-    modifiers: {
-      horizontal: true,
-      mouse: true,
-      mouseAllDir: true
-    }
-  };
 
   var mouseEvents = [
     'mouseover', 'mouseout', 'mouseenter', 'mouseleave'
@@ -11881,6 +12652,10 @@
         return this.side === 'right'
       },
 
+      otherSide: function otherSide () {
+        return this.rightSide === true ? 'left' : 'right'
+      },
+
       offset: function offset () {
         return this.showing === true && this.belowBreakpoint === false && this.overlay === false
           ? (this.miniToOverlay === true ? this.miniWidth : this.size)
@@ -12001,16 +12776,42 @@
       },
 
       openDirective: function openDirective () {
-        if (this.belowBreakpoint === true) {
-          return [Object.assign({}, directiveTemplate,
-            {value: this.__openByTouch})]
+        var obj;
+
+        var dir = this.$q.lang.rtl === true ? this.side : this.otherSide;
+
+        return [{
+          name: 'touch-pan',
+          value: this.__openByTouch,
+          modifiers: ( obj = {}, obj[ dir ] = true, obj.mouse = true, obj )
+        }]
+      },
+
+      contentCloseDirective: function contentCloseDirective () {
+        var obj;
+
+        if (this.noSwipeClose !== true) {
+          var dir = this.$q.lang.rtl === true ? this.otherSide : this.side;
+
+          return [{
+            name: 'touch-pan',
+            value: this.__closeByTouch,
+            modifiers: ( obj = {}, obj[ dir ] = true, obj.mouse = true, obj )
+          }]
         }
       },
 
-      closeDirective: function closeDirective () {
-        if (this.belowBreakpoint === true) {
-          return [Object.assign({}, directiveTemplate,
-            {value: this.__closeByTouch})]
+      backdropCloseDirective: function backdropCloseDirective () {
+        var obj;
+
+        if (this.noSwipeBackdrop !== true) {
+          var dir = this.$q.lang.rtl === true ? this.otherSide : this.side;
+
+          return [{
+            name: 'touch-pan',
+            value: this.__closeByTouch,
+            modifiers: ( obj = {}, obj[ dir ] = true, obj.mouse = true, obj.mouseAllDir = true, obj )
+          }]
         }
       }
     },
@@ -12113,7 +12914,7 @@
         }
 
         this.__applyPosition(
-          (this.$q.lang.rtl === true ? !this.rightSide : this.rightSide)
+          (this.$q.lang.rtl === true ? this.rightSide !== true : this.rightSide)
             ? Math.max(width - position, 0)
             : Math.min(0, position - width)
         );
@@ -12138,7 +12939,7 @@
         var
           width = this.size,
           dir = evt.direction === this.side,
-          position = (this.$q.lang.rtl === true ? !dir : dir)
+          position = (this.$q.lang.rtl === true ? dir !== true : dir)
             ? between(evt.distance.x, 0, width)
             : 0;
 
@@ -12175,7 +12976,7 @@
         this.__applyPosition(0);
 
         if (this.belowBreakpoint === true) {
-          var otherSide = this.layout.instances[this.rightSide === true ? 'left' : 'right'];
+          var otherSide = this.layout.instances[this.otherSide];
           if (otherSide !== void 0 && otherSide.belowBreakpoint === true) {
             otherSide.hide(false);
           }
@@ -12295,29 +13096,27 @@
     render: function render (h) {
       var child = [];
 
-      if (this.noSwipeOpen !== true && this.belowBreakpoint === true) {
-        child.push(
+      if (this.belowBreakpoint === true) {
+        this.noSwipeOpen !== true && child.push(
           h('div', {
             staticClass: ("q-drawer__opener fixed-" + (this.side)),
             directives: this.openDirective
           })
         );
-      }
 
-      this.belowBreakpoint === true && child.push(
-        h('div', {
-          ref: 'backdrop',
-          staticClass: 'fullscreen q-drawer__backdrop',
-          class: this.backdropClass,
-          style: this.lastBackdropBg !== void 0
-            ? { backgroundColor: this.lastBackdropBg }
-            : null,
-          on: cache(this, 'bkdrop', { click: this.hide }),
-          directives: this.noSwipeBackdrop !== true
-            ? this.closeDirective
-            : void 0
-        })
-      );
+        child.push(
+          h('div', {
+            ref: 'backdrop',
+            staticClass: 'fullscreen q-drawer__backdrop',
+            class: this.backdropClass,
+            style: this.lastBackdropBg !== void 0
+              ? { backgroundColor: this.lastBackdropBg }
+              : null,
+            on: cache(this, 'bkdrop', { click: this.hide }),
+            directives: this.backdropCloseDirective
+          })
+        );
+      }
 
       var content = [
         h('div', {
@@ -12345,15 +13144,13 @@
           class: this.classes,
           style: this.style,
           on: this.onNativeEvents,
-          directives: this.noSwipeClose !== true
-            ? this.closeDirective
+          directives: this.belowBreakpoint === true
+            ? this.contentCloseDirective
             : void 0
         }, content)
       );
 
-      return h('div', {
-        staticClass: 'q-drawer-container'
-      }, child)
+      return h('div', { staticClass: 'q-drawer-container' }, child)
     }
   });
 
@@ -12374,7 +13171,7 @@
 
     data: function data () {
       return {
-        isDirty: false,
+        isDirty: null,
         innerError: false,
         innerErrorMessage: void 0
       }
@@ -12385,7 +13182,7 @@
         if (this.rules === void 0) {
           return
         }
-        if (this.lazyRules === true && this.isDirty === false) {
+        if (this.lazyRules === true && this.isDirty !== true) {
           return
         }
 
@@ -12393,7 +13190,12 @@
       },
 
       focused: function focused (focused$1) {
-        focused$1 === false && this.__triggerValidation();
+        if (focused$1 === true) {
+          this.__initDirty();
+        }
+        else {
+          this.__triggerValidation();
+        }
       }
     },
 
@@ -12411,18 +13213,24 @@
 
     mounted: function mounted () {
       this.validateIndex = 0;
-      this.focused === void 0 && this.$el.addEventListener('focusout', this.__triggerValidation);
+      if (this.focused === void 0) {
+        this.$el.addEventListener('focusin', this.__initDirty);
+        this.$el.addEventListener('focusout', this.__triggerValidation);
+      }
     },
 
     beforeDestroy: function beforeDestroy () {
-      this.focused === void 0 && this.$el.removeEventListener('focusout', this.__triggerValidation);
+      if (this.focused === void 0) {
+        this.$el.removeEventListener('focusin', this.__initDirty);
+        this.$el.removeEventListener('focusout', this.__triggerValidation);
+      }
     },
 
     methods: {
       resetValidation: function resetValidation () {
         this.validateIndex++;
         this.innerLoading = false;
-        this.isDirty = false;
+        this.isDirty = null;
         this.innerError = false;
         this.innerErrorMessage = void 0;
       },
@@ -12522,6 +13330,12 @@
         )
       },
 
+      __initDirty: function __initDirty () {
+        if (this.isDirty === null) {
+          this.isDirty = false;
+        }
+      },
+
       __triggerValidation: function __triggerValidation () {
         if (this.isDirty === false && this.rules !== void 0) {
           this.isDirty = true;
@@ -12531,15 +13345,77 @@
     }
   };
 
-  function s4 () {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1)
+  /**
+   * Based on the work of https://github.com/jchook/uuid-random
+   */
+
+  var
+    buf,
+    bufIdx = 0,
+    hexBytes = new Array(256);
+
+  // Pre-calculate toString(16) for speed
+  for (var i = 0; i < 256; i++) {
+    hexBytes[i] = (i + 0x100).toString(16).substr(1);
   }
 
+  // Use best available PRNG
+  var randomBytes = (function () {
+    // Node & Browser support
+    var lib = typeof crypto !== 'undefined'
+      ? crypto
+      : (
+        typeof window !== 'undefined'
+          ? window.msCrypto // IE11
+          : void 0
+      );
+
+    if (lib !== void 0) {
+      if (lib.randomBytes !== void 0) {
+        return lib.randomBytes
+      }
+      if (lib.getRandomValues !== void 0) {
+        return function (n) {
+          var bytes = new Uint8Array(n);
+          lib.getRandomValues(bytes);
+          return bytes
+        }
+      }
+    }
+
+    return function (n) {
+      var r = [];
+      for (var i = n; i > 0; i--) {
+        r.push(Math.floor(Math.random() * 256));
+      }
+      return r
+    }
+  })();
+
+  // Buffer random numbers for speed
+  // Reduce memory usage by decreasing this number (min 16)
+  // or improve speed by increasing this number (try 16384)
+  var BUFFER_SIZE = 4096;
+
   function uid$2 () {
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-      s4() + '-' + s4() + s4() + s4()
+    // Buffer some random bytes for speed
+    if (buf === void 0 || (bufIdx + 16 > BUFFER_SIZE)) {
+      bufIdx = 0;
+      buf = randomBytes(BUFFER_SIZE);
+    }
+
+    var b = buf.slice(bufIdx, (bufIdx += 16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+
+    return hexBytes[b[0]] + hexBytes[b[1]] +
+      hexBytes[b[2]] + hexBytes[b[3]] + '-' +
+      hexBytes[b[4]] + hexBytes[b[5]] + '-' +
+      hexBytes[b[6]] + hexBytes[b[7]] + '-' +
+      hexBytes[b[8]] + hexBytes[b[9]] + '-' +
+      hexBytes[b[10]] + hexBytes[b[11]] +
+      hexBytes[b[12]] + hexBytes[b[13]] +
+      hexBytes[b[14]] + hexBytes[b[15]]
   }
 
   function getTargetUid (val) {
@@ -12561,6 +13437,7 @@
       prefix: String,
       suffix: String,
 
+      labelColor: String,
       color: String,
       bgColor: String,
 
@@ -12590,7 +13467,8 @@
 
       autofocus: Boolean,
 
-      for: [String],
+      for: String,
+
       maxlength: [Number, String],
       maxValues: [Number, String] // private, do not add to JSON; internally needed by QSelect
     },
@@ -12632,15 +13510,17 @@
           var len = typeof this.value === 'string' || typeof this.value === 'number'
             ? ('' + this.value).length
             : (Array.isArray(this.value) === true ? this.value.length : 0);
-          var max = this.maxlength !== void 0 ? this.maxlength : this.maxValues;
+
+          var max = this.maxlength !== void 0
+            ? this.maxlength
+            : this.maxValues;
 
           return len + (max !== void 0 ? ' / ' + max : '')
         }
       },
 
       floatingLabel: function floatingLabel () {
-        return this.hasError === true ||
-          this.stackLabel === true ||
+        return this.stackLabel === true ||
           this.focused === true ||
           (
             this.inputValue !== void 0 && this.hideSelected === true
@@ -12696,6 +13576,15 @@
         return cls
       },
 
+      labelClass: function labelClass () {
+        if (
+          this.labelColor !== void 0 &&
+          this.hasError !== true
+        ) {
+          return 'text-' + this.labelColor
+        }
+      },
+
       controlSlotScope: function controlSlotScope () {
         return {
           id: this.targetUid,
@@ -12706,6 +13595,21 @@
           value: this.value,
           emitValue: this.__emitValue
         }
+      },
+
+      attrs: function attrs () {
+        var attrs = {
+          for: this.targetUid
+        };
+
+        if (this.disable === true) {
+          attrs['aria-disabled'] = '';
+        }
+        else if (this.readonly === true) {
+          attrs['aria-readonly'] = '';
+        }
+
+        return attrs
       }
     },
 
@@ -12795,8 +13699,8 @@
           this.__getInnerAppendNode(h, 'inner-append', this.__getInnerAppend(h))
         );
 
-        this.__getPopup !== void 0 && node.push(
-          this.__getPopup(h)
+        this.__getControlChild !== void 0 && node.push(
+          this.__getControlChild(h)
         );
 
         return node
@@ -12833,7 +13737,8 @@
 
         this.label !== void 0 && node.push(
           h('div', {
-            staticClass: 'q-field__label no-pointer-events absolute ellipsis'
+            staticClass: 'q-field__label no-pointer-events absolute ellipsis',
+            class: this.labelClass
           }, [ this.label ])
         );
 
@@ -12981,9 +13886,7 @@
       return h('label', {
         staticClass: 'q-field row no-wrap items-start',
         class: this.classes,
-        attrs: {
-          for: this.targetUid
-        }
+        attrs: this.attrs
       }, [
         this.$scopedSlots.before !== void 0 ? h('div', {
           staticClass: 'q-field__before q-field__marginal row no-wrap items-center',
@@ -13042,6 +13945,174 @@
       clearTimeout(this.focusoutTimer);
     }
   });
+
+  var FileMixin = {
+    props: {
+      multiple: Boolean,
+      accept: String,
+      maxFileSize: Number,
+      maxTotalSize: Number,
+      filter: Function
+    },
+
+    computed: {
+      extensions: function extensions () {
+        if (this.accept !== void 0) {
+          return this.accept.split(',').map(function (ext) {
+            ext = ext.trim();
+            // support "image/*"
+            if (ext.endsWith('/*')) {
+              ext = ext.slice(0, ext.length - 1);
+            }
+            return ext
+          })
+        }
+      }
+    },
+
+    methods: {
+      pickFiles: function pickFiles (e) {
+        if (this.editable === true) {
+          var input = this.__getFileInput();
+          input && input.click(e);
+        }
+      },
+
+      addFiles: function addFiles (files) {
+        if (this.editable && files) {
+          this.__addFiles(null, files);
+        }
+      },
+
+      __processFiles: function __processFiles (e, files) {
+        var this$1 = this;
+
+        files = Array.from(files || e.target.files);
+
+        // filter file types
+        if (this.accept !== void 0) {
+          files = files.filter(function (file) {
+            return this$1.extensions.some(function (ext) { return (
+              file.type.toUpperCase().startsWith(ext.toUpperCase()) ||
+              file.name.toUpperCase().endsWith(ext.toUpperCase())
+            ); })
+          });
+          if (files.length === 0) { return }
+        }
+
+        // filter max file size
+        if (this.maxFileSize !== void 0) {
+          files = files.filter(function (file) { return file.size <= this$1.maxFileSize; });
+          if (files.length === 0) { return }
+        }
+
+        // Cordova/iOS allows selecting multiple files even when the
+        // multiple attribute is not specified. We also normalize drag'n'dropped
+        // files here:
+        if (this.multiple !== true) {
+          files = [ files[0] ];
+        }
+
+        if (this.maxTotalSize !== void 0) {
+          var size = 0;
+          for (var i = 0; i < files.length; i++) {
+            size += files[i].size;
+            if (size > this.maxTotalSize) {
+              if (i > 0) {
+                files = files.slice(0, i);
+                break
+              }
+              else {
+                return
+              }
+            }
+          }
+          if (files.length === 0) { return }
+        }
+
+        // do we have custom filter function?
+        if (typeof this.filter === 'function') {
+          files = this.filter(files);
+        }
+
+        if (files.length > 0) {
+          return files
+        }
+      },
+
+      __onDragOver: function __onDragOver (e) {
+        stopAndPrevent(e);
+        this.dnd = true;
+      },
+
+      __onDragLeave: function __onDragLeave (e) {
+        stopAndPrevent(e);
+        this.dnd = false;
+      },
+
+      __onDrop: function __onDrop (e) {
+        stopAndPrevent(e);
+        var files = e.dataTransfer.files;
+
+        if (files.length > 0) {
+          this.__addFiles(null, files);
+        }
+
+        this.dnd = false;
+      },
+
+      __getDnd: function __getDnd (h, type) {
+        if (this.dnd === true) {
+          return h('div', {
+            staticClass: ("q-" + type + "__dnd absolute-full"),
+            on: cache(this, 'dnd', {
+              dragenter: stopAndPrevent,
+              dragover: stopAndPrevent,
+              dragleave: this.__onDragLeave,
+              drop: this.__onDrop
+            })
+          })
+        }
+      }
+    }
+  };
+
+  var FileValueMixin = {
+    computed: {
+      formDomProps: function formDomProps () {
+        if (this.type !== 'file') {
+          return
+        }
+
+        try {
+          var dt = 'DataTransfer' in window
+            ? new DataTransfer()
+            : ('ClipboardEvent' in window
+              ? new ClipboardEvent('').clipboardData
+              : void 0
+            );
+
+          if (Object(this.value) === this.value) {
+            ('length' in this.value
+              ? Array.from(this.value)
+              : [ this.value ]
+            ).forEach(function (file) {
+              dt.items.add(file);
+            });
+          }
+
+          return {
+            files: dt.files
+          }
+        }
+        catch (e) {
+          return {
+            files: void 0
+          }
+        }
+      }
+    }
+  };
 
   // leave NAMED_MASKS at top of file (code referenced from docs)
   var NAMED_MASKS = {
@@ -13603,7 +14674,7 @@
   var QInput = Vue.extend({
     name: 'QInput',
 
-    mixins: [ QField, MaskMixin, CompositionMixin ],
+    mixins: [ QField, MaskMixin, CompositionMixin, FormFieldMixin, FileValueMixin ],
 
     props: {
       value: { required: false },
@@ -13648,13 +14719,13 @@
         }
 
         // textarea only
-        this.autogrow === true && this.$nextTick(this.__adjustHeightDebounce);
+        this.autogrow === true && this.$nextTick(this.__adjustHeight);
       },
 
       autogrow: function autogrow (autogrow$1) {
         // textarea only
         if (autogrow$1 === true) {
-          this.$nextTick(this.__adjustHeightDebounce);
+          this.$nextTick(this.__adjustHeight);
         }
         // if it has a number of rows set respect it
         else if (this.$attrs.rows > 0 && this.$refs.input !== void 0) {
@@ -13830,16 +14901,25 @@
         var attrs = Object.assign({}, {tabindex: 0,
           'data-autofocus': this.autofocus,
           rows: this.type === 'textarea' ? 6 : void 0,
-          'aria-label': this.label},
+          'aria-label': this.label,
+          name: this.nameProp},
           this.$attrs,
           {id: this.targetUid,
           type: this.type,
-          maxlength: this.maxlength,
-          disabled: this.disable === true,
-          readonly: this.readonly === true});
+          maxlength: this.maxlength});
+
+        if (this.disable === true) {
+          attrs.disabled = '';
+          attrs['aria-disabled'] = '';
+        }
+        else if (this.readonly === true) {
+          attrs.readonly = '';
+          attrs['aria-readonly'] = '';
+        }
 
         if (this.autogrow === true) {
           attrs.rows = 1;
+          on.animationend = this.__adjustHeight;
         }
 
         return h(this.isTextarea === true ? 'textarea' : 'input', {
@@ -13855,14 +14935,9 @@
                 ? this.tempValue
                 : (this.innerValue !== void 0 ? this.innerValue : '')
             }
-            : null
+            : this.formDomProps
         })
       }
-    },
-
-    created: function created () {
-      // textarea only
-      this.__adjustHeightDebounce = debounce(this.__adjustHeight, 100);
     },
 
     mounted: function mounted () {
@@ -13913,7 +14988,16 @@
         validator: validateOffset
       },
 
+      scrollTarget: {
+        default: void 0
+      },
+
       delay: {
+        type: Number,
+        default: 0
+      },
+
+      hideDelay: {
         type: Number,
         default: 0
       }
@@ -13940,6 +15024,8 @@
         this.__showPortal();
 
         this.__nextTick(function () {
+          this$1.observer = new MutationObserver(function () { return this$1.updatePosition(); });
+          this$1.observer.observe(this$1.__portal.$el, { attributes: false, childList: true, characterData: true, subtree: true });
           this$1.updatePosition();
           this$1.__configureScrollTarget();
         });
@@ -13961,6 +15047,11 @@
       },
 
       __anchorCleanup: function __anchorCleanup () {
+        if (this.observer !== void 0) {
+          this.observer.disconnect();
+          this.observer = void 0;
+        }
+
         this.__unconfigureScrollTarget();
         cleanEvt(this, 'tooltipTemp');
       },
@@ -14008,6 +15099,8 @@
       },
 
       __delayHide: function __delayHide (evt) {
+        var this$1 = this;
+
         this.__clearTimeout();
 
         if (this.$q.platform.is.mobile === true) {
@@ -14019,7 +15112,9 @@
           }, 10);
         }
 
-        this.hide(evt);
+        this.__setTimeout(function () {
+          this$1.hide(evt);
+        }, this.hideDelay);
       },
 
       __configureAnchorEl: function __configureAnchorEl () {
@@ -14038,20 +15133,20 @@
       },
 
       __unconfigureScrollTarget: function __unconfigureScrollTarget () {
-        if (this.scrollTarget !== void 0) {
-          this.__changeScrollEvent(this.scrollTarget);
-          this.scrollTarget = void 0;
+        if (this.__scrollTarget !== void 0) {
+          this.__changeScrollEvent(this.__scrollTarget);
+          this.__scrollTarget = void 0;
         }
       },
 
       __configureScrollTarget: function __configureScrollTarget () {
-        if (this.anchorEl !== void 0) {
-          this.scrollTarget = getScrollTarget(this.anchorEl);
+        if (this.anchorEl !== void 0 || this.scrollTarget !== void 0) {
+          this.__scrollTarget = getScrollTarget(this.anchorEl, this.scrollTarget);
           var fn = this.noParentEvent === true
             ? this.updatePosition
             : this.hide;
 
-          this.__changeScrollEvent(this.scrollTarget, fn);
+          this.__changeScrollEvent(this.__scrollTarget, fn);
         }
       },
 
@@ -14060,7 +15155,7 @@
           props: { name: this.transition }
         }, [
           this.showing === true ? h('div', {
-            staticClass: 'q-tooltip no-pointer-events',
+            staticClass: 'q-tooltip q-tooltip--style q-position-engine no-pointer-events',
             class: this.contentClass,
             style: this.contentStyle,
             attrs: {
@@ -14110,7 +15205,7 @@
   var QItem = Vue.extend({
     name: 'QItem',
 
-    mixins: [ DarkMixin, RouterLinkMixin ],
+    mixins: [ DarkMixin, RouterLinkMixin, TagMixin ],
 
     props: {
       active: Boolean,
@@ -14120,10 +15215,6 @@
       insetLevel: Number,
 
       tabindex: [ String, Number ],
-      tag: {
-        type: String,
-        default: 'div'
-      },
 
       focused: Boolean,
       manualFocus: Boolean
@@ -14602,18 +15693,9 @@
   }
 
   function isChildOf (el, parent) {
-    if (!el) {
-      return false
-    }
-    while ((el = el.parentNode)) {
-      if (el === document.body) {
-        return false
-      }
-      if (el === parent) {
-        return true
-      }
-    }
-    return false
+    return el === parent
+      ? false
+      : (parent === document ? document.body : parent).contains(el)
   }
 
   var urlRegex = /^https?:\/\//;
@@ -14781,7 +15863,7 @@
   };
 
   Caret.prototype.apply = function apply (cmd, param, done) {
-      if ( done === void 0 ) done = function () {};
+      if ( done === void 0 ) done = noop;
 
     if (cmd === 'formatBlock') {
       if (['BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(param) && this.is(cmd, param)) {
@@ -15189,11 +16271,21 @@
             this.contentStyle
           ]
       },
+
       innerClass: function innerClass () {
         return [
           this.contentClass,
           { col: this.inFullscreen, 'overflow-auto': this.inFullscreen || this.maxHeight }
         ]
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return { 'aria-disabled': '' }
+        }
+        if (this.readonly === true) {
+          return { 'aria-readonly': '' }
+        }
       }
     },
 
@@ -15406,7 +16498,8 @@
             'q-editor--flat': this.flat,
             'q-editor--dense': this.dense,
             'q-editor--dark q-dark': this.isDark
-          }
+          },
+          attrs: this.attrs
         },
         [
           toolbars,
@@ -15597,17 +16690,41 @@
     },
 
     computed: {
-      classes: function classes () {
-        var obj;
+      insetClass: function insetClass () {
+        switch (this.inset) {
+          case true:
+            return ' q-separator--inset'
+          case 'item':
+            return ' q-separator--item-inset'
+          case 'item-thumbnail':
+            return ' q-separator--item-thumbnail-inset'
+          default:
+            return ''
+        }
+      },
 
-        return ( obj = {}, obj[("bg-" + (this.color))] = this.color, obj['q-separator--dark'] = this.isDark, obj['q-separator--spaced'] = this.spaced, obj['q-separator--inset'] = this.inset === true, obj['q-separator--item-inset'] = this.inset === 'item', obj['q-separator--item-thumbnail-inset'] = this.inset === 'item-thumbnail', obj[("q-separator--" + (this.vertical ? 'vertical self-stretch' : 'horizontal col-grow'))] = true, obj )
+      classes: function classes () {
+        return 'q-separator' + this.insetClass +
+          " q-separator--" + (this.vertical === true ? 'vertical self-stretch' : 'horizontal col-grow') +
+          (this.color !== void 0 ? (" bg-" + (this.color)) : '') +
+          (this.isDark === true ? ' q-separator--dark' : '') +
+          (this.spaced === true ? ' q-separator--spaced' : '')
+      },
+
+      attrs: function attrs () {
+        return {
+          role: 'separator',
+          'aria-orientation': this.vertical === true ? 'vertical' : 'horizontal'
+        }
       }
     },
 
     render: function render (h) {
       return h('hr', {
         staticClass: 'q-separator',
-        class: this.classes
+        class: this.classes,
+        attrs: this.attrs,
+        on: this.$listeners
       })
     }
   });
@@ -15724,38 +16841,44 @@
       },
 
       __getToggleIcon: function __getToggleIcon (h) {
-        return h(QItemSection, {
-          staticClass: ("cursor-pointer" + (this.denseToggle === true && this.switchToggleSide === true ? ' items-end' : '')),
+        var data = {
+          staticClass: ("q-focusable relative-position cursor-pointer" + (this.denseToggle === true && this.switchToggleSide === true ? ' items-end' : '')),
           class: this.expandIconClass,
           props: {
             side: this.switchToggleSide !== true,
             avatar: this.switchToggleSide
-          },
-          on: this.activeToggleIcon === true ? cache(this, 'inpExt', {
-            click: this.__toggleIcon,
-            keyup: this.__toggleIconKeyboard
-          }) : void 0
-        }, [
+          }
+        };
+
+        var child = [
           h(QIcon, {
-            staticClass: 'q-expansion-item__toggle-icon q-focusable',
-            class: {
-              'rotate-180': this.expandedIcon === void 0 ? this.showing : false,
-              invisible: this.disable
-            },
-            props: {
-              name: this.expansionIcon
-            },
-            attrs: this.activeToggleIcon === true
-              ? { tabindex: 0 }
-              : void 0
-          }, [
-            h('div', {
-              staticClass: 'q-focus-helper q-focus-helper--round',
-              attrs: { tabindex: -1 },
-              ref: 'blurTarget'
+            staticClass: 'q-expansion-item__toggle-icon',
+            class: this.expandedIcon === void 0 && this.showing === true
+              ? 'q-expansion-item__toggle-icon--rotated'
+              : void 0,
+            props: { name: this.expansionIcon }
+          })
+        ];
+
+        if (this.activeToggleIcon === true) {
+          Object.assign(data, {
+            attrs: { tabindex: 0 },
+            on: cache(this, 'inpExt', {
+              click: this.__toggleIcon,
+              keyup: this.__toggleIconKeyboard
             })
-          ])
-        ])
+          });
+
+          child.unshift(
+            h('div', {
+              ref: 'blurTarget',
+              staticClass: 'q-expansion-item__toggle-focus q-icon q-focus-helper q-focus-helper--rounded',
+              attrs: { tabindex: -1 }
+            })
+          );
+        }
+
+        return h(QItemSection, data, child)
       },
 
       __getHeader: function __getHeader (h) {
@@ -15793,7 +16916,9 @@
           );
         }
 
-        child[this.switchToggleSide === true ? 'unshift' : 'push'](this.__getToggleIcon(h));
+        this.disable !== true && child[this.switchToggleSide === true ? 'unshift' : 'push'](
+          this.__getToggleIcon(h)
+        );
 
         var data = {
           ref: 'item',
@@ -15824,11 +16949,17 @@
       },
 
       __getContent: function __getContent (h) {
+        var this$1 = this;
+
         var node = [
           this.__getHeader(h),
 
           h(QSlideTransition, {
-            props: { duration: this.duration }
+            props: { duration: this.duration },
+            on: cache(this, 'slide', {
+              show: function () { this$1.$emit('after-show'); },
+              hide: function () { this$1.$emit('after-hide'); }
+            })
           }, [
             h('div', {
               staticClass: 'q-expansion-item__content relative-position',
@@ -15877,6 +17008,8 @@
     }
   });
 
+  var labelPositions = ['top', 'right', 'bottom', 'left'];
+
   var FabMixin = {
     props: {
       type: {
@@ -15886,13 +17019,74 @@
       outline: Boolean,
       push: Boolean,
       flat: Boolean,
+      unelevated: Boolean,
       color: String,
       textColor: String,
       glossy: Boolean,
 
+      square: Boolean,
+
+      label: {
+        type: [ String, Number ],
+        default: ''
+      },
+      labelPosition: {
+        type: String,
+        default: 'right',
+        validator: function (v) { return labelPositions.includes(v); }
+      },
+      externalLabel: Boolean,
+      hideLabel: Boolean,
+      labelClass: [ Array, String, Object ],
+      labelStyle: [ Array, String, Object ],
+
       disable: Boolean
+    },
+
+    computed: {
+      formClass: function formClass () {
+        return ("q-fab--form-" + (this.square === true ? 'square' : 'rounded'))
+      },
+
+      stacked: function stacked () {
+        return this.externalLabel === false && ['top', 'bottom'].includes(this.labelPosition)
+      },
+
+      labelProps: function labelProps () {
+        if (this.externalLabel === true) {
+          var hideLabel = this.hideLabel === null
+            ? this.showing === false
+            : this.hideLabel;
+
+          return {
+            action: 'push',
+            data: {
+              staticClass: "q-fab__label q-tooltip--style q-fab__label--external" +
+                " q-fab__label--external-" + (this.labelPosition) +
+                (hideLabel === true ? ' q-fab__label--external-hidden' : ''),
+              style: this.labelStyle,
+              class: this.labelClass
+            }
+          }
+        }
+
+        return {
+          action: [ 'left', 'top' ].includes(this.labelPosition)
+            ? 'unshift'
+            : 'push',
+          data: {
+            staticClass: "q-fab__label q-fab__label--internal q-fab__label--internal-" + (this.labelPosition) +
+              (this.hideLabel === true ? ' q-fab__label--internal-hidden' : ''),
+            style: this.labelStyle,
+            class: this.labelClass
+          }
+        }
+      }
     }
   };
+
+  var directions$1 = ['up', 'right', 'down', 'left'];
+  var alignValues$1 = [ 'left', 'center', 'right' ];
 
   var QFab = Vue.extend({
     name: 'QFab',
@@ -15905,7 +17099,10 @@
       return {
         __qFabClose: function (evt) {
           this$1.hide(evt);
-          this$1.$refs.trigger && this$1.$refs.trigger.$el && this$1.$refs.trigger.$el.focus();
+
+          if (this$1.$refs.trigger && this$1.$refs.trigger.$el) {
+            this$1.$refs.trigger.$el.focus();
+          }
         }
       }
     },
@@ -15913,12 +17110,24 @@
     props: {
       icon: String,
       activeIcon: String,
+
+      hideLabel: {
+        default: null
+      },
+
       direction: {
         type: String,
         default: 'right',
-        validator: function (v) { return ['up', 'right', 'down', 'left'].includes(v); }
+        validator: function (v) { return directions$1.includes(v); }
       },
-      persistent: Boolean
+
+      persistent: Boolean,
+
+      verticalActionsAlign: {
+        type: String,
+        default: 'center',
+        validator: function (v) { return alignValues$1.includes(v); }
+      }
     },
 
     data: function data () {
@@ -15930,24 +17139,17 @@
     computed: {
       hideOnRouteChange: function hideOnRouteChange () {
         return this.persistent !== true
+      },
+
+      classes: function classes () {
+        return "q-fab--align-" + (this.verticalActionsAlign) + " " + (this.formClass) +
+          (this.showing === true ? ' q-fab--opened' : '')
       }
     },
 
     render: function render (h) {
-      return h('div', {
-        staticClass: 'q-fab z-fab row inline justify-center',
-        class: this.showing === true ? 'q-fab--opened' : null,
-        on: this.$listeners
-      }, [
-        h(QBtn, {
-          ref: 'trigger',
-          props: Object.assign({}, this.$props,
-            {icon: void 0,
-            fab: true}),
-          on: cache(this, 'tog', {
-            click: this.toggle
-          })
-        }, slot(this, 'tooltip', []).concat([
+      var child = [
+        h('div', { staticClass: 'q-fab__icon-holder' }, [
           h(QIcon, {
             staticClass: 'q-fab__icon absolute-full',
             props: { name: this.icon || this.$q.iconSet.fab.icon }
@@ -15956,15 +17158,49 @@
             staticClass: 'q-fab__active-icon absolute-full',
             props: { name: this.activeIcon || this.$q.iconSet.fab.activeIcon }
           })
-        ])),
+        ])
+      ];
 
+      this.label !== '' && child[this.labelProps.action](
+        h('div', this.labelProps.data, [ this.label ])
+      );
+
+      return h('div', {
+        staticClass: 'q-fab z-fab row inline justify-center',
+        class: this.classes,
+        on: this.$listeners
+      }, [
         h('div', {
-          staticClass: 'q-fab__actions flex no-wrap inline items-center',
+          staticClass: 'q-fab__actions flex no-wrap inline',
           class: ("q-fab__actions--" + (this.direction))
-        }, slot(this, 'default'))
+        }, slot(this, 'default')),
+
+        h(QBtn, {
+          ref: 'trigger',
+          class: this.formClass,
+          props: Object.assign({}, this.$props,
+            {noWrap: true,
+            stack: this.stacked,
+            align: void 0,
+            icon: void 0,
+            label: void 0,
+            noCaps: true,
+            fab: true}),
+          on: cache(this, 'tog', {
+            click: this.toggle
+          })
+        }, mergeSlot(child, this, 'tooltip'))
       ])
     }
   });
+
+  var anchorMap = {
+    start: 'self-end',
+    center: 'self-center',
+    end: 'self-start'
+  };
+
+  var anchorValues = Object.keys(anchorMap);
 
   var QFabAction = Vue.extend({
     name: 'QFabAction',
@@ -15975,6 +17211,11 @@
       icon: {
         type: String,
         required: true
+      },
+
+      anchor: {
+        type: String,
+        validator: function (v) { return anchorValues.includes(v); }
       },
 
       to: [String, Object],
@@ -15989,6 +17230,13 @@
       }
     },
 
+    computed: {
+      classes: function classes () {
+        var align = anchorMap[this.anchor];
+        return this.formClass + (align !== void 0 ? (" " + align) : '')
+      }
+    },
+
     methods: {
       click: function click (e) {
         this.__qFabClose();
@@ -15997,12 +17245,235 @@
     },
 
     render: function render (h) {
+      var child = [
+        h(QIcon, {
+          props: { name: this.icon }
+        })
+      ];
+
+      this.label !== '' && child[this.labelProps.action](
+        h('div', this.labelProps.data, [ this.label ])
+      );
+
       return h(QBtn, {
+        class: this.classes,
         props: Object.assign({}, this.$props,
-          {fabMini: true}),
+          {noWrap: true,
+          stack: this.stacked,
+          icon: void 0,
+          label: void 0,
+          noCaps: true,
+          fabMini: true}),
         on: Object.assign({}, this.$listeners,
           {click: this.click})
-      }, slot(this, 'default'))
+      }, mergeSlot(child, this, 'default'))
+    }
+  });
+
+  var QFile = Vue.extend({
+    name: 'QFile',
+
+    mixins: [ QField, FileMixin, FormFieldMixin, FileValueMixin ],
+
+    props: {
+      /* SSR does not know about File & FileList */
+      value: isSSR === true
+        ? {}
+        : [ File, FileList, Array ],
+
+      useChips: Boolean,
+      displayValue: [ String, Number ],
+      maxFiles: [ Number, String ],
+
+      tabindex: {
+        type: [ String, Number ],
+        default: 0
+      },
+
+      counterLabel: Function,
+
+      inputClass: [ Array, String, Object ],
+      inputStyle: [ Array, String, Object ]
+    },
+
+    data: function data () {
+      return {
+        dnd: false
+      }
+    },
+
+    computed: {
+      innerValue: function innerValue () {
+        return Object(this.value) === this.value
+          ? ('length' in this.value ? Array.from(this.value) : [ this.value ])
+          : []
+      },
+
+      selectedString: function selectedString () {
+        return this.innerValue
+          .map(function (file) { return file.name; })
+          .join(', ')
+      },
+
+      totalSize: function totalSize () {
+        return humanStorageSize(
+          this.innerValue.reduce(function (acc, file) { return acc + file.size; }, 0)
+        )
+      },
+
+      counterProps: function counterProps () {
+        return {
+          totalSize: this.totalSize,
+          filesNumber: this.innerValue.length,
+          maxFiles: this.maxFiles
+        }
+      },
+
+      computedCounter: function computedCounter () {
+        if (this.counterLabel !== void 0) {
+          return this.counterLabel(this.counterProps)
+        }
+
+        var max = this.maxFiles;
+        return ("" + (this.innerValue.length) + (max !== void 0 ? ' / ' + max : '') + " (" + (this.totalSize) + ")")
+      }
+    },
+
+    methods: {
+      removeAtIndex: function removeAtIndex (index) {
+        var files = this.innerValue.slice();
+        files.splice(index, 1);
+        this.__emitValue(files);
+      },
+
+      removeFile: function removeFile (file) {
+        var index = this.innerValue.findIndex(file);
+        if (index > -1) {
+          this.removeAtIndex(index);
+        }
+      },
+
+      __emitValue: function __emitValue (files) {
+        this.$emit('input', this.multiple === true ? files : files[0]);
+      },
+
+      __onKeyup: function __onKeyup (e) {
+        // only on ENTER
+        e.keyCode === 13 && this.pickFiles(e);
+      },
+
+      __getFileInput: function __getFileInput () {
+        return this.$refs.input
+      },
+
+      __addFiles: function __addFiles (e, fileList) {
+        var files = this.__processFiles(e, fileList);
+
+        files !== void 0 && this.__emitValue(
+          this.maxFiles !== void 0
+            ? files.slice(0, parseInt(this.maxFiles, 10))
+            : files
+        );
+      },
+
+      __getControl: function __getControl (h) {
+        var data = {
+          ref: 'target',
+          staticClass: 'q-field__native row items-center cursor-pointer',
+          attrs: {
+            tabindex: this.tabindex
+          }
+        };
+
+        if (this.editable === true) {
+          data.on = cache(this, 'native', {
+            dragover: this.__onDragOver,
+            keyup: this.__onKeyup
+          });
+        }
+
+        return h('div', data, [ this.__getInput(h) ].concat(this.__getSelection(h)))
+      },
+
+      __getControlChild: function __getControlChild (h) {
+        return this.__getDnd(h, 'file')
+      },
+
+      __getSelection: function __getSelection (h) {
+        var this$1 = this;
+
+        if (this.$scopedSlots.file !== void 0) {
+          return this.innerValue.map(function (file, index) { return this$1.$scopedSlots.file({ index: index, file: file, ref: this$1 }); })
+        }
+
+        if (this.$scopedSlots.selected !== void 0) {
+          return this.$scopedSlots.selected({ files: this.innerValue, ref: this })
+        }
+
+        if (this.useChips === true) {
+          return this.innerValue.map(function (file, i) { return h(QChip, {
+            key: 'file-' + i,
+            props: {
+              removable: this$1.editable,
+              dense: true,
+              textColor: this$1.color,
+              tabindex: this$1.tabindex
+            },
+            on: cache(this$1, 'rem#' + i, {
+              remove: function () { this$1.removeAtIndex(i); }
+            })
+          }, [
+            h('span', {
+              staticClass: 'ellipsis',
+              domProps: {
+                textContent: file.name
+              }
+            })
+          ]); })
+        }
+
+        return [
+          h('div', {
+            style: this.inputStyle,
+            class: this.inputClass,
+            domProps: {
+              textContent: this.displayValue !== void 0
+                ? this.displayValue
+                : this.selectedString
+            }
+          })
+        ]
+      },
+
+      __getInput: function __getInput (h) {
+        var data = {
+          ref: 'input',
+          staticClass: 'q-field__input fit absolute-full cursor-pointer',
+          attrs: Object.assign({}, {tabindex: -1,
+            type: 'file',
+            title: '', // try to remove default tooltip,
+            accept: this.accept,
+            name: this.nameProp},
+            this.$attrs,
+            {id: this.targetUid,
+            disabled: this.editable !== true}),
+          domProps: this.formDomProps,
+          on: cache(this, 'input', {
+            change: this.__addFiles
+          })
+        };
+
+        if (this.multiple === true) {
+          data.attrs.multiple = true;
+        }
+
+        return h('input', data)
+      }
+    },
+
+    created: function created () {
+      this.fieldClass = 'q-file q-field--auto-height';
+      this.type = 'file'; // necessary for QField's clearable
     }
   });
 
@@ -16232,8 +17703,8 @@
         this.validateIndex++;
 
         var components = getAllChildren(this);
-        var emit = function (res) {
-          this$1.$emit('validation-' + (res === true ? 'success' : 'error'));
+        var emit = function (res, ref) {
+          this$1.$emit('validation-' + (res === true ? 'success' : 'error'), ref);
         };
 
         var loop = function ( i ) {
@@ -16252,7 +17723,7 @@
             }
             else if (valid !== true) {
               if (this$1.greedy === false) {
-                emit(false);
+                emit(false, comp);
 
                 if (focus === true && typeof comp.focus === 'function') {
                   comp.focus();
@@ -16289,10 +17760,11 @@
                 return true
               }
 
-              emit(false);
               var ref = errors[0];
               var valid = ref.valid;
               var comp = ref.comp;
+
+              emit(false, comp);
 
               if (
                 focus === true &&
@@ -16324,7 +17796,14 @@
         evt !== void 0 && stopAndPrevent(evt);
 
         this.validate().then(function (val) {
-          val === true && this$1.$emit('submit', evt);
+          if (val === true) {
+            if (this$1.$listeners.submit !== void 0) {
+              this$1.$emit('submit', evt);
+            }
+            else if (evt !== void 0 && evt.target !== void 0 && typeof evt.target.submit === 'function') {
+              evt.target.submit();
+            }
+          }
         });
       },
 
@@ -16533,14 +18012,34 @@
     }
   });
 
+  var RatioMixin = {
+    props: {
+      ratio: [ String, Number ]
+    },
+
+    computed: {
+      ratioStyle: function ratioStyle () {
+        var ratio = this.ratio || this.naturalRatio;
+
+        if (ratio !== void 0) {
+          return { paddingBottom: ((100 / ratio) + "%") }
+        }
+      }
+    }
+  };
+
   var QImg = Vue.extend({
     name: 'QImg',
+
+    mixins: [ RatioMixin ],
 
     props: {
       src: String,
       srcset: String,
       sizes: String,
       alt: String,
+      width: String,
+      height: String,
 
       placeholderSrc: String,
 
@@ -16550,7 +18049,7 @@
         type: String,
         default: '50% 50%'
       },
-      ratio: [String, Number],
+
       transition: {
         type: String,
         default: 'fade'
@@ -16558,6 +18057,8 @@
 
       imgClass: [ Array, String, Object ],
       imgStyle: Object,
+
+      nativeContextMenu: Boolean,
 
       noDefaultSpinner: Boolean,
       spinnerColor: String,
@@ -16585,16 +18086,6 @@
     },
 
     computed: {
-      aspectRatio: function aspectRatio () {
-        return this.ratio || this.naturalRatio
-      },
-
-      padding: function padding () {
-        return this.aspectRatio !== void 0
-          ? (1 / this.aspectRatio) * 100 + '%'
-          : void 0
-      },
-
       url: function url () {
         return this.currentSrc || this.placeholderSrc || void 0
       },
@@ -16607,14 +18098,26 @@
         return att
       },
 
-      style: function style () {
+      imgContainerStyle: function imgContainerStyle () {
         return Object.assign(
           {
-            backgroundSize: this.contain ? 'contain' : 'cover',
+            backgroundSize: this.contain === true ? 'contain' : 'cover',
             backgroundPosition: this.position
           },
           this.imgStyle,
           { backgroundImage: ("url(\"" + (this.url) + "\")") })
+      },
+
+      style: function style () {
+        return {
+          width: this.width,
+          height: this.height
+        }
+      },
+
+      classes: function classes () {
+        return 'q-img overflow-hidden' +
+          (this.nativeContextMenu === true ? ' q-img--menu' : '')
       }
     },
 
@@ -16715,8 +18218,14 @@
           img.srcset = this.srcset;
         }
 
-        if (this.sizes) {
+        if (this.sizes !== void 0) {
           img.sizes = this.sizes;
+        }
+        else {
+          Object.assign(img, {
+            height: this.height,
+            width: this.width
+          });
         }
       },
 
@@ -16741,12 +18250,23 @@
       },
 
       __getImage: function __getImage (h) {
-        var content = this.url !== void 0 ? h('div', {
-          key: this.url,
-          staticClass: 'q-img__image absolute-full',
-          class: this.imgClass,
-          style: this.style
-        }) : null;
+        var nativeImg = this.nativeContextMenu === true
+          ? [
+            h('img', {
+              staticClass: 'absolute-full fit',
+              attrs: { src: this.url }
+            })
+          ]
+          : void 0;
+
+        var content = this.url !== void 0
+          ? h('div', {
+            key: this.url,
+            staticClass: 'q-img__image absolute-full',
+            class: this.imgClass,
+            style: this.imgContainerStyle
+          }, nativeImg)
+          : null;
 
         return this.basic === true
           ? content
@@ -16771,16 +18291,17 @@
             staticClass: 'q-img__loading absolute-full flex flex-center'
           }, this.$scopedSlots.loading !== void 0
             ? this.$scopedSlots.loading()
-            : (this.noDefaultSpinner === false
-              ? [
-                h(QSpinner, {
-                  props: {
-                    color: this.spinnerColor,
-                    size: this.spinnerSize
-                  }
-                })
-              ]
-              : null
+            : (
+              this.noDefaultSpinner === false
+                ? [
+                  h(QSpinner, {
+                    props: {
+                      color: this.spinnerColor,
+                      size: this.spinnerSize
+                    }
+                  })
+                ]
+                : void 0
             )
           )
           : h('div', {
@@ -16796,13 +18317,12 @@
 
     render: function render (h) {
       return h('div', {
-        staticClass: 'q-img overflow-hidden',
+        class: this.classes,
+        style: this.style,
         attrs: this.attrs,
         on: this.$listeners
       }, [
-        h('div', {
-          style: { paddingBottom: this.padding }
-        }),
+        h('div', { style: this.ratioStyle }),
         this.__getImage(h),
         this.__getContent(h)
       ])
@@ -16836,7 +18356,9 @@
         type: [String, Number],
         default: 100
       },
-      scrollTarget: {},
+      scrollTarget: {
+        default: void 0
+      },
       disable: Boolean,
       reverse: Boolean
     },
@@ -16952,18 +18474,7 @@
           this.scrollContainer.removeEventListener('scroll', this.poll, listenOpts.passive);
         }
 
-        if (typeof this.scrollTarget === 'string') {
-          this.scrollContainer = document.querySelector(this.scrollTarget);
-          if (this.scrollContainer === null) {
-            console.error(("InfiniteScroll: scroll target container \"" + (this.scrollTarget) + "\" not found"), this);
-            return
-          }
-        }
-        else {
-          this.scrollContainer = this.scrollTarget === document.defaultView || this.scrollTarget instanceof Element
-            ? this.scrollTarget
-            : getScrollTarget(this.$el);
-        }
+        this.scrollContainer = getScrollTarget(this.$el, this.scrollTarget);
 
         if (this.working === true) {
           this.scrollContainer.addEventListener('scroll', this.poll, listenOpts.passive);
@@ -17015,7 +18526,10 @@
         );
       }
 
-      return h('div', { staticClass: 'q-infinite-scroll' }, child)
+      return h('div', {
+        staticClass: 'q-infinite-scroll',
+        on: this.$listeners
+      }, child)
     }
   });
 
@@ -17058,7 +18572,10 @@
         : void 0;
 
       return h('transition', {
-        props: { name: this.transition }
+        props: {
+          name: this.transition,
+          appear: true
+        }
       }, child)
     }
   });
@@ -17099,13 +18616,26 @@
       ctx.observer = new IntersectionObserver(function (ref) {
         var entry = ref[0];
 
-        var res = ctx.handler(entry, ctx.observer);
+        if (typeof ctx.handler === 'function') {
+          // if observed element is part of a vue transition
+          // then we need to be careful...
+          if (
+            entry.rootBounds === null &&
+            (el.__vue__ !== void 0 ? el.__vue__._inactive !== true : document.body.contains(el) === true)
+          ) {
+            ctx.observer.unobserve(el);
+            ctx.observer.observe(el);
+            return
+          }
 
-        if (
-          res === false ||
-          (ctx.once === true && entry.isIntersecting === true)
-        ) {
-          destroy(el);
+          var res = ctx.handler(entry, ctx.observer);
+
+          if (
+            res === false ||
+            (ctx.once === true && entry.isIntersecting === true)
+          ) {
+            destroy(el);
+          }
         }
       }, cfg);
 
@@ -17142,6 +18672,8 @@
   var QIntersection = Vue.extend({
     name: 'QIntersection',
 
+    mixins: [ TagMixin ],
+
     directives: {
       Intersection: Intersection
     },
@@ -17149,6 +18681,8 @@
     props: {
       once: Boolean,
       transition: String,
+
+      ssrPrerender: Boolean,
 
       margin: String,
       threshold: [ Number, Array ],
@@ -17158,7 +18692,7 @@
 
     data: function data () {
       return {
-        showing: false
+        showing: onSSR === true ? this.ssrPrerender : false
       }
     },
 
@@ -17173,6 +18707,18 @@
             }
           }
           : this.__trigger
+      },
+
+      directives: function directives () {
+        if (this.disable !== true && (onSSR !== true || this.once !== true || this.ssrPrerender !== true)) {
+          return [{
+            name: 'intersection',
+            value: this.value,
+            modifiers: {
+              once: this.once
+            }
+          }]
+        }
       }
     },
 
@@ -17193,15 +18739,10 @@
         ? [ h('div', { key: 'content' }, slot(this, 'default')) ]
         : void 0;
 
-      return h('div', {
+      return h(this.tag, {
         staticClass: 'q-intersection',
-        directives: this.disable === true ? null : [{
-          name: 'intersection',
-          value: this.value,
-          modifiers: {
-            once: this.once
-          }
-        }]
+        on: this.$listeners,
+        directives: this.directives
       }, this.transition
         ? [
           h('transition', {
@@ -17219,9 +18760,10 @@
   var QKnob = Vue.extend({
     name: 'QKnob',
 
-    mixins: [{
-      props: QCircularProgress.options.props
-    }],
+    mixins: [
+      { props: QCircularProgress.options.props },
+      FormMixin
+    ],
 
     directives: {
       TouchPan: TouchPan
@@ -17290,34 +18832,40 @@
 
       computedStep: function computedStep () {
         return this.step === 0 ? 1 : this.step
+      },
+
+      events: function events () {
+        return this.$q.platform.is.mobile === true
+          ? { click: this.__click }
+          : {
+            mousedown: this.__activate,
+            click: this.__click,
+            keydown: this.__keydown,
+            keyup: this.__keyup
+          }
+      },
+
+      attrs: function attrs () {
+        var attrs = {
+          role: 'slider',
+          'aria-valuemin': this.min,
+          'aria-valuemax': this.max,
+          'aria-valuenow': this.value
+        };
+
+        if (this.editable === true) {
+          attrs.tabindex = this.tabindex;
+        }
+        else {
+          attrs[("aria-" + (this.disable === true ? 'disabled' : 'readonly'))] = '';
+        }
+
+        return attrs
       }
     },
 
     methods: {
-      __pan: function __pan (event) {
-        if (event.isFinal) {
-          this.__updatePosition(event.evt, true);
-          this.dragging = false;
-        }
-        else if (event.isFirst) {
-          var ref = this.$el.getBoundingClientRect();
-          var top = ref.top;
-          var left = ref.left;
-          var width = ref.width;
-          var height = ref.height;
-          this.centerPosition = {
-            top: top + height / 2,
-            left: left + width / 2
-          };
-          this.dragging = true;
-          this.__updatePosition(event.evt);
-        }
-        else {
-          this.__updatePosition(event.evt);
-        }
-      },
-
-      __click: function __click (evt) {
+      __updateCenterPosition: function __updateCenterPosition () {
         var ref = this.$el.getBoundingClientRect();
         var top = ref.top;
         var left = ref.left;
@@ -17327,6 +18875,25 @@
           top: top + height / 2,
           left: left + width / 2
         };
+      },
+
+      __pan: function __pan (event) {
+        if (event.isFinal) {
+          this.__updatePosition(event.evt, true);
+          this.dragging = false;
+        }
+        else if (event.isFirst) {
+          this.__updateCenterPosition();
+          this.dragging = true;
+          this.__updatePosition(event.evt);
+        }
+        else {
+          this.__updatePosition(event.evt);
+        }
+      },
+
+      __click: function __click (evt) {
+        this.__updateCenterPosition();
         this.__updatePosition(evt, true);
       },
 
@@ -17354,6 +18921,12 @@
         if (keyCodes$1.includes(evt.keyCode)) {
           this.__updateValue(true);
         }
+      },
+
+      __activate: function __activate (evt) {
+        this.__updateCenterPosition();
+        this.__updatePosition(evt);
+        this.__updateValue();
       },
 
       __updatePosition: function __updatePosition (evt, change) {
@@ -17410,6 +18983,10 @@
       __updateValue: function __updateValue (change) {
         this.value !== this.model && this.$emit('input', this.model);
         change === true && this.$emit('change', this.model);
+      },
+
+      __getNameInput: function __getNameInput () {
+        return this.$createElement('input', { attrs: this.formAttrs })
       }
     },
 
@@ -17418,19 +18995,16 @@
         staticClass: 'q-knob non-selectable',
         class: this.classes,
 
+        attrs: this.attrs,
+
         props: Object.assign({}, this.$props,
           {value: this.model,
           instantFeedback: this.dragging})
       };
 
       if (this.editable === true) {
-        data.attrs = { tabindex: this.tabindex };
-        data.on = {
-          click: this.__click,
-          keydown: this.__keydown,
-          keyup: this.__keyup
-        };
-        data.directives = [{
+        data.on = this.events;
+        data.directives = cache(this, 'dir', [{
           name: 'touch-pan',
           value: this.__pan,
           modifiers: {
@@ -17438,22 +19012,34 @@
             stop: true,
             mouse: true
           }
-        }];
+        }]);
+
+        if (this.name !== void 0) {
+          data.scopedSlots = {
+            internal: this.__getNameInput
+          };
+        }
       }
 
       return h(QCircularProgress, data, slot(this, 'default'))
     }
   });
 
+  var passive$1 = listenOpts.passive;
+
   var QScrollObserver = Vue.extend({
     name: 'QScrollObserver',
 
     props: {
-      debounce: [String, Number],
-      horizontal: Boolean
+      debounce: [ String, Number ],
+      horizontal: Boolean,
+
+      scrollTarget: {
+        default: void 0
+      }
     },
 
-    render: function render () {}, // eslint-disable-line
+    render: noop, // eslint-disable-line
 
     data: function data () {
       return {
@@ -17461,6 +19047,13 @@
         dir: this.horizontal === true ? 'right' : 'down',
         dirChanged: false,
         dirChangePos: 0
+      }
+    },
+
+    watch: {
+      scrollTarget: function scrollTarget () {
+        this.__unconfigureScrollTarget();
+        this.__configureScrollTarget();
       }
     },
 
@@ -17486,13 +19079,19 @@
       },
 
       __emit: function __emit () {
+        var fn = this.horizontal === true
+          ? getHorizontalScrollPosition
+          : getScrollPosition;
+
         var
-          pos = Math.max(0, (this.horizontal === true ? getHorizontalScrollPosition(this.target) : getScrollPosition(this.target))),
+          pos = Math.max(0, fn(this.__scrollTarget)),
           delta = pos - this.pos,
-          dir = this.horizontal
+          dir = this.horizontal === true
             ? delta < 0 ? 'left' : 'right'
             : delta < 0 ? 'up' : 'down';
+
         this.dirChanged = this.dir !== dir;
+
         if (this.dirChanged) {
           this.dir = dir;
           this.dirChangePos = this.pos;
@@ -17501,19 +19100,30 @@
         this.timer = null;
         this.pos = pos;
         this.$emit('scroll', this.getPosition());
+      },
+
+      __configureScrollTarget: function __configureScrollTarget () {
+        this.__scrollTarget = getScrollTarget(this.$el.parentNode, this.scrollTarget);
+        this.__scrollTarget.addEventListener('scroll', this.trigger, passive$1);
+        this.trigger(true);
+      },
+
+      __unconfigureScrollTarget: function __unconfigureScrollTarget () {
+        if (this.__scrollTarget !== void 0) {
+          this.__scrollTarget.removeEventListener('scroll', this.trigger, passive$1);
+          this.__scrollTarget = void 0;
+        }
       }
     },
 
     mounted: function mounted () {
-      this.target = getScrollTarget(this.$el.parentNode);
-      this.target.addEventListener('scroll', this.trigger, listenOpts.passive);
-      this.trigger(true);
+      this.__configureScrollTarget();
     },
 
     beforeDestroy: function beforeDestroy () {
       clearTimeout(this.timer);
       cancelAnimationFrame(this.timer);
-      this.target !== void 0 && this.target.removeEventListener('scroll', this.trigger, listenOpts.passive);
+      this.__unconfigureScrollTarget();
     }
   });
 
@@ -17608,6 +19218,11 @@
 
       totalWidth: function totalWidth () {
         return this.width + this.scrollbarWidth
+      },
+
+      classes: function classes () {
+        return 'q-layout q-layout--' +
+          (this.container === true ? 'containerized' : 'standard')
       }
     },
 
@@ -17617,9 +19232,9 @@
 
     render: function render (h) {
       var layout = h('div', {
-        staticClass: 'q-layout q-layout--' +
-          (this.container === true ? 'containerized' : 'standard'),
-        style: this.style
+        class: this.classes,
+        style: this.style,
+        on: this.$listeners
       }, mergeSlot([
         h(QScrollObserver, {
           on: cache(this, 'scroll', { scroll: this.__onPageScroll })
@@ -17762,33 +19377,35 @@
   var QNoSsr = Vue.extend({
     name: 'QNoSsr',
 
-    mixins: [ CanRenderMixin ],
+    mixins: [ CanRenderMixin, TagMixin ],
 
     props: {
-      tag: {
-        type: String,
-        default: 'div'
-      },
       placeholder: String
     },
 
     render: function render (h) {
+      var data = {
+        on: this.$listeners
+      };
+
       if (this.canRender === true) {
         var node$1 = slot(this, 'default');
         return node$1 === void 0
           ? node$1
-          : (node$1.length > 1 ? h(this.tag, node$1) : node$1[0])
+          : (node$1.length > 1 ? h(this.tag, data, node$1) : node$1[0])
       }
+
+      data.staticClass = 'q-no-ssr-placeholder';
 
       var node = slot(this, 'placeholder');
       if (node !== void 0) {
         return node.length > 1
-          ? h(this.tag, { staticClass: 'q-no-ssr-placeholder' }, node)
+          ? h(this.tag, data, node)
           : node[0]
       }
 
       if (this.placeholder !== void 0) {
-        return h(this.tag, { staticClass: 'q-no-ssr-placeholder' }, [
+        return h(this.tag, data, [
           this.placeholder
         ])
       }
@@ -17798,7 +19415,7 @@
   var QRadio = Vue.extend({
     name: 'QRadio',
 
-    mixins: [ DarkMixin ],
+    mixins: [ DarkMixin, OptionSizeMixin, FormMixin, RefocusTargetMixin ],
 
     props: {
       value: {
@@ -17825,32 +19442,68 @@
       },
 
       classes: function classes () {
-        return {
-          'disabled': this.disable,
-          'q-radio--dark': this.isDark,
-          'q-radio--dense': this.dense,
-          'reverse': this.leftLabel
-        }
+        return 'q-radio cursor-pointer no-outline row inline no-wrap items-center' +
+          (this.disable === true ? ' disabled' : '') +
+          (this.isDark === true ? ' q-radio--dark' : '') +
+          (this.dense === true ? ' q-radio--dense' : '') +
+          (this.leftLabel === true ? ' reverse' : '')
       },
 
       innerClass: function innerClass () {
-        if (this.isTrue === true) {
-          return 'q-radio__inner--active' +
-            (this.color !== void 0 ? ' text-' + this.color : '')
-        }
-        else if (this.keepColor === true && this.color !== void 0) {
-          return 'text-' + this.color
-        }
+        var color = this.color !== void 0 && (
+          this.keepColor === true ||
+          this.isTrue === true
+        )
+          ? (" text-" + (this.color))
+          : '';
+
+        return ("q-radio__inner--" + (this.isTrue === true ? 'truthy' : 'falsy') + color)
       },
 
       computedTabindex: function computedTabindex () {
         return this.disable === true ? -1 : this.tabindex || 0
+      },
+
+      formAttrs: function formAttrs () {
+        var prop = { type: 'radio' };
+
+        this.name !== void 0 && Object.assign(prop, {
+          name: this.name,
+          value: this.val
+        });
+
+        return prop
+      },
+
+      formDomProps: function formDomProps () {
+        if (this.name !== void 0 && this.isTrue === true) {
+          return { checked: true }
+        }
+      },
+
+      attrs: function attrs () {
+        var attrs = {
+          tabindex: this.computedTabindex,
+          role: 'radio',
+          'aria-label': this.label,
+          'aria-checked': this.isTrue === true ? 'true' : 'false'
+        };
+
+        if (this.disable === true) {
+          attrs['aria-disabled'] = '';
+        }
+
+        return attrs
       }
     },
 
     methods: {
       set: function set (e) {
-        e !== void 0 && stopAndPrevent(e);
+        if (e !== void 0) {
+          stopAndPrevent(e);
+          this.__refocusTarget(e);
+        }
+
         if (this.disable !== true && this.isTrue !== true) {
           this.$emit('input', this.val);
         }
@@ -17861,27 +19514,42 @@
       var this$1 = this;
 
       var content = [
-        h('div', {
-          staticClass: 'q-radio__bg absolute'
+        h('svg', {
+          staticClass: 'q-radio__bg absolute',
+          attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24' }
         }, [
-          h('div', { staticClass: 'q-radio__outer-circle absolute-full' }),
-          h('div', { staticClass: 'q-radio__inner-circle absolute-full' })
+          h('path', {
+            attrs: {
+              d: 'M12,22a10,10 0 0 1 -10,-10a10,10 0 0 1 10,-10a10,10 0 0 1 10,10a10,10 0 0 1 -10,10m0,-22a12,12 0 0 0 -12,12a12,12 0 0 0 12,12a12,12 0 0 0 12,-12a12,12 0 0 0 -12,-12'
+            }
+          }),
+
+          h('path', {
+            staticClass: 'q-radio__check',
+            attrs: {
+              d: 'M12,6a6,6 0 0 0 -6,6a6,6 0 0 0 6,6a6,6 0 0 0 6,-6a6,6 0 0 0 -6,-6'
+            }
+          })
         ])
       ];
 
-      this.disable !== true && content.unshift(
-        h('input', {
-          staticClass: 'q-radio__native q-ma-none q-pa-none invisible',
-          attrs: { type: 'radio' }
-        })
+      this.disable !== true && this.__injectFormInput(
+        content,
+        'unshift',
+        'q-radio__native q-ma-none q-pa-none invisible'
       );
 
       var child = [
         h('div', {
           staticClass: 'q-radio__inner relative-position no-pointer-events',
-          class: this.innerClass
+          class: this.innerClass,
+          style: this.sizeStyle
         }, content)
       ];
+
+      if (this.__refocusTargetEl !== void 0) {
+        child.push(this.__refocusTargetEl);
+      }
 
       var label = this.label !== void 0
         ? mergeSlot([ this.label ], this, 'default')
@@ -17894,9 +19562,8 @@
       );
 
       return h('div', {
-        staticClass: 'q-radio cursor-pointer no-outline row inline no-wrap items-center',
         class: this.classes,
-        attrs: { tabindex: this.computedTabindex },
+        attrs: this.attrs,
         on: cache(this, 'inpExt', {
           click: this.set,
           keydown: function (e) {
@@ -17922,82 +19589,52 @@
     props: {
       icon: String,
       checkedIcon: String,
-      uncheckedIcon: String
+      uncheckedIcon: String,
+      indeterminateIcon: String,
+
+      iconColor: String
     },
 
     computed: {
-      classes: function classes () {
-        return {
-          'disabled': this.disable,
-          'q-toggle--dark': this.isDark,
-          'q-toggle--dense': this.dense,
-          'reverse': this.leftLabel
-        }
-      },
-
-      innerClass: function innerClass () {
-        if (this.isTrue === true) {
-          return 'q-toggle__inner--active' +
-            (this.color !== void 0 ? ' text-' + this.color : '')
-        }
-        else if (this.keepColor === true && this.color !== void 0) {
-          return 'text-' + this.color
-        }
-      },
-
       computedIcon: function computedIcon () {
-        return (this.isTrue === true ? this.checkedIcon : this.uncheckedIcon) || this.icon
+        return (
+          this.isTrue === true
+            ? this.checkedIcon
+            : (this.isIndeterminate === true ? this.indeterminateIcon : this.uncheckedIcon)
+        ) || this.icon
+      },
+
+      computedIconColor: function computedIconColor () {
+        if (this.isTrue === true) {
+          return this.iconColor
+        }
       }
     },
 
-    render: function render (h) {
-      var inner = [
-        h('div', { staticClass: 'q-toggle__track' }),
+    methods: {
+      __getInner: function __getInner (h) {
+        return [
+          h('div', { staticClass: 'q-toggle__track' }),
 
-        h('div', { staticClass: 'q-toggle__thumb-container absolute' }, [
           h('div', {
-            staticClass: 'q-toggle__thumb row flex-center'
+            staticClass: 'q-toggle__thumb absolute flex flex-center no-wrap'
           }, this.computedIcon !== void 0
-            ? [ h(QIcon, { props: { name: this.computedIcon } }) ]
+            ? [
+              h(QIcon, {
+                props: {
+                  name: this.computedIcon,
+                  color: this.computedIconColor
+                }
+              })
+            ]
             : void 0
           )
-        ])
-      ];
+        ]
+      }
+    },
 
-      this.disable !== true && inner.unshift(
-        h('input', {
-          staticClass: 'q-toggle__native absolute q-ma-none q-pa-none invisible',
-          attrs: { type: 'checkbox' }
-        })
-      );
-
-      var child = [
-        h('div', {
-          staticClass: 'q-toggle__inner relative-position no-pointer-events',
-          class: this.innerClass
-        }, inner)
-      ];
-
-      var label = this.label !== void 0
-        ? mergeSlot([ this.label ], this, 'default')
-        : slot(this, 'default');
-
-      label !== void 0 && child.push(
-        h('div', {
-          staticClass: 'q-toggle__label q-anchor--skip'
-        }, label)
-      );
-
-      return h('div', {
-        staticClass: 'q-toggle cursor-pointer no-outline row inline no-wrap items-center',
-        class: this.classes,
-        attrs: { tabindex: this.computedTabindex },
-        on: cache(this, 'inpExt', {
-          click: this.toggle,
-          keydown: this.__onKeydown,
-          keyup: this.__onKeyup
-        })
-      }, child)
+    created: function created () {
+      this.type = 'toggle';
     }
   });
 
@@ -18006,6 +19643,8 @@
     checkbox: QCheckbox,
     toggle: QToggle
   };
+
+  var typeValues = Object.keys(components);
 
   var QOptionGroup = Vue.extend({
     name: 'QOptionGroup',
@@ -18023,14 +19662,18 @@
         }
       },
 
+      name: String,
+
       type: {
         default: 'radio',
-        validator: function (v) { return ['radio', 'checkbox', 'toggle'].includes(v); }
+        validator: function (v) { return typeValues.includes(v); }
       },
 
       color: String,
       keepColor: Boolean,
       dense: Boolean,
+
+      size: String,
 
       leftLabel: Boolean,
       inline: Boolean,
@@ -18043,7 +19686,28 @@
       },
 
       model: function model () {
-        return Array.isArray(this.value) ? this.value.slice() : this.value
+        return Array.isArray(this.value)
+          ? this.value.slice()
+          : this.value
+      },
+
+      classes: function classes () {
+        return 'q-option-group q-gutter-x-sm' +
+          (this.inline === true ? ' q-option-group--inline' : '')
+      },
+
+      attrs: function attrs () {
+        if (this.type === 'radio') {
+          var attrs = {
+            role: 'radiogroup'
+          };
+
+          if (this.disable === true) {
+            attrs['aria-disabled'] = '';
+          }
+
+          return attrs
+        }
       }
     },
 
@@ -18061,7 +19725,7 @@
           console.error('q-option-group: model should not be array');
         }
       }
-      else if (!isArray) {
+      else if (isArray === false) {
         console.error('q-option-group: model should be array in your case');
       }
     },
@@ -18070,13 +19734,15 @@
       var this$1 = this;
 
       return h('div', {
-        staticClass: 'q-option-group q-gutter-x-sm',
-        class: this.inline ? 'q-option-group--inline' : null
+        class: this.classes,
+        attrs: this.attrs,
+        on: this.$listeners
       }, this.options.map(function (opt) { return h('div', [
         h(this$1.component, {
           props: {
             value: this$1.value,
             val: opt.value,
+            name: this$1.name || opt.name,
             disable: this$1.disable || opt.disable,
             label: opt.label,
             leftLabel: this$1.leftLabel || opt.leftLabel,
@@ -18084,6 +19750,7 @@
             checkedIcon: opt.checkedIcon,
             uncheckedIcon: opt.uncheckedIcon,
             dark: opt.dark || this$1.isDark,
+            size: opt.size || this$1.size,
             dense: this$1.dense,
             keepColor: opt.keepColor || this$1.keepColor
           },
@@ -18119,7 +19786,11 @@
           (this.layout.footer.space === true ? this.layout.footer.size : 0);
 
         if (typeof this.styleFn === 'function') {
-          return this.styleFn(offset)
+          var height = this.layout.container === true
+            ? this.layout.containerHeight
+            : this.$q.screen.height;
+
+          return this.styleFn(offset, height)
         }
 
         return {
@@ -18313,7 +19984,8 @@
       return h('div', {
         staticClass: 'q-page-sticky row flex-center',
         class: this.classes,
-        style: this.style
+        style: this.style,
+        on: this.$listeners
       },
       this.expand === true
         ? content
@@ -18332,6 +20004,8 @@
         type: Number,
         default: 1000
       },
+
+      reverse: Boolean,
 
       duration: {
         type: Number,
@@ -18353,22 +20027,43 @@
 
     data: function data () {
       return {
-        showing: this.__isVisible(this.layout.scroll.position)
+        showing: this.__isVisible()
+      }
+    },
+
+    computed: {
+      height: function height () {
+        return this.layout.container === true
+          ? this.layout.containerHeight
+          : this.layout.height
       }
     },
 
     watch: {
-      'layout.scroll.position': function layout_scroll_position (val) {
-        var newVal = this.__isVisible(val);
-        if (this.showing !== newVal) {
-          this.showing = newVal;
-        }
+      'layout.scroll.position': function layout_scroll_position () {
+        this.__updateVisibility();
+      },
+
+      reverse: {
+        handler: function handler (val) {
+          if (val === true) {
+            if (this.heightWatcher === void 0) {
+              this.heightWatcher = this.$watch('height', this.__updateVisibility);
+            }
+          }
+          else if (this.heightWatcher !== void 0) {
+            this.__cleanup();
+          }
+        },
+        immediate: true
       }
     },
 
     methods: {
-      __isVisible: function __isVisible (val) {
-        return val > this.scrollOffset
+      __isVisible: function __isVisible () {
+        return this.reverse === true
+          ? this.height - this.layout.scroll.position > this.scrollOffset
+          : this.layout.scroll.position > this.scrollOffset
       },
 
       __onClick: function __onClick (e) {
@@ -18376,8 +20071,20 @@
           ? getScrollTarget(this.$el)
           : getScrollTarget(this.layout.$el);
 
-        setScrollPosition(target, 0, this.duration);
-        this.$listeners.click !== void 0 && this.$emit('click', e);
+        setScrollPosition(target, this.reverse === true ? this.layout.height : 0, this.duration);
+        this.$emit('click', e);
+      },
+
+      __updateVisibility: function __updateVisibility () {
+        var newVal = this.__isVisible();
+        if (this.showing !== newVal) {
+          this.showing = newVal;
+        }
+      },
+
+      __cleanup: function __cleanup () {
+        this.heightWatcher();
+        this.heightWatcher = void 0;
       }
     },
 
@@ -18397,6 +20104,10 @@
         ]
         : null
       )
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      this.heightWatcher !== void 0 && this.__cleanup();
     }
   });
 
@@ -18434,6 +20145,11 @@
 
       input: Boolean,
 
+      iconPrev: String,
+      iconNext: String,
+      iconFirst: String,
+      iconLast: String,
+
       toFn: Function,
 
       boundaryLinks: {
@@ -18466,11 +20182,11 @@
     },
 
     watch: {
-      min: function min (value) {
+      min: function min () {
         this.model = this.value;
       },
 
-      max: function max (value) {
+      max: function max () {
         this.model = this.value;
       }
     },
@@ -18512,12 +20228,20 @@
 
       icons: function icons () {
         var ico = [
-          this.$q.iconSet.pagination.first,
-          this.$q.iconSet.pagination.prev,
-          this.$q.iconSet.pagination.next,
-          this.$q.iconSet.pagination.last
+          this.iconFirst || this.$q.iconSet.pagination.first,
+          this.iconPrev || this.$q.iconSet.pagination.prev,
+          this.iconNext || this.$q.iconSet.pagination.next,
+          this.iconLast || this.$q.iconSet.pagination.last
         ];
         return this.$q.lang.rtl === true ? ico.reverse() : ico
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return {
+            'aria-disabled': ''
+          }
+        }
       }
     },
 
@@ -18727,6 +20451,7 @@
       return h('div', {
         staticClass: 'q-pagination row no-wrap items-center',
         class: { disabled: this.disable },
+        attrs: this.attrs,
         on: this.$listeners
       }, [
         contentStart,
@@ -18783,6 +20508,10 @@
         type: Number,
         default: 1,
         validator: function (v) { return v >= 0 && v <= 1; }
+      },
+
+      scrollTarget: {
+        default: void 0
       }
     },
 
@@ -18796,6 +20525,11 @@
     watch: {
       height: function height () {
         this.__updatePos();
+      },
+
+      scrollTarget: function scrollTarget () {
+        this.__unconfigureScrollTarget();
+        this.__configureScrollTarget();
       }
     },
 
@@ -18806,7 +20540,7 @@
       },
 
       __onResize: function __onResize () {
-        if (this.scrollTarget) {
+        if (this.__scrollTarget) {
           this.mediaHeight = this.media.naturalHeight || this.media.videoHeight || height(this.media);
           this.__updatePos();
         }
@@ -18815,14 +20549,14 @@
       __updatePos: function __updatePos () {
         var containerTop, containerHeight, containerBottom, top, bottom;
 
-        if (this.scrollTarget === window) {
+        if (this.__scrollTarget === window) {
           containerTop = 0;
           containerHeight = window.innerHeight;
           containerBottom = containerHeight;
         }
         else {
-          containerTop = offset(this.scrollTarget).top;
-          containerHeight = height(this.scrollTarget);
+          containerTop = offset(this.__scrollTarget).top;
+          containerHeight = height(this.__scrollTarget);
           containerBottom = containerTop + containerHeight;
         }
 
@@ -18839,6 +20573,19 @@
       __setPos: function __setPos (offset) {
         // apply it immediately without any delay
         this.media.style.transform = "translate3D(-50%," + (Math.round(offset)) + "px, 0)";
+      },
+
+      __configureScrollTarget: function __configureScrollTarget () {
+        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
+        this.__scrollTarget.addEventListener('scroll', this.__updatePos, listenOpts.passive);
+        this.__onResize();
+      },
+
+      __unconfigureScrollTarget: function __unconfigureScrollTarget () {
+        if (this.__scrollTarget !== void 0) {
+          this.__scrollTarget.removeEventListener('scroll', this.__updatePos, listenOpts.passive);
+          this.__scrollTarget = void 0;
+        }
       }
     },
 
@@ -18884,17 +20631,14 @@
 
       this.media.onload = this.media.onloadstart = this.media.loadedmetadata = this.__onResize;
 
-      this.scrollTarget = getScrollTarget(this.$el);
-
       window.addEventListener('resize', this.resizeHandler, listenOpts.passive);
-      this.scrollTarget.addEventListener('scroll', this.__updatePos, listenOpts.passive);
 
-      this.__onResize();
+      this.__configureScrollTarget();
     },
 
     beforeDestroy: function beforeDestroy () {
       window.removeEventListener('resize', this.resizeHandler, listenOpts.passive);
-      this.scrollTarget !== void 0 && this.scrollTarget.removeEventListener('scroll', this.__updatePos, listenOpts.passive);
+      this.__unconfigureScrollTarget();
       this.media.onload = this.media.onloadstart = this.media.loadedmetadata = null;
     }
   });
@@ -18927,6 +20671,8 @@
         default: function () { return true; }
       },
 
+      autoSave: Boolean,
+
       /* menu props overrides */
       cover: {
         type: Boolean,
@@ -18947,7 +20693,7 @@
     computed: {
       classes: function classes () {
         return 'q-popup-edit' +
-          (this.contentClass ? ' ' + this.contentClass : '')
+          (this.contentClass !== void 0 ? (" " + (this.contentClass)) : '')
       },
 
       defaultSlotScope: function defaultSlotScope () {
@@ -18964,7 +20710,7 @@
 
     methods: {
       set: function set () {
-        if (this.__hasChanged()) {
+        if (this.__hasChanged() === true) {
           if (this.validate(this.value) === false) {
             return
           }
@@ -18974,27 +20720,26 @@
       },
 
       cancel: function cancel () {
-        if (this.__hasChanged()) {
-          this.$emit('cancel', this.value, this.initialValue);
+        if (this.__hasChanged() === true) {
           this.$emit('input', this.initialValue);
+          this.$emit('cancel', this.value, this.initialValue);
         }
         this.__close();
       },
 
       __hasChanged: function __hasChanged () {
-        return !isDeepEqual(this.value, this.initialValue)
+        return isDeepEqual(this.value, this.initialValue) === false
       },
 
       __emitValue: function __emitValue (val) {
-        if (this.disable === true) {
-          return
+        if (this.disable !== true) {
+          this.$emit('input', val);
         }
-        this.$emit('input', val);
       },
 
       __close: function __close () {
         this.validated = true;
-        this.$refs.menu.hide();
+        this.$refs.menu.showing === true && this.$refs.menu.hide();
       },
 
       __reposition: function __reposition () {
@@ -19061,13 +20806,20 @@
           show: function () {
             this$1.$emit('show');
           },
+          'escape-key': this.cancel,
           'before-hide': function () {
             this$1.watcher();
 
-            if (this$1.validated === false && this$1.__hasChanged()) {
-              this$1.$emit('cancel', this$1.value, this$1.initialValue);
-              this$1.$emit('input', this$1.initialValue);
+            if (this$1.validated === false && this$1.__hasChanged() === true) {
+              if (this$1.autoSave === true && this$1.validate(this$1.value) === true) {
+                this$1.$emit('save', this$1.value, this$1.initialValue);
+              }
+              else {
+                this$1.$emit('cancel', this$1.value, this$1.initialValue);
+                this$1.$emit('input', this$1.initialValue);
+              }
             }
+
             this$1.$emit('before-hide');
           },
           hide: function () {
@@ -19186,6 +20938,7 @@
       }
       else {
         component = QMenu;
+        data.props.target = this.target;
         data.props.contextMenu = this.contextMenu;
         data.props.noParentEvent = true;
         data.props.separateClosePopup = true;
@@ -19199,18 +20952,19 @@
     return { transform: ("scale3d(" + val + ",1,1)") }
   }
 
-  var sizes$3 = {
-    xs: 2,
-    sm: 4,
-    md: 6,
-    lg: 10,
-    xl: 14
-  };
-
   var QLinearProgress = Vue.extend({
     name: 'QLinearProgress',
 
-    mixins: [ DarkMixin ],
+    mixins: [
+      DarkMixin,
+      getSizeMixin({
+        xs: 2,
+        sm: 4,
+        md: 6,
+        lg: 10,
+        xl: 14
+      })
+    ],
 
     props: {
       value: {
@@ -19218,8 +20972,6 @@
         default: 0
       },
       buffer: Number,
-
-      size: String,
 
       color: String,
       trackColor: String,
@@ -19232,20 +20984,15 @@
     },
 
     computed: {
-      sizeStyle: function sizeStyle () {
-        if (this.size !== void 0) {
-          return { height: this.size in sizes$3 ? ((sizes$3[this.size]) + "px") : this.size }
-        }
-      },
-
       motion: function motion () {
-        return this.indeterminate || this.query
+        return this.indeterminate === true || this.query === true
       },
 
       classes: function classes () {
-        var obj;
-
-        return ( obj = {}, obj[("text-" + (this.color))] = this.color !== void 0, obj['q-linear-progress--reverse'] = this.reverse === true || this.query === true, obj['rounded-borders'] = this.rounded === true, obj )
+        return 'q-linear-progress' +
+          (this.color !== void 0 ? (" text-" + (this.color)) : '') +
+          (this.reverse === true || this.query === true ? ' q-linear-progress--reverse' : '') +
+          (this.rounded === true ? ' rounded-borders' : '')
       },
 
       trackStyle: function trackStyle () {
@@ -19267,6 +21014,15 @@
 
       stripeStyle: function stripeStyle () {
         return { width: (this.value * 100) + '%' }
+      },
+
+      attrs: function attrs () {
+        return {
+          role: 'progressbar',
+          'aria-valuemin': this.min,
+          'aria-valuemax': this.max,
+          'aria-valuenow': this.indeterminate === true ? void 0 : this.value
+        }
       }
     },
 
@@ -19293,9 +21049,9 @@
       );
 
       return h('div', {
-        staticClass: 'q-linear-progress',
         style: this.sizeStyle,
         class: this.classes,
+        attrs: this.attrs,
         on: this.$listeners
       }, mergeSlot(child, this, 'default'))
     }
@@ -19314,9 +21070,14 @@
 
     props: {
       color: String,
+      bgColor: String,
       icon: String,
       noMouse: Boolean,
-      disable: Boolean
+      disable: Boolean,
+
+      scrollTarget: {
+        default: void 0
+      }
     },
 
     data: function data () {
@@ -19336,6 +21097,18 @@
           opacity: this.pullRatio,
           transform: ("translateY(" + (this.pullPosition) + "px) rotate(" + (this.pullRatio * 360) + "deg)")
         }
+      },
+
+      classes: function classes () {
+        return 'q-pull-to-refresh__puller row flex-center' +
+          (this.animating === true ? ' q-pull-to-refresh__puller--animating' : '') +
+          (this.bgColor !== void 0 ? (" bg-" + (this.bgColor)) : '')
+      }
+    },
+
+    watch: {
+      scrollTarget: function scrollTarget () {
+        this.updateScrollTarget();
       }
     },
 
@@ -19351,12 +21124,12 @@
       },
 
       updateScrollTarget: function updateScrollTarget () {
-        this.scrollContainer = getScrollTarget(this.$el);
+        this.scrollContainer = getScrollTarget(this.$el, this.scrollTarget);
       },
 
       __pull: function __pull (event) {
-        if (event.isFinal) {
-          if (this.pulling) {
+        if (event.isFinal === true) {
+          if (this.pulling === true) {
             this.pulling = false;
 
             if (this.state === 'pulled') {
@@ -19372,11 +21145,11 @@
           return
         }
 
-        if (this.animating || this.state === 'refreshing') {
+        if (this.animating === true || this.state === 'refreshing') {
           return false
         }
 
-        if (event.isFirst) {
+        if (event.isFirst === true) {
           if (getScrollPosition(this.scrollContainer) !== 0) {
             if (this.pulling) {
               this.pulling = false;
@@ -19442,21 +21215,22 @@
     render: function render (h) {
       return h('div', {
         staticClass: 'q-pull-to-refresh overflow-hidden',
+        on: this.$listeners,
         directives: this.disable === true
           ? null
-          : [{
+          : cache(this, 'dir#' + this.noMouse, [{
             name: 'touch-pan',
             modifiers: {
               down: true,
               mightPrevent: true,
-              mouse: !this.noMouse
+              mouse: this.noMouse !== true
             },
             value: this.__pull
-          }]
+          }])
       }, [
         h('div', {
           staticClass: 'q-pull-to-refresh__content',
-          class: this.pulling ? 'no-pointer-events' : null
+          class: this.pulling === true ? 'no-pointer-events' : ''
         }, slot(this, 'default')),
 
         h('div', {
@@ -19464,9 +21238,8 @@
           style: this.positionCSS
         }, [
           h('div', {
-            staticClass: 'q-pull-to-refresh__puller row flex-center',
             style: this.style,
-            class: this.animating ? 'q-pull-to-refresh__puller--animating' : null
+            class: this.classes
           }, [
             this.state !== 'refreshing'
               ? h(QIcon, {
@@ -19510,6 +21283,8 @@
           return 'min' in val && 'max' in val
         }
       },
+
+      name: String,
 
       dragRange: Boolean,
       dragOnlyRange: Boolean,
@@ -19708,6 +21483,14 @@
       maxPinStyle: function maxPinStyle () {
         var percent = (this.reverse === true ? -this.ratioMax : this.ratioMax - 1);
         return this.__getPinStyle(percent, this.ratioMax)
+      },
+
+      formAttrs: function formAttrs () {
+        return {
+          type: 'hidden',
+          name: this.name,
+          value: ((this.value.min) + "|" + (this.value.max))
+        }
       }
     },
 
@@ -19947,20 +21730,42 @@
     },
 
     render: function render (h) {
+      var track = [
+        h('div', {
+          staticClass: 'q-slider__track absolute',
+          style: this.trackStyle
+        })
+      ];
+
+      this.markers === true && track.push(
+        h('div', {
+          staticClass: 'q-slider__track-markers absolute-full fit',
+          style: this.markerStyle
+        })
+      );
+
+      var child = [
+        h('div', {
+          staticClass: 'q-slider__track-container absolute'
+        }, track),
+
+        this.__getThumb(h, 'min'),
+        this.__getThumb(h, 'max')
+      ];
+
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(child, 'push');
+      }
+
       return h('div', {
         staticClass: this.value.min === null || this.value.max === null
           ? 'q-slider--no-value'
           : void 0,
-        attrs: {
-          role: 'slider',
-          'aria-valuemin': this.min,
-          'aria-valuemax': this.max,
-          'data-step': this.step,
-          'aria-disabled': this.disable,
+        attrs: Object.assign({}, this.attrs,
+          {'aria-valuenow': this.value.min + '|' + this.value.max,
           tabindex: this.dragOnlyRange && !this.$q.platform.is.mobile
             ? this.computedTabindex
-            : null
-        },
+            : null}),
         class: this.classes,
         on: this.events,
         directives: this.editable === true ? cache(this, 'dir', [{
@@ -19974,31 +21779,14 @@
             mouseAllDir: true
           }
         }]) : null
-      }, [
-        h('div', { staticClass: 'q-slider__track-container absolute overflow-hidden' }, [
-          h('div', {
-            staticClass: 'q-slider__track absolute',
-            style: this.trackStyle
-          }),
-
-          this.markers === true
-            ? h('div', {
-              staticClass: 'q-slider__track-markers absolute-full fit',
-              style: this.markerStyle
-            })
-            : null
-        ]),
-
-        this.__getThumb(h, 'min'),
-        this.__getThumb(h, 'max')
-      ])
+      }, child)
     }
   });
 
   var QRating = Vue.extend({
     name: 'QRating',
 
-    mixins: [ SizeMixin ],
+    mixins: [ SizeMixin, FormMixin ],
 
     props: {
       value: {
@@ -20012,12 +21800,15 @@
       },
 
       icon: [String, Array],
+      iconHalf: [String, Array],
       iconSelected: [String, Array],
 
       color: [String, Array],
+      colorHalf: [String, Array],
       colorSelected: [String, Array],
 
       noReset: Boolean,
+      noDimming: Boolean,
 
       readonly: Boolean,
       disable: Boolean
@@ -20036,6 +21827,7 @@
 
       classes: function classes () {
         return "q-rating--" + (this.editable === true ? '' : 'non-') + "editable" +
+          (this.noDimming === true ? ' q-rating--no-dimming' : '') +
           (this.disable === true ? ' disabled' : '') +
           (this.color !== void 0 && Array.isArray(this.color) === false ? (" text-" + (this.color)) : '')
       },
@@ -20044,18 +21836,33 @@
         var
           iconLen = Array.isArray(this.icon) === true ? this.icon.length : 0,
           selIconLen = Array.isArray(this.iconSelected) === true ? this.iconSelected.length : 0,
+          halfIconLen = Array.isArray(this.iconHalf) === true ? this.iconHalf.length : 0,
           colorLen = Array.isArray(this.color) === true ? this.color.length : 0,
-          selColorLen = Array.isArray(this.colorSelected) === true ? this.colorSelected.length : 0;
+          selColorLen = Array.isArray(this.colorSelected) === true ? this.colorSelected.length : 0,
+          halfColorLen = Array.isArray(this.colorHalf) === true ? this.colorHalf.length : 0;
 
         return {
           iconLen: iconLen,
           icon: iconLen > 0 ? this.icon[iconLen - 1] : this.icon,
           selIconLen: selIconLen,
           selIcon: selIconLen > 0 ? this.iconSelected[selIconLen - 1] : this.iconSelected,
+          halfIconLen: halfIconLen,
+          halfIcon: halfIconLen > 0 ? this.iconHalf[selIconLen - 1] : this.iconHalf,
           colorLen: colorLen,
           color: colorLen > 0 ? this.color[colorLen - 1] : this.color,
           selColorLen: selColorLen,
-          selColor: selColorLen > 0 ? this.colorSelected[selColorLen - 1] : this.colorSelected
+          selColor: selColorLen > 0 ? this.colorSelected[selColorLen - 1] : this.colorSelected,
+          halfColorLen: halfColorLen,
+          halfColor: halfColorLen > 0 ? this.colorHalf[halfColorLen - 1] : this.colorHalf
+        }
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return { 'aria-disabled': '' }
+        }
+        if (this.readonly === true) {
+          return { 'aria-readonly': '' }
         }
       }
     },
@@ -20107,18 +21914,32 @@
       var
         child = [],
         tabindex = this.editable === true ? 0 : null,
-        icons = this.iconData;
+        icons = this.iconData,
+        ceil = Math.ceil(this.value);
+
+      var halfIndex = this.iconHalf === void 0 || ceil === this.value
+        ? -1
+        : ceil;
 
       var loop = function ( i ) {
         var
           active = (this$1.mouseModel === 0 && this$1.value >= i) || (this$1.mouseModel > 0 && this$1.mouseModel >= i),
-          exSelected = this$1.mouseModel > 0 && this$1.value >= i && this$1.mouseModel < i,
-          name = icons.selIcon !== void 0 && (active === true || exSelected === true)
-            ? (i <= icons.selIconLen ? this$1.iconSelected[i - 1] : icons.selIcon)
-            : (i <= icons.iconLen ? this$1.icon[i - 1] : icons.icon),
-          color = icons.selColor !== void 0 && active === true
-            ? (i <= icons.selColorLen ? this$1.colorSelected[i - 1] : icons.selColor)
-            : (i <= icons.colorLen ? this$1.color[i - 1] : icons.color);
+          half = halfIndex === i && this$1.mouseModel < i,
+          exSelected = this$1.mouseModel > 0 && (half === true ? ceil : this$1.value) >= i && this$1.mouseModel < i,
+          name = half === true
+            ? (i <= icons.halfIconLen ? this$1.iconHalf[i - 1] : icons.halfIcon)
+            : (
+              icons.selIcon !== void 0 && (active === true || exSelected === true)
+                ? (i <= icons.selIconLen ? this$1.iconSelected[i - 1] : icons.selIcon)
+                : (i <= icons.iconLen ? this$1.icon[i - 1] : icons.icon)
+            ),
+          color = half === true
+            ? (i <= icons.halfColorLen ? this$1.colorHalf[i - 1] : icons.halfColor)
+            : (
+              icons.selColor !== void 0 && active === true
+                ? (i <= icons.selColorLen ? this$1.colorSelected[i - 1] : icons.selColor)
+                : (i <= icons.colorLen ? this$1.color[i - 1] : icons.color)
+            );
 
         child.push(
           h(QIcon, {
@@ -20126,7 +21947,7 @@
             ref: ("rt" + i),
             staticClass: 'q-rating__icon',
             class: ( obj = {
-              'q-rating__icon--active': active,
+              'q-rating__icon--active': active === true || half === true,
               'q-rating__icon--exselected': exSelected,
               'q-rating__icon--hovered': this$1.mouseModel === i
             }, obj[("text-" + color)] = color !== void 0, obj ),
@@ -20146,25 +21967,53 @@
 
       for (var i = 1; i <= this$1.max; i++) loop( i );
 
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(child, 'push');
+      }
+
       return h('div', {
         staticClass: 'q-rating row inline items-center',
         class: this.classes,
         style: this.sizeStyle,
+        attrs: this.attrs,
         on: this.$listeners
       }, child)
+    }
+  });
+
+  var QResponsive = Vue.extend({
+    name: 'QResponsive',
+
+    mixins: [ RatioMixin ],
+
+    render: function render (h) {
+      return h('div', {
+        staticClass: 'q-responsive',
+        on: this.$listeners
+      }, [
+        h('div', {
+          staticClass: 'q-responsive__filler overflow-hidden'
+        }, [
+          h('div', { style: this.ratioStyle })
+        ]),
+
+        h('div', {
+          staticClass: 'q-responsive__content absolute-full fit'
+        }, slot(this, 'default'))
+      ])
     }
   });
 
   var QScrollArea = Vue.extend({
     name: 'QScrollArea',
 
+    mixins: [ DarkMixin ],
+
     directives: {
       TouchPan: TouchPan
     },
 
     props: {
-      forceOnMobile: Boolean,
-
       barStyle: [ Array, String, Object ],
       thumbStyle: Object,
       contentStyle: [ Array, String, Object ],
@@ -20185,8 +22034,12 @@
 
     data: function data () {
       return {
-        active: false,
-        hover: this.visible === true,
+        // state management
+        tempShowing: false,
+        panning: false,
+        hover: false,
+
+        // other...
         containerWidth: 0,
         containerHeight: 0,
         scrollPosition: 0,
@@ -20194,16 +22047,18 @@
       }
     },
 
-    watch: {
-      visible: function visible (val) {
-        this.hover = val === true;
-      }
-    },
-
     computed: {
+      classes: function classes () {
+        return 'q-scrollarea' +
+          (this.isDark === true ? ' q-scrollarea--dark' : '')
+      },
+
       thumbHidden: function thumbHidden () {
-        return this.scrollSize <= this.containerSize ||
-          (this.active === false && this.hover === false)
+        return (
+          (this.visible === null ? this.hover : this.visible) !== true &&
+          this.tempShowing === false &&
+          this.panning === false
+        ) || this.scrollSize <= this.containerSize
       },
 
       thumbSize: function thumbSize () {
@@ -20224,7 +22079,8 @@
           this.horizontal === true
             ? {
               left: (pos + "px"),
-              width: ((this.thumbSize) + "px") }
+              width: ((this.thumbSize) + "px")
+            }
             : {
               top: (pos + "px"),
               height: ((this.thumbSize) + "px")
@@ -20243,31 +22099,23 @@
         return Math.round(p * 10000) / 10000
       },
 
-      direction: function direction () {
-        return this.horizontal === true
-          ? 'right'
-          : 'down'
-      },
-
       containerSize: function containerSize () {
-        return this.horizontal === true
-          ? this.containerWidth
-          : this.containerHeight
+        return this[("container" + (this.dirProps.suffix))]
       },
 
       dirProps: function dirProps () {
         return this.horizontal === true
-          ? { el: 'scrollLeft', wheel: 'x' }
-          : { el: 'scrollTop', wheel: 'y' }
+          ? { prefix: 'horizontal', suffix: 'Width', scroll: 'scrollLeft', classSuffix: 'h absolute-bottom', dir: 'right', dist: 'x' }
+          : { prefix: 'vertical', suffix: 'Height', scroll: 'scrollTop', classSuffix: 'v absolute-right', dir: 'down', dist: 'y' }
       },
 
       thumbClass: function thumbClass () {
-        return "q-scrollarea__thumb--" + (this.horizontal === true ? 'h absolute-bottom' : 'v absolute-right') +
+        return "q-scrollarea__thumb--" + (this.dirProps.classSuffix) +
           (this.thumbHidden === true ? ' q-scrollarea__thumb--invisible' : '')
       },
 
       barClass: function barClass () {
-        return "q-scrollarea__bar--" + (this.horizontal === true ? 'h absolute-bottom' : 'v absolute-right') +
+        return "q-scrollarea__bar--" + (this.dirProps.classSuffix) +
           (this.thumbHidden === true ? ' q-scrollarea__bar--invisible' : '')
       }
     },
@@ -20278,9 +22126,7 @@
       },
 
       getScrollPosition: function getScrollPosition () {
-        return this.$q.platform.is.desktop === true
-          ? this.scrollPosition
-          : this.$refs.target[this.dirProps.el]
+        return this.scrollPosition
       },
 
       setScrollPosition: function setScrollPosition$1 (offset, duration) {
@@ -20295,23 +22141,25 @@
         var height = ref.height;
         var width = ref.width;
 
+        var change = false;
+
         if (this.containerWidth !== width) {
           this.containerWidth = width;
-          this.__setActive(true, true);
+          change = true;
         }
 
         if (this.containerHeight !== height) {
           this.containerHeight = height;
-          this.__setActive(true, true);
+          change = true;
         }
+
+        change === true && this.__startTimer();
       },
 
-      __updateScroll: function __updateScroll (ref) {
-        var position = ref.position;
-
-        if (this.scrollPosition !== position) {
-          this.scrollPosition = position;
-          this.__setActive(true, true);
+      __updateScroll: function __updateScroll (info) {
+        if (this.scrollPosition !== info.position) {
+          this.scrollPosition = info.position;
+          this.__startTimer();
         }
       },
 
@@ -20319,143 +22167,89 @@
         var height = ref.height;
         var width = ref.width;
 
-        if (this.horizontal) {
+        if (this.horizontal === true) {
           if (this.scrollSize !== width) {
             this.scrollSize = width;
-            this.__setActive(true, true);
+            this.__startTimer();
           }
         }
-        else {
-          if (this.scrollSize !== height) {
-            this.scrollSize = height;
-            this.__setActive(true, true);
-          }
+        else if (this.scrollSize !== height) {
+          this.scrollSize = height;
+          this.__startTimer();
         }
       },
 
       __panThumb: function __panThumb (e) {
         if (e.isFirst === true) {
-          this.refPos = this.scrollPosition;
-          this.__setActive(true, true);
-        }
-
-        if (e.isFinal === true) {
-          this.__setActive(false);
-        }
-
-        var multiplier = (this.scrollSize - this.containerSize) / (this.containerSize - this.thumbSize);
-        var distance = this.horizontal ? e.distance.x : e.distance.y;
-        var pos = this.refPos + (e.direction === this.direction ? 1 : -1) * distance * multiplier;
-        this.__setScroll(pos);
-      },
-
-      __panContainer: function __panContainer (e) {
-        if (e.isFirst === true) {
-          this.refPos = this.scrollPosition;
-          this.__setActive(true, true);
-        }
-        if (e.isFinal === true) {
-          this.__setActive(false);
-        }
-
-        var distance = e.distance[this.horizontal === true ? 'x' : 'y'];
-        var pos = this.refPos +
-          (e.direction === this.direction ? -1 : 1) * distance;
-
-        this.__setScroll(pos);
-
-        if (pos > 0 && pos + this.containerSize < this.scrollSize) {
-          prevent(e.evt);
-        }
-      },
-
-      __mouseWheel: function __mouseWheel (e) {
-        var el = this.$refs.target;
-
-        el[this.dirProps.el] += getMouseWheelDistance(e)[this.dirProps.wheel];
-
-        if (
-          el[this.dirProps.el] > 0 &&
-          el[this.dirProps.el] + this.containerSize < this.scrollSize
-        ) {
-          prevent(e);
-        }
-      },
-
-      __setActive: function __setActive (active, timer) {
-        clearTimeout(this.timer);
-
-        if (active === this.active) {
-          if (active && this.timer) {
-            this.__startTimer();
+          if (this.thumbHidden === true) {
+            return
           }
+
+          this.refPos = this.scrollPosition;
+          this.panning = true;
+        }
+        else if (this.panning !== true) {
           return
         }
 
-        if (active) {
-          this.active = true;
-          if (timer) {
-            this.__startTimer();
-          }
+        if (e.isFinal === true) {
+          this.panning = false;
         }
-        else {
-          this.active = false;
+
+        var multiplier = (this.scrollSize - this.containerSize) / (this.containerSize - this.thumbSize);
+        var distance = e.distance[this.dirProps.dist];
+        var pos = this.refPos + (e.direction === this.dirProps.dir ? 1 : -1) * distance * multiplier;
+
+        this.__setScroll(pos);
+      },
+
+      __mouseDown: function __mouseDown (evt) {
+        if (this.thumbHidden !== true) {
+          var pos = evt[("offset" + (this.horizontal === true ? 'X' : 'Y'))] - this.thumbSize / 2;
+          this.__setScroll(pos / this.containerSize * this.scrollSize);
+
+          // activate thumb pan
+          if (this.$refs.thumb !== void 0) {
+            this.$refs.thumb.dispatchEvent(new MouseEvent(evt.type, evt));
+          }
         }
       },
 
       __startTimer: function __startTimer () {
         var this$1 = this;
 
+        if (this.tempShowing === true) {
+          clearTimeout(this.timer);
+        }
+        else {
+          this.tempShowing = true;
+        }
+
         this.timer = setTimeout(function () {
-          this$1.active = false;
-          this$1.timer = null;
+          this$1.tempShowing = false;
         }, this.delay);
+
+        this.__emitScroll();
       },
 
       __setScroll: function __setScroll (offset) {
-        this.$refs.target[this.dirProps.el] = offset;
+        this.$refs.target[this.dirProps.scroll] = offset;
       }
     },
 
     render: function render (h) {
       var this$1 = this;
 
-      if (this.forceOnMobile !== true && this.$q.platform.is.desktop !== true) {
-        return h('div', {
-          staticClass: 'q-scrollarea',
-          style: this.contentStyle
-        }, [
-          h('div', {
-            ref: 'target',
-            staticClass: 'scroll relative-position fit'
-          }, slot(this, 'default'))
-        ])
-      }
-
       return h('div', {
-        staticClass: 'q-scrollarea',
-        on: this.visible === null
-          ? cache(this, 'desk', {
-            mouseenter: function () { this$1.hover = true; },
-            mouseleave: function () { this$1.hover = false; }
-          })
-          : null
+        class: this.classes,
+        on: cache(this, 'desk', {
+          mouseenter: function () { this$1.hover = true; },
+          mouseleave: function () { this$1.hover = false; }
+        })
       }, [
         h('div', {
           ref: 'target',
-          staticClass: 'scroll relative-position fit hide-scrollbar',
-          on: cache(this, 'wheel', {
-            wheel: this.__mouseWheel
-          }),
-          directives: cache(this, 'touch#' + this.horizontal, [{
-            name: 'touch-pan',
-            modifiers: {
-              vertical: this.horizontal !== true,
-              horizontal: this.horizontal,
-              mightPrevent: true
-            },
-            value: this.__panContainer
-          }])
+          staticClass: 'scroll relative-position fit hide-scrollbar'
         }, [
           h('div', {
             staticClass: 'absolute',
@@ -20482,21 +22276,19 @@
           style: this.barStyle,
           class: this.barClass,
           on: cache(this, 'bar', {
-            click: function (e) {
-              var pos = e[("offset" + (this$1.horizontal === true ? 'X' : 'Y'))] - this$1.thumbSize / 2;
-              this$1.__setScroll(pos / this$1.containerSize * this$1.scrollSize);
-            }
+            mousedown: this.__mouseDown
           })
         }),
 
         h('div', {
+          ref: 'thumb',
           staticClass: 'q-scrollarea__thumb',
           style: this.style,
           class: this.thumbClass,
-          directives: this.thumbHidden === true ? null : cache(this, 'thumb#' + this.horizontal, [{
+          directives: cache(this, 'thumb#' + this.horizontal, [{
             name: 'touch-pan',
             modifiers: {
-              vertical: !this.horizontal,
+              vertical: this.horizontal !== true,
               horizontal: this.horizontal,
               prevent: true,
               mouse: true,
@@ -20506,10 +22298,33 @@
           }])
         })
       ])
+    },
+
+    created: function created () {
+      var this$1 = this;
+
+      // we have lots of listeners, so
+      // ensure we're not emitting same info
+      // multiple times
+      this.__emitScroll = debounce(function () {
+        if (this$1.$listeners.scroll !== void 0) {
+          var info = { ref: this$1 };
+          var prefix = this$1.dirProps.prefix;
+
+          info[prefix + 'Position'] = this$1.scrollPosition;
+          info[prefix + 'Percentage'] = this$1.scrollPercentage;
+          info[prefix + 'Size'] = this$1.scrollSize;
+          info[prefix + 'ContainerSize'] = this$1.containerSize;
+
+          this$1.$emit('scroll', info);
+        }
+      }, 0);
     }
   });
 
   var aggBucketSize = 1000;
+
+  var slice = Array.prototype.slice;
 
   function sumFn (acc, h) {
     return acc + h
@@ -20684,6 +22499,10 @@
         this.__resetVirtualScroll(this.prevToIndex, true);
       },
 
+      refresh: function refresh (toIndex) {
+        this.__resetVirtualScroll(toIndex === void 0 ? this.prevToIndex : toIndex);
+      },
+
       scrollTo: function scrollTo (toIndex) {
         var scrollEl = this.__getVirtualScrollTarget();
 
@@ -20740,7 +22559,7 @@
             scrollEl,
             scrollDetails,
             this.virtualScrollLength - 1,
-            scrollMaxStart - this.virtualScrollSizesAgg.reduce(sumFn, 0)
+            scrollDetails.scrollMaxSize - scrollDetails.offsetEnd - this.virtualScrollSizesAgg.reduce(sumFn, 0)
           );
 
           return
@@ -20787,11 +22606,11 @@
           from = Math.max(0, to - this.virtualScrollSliceSizeComputed);
         }
 
-        this.__emitScroll(toIndex);
-
         var rangeChanged = from !== this.virtualScrollSliceRange.from || to !== this.virtualScrollSliceRange.to;
 
         if (rangeChanged === false && align === void 0) {
+          this.__emitScroll(toIndex);
+
           return
         }
 
@@ -20825,6 +22644,8 @@
             scrollPosition,
             this$1.virtualScrollHorizontal
           );
+
+          this$1.__emitScroll(toIndex);
         });
       },
 
@@ -20833,18 +22654,31 @@
 
         if (contentEl !== void 0) {
           var
-            children = contentEl.children,
+            children = slice.call(contentEl.children).filter(function (el) { return el.classList.contains('q-virtual-scroll--skip') === false; }),
+            childrenLength = children.length,
             sizeProp = this.virtualScrollHorizontal === true ? 'offsetWidth' : 'offsetHeight';
 
-          for (var i = children.length - 1; i >= 0; i--) {
-            var
-              index = from + i,
-              diff = children[i][sizeProp] - this.virtualScrollSizes[index];
+          var
+            index = from,
+            size, diff;
+
+          for (var i = 0; i < childrenLength;) {
+            size = children[i][sizeProp];
+            i++;
+
+            while (i < childrenLength && children[i].classList.contains('q-virtual-scroll--with-prev') === true) {
+              size += children[i][sizeProp];
+              i++;
+            }
+
+            diff = size - this.virtualScrollSizes[index];
 
             if (diff !== 0) {
               this.virtualScrollSizes[index] += diff;
               this.virtualScrollSizesAgg[Math.floor(index / aggBucketSize)] += diff;
             }
+
+            index++;
           }
         }
       },
@@ -20881,6 +22715,8 @@
         this.prevScrollStart = void 0;
 
         if (toIndex >= 0) {
+          this.__updateVirtualScrollSizes(this.virtualScrollSliceRange.from);
+
           this.$nextTick(function () {
             this$1.scrollTo(toIndex);
           });
@@ -20966,7 +22802,8 @@
             index: index,
             from: this.virtualScrollSliceRange.from,
             to: this.virtualScrollSliceRange.to - 1,
-            direction: index < this.prevToIndex ? 'decrease' : 'increase'
+            direction: index < this.prevToIndex ? 'decrease' : 'increase',
+            ref: this
           });
 
           this.prevToIndex = index;
@@ -20990,7 +22827,7 @@
   var QSelect = Vue.extend({
     name: 'QSelect',
 
-    mixins: [ QField, VirtualScroll, CompositionMixin ],
+    mixins: [ QField, VirtualScroll, CompositionMixin, FormFieldMixin ],
 
     props: {
       value: {
@@ -21024,8 +22861,14 @@
         default: null
       },
       optionsSelectedClass: String,
-      optionsCover: Boolean,
       optionsSanitize: Boolean,
+
+      optionsCover: Boolean,
+
+      menuShrink: Boolean,
+      menuAnchor: String,
+      menuSelf: String,
+      menuOffset: Array,
 
       popupContentClass: String,
       popupContentStyle: [String, Array, Object],
@@ -21088,13 +22931,17 @@
             this.innerLoading !== true &&
             ((this.dialog !== true && this.menu !== true) || this.hasValue !== true)
           ) {
-            this.__resetInputValue();
+            this.userInputValue !== true && this.__resetInputValue();
             if (this.dialog === true || this.menu === true) {
               this.filter('');
             }
           }
         },
         immediate: true
+      },
+
+      fillInput: function fillInput () {
+        this.__resetInputValue();
       },
 
       menu: function menu (show) {
@@ -21125,8 +22972,8 @@
         }
 
         return this.inputClass === void 0
-          ? 'q-select__input--padding'
-          : [this.inputClass, 'q-select__input--padding']
+          ? 'q-field__input--padding'
+          : [this.inputClass, 'q-field__input--padding']
       },
 
       menuContentClass: function menuContentClass () {
@@ -21165,15 +23012,21 @@
         var this$1 = this;
 
         return this.innerValue
-          .map(function (opt) { return this$1.__getOptionLabel(opt); })
+          .map(function (opt) { return this$1.getOptionLabel(opt); })
           .join(', ')
+      },
+
+      sanitizeFn: function sanitizeFn () {
+        return this.optionsSanitize === true
+          ? function () { return true; }
+          : function (opt) { return opt !== void 0 && opt !== null && opt.sanitize === true; }
       },
 
       displayAsText: function displayAsText () {
         return this.displayValueSanitize === true || (
           this.displayValue === void 0 && (
             this.optionsSanitize === true ||
-            this.innerValue.some(function (opt) { return opt !== null && opt.sanitize === true; })
+            this.innerValue.some(this.sanitizeFn)
           )
         )
       },
@@ -21188,7 +23041,7 @@
         return this.innerValue.map(function (opt, i) { return ({
           index: i,
           opt: opt,
-          sanitize: this$1.optionsSanitize === true || opt.sanitize === true,
+          sanitize: this$1.sanitizeFn(opt),
           selected: true,
           removeAtIndex: this$1.__removeAtIndexAndFocus,
           toggleOption: this$1.toggleOption,
@@ -21208,7 +23061,7 @@
         var to = ref.to;
 
         return this.options.slice(from, to).map(function (opt, i) {
-          var disable = this$1.__isDisabled(opt);
+          var disable = this$1.isOptionDisabled(opt) === true;
           var index = from + i;
 
           var itemProps = {
@@ -21224,7 +23077,7 @@
           };
 
           if (disable !== true) {
-            this$1.__isSelected(opt) === true && (itemProps.active = true);
+            this$1.isOptionSelected(opt) === true && (itemProps.active = true);
             this$1.optionIndex === index && (itemProps.focused = true);
           }
 
@@ -21239,7 +23092,7 @@
           return {
             index: index,
             opt: opt,
-            sanitize: this$1.optionsSanitize === true || opt.sanitize === true,
+            sanitize: this$1.sanitizeFn(opt),
             selected: itemProps.active,
             focused: itemProps.focused,
             toggleOption: this$1.toggleOption,
@@ -21268,10 +23121,40 @@
         return this.optionsSelectedClass !== void 0
           ? this.optionsSelectedClass
           : (this.color !== void 0 ? ("text-" + (this.color)) : '')
+      },
+
+      innerOptionsValue: function innerOptionsValue () {
+        var this$1 = this;
+
+        return this.innerValue.map(function (opt) { return this$1.getOptionValue(opt); })
+      },
+
+      // returns method to get value of an option;
+      // takes into account 'option-value' prop
+      getOptionValue: function getOptionValue () {
+        return this.__getPropValueFn('optionValue', 'value')
+      },
+
+      // returns method to get label of an option;
+      // takes into account 'option-label' prop
+      getOptionLabel: function getOptionLabel () {
+        return this.__getPropValueFn('optionLabel', 'label')
+      },
+
+      // returns method to tell if an option is disabled;
+      // takes into account 'option-disable' prop
+      isOptionDisabled: function isOptionDisabled () {
+        return this.__getPropValueFn('optionDisable', 'disable')
       }
     },
 
     methods: {
+      getEmittingOptionValue: function getEmittingOptionValue (opt) {
+        return this.emitValue === true
+          ? this.getOptionValue(opt)
+          : opt
+      },
+
       removeAtIndex: function removeAtIndex (index) {
         if (index > -1 && index < this.innerValue.length) {
           if (this.multiple === true) {
@@ -21291,11 +23174,15 @@
       },
 
       add: function add (opt, unique) {
-        var val = this.emitValue === true
-          ? this.__getOptionValue(opt)
-          : opt;
+        var val = this.getEmittingOptionValue(opt);
 
         if (this.multiple !== true) {
+          this.fillInput === true && this.updateInputValue(
+            this.getOptionLabel(opt),
+            true,
+            true
+          );
+
           this.$emit('input', val);
           return
         }
@@ -21306,7 +23193,7 @@
           return
         }
 
-        if (unique === true && this.__isSelected(opt) === true) {
+        if (unique === true && this.isOptionSelected(opt) === true) {
           return
         }
 
@@ -21321,32 +23208,35 @@
         this.$emit('input', model);
       },
 
-      toggleOption: function toggleOption (opt) {
-        var this$1 = this;
-
-        if (this.editable !== true || opt === void 0 || this.__isDisabled(opt) === true) {
+      toggleOption: function toggleOption (opt, keepOpen) {
+        if (this.editable !== true || opt === void 0 || this.isOptionDisabled(opt) === true) {
           return
         }
 
-        var optValue = this.__getOptionValue(opt);
+        var optValue = this.getOptionValue(opt);
 
         if (this.multiple !== true) {
-          this.updateInputValue(
-            this.fillInput === true ? this.__getOptionLabel(opt) : '',
-            true,
-            true
-          );
-
           this.$refs.target !== void 0 && this.$refs.target.focus();
-          this.hidePopup();
 
-          if (isDeepEqual(this.__getOptionValue(this.value), optValue) !== true) {
+          if (keepOpen !== true) {
+            this.updateInputValue(
+              this.fillInput === true ? this.getOptionLabel(opt) : '',
+              true,
+              true
+            );
+
+            this.hidePopup();
+          }
+
+          if (isDeepEqual(this.getOptionValue(this.innerValue), optValue) !== true) {
             this.$emit('input', this.emitValue === true ? optValue : opt);
           }
           return
         }
 
         (this.hasDialog !== true || this.dialogFieldFocused === true) && this.__focus();
+
+        this.__selectInputText();
 
         if (this.innerValue.length === 0) {
           var val = this.emitValue === true ? optValue : opt;
@@ -21357,7 +23247,7 @@
 
         var
           model = this.value.slice(),
-          index = this.value.findIndex(function (v) { return isDeepEqual(this$1.__getOptionValue(v), optValue); });
+          index = this.innerOptionsValue.findIndex(function (v) { return isDeepEqual(v, optValue); });
 
         if (index > -1) {
           this.$emit('remove', { index: index, value: model.splice(index, 1) });
@@ -21388,55 +23278,62 @@
         }
       },
 
+      moveOptionSelection: function moveOptionSelection (offset, skipInputValue) {
+        if ( offset === void 0 ) offset = 1;
+
+        if (this.menu === true) {
+          var index = this.optionIndex;
+          do {
+            index = normalizeToInterval(
+              index + offset,
+              -1,
+              this.virtualScrollLength - 1
+            );
+          }
+          while (index !== -1 && index !== this.optionIndex && this.isOptionDisabled(this.options[index]) === true)
+
+          if (this.optionIndex !== index) {
+            this.setOptionIndex(index);
+            this.scrollTo(index);
+
+            if (skipInputValue !== true && this.useInput === true && this.fillInput === true) {
+              this.__setInputValue(index >= 0
+                ? this.getOptionLabel(this.options[index])
+                : this.defaultInputValue
+              );
+            }
+          }
+        }
+      },
+
       __getOption: function __getOption (value, innerValueCache) {
         var this$1 = this;
 
-        var fn = function (opt) { return isDeepEqual(this$1.__getOptionValue(opt), value); };
+        var fn = function (opt) { return isDeepEqual(this$1.getOptionValue(opt), value); };
         return this.options.find(fn) || innerValueCache.find(fn) || value
       },
 
-      __getOptionValue: function __getOptionValue (opt) {
-        if (typeof this.optionValue === 'function') {
-          return this.optionValue(opt)
-        }
-        if (Object(opt) === opt) {
-          return typeof this.optionValue === 'string'
-            ? opt[this.optionValue]
-            : opt.value
-        }
-        return opt
+      __getPropValueFn: function __getPropValueFn (propName, defaultVal) {
+        var val = this[propName] !== void 0
+          ? this[propName]
+          : defaultVal;
+
+        return typeof val === 'function'
+          ? val
+          : function (opt) { return Object(opt) === opt && val in opt
+            ? opt[val]
+            : opt; }
       },
 
-      __getOptionLabel: function __getOptionLabel (opt) {
-        if (typeof this.optionLabel === 'function') {
-          return this.optionLabel(opt)
-        }
-        if (Object(opt) === opt) {
-          return typeof this.optionLabel === 'string'
-            ? opt[this.optionLabel]
-            : opt.label
-        }
-        return opt
+      isOptionSelected: function isOptionSelected (opt) {
+        var val = this.getOptionValue(opt);
+        return this.innerOptionsValue.find(function (v) { return isDeepEqual(v, val); }) !== void 0
       },
 
-      __isDisabled: function __isDisabled (opt) {
-        if (typeof this.optionDisable === 'function') {
-          return this.optionDisable(opt) === true
+      __selectInputText: function __selectInputText () {
+        if (this.useInput === true && this.$refs.target !== void 0) {
+          this.$refs.target.select();
         }
-        if (Object(opt) === opt) {
-          return typeof this.optionDisable === 'string'
-            ? opt[this.optionDisable] === true
-            : opt.disable === true
-        }
-        return false
-      },
-
-      __isSelected: function __isSelected (opt) {
-        var this$1 = this;
-
-        var val = this.__getOptionValue(opt);
-        return this.innerValue
-          .find(function (v) { return isDeepEqual(this$1.__getOptionValue(v), val); }) !== void 0
       },
 
       __onTargetKeyup: function __onTargetKeyup (e) {
@@ -21447,9 +23344,42 @@
           stop(e);
           // on ESC we need to close the dialog also
           this.hidePopup();
+          this.__resetInputValue();
         }
 
         this.$emit('keyup', e);
+      },
+
+      __onTargetAutocomplete: function __onTargetAutocomplete (e) {
+        var this$1 = this;
+
+        var ref = e.target;
+        var value = ref.value;
+
+        e.target.value = '';
+
+        if (
+          e.keyCode === void 0 &&
+          typeof value === 'string' &&
+          value.length > 0
+        ) {
+          var needle = value.toLocaleLowerCase();
+
+          var fn = function (opt) { return this$1.getOptionValue(opt).toLocaleLowerCase() === needle; };
+          var option = this.options.find(fn);
+
+          if (option !== null) {
+            this.innerValue.indexOf(option) === -1 && this.toggleOption(option);
+          }
+          else {
+            fn = function (opt) { return this$1.getOptionLabel(opt).toLocaleLowerCase() === needle; };
+            option = this.options.find(fn);
+
+            if (option !== null) {
+              this.innerValue.indexOf(option) === -1 && this.toggleOption(option);
+            }
+          }
+        }
       },
 
       __onTargetKeypress: function __onTargetKeypress (e) {
@@ -21465,10 +23395,15 @@
           return
         }
 
-        var tabShouldSelect = e.shiftKey !== true && this.multiple !== true && this.optionIndex > -1;
+        var newValueModeValid = this.inputValue.length > 0 &&
+          (this.newValueMode !== void 0 || this.$listeners['new-value'] !== void 0);
+        var tabShouldSelect = e.shiftKey !== true &&
+          this.multiple !== true &&
+          (this.optionIndex > -1 || newValueModeValid === true);
 
         // escape
         if (e.keyCode === 27) {
+          prevent(e); // prevent clearing the inputValue
           return
         }
 
@@ -21478,7 +23413,7 @@
           return
         }
 
-        if (e.target !== this.$refs.target) { return }
+        if (e.target === void 0 || e.target.id !== this.targetUid) { return }
 
         // down
         if (
@@ -21503,35 +23438,12 @@
         }
 
         // up, down
-        var optionsLength = this.virtualScrollLength;
-
         if (e.keyCode === 38 || e.keyCode === 40) {
           stopAndPrevent(e);
-
-          if (this.menu === true) {
-            var index = this.optionIndex;
-            do {
-              index = normalizeToInterval(
-                index + (e.keyCode === 38 ? -1 : 1),
-                -1,
-                optionsLength - 1
-              );
-            }
-            while (index !== -1 && index !== this.optionIndex && this.__isDisabled(this.options[index]) === true)
-
-            if (this.optionIndex !== index) {
-              this.setOptionIndex(index);
-              this.scrollTo(index);
-
-              if (index >= 0 && this.useInput === true && this.fillInput === true) {
-                var inputValue = this.__getOptionLabel(this.options[index]);
-                if (this.inputValue !== inputValue) {
-                  this.inputValue = inputValue;
-                }
-              }
-            }
-          }
+          this.moveOptionSelection(e.keyCode === 38 ? -1 : 1, this.multiple);
         }
+
+        var optionsLength = this.virtualScrollLength;
 
         // keyboard search when not having use-input
         if (optionsLength > 0 && this.useInput !== true && e.keyCode >= 48 && e.keyCode <= 90) {
@@ -21553,28 +23465,25 @@
 
           var searchRe = new RegExp('^' + this.searchBuffer.split('').join('.*'), 'i');
 
-          var index$1 = this.optionIndex;
+          var index = this.optionIndex;
 
-          if (keyRepeat === true || searchRe.test(this.__getOptionLabel(this.options[index$1])) !== true) {
+          if (keyRepeat === true || searchRe.test(this.getOptionLabel(this.options[index])) !== true) {
             do {
-              index$1 = normalizeToInterval(index$1 + 1, -1, optionsLength - 1);
+              index = normalizeToInterval(index + 1, -1, optionsLength - 1);
             }
-            while (index$1 !== this.optionIndex && (
-              this.__isDisabled(this.options[index$1]) === true ||
-              searchRe.test(this.__getOptionLabel(this.options[index$1])) !== true
+            while (index !== this.optionIndex && (
+              this.isOptionDisabled(this.options[index]) === true ||
+              searchRe.test(this.getOptionLabel(this.options[index])) !== true
             ))
           }
 
-          if (this.optionIndex !== index$1) {
+          if (this.optionIndex !== index) {
             this.$nextTick(function () {
-              this$1.setOptionIndex(index$1);
-              this$1.scrollTo(index$1);
+              this$1.setOptionIndex(index);
+              this$1.scrollTo(index);
 
-              if (index$1 >= 0 && this$1.useInput === true && this$1.fillInput === true) {
-                var inputValue = this$1.__getOptionLabel(this$1.options[index$1]);
-                if (this$1.inputValue !== inputValue) {
-                  this$1.inputValue = inputValue;
-                }
+              if (index >= 0 && this$1.useInput === true && this$1.fillInput === true) {
+                this$1.__setInputValue(this$1.getOptionLabel(this$1.options[index]));
               }
             });
           }
@@ -21583,13 +23492,11 @@
         }
 
         // enter, space (when not using use-input), or tab (when not using multiple and option selected)
+        // same target is checked above
         if (
-          e.target !== this.$refs.target ||
-          (
-            e.keyCode !== 13 &&
-            (this.useInput === true || e.keyCode !== 32) &&
-            (tabShouldSelect === false || e.keyCode !== 9)
-          )
+          e.keyCode !== 13 &&
+          (this.useInput === true || e.keyCode !== 32) &&
+          (tabShouldSelect === false || e.keyCode !== 9)
         ) { return }
 
         e.keyCode !== 9 && stopAndPrevent(e);
@@ -21599,14 +23506,10 @@
           return
         }
 
-        if (
-          this.inputValue.length > 0 &&
-          (this.newValueMode !== void 0 || this.$listeners['new-value'] !== void 0)
-        ) {
+        if (newValueModeValid === true) {
           var done = function (val, mode) {
             if (mode) {
               if (validateNewValueMode(mode) !== true) {
-                console.error('QSelect: invalid new value mode - ' + mode);
                 return
               }
             }
@@ -21614,25 +23517,32 @@
               mode = this$1.newValueMode;
             }
 
-            if (val !== void 0 && val !== null) {
-              this$1[mode === 'toggle' ? 'toggleOption' : 'add'](
-                val,
-                mode === 'add-unique'
-              );
+            if (val === void 0 || val === null) {
+              return
             }
 
             this$1.updateInputValue('', this$1.multiple !== true, true);
+
+            this$1[mode === 'toggle' ? 'toggleOption' : 'add'](
+              val,
+              mode === 'add-unique'
+            );
+
+            if (this$1.multiple !== true) {
+              this$1.$refs.target !== void 0 && this$1.$refs.target.focus();
+              this$1.hidePopup();
+            }
           };
 
           if (this.$listeners['new-value'] !== void 0) {
             this.$emit('new-value', this.inputValue, done);
-
-            if (this.multiple !== true) {
-              return
-            }
           }
           else {
             done(this.inputValue);
+          }
+
+          if (this.multiple !== true) {
+            return
           }
         }
 
@@ -21667,7 +23577,7 @@
             ? [
               h('span', {
                 domProps: {
-                  'textContent': this.inputValue
+                  textContent: this.inputValue
                 }
               })
             ]
@@ -21689,7 +23599,7 @@
             return h(QChip, {
             key: 'option-' + i,
             props: {
-              removable: this$1.__isDisabled(scope.opt) !== true,
+              removable: this$1.editable === true && this$1.isOptionDisabled(scope.opt) !== true,
               dense: true,
               textColor: this$1.color,
               tabindex: this$1.computedTabindex
@@ -21699,7 +23609,7 @@
             })
           }, [
             h('span', {
-              domProps: ( obj = {}, obj[scope.sanitize === true ? 'textContent' : 'innerHTML'] = this$1.__getOptionLabel(scope.opt), obj )
+              domProps: ( obj = {}, obj[scope.sanitize === true ? 'textContent' : 'innerHTML'] = this$1.getOptionLabel(scope.opt), obj )
             })
           ]);
           })
@@ -21723,6 +23633,19 @@
         else if (this.editable === true) {
           var isShadowField = this.hasDialog === true && fromDialog !== true && this.menu === true;
 
+          if (fromDialog !== true) {
+            child.push(h('input', {
+              staticClass: 'q-select__autocomplete-input no-outline',
+              attrs: {
+                autocomplete: this.$attrs.autocomplete,
+                tabindex: -1
+              },
+              on: cache(this, 'acpl', {
+                keyup: this.__onTargetAutocomplete
+              })
+            }));
+          }
+
           child.push(h('div', {
             // there can be only one (when dialog is opened the control in dialog should be target)
             ref: isShadowField === true ? void 0 : 'target',
@@ -21737,6 +23660,22 @@
               keypress: this.__onTargetKeypress
             })
           }));
+        }
+
+        if (this.nameProp !== void 0 && this.disable !== true && this.innerOptionsValue.length > 0) {
+          var opts = this.innerOptionsValue.map(function (value) { return h('option', {
+            attrs: { value: value, selected: true }
+          }); });
+
+          child.push(
+            h('select', {
+              staticClass: 'hidden',
+              attrs: {
+                name: this.nameProp,
+                multiple: this.multiple
+              }
+            }, opts)
+          );
         }
 
         return h('div', { staticClass: 'q-field__native row items-center', attrs: this.$attrs }, child)
@@ -21761,7 +23700,7 @@
           }, [
             h(QItemSection, [
               h(QItemLabel, {
-                domProps: ( obj = {}, obj[scope.sanitize === true ? 'textContent' : 'innerHTML'] = this$1.__getOptionLabel(scope.opt), obj )
+                domProps: ( obj = {}, obj[scope.sanitize === true ? 'textContent' : 'innerHTML'] = this$1.getOptionLabel(scope.opt), obj )
               })
             ])
           ]);
@@ -21797,7 +23736,8 @@
           change: this.__onChange,
           keydown: this.__onTargetKeydown,
           keyup: this.__onTargetKeyup,
-          keypress: this.__onTargetKeypress
+          keypress: this.__onTargetKeypress,
+          focus: this.__selectInputText
         };
 
         on.compositionstart = on.compositionupdate = on.compositionend = this.__onComposition;
@@ -21808,7 +23748,7 @@
 
         return h('input', {
           ref: 'target',
-          staticClass: 'q-select__input q-placeholder col',
+          staticClass: 'q-field__input q-placeholder col',
           style: this.inputStyle,
           class: this.computedInputClass,
           domProps: { value: this.inputValue !== void 0 ? this.inputValue : '' },
@@ -21836,10 +23776,18 @@
           return
         }
 
-        this.inputValue = e.target.value || '';
+        this.__setInputValue(e.target.value || '');
         // mark it here as user input so that if updateInputValue is called
         // before filter is called the indicator is reset
         this.userInputValue = true;
+        this.defaultInputValue = this.inputValue;
+
+        if (
+          this.focused !== true &&
+          (this.hasDialog !== true || this.dialogFieldFocused === true)
+        ) {
+          this.__focus();
+        }
 
         if (this.$listeners.filter !== void 0) {
           this.inputTimer = setTimeout(function () {
@@ -21848,12 +23796,21 @@
         }
       },
 
+      __setInputValue: function __setInputValue (inputValue) {
+        if (this.inputValue !== inputValue) {
+          this.inputValue = inputValue;
+          this.$emit('input-value', inputValue);
+        }
+      },
+
       updateInputValue: function updateInputValue (val, noFiltering, internal) {
         this.userInputValue = internal !== true;
 
         if (this.useInput === true) {
-          if (this.inputValue !== val) {
-            this.inputValue = val;
+          this.__setInputValue(val);
+
+          if (noFiltering === true || internal !== true) {
+            this.defaultInputValue = val;
           }
 
           noFiltering !== true && this.filter(val);
@@ -21879,7 +23836,7 @@
           this.multiple !== true &&
           this.innerValue.length > 0 &&
           this.userInputValue !== true &&
-          val === this.__getOptionLabel(this.innerValue[0])
+          val === this.getOptionLabel(this.innerValue[0])
         ) {
           val = '';
         }
@@ -21893,10 +23850,12 @@
         this.$emit(
           'filter',
           val,
-          function (fn) {
+          function (fn, afterFn) {
             if (this$1.focused === true && this$1.filterId === filterId) {
               clearTimeout(this$1.filterId);
+
               typeof fn === 'function' && fn();
+
               this$1.$nextTick(function () {
                 this$1.innerLoading = false;
                 if (this$1.menu === true) {
@@ -21905,6 +23864,8 @@
                 else {
                   this$1.menu = true;
                 }
+
+                typeof afterFn === 'function' && this$1.$nextTick(function () { afterFn(this$1); });
               });
             }
           },
@@ -21942,7 +23903,7 @@
             if (this$1.hasDialog !== true) {
               // label from QField will propagate click on the input (except IE)
               if (
-                (this$1.useInput === true && e.target.classList.contains('q-select__input') !== true) ||
+                (this$1.useInput === true && e.target.classList.contains('q-field__input') !== true) ||
                 (this$1.useInput !== true && e.target.classList.contains('no-outline') === true)
               ) {
                 return
@@ -21960,7 +23921,7 @@
         }
       },
 
-      __getPopup: function __getPopup (h) {
+      __getControlChild: function __getControlChild (h) {
         if (
           this.editable !== false && (
             this.dialog === true || // dialog always has menu displayed, so need to render it
@@ -21985,8 +23946,11 @@
           ref: 'menu',
           props: {
             value: this.menu,
-            fit: true,
+            fit: this.menuShrink !== true,
             cover: this.optionsCover === true && this.noOptions !== true && this.useInput !== true,
+            anchor: this.menuAnchor,
+            self: this.menuSelf,
+            offset: this.menuOffset,
             contentClass: this.menuContentClass,
             contentStyle: this.popupContentStyle,
             dark: this.isOptionsDark,
@@ -22132,9 +24096,14 @@
       },
 
       showPopup: function showPopup (e) {
+        var this$1 = this;
+
         if (this.hasDialog === true) {
           this.__onControlFocusin(e);
           this.dialog = true;
+          this.$nextTick(function () {
+            this$1.__focus();
+          });
         }
         else {
           this.__focus();
@@ -22156,7 +24125,7 @@
       __resetInputValue: function __resetInputValue () {
         this.useInput === true && this.updateInputValue(
           this.multiple !== true && this.fillInput === true && this.innerValue.length > 0
-            ? this.__getOptionLabel(this.innerValue[0]) || ''
+            ? this.getOptionLabel(this.innerValue[0]) || ''
             : '',
           true,
           true
@@ -22170,8 +24139,8 @@
 
         if (show === true) {
           if (this.innerValue.length > 0) {
-            var val = this.__getOptionValue(this.innerValue[0]);
-            optionIndex = this.options.findIndex(function (v) { return isDeepEqual(this$1.__getOptionValue(v), val); });
+            var val = this.getOptionValue(this.innerValue[0]);
+            optionIndex = this.options.findIndex(function (v) { return isDeepEqual(this$1.getOptionValue(v), val); });
           }
 
           this.__resetVirtualScroll(optionIndex);
@@ -22210,6 +24179,69 @@
     }
   });
 
+  var skeletonTypes = [
+    'text', 'rect', 'circle',
+    'QBtn', 'QBadge', 'QChip', 'QToolbar',
+    'QCheckbox', 'QRadio', 'QToggle',
+    'QSlider', 'QRange', 'QInput',
+    'QAvatar'
+  ];
+
+  var skeletonAnimations = [
+    'wave', 'pulse', 'pulse-x', 'pulse-y', 'fade', 'blink', 'none'
+  ];
+
+  var QSkeleton = Vue.extend({
+    name: 'QSkeleton',
+
+    mixins: [ DarkMixin, TagMixin ],
+
+    props: {
+      type: {
+        type: String,
+        validator: function (v) { return skeletonTypes.includes(v); },
+        default: 'rect'
+      },
+
+      animation: {
+        type: String,
+        validator: function (v) { return skeletonAnimations.includes(v); },
+        default: 'wave'
+      },
+
+      square: Boolean,
+      bordered: Boolean,
+
+      size: String,
+      width: String,
+      height: String
+    },
+
+    computed: {
+      style: function style () {
+        return this.size !== void 0
+          ? { width: this.size, height: this.size }
+          : { width: this.width, height: this.height }
+      },
+
+      classes: function classes () {
+        return "q-skeleton--" + (this.isDark === true ? 'dark' : 'light') + " q-skeleton--type-" + (this.type) +
+          (this.animation !== 'none' ? (" q-skeleton--anim-" + (this.animation)) : '') +
+          (this.square === true ? ' q-skeleton--square' : '') +
+          (this.bordered === true ? ' q-skeleton--bordered' : '')
+      }
+    },
+
+    render: function render (h) {
+      return h(this.tag, {
+        staticClass: 'q-skeleton',
+        class: this.classes,
+        style: this.style,
+        on: this.$listeners
+      }, slot(this, 'default'))
+    }
+  });
+
   var slotsDef = [
     ['left', 'center', 'start', 'width'],
     ['right', 'center', 'end', 'width'],
@@ -22231,6 +24263,14 @@
 
     directives: {
       TouchPan: TouchPan
+    },
+
+    computed: {
+      langDir: function langDir () {
+        return this.$q.lang.rtl === true
+          ? { left: 'right', right: 'left' }
+          : { left: 'left', right: 'right' }
+      }
     },
 
     methods: {
@@ -22286,8 +24326,8 @@
         }
 
         if (
-          (this.$scopedSlots.left === void 0 && evt.direction === 'right') ||
-          (this.$scopedSlots.right === void 0 && evt.direction === 'left') ||
+          (this.$scopedSlots.left === void 0 && evt.direction === this.langDir.right) ||
+          (this.$scopedSlots.right === void 0 && evt.direction === this.langDir.left) ||
           (this.$scopedSlots.top === void 0 && evt.direction === 'down') ||
           (this.$scopedSlots.bottom === void 0 && evt.direction === 'up')
         ) {
@@ -22299,7 +24339,7 @@
 
         if (this.__axis === 'X') {
           dir = evt.direction === 'left' ? -1 : 1;
-          showing = dir * (this.$q.lang.rtl === true ? -1 : 1) === 1 ? 'left' : 'right';
+          showing = dir === 1 ? this.langDir.left : this.langDir.right;
           dist = evt.distance.x;
         }
         else {
@@ -22336,8 +24376,8 @@
 
       var
         content = [],
-        left = this.$scopedSlots.right !== void 0,
-        right = this.$scopedSlots.left !== void 0,
+        left = this.$scopedSlots[this.langDir.right] !== void 0,
+        right = this.$scopedSlots[this.langDir.left] !== void 0,
         up = this.$scopedSlots.bottom !== void 0,
         down = this.$scopedSlots.top !== void 0;
 
@@ -22360,6 +24400,7 @@
       content.push(
         h('div', {
           ref: 'content',
+          key: 'content',
           staticClass: 'q-slide-item__content',
           directives: left === true || right === true || up === true || down === true ? [{
             name: 'touch-pan',
@@ -22371,8 +24412,7 @@
               down: down,
               prevent: true,
               stop: true,
-              mouse: true,
-              mouseAllDir: true
+              mouse: true
             }
           }] : null
         }, slot(this, 'default'))
@@ -22380,7 +24420,8 @@
 
       return h('div', {
         staticClass: 'q-slide-item q-item-type overflow-hidden',
-        class: this.isDark === true ? "q-slide-item--dark q-dark" : ''
+        class: this.isDark === true ? "q-slide-item--dark q-dark" : '',
+        on: this.$listeners
       }, content)
     },
 
@@ -22394,7 +24435,8 @@
 
     render: function render (h) {
       return h('div', {
-        staticClass: 'q-space'
+        staticClass: 'q-space',
+        on: this.$listeners
       })
     }
   });
@@ -23659,7 +25701,7 @@
                   'to': '0',
                   'dur': '1s',
                   'repeatCount': 'indefinite',
-                  'vlaues': '25;0;0',
+                  'values': '25;0;0',
                   'keyTimes': '0;0.5;1'
                 }
               }),
@@ -23670,7 +25712,7 @@
                   'to': '45',
                   'dur': '1s',
                   'repeatCount': 'indefinite',
-                  'vlaues': '20;45;45',
+                  'values': '20;45;45',
                   'keyTimes': '0;0.5;1'
                 }
               })
@@ -23697,7 +25739,7 @@
                   'to': '25',
                   'dur': '1s',
                   'repeatCount': 'indefinite',
-                  'vlaues': '0;25;25',
+                  'values': '0;25;25',
                   'keyTimes': '0;0.5;1'
                 }
               }),
@@ -23708,7 +25750,7 @@
                   'to': '55',
                   'dur': '1s',
                   'repeatCount': 'indefinite',
-                  'vlaues': '80;55;55',
+                  'values': '80;55;55',
                   'keyTimes': '0;0.5;1'
                 }
               })
@@ -25025,7 +27067,6 @@
     props: {
       flat: Boolean,
       bordered: Boolean,
-      vertical: Boolean,
       alternativeLabels: Boolean,
       headerNav: Boolean,
       contracted: Boolean,
@@ -25262,14 +27303,16 @@
       getTableHeader: function getTableHeader (h) {
         var child = this.getTableHeaderRow(h);
 
-        this.loading === true && child.push(
-          h('tr', { staticClass: 'q-table__progress' }, [
-            h('th', {
-              staticClass: 'relative-position',
-              attrs: { colspan: '100%' }
-            }, this.__getProgress(h))
-          ])
-        );
+        if (this.loading === true && this.$scopedSlots.loading === void 0) {
+          child.push(
+            h('tr', { staticClass: 'q-table__progress' }, [
+              h('th', {
+                staticClass: 'relative-position',
+                attrs: { colspan: '100%' }
+              }, this.__getProgress(h))
+            ])
+          );
+        }
 
         return h('thead', child)
       },
@@ -25500,9 +27543,9 @@
         });
 
         Object.defineProperty(data, 'expand', {
-          get: function () { return this$1.rowsExpanded[data.key] === true; },
-          set: function (val) {
-            this$1.$set(this$1.rowsExpanded, data.key, val);
+          get: function () { return this$1.isRowExpanded(data.key); },
+          set: function (adding) {
+            this$1.__updateExpanded(data.key, adding);
           },
           configurable: true,
           enumerable: true
@@ -25554,9 +27597,9 @@
         }
 
         if (this.nothingToDisplay === true) {
-          var message = this.filter
-            ? this.noResultsLabel || this.$q.lang.table.noResults
-            : (this.loading === true ? this.loadingLabel || this.$q.lang.table.loading : this.noDataLabel || this.$q.lang.table.noData);
+          var message = this.loading === true
+            ? this.loadingLabel || this.$q.lang.table.loading
+            : (this.filter ? this.noResultsLabel || this.$q.lang.table.noResults : this.noDataLabel || this.$q.lang.table.noData);
 
           var noData = this.$scopedSlots['no-data'];
           var children = noData !== void 0
@@ -25611,7 +27654,7 @@
                 this.rowsPerPageLabel || this.$q.lang.table.recordsPerPage
               ]),
               h(QSelect, {
-                staticClass: 'inline q-table__bottom-item',
+                staticClass: 'q-table__select inline q-table__bottom-item',
                 props: {
                   color: this.color,
                   value: rowsPerPage,
@@ -25646,11 +27689,13 @@
             h('span', rowsPerPage !== 0 ? { staticClass: 'q-table__bottom-item' } : {}, [
               rowsPerPage
                 ? paginationLabel(this.firstRowIndex + 1, Math.min(this.lastRowIndex, this.computedRowsNumber), this.computedRowsNumber)
-                : paginationLabel(1, this.computedRowsNumber, this.computedRowsNumber)
+                : paginationLabel(1, this.computedData.rowsNumber, this.computedRowsNumber)
             ])
           ];
 
           if (rowsPerPage !== 0) {
+            var size = this.dense === true ? 'sm' : void 0;
+
             control.push(
               h(QBtn, {
                 props: {
@@ -25659,6 +27704,7 @@
                   icon: this.navIcon[0],
                   dense: true,
                   flat: true,
+                  size: size,
                   disable: this.isFirstPage
                 },
                 on: cache(this, 'pgPrev', { click: this.prevPage })
@@ -25670,6 +27716,7 @@
                   round: true,
                   icon: this.navIcon[1],
                   dense: true,
+                  size: size,
                   flat: true,
                   disable: this.isLastPage
                 },
@@ -25755,7 +27802,7 @@
           };
 
         return h('div', {
-          staticClass: 'row',
+          staticClass: 'q-table__grid-content row',
           class: this.cardContainerClass,
           style: this.cardContainerStyle
         }, this.computedRows.map(function (row) {
@@ -25780,7 +27827,11 @@
               this.getTableHeader(h)
             ])
           ]
-          : (this.loading === true ? this.__getProgress(h) : void 0);
+          : (
+            this.loading === true && this.$scopedSlots.loading === void 0
+              ? this.__getProgress(h)
+              : void 0
+          );
 
         return h('div', { staticClass: 'q-table__middle' }, child)
       }
@@ -25881,23 +27932,8 @@
       },
 
       __configureScrollTarget: function __configureScrollTarget () {
-        var __scrollTarget = typeof this.scrollTarget === 'string' ? document.querySelector(this.scrollTarget) : this.scrollTarget;
-
-        if (__scrollTarget === void 0) {
-          __scrollTarget = this.$el;
-        }
-        else if (
-          __scrollTarget === document ||
-          __scrollTarget === document.body ||
-          __scrollTarget === document.scrollingElement ||
-          __scrollTarget === document.documentElement
-        ) {
-          __scrollTarget = window;
-        }
-
-        this.__scrollTarget = __scrollTarget;
-
-        __scrollTarget.addEventListener('scroll', this.__onVirtualScrollEvt, listenOpts.passive);
+        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
+        this.__scrollTarget.addEventListener('scroll', this.__onVirtualScrollEvt, listenOpts.passive);
       },
 
       __unconfigureScrollTarget: function __unconfigureScrollTarget () {
@@ -26261,7 +28297,7 @@
       allRowsSelected: function allRowsSelected () {
         var this$1 = this;
 
-        return this.computedRows.every(
+        return this.computedRows.length > 0 && this.computedRows.every(
           function (row) { return this$1.selectedKeys[ this$1.getRowKey(row) ] === true; }
         )
       },
@@ -26303,6 +28339,61 @@
           );
 
         this.$emit('update:selected', payload);
+      }
+    }
+  };
+
+  function getVal (val) {
+    return Array.isArray(val)
+      ? val.slice()
+      : []
+  }
+
+  var RowExpand = {
+    props: {
+      expanded: Array // sync
+    },
+
+    data: function data () {
+      return {
+        innerExpanded: getVal(this.expanded)
+      }
+    },
+
+    watch: {
+      expanded: function expanded (val) {
+        this.innerExpanded = getVal(val);
+      }
+    },
+
+    methods: {
+      isRowExpanded: function isRowExpanded (key) {
+        return this.innerExpanded.includes(key)
+      },
+
+      setExpanded: function setExpanded (val) {
+        if (this.expanded !== void 0) {
+          this.$emit('update:expanded', val);
+        }
+        else {
+          this.innerExpanded = val;
+        }
+      },
+
+      __updateExpanded: function __updateExpanded (key, add) {
+        var target = this.innerExpanded.slice();
+        var index = target.indexOf(key);
+
+        if (add === true) {
+          if (index === -1) {
+            target.push(key);
+            this.setExpanded(target);
+          }
+        }
+        else if (index !== -1) {
+          target.splice(index, 1);
+          this.setExpanded(target);
+        }
       }
     }
   };
@@ -26364,6 +28455,7 @@
       Filter,
       Pagination,
       RowSelection,
+      RowExpand,
       ColumnSelection
     ],
 
@@ -26425,7 +28517,6 @@
 
     data: function data () {
       return {
-        rowsExpanded: {},
         innerPagination: {
           sortBy: null,
           descending: false,
@@ -26437,7 +28528,7 @@
 
     watch: {
       needsReset: function needsReset () {
-        this.hasVirtScroll === true && this.$refs.virtScroll.reset();
+        this.hasVirtScroll === true && this.$refs.virtScroll !== void 0 && this.$refs.virtScroll.reset();
       }
     },
 
@@ -26472,7 +28563,10 @@
         }
 
         if (this.isServerSide === true) {
-          return { rows: rows }
+          return {
+            rowsNumber: rows.length,
+            rows: rows
+          }
         }
 
         var ref = this.computedPagination;
@@ -26535,7 +28629,7 @@
       },
 
       containerClass: function containerClass () {
-        return "q-table__container q-table--" + (this.separator) + "-separator" +
+        return "q-table__container q-table--" + (this.separator) + "-separator column no-wrap" +
           (this.loading === true ? ' q-table--loading' : '') +
           (this.grid === true ? ' q-table--grid' : this.cardDefaultClass) +
           (this.isDark === true ? " q-table--dark" : '') +
@@ -26561,19 +28655,31 @@
     },
 
     render: function render (h) {
+      var child = [ this.getTop(h) ];
       var data = { staticClass: this.containerClass };
 
-      if (this.grid === false) {
-        data.class = this.cardClass;
-        data.style = this.cardStyle;
+      if (this.grid === true) {
+        child.push(this.getGridHeader(h));
+      }
+      else {
+        Object.assign(data, {
+          class: this.cardClass,
+          style: this.cardStyle
+        });
       }
 
-      return h('div', data, [
-        this.getTop(h),
-        this.grid === true ? this.getGridHeader(h) : null,
+      child.push(
         this.getBody(h),
         this.getBottom(h)
-      ])
+      );
+
+      if (this.loading === true && this.$scopedSlots.loading !== void 0) {
+        child.push(
+          this.$scopedSlots.loading()
+        );
+      }
+
+      return h('div', data, child)
     },
 
     methods: {
@@ -26629,6 +28735,31 @@
           ])
       },
 
+      scrollTo: function scrollTo (toIndex) {
+        if (this.$refs.virtScroll !== void 0) {
+          this.$refs.virtScroll.scrollTo(toIndex);
+          return
+        }
+
+        toIndex = parseInt(toIndex, 10);
+        var rowEl = this.$el.querySelector(("tbody tr:nth-of-type(" + (toIndex + 1) + ")"));
+
+        if (rowEl !== null) {
+          var scrollTarget = this.$el.querySelector('.q-table__middle.scroll');
+          var offsetTop = rowEl.offsetTop;
+          var direction = offsetTop < scrollTarget.scrollTop ? 'decrease' : 'increase';
+
+          scrollTarget.scrollTop = offsetTop;
+
+          this.$emit('virtual-scroll', {
+            index: toIndex,
+            from: 0,
+            to: this.pagination.rowsPerPage - 1,
+            direction: direction
+          });
+        }
+      },
+
       __onVScroll: function __onVScroll (info) {
         this.$emit('virtual-scroll', info);
       },
@@ -26657,20 +28788,18 @@
       noHover: Boolean
     },
 
-    render: function render (h) {
-      var on = this.$listeners;
+    computed: {
+      classes: function classes () {
+        return 'q-tr' + (this.props === void 0 || this.props.header === true ? '' : ' ' + this.props.__trClass) +
+          (this.noHover === true ? ' q-tr--no-hover' : '')
+      }
+    },
 
-      return h(
-        'tr',
-        this.props === void 0 || this.props.header === true
-          ? on
-          : {
-            on: on,
-            class: this.props.__trClass +
-              (this.noHover === true ? ' q-tr--no-hover' : '')
-          },
-        slot(this, 'default')
-      )
+    render: function render (h) {
+      return h('tr', {
+        on: this.$listeners,
+        class: this.classes
+      }, slot(this, 'default'))
     }
   });
 
@@ -26683,13 +28812,20 @@
       noHover: Boolean
     },
 
+    computed: {
+      classes: function classes () {
+        return 'q-td' + (this.autoWidth === true ? ' q-table--col-auto-width' : '') +
+          (this.noHover === true ? ' q-td--no-hover' : '')
+      }
+    },
+
     render: function render (h) {
       var on = this.$listeners;
 
       if (this.props === void 0) {
         return h('td', {
           on: on,
-          class: { 'q-table--col-auto-width': this.autoWidth }
+          class: this.classes
         }, slot(this, 'default'))
       }
 
@@ -26704,9 +28840,7 @@
       return h('td', {
         on: on,
         style: col.__tdStyle,
-        class: col.__tdClass +
-          (this.autoWidth === true ? ' q-table--col-auto-width' : '') +
-          (this.noHover === true ? ' q-td--no-hover' : '')
+        class: this.classes + ' ' + col.__tdClass
       }, slot(this, 'default'))
     }
   });
@@ -26846,6 +28980,11 @@
         default: null
       },
 
+      defaultDate: {
+        type: String,
+        validator: function (v) { return /^-?[\d]+\/[0-1]\d\/[0-3]\d$/.test(v); }
+      },
+
       options: Function,
       hourOptions: Array,
       minuteOptions: Array,
@@ -26860,7 +28999,8 @@
         this.value,
         this.__getComputedMask(),
         this.__getComputedLocale(),
-        this.calendar
+        this.calendar,
+        this.__getDefaultDateModel()
       );
 
       var view = 'Hour';
@@ -26883,7 +29023,13 @@
 
     watch: {
       value: function value (v) {
-        var model = __splitDate(v, this.computedMask, this.computedLocale, this.calendar);
+        var model = __splitDate(
+          v,
+          this.computedMask,
+          this.computedLocale,
+          this.calendar,
+          this.defaultDateModel
+        );
 
         if (
           model.dateHash !== this.innerModel.dateHash ||
@@ -26903,10 +29049,9 @@
 
     computed: {
       classes: function classes () {
-        return "q-time--" + (this.landscape === true ? 'landscape' : 'portrait') +
+        return "q-time q-time--" + (this.landscape === true ? 'landscape' : 'portrait') +
           (this.isDark === true ? ' q-time--dark q-dark' : '') +
-          (this.readonly === true && this.disable !== true ? ' q-time--readonly' : '') +
-          (this.disable === true ? ' disable' : '') +
+          (this.disable === true ? ' disabled' : (this.readonly === true ? ' q-time--readonly' : '')) +
           (this.bordered === true ? " q-time--bordered" : '') +
           (this.square === true ? " q-time--square no-border-radius" : '') +
           (this.flat === true ? " q-time--flat no-shadow" : '')
@@ -26940,6 +29085,10 @@
         }
       },
 
+      defaultDateModel: function defaultDateModel () {
+        return this.__getDefaultDateModel()
+      },
+
       computedFormat24h: function computedFormat24h () {
         return this.format24h !== null
           ? this.format24h
@@ -26953,14 +29102,14 @@
           amount = this.innerModel[this.view.toLowerCase()],
           degrees = Math.round(amount * (360 / divider)) - 180;
 
-        var transform = "rotate3d(0,0,1," + degrees + "deg) translate3d(-50%,0,0)";
+        var transform = "rotate(" + degrees + "deg) translateX(-50%)";
 
         if (
           forHour === true &&
           this.computedFormat24h === true &&
           this.innerModel.hour >= 12
         ) {
-          transform += ' scale3d(.7,.7,.7)';
+          transform += ' scale(.7)';
         }
 
         return { transform: transform }
@@ -27066,12 +29215,34 @@
         this.view = 'Hour';
       },
 
+      __getDefaultDateModel: function __getDefaultDateModel () {
+        if (typeof this.defaultDate !== 'string') {
+          var date = this.__getCurrentDate();
+          date.dateHash = date.year + '/' + pad(date.month) + '/' + pad(date.day);
+
+          return date
+        }
+
+        return __splitDate(this.defaultDate, 'YYYY/MM/DD', void 0, this.calendar)
+      },
+
       __click: function __click (evt) {
-        this.__drag({ isFirst: true, evt: evt });
+        // __activate() has already updated the offset
+        // we only need to change the view now, so:
+
+        if (this.$q.platform.is.desktop !== true) {
+          this.__drag({ isFirst: true, evt: evt });
+        }
+
         this.__drag({ isFinal: true, evt: evt });
       },
 
-      __drag: function __drag (event) {
+      __activate: function __activate (evt) {
+        this.__drag({ isFirst: true, evt: evt }, true);
+        this.__drag({ isFinal: true, evt: evt }, true);
+      },
+
+      __drag: function __drag (event, noViewChange) {
         // cases when on a popup getting closed
         // on previously emitted value
         if (this._isBeingDestroyed === true || this._isDestroyed === true) {
@@ -27099,7 +29270,7 @@
 
         this.__updateClock(event.evt);
 
-        if (event.isFinal) {
+        if (event.isFinal && noViewChange !== true) {
           this.dragging = false;
 
           if (this.view === 'Hour') {
@@ -27328,7 +29499,8 @@
                 h('div', {
                   staticClass: 'q-time__clock cursor-pointer non-selectable',
                   on: cache(this, 'click', {
-                    click: this.__click
+                    click: this.__click,
+                    mousedown: this.__activate
                   }),
                   directives: cache(this, 'touch', [{
                     name: 'touch-pan',
@@ -27341,13 +29513,11 @@
                   }])
                 }, [
                   h('div', { staticClass: 'q-time__clock-circle fit' }, [
-                    this.innerModel[view] !== null
-                      ? h('div', {
-                        staticClass: 'q-time__clock-pointer',
-                        style: this.pointerStyle,
-                        class: this.color !== void 0 ? ("text-" + (this.color)) : null
-                      })
-                      : null,
+                    h('div', {
+                      staticClass: 'q-time__clock-pointer',
+                      style: this.pointerStyle,
+                      class: this.innerModel[view] === null ? 'hidden' : (this.color !== void 0 ? ("text-" + (this.color)) : '')
+                    }),
 
                     this.positions.map(function (pos) { return h('div', {
                       staticClass: ("q-time__clock-position row flex-center q-time__clock-pos-" + (pos.index)),
@@ -27491,8 +29661,11 @@
         h('div', { staticClass: 'q-time__actions' }, def)
       );
 
+      if (this.name !== void 0 && this.disable !== true) {
+        this.__injectFormInput(child, 'push');
+      }
+
       return h('div', {
-        staticClass: 'q-time',
         class: this.classes,
         on: this.$listeners,
         attrs: { tabindex: -1 }
@@ -28261,7 +30434,11 @@
 
           isParent === true
             ? h(QSlideTransition, {
-              props: { duration: this.duration }
+              props: { duration: this.duration },
+              on: cache(this, 'slide', {
+                show: function () { this$1.$emit('after-show'); },
+                hide: function () { this$1.$emit('after-hide'); }
+              })
             }, [
               h('div', {
                 staticClass: 'q-tree__node-collapsible',
@@ -28364,8 +30541,10 @@
     }
   });
 
-  var QUploaderBase = {
-    mixins: [ DarkMixin ],
+  var QUploaderBase = Vue.extend({
+    name: 'QUploaderBase',
+
+    mixins: [ DarkMixin, FileMixin ],
 
     props: {
       label: String,
@@ -28377,11 +30556,6 @@
       flat: Boolean,
       bordered: Boolean,
 
-      multiple: Boolean,
-      accept: String,
-      maxFileSize: Number,
-      maxTotalSize: Number,
-      filter: Function,
       noThumbnails: Boolean,
       autoUpload: Boolean,
       hideUploadBtn: Boolean,
@@ -28484,24 +30658,12 @@
     },
 
     methods: {
-      pickFiles: function pickFiles (e) {
-        if (this.editable) {
-          var input = this.__getFileInput();
-          input && input.click(e);
-        }
-      },
-
-      addFiles: function addFiles (files) {
-        if (this.editable && files) {
-          this.__addFiles(null, files);
-        }
-      },
-
       reset: function reset () {
         if (!this.disable) {
           this.abort();
           this.uploadedSize = 0;
           this.uploadSize = 0;
+          this.__revokeImgURLs();
           this.files = [];
           this.queuedFiles = [];
           this.uploadedFiles = [];
@@ -28510,7 +30672,15 @@
 
       removeUploadedFiles: function removeUploadedFiles () {
         if (!this.disable) {
-          this.files = this.files.filter(function (f) { return f.__status !== 'uploaded'; });
+          this.files = this.files.filter(function (f) {
+            if (f.__status !== 'uploaded') {
+              return true
+            }
+
+            f._img !== void 0 && window.URL.revokeObjectURL(f._img.src);
+
+            return false
+          });
           this.uploadedFiles = [];
         }
       },
@@ -28521,15 +30691,21 @@
         if (!this.disable) {
           var removedFiles = [];
 
-          this.files.forEach(function (file) {
-            if (file.__status === 'idle' || file.__status === 'failed') {
-              this$1.uploadSize -= file.size;
-              removedFiles.push(file);
+          var files = this.files.filter(function (f) {
+            if (f.__status !== 'idle' && f.__status !== 'failed') {
+              return true
             }
+
+            this$1.uploadSize -= f.size;
+            removedFiles.push(f);
+
+            f._img !== void 0 && window.URL.revokeObjectURL(f._img.src);
+
+            return false
           });
 
           if (removedFiles.length > 0) {
-            this.files = this.files.filter(function (f) { return f.__status !== 'idle' && f.__status !== 'failed'; });
+            this.files = files;
             this.queuedFiles = [];
             this.$emit('removed', removedFiles);
           }
@@ -28549,9 +30725,23 @@
           this.uploadSize -= file.size;
         }
 
-        this.files = this.files.filter(function (f) { return f.name !== file.name; });
+        this.files = this.files.filter(function (f) {
+          if (f.name !== file.name) {
+            return true
+          }
+
+          f._img !== void 0 && window.URL.revokeObjectURL(f._img.src);
+
+          return false
+        });
         this.queuedFiles = this.queuedFiles.filter(function (f) { return f.name !== file.name; });
         this.$emit('removed', [ file ]);
+      },
+
+      __revokeImgURLs: function __revokeImgURLs () {
+        this.files.forEach(function (f) {
+          f._img !== void 0 && window.URL.revokeObjectURL(f._img.src);
+        });
       },
 
       __getFileInput: function __getFileInput () {
@@ -28590,114 +30780,31 @@
         this.$forceUpdate();
       },
 
-      __addFiles: function __addFiles (e, files) {
+      __addFiles: function __addFiles (e, fileList) {
         var this$1 = this;
 
-        files = Array.prototype.slice.call(files || e.target.files);
+        var files = this.__processFiles(e, fileList)
+          .filter(function (file) { return this$1.files.findIndex(function (f) { return file.name === f.name; }) === -1; });
+
         this.__getFileInput().value = '';
 
-        // make sure we don't duplicate files
-        files = files.filter(function (file) { return !this$1.files.some(function (f) { return file.name === f.name; }); });
-        if (files.length === 0) { return }
-
-        // filter file types
-        if (this.accept !== void 0) {
-          files = Array.prototype.filter.call(files, function (file) {
-            return this$1.extensions.some(function (ext) { return (
-              file.type.toUpperCase().startsWith(ext.toUpperCase()) ||
-              file.name.toUpperCase().endsWith(ext.toUpperCase())
-            ); })
-          });
-          if (files.length === 0) { return }
-        }
-
-        // filter max file size
-        if (this.maxFileSize !== void 0) {
-          files = Array.prototype.filter.call(files, function (file) { return file.size <= this$1.maxFileSize; });
-          if (files.length === 0) { return }
-        }
-
-        // Cordova/iOS allows selecting multiple files even when the
-        // multiple attribute is not specified. We also normalize drag'n'dropped
-        // files here:
-        if (this.multiple !== true) {
-          files = [ files[0] ];
-        }
-
-        if (this.maxTotalSize !== void 0) {
-          var size = 0;
-          for (var i = 0; i < files.length; i++) {
-            size += files[i].size;
-            if (size > this.maxTotalSize) {
-              if (i > 0) {
-                files = files.slice(0, i - 1);
-                break
-              }
-              else {
-                return
-              }
-            }
-          }
-          if (files.length === 0) { return }
-        }
-
-        // do we have custom filter function?
-        if (typeof this.filter === 'function') {
-          files = this.filter(files);
-        }
-
-        if (files.length === 0) { return }
-
-        var filesReady = []; // List of image load promises
+        if (files === void 0) { return }
 
         files.forEach(function (file) {
           this$1.__updateFile(file, 'idle');
           this$1.uploadSize += file.size;
 
           if (this$1.noThumbnails !== true && file.type.toUpperCase().startsWith('IMAGE')) {
-            var reader = new FileReader();
-            var p = new Promise(function (resolve, reject) {
-              reader.onload = function (e) {
-                var img = new Image();
-                img.src = e.target.result;
-                file.__img = img;
-                resolve(true);
-              };
-              reader.onerror = function (e) { reject(e); };
-            });
-
-            reader.readAsDataURL(file);
-            filesReady.push(p);
+            var img = new Image();
+            img.src = window.URL.createObjectURL(file);
+            file.__img = img;
           }
         });
 
-        Promise.all(filesReady).then(function () {
-          this$1.files = this$1.files.concat(files);
-          this$1.queuedFiles = this$1.queuedFiles.concat(files);
-          this$1.$emit('added', files);
-          this$1.autoUpload === true && this$1.upload();
-        });
-      },
-
-      __onDragOver: function __onDragOver (e) {
-        stopAndPrevent(e);
-        this.dnd = true;
-      },
-
-      __onDragLeave: function __onDragLeave (e) {
-        stopAndPrevent(e);
-        this.dnd = false;
-      },
-
-      __onDrop: function __onDrop (e) {
-        stopAndPrevent(e);
-        var files = e.dataTransfer.files;
-
-        if (files.length > 0) {
-          this.__addFiles(null, files);
-        }
-
-        this.dnd = false;
+        this.files = this.files.concat(files);
+        this.queuedFiles = this.queuedFiles.concat(files);
+        this.$emit('added', files);
+        this.autoUpload === true && this.upload();
       },
 
       __getBtn: function __getBtn (h, show, icon, fn) {
@@ -28776,11 +30883,11 @@
           key: file.name,
           staticClass: 'q-uploader__file relative-position',
           class: {
-            'q-uploader__file--img': file.__img !== void 0,
+            'q-uploader__file--img': this$1.noThumbnails !== true && file.__img !== void 0,
             'q-uploader__file--failed': file.__status === 'failed',
             'q-uploader__file--uploaded': file.__status === 'uploaded'
           },
-          style: file.__img !== void 0 ? {
+          style: this$1.noThumbnails !== true && file.__img !== void 0 ? {
             backgroundImage: 'url(' + file.__img.src + ')'
           } : null
         }, [
@@ -28833,9 +30940,29 @@
 
     beforeDestroy: function beforeDestroy () {
       this.isUploading === true && this.abort();
+      this.files.length > 0 && this.__revokeImgURLs();
     },
 
     render: function render (h) {
+      var children = [
+        h('div', {
+          staticClass: 'q-uploader__header',
+          class: this.colorClass
+        }, this.__getHeader(h)),
+
+        h('div', {
+          staticClass: 'q-uploader__list scroll'
+        }, this.__getList(h)),
+
+        this.__getDnd(h, 'uploader')
+      ];
+
+      this.isBusy === true && children.push(
+        h('div', {
+          staticClass: 'q-uploader__overlay absolute-full flex flex-center'
+        }, [ h(QSpinner) ])
+      );
+
       return h('div', {
         staticClass: 'q-uploader column no-wrap',
         class: {
@@ -28848,34 +30975,9 @@
         on: this.canAddFiles === true
           ? cache(this, 'drag', { dragover: this.__onDragOver })
           : null
-      }, [
-        h('div', {
-          staticClass: 'q-uploader__header',
-          class: this.colorClass
-        }, this.__getHeader(h)),
-
-        h('div', {
-          staticClass: 'q-uploader__list scroll'
-        }, this.__getList(h)),
-
-        this.dnd === true ? h('div', {
-          staticClass: 'q-uploader__dnd absolute-full',
-          on: cache(this, 'dnd', {
-            dragenter: stopAndPrevent,
-            dragover: stopAndPrevent,
-            dragleave: this.__onDragLeave,
-            drop: this.__onDrop
-          })
-        }) : null,
-
-        this.isBusy === true ? h('div', {
-          staticClass: 'q-uploader__overlay absolute-full flex flex-center'
-        }, [
-          h(QSpinner)
-        ]) : null
-      ])
+      }, children)
     }
-  };
+  });
 
   function getFn (prop) {
     return typeof prop === 'function'
@@ -29118,10 +31220,10 @@
         files.forEach(function (file) {
           this$1.__updateFile(file, 'uploading', 0);
           if (sendRaw !== true) {
-            form.append(getProp('fieldName', file), file);
+            form.append(getProp('fieldName', file), file, file.name);
           }
           file.xhr = xhr;
-          file.__abort = xhr.abort;
+          file.__abort = function () { xhr.abort(); };
           maxUploadSize += file.size;
         });
 
@@ -29162,6 +31264,8 @@
   var QVideo = Vue.extend({
     name: 'QVideo',
 
+    mixins: [ RatioMixin ],
+
     props: {
       src: {
         type: String,
@@ -29178,12 +31282,18 @@
             allowfullscreen: true
           }
         }
+      },
+
+      classes: function classes () {
+        return 'q-video' +
+          (this.ratio !== void 0 ? ' q-video--responsive' : '')
       }
     },
 
     render: function render (h) {
       return h('div', {
-        staticClass: 'q-video',
+        class: this.classes,
+        style: this.ratioStyle,
         on: this.$listeners
       }, [
         h('iframe', this.iframeData)
@@ -29225,6 +31335,7 @@
     QFab: QFab,
     QFabAction: QFabAction,
     QField: QField,
+    QFile: QFile,
     QFooter: QFooter,
     QForm: QForm,
     QHeader: QHeader,
@@ -29258,10 +31369,12 @@
     QRange: QRange,
     QRating: QRating,
     QResizeObserver: QResizeObserver,
+    QResponsive: QResponsive,
     QScrollArea: QScrollArea,
     QScrollObserver: QScrollObserver,
     QSelect: QSelect,
     QSeparator: QSeparator,
+    QSkeleton: QSkeleton,
     QSlideItem: QSlideItem,
     QSlideTransition: QSlideTransition,
     QSlider: QSlider,
@@ -29368,7 +31481,7 @@
       var value = ref.value;
       var oldValue = ref.oldValue;
 
-      if (value !== oldValue) {
+      if (el.__qclosepopup !== void 0 && value !== oldValue) {
         el.__qclosepopup.depth = getDepth(value);
       }
     },
@@ -29399,7 +31512,7 @@
         goBack: function goBack () {
           var router = vnode.context.$router;
 
-          if (ctx.single) {
+          if (ctx.single === true) {
             router.go(-1);
           }
           else if (client.is.nativeMobile === true) {
@@ -29428,9 +31541,18 @@
     update: function update (el, ref) {
       var value = ref.value;
       var oldValue = ref.oldValue;
+      var modifiers = ref.modifiers;
 
-      if (value !== oldValue) {
-        el.__qgoback.value = value;
+      var ctx = el.__qgoback;
+
+      if (ctx !== void 0) {
+        if (value !== oldValue) {
+          ctx.value = value;
+        }
+
+        if (ctx.single !== modifiers.single) {
+          ctx.single = modifiers.single;
+        }
       }
     },
 
@@ -29483,9 +31605,11 @@
       ctx.observer !== void 0 && ctx.observer.disconnect();
 
       ctx.observer = new MutationObserver(function (list) {
-        var res = ctx.handler(list);
-        if (res === false || ctx.once === true) {
-          destroy$1(el);
+        if (typeof ctx.handler === 'function') {
+          var res = ctx.handler(list);
+          if (res === false || ctx.once === true) {
+            destroy$1(el);
+          }
         }
       });
 
@@ -29519,15 +31643,12 @@
     unbind: destroy$1
   };
 
-  function updateBinding (el, ref) {
+  function updateBinding (ctx, ref) {
     var value = ref.value;
     var oldValue = ref.oldValue;
 
-    var ctx = el.__qscrollfire;
-
     if (typeof value !== 'function') {
       ctx.scrollTarget.removeEventListener('scroll', ctx.scroll);
-      console.error('v-scroll-fire requires a function as parameter', el);
       return
     }
 
@@ -29572,12 +31693,12 @@
     inserted: function inserted (el, binding) {
       var ctx = el.__qscrollfire;
       ctx.scrollTarget = getScrollTarget(el);
-      updateBinding(el, binding);
+      updateBinding(ctx, binding);
     },
 
     update: function update (el, binding) {
-      if (binding.value !== binding.oldValue) {
-        updateBinding(el, binding);
+      if (el.__qscrollfire !== void 0 && binding.value !== binding.oldValue) {
+        updateBinding(el.__qscrollfire, binding);
       }
     },
 
@@ -29590,15 +31711,12 @@
     }
   };
 
-  function updateBinding$1 (el, ref) {
+  function updateBinding$1 (ctx, ref) {
     var value = ref.value;
     var oldValue = ref.oldValue;
 
-    var ctx = el.__qscroll;
-
     if (typeof value !== 'function') {
       ctx.scrollTarget.removeEventListener('scroll', ctx.scroll, listenOpts.passive);
-      console.error('v-scroll requires a function as parameter', el);
       return
     }
 
@@ -29631,12 +31749,12 @@
     inserted: function inserted (el, binding) {
       var ctx = el.__qscroll;
       ctx.scrollTarget = getScrollTarget(el);
-      updateBinding$1(el, binding);
+      updateBinding$1(ctx, binding);
     },
 
     update: function update (el, binding) {
-      if (binding.oldValue !== binding.value) {
-        updateBinding$1(el, binding);
+      if (el.__qscroll !== void 0 && binding.oldValue !== binding.value) {
+        updateBinding$1(el.__qscroll, binding);
       }
     },
 
@@ -29656,6 +31774,7 @@
 
     if (ctx !== void 0) {
       if (binding.oldValue !== binding.value) {
+        typeof binding.value !== 'function' && ctx.end();
         ctx.handler = binding.value;
       }
 
@@ -29685,25 +31804,27 @@
       }
 
       var ctx = {
+        noop: noop,
+
         mouseStart: function mouseStart (evt) {
-          if (leftClick(evt) === true) {
+          if (typeof ctx.handler === 'function' && leftClick(evt) === true) {
             addEvt(ctx, 'temp', [
-              [ document, 'mousemove', 'mouseMove', 'notPassiveCapture' ],
+              [ document, 'mousemove', 'move', 'passiveCapture' ],
               [ document, 'click', 'end', 'notPassiveCapture' ]
             ]);
             ctx.start(evt, true);
           }
         },
 
-        mouseMove: function mouseMove (evt) {
-          var ref = position(evt);
-          var top = ref.top;
-          var left = ref.left;
-          if (
-            Math.abs(left - ctx.origin.left) >= ctx.mouseSensitivity ||
-            Math.abs(top - ctx.origin.top) >= ctx.mouseSensitivity
-          ) {
-            ctx.end(evt);
+        touchStart: function touchStart (evt) {
+          if (evt.target !== void 0 && typeof ctx.handler === 'function') {
+            var target = getTouchTarget(evt.target);
+            addEvt(ctx, 'temp', [
+              [ target, 'touchmove', 'move', 'passiveCapture' ],
+              [ target, 'touchcancel', 'end', 'notPassiveCapture' ],
+              [ target, 'touchend', 'end', 'notPassiveCapture' ]
+            ]);
+            ctx.start(evt);
           }
         },
 
@@ -29715,9 +31836,26 @@
           if (client.is.mobile === true) {
             document.body.classList.add('non-selectable');
             clearSelection();
+
+            ctx.styleCleanup = function (withDelay) {
+              ctx.styleCleanup = void 0;
+
+              var remove = function () {
+                document.body.classList.remove('non-selectable');
+              };
+
+              if (withDelay === true) {
+                clearSelection();
+                setTimeout(remove, 10);
+              }
+              else { remove(); }
+            };
           }
 
           ctx.triggered = false;
+          ctx.sensitivity = mouseEvent === true
+            ? ctx.mouseSensitivity
+            : ctx.touchSensitivity;
 
           ctx.timer = setTimeout(function () {
             clearSelection();
@@ -29733,46 +31871,29 @@
           }, ctx.duration);
         },
 
-        end: function end (evt) {
-          cleanEvt(ctx, 'temp');
-
-          if (ctx.triggered === true) {
-            if (client.is.mobile === true) {
-              clearSelection();
-              // delay needed otherwise selection still occurs
-              setTimeout(function () {
-                document.body.classList.remove('non-selectable');
-              }, 10);
-            }
-            stopAndPrevent(evt);
-          }
-          else {
-            client.is.mobile === true && document.body.classList.remove('non-selectable');
-            clearTimeout(ctx.timer);
-          }
-        },
-
-        touchStart: function touchStart (evt) {
-          if (evt.target !== void 0) {
-            var target = getTouchTarget(evt.target);
-            addEvt(ctx, 'temp', [
-              [ target, 'touchmove', 'touchMove', 'notPassiveCapture' ],
-              [ target, 'touchcancel', 'end', 'notPassiveCapture' ],
-              [ target, 'touchend', 'end', 'notPassiveCapture' ]
-            ]);
-            ctx.start(evt);
-          }
-        },
-
-        touchMove: function touchMove (evt) {
+        move: function move (evt) {
           var ref = position(evt);
           var top = ref.top;
           var left = ref.left;
           if (
-            Math.abs(left - ctx.origin.left) >= ctx.touchSensitivity ||
-            Math.abs(top - ctx.origin.top) >= ctx.touchSensitivity
+            Math.abs(left - ctx.origin.left) >= ctx.sensitivity ||
+            Math.abs(top - ctx.origin.top) >= ctx.sensitivity
           ) {
-            ctx.end(evt);
+            clearTimeout(ctx.timer);
+          }
+        },
+
+        end: function end (evt) {
+          cleanEvt(ctx, 'temp');
+
+          // delay needed otherwise selection still occurs
+          ctx.styleCleanup !== void 0 && ctx.styleCleanup(ctx.triggered);
+
+          if (ctx.triggered === true) {
+            evt !== void 0 && stopAndPrevent(evt);
+          }
+          else {
+            clearTimeout(ctx.timer);
           }
         }
       };
@@ -29790,7 +31911,8 @@
       ]);
 
       client.has.touch === true && addEvt(ctx, 'main', [
-        [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ]
+        [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ],
+        [ el, 'touchend', 'noop', 'notPassiveCapture' ]
       ]);
     },
 
@@ -29803,7 +31925,7 @@
         cleanEvt(ctx, 'temp');
 
         clearTimeout(ctx.timer);
-        client.is.mobile === true && document.body.classList.remove('non-selectable');
+        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
 
         delete el[el.__qtouchhold_old ? '__qtouchhold_old' : '__qtouchhold'];
       }
@@ -29868,26 +31990,20 @@
         keyboard: keyboard,
         handler: value,
 
-        // needed by addEvt / cleanEvt
-        stopAndPrevent: stopAndPrevent,
+        noop: noop,
 
         mouseStart: function mouseStart (evt) {
-          if (ctx.skipMouse === true) {
-            // touch actions finally generate this event
-            // so we need to avoid it
-            ctx.skipMouse = false;
-          }
-          else if (ctx.event === void 0 && leftClick(evt) === true) {
+          if (ctx.event === void 0 && typeof ctx.handler === 'function' && leftClick(evt) === true) {
             addEvt(ctx, 'temp', [
               [ document, 'mousemove', 'move', 'passiveCapture' ],
-              [ document, 'mouseup', 'end', 'passiveCapture' ]
+              [ document, 'click', 'end', 'notPassiveCapture' ]
             ]);
             ctx.start(evt, true);
           }
         },
 
         keyboardStart: function keyboardStart (evt) {
-          if (isKeyCode(evt, keyboard) === true) {
+          if (typeof ctx.handler === 'function' && isKeyCode(evt, keyboard) === true) {
             if (durations[0] === 0 || ctx.event !== void 0) {
               stopAndPrevent(evt);
               el.focus();
@@ -29897,29 +32013,22 @@
             }
 
             addEvt(ctx, 'temp', [
-              [ document, 'keyup', 'end', 'passiveCapture' ]
+              [ document, 'keyup', 'end', 'notPassiveCapture' ],
+              [ document, 'click', 'end', 'notPassiveCapture' ]
             ]);
             ctx.start(evt, false, true);
           }
         },
 
         touchStart: function touchStart (evt) {
-          if (evt.target !== void 0) {
+          if (evt.target !== void 0 && typeof ctx.handler === 'function') {
             var target = getTouchTarget(evt.target);
             addEvt(ctx, 'temp', [
               [ target, 'touchmove', 'move', 'passiveCapture' ],
-              [ target, 'touchcancel', 'touchEnd', 'passiveCapture' ],
-              [ target, 'touchend', 'touchEnd', 'passiveCapture' ],
-              [ document, 'contextmenu', 'stopAndPrevent', 'notPassiveCapture' ]
+              [ target, 'touchcancel', 'end', 'notPassiveCapture' ],
+              [ target, 'touchend', 'end', 'notPassiveCapture' ]
             ]);
             ctx.start(evt);
-          }
-        },
-
-        touchEnd: function touchEnd (evt) {
-          if (ctx.event !== void 0) {
-            ctx.skipMouse = true;
-            ctx.end(evt);
           }
         },
 
@@ -29928,9 +32037,26 @@
             ctx.origin = position(evt);
           }
 
+          function styleCleanup (withDelay) {
+            ctx.styleCleanup = void 0;
+
+            document.documentElement.style.cursor = '';
+
+            var remove = function () {
+              document.body.classList.remove('non-selectable');
+            };
+
+            if (withDelay === true) {
+              clearSelection();
+              setTimeout(remove, 10);
+            }
+            else { remove(); }
+          }
+
           if (client.is.mobile === true) {
             document.body.classList.add('non-selectable');
             clearSelection();
+            ctx.styleCleanup = styleCleanup;
           }
 
           ctx.event = {
@@ -29960,6 +32086,7 @@
                 document.documentElement.style.cursor = 'pointer';
                 document.body.classList.add('non-selectable');
                 clearSelection();
+                ctx.styleCleanup = styleCleanup;
               }
             }
 
@@ -29985,40 +32112,26 @@
 
         move: function move (evt) {
           if (ctx.event !== void 0 && shouldEnd(evt, ctx.origin) === true) {
-            if (ctx.event.touch === true) {
-              ctx.touchEnd(evt);
-            }
-            else {
-              ctx.end(evt);
-            }
+            clearTimeout(ctx.timer);
           }
         },
 
-        end: function end () {
+        end: function end (evt) {
           if (ctx.event === void 0) {
             return
           }
 
-          var triggered = ctx.event.repeatCount > 0;
-
-          if (client.is.mobile === true || triggered === true) {
-            document.documentElement.style.cursor = '';
-            clearSelection();
-            // delay needed otherwise selection still occurs
-            setTimeout(function () {
-              document.body.classList.remove('non-selectable');
-            }, 10);
-          }
+          ctx.styleCleanup !== void 0 && ctx.styleCleanup(true);
+          evt !== void 0 && ctx.event.repeatCount > 0 && stopAndPrevent(evt);
 
           cleanEvt(ctx, 'temp');
           clearTimeout(ctx.timer);
 
-          ctx.timer = void 0;
           ctx.event = void 0;
         }
       };
 
-      if (el.__qtouchrepeat) {
+      if (el.__qtouchrepeat !== void 0) {
         el.__qtouchrepeat_old = el.__qtouchrepeat;
       }
 
@@ -30029,7 +32142,8 @@
       ]);
 
       client.has.touch === true && addEvt(ctx, 'main', [
-        [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ]
+        [ el, 'touchstart', 'touchStart', ("passive" + (modifiers.capture === true ? 'Capture' : '')) ],
+        [ el, 'touchend', 'noop', 'notPassiveCapture' ]
       ]);
 
       keyboard.length > 0 && addEvt(ctx, 'main', [
@@ -30041,6 +32155,7 @@
       var ctx = el.__qtouchrepeat;
 
       if (ctx !== void 0 && binding.oldValue !== binding.value) {
+        typeof binding.value !== 'function' && ctx.end();
         ctx.handler = binding.value;
       }
     },
@@ -30054,10 +32169,7 @@
         cleanEvt(ctx, 'main');
         cleanEvt(ctx, 'temp');
 
-        if (client.is.mobile === true || (ctx.event !== void 0 && ctx.event.repeatCount > 0)) {
-          document.documentElement.style.cursor = '';
-          document.body.classList.remove('non-selectable');
-        }
+        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
 
         delete el[el.__qtouchrepeat_old ? '__qtouchrepeat_old' : '__qtouchrepeat'];
       }
@@ -30144,7 +32256,7 @@
             setColor(val);
           }
         }
-        : function () {};
+        : noop;
 
       $q.addressbarColor = this;
 
@@ -30586,21 +32698,51 @@
     return string
   }
 
+  function getString (msOffset) {
+    var time = new Date();
+    time.setMilliseconds(time.getMilliseconds() + msOffset);
+    return time.toUTCString()
+  }
+
+  function parseExpireString (str) {
+    var timestamp = 0;
+
+    var days = str.match(/(\d+)d/);
+    var hours = str.match(/(\d+)h/);
+    var minutes = str.match(/(\d+)m/);
+    var seconds = str.match(/(\d+)s/);
+
+    if (days) { timestamp += days[1] * 864e+5; }
+    if (hours) { timestamp += hours[1] * 36e+5; }
+    if (minutes) { timestamp += minutes[1] * 6e+4; }
+    if (seconds) { timestamp += seconds[1] * 1000; }
+
+    return timestamp === 0
+      ? str
+      : getString(timestamp)
+  }
+
   function set (key, val, opts, ssr) {
     if ( opts === void 0 ) opts = {};
 
     var expire, expireValue;
 
     if (opts.expires !== void 0) {
-      expireValue = parseFloat(opts.expires);
-
-      if (isNaN(expireValue)) {
-        expire = opts.expires;
+      // if it's a Date Object
+      if (Object.prototype.toString.call(opts.expires) === '[object Date]') {
+        expire = opts.expires.toUTCString();
       }
+      // if it's a String (eg. "15m", "1h", "13d", "1d 15m", "31s")
+      // possible units: d (days), h (hours), m (minutes), s (seconds)
+      else if (typeof opts.expires === 'string') {
+        expire = parseExpireString(opts.expires);
+      }
+      // otherwise it must be a Number (defined in days)
       else {
-        expire = new Date();
-        expire.setMilliseconds(expire.getMilliseconds() + expireValue * 864e+5);
-        expire = expire.toUTCString();
+        expireValue = parseFloat(opts.expires);
+        expire = isNaN(expireValue) === false
+          ? getString(expireValue * 864e+5)
+          : opts.expires;
       }
     }
 
@@ -30656,7 +32798,7 @@
 
   function get (key, ssr) {
     var
-      result = key ? undefined : {},
+      result = key ? null : {},
       cookieSource = ssr ? ssr.req.headers : document,
       cookies = cookieSource.cookie ? cookieSource.cookie.split('; ') : [],
       i = 0,
@@ -30692,7 +32834,7 @@
   }
 
   function has (key, ssr) {
-    return get(key, ssr) !== undefined
+    return get(key, ssr) !== null
   }
 
   function getObject (ctx) {
@@ -30765,51 +32907,69 @@
 
     computed: {
       hasForm: function hasForm () {
-        return this.prompt || this.options
+        return this.prompt !== void 0 || this.options !== void 0
       },
 
       okLabel: function okLabel () {
-        return this.ok === true
+        return Object(this.ok) === this.ok
           ? this.$q.lang.label.ok
-          : this.ok
+          : (
+            this.ok === true
+              ? this.$q.lang.label.ok
+              : this.ok
+          )
       },
 
       cancelLabel: function cancelLabel () {
-        return this.cancel === true
+        return Object(this.cancel) === this.cancel
           ? this.$q.lang.label.cancel
-          : this.cancel
+          : (
+            this.cancel === true
+              ? this.$q.lang.label.cancel
+              : this.cancel
+          )
       },
 
       vmColor: function vmColor () {
         return this.color || (this.isDark === true ? 'amber' : 'primary')
       },
 
+      okDisabled: function okDisabled () {
+        if (this.prompt !== void 0) {
+          return this.prompt.isValid !== void 0 &&
+            this.prompt.isValid(this.prompt.model) !== true
+        }
+        if (this.options !== void 0) {
+          return this.options.isValid !== void 0 &&
+            this.options.isValid(this.options.model) !== true
+        }
+      },
+
       okProps: function okProps () {
-        return Object(this.ok) === this.ok
-          ? Object.assign({}, {color: this.vmColor,
-            label: this.$q.lang.label.ok,
-            ripple: false},
-            this.ok)
-          : {
+        return Object.assign(
+          {
             color: this.vmColor,
-            flat: true,
             label: this.okLabel,
             ripple: false
-          }
+          },
+          Object(this.ok) === this.ok
+            ? this.ok
+            : { flat: true },
+          { disable: this.okDisabled }
+        )
       },
 
       cancelProps: function cancelProps () {
-        return Object(this.cancel) === this.cancel
-          ? Object.assign({}, {color: this.vmColor,
-            label: this.$q.lang.label.cancel,
-            ripple: false},
-            this.cancel)
-          : {
+        return Object.assign(
+          {
             color: this.vmColor,
-            flat: true,
             label: this.cancelLabel,
             ripple: false
-          }
+          },
+          Object(this.cancel) === this.cancel
+            ? this.cancel
+            : { flat: true }
+        )
       }
     },
 
@@ -30829,7 +32989,12 @@
           h(QInput, {
             props: {
               value: this.prompt.model,
-              type: this.prompt.type || 'text',
+              type: this.prompt.type,
+              label: this.prompt.label,
+              stackLabel: this.prompt.stackLabel,
+              outlined: this.prompt.outlined,
+              filled: this.prompt.filled,
+              standout: this.prompt.standout,
               color: this.vmColor,
               dense: true,
               autofocus: true,
@@ -30839,7 +33004,11 @@
               input: function (v) { this$1.prompt.model = v; },
               keyup: function (evt) {
                 // if ENTER key
-                if (this$1.prompt.type !== 'textarea' && isKeyCode(evt, 13) === true) {
+                if (
+                  this$1.okDisabled !== true &&
+                  this$1.prompt.type !== 'textarea' &&
+                  isKeyCode(evt, 13) === true
+                ) {
                   this$1.onOk();
                 }
               }
@@ -30871,20 +33040,17 @@
       getButtons: function getButtons (h) {
         var child = [];
 
-        if (this.cancel) {
-          child.push(h(QBtn, {
-            props: this.cancelProps,
-            attrs: { 'data-autofocus': this.focus === 'cancel' && !this.hasForm },
-            on: cache(this, 'cancel', { click: this.onCancel })
-          }));
-        }
-        if (this.ok) {
-          child.push(h(QBtn, {
-            props: this.okProps,
-            attrs: { 'data-autofocus': this.focus === 'ok' && !this.hasForm },
-            on: cache(this, 'ok', { click: this.onOk })
-          }));
-        }
+        this.cancel && child.push(h(QBtn, {
+          props: this.cancelProps,
+          attrs: { 'data-autofocus': this.focus === 'cancel' && this.hasForm !== true },
+          on: cache(this, 'cancel', { click: this.onCancel })
+        }));
+
+        this.ok && child.push(h(QBtn, {
+          props: this.okProps,
+          attrs: { 'data-autofocus': this.focus === 'ok' && this.hasForm !== true },
+          on: cache(this, 'ok', { click: this.onOk })
+        }));
 
         if (child.length > 0) {
           return h(QCardActions, {
@@ -30907,21 +33073,16 @@
       },
 
       getData: function getData () {
-        if (this.prompt) {
-          return this.prompt.model
-        }
-        if (this.options) {
-          return this.options.model
-        }
+        return this.prompt !== void 0
+          ? this.prompt.model
+          : (this.options !== void 0 ? this.options.model : void 0)
       },
 
       getSection: function getSection (h, staticClass, text) {
         return this.html === true
           ? h(QCardSection, {
             staticClass: staticClass,
-            domProps: {
-              innerHTML: text
-            }
+            domProps: { innerHTML: text }
           })
           : h(QCardSection, { staticClass: staticClass }, [ text ])
       }
@@ -30932,27 +33093,23 @@
 
       var child = [];
 
-      if (this.title) {
-        child.push(
-          this.getSection(h, 'q-dialog__title', this.title)
-        );
-      }
+      this.title && child.push(
+        this.getSection(h, 'q-dialog__title', this.title)
+      );
 
-      if (this.message) {
-        child.push(
-          this.getSection(h, 'q-dialog__message scroll', this.message)
-        );
-      }
+      this.message && child.push(
+        this.getSection(h, 'q-dialog__message scroll', this.message)
+      );
 
-      if (this.hasForm) {
-        child.push(
-          h(
-            QCardSection,
-            { staticClass: 'scroll' },
-            this.prompt ? this.getPrompt(h) : this.getOptions(h)
-          )
-        );
-      }
+      this.hasForm === true && child.push(
+        h(
+          QCardSection,
+          { staticClass: 'scroll' },
+          this.prompt !== void 0
+            ? this.getPrompt(h)
+            : this.getOptions(h)
+        )
+      );
 
       if (this.ok || this.cancel) {
         child.push(this.getButtons(h));
@@ -30991,10 +33148,10 @@
 
   var LoadingBar = {
     isActive: false,
-    start: function start () {},
-    stop: function stop () {},
-    increment: function increment () {},
-    setDefaults: function setDefaults () {},
+    start: noop,
+    stop: noop,
+    increment: noop,
+    setDefaults: noop,
 
     install: function install (ref) {
       var this$1 = this;
@@ -31307,8 +33464,9 @@
     if (component._inactive === true) { return }
 
     // if it has meta
-    if (component.__qMeta !== void 0) {
+    if (hasMeta(component) === true) {
       extend(true, meta, component.__qMeta);
+
       if (component.$options.meta.stopPropagation === true) {
         return
       }
@@ -31478,8 +33636,12 @@
     }
   };
 
+  function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
   var uid$4 = 0;
   var defaults$1 = {};
+
+  var attrs$2 = { role: 'alert' };
 
   var positionList = [
     'top-left', 'top-right',
@@ -31487,21 +33649,55 @@
     'top', 'bottom', 'left', 'right', 'center'
   ];
 
+  var badgePositions = [
+    'top-left', 'top-right',
+    'bottom-left', 'bottom-right'
+  ];
+
+  var notifTypes = {
+    positive: {
+      icon: function icon () { return this.$q.iconSet.type.positive },
+      color: 'positive'
+    },
+
+    negative: {
+      icon: function icon () { return this.$q.iconSet.type.negative },
+      color: 'negative'
+    },
+
+    warning: {
+      icon: function icon () { return this.$q.iconSet.type.warning },
+      color: 'warning',
+      textColor: 'dark'
+    },
+
+    info: {
+      icon: function icon () { return this.$q.iconSet.type.info },
+      color: 'info'
+    }
+  };
+
+  var groups = {};
+  var positionClass$1 = {};
+
   var Notifications = {
     name: 'QNotifications',
 
-    data: {
-      notifs: {
-        center: [],
-        left: [],
-        right: [],
-        top: [],
-        'top-left': [],
-        'top-right': [],
-        bottom: [],
-        'bottom-left': [],
-        'bottom-right': []
-      }
+    created: function created () {
+      var this$1 = this;
+
+      this.notifs = {};
+
+      positionList.forEach(function (pos) {
+        this$1.notifs[pos] = [];
+
+        var
+          vert = ['left', 'center', 'right'].includes(pos) ? 'center' : (pos.indexOf('top') > -1 ? 'top' : 'bottom'),
+          align = pos.indexOf('left') > -1 ? 'start' : (pos.indexOf('right') > -1 ? 'end' : 'center'),
+          classes = ['left', 'right'].includes(pos) ? ("items-" + (pos === 'left' ? 'start' : 'end') + " justify-center") : (pos === 'center' ? 'flex-center' : ("items-" + align));
+
+        positionClass$1[pos] = "q-notifications__list q-notifications__list--" + vert + " fixed column no-wrap " + classes;
+      });
     },
 
     methods: {
@@ -31519,12 +33715,20 @@
           Object.assign(notif, defaults$1);
         }
 
-        Object.assign(
-          notif,
-          typeof config === 'string'
-            ? { message: config }
-            : clone$1(config)
-        );
+        if (Object(config) === config) {
+          Object.assign(notif, notifTypes[config.type], config);
+
+          if (typeof notif.icon === 'function') {
+            notif.icon = notif.icon.call(this);
+          }
+        }
+        else {
+          Object.assign(notif, { message: config });
+        }
+
+        notif.meta = {
+          hasMedia: Boolean(notif.icon || notif.avatar)
+        };
 
         if (notif.position) {
           if (!positionList.includes(notif.position)) {
@@ -31535,8 +33739,6 @@
         else {
           notif.position = 'bottom';
         }
-
-        notif.__uid = uid$4++;
 
         if (notif.timeout === void 0) {
           notif.timeout = 5000;
@@ -31550,71 +33752,166 @@
           notif.timeout = t;
         }
 
-        var close = function () {
-          this$1.remove(notif);
-        };
+        if (notif.timeout === 0) {
+          notif.progress = false;
+        }
+        else if (notif.progress === true) {
+          notif.meta.progressStyle = {
+            animationDuration: ((notif.timeout + 1000) + "ms")
+          };
+        }
 
-        var actions = (config.actions || [])
+        var actions = (Array.isArray(config.actions) === true ? config.actions : [])
           .concat(config.ignoreDefaults !== true && Array.isArray(defaults$1.actions) === true ? defaults$1.actions : []);
 
-        notif.actions = actions.length > 0
-          ? actions.map(function (item) {
-            var
-              handler = item.handler,
-              action = clone$1(item);
+        notif.closeBtn && actions.push({
+          label: typeof notif.closeBtn === 'string'
+            ? notif.closeBtn
+            : this.$q.lang.label.close
+        });
 
-            action.handler = typeof handler === 'function'
+        notif.actions = actions.map(function (ref) {
+          var handler = ref.handler;
+          var noDismiss = ref.noDismiss;
+          var rest = objectWithoutProperties$2( ref, ["handler", "noDismiss"] );
+          var item = rest;
+
+          return ({
+          props: Object.assign({}, {flat: true}, item),
+          on: {
+            click: typeof handler === 'function'
               ? function () {
                 handler();
-                !item.noDismiss && close();
+                noDismiss !== true && notif.meta.close();
               }
-              : function () { return close(); };
+              : function () {
+                notif.meta.close();
+              }
+          }
+        });
+        });
 
-            return action
-          })
-          : void 0;
-
-        if (typeof config.onDismiss === 'function') {
-          notif.onDismiss = config.onDismiss;
-        }
-
-        if (typeof notif.closeBtn === 'string') {
-          var btn = { label: notif.closeBtn, handler: close };
-          notif.actions = notif.actions
-            ? notif.actions.concat(btn)
-            : [ btn ];
-        }
-
-        if (notif.timeout > 0) {
-          notif.__timeout = setTimeout(function () {
-            close();
-          }, notif.timeout + /* show duration */ 1000);
-        }
-
-        if (notif.multiLine === void 0 && notif.actions) {
+        if (notif.multiLine === void 0) {
           notif.multiLine = notif.actions.length > 1;
         }
 
-        notif.staticClass = [
-          "q-notification row items-center",
-          notif.color && ("bg-" + (notif.color)),
-          notif.textColor && ("text-" + (notif.textColor)),
-          ("q-notification--" + (notif.multiLine === true ? 'multi-line' : 'standard')),
-          notif.classes
-        ].filter(function (n) { return n; }).join(' ');
+        Object.assign(notif.meta, {
+          staticClass: "q-notification row items-stretch" +
+            " q-notification--" + (notif.multiLine === true ? 'multi-line' : 'standard') +
+            (notif.color !== void 0 ? (" bg-" + (notif.color)) : '') +
+            (notif.textColor !== void 0 ? (" text-" + (notif.textColor)) : '') +
+            (notif.classes !== void 0 ? (" " + (notif.classes)) : ''),
 
-        var action = notif.position.indexOf('top') > -1 ? 'unshift' : 'push';
-        this.notifs[notif.position][action](notif);
+          wrapperClass: 'q-notification__wrapper col relative-position border-radius-inherit ' +
+            (notif.multiLine === true ? 'column no-wrap justify-center' : 'row items-center'),
 
-        return close
+          contentClass: 'q-notification__content row items-center' +
+            (notif.multiLine === true ? '' : ' col')
+        });
+
+        if (notif.group === false) {
+          notif.group = void 0;
+        }
+        else {
+          if (notif.group === void 0 || notif.group === true) {
+            // do not replace notifications with different buttons
+            notif.group = [
+              notif.message,
+              notif.caption,
+              notif.multiline
+            ].concat(
+              notif.actions.map(function (a) { return ((a.props.label) + "*" + (a.props.icon)); })
+            ).join('|');
+          }
+
+          notif.group += '|' + notif.position;
+        }
+
+        if (notif.actions.length === 0) {
+          notif.actions = void 0;
+        }
+        else {
+          notif.meta.actionsClass = 'q-notification__actions row items-center ' +
+            (notif.multiLine === true ? 'justify-end' : 'col-auto') +
+            (notif.meta.hasMedia === true ? ' q-notification__actions--with-media' : '');
+        }
+
+        var groupNotif = groups[notif.group];
+
+        // wohoo, new notification
+        if (groupNotif === void 0) {
+          notif.meta.uid = uid$4++;
+          notif.meta.badge = 1;
+
+          if (['left', 'right', 'center'].indexOf(notif.position) !== -1) {
+            this.notifs[notif.position].splice(
+              Math.floor(this.notifs[notif.position].length / 2),
+              0,
+              notif
+            );
+          }
+          else {
+            var action = notif.position.indexOf('top') > -1 ? 'unshift' : 'push';
+            this.notifs[notif.position][action](notif);
+          }
+
+          if (notif.group !== void 0) {
+            groups[notif.group] = notif;
+          }
+        }
+        // ok, so it's NOT a new one
+        else {
+          // reset timeout if any
+          if (groupNotif.meta.timer !== void 0) {
+            clearTimeout(groupNotif.meta.timer);
+          }
+
+          var original = groups[notif.group];
+
+          if (notif.badgePosition !== void 0) {
+            if (badgePositions.includes(notif.badgePosition) === false) {
+              console.error(("Notify - wrong badgePosition specified: " + (notif.badgePosition)));
+              return false
+            }
+          }
+          else {
+            notif.badgePosition = "top-" + (notif.position.indexOf('left') > -1 ? 'right' : 'left');
+          }
+
+          notif.meta.uid = original.meta.uid;
+          notif.meta.badge = original.meta.badge + 1;
+          notif.meta.badgeStaticClass = "q-notification__badge q-notification__badge--" + (notif.badgePosition) +
+            (notif.badgeColor !== void 0 ? (" bg-" + (notif.badgeColor)) : '') +
+            (notif.badgeTextColor !== void 0 ? (" text-" + (notif.badgeTextColor)) : '');
+
+          notif = Object.assign(original, notif);
+        }
+
+        notif.meta.close = function () {
+          this$1.remove(notif);
+        };
+
+        this.$forceUpdate();
+
+        if (notif.timeout > 0) {
+          notif.meta.timer = setTimeout(function () {
+            notif.meta.close();
+          }, notif.timeout + /* show duration */ 1000);
+        }
+
+        return notif.meta.close
       },
 
       remove: function remove (notif) {
-        if (notif.__timeout) { clearTimeout(notif.__timeout); }
+        if (notif.meta.timer) { clearTimeout(notif.meta.timer); }
 
         var index = this.notifs[notif.position].indexOf(notif);
         if (index !== -1) {
-          var el = this.$refs[("notif_" + (notif.__uid))];
+          if (notif.group !== void 0) {
+            delete groups[notif.group];
+          }
+
+          var el = this.$refs[("notif_" + (notif.meta.uid))];
 
           if (el) {
             var ref = getComputedStyle(el);
@@ -31627,6 +33924,9 @@
           }
 
           this.notifs[notif.position].splice(index, 1);
+
+          this.$forceUpdate();
+
           if (typeof notif.onDismiss === 'function') {
             notif.onDismiss();
           }
@@ -31638,14 +33938,9 @@
       var this$1 = this;
 
       return h('div', { staticClass: 'q-notifications' }, positionList.map(function (pos) {
-        var
-          vert = ['left', 'center', 'right'].includes(pos) ? 'center' : (pos.indexOf('top') > -1 ? 'top' : 'bottom'),
-          align = pos.indexOf('left') > -1 ? 'start' : (pos.indexOf('right') > -1 ? 'end' : 'center'),
-          classes = ['left', 'right'].includes(pos) ? ("items-" + (pos === 'left' ? 'start' : 'end') + " justify-center") : (pos === 'center' ? 'flex-center' : ("items-" + align));
-
         return h('transition-group', {
           key: pos,
-          staticClass: ("q-notifications__list q-notifications__list--" + vert + " fixed column " + classes),
+          staticClass: positionClass$1[pos],
           tag: 'div',
           props: {
             name: ("q-notification--" + pos),
@@ -31653,6 +33948,8 @@
           }
         }, this$1.notifs[pos].map(function (notif) {
           var msgChild;
+
+          var meta = notif.meta;
           var msgData = { staticClass: 'q-notification__message col' };
 
           if (notif.html === true) {
@@ -31674,20 +33971,23 @@
 
           var mainChild = [];
 
-          if (notif.icon) {
-            mainChild.push(
-              h(QIcon, {
-                staticClass: 'q-notification__icon col-auto',
-                props: { name: notif.icon }
-              })
-            );
-          }
-          else if (notif.avatar) {
-            mainChild.push(
-              h(QAvatar, { staticClass: 'q-notification__avatar col-auto' }, [
-                h('img', { attrs: { src: notif.avatar } })
-              ])
-            );
+          if (meta.hasMedia === true) {
+            if (notif.icon) {
+              mainChild.push(
+                h(QIcon, {
+                  staticClass: 'q-notification__icon col-auto',
+                  attrs: { role: 'img' },
+                  props: { name: notif.icon }
+                })
+              );
+            }
+            else if (notif.avatar) {
+              mainChild.push(
+                h(QAvatar, { staticClass: 'q-notification__avatar col-auto' }, [
+                  h('img', { attrs: { src: notif.avatar, 'aria-hidden': 'true' } })
+                ])
+              );
+            }
           }
 
           mainChild.push(
@@ -31695,25 +33995,41 @@
           );
 
           var child = [
-            h('div', {
-              staticClass: 'row items-center ' + (notif.multiLine === true ? 'col-all' : 'col')
-            }, mainChild)
+            h('div', { staticClass: meta.contentClass }, mainChild)
           ];
+
+          notif.progress === true && child.push(
+            h('div', {
+              key: ((meta.uid) + "|p|" + (meta.badge)),
+              staticClass: 'q-notification__progress',
+              style: meta.progressStyle,
+              class: notif.progressClass
+            })
+          );
 
           notif.actions !== void 0 && child.push(
             h('div', {
-              staticClass: 'q-notification__actions row items-center ' + (notif.multiLine === true ? 'col-all justify-end' : 'col-auto')
-            }, notif.actions.map(function (action) { return h(QBtn, {
-              props: Object.assign({}, {flat: true}, action),
-              on: { click: action.handler }
-            }); }))
+              staticClass: meta.actionsClass
+            }, notif.actions.map(function (a) { return h(QBtn, { props: a.props, on: a.on }); }))
+          );
+
+          meta.badge > 1 && child.push(
+            h('div', {
+              key: ((meta.uid) + "|" + (meta.badge)),
+              staticClass: meta.badgeStaticClass,
+              style: notif.badgeStyle,
+              class: notif.badgeClass
+            }, [ meta.badge ])
           );
 
           return h('div', {
-            ref: ("notif_" + (notif.__uid)),
-            key: notif.__uid,
-            staticClass: notif.staticClass
-          }, child)
+            ref: ("notif_" + (meta.uid)),
+            key: meta.uid,
+            staticClass: meta.staticClass,
+            attrs: attrs$2
+          }, [
+            h('div', { staticClass: meta.wrapperClass }, child)
+          ])
         }))
       }))
     }
@@ -31721,11 +34037,16 @@
 
   var Notify = {
     create: function create (opts) {
-      if (isSSR === true) { return function () {} }
+      if (isSSR === true) { return noop }
       return this.__vm.add(opts)
     },
     setDefaults: function setDefaults (opts) {
       opts === Object(opts) && Object.assign(defaults$1, opts);
+    },
+    registerType: function registerType (typeName, typeOpts) {
+      if (isSSR !== true && typeOpts === Object(typeOpts)) {
+        notifTypes[typeName] = typeOpts;
+      }
     },
 
     install: function install (ref) {
@@ -31733,8 +34054,8 @@
       var $q = ref.$q;
 
       if (isSSR === true) {
-        $q.notify = function () {};
-        $q.notify.setDefaults = function () {};
+        $q.notify = noop;
+        $q.notify.setDefaults = noop;
         return
       }
 
@@ -31742,6 +34063,7 @@
 
       $q.notify = this.create.bind(this);
       $q.notify.setDefaults = this.setDefaults;
+      $q.notify.registerType = this.registerType;
 
       var node = document.createElement('div');
       document.body.appendChild(node);
@@ -31819,18 +34141,16 @@
   }
 
   function getEmptyStorage () {
-    var fn = function () {};
-
     return {
-      has: fn,
-      getLength: fn,
-      getItem: fn,
-      getIndex: fn,
-      getAll: fn,
-      set: fn,
-      remove: fn,
-      clear: fn,
-      isEmpty: fn
+      has: noop,
+      getLength: noop,
+      getItem: noop,
+      getIndex: noop,
+      getAll: noop,
+      set: noop,
+      remove: noop,
+      clear: noop,
+      isEmpty: noop
     }
   }
 
@@ -31849,16 +34169,31 @@
       getLength: function () { return webStorage.length; },
       getItem: get,
       getIndex: function (index) {
-        if (index < webStorage.length) {
-          return get(webStorage.key(index))
-        }
+        return index < webStorage.length
+          ? get(webStorage.key(index))
+          : null
+      },
+      getKey: function (index) {
+        return index < webStorage.length
+          ? webStorage.key(index)
+          : null
       },
       getAll: function () {
-        var result = {}, key, len = webStorage.length;
+        var key;
+        var result = {}, len = webStorage.length;
 
         for (var i = 0; i < len; i++) {
           key = webStorage.key(i);
           result[key] = get(key);
+        }
+
+        return result
+      },
+      getAllKeys: function () {
+        var result = [], len = webStorage.length;
+
+        for (var i = 0; i < len; i++) {
+          result.push(webStorage.key(i));
         }
 
         return result
@@ -31920,6 +34255,7 @@
   function fallback (text) {
     var area = document.createElement('textarea');
     area.value = text;
+    area.contentEditable = true;
     area.style.position = 'fixed'; // avoid scrolling to bottom
 
     document.body.appendChild(area);
@@ -32010,7 +34346,7 @@
     }
   }
 
-  function noop () {}
+
 
   var utils = /*#__PURE__*/Object.freeze({
     __proto__: null,

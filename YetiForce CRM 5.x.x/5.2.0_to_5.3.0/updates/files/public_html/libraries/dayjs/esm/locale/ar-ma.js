@@ -1,3 +1,4 @@
+// Arabic (Morocco) [ar-ma]
 import dayjs from '../index';
 var locale = {
   name: 'ar-ma',

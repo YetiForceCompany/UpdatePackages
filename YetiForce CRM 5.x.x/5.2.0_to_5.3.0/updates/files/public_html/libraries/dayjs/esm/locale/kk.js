@@ -1,3 +1,4 @@
+// Kazakh [kk]
 import dayjs from '../index';
 var locale = {
   name: 'kk',

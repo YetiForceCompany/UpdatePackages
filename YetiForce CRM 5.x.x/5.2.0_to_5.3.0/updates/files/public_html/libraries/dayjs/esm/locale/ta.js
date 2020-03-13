@@ -1,3 +1,4 @@
+// Tamil [ta]
 import dayjs from '../index';
 var locale = {
   name: 'ta',

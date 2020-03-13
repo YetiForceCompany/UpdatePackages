@@ -31,8 +31,8 @@ var parseLocale = function parseLocale(preset, object, isLocal) {
     l = name;
   }
 
-  if (!isLocal) L = l;
-  return l;
+  if (!isLocal && l) L = l;
+  return l || !isLocal && L;
 };
 
 var dayjs = function dayjs(date, c, pl) {

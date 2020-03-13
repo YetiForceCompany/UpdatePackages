@@ -37,6 +37,11 @@
       "desc": "Enable swipe events (may interfere with content's touch/mouse events)",
       "category": "behavior"
     },
+    "vertical": {
+      "type": "Boolean",
+      "desc": "Default transitions and swipe actions will be on the vertical axis",
+      "category": "behavior"
+    },
     "transition-prev": {
       "type": "String",
       "desc": "One of Quasar's embedded transitions (has effect only if 'animated' prop is set)",
@@ -45,7 +50,7 @@
         "slide-down"
       ],
       "category": "behavior",
-      "default": "slide-right"
+      "default": "slide-right/slide-down"
     },
     "transition-next": {
       "type": "String",
@@ -55,7 +60,7 @@
         "slide-down"
       ],
       "category": "behavior",
-      "default": "slide-left"
+      "default": "slide-left/slide-up"
     }
   },
   "slots": {

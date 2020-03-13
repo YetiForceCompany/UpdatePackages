@@ -3,6 +3,8 @@
     "docsUrl": "https://v1.quasar.dev/vue-components/img"
   },
 
+  "mixins": [ "mixins/ratio" ],
+
   "behavior": {
     "$listeners": true
   },
@@ -39,6 +41,28 @@
         "(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
       ],
       "category": "model"
+    },
+
+    "width": {
+      "type": "String",
+      "desc": "Forces image width; Must also include the unit (px or %)",
+      "examples": [
+        "280px",
+        "70%"
+      ],
+      "category": "model",
+      "addedIn": "v1.9.0"
+    },
+
+    "height": {
+      "type": "String",
+      "desc": "Forces image height; Must also include the unit (px or %)",
+      "examples": [
+        "280px",
+        "70%"
+      ],
+      "category": "model",
+      "addedIn": "v1.9.0"
     },
 
     "alt": {
@@ -132,6 +156,13 @@
       "desc": "Do not display the default spinner when loading images (unless you are specifying one through the 'loading' slot)",
       "category": "content",
       "addedIn": "v1.1.0"
+    },
+
+    "native-context-menu": {
+      "type": "Boolean",
+      "desc": "Enable the native context menu of the image",
+      "category": "behavior",
+      "addedIn": "v1.8.4"
     }
   },
 

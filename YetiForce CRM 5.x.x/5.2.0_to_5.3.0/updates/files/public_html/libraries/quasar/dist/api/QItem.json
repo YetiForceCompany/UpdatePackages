@@ -9,6 +9,17 @@
     }
   },
   "props": {
+    "tag": {
+      "type": "String",
+      "desc": "HTML tag to render; Suggestion: use 'label' when encapsulating a QCheckbox/QRadio/QToggle so that when user clicks/taps on the whole item it will trigger a model change for the mentioned components",
+      "default": "div",
+      "category": "content",
+      "examples": [
+        "a",
+        "label",
+        "div"
+      ]
+    },
     "to": {
       "type": [
         "String",
@@ -96,16 +107,6 @@
         "100"
       ],
       "category": "general"
-    },
-    "tag": {
-      "type": "String",
-      "desc": "HTML tag to render; Suggestion: use 'label' when encapsulating a QCheckbox/QRadio/QToggle so that when user clicks/taps on the whole item it will trigger a model change for the mentioned components",
-      "default": "div",
-      "examples": [
-        "a",
-        "label"
-      ],
-      "category": "content"
     },
     "manual-focus": {
       "type": "Boolean",

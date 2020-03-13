@@ -27,7 +27,7 @@
     "phenx/php-font-lib": "^0.5.1",
     "guzzlehttp/guzzle": "^6.3",
     "composer/ca-bundle": "^1.1",
-    "milon/barcode": "^6.0.0",
+    "milon/barcode": "^7.0.0",
     "sabberworm/php-css-parser": "^8.3"
   },
   "autoload": {

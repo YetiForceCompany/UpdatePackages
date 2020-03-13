@@ -1,3 +1,4 @@
+// French (Switzerland) [fr-ch]
 import dayjs from '../index';
 var locale = {
   name: 'fr-ch',

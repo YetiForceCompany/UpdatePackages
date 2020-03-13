@@ -9,18 +9,18 @@
     }
   },
   "props": {
-    "heading": {
-      "type": "Boolean",
-      "desc": "Defines a heading timeline item",
-      "category": "content"
-    },
     "tag": {
       "type": "String",
       "desc": "Tag to use, if of type 'heading' only",
       "default": "h3",
+      "category": "content",
       "examples": [
         "h1"
-      ],
+      ]
+    },
+    "heading": {
+      "type": "Boolean",
+      "desc": "Defines a heading timeline item",
       "category": "content"
     },
     "side": {

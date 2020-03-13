@@ -1,3 +1,4 @@
+// Klingon [tlh]
 import dayjs from '../index';
 var locale = {
   name: 'tlh',

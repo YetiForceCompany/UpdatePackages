@@ -1,3 +1,4 @@
+// Vietnamese [vi]
 import dayjs from '../index';
 var locale = {
   name: 'vi',

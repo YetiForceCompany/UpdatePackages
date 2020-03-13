@@ -1,3 +1,4 @@
+// Turkish [tr]
 import dayjs from '../index';
 var locale = {
   name: 'tr',

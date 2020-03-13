@@ -200,9 +200,9 @@ var parseFormattedInput = function parseFormattedInput(input, format, utc) {
     }
 
     var now = new Date();
+    var d = day || (!year && !month ? now.getDate() : 1);
     var y = year || now.getFullYear();
     var M = month > 0 ? month - 1 : now.getMonth();
-    var d = day || now.getDate();
     var h = hours || 0;
     var m = minutes || 0;
     var s = seconds || 0;
@@ -233,6 +233,7 @@ export default (function (o, C, d) {
       locale = pl ? d.Ls[pl] : this.$locale();
       this.$d = parseFormattedInput(date, format, utc);
       this.init(cfg);
+      if (pl) this.$L = pl;
     } else {
       oldParse.call(this, cfg);
     }

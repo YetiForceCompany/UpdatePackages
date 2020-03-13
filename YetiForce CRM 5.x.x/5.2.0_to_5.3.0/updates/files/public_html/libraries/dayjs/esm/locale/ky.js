@@ -1,3 +1,4 @@
+// Kyrgyz [ky]
 import dayjs from '../index';
 var locale = {
   name: 'ky',

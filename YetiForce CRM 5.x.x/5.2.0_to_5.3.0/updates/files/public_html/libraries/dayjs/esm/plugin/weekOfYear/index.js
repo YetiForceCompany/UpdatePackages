@@ -1,5 +1,5 @@
 import { MS, Y, D, W } from '../../constant';
-export default (function (o, c, d) {
+export default (function (o, c) {
   var proto = c.prototype;
 
   proto.week = function (week) {
@@ -8,20 +8,28 @@ export default (function (o, c, d) {
     }
 
     if (week !== null) {
-      return this.add((week - this.week()) * 7, 'day');
+      return this.add((week - this.week()) * 7, D);
     }
 
-    var weekStart = this.$locale().weekStart || 0; // d(this) clone is for badMutable plugin
+    var yearStart = this.$locale().yearStart || 1;
 
-    var endOfYear = d(this).endOf(Y);
+    if (this.month() === 11 && this.date() > 25) {
+      var nextYearStartDay = this.startOf(Y).add(1, Y).date(yearStart);
+      var thisEndOfWeek = this.endOf(W);
 
-    if (weekStart === 0 && endOfYear.day() !== 6 && this.month() === 11 && 31 - this.date() <= endOfYear.day()) {
-      return 1;
+      if (nextYearStartDay.isBefore(thisEndOfWeek)) {
+        return 1;
+      }
     }
 
-    var startOfYear = d(this).startOf(Y);
-    var compareDay = startOfYear.subtract(startOfYear.day() - weekStart, D).subtract(1, MS);
-    var diffInWeek = this.diff(compareDay, W, true);
+    var yearStartDay = this.startOf(Y).date(yearStart);
+    var yearStartWeek = yearStartDay.startOf(W).subtract(1, MS);
+    var diffInWeek = this.diff(yearStartWeek, W, true);
+
+    if (diffInWeek < 0) {
+      return this.startOf('week').week();
+    }
+
     return Math.ceil(diffInWeek);
   };
 

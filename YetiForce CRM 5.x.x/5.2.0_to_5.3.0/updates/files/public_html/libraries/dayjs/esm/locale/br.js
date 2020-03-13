@@ -1,3 +1,4 @@
+// Breton [br]
 import dayjs from '../index';
 var locale = {
   name: 'br',

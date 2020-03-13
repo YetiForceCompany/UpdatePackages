@@ -1,3 +1,5 @@
+import { noop } from '../../utils/event.js'
+
 function getBlockElement (el, parent) {
   if (parent && el === parent) {
     return null
@@ -23,18 +25,9 @@ function getBlockElement (el, parent) {
 }
 
 function isChildOf (el, parent) {
-  if (!el) {
-    return false
-  }
-  while ((el = el.parentNode)) {
-    if (el === document.body) {
-      return false
-    }
-    if (el === parent) {
-      return true
-    }
-  }
-  return false
+  return el === parent
+    ? false
+    : (parent === document ? document.body : parent).contains(el)
 }
 
 const urlRegex = /^https?:\/\//
@@ -194,7 +187,7 @@ export class Caret {
     }
   }
 
-  apply (cmd, param, done = () => {}) {
+  apply (cmd, param, done = noop) {
     if (cmd === 'formatBlock') {
       if (['BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(param) && this.is(cmd, param)) {
         cmd = 'outdent'

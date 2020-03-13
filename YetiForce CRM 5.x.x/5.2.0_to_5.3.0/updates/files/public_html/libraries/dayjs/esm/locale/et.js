@@ -1,4 +1,27 @@
+// Estonian [et]
 import dayjs from '../index';
+
+function relativeTimeWithTense(number, withoutSuffix, key, isFuture) {
+  var format = {
+    s: ['mõne sekundi', 'mõni sekund', 'paar sekundit'],
+    m: ['ühe minuti', 'üks minut'],
+    mm: ['%d minuti', '%d minutit'],
+    h: ['ühe tunni', 'tund aega', 'üks tund'],
+    hh: ['%d tunni', '%d tundi'],
+    d: ['ühe päeva', 'üks päev'],
+    M: ['kuu aja', 'kuu aega', 'üks kuu'],
+    MM: ['%d kuu', '%d kuud'],
+    y: ['ühe aasta', 'aasta', 'üks aasta'],
+    yy: ['%d aasta', '%d aastat']
+  };
+
+  if (withoutSuffix) {
+    return (format[key][2] ? format[key][2] : format[key][1]).replace('%d', number);
+  }
+
+  return (isFuture ? format[key][0] : format[key][1]).replace('%d', number);
+}
+
 var locale = {
   name: 'et',
   // Estonian
@@ -14,40 +37,20 @@ var locale = {
     return n + ".";
   },
   weekStart: 1,
-
-  /*
-   * This relativeTime is currently configured for having proper past
-   * tense forms since Estonian needs a separate version for future tense
-   * and I think past tense is a more common use case for this kind of library.
-   *
-   * Doing this properly requires this issue to be fixed:
-   * https://github.com/iamkun/dayjs/issues/302
-   */
   relativeTime: {
     future: '%s pärast',
     past: '%s tagasi',
-    s: 'mõni sekund',
-    // for past tense
-    m: 'minut',
-    // for past tense
-    mm: '%d minutit',
-    // for past tense
-    h: 'tund',
-    // for past tense
-    hh: '%d tundi',
-    // for past tense
-    d: 'päev',
-    // for past tense
+    s: relativeTimeWithTense,
+    m: relativeTimeWithTense,
+    mm: relativeTimeWithTense,
+    h: relativeTimeWithTense,
+    hh: relativeTimeWithTense,
+    d: relativeTimeWithTense,
     dd: '%d päeva',
-    // for past tense
-    M: 'kuu',
-    // for past tense
-    MM: '%d kuud',
-    // for past tense
-    y: 'aasta',
-    // for past tense
-    yy: '%d aastat' // for past tense
-
+    M: relativeTimeWithTense,
+    MM: relativeTimeWithTense,
+    y: relativeTimeWithTense,
+    yy: relativeTimeWithTense
   },
   formats: {
     LT: 'H:mm',

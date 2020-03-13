@@ -1,3 +1,4 @@
+// Chuvash [cv]
 import dayjs from '../index';
 var locale = {
   name: 'cv',

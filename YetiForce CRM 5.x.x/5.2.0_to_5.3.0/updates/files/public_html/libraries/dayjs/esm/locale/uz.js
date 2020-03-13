@@ -1,3 +1,4 @@
+// Uzbek [uz]
 import dayjs from '../index';
 var locale = {
   name: 'uz',

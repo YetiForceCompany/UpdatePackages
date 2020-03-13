@@ -55,7 +55,9 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 				jitRenderStatic = (jitRenderStatic && test.static && test.def !== opts.groupSeparator && test.fn === null) || (maskset.validPositions[pos - 1] && test.static && test.def !== opts.groupSeparator && test.fn === null);
 				if (jitRenderStatic || jitMasking === false || jitMasking === undefined /*|| pos < lvp*/ || (typeof jitMasking === "number" && isFinite(jitMasking) && jitMasking > pos)) {
 					maskTemplate.push(includeMode === false ? test.nativeDef : getPlaceholder(pos, test));
-				} else jitRenderStatic = false;
+				} else {
+					jitRenderStatic = false;
+				}
 			}
 
 			pos++;
@@ -276,6 +278,18 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 					return false;
 				}
 
+				function isSameLevel(targetMatch, altMatch) {
+					if (targetMatch.locator.length !== altMatch.locator.length) {
+						return false;
+					}
+					for (let locNdx = targetMatch.alternation + 1; locNdx < targetMatch.locator.length; locNdx++) {
+						if (targetMatch.locator[locNdx] !== altMatch.locator[locNdx]) {
+							return false;
+						}
+					}
+					return true;
+				}
+
 				if (testPos > opts._maxTestPos && quantifierRecurse !== undefined) {
 					throw "Inputmask: There is probably an error in your mask definition or in the code. Create an issue on github with an example of the mask you are using. " + maskset.mask;
 				}
@@ -331,7 +345,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 
 							if (maskset.excludes[pos] !== undefined) {
 								var altIndexArrClone = altIndexArr.slice();
-								for (var i = 0, el = maskset.excludes[pos].length; i < el; i++) {
+								for (var i = 0, exl = maskset.excludes[pos].length; i < exl; i++) {
 									var excludeSet = maskset.excludes[pos][i].toString().split(":");
 									if (loopNdx.length == excludeSet[1]) {
 										altIndexArr.splice(altIndexArr.indexOf(excludeSet[0]), 1);
@@ -383,7 +397,9 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 												setMergeLocators(altMatch2, altMatch);
 												break;
 											} else if (staticCanMatchDefinition(altMatch, altMatch2)) {
-												if (setMergeLocators(altMatch, altMatch2)) {
+												if (!isSameLevel(altMatch, altMatch2) && el.inputmask.userOptions.keepStatic === undefined) {
+													opts.keepStatic = true;
+												} else if (setMergeLocators(altMatch, altMatch2)) {
 													//insert match above general match
 													dropMatch = true;
 													malternateMatches.splice(malternateMatches.indexOf(altMatch2), 0, altMatch);
@@ -556,7 +572,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 			maskset.tests = {}; //refresh tests after possible alternating
 			start = 0;
 			end = buffer.length;
-			p = determineNewCaretPosition({ begin: 0, end: 0 }, false).begin;
+			p = determineNewCaretPosition({begin: 0, end: 0}, false).begin;
 		} else {
 			for (i = start; i < end; i++) {
 				delete maskset.validPositions[i];
@@ -702,7 +718,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 						returnRslt = isValidRslt;
 					}
 					if (maskPos == true && isValidRslt) {  //return validposition on generalise
-						returnRslt = { caretPos: i };
+						returnRslt = {caretPos: i};
 					}
 				}
 				if (!isValidRslt) {
@@ -755,7 +771,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 					$.each(commandObj.remove.sort(function (a, b) {
 						return b.pos - a.pos;
 					}), function (ndx, lmnt) {
-						revalidateMask({ begin: lmnt, end: lmnt + 1 });
+						revalidateMask({begin: lmnt, end: lmnt + 1});
 					});
 					commandObj.remove = undefined;
 				}
@@ -988,15 +1004,14 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 
 			var valid = true, j = validatedPos,
 				posMatch = j, t, canMatch;
-			i = j;
 
 			if (validTest) {
 				maskset.validPositions[validatedPos] = $.extend(true, {}, validTest);
 				posMatch++;
 				j++;
-				if (begin < end) i++; //if selection and entry move start by one
 			}
-			for (; i <= lvp; i++) {
+
+			for (i = validTest ? end : end - 1; i <= lvp; i++) {
 				if ((t = positionsClone[i]) !== undefined && t.generatedInput !== true &&
 					(i >= end || (i >= begin && IsEnclosedStatic(i, positionsClone, {
 						begin: begin,
@@ -1072,8 +1087,8 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 		if (fuzzy === undefined) fuzzy = true;
 		var position = pos + 1;
 		while (getTest(position).match.def !== "" &&
-			((newBlock === true && (getTest(position).match.newBlockMarker !== true || !isMask(position, undefined, true))) ||
-				(newBlock !== true && !isMask(position, undefined, fuzzy)))) {
+		((newBlock === true && (getTest(position).match.newBlockMarker !== true || !isMask(position, undefined, true))) ||
+			(newBlock !== true && !isMask(position, undefined, fuzzy)))) {
 			position++;
 		}
 		return position;
@@ -1085,10 +1100,10 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 		if (position <= 0) return 0;
 
 		while (--position > 0 &&
-			((newBlock === true && getTest(position).match.newBlockMarker !== true) ||
-				(newBlock !== true && !isMask(position, undefined, true) &&
-					// eslint-disable-next-line no-empty
-					(tests = getTests(position), tests.length < 2 || (tests.length === 2 && tests[1].match.def === ""))))) {
+		((newBlock === true && getTest(position).match.newBlockMarker !== true) ||
+			(newBlock !== true && !isMask(position, undefined, true) &&
+				// eslint-disable-next-line no-empty
+				(tests = getTests(position), tests.length < 2 || (tests.length === 2 && tests[1].match.def === ""))))) {
 		}
 		return position;
 	}
@@ -1209,7 +1224,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 				case "none":
 					break;
 				case "select":
-					selectedCaret = { begin: 0, end: getBuffer().length };
+					selectedCaret = {begin: 0, end: getBuffer().length};
 					break;
 				case "ignore":
 					selectedCaret.end = selectedCaret.begin = seekNext(getLastValidPosition());
@@ -1304,6 +1319,10 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 							}
 							args = arguments;
 							setTimeout(function () { //needed for Chrome ~ initial selection clears after the clickevent
+								if (!input.inputmask) {
+									// `inputmask.remove()` was called before this callback
+									return;
+								}
 								eventHandler.apply(that, args);
 							}, 0);
 							return false;
@@ -1437,9 +1456,9 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 				//special treat the decimal separator
 				if ((k === 44 || k === 46) && e.location === 3 && opts.radixPoint !== "") k = opts.radixPoint.charCodeAt(0);
 				var pos = checkval ? {
-					begin: ndx,
-					end: ndx
-				} : caret(input),
+						begin: ndx,
+						end: ndx
+					} : caret(input),
 					forwardPosition, c = String.fromCharCode(k);
 
 				maskset.writeOutBuffer = true;
@@ -1617,7 +1636,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 				var changes = analyseChanges(inputValue, buffer, caretPos);
 
 				// console.log(JSON.stringify(changes));
-				if (document.activeElement !== input) {
+				if ((input.inputmask.shadowRoot || document).activeElement !== input) {
 					input.focus();
 				}
 				writeBuffer(input, getBuffer());
@@ -1690,14 +1709,14 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 		mouseleaveEvent: function () {
 			var input = this;
 			mouseEnter = false;
-			if (opts.clearMaskOnLostFocus && document.activeElement !== input) {
+			if (opts.clearMaskOnLostFocus && (input.inputmask.shadowRoot || document).activeElement !== input) {
 				HandleNativePlaceholder(input, originalPlaceholder);
 			}
 		}
 		,
 		clickEvent: function (e, tabbed) {
 			var input = this;
-			if (document.activeElement === input) {
+			if ((input.inputmask.shadowRoot || document).activeElement === input) {
 				var newCaretPosition = determineNewCaretPosition(caret(input), tabbed);
 				if (newCaretPosition !== undefined) {
 					caret(input, newCaretPosition);
@@ -1761,7 +1780,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 		mouseenterEvent: function () {
 			var input = this;
 			mouseEnter = true;
-			if (document.activeElement !== input) {
+			if ((input.inputmask.shadowRoot || document).activeElement !== input) {
 				if (originalPlaceholder == undefined && input.placeholder !== originalPlaceholder) {
 					originalPlaceholder = input.placeholder;
 				}
@@ -1819,15 +1838,20 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 					|| (getTest(ndx).match.nativeDef === " " && (getTest(ndx + 1).match.nativeDef === charCodes.charAt(0)
 						|| (getTest(ndx + 1).match.static === true && getTest(ndx + 1).match.nativeDef === ("'" + charCodes.charAt(0))))));
 
-			if (!match && charCodeNdx > 0) inputmask.caretPos = { begin: seekNext(charCodeNdx) };
+			if (!match && charCodeNdx > 0 && !isMask(ndx, false, true)) {
+				var nextPos = seekNext(ndx);
+				if (inputmask.caretPos.begin < nextPos) {
+					inputmask.caretPos = {begin: nextPos};
+				}
+			}
 			return match;
 		}
 
 		resetMaskSet();
 		maskset.tests = {}; //reset tests ~ possible after alternating
-		initialNdx = opts.radixPoint ? determineNewCaretPosition({ begin: 0, end: 0 }).begin : 0;
+		initialNdx = opts.radixPoint ? determineNewCaretPosition({begin: 0, end: 0}).begin : 0;
 		maskset.p = initialNdx;
-		inputmask.caretPos = { begin: initialNdx };
+		inputmask.caretPos = {begin: initialNdx};
 
 		var staticMatches = [], prevCaretPos = inputmask.caretPos;
 		$.each(inputValue, function (ndx, charCode) {
@@ -1858,7 +1882,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 							}
 						}
 						writeBuffer(undefined, getBuffer(), result.forwardPosition, keypress, false);
-						inputmask.caretPos = { begin: result.forwardPosition, end: result.forwardPosition };
+						inputmask.caretPos = {begin: result.forwardPosition, end: result.forwardPosition};
 						prevCaretPos = inputmask.caretPos;
 					} else {
 						inputmask.caretPos = prevCaretPos;
@@ -1913,7 +1937,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 		var umValue = [],
 			vps = maskset.validPositions;
 		for (var pndx in vps) {
-			if (vps[pndx] && vps[pndx].match && vps[pndx].match.static != true) {
+			if (vps[pndx] && vps[pndx].match && (vps[pndx].match.static != true || vps[pndx].generatedInput !== true)) {
 				umValue.push(vps[pndx].input);
 			}
 		}
@@ -1953,13 +1977,13 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 
 				var scrollCalc = parseInt(((input.ownerDocument.defaultView || window).getComputedStyle ? (input.ownerDocument.defaultView || window).getComputedStyle(input, null) : input.currentStyle).fontSize) * end;
 				input.scrollLeft = scrollCalc > input.scrollWidth ? scrollCalc : 0;
-				input.inputmask.caretPos = { begin: begin, end: end }; //track caret internally
+				input.inputmask.caretPos = {begin: begin, end: end}; //track caret internally
 				if (opts.insertModeVisual && opts.insertMode === false && begin === end) {
 					if (!isDelete) {
 						end++; //set visualization for insert/overwrite mode
 					}
 				}
-				if (input === document.activeElement) {
+				if (input === (input.inputmask.shadowRoot || document).activeElement) {
 					if ("setSelectionRange" in input) {
 						input.setSelectionRange(begin, end);
 					} else if (window.getSelection) {
@@ -2094,6 +2118,11 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 			}
 		}
 
+		var lvp = getLastValidPosition(undefined, true);
+		if (pos.end >= getBuffer().length && lvp >= pos.end) { //handle numeric negate symbol offset, due to  dynamic jit masking
+			pos.end = lvp + 1;
+		}
+
 		if (k === keyCode.BACKSPACE) {
 			if ((pos.end - pos.begin < 1)) {
 				pos.begin = seekPrevious(pos.begin);
@@ -2178,7 +2207,7 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 						return this.inputmask.opts.autoUnmask ?
 							this.inputmask.unmaskedvalue() :
 							(getLastValidPosition() !== -1 || opts.nullable !== true ?
-								(document.activeElement === this && opts.clearMaskOnLostFocus ?
+								((this.inputmask.shadowRoot || document.activeElement) === this && opts.clearMaskOnLostFocus ?
 									(isRTL ? clearOptionalTail(getBuffer().slice()).reverse() : clearOptionalTail(getBuffer().slice())).join("") :
 									valueGet.call(this)) :
 								"");
@@ -2343,26 +2372,26 @@ module.exports = function maskScope(actionObj, maskset, opts) {
 
 			//apply mask
 			undoValue = getBufferTemplate().join(""); //initialize the buffer and getmasklength
-			if (el.inputmask._valueGet(true) !== "" || opts.clearMaskOnLostFocus === false || document.activeElement === el) {
+			var activeElement = (el.inputmask.shadowRoot || document).activeElement;
+			if (el.inputmask._valueGet(true) !== "" || opts.clearMaskOnLostFocus === false || activeElement === el) {
 				applyInputValue(el, el.inputmask._valueGet(true), opts);
 				var buffer = getBuffer().slice();
-				// Wrap document.activeElement in a try/catch block since IE9 throw "Unspecified error" if document.activeElement is undefined when we are in an IFrame.
 				if (isComplete(buffer) === false) {
 					if (opts.clearIncomplete) {
 						resetMaskSet();
 					}
 				}
-				if (opts.clearMaskOnLostFocus && document.activeElement !== el) {
+				if (opts.clearMaskOnLostFocus && activeElement !== el) {
 					if (getLastValidPosition() === -1) {
 						buffer = [];
 					} else {
 						clearOptionalTail(buffer);
 					}
 				}
-				if (opts.clearMaskOnLostFocus === false || (opts.showMaskOnFocus && document.activeElement === el) || el.inputmask._valueGet(true) !== "") {
+				if (opts.clearMaskOnLostFocus === false || (opts.showMaskOnFocus && activeElement === el) || el.inputmask._valueGet(true) !== "") {
 					writeBuffer(el, buffer);
 				}
-				if (document.activeElement === el) { //position the caret when in focus
+				if (activeElement === el) { //position the caret when in focus
 					caret(el, seekNext(getLastValidPosition()));
 				}
 			}

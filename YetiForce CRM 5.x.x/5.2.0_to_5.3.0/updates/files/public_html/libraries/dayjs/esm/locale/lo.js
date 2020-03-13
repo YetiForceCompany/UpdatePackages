@@ -1,3 +1,4 @@
+// Lao [lo]
 import dayjs from '../index';
 var locale = {
   name: 'lo',

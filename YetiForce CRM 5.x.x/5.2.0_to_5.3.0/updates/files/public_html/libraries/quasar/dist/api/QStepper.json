@@ -37,6 +37,11 @@
       "desc": "Enable swipe events (may interfere with content's touch/mouse events)",
       "category": "behavior"
     },
+    "vertical": {
+      "type": "Boolean",
+      "desc": "Put Stepper in vertical mode (instead of horizontal by default)",
+      "category": "behavior"
+    },
     "transition-prev": {
       "type": "String",
       "desc": "One of Quasar's embedded transitions (has effect only if 'animated' prop is set)",
@@ -45,7 +50,7 @@
         "slide-down"
       ],
       "category": "behavior",
-      "default": "slide-right"
+      "default": "slide-right/slide-down"
     },
     "transition-next": {
       "type": "String",
@@ -55,7 +60,7 @@
         "slide-down"
       ],
       "category": "behavior",
-      "default": "slide-left"
+      "default": "slide-left/slide-up"
     },
     "dark": {
       "type": "Boolean",
@@ -71,11 +76,6 @@
       "type": "Boolean",
       "desc": "Applies a default border to the component",
       "category": "style"
-    },
-    "vertical": {
-      "type": "Boolean",
-      "desc": "Put Stepper in vertical mode (instead of horizontal by default)",
-      "category": "behavior"
     },
     "alternative-labels": {
       "type": "Boolean",

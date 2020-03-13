@@ -1,3 +1,4 @@
+// English (Australia) [en-au]
 import dayjs from '../index';
 var locale = {
   name: 'en-au',

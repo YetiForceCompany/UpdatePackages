@@ -1,3 +1,4 @@
+// Dutch [nl]
 import dayjs from '../index';
 var locale = {
   name: 'nl',

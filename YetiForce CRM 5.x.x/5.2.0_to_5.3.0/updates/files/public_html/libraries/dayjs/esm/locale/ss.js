@@ -1,3 +1,4 @@
+// siSwati [ss]
 import dayjs from '../index';
 var locale = {
   name: 'ss',

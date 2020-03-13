@@ -1,3 +1,4 @@
+// Catalan [ca]
 import dayjs from '../index';
 var locale = {
   name: 'ca',

@@ -51,7 +51,16 @@ export default Vue.extend({
       validator: validateOffset
     },
 
+    scrollTarget: {
+      default: void 0
+    },
+
     delay: {
+      type: Number,
+      default: 0
+    },
+
+    hideDelay: {
       type: Number,
       default: 0
     }
@@ -76,6 +85,8 @@ export default Vue.extend({
       this.__showPortal()
 
       this.__nextTick(() => {
+        this.observer = new MutationObserver(() => this.updatePosition())
+        this.observer.observe(this.__portal.$el, { attributes: false, childList: true, characterData: true, subtree: true })
         this.updatePosition()
         this.__configureScrollTarget()
       })
@@ -95,6 +106,11 @@ export default Vue.extend({
     },
 
     __anchorCleanup () {
+      if (this.observer !== void 0) {
+        this.observer.disconnect()
+        this.observer = void 0
+      }
+
       this.__unconfigureScrollTarget()
       cleanEvt(this, 'tooltipTemp')
     },
@@ -151,7 +167,9 @@ export default Vue.extend({
         }, 10)
       }
 
-      this.hide(evt)
+      this.__setTimeout(() => {
+        this.hide(evt)
+      }, this.hideDelay)
     },
 
     __configureAnchorEl () {
@@ -170,20 +188,20 @@ export default Vue.extend({
     },
 
     __unconfigureScrollTarget () {
-      if (this.scrollTarget !== void 0) {
-        this.__changeScrollEvent(this.scrollTarget)
-        this.scrollTarget = void 0
+      if (this.__scrollTarget !== void 0) {
+        this.__changeScrollEvent(this.__scrollTarget)
+        this.__scrollTarget = void 0
       }
     },
 
     __configureScrollTarget () {
-      if (this.anchorEl !== void 0) {
-        this.scrollTarget = getScrollTarget(this.anchorEl)
+      if (this.anchorEl !== void 0 || this.scrollTarget !== void 0) {
+        this.__scrollTarget = getScrollTarget(this.anchorEl, this.scrollTarget)
         const fn = this.noParentEvent === true
           ? this.updatePosition
           : this.hide
 
-        this.__changeScrollEvent(this.scrollTarget, fn)
+        this.__changeScrollEvent(this.__scrollTarget, fn)
       }
     },
 
@@ -192,7 +210,7 @@ export default Vue.extend({
         props: { name: this.transition }
       }, [
         this.showing === true ? h('div', {
-          staticClass: 'q-tooltip no-pointer-events',
+          staticClass: 'q-tooltip q-tooltip--style q-position-engine no-pointer-events',
           class: this.contentClass,
           style: this.contentStyle,
           attrs: {

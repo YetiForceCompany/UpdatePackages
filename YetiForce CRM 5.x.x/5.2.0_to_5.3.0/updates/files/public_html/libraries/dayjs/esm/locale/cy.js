@@ -1,3 +1,4 @@
+// Welsh [cy]
 import dayjs from '../index';
 var locale = {
   name: 'cy',

@@ -3,6 +3,11 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/dialog"
   },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
   "props": {
     "content-class": {
       "type": [
@@ -131,6 +136,11 @@
       "type": "Boolean",
       "desc": "(Accessibility) When Dialog gets shown, do not switch focus on it",
       "category": "behavior"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Default slot in the devland unslotted content of the component"
     }
   },
   "events": {

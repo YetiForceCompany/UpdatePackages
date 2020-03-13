@@ -3,16 +3,22 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/no-ssr"
   },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
   "props": {
     "tag": {
       "type": "String",
       "desc": "HTML tag to render",
       "default": "div",
+      "category": "content",
       "examples": [
+        "div",
         "span",
         "blockquote"
-      ],
-      "category": "content"
+      ]
     },
     "placeholder": {
       "type": "String",

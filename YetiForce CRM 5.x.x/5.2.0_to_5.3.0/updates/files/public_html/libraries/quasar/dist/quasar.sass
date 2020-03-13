@@ -1,5 +1,5 @@
 /*!
- * Quasar Framework v1.5.11
+ * Quasar Framework v1.9.9
  * (c) 2015-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -52,7 +52,7 @@ $caption:   (size: .75rem,   line-height: 1.25rem,  letter-spacing: .03333em,  w
 $headings: ('h1': $h1, 'h2': $h2, 'h3': $h3, 'h4': $h4, 'h5': $h5, 'h6': $h6, 'subtitle1': $subtitle1, 'subtitle2': $subtitle2, 'body1': $body1, 'body2': $body2, 'overline': $overline, 'caption': $caption) !default
 $h-tags: (h1: map-get($headings, "h1"), h2: map-get($headings, "h2"), h3: map-get($headings, "h3"), h4: map-get($headings, "h4"), h5: map-get($headings, "h5"), h6: map-get($headings, "h6")) !default
 $text-weights: (thin: 100, light: 300, regular: 400, medium: 500, bold: 700, bolder: 900) !default
-$primary   : #027BE3 !default
+$primary   : #1976D2 !default
 $secondary : #26A69A !default
 $accent    : #9C27B0 !default
 $dark-page : #121212 !default
@@ -451,7 +451,6 @@ $editor-toolbar-padding         : 4px !default
 $editor-hr-color                : $editor-border-color !default
 $editor-hr-dark-color           : $editor-border-dark-color !default
 $editor-button-gutter           : 4px !default
-$fab-margin                     : 5px !default
 $table-transition               : $generic-hover-transition !default
 $table-border-radius            : $generic-border-radius !default
 $table-box-shadow               : $shadow-2 !default
@@ -584,14 +583,16 @@ input[type='search']::-webkit-search-decoration
   direction: ltr
   text-align: center
   position: relative
-  font-display: block 
-                     
-  &:before
+  fill: currentColor 
+  &:before, &:after
     width: 100%
     height: 100%
     display: flex !important
     align-items: center
     justify-content: center
+  > svg
+    width: 100%
+    height: 100%
 .q-icon,
 .material-icons,
 .material-icons-outlined,
@@ -749,25 +750,6 @@ input[type='search']::-webkit-search-decoration
     pointer-events: none
 [dir=rtl] .q-breadcrumbs__separator .q-icon
   transform: scaleX(-1) #{"/* rtl:ignore */"}
-.column
-  > .q-btn.self-stretch,
-  &.items-stretch > .q-btn
-    width: auto
-.row
-  > .q-btn
-    height: 100%
-  > .q-btn.self-stretch
-    height: auto
-.row
-  &.items-start,
-  &.items-end,
-  &.items-center,
-  &.items-baseline,
-  &.items-stretch,
-  &.q-toolbar,
-  &.q-bar
-    > .q-btn
-      height: auto
 .q-btn
   display: inline-flex
   flex-direction: column
@@ -785,7 +767,8 @@ input[type='search']::-webkit-search-decoration
   font-weight: $button-font-weight
   text-transform: uppercase
   text-align: center
-  width: fit-content
+  width: auto
+  height: auto
   .q-icon, .q-spinner
     font-size: $button-line-height
   &.disabled
@@ -867,12 +850,15 @@ input[type='search']::-webkit-search-decoration
   &--fab, &--fab-mini
     .q-icon
       font-size: 24px
-      width: 100%
-      height: 100%
-  &--fab .q-btn__wrapper
-    min-height: 56px
-    min-width: 56px
+  &--fab
+    .q-icon
+      margin: auto
+    .q-btn__wrapper
+      padding: 16px
+      min-height: 56px
+      min-width: 56px
   &--fab-mini .q-btn__wrapper
+    padding: 8px
     min-height: 40px
     min-width: 40px
   
@@ -906,7 +892,7 @@ input[type='search']::-webkit-search-decoration
   vertical-align: middle
   > .q-btn-item
     border-radius: inherit
-    height: auto
+    align-self: stretch
     .q-btn__wrapper:before
       box-shadow: none
     .q-badge--floating
@@ -980,21 +966,25 @@ input[type='search']::-webkit-search-decoration
   vertical-align: top
   background: #fff
   position: relative
-  > div, > img
+  > div,
+  > img
     &:first-child
       border-top: 0
       border-top-left-radius: inherit
       border-top-right-radius: inherit
-  > div, > img
+  > div,
+  > img
     &:last-child
       border-bottom: 0
       border-bottom-left-radius: inherit
       border-bottom-right-radius: inherit
-  > div, > img
+  > div,
+  > img
     &:not(:first-child)
       border-top-left-radius: 0
       border-top-right-radius: 0
-  > div, > img
+  > div,
+  > img
     &:not(:last-child)
       border-bottom-left-radius: 0
       border-bottom-right-radius: 0
@@ -1008,7 +998,27 @@ input[type='search']::-webkit-search-decoration
     border-color: $separator-dark-color
   &__section
     position: relative
-    padding: 16px
+    &--vert
+      padding: 16px
+    &--horiz
+      > div,
+      > img
+        &:first-child
+          border-top-left-radius: inherit
+          border-bottom-left-radius: inherit
+        &:last-child
+          border-top-right-radius: inherit
+          border-bottom-right-radius: inherit
+        &:not(:first-child)
+          border-top-left-radius: 0
+          border-bottom-left-radius: 0
+        &:not(:last-child)
+          border-top-right-radius: 0
+          border-bottom-right-radius: 0
+      > div
+        border-top: 0
+        border-bottom: 0
+        box-shadow: none
   &__actions
     padding: 8px
     align-items: center
@@ -1020,14 +1030,14 @@ input[type='search']::-webkit-search-decoration
       > .q-btn-item + .q-btn-group
         margin-left: 8px
     &--vert
+      > .q-btn-item.q-btn--round
+        align-self: center
       > .q-btn-item + .q-btn-item,
       > .q-btn-group + .q-btn-item,
       > .q-btn-item + .q-btn-group
         margin-top: 4px
       > .q-btn-group > .q-btn-item
         flex-grow: 1
-  &__section + &__section
-    padding-top: 0
   > img
     display: block
     width: 100%
@@ -1037,57 +1047,101 @@ input[type='search']::-webkit-search-decoration
   background-color: #fff 
   height: 400px
   &__slide
-    height: 100%
-    padding: 16px
+    min-height: 100%
     background-size: cover
     background-position: 50%
+  &__slide, .q-carousel--padding
+    padding: 16px
   &__slides-container
     height: 100%
   &__control
     color: #fff
-  &__prev-arrow,
-  &__next-arrow
-    top: 50%
-    transform: translateY(-50%)
+  &__arrow
+    pointer-events: none
     .q-icon
-      font-size: 46px
-  &__prev-arrow
-    left: 4px
-  &__next-arrow
-    right: 4px
+      font-size: 28px
+    .q-btn
+      pointer-events: all
+  &__prev-arrow--horizontal,
+  &__next-arrow--horizontal
+    top: 16px
+    bottom: 16px
+  &__prev-arrow--horizontal
+    left: 16px
+  &__next-arrow--horizontal
+    right: 16px
+  &__prev-arrow--vertical,
+  &__next-arrow--vertical
+    left: 16px
+    right: 16px
+  &__prev-arrow--vertical
+    top: 16px
+  &__next-arrow--vertical
+    bottom: 16px
   &__navigation
-    padding: 0 8px 8px
-    left: 0
-    right: 0
-    bottom: 0
+    &--top,
+    &--bottom
+      left: 16px
+      right: 16px
+      overflow-x: auto
+      overflow-y: hidden
+    &--top
+      top: 16px
+    &--bottom
+      bottom: 16px
+    &--left,
+    &--right
+      top: 16px
+      bottom: 16px
+      overflow-x: hidden
+      overflow-y: auto
+      > .q-carousel__navigation-inner
+        flex-direction: column
+    &--left
+      left: 16px
+    &--right
+      right: 16px
     &-inner
       flex: 1 1 auto
     .q-btn
       margin: 6px 4px
       .q-btn__wrapper
         padding: 5px
-      &:not(.q-carousel__navigation-icon--active)
-        opacity: .5
-    img
-      margin: 2px
-      height: 50px
-      width: auto
-      display: inline-block
-      cursor: pointer
-      border: 1px solid transparent
-      vertical-align: middle
-      opacity: .8
-      transition: opacity .3s
-      &:hover, &.q-carousel__thumbnail--active
-        opacity: 1
-      &.q-carousel__thumbnail--active
-        border-color: #fff
-        cursor: default
-  &.q-carousel--navigation .q-carousel__slide
-    padding-bottom: 50px
-  &.q-carousel--arrows .q-carousel__slide
-    padding-left: 56px
-    padding-right: 56px
+  &__navigation-icon--inactive
+    opacity: .7
+  .q-carousel__thumbnail
+    margin: 2px
+    height: 50px
+    width: auto
+    display: inline-block
+    cursor: pointer
+    border: 1px solid transparent
+    border-radius: $generic-border-radius
+    vertical-align: middle
+    opacity: .7
+    transition: opacity .3s
+  .q-carousel__thumbnail:hover,
+  .q-carousel__thumbnail--active
+    opacity: 1
+  .q-carousel__thumbnail--active
+    border-color: currentColor
+    cursor: default
+  &--navigation-top,
+  &--arrows-vertical
+    &.q-carousel--with-padding .q-carousel__slide, .q-carousel--padding
+      padding-top: 60px
+  &--navigation-bottom,
+  &--arrows-vertical
+    &.q-carousel--with-padding .q-carousel__slide, .q-carousel--padding
+      padding-bottom: 60px
+  &--navigation-left,
+  &--arrows-horizontal
+    &.q-carousel--with-padding .q-carousel__slide, .q-carousel--padding
+      padding-left: 60px
+  &--navigation-right,
+  &--arrows-horizontal
+    &.q-carousel--with-padding .q-carousel__slide, .q-carousel--padding
+      padding-right: 60px
   &.fullscreen
     height: 100%
 .q-message-name, .q-message-stamp, .q-message-label
@@ -1108,36 +1162,34 @@ input[type='search']::-webkit-search-decoration
   margin-bottom: $chat-message-distance
   &:first-child .q-message-label
     margin-top: 0
-.q-message-received
-  .q-message-avatar
-    margin-right: 8px
-  .q-message-text
-    color: $chat-message-received-bg
-    border-radius: $chat-message-border-radius $chat-message-border-radius $chat-message-border-radius 0
-    &:last-child:before
-      right: 100%
-      border-right: 0 solid transparent
-      border-left: 8px solid transparent
-      border-bottom: 8px solid currentColor
-  .q-message-text-content
-    color: $chat-message-received-color
-.q-message-sent
-  .q-message-name
-    text-align: right
-  .q-message-avatar
-    margin-left: 8px
-  .q-message-container
-    flex-direction: row-reverse
-  .q-message-text
-    color: $chat-message-sent-bg
-    border-radius: $chat-message-border-radius $chat-message-border-radius 0 $chat-message-border-radius
-    &:last-child:before
-      left: 100%
-      border-left: 0 solid transparent
-      border-right: 8px solid transparent
-      border-bottom: 8px solid currentColor
-  .q-message-text-content
-    color: $chat-message-sent-color
+.q-message-avatar--received
+  margin-right: 8px
+.q-message-text--received
+  color: $chat-message-received-bg
+  border-radius: $chat-message-border-radius $chat-message-border-radius $chat-message-border-radius 0
+  &:last-child:before
+    right: 100%
+    border-right: 0 solid transparent
+    border-left: 8px solid transparent
+    border-bottom: 8px solid currentColor
+.q-message-text-content--received
+  color: $chat-message-received-color
+.q-message-name--sent
+  text-align: right
+.q-message-avatar--sent
+  margin-left: 8px
+.q-message-container--sent
+  flex-direction: row-reverse
+.q-message-text--sent
+  color: $chat-message-sent-bg
+  border-radius: $chat-message-border-radius $chat-message-border-radius 0 $chat-message-border-radius
+  &:last-child:before
+    left: 100%
+    border-left: 0 solid transparent
+    border-right: 8px solid transparent
+    border-bottom: 8px solid currentColor
+.q-message-text-content--sent
+  color: $chat-message-sent-color
 .q-message-text
   background: currentColor
   padding: $chat-message-text-padding
@@ -1160,60 +1212,47 @@ $checkbox-transition: .22s cubic-bezier(0,0,.2,1) 0ms
 .q-checkbox
   vertical-align: middle
   &__bg
-    left: 11px
-    top: 11px
-    right: auto
-    bottom: 0
-    width: 45%
-    height: 45%
+    top: 25%
+    left: 25%
+    width: 50%
+    height: 50%
     border: 2px solid currentColor
     border-radius: 2px
     transition: background $checkbox-transition
   &__native
     width: 1px
     height: 1px
-  &__label
-    padding-left: 4px
-    font-size: 14px
-    line-height: 20px
-  &.reverse &__label
-    padding-right: 4px
-  &__check
+  &__svg
     color: #fff
-    path
-      stroke: currentColor
-      stroke-width: 3.12px
-      stroke-dashoffset: 29.78334
-      stroke-dasharray: 29.78334
-  &__check-indet
-    width: 100%
-    height: 0
-    left: 0
-    top: 50%
-    border-color: #fff
-    border-width: 1px
-    border-style: solid
-    transform: translate3d(0, -50%, 0) rotate3d(0, 0, 1, -280deg) scale3d(0, 0, 0)
+  &__truthy
+    stroke: currentColor
+    stroke-width: 3.12px
+    stroke-dashoffset: 29.78334
+    stroke-dasharray: 29.78334
+  &__indet
+    fill: currentColor
+    transform-origin: 50% 50%
+    transform: rotate(-280deg) scale(0)
   &__inner
-    width: 40px
-    min-width: 40px
-    height: 40px
-    padding: 11px
+    font-size: 40px
+    width: 1em
+    min-width: 1em
+    height: 1em
     outline: 0
     border-radius: 50%
     color: rgba(0,0,0,.54)
-    &--active, &--indeterminate
+    &--truthy, &--indet
       color: $primary
       color: var(--q-color-primary)
       .q-checkbox__bg
         background: currentColor
-    &--active
+    &--truthy
       path
         stroke-dashoffset: 0
         transition: stroke-dashoffset .18s cubic-bezier(.4,0,.6,1) 0ms
-    &--indeterminate
-      .q-checkbox__check-indet
-        transform: translate3d(0, -50%, 0) rotate3d(0, 0, 1, 0) scale3d(1, 1, 1)
+    &--indet
+      .q-checkbox__indet
+        transform: rotate(0) scale(1)
         transition: transform $checkbox-transition
   &.disabled
     opacity: .75 !important
@@ -1222,23 +1261,27 @@ $checkbox-transition: .22s cubic-bezier(0,0,.2,1) 0ms
       color: rgba(255,255,255,.7)
       &:before
         opacity: .32 !important
-      &--active, &--indeterminate
+      &--truthy, &--indet
         color: $primary
         color: var(--q-color-primary)
   &--dense
     .q-checkbox__inner
-      width: 20px
-      min-width: 20px
-      height: 20px
-      padding: 0
+      width: .5em
+      min-width: .5em
+      height: .5em
     .q-checkbox__bg
-      left: 1px
-      top: 1px
-      width: 18px
-      height: 18px
+      left: 5%
+      top: 5%
+      width: 90%
+      height: 90%
+    .q-checkbox__label
+      padding-left: .5em
+    &.reverse .q-checkbox__label
+      padding-left: 0
+      padding-right: .5em
 body.desktop
-  .q-checkbox
-    &__inner:before
+  .q-checkbox:not(.disabled)
+    .q-checkbox__inner:before
       content: ''
       position: absolute
       top: 0
@@ -1248,15 +1291,17 @@ body.desktop
       border-radius: 50%
       background: currentColor
       opacity: .12
-      transform: scale3d(0, 0, 0)
+      transform: scale3d(0, 0, 1)
       transition: transform $option-focus-transition
-    &:focus:not(.disabled)
+    &:focus,
+    &:hover
       .q-checkbox__inner:before
         transform: scale3d(1, 1, 1)
-    &--dense:focus:not(.disabled) .q-checkbox__inner:before
-      transform: scale3d(1.5, 1.5, 1.5)
-  .q-table--dense .q-checkbox--dense:focus:not(.disabled) .q-checkbox__inner:before
-    transform: scale3d(1.4, 1.4, 1.4)
+  .q-checkbox--dense:not(.disabled)
+    &:focus,
+    &:hover
+      .q-checkbox__inner:before
+        transform: scale3d(1.4, 1.4, 1)
 $chip-height: 2em
 .q-chip
   vertical-align: middle
@@ -1264,6 +1309,7 @@ $chip-height: 2em
   outline: 0
   position: relative
   height: $chip-height
+  max-width: 100%
   margin: 4px
   background: #e0e0e0
   color: rgba(0,0,0,.87)
@@ -1363,8 +1409,6 @@ body.desktop .q-chip--clickable:focus
   border-radius: $generic-border-radius
   box-shadow: $shadow-2
   .q-tab
-    min-height: 32px !important
-    height: 32px !important
     padding: 0 !important
   &--bordered
     border: 1px solid $separator-color
@@ -1373,8 +1417,11 @@ body.desktop .q-chip--clickable:focus
     input
       line-height: 24px
       border: 0
-    .q-tab--inactive
-      background: linear-gradient(to top, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 25%, rgba(0,0,0,.1))
+    .q-tab
+      min-height: 32px !important
+      height: 32px !important
+      &--inactive
+        background: linear-gradient(to top, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 25%, rgba(0,0,0,.1))
   &__error-icon
     bottom: 2px
     right: 2px
@@ -1403,9 +1450,12 @@ body.desktop .q-chip--clickable:focus
     background: #fff
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAH0lEQVQoU2NkYGAwZkAFZ5G5jPRRgOYEVDeB3EBjBQBOZwTVugIGyAAAAABJRU5ErkJggg==') !important
   &__footer
-    height: 32px
-    .q-tab--inactive
-      background: linear-gradient(to bottom, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 25%, rgba(0,0,0,.1))
+    height: 36px
+    .q-tab
+      min-height: 36px !important
+      height: 36px !important
+      &--inactive
+        background: linear-gradient(to bottom, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 25%, rgba(0,0,0,.1))
   
   &__spectrum
     width: 100%
@@ -1642,8 +1692,6 @@ body.desktop .q-chip--clickable:focus
     font-weight: 500
     line-height: 2rem
     letter-spacing: .0125em
-  &__message
-    opacity: .6
   &__inner
     outline: 0
     > div
@@ -1750,6 +1798,8 @@ body.q-ios-padding .q-dialog__inner
     flex: 0 0 25%
 .q-dialog-plugin
   width: 400px
+  .q-card__section + .q-card__section
+    padding-top: 0
 .q-editor
   border: 1px solid $editor-border-color
   border-radius: $generic-border-radius
@@ -1816,6 +1866,14 @@ body.q-ios-padding .q-dialog__inner
   &__toggle-icon
     position: relative
     transition: transform .3s
+    &--rotated
+      transform: rotate(180deg)
+  &__toggle-focus
+    width: 1em !important
+    height: 1em !important
+    position: relative !important
+    & + .q-expansion-item__toggle-icon
+      margin-top: -1em
   &--standard
     &.q-expansion-item--expanded
       > div > .q-expansion-item__border
@@ -1849,11 +1907,22 @@ body.q-ios-padding .q-dialog__inner
   &--expanded + &--expanded
     > div > .q-expansion-item__border--top
       opacity: 0
+  &--expanded .q-textarea--autogrow textarea
+    animation: q-expansion-done 0s
+@keyframes q-expansion-done
+  0%
+    --q-exp-done: 1 
 .z-fab
   z-index: $z-fab
 .q-fab
   position: relative
   vertical-align: middle
+  > .q-btn
+    width: 100%
+  &--form-rounded
+    border-radius: $button-rounded-border-radius
+  &--form-square
+    border-radius: $generic-border-radius
   &--opened
     .q-fab__actions
       opacity: 1
@@ -1873,38 +1942,106 @@ body.q-ios-padding .q-dialog__inner
   &__active-icon
     opacity: 0
     transform: rotate(-180deg)
+  &__label
+    &--external
+      position: absolute
+      padding: 0 8px
+      transition: opacity .18s cubic-bezier(.65,.815,.735,.395)
+      &-hidden
+        opacity: 0
+        pointer-events: none
+    &--external-left
+      top: 50%
+      left: -12px
+      transform: translate(-100%, -50%)
+    &--external-right
+      top: 50%
+      right: -12px
+      transform: translate(100%, -50%)
+    &--external-bottom
+      bottom: -12px
+      left: 50%
+      transform: translate(-50%, 100%)
+    &--external-top
+      top: -12px
+      left: 50%
+      transform: translate(-50%, -100%)
+    &--internal
+      padding: 0
+      transition: font-size .12s cubic-bezier(.65,.815,.735,.395), max-height .12s cubic-bezier(.65,.815,.735,.395), opacity .07s cubic-bezier(.65,.815,.735,.395)
+      max-height: 30px
+      &-hidden
+        font-size: 0
+        opacity: 0
+      &-top
+        padding-bottom: .12em
+      &-bottom
+        padding-top: .12em
+      &-top, &-bottom
+        &.q-fab__label--internal-hidden
+          max-height: 0
+      &-left
+        padding-left: .285em
+        padding-right: .571em
+      &-right
+        padding-right: .285em
+        padding-left: .571em
+  &__icon-holder
+    min-width: 24px
+    min-height: 24px
+    position: relative
   &__actions
     position: absolute
     opacity: 0
-    transition: all .2s ease-in
+    transition: transform .18s ease-in, opacity .18s ease-in
     pointer-events: none
+    align-items: center
+    justify-content: center
+    align-self: center
+    padding: 3px
     .q-btn
-      margin: $fab-margin
+      margin: 5px
     &--right
-      transform: scale(.4) translate(-100%, 0)
-      top: 0
-      bottom: 0
-      left: 120%
+      transform-origin: 0 50%
+      transform: scale(.4) translateX(-62px)
+      height: 56px
+      left: 100%
+      margin-left: 9px
     &--left
-      transform: scale(.4) translate(100%, 0)
-      top: 0
-      bottom: 0
-      right: 120%
+      transform-origin: 100% 50%
+      transform: scale(.4) translateX(62px)
+      height: 56px
+      right: 100%
+      margin-right: 9px
       flex-direction: row-reverse
     &--up
-      transform: scale(.4) translate(0, 100%)
+      transform-origin: 50% 100%
+      transform: scale(.4) translateY(62px)
+      width: 56px
+      bottom: 100%
+      margin-bottom: 9px
       flex-direction: column-reverse
-      justify-content: center
-      bottom: 120%
-      left: 0
-      right: 0
     &--down
-      transform: scale(.4) translate(0, -100%)
+      transform-origin: 50% 0
+      transform: scale(.4) translateY(-62px)
+      width: 56px
+      top: 100%
+      margin-top: 9px
       flex-direction: column
-      justify-content: center
-      top: 120%
-      left: 0
-      right: 0
+    &--up, &--down
+      left: 50%
+      margin-left: -28px
+  &--align-left
+    > .q-fab__actions
+      &--up, &--down
+        align-items: flex-start
+        left: 28px
+  &--align-right
+    > .q-fab__actions
+      &--up, &--down
+        align-items: flex-end
+        left: auto
+        right: 0
 $field-transition: .36s cubic-bezier(.4,0,.2,1)
 $field-transition-label-right-down: .396s cubic-bezier(.4,0,.2,1)
 $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
@@ -1979,7 +2116,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       pointer-events: none
     &:before
       border-radius: inherit
-  &__native, &__prefix, &__suffix
+  &__native, &__prefix, &__suffix, &__input
     font-weight: 400
     line-height: 28px
     letter-spacing: .00937em
@@ -1991,12 +2128,17 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
     color: $input-text-color
     outline: 0
     padding: 6px 0
-  &__native
+  &__native, &__input
     width: 100%
     min-width: 0 
     outline: 0 !important 
-    &[type="file"]
-      line-height: 1em 
+  &__native[type="file"]
+    line-height: 1em 
+  &__input
+    padding: 0
+    height: 0
+    min-height: 24px
+    line-height: 24px
   &__prefix, &__suffix
     transition: opacity $field-transition
     white-space: nowrap
@@ -2009,10 +2151,10 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       opacity: 1 !important
   &--readonly
     &.q-field--labeled
-      .q-field__native
+      .q-field__native, .q-field__input
         cursor: default
     &.q-field--float
-      .q-field__native
+      .q-field__native, .q-field__input
         cursor: text
   &--disabled
     .q-field__inner
@@ -2040,7 +2182,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
     transform: translateY(-40%) scale(.75)
     right: calc(-100% / 3)
     transition: transform $field-transition, right $field-transition-label-right-down
-  .q-field__native, .q-select__input
+  .q-field__native, .q-field__input
     &:-webkit-autofill
       -webkit-animation-name: q-autofill
       -webkit-animation-fill-mode: both
@@ -2142,7 +2284,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       border-color: rgba(255,255,255,.6)
     .q-field__control:hover:before
       border-color: #fff
-    .q-field__native, .q-field__prefix, .q-field__suffix, .q-select__input
+    .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__input
       color: #fff
     &:not(.q-field--focused) .q-field__label, .q-field__marginal, .q-field__bottom
       color: rgba(255,255,255,.7)
@@ -2164,7 +2306,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       .q-field__control
         box-shadow: $shadow-2
         background: #000
-      .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__prepend, .q-field__append, .q-select__input
+      .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__prepend, .q-field__append, .q-field__input
         color: #fff
     &.q-field--readonly
       .q-field__control:before
@@ -2179,7 +2321,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       &.q-field--focused
         .q-field__control
           background: #fff
-        .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__prepend, .q-field__append, .q-select__input
+        .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__prepend, .q-field__append, .q-field__input
           color: #000
       &.q-field--readonly
         .q-field__control:before
@@ -2192,7 +2334,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
     &:not(.q-field--float)
       .q-field__prefix, .q-field__suffix
         opacity: 0
-      .q-field__native, .q-select__input
+      .q-field__native, .q-field__input
         &::-webkit-input-placeholder
           color: transparent
         &::-moz-placeholder
@@ -2225,7 +2367,7 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
       font-size: 24px
     &.q-field--float .q-field__label
       transform: translateY(-30%) scale(.75)
-    .q-field__native, .q-select__input
+    .q-field__native, .q-field__input
       &:-webkit-autofill + .q-field__label
         transform: translateY(-30%) scale(.75)
       &[type="number"]:invalid + .q-field__label
@@ -2285,6 +2427,17 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
     margin-left: -2px
   70%, 90%
     margin-left: 2px
+.q-file
+  width: 100%
+  .q-field__native
+    word-break: break-all
+  .q-field__input
+    opacity: 0 !important
+    &::-webkit-file-upload-button
+      cursor: pointer
+  &__dnd
+    outline: 1px dashed currentColor
+    outline-offset: -4px
 .q-form
   position: relative
 .q-img
@@ -2295,12 +2448,27 @@ $field-transition-label-right-up: .324s cubic-bezier(.4,0,.2,1)
   &__loading .q-spinner
     font-size: $img-loading-font-size
   &__image
+    border-radius: inherit
     background-repeat: $img-background-repeat
-  &__content > div
-    position: $img-content-position
-    padding: $img-content-padding
-    color: $img-content-color
-    background: $img-content-background
+  &__content
+    overflow: hidden
+    border-radius: inherit
+    > div
+      position: $img-content-position
+      padding: $img-content-padding
+      color: $img-content-color
+      background: $img-content-background
+  &--menu
+    .q-img
+      &__image
+        pointer-events: none
+        > img
+          pointer-events: all
+          opacity: 0
+      &__content
+        pointer-events: none
+        > div
+          pointer-events: all
 .q-inner-loading
   background: $light-dimmed-background
   &--dark
@@ -2615,7 +2783,8 @@ body.platform-ios
   position: relative
   width: 100%
   overflow: hidden
-  height: 4px
+  font-size: 4px
+  height: 1em
   color: $primary
   color: var(--q-color-primary)
   &--reverse
@@ -2681,9 +2850,6 @@ body.platform-ios
   z-index: $z-menu
   &--square
     border-radius: 0
-body.platform-ios
-  .q-menu
-    transform: translate(var(--q-vp-left), var(--q-vp-top))
 .q-option-group
   &--inline
     > div
@@ -2733,44 +2899,32 @@ $radio-transition: .22s cubic-bezier(0,0,.2,1) 0ms
 .q-radio
   vertical-align: middle
   &__bg
-    left: 10px
-    top: 10px
+    top: 25%
+    left: 25%
     width: 50%
     height: 50%
+    path
+      fill: currentColor
   &__native
     width: 1px
     height: 1px
-  &__outer-circle
-    border-width: 2px
-    border-style: solid
-    border-radius: 50%
-  &__inner-circle
-    border-width: 10px
-    border-style: solid
-    border-radius: 50%
-    transform: scale3d(0, 0, 0)
+  &__check
+    transform-origin: 50% 50%
+    transform: scale3d(0, 0, 1)
     transition: transform $radio-transition
-  &__label
-    padding-left: 4px
-    padding-right: 0
-    font-size: 14px
-    line-height: 20px
-  &.reverse &__label
-    padding-right: 4px
-    padding-left: 0
   &__inner
-    width: 40px
-    min-width: 40px
-    height: 40px
-    padding: 10px
+    font-size: 40px
+    width: 1em
+    min-width: 1em
+    height: 1em
     outline: 0
     border-radius: 50%
     color: rgba(0,0,0,.54)
-    &--active
+    &--truthy
       color: $primary
       color: var(--q-color-primary)
-      .q-radio__inner-circle
-        transform: scale3d(.5, .5, .5)
+      .q-radio__check
+        transform: scale3d(1, 1, 1)
   &.disabled
     opacity: .75 !important
   &--dark
@@ -2778,22 +2932,27 @@ $radio-transition: .22s cubic-bezier(0,0,.2,1) 0ms
       color: rgba(255,255,255,.7)
       &:before
         opacity: .32 !important
-      &--active
+      &--truthy
         color: $primary
         color: var(--q-color-primary)
   &--dense
+    .q-radio__inner
+      width: .5em
+      min-width: .5em
+      height: .5em
     .q-radio__bg
       left: 0
       top: 0
       width: 100%
       height: 100%
-    .q-radio__inner
-      width: 20px
-      min-width: 20px
-      height: 20px
+    .q-radio__label
+      padding-left: .5em
+    &.reverse .q-radio__label
+      padding-left: 0
+      padding-right: .5em
 body.desktop
-  .q-radio
-    &__inner:before
+  .q-radio:not(.disabled)
+    .q-radio__inner:before
       content: ''
       position: absolute
       top: 0
@@ -2803,13 +2962,17 @@ body.desktop
       border-radius: 50%
       background: currentColor
       opacity: .12
-      transform: scale3d(0, 0, 0)
+      transform: scale3d(0, 0, 1)
       transition: transform $radio-transition
-    &:focus:not(.disabled)
+    &:focus,
+    &:hover
       .q-radio__inner:before
         transform: scale3d(1, 1, 1)
-    &--dense:focus:not(.disabled) .q-radio__inner:before
-      transform: scale3d(1.5, 1.5, 1.5)
+  .q-radio--dense:not(.disabled)
+    &:focus,
+    &:hover
+      .q-radio__inner:before
+        transform: scale3d(1.5, 1.5, 1)
 .q-rating
   color: $rating-grade-color
   vertical-align: middle
@@ -2821,16 +2984,34 @@ body.desktop
     transition: transform .2s ease-in, opacity .2s ease-in
     &--hovered
       transform: scale(1.3)
-    &--exselected
-      opacity: .7
     &--active
       opacity: 1
+    &--exselected
+      opacity: .7
     & + &
       margin-left: 2px
+  &--no-dimming .q-rating__icon
+    opacity: 1
   &--editable .q-icon
     cursor: pointer
   &--non-editable span, .q-icon
     outline: 0
+.q-responsive
+  position: relative
+  max-width: 100%
+  max-height: 100%
+  &__filler
+    width: inherit
+    max-width: inherit
+    height: inherit
+    max-height: inherit
+  &__content
+    border-radius: inherit
+    > *
+      width: 100% !important
+      height: 100% !important
+      max-height: 100% !important
+      max-width: 100% !important
 .q-scrollarea
   position: relative
   &__bar,
@@ -2838,6 +3019,7 @@ body.desktop
     opacity: .2
     transition: opacity .3s
     will-change: opacity
+    cursor: grab
     &--v
       right: 0
       width: 10px
@@ -2846,16 +3028,15 @@ body.desktop
       height: 10px
     &--invisible
       opacity: 0 !important
+      pointer-events: none
   &__thumb
     background: #000
     &:hover
       opacity: .3
-      cursor: grab
     &:active
       opacity: .5
-    &--invisible
-      &:hover
-        cursor: inherit
+  &--dark .q-scrollarea__thumb
+    background: #fff
 .q-select
   &--without-input
     .q-field__control
@@ -2863,28 +3044,21 @@ body.desktop
   &--with-input
     .q-field__control
       cursor: text
-  &__input
-    border: 0
-    outline: 0 !important 
-    background: transparent
+  .q-field__input
     min-width: 50px !important
-    padding: 0
-    height: 0
-    min-height: 24px
-    line-height: 24px
     &--padding
       padding-left: 4px
+  &__autocomplete-input
+    width: 0
+    height: 0
+    padding: 0
+    border: 0
+    opacity: 0
   &__dropdown-icon
     cursor: pointer
   &.q-field--readonly
     .q-field__control, .q-select__dropdown-icon
       cursor: default
-    &.q-field--labeled
-      .q-select__input
-        cursor: default
-    &.q-field--float
-      .q-select__input
-        cursor: text
   &__dialog
     width: 90vw !important
     max-width: 90vw !important
@@ -2947,6 +3121,121 @@ body.platform-ios
     &.q-separator--inset
       margin-top: 8px
       margin-bottom: 8px
+.q-skeleton
+  cursor: wait
+  background: $separator-color
+  border-radius: $generic-border-radius
+  
+  box-sizing: border-box
+  &:before
+    content: '\00a0'
+  &--type
+    &-text
+      transform: scale(1, .5)
+    &-circle,
+    &-QAvatar
+      height: 48px
+      width: 48px
+      border-radius: 50%
+    &-QBtn
+      width: 90px
+      height: 36px
+    &-QBadge
+      width: 70px
+      height: 16px
+    &-QChip
+      width: 90px
+      height: 28px
+      border-radius: 16px
+    &-QToolbar
+      height: 50px
+    &-QCheckbox,
+    &-QRadio
+      width: 40px
+      height: 40px
+      border-radius: 50%
+    &-QToggle
+      width: 56px
+      height: 40px
+      border-radius: 7px
+    &-QSlider,
+    &-QRange
+      height: 40px
+    &-QInput
+      height: 56px
+  &--bordered
+    border: 1px solid rgba(0,0,0,.05)
+  &--square
+    border-radius: 0
+  &--anim-fade
+    animation: q-skeleton--fade 1.5s linear .5s infinite
+  &--anim-pulse
+    animation: q-skeleton--pulse 1.5s ease-in-out .5s infinite
+  &--anim-pulse-x
+    animation: q-skeleton--pulse-x 1.5s ease-in-out .5s infinite
+  &--anim-pulse-y
+    animation: q-skeleton--pulse-y 1.5s ease-in-out .5s infinite
+  &--anim-wave,
+  &--anim-blink,
+  &--anim-pop
+    position: relative
+    overflow: hidden
+    z-index: 1
+    &:after
+      content: ''
+      position: absolute
+      top: 0
+      right: 0
+      bottom: 0
+      left: 0
+      z-index: 0
+  &--anim-blink:after
+    background: rgba(255,255,255,.7)
+    animation: q-skeleton--fade 1.5s linear .5s infinite
+  &--anim-wave:after
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent)
+    animation: q-skeleton--wave 1.5s linear .5s infinite
+  &--dark
+    background: rgba(255, 255, 255, 0.05)
+    &.q-skeleton--bordered
+      border: 1px solid rgba(255,255,255,.25)
+    &.q-skeleton--anim-wave:after
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent)
+    &.q-skeleton--anim-blink:after
+      background: rgba(255,255,255,.2)
+@keyframes q-skeleton--fade
+  0%
+    opacity: 1
+  50%
+    opacity: .4
+  100%
+    opacity: 1
+@keyframes q-skeleton--pulse
+  0%
+    transform: scale(1)
+  50%
+    transform: scale(.85)
+  100%
+    transform: scale(1)
+@keyframes q-skeleton--pulse-x
+  0%
+    transform: scaleX(1)
+  50%
+    transform: scaleX(.75)
+  100%
+    transform: scaleX(1)
+@keyframes q-skeleton--pulse-y
+  0%
+    transform: scaleY(1)
+  50%
+    transform: scaleY(.75)
+  100%
+    transform: scaleY(1)
+@keyframes q-skeleton--wave
+  0%
+    transform: translateX(-100%)
+  100%
+    transform: translateX(100%)
 .q-slide-item
   position: relative
   background: white
@@ -3058,6 +3347,7 @@ body.platform-ios
     z-index: 1
     white-space: nowrap
     &-text-container
+      min-height: 25px
       padding: 2px 8px
       border-radius: $generic-border-radius
       background: currentColor
@@ -3078,7 +3368,7 @@ body.platform-ios
   &--focus, body.desktop &.q-slider--editable:hover
     .q-slider__focus-ring
       background: currentColor
-      transform: scale3d(1.55, 1.55, 1.55)
+      transform: scale3d(1.55, 1.55, 1)
       opacity: .25
     .q-slider__thumb, .q-slider__track
       visibility: visible
@@ -3418,6 +3708,8 @@ body.platform-ios
     background-color: #fff
     border-radius: $table-border-radius
     box-shadow: $table-box-shadow
+    .q-table__middle
+      flex: 1 1 auto
   &__container
     position: relative
     > div:first-child
@@ -3426,6 +3718,8 @@ body.platform-ios
     > div:last-child
       border-bottom-left-radius: inherit
       border-bottom-right-radius: inherit
+    > .q-inner-loading
+      border-radius: inherit !important
   &__top
     padding: 12px 16px
     .q-table__control
@@ -3483,6 +3777,7 @@ body.platform-ios
       white-space: nowrap
   &--grid
     box-shadow: none
+    border-radius: $generic-border-radius
     .q-table__top
       padding-bottom: 4px
     .q-table__middle
@@ -3495,6 +3790,10 @@ body.platform-ios
       bottom: 0
     .q-table__bottom
       border-top: 0
+    .q-table__grid-content
+      flex: 1 1 auto
+    &.fullscreen
+      background: inherit
   &__grid-item-card
     vertical-align: top
     padding: 12px
@@ -3527,8 +3826,10 @@ body.platform-ios
   .q-table__top
     border-bottom: 1px solid $table-border-color
 .q-table--dense
+  .q-table__top
+    padding: 6px 16px
   .q-table__bottom
-    min-height: 42px
+    min-height: 33px
   .q-table__sort-icon
     font-size: 110%
   .q-table
@@ -3542,6 +3843,12 @@ body.platform-ios
       padding-right: 16px
   .q-table__bottom-item
     margin-right: 8px
+  .q-table__select
+    .q-field__control, .q-field__native
+      min-height: 24px
+      padding: 0
+    .q-field__marginal
+      height: 24px
 .q-table__bottom 
   border-top: 1px solid $table-border-color
 .q-table 
@@ -3807,9 +4114,9 @@ $PI: 3.14159265359
     min-height: 0
     background: currentColor
   &__clock-pointer
-    width: 1px
+    width: 2px
     height: 50%
-    transform-origin: top center #{"/* rtl:ignore */"}
+    transform-origin: 0 0 #{"/* rtl:ignore */"}
     min-height: 0
     position: absolute
     left: 50%
@@ -3822,10 +4129,10 @@ $PI: 3.14159265359
     &:before, &:after
       content: ''
       position: absolute
-      left: 0
+      left: 50%
       border-radius: 50%
       background: currentColor
-      transform: translateX(-44%)
+      transform: translateX(-50%)
     &:before
       bottom: -4px
       width: 8px
@@ -3871,16 +4178,6 @@ $PI: 3.14159265359
     color: #fff
     top: 12px
     right: 12px
-  &__event
-    position: absolute
-    bottom: 2px
-    left: 50%
-    height: 5px
-    width: 10px
-    border-radius: 5px
-    background-color: $secondary
-    background-color: var(--q-color-secondary)
-    transform: translate3d(-50%, 0, 0)
   &.disabled, &--readonly
     .q-time__header-ampm, .q-time__content
       pointer-events: none
@@ -4111,53 +4408,56 @@ $PI: 3.14159265359
 $toggle-transition: .22s cubic-bezier(.4,0,.2,1)
 .q-toggle
   vertical-align: middle
-  &__label
-    font-size: 14px
-    line-height: 20px
   &__native
     width: 1px
     height: 1px
   &__track
-    height: 14px
-    border-radius: 7px
+    height: .35em
+    border-radius: .175em
     opacity: .38
-    background-color: currentColor
-  &__thumb-container
-    left: 10px
-    right: auto
-    top: 10px
-    transform: translate3d(0, 0, 0)
-    transition: transform $toggle-transition
-    user-select: none
+    background: currentColor
   &__thumb
-    width: 20px
-    height: 20px
-    border: 10px solid
-    border-radius: 50%
-    border-color: #fff
-    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12)
+    top: .25em
+    left: .25em
+    width: .5em
+    height: .5em
+    transition: left $toggle-transition
+    user-select: none
+    z-index: 0
+    &:after
+      content: ''
+      position: absolute
+      top: 0
+      right: 0
+      bottom: 0
+      left: 0
+      border-radius: 50%
+      background: #fff
+      box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12)
     .q-icon
-      font-size: 12px
-      width: 20px
-      height: 0
-      line-height: 0
+      font-size: .3em
+      min-width: 1em
       color: #000
       opacity: .54
+      z-index: 1
   &__inner
-    width: 56px
-    min-width: 56px
-    height: 40px
-    padding: 13px 12px
-    &--active
+    font-size: 40px
+    width: 1.4em
+    min-width: 1.4em
+    height: 1em
+    padding: .325em .3em
+    &--indet
+      .q-toggle__thumb
+        left: .45em
+    &--truthy
       color: $primary
       color: var(--q-color-primary)
       .q-toggle__track
         opacity: .54
-      .q-toggle__thumb-container
-        transform: translate3d(16px, 0, 0)
       .q-toggle__thumb
-        background-color: currentColor
-        border-color: currentColor
+        left: .65em
+        &:after
+          background-color: currentColor
         .q-icon
           color: #fff
           opacity: 1
@@ -4166,22 +4466,35 @@ $toggle-transition: .22s cubic-bezier(.4,0,.2,1)
   &--dark
     .q-toggle__inner
       color: #fff
-      &--active
+      &--truthy
         color: $primary
         color: var(--q-color-primary)
     .q-toggle__thumb:before
       opacity: .32 !important
   &--dense
     .q-toggle__inner
-      height: 20px
-      padding: 3px 12px
-    .q-toggle__thumb-container
+      width: .8em
+      min-width: .8em
+      height: .5em
+      padding: .07625em 0
+    .q-toggle__thumb
       top: 0
+      left: 0
+    .q-toggle__inner--indet
+      .q-toggle__thumb
+        left: .15em
+    .q-toggle__inner--truthy
+      .q-toggle__thumb
+        left: .3em
+    .q-toggle__label
+      padding-left: .5em
+    &.reverse .q-toggle__label
+      padding-left: 0
+      padding-right: .5em
 body.desktop
-  .q-toggle
-    &__thumb:before
+  .q-toggle:not(.disabled)
+    .q-toggle__thumb:before
       content: ''
-      z-index: -1
       position: absolute
       top: 0
       right: 0
@@ -4190,12 +4503,17 @@ body.desktop
       border-radius: 50%
       background: currentColor
       opacity: .12
-      transform: scale3d(0, 0, 0)
+      transform: scale3d(0, 0, 1)
       transition: transform $option-focus-transition
-    &:focus:not(.disabled) .q-toggle__thumb:before
-      transform: scale3d(2, 2, 2)
-    &--dense:focus:not(.disabled) .q-toggle__thumb:before
-      transform: scale3d(1.5, 1.5, 1.5)
+    &:focus,
+    &:hover
+      .q-toggle__thumb:before
+        transform: scale3d(2, 2, 1)
+  .q-toggle--dense:not(.disabled)
+    &:focus,
+    &:hover
+      .q-toggle__thumb:before
+        transform: scale3d(1.5, 1.5, 1)
 .q-toolbar
   position: relative
   padding: $toolbar-padding
@@ -4217,23 +4535,22 @@ body.desktop
     padding-left: 0
   &:last-child
     padding-right: 0
-.q-tooltip
-  position: fixed !important
+.q-tooltip--style
   font-size: $tooltip-fontsize
   color: $tooltip-color
   background: $tooltip-background
-  z-index: $z-tooltip
-  padding: $tooltip-padding
   border-radius: $tooltip-border-radius
+  text-transform: none
+  font-weight: normal
+.q-tooltip
+  z-index: $z-tooltip
+  position: fixed !important
   overflow-y: auto
   overflow-x: hidden
-  pointer-events: none
+  padding: $tooltip-padding
   @media (max-width: $breakpoint-xs-max)
     font-size: $tooltip-mobile-fontsize
     padding: $tooltip-mobile-padding
-body.platform-ios
-  .q-tooltip
-    transform: translate(var(--q-vp-left), var(--q-vp-top))
 .q-tree
   position: relative
   color: $grey
@@ -4449,23 +4766,26 @@ body.platform-ios
       background: rgba(255,255,255,.3)
     .q-uploader__overlay
       color: #fff
-img
-  &.responsive
-    max-width: 100%
-    height: auto
-  &.avatar
-    width: 50px
-    height: 50px
-    border-radius: 50%
-    box-shadow: $shadow-1
-    vertical-align: middle
+img.responsive
+  max-width: 100%
+  height: auto
 .q-video
   position: relative
   overflow: hidden
   border-radius: inherit
-  iframe, object, embed
+  iframe,
+  object,
+  embed
     width: 100%
     height: 100%
+  &--responsive
+    height: 0
+    iframe,
+    object,
+    embed
+      position: absolute
+      top: 0
+      left: 0
 .q-virtual-scroll
   &:focus
     outline: 0
@@ -4566,7 +4886,7 @@ body.q-ios-padding .q-notifications__list
   margin: 10px 10px 0
   transition: transform 1s, opacity 1s
   z-index: $z-notify
-  min-width: 300px
+  flex-shrink: 0
   max-width: 95vw
   background: #323232
   color: #fff
@@ -4583,7 +4903,45 @@ body.q-ios-padding .q-notifications__list
     font-size: 0.9em
     opacity: 0.7
   &__actions
-    color: #c581ff
+    color: $primary
+    color: var(--q-color-primary)
+  &__badge
+    animation: q-notif-badge .42s
+    padding: 4px 8px
+    position: absolute
+    background: $negative
+    box-shadow: $shadow-1
+    background-color: $negative
+    background-color: var(--q-color-negative)
+    color: #fff
+    border-radius: $generic-border-radius
+    font-size: 12px
+    line-height: 12px
+    &--top-left,
+    &--top-right
+      top: -6px
+    &--bottom-left,
+    &--bottom-right
+      bottom: -6px
+    &--top-left,
+    &--bottom-left
+      left: -22px
+    &--top-right,
+    &--bottom-right
+      right: -22px
+  &__progress
+    z-index: -1
+    position: absolute
+    height: 3px
+    bottom: 0
+    left: -10px
+    right: -10px
+    animation: q-notif-progress linear
+    background: currentColor
+    opacity: .3
+    border-radius: $generic-border-radius $generic-border-radius 0 0
+    transform-origin: 0 50%
+    transform: scaleX(0)
   &--standard
     padding: 0 16px
     min-height: 48px
@@ -4593,8 +4951,19 @@ body.q-ios-padding .q-notifications__list
   &--multi-line
     min-height: 68px
     padding: 8px 16px
+    .q-notification__badge
+      &--top-left,
+      &--top-right
+        top: -15px
+      &--bottom-left,
+      &--bottom-right
+        bottom: -15px
+    .q-notification__progress
+      bottom: -8px
     .q-notification__actions
       padding: 0
+      &--with-media
+        padding-left: 25px
   &--top-left-enter, &--top-left-leave-to,
   &--top-enter, &--top-leave-to,
   &--top-right-enter, &--top-right-leave-to
@@ -4603,7 +4972,10 @@ body.q-ios-padding .q-notifications__list
     z-index: ($z-notify - 1)
   &--left-enter, &--left-leave-to,
   &--center-enter, &--center-leave-to,
-  &--right-enter, &--right-leave-to,
+  &--right-enter, &--right-leave-to
+    opacity: 0
+    transform: rotateX(90deg)
+    z-index: ($z-notify - 1)
   &--bottom-left-enter, &--bottom-left-leave-to,
   &--bottom-enter, &--bottom-leave-to,
   &--bottom-right-enter, &--bottom-right-leave-to
@@ -4633,6 +5005,22 @@ body.q-ios-padding .q-notifications__list
 @media (min-width: $breakpoint-sm-min)
   .q-notification
     max-width: 65vw
+@keyframes q-notif-badge
+  15%
+    transform: translate3d(-25%, 0, 0) rotate3d(0, 0, 1, -5deg)
+  30%
+    transform: translate3d(20%, 0, 0) rotate3d(0, 0, 1, 3deg)
+  45%
+    transform: translate3d(-15%, 0, 0) rotate3d(0, 0, 1, -3deg)
+  60%
+    transform: translate3d(10%, 0, 0) rotate3d(0, 0, 1, 2deg)
+  75%
+    transform: translate3d(-5%, 0, 0) rotate3d(0, 0, 1, -1deg)
+@keyframes q-notif-progress
+  0%
+    transform: scaleX(1)
+  100%
+    transform: scaleX(0)
 .animated
   animation-duration: .3s
   animation-fill-mode: both
@@ -6055,6 +6443,8 @@ body.q-ios-padding .q-notifications__list
   @include fg("-" + $name, $size)
 .rounded-borders
   border-radius: $generic-border-radius
+.border-radius-inherit
+  border-radius: inherit
 .no-transition
   transition: none !important
 .transition-0
@@ -6094,8 +6484,11 @@ body.electron
   .q-electron-drag
     -webkit-user-select: none
     -webkit-app-region: drag
-  .q-electron-drag .q-btn, .q-electron-drag--exception
+  .q-electron-drag .q-btn-item, .q-electron-drag--exception
     -webkit-app-region: no-drag
+img.responsive
+  max-width: 100%
+  height: auto
 .non-selectable
   user-select: none !important
 .scroll
@@ -6122,6 +6515,13 @@ body.electron
     cursor: inherit !important
   &-none
     cursor: none !important
+[aria-busy='true']
+  cursor: progress
+[aria-controls],
+[role='button']
+  cursor: pointer
+[aria-disabled]
+  cursor: default
 .rotate-45
   transform: rotate(45deg) #{"/* rtl:ignore */"}
 .rotate-90
@@ -6224,6 +6624,12 @@ body.electron
   margin-right: 12px
 .on-right
   margin-left: 12px
+/* internal: */
+.q-position-engine
+  margin-top: var(--q-pe-top, 0) !important
+  margin-left: var(--q-pe-left, 0) !important
+  will-change: auto
+  visibility: collapse 
 \:root
   @each $name, $size in $sizes
     #{"--q-size-"}#{$name}: #{$size}
@@ -6317,7 +6723,8 @@ $transition-easing: cubic-bezier(0.215, 0.61, 0.355, 1)
   &--slide-left,
   &--slide-up,
   &--slide-down
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: transform .3s $transition-easing
   &--slide-right
     &-enter
@@ -6343,9 +6750,11 @@ $transition-easing: cubic-bezier(0.215, 0.61, 0.355, 1)
   &--jump-left,
   &--jump-up,
   &--jump-down
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: opacity .3s, transform .3s
-    &-enter, &-leave-to
+    &-enter,
+    &-leave-to
       opacity: 0
   &--jump-right
     &-enter
@@ -6368,31 +6777,42 @@ $transition-easing: cubic-bezier(0.215, 0.61, 0.355, 1)
     &-leave-to
       transform: translate3d(0, 15px, 0)
   &--fade
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: opacity .3s ease-out
-    &-enter, &-leave, &-leave-to
+    &-enter,
+    &-leave,
+    &-leave-to
       opacity: 0
   &--scale
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: opacity .3s, transform .3s $transition-easing
-    &-enter, &-leave, &-leave-to
+    &-enter,
+    &-leave,
+    &-leave-to
       opacity: 0
       transform: scale3d(0, 0, 1)
   &--rotate
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: opacity .3s, transform .3s $transition-easing
       transform-style: preserve-3d
-    &-enter, &-leave, &-leave-to
+    &-enter,
+    &-leave,
+    &-leave-to
       opacity: 0
       transform: scale3d(0, 0, 1) rotate3d(0, 0, 1, 90deg)
   &--flip-right,
   &--flip-left,
   &--flip-up,
   &--flip-down
-    &-enter-active, &-leave-active
+    &-enter-active,
+    &-leave-active
       transition: transform .3s
       backface-visibility: hidden
-    &-enter-to, &-leave
+    &-enter-to,
+    &-leave
       transform: perspective(400px) rotate3d(1, 1, 0, 0deg)
   &--flip-right
     &-enter
@@ -6656,10 +7076,10 @@ body.body--dark
   .q-btn__wrapper,
   .q-time__content,
   .q-toolbar__title,
-  .q-menu .q-item__section--main
+  .q-menu .q-item__section--main,
+  .q-table__middle
     flex-basis: auto
-  .q-banner__content,
-  .q-notification__message
+  .q-banner__content
     flex-basis: 0 !important
   .q-menu,
   .q-dialog__inner
@@ -6668,6 +7088,8 @@ body.body--dark
   .q-tab__content
     flex-basis: auto
     min-width: 100%
+  .q-card__actions--vert
+    flex: 0 0 auto
   .column
     min-width: 0%
   @each $name, $size in $sizes
@@ -6692,9 +7114,6 @@ body.body--dark
       > button.q-btn--push.q-btn--actionable:active:hover
         .q-btn__wrapper
           margin: 1px 1px -1px -1px
-    > .q-btn
-      > .q-focus-helper
-        z-index: -1
   .q-btn
     overflow: visible
     &--wrap
@@ -6714,9 +7133,19 @@ body.body--dark
     &.q-spinner-mat .path
       stroke-dasharray: 89, 200
   
-  .q-toggle__thumb
-    .q-icon
-      margin-left: -6px
+  .q-checkbox
+    &__indet
+      opacity: 0
+    &__inner--indet
+      .q-checkbox__indet
+        opacity: 1
+  
+  .q-radio
+    &__check
+      opacity: 0
+    &__inner--truthy
+      .q-radio__check
+        opacity: 1
   
   .q-date__main
     min-height: 290px !important
@@ -6742,6 +7171,9 @@ body.body--dark
           left: 0
     &--float .q-field__label
       max-width: 100%
+  
+  .q-focus-helper
+    z-index: 1
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none)
   @include ie_style
 @supports (-ms-ime-align:auto)

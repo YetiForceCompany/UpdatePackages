@@ -1,3 +1,4 @@
+// Greek [el]
 import dayjs from '../index';
 var locale = {
   name: 'el',

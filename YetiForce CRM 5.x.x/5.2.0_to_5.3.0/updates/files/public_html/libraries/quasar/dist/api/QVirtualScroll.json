@@ -108,12 +108,15 @@
         "Element",
         "String"
       ],
-      "desc": "CSS selector or DOM element to be used as scroll container instead of the component's own container",
+      "desc": "CSS selector or DOM element to be used as a custom scroll container instead of the auto detected one",
       "examples": [
         ":scroll-target=\"$refs.scrollTarget\"",
+        "scroll-target=\".scroll-target-class\"",
+        "scroll-target=\"#scroll-target-id\"",
         "scroll-target=\"body\""
       ],
-      "category": "behavior"
+      "category": "behavior",
+      "addedIn": "v1.8.0"
     }
   },
   "slots": {
@@ -178,6 +181,11 @@
                 "increase",
                 "decrease"
               ]
+            },
+            "ref": {
+              "type": "Object",
+              "desc": "Vue reference to the QVirtualList which triggered the event",
+              "addedIn": "v1.8.4"
             }
           }
         }
@@ -204,6 +212,24 @@
     },
     "reset": {
       "desc": "Resets the computations; Needed for custom edge-cases"
+    },
+    "refresh": {
+      "desc": "Refreshes the list; Use it after appending items",
+      "params": {
+        "index": {
+          "type": [
+            "String",
+            "Number"
+          ],
+          "desc": "The index of the list item to scroll to after refresh (0 based); If it's not specified the scroll position is not changed; Use a negative value to keep scroll position",
+          "examples": [
+            "1",
+            23,
+            -1
+          ]
+        }
+      },
+      "addedIn": "v1.8.4"
     }
   }
 }

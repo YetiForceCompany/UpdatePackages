@@ -21,7 +21,8 @@ function execHandlers (list, evt) {
 function globalHandler (evt) {
   clearTimeout(timer)
 
-  if (evt.type === 'focusin') {
+  // prevent autofocus on body resulting from blur
+  if (evt.type === 'focusin' && evt.target.hasAttribute('tabindex') === true) {
     timer = setTimeout(() => {
       execHandlers(handlers.focus, evt)
     }, 200)
@@ -75,8 +76,7 @@ export default {
     el.__qclickoutside = ctx
 
     if (handlers.click.length === 0) {
-      // use click to be able to prevent click in handler
-      document.addEventListener('click', globalHandler, notPassiveCapture)
+      document.addEventListener('mousedown', globalHandler, notPassiveCapture)
       document.addEventListener('touchstart', globalHandler, notPassiveCapture)
       document.addEventListener('focusin', globalHandler, passiveCapture)
     }
@@ -113,7 +113,7 @@ export default {
 
       if (handlers.click.length === 0) {
         clearTimeout(timer)
-        document.removeEventListener('click', globalHandler, notPassiveCapture)
+        document.removeEventListener('mousedown', globalHandler, notPassiveCapture)
         document.removeEventListener('touchstart', globalHandler, notPassiveCapture)
         document.removeEventListener('focusin', globalHandler, passiveCapture)
       }

@@ -1,3 +1,4 @@
+// Pseudo [x-pseudo]
 import dayjs from '../index';
 var locale = {
   name: 'x-pseudo',

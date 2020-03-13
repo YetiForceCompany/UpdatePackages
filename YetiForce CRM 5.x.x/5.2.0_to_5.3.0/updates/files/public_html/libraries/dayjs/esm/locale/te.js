@@ -1,3 +1,4 @@
+// Telugu [te]
 import dayjs from '../index';
 var locale = {
   name: 'te',

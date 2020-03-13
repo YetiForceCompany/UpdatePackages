@@ -1,3 +1,4 @@
+// English (Israel) [en-il]
 import dayjs from '../index';
 var locale = {
   name: 'en-il',

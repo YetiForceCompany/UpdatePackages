@@ -9,6 +9,16 @@
     }
   },
   "props": {
+    "name": {
+      "type": "String",
+      "desc": "Used to specify the name of the control; Useful if dealing with forms; If not specified, it takes the value of 'for' prop, if it exists",
+      "examples": [
+        "car_id",
+        "car_id"
+      ],
+      "category": "behavior",
+      "addedIn": "v1.9.0"
+    },
     "mask": {
       "type": "String",
       "desc": "Custom mask or one of the predefined mask names",
@@ -120,6 +130,16 @@
       ],
       "category": "content"
     },
+    "label-color": {
+      "type": "String",
+      "desc": "Color name for the label from the Quasar Color Palette; Overrides the 'color' prop; The difference from 'color' prop is that the label will always have this color, even when field is not focused",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style",
+      "addedIn": "v1.7.0"
+    },
     "color": {
       "type": "String",
       "desc": "Color name for component from the Quasar Color Palette",
@@ -195,7 +215,7 @@
     },
     "hide-bottom-space": {
       "type": "Boolean",
-      "desc": "Does not reserves space for hint/error/counter anymore when these are not used; as a result, it also disables the animation for those",
+      "desc": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
       "category": "style"
     },
     "counter": {
@@ -240,9 +260,9 @@
     },
     "for": {
       "type": "String",
-      "desc": "DOM element id to be used as 'for' attribute of the label and as 'id' for the focus target",
+      "desc": "Used to specify the 'id' of the control and also the 'for' attribute of the label that wraps it; If no 'name' prop is specified, then it is used for this attribute as well",
       "examples": [
-        "for=\"myFieldsId\""
+        "myFieldsId"
       ],
       "category": "behavior",
       "addedIn": "v1.4.2"

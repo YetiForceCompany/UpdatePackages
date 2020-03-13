@@ -1,13 +1,13 @@
 /*!
  * Chart.Funnel.js
  * A funnel plugin for Chart.js(http://chartjs.org/)
- * Version: 1.1.2
+ * Version: 1.1.5
  *
  * Copyright 2016 Jone Casaper & YetiForce
  * Released under the MIT license
  * https://github.com/xch89820/Chart.Funnel.js/blob/master/LICENSE.md
  */
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.Chart || (g.Chart = {})).Funnel = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.Chart || (g.Chart = {})).Funnel = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 
 },{}],2:[function(require,module,exports){
 /**
@@ -152,6 +152,22 @@ module.exports = function (Chart) {
 			}
 		},
 		scales: {
+			xAxes: [{
+					position: 'left',
+					type: 'category',
+					display: false,
+					// Specific to Horizontal Bar Controller
+					categoryPercentage: 0.8,
+					barPercentage: 0.9,
+
+					// offset settings
+					offset: true,
+
+					// grid line settings
+					gridLines: {
+						offsetGridLines: true
+					}
+				}],
 			yAxes: [{
 					position: 'left',
 					type: 'category',
@@ -214,6 +230,9 @@ module.exports = function (Chart) {
 			var dataset = me.getDataset();
 			if (meta.yAxisID === null || !(meta.yAxisID in me.chart.scales)) {
 				meta.yAxisID = dataset.yAxisID || me.chart.options.scales.yAxes[0].id;
+			}
+			if (meta.xAxisID === null || !(meta.xAxisID in me.chart.scales)) {
+				meta.xAxisID = dataset.xAxisID || me.chart.options.scales.xAxes[0].id;
 			}
 		},
 
@@ -296,7 +315,7 @@ module.exports = function (Chart) {
 					base = chartArea.top + (viewIndex + 1) * (elHeight + gap) - gap;
 
 			var meta = me.getMeta();
-			trapezium._yScale = me.getScaleForId(meta.yAxisID);
+			trapezium._xScale = me.getScaleForId(meta.xAxisID);
 
 			if (sort === 'asc' || sort === 'data-asc' || !sort) {
 				// Find previous element which is visible

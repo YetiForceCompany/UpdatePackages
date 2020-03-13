@@ -1,3 +1,4 @@
+// Chinese (China) [zh-cn]
 import dayjs from '../index';
 var locale = {
   name: 'zh-cn',
@@ -16,6 +17,7 @@ var locale = {
     }
   },
   weekStart: 1,
+  yearStart: 4,
   formats: {
     LT: 'HH:mm',
     LTS: 'HH:mm:ss',

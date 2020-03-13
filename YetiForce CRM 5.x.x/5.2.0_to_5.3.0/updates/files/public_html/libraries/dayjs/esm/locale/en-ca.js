@@ -1,3 +1,4 @@
+// English (Canada) [en-ca]
 import dayjs from '../index';
 var locale = {
   name: 'en-ca',

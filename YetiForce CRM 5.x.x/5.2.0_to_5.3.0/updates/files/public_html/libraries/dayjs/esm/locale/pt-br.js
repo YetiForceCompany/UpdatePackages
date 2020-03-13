@@ -1,3 +1,4 @@
+// Portuguese (Brazil) [pt-br]
 import dayjs from '../index';
 var locale = {
   name: 'pt-br',

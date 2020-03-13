@@ -1,3 +1,4 @@
+// Hungarian [hu]
 import dayjs from '../index';
 var locale = {
   name: 'hu',

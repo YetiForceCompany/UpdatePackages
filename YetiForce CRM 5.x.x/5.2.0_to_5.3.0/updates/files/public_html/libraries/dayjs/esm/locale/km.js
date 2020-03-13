@@ -1,3 +1,4 @@
+// Cambodian [km]
 import dayjs from '../index';
 var locale = {
   name: 'km',

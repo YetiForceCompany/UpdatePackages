@@ -4,6 +4,12 @@
     "docsUrl": "https://v1.quasar.dev/vue-components/scroll-area"
   },
   "props": {
+    "dark": {
+      "type": "Boolean",
+      "desc": "Notify the component that the background is a dark color",
+      "category": "style",
+      "addedIn": "v1.9.0"
+    },
     "bar-style": {
       "type": [
         "Array",
@@ -15,7 +21,7 @@
         ":bar-style=\"{ right: '4px', borderRadius: '5px', background: 'red', width: '10px', opacity: 1 }\""
       ],
       "category": "style",
-      "addedIn": "1.5.0"
+      "addedIn": "v1.5.0"
     },
     "thumb-style": {
       "type": "Object",
@@ -72,17 +78,60 @@
       "type": "Boolean",
       "desc": "Register for horizontal scroll instead of vertical (which is default)",
       "category": "behavior"
-    },
-    "force-on-mobile": {
-      "type": "Boolean",
-      "desc": "Use custom scrollbar on mobile too; The scroll area will not benefit from inertial scrolling on mobile",
-      "category": "behavior",
-      "addedIn": "v1.5.11"
     }
   },
   "slots": {
     "default": {
       "desc": "Default slot in the devland unslotted content of the component"
+    }
+  },
+  "events": {
+    "scroll": {
+      "desc": "Emitted when scroll information changes (and listener is configured)",
+      "params": {
+        "info": {
+          "type": "Object",
+          "definition": {
+            "ref": {
+              "type": "Object",
+              "desc": "Vue reference to the QScrollArea which triggered the event"
+            },
+            "verticalPosition": {
+              "type": "Number",
+              "desc": "Vertical scroll position (in px); available only if QScrollArea is NOT in horizontal mode"
+            },
+            "verticalPercentage": {
+              "type": "Number",
+              "desc": "Vertical scroll percentage (0.0 < x < 1.0); available only if QScrollArea is NOT in horizontal mode"
+            },
+            "verticalSize": {
+              "type": "Number",
+              "desc": "Vertical scroll size (in px); available only if QScrollArea is NOT in horizontal mode"
+            },
+            "verticalContainerSize": {
+              "type": "Number",
+              "desc": "Height of the container (in px); available only if QScrollArea is NOT in horizontal mode"
+            },
+            "horizontalPosition": {
+              "type": "Number",
+              "desc": "Horizontal scroll position (in px); available only if QScrollArea is in horizontal mode"
+            },
+            "horizontalPercentage": {
+              "type": "Number",
+              "desc": "Horizontal scroll percentage (0.0 < x < 1.0); available only if QScrollArea is in horizontal mode"
+            },
+            "horizontalSize": {
+              "type": "Number",
+              "desc": "Horizontal scroll size (in px); available only if QScrollArea is in horizontal mode"
+            },
+            "horizontalContainerSize": {
+              "type": "Number",
+              "desc": "Width of the container (in px); available only if QScrollArea is in horizontal mode"
+            }
+          }
+        }
+      },
+      "addedIn": "v1.9.3"
     }
   },
   "methods": {

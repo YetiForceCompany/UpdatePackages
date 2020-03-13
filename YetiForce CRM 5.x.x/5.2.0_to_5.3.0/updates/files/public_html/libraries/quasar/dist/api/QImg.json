@@ -9,6 +9,23 @@
     }
   },
   "props": {
+    "ratio": {
+      "type": [
+        "String",
+        "Number",
+        "String",
+        "Number"
+      ],
+      "desc": "Force the component to maintain an aspect ratio",
+      "examples": [
+        ":ratio=\"4/3\"",
+        ":ratio=\"16/9\"",
+        "ratio=\"1\"",
+        "(Number format) :ratio=\"16/9\"",
+        "(String format) ratio=\"1\""
+      ],
+      "category": "content"
+    },
     "src": {
       "type": "String",
       "desc": "Path to image",
@@ -38,6 +55,26 @@
         "(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
       ],
       "category": "model"
+    },
+    "width": {
+      "type": "String",
+      "desc": "Forces image width; Must also include the unit (px or %)",
+      "examples": [
+        "280px",
+        "70%"
+      ],
+      "category": "model",
+      "addedIn": "v1.9.0"
+    },
+    "height": {
+      "type": "String",
+      "desc": "Forces image height; Must also include the unit (px or %)",
+      "examples": [
+        "280px",
+        "70%"
+      ],
+      "category": "model",
+      "addedIn": "v1.9.0"
     },
     "alt": {
       "type": "String",
@@ -76,18 +113,6 @@
       "examples": [
         "0 0",
         "20px 50px"
-      ],
-      "category": "content"
-    },
-    "ratio": {
-      "type": [
-        "String",
-        "Number"
-      ],
-      "desc": "Force the component to maintain an aspect ratio",
-      "examples": [
-        "(Number format) :ratio=\"16/9\"",
-        "(String format) ratio=\"1\""
       ],
       "category": "content"
     },
@@ -147,6 +172,12 @@
       "desc": "Do not display the default spinner when loading images (unless you are specifying one through the 'loading' slot)",
       "category": "content",
       "addedIn": "v1.1.0"
+    },
+    "native-context-menu": {
+      "type": "Boolean",
+      "desc": "Enable the native context menu of the image",
+      "category": "behavior",
+      "addedIn": "v1.8.4"
     }
   },
   "slots": {

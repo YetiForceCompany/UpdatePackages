@@ -1,7 +1,7 @@
 /*!
- * required gridstack CSS for default 12 column size
+ * required gridstack 1.1.0 CSS for default 12 and 1 columnMode size. Use gridstack-extra.css for others
  * https://gridstackjs.com/
- * (c) 2014-2019 Dylan Weiss, Alain Dumesny, Pavel Reznikov
+ * (c) 2014-2020 Alain Dumesny, Dylan Weiss, Pavel Reznikov
  * gridstack.js may be freely distributed under the MIT license.
 */
 :root .grid-stack-item > .ui-resizable-handle {
@@ -216,6 +216,16 @@
       min-width: 100%; }
     .grid-stack > .grid-stack-item[data-gs-max-width='12'] {
       max-width: 100%; }
+  .grid-stack.grid-stack-1 > .grid-stack-item {
+    min-width: 100%; }
+    .grid-stack.grid-stack-1 > .grid-stack-item[data-gs-width='1'] {
+      width: 100%; }
+    .grid-stack.grid-stack-1 > .grid-stack-item[data-gs-x='1'] {
+      left: 100%; }
+    .grid-stack.grid-stack-1 > .grid-stack-item[data-gs-min-width='1'] {
+      min-width: 100%; }
+    .grid-stack.grid-stack-1 > .grid-stack-item[data-gs-max-width='1'] {
+      max-width: 100%; }
   .grid-stack.grid-stack-animate,
   .grid-stack.grid-stack-animate .grid-stack-item {
     -webkit-transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
@@ -231,14 +241,5 @@
     -ms-transition: left 0s, top 0s, height 0s, width 0s;
     -o-transition: left 0s, top 0s, height 0s, width 0s;
     transition: left 0s, top 0s, height 0s, width 0s; }
-  .grid-stack.grid-stack-one-column-mode {
-    height: auto !important; }
-    .grid-stack.grid-stack-one-column-mode > .grid-stack-item {
-      position: relative !important;
-      width: auto !important;
-      left: 0 !important;
-      top: auto !important;
-      margin-bottom: 20px;
-      max-width: none !important; }
-      .grid-stack.grid-stack-one-column-mode > .grid-stack-item > .ui-resizable-handle {
-        display: none; }
+
+/*# sourceMappingURL=gridstack.css.map */

@@ -1,3 +1,4 @@
+// Nynorsk [nn]
 import dayjs from '../index';
 var locale = {
   name: 'nn',

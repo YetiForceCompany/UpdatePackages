@@ -3,6 +3,11 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/form"
   },
+  "behavior": {
+    "$listeners": {
+      "desc": "All native events are being propagated (you don't need the '.native' modifier)"
+    }
+  },
   "props": {
     "autofocus": {
       "type": "Boolean",
@@ -23,7 +28,7 @@
       "type": "Boolean",
       "desc": "Validate all fields in form (by default it stops after finding the first invalid field with synchronous validation)",
       "category": "behavior",
-      "addedIn": "1.1.1"
+      "addedIn": "v1.1.1"
     }
   },
   "slots": {
@@ -42,7 +47,14 @@
       "desc": "Emitted after a validation was triggered and all inner Quasar components models are valid"
     },
     "validation-error": {
-      "desc": "Emitted after a validation was triggered and at least one of the inner Quasar components models are NOT valid"
+      "desc": "Emitted after a validation was triggered and at least one of the inner Quasar components models are NOT valid",
+      "params": {
+        "ref": {
+          "type": "Object",
+          "desc": "Vue reference to the first component that triggered the validation error"
+        }
+      },
+      "addedIn": "v1.9.9"
     }
   },
   "methods": {

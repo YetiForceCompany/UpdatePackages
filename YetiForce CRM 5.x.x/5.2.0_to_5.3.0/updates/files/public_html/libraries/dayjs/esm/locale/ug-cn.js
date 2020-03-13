@@ -1,3 +1,4 @@
+// Uyghur (China) [ug-cn]
 import dayjs from '../index';
 var locale = {
   name: 'ug-cn',

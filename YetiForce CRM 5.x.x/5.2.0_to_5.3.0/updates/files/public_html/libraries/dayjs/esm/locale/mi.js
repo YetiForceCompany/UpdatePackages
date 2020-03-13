@@ -1,3 +1,4 @@
+// Maori [mi]
 import dayjs from '../index';
 var locale = {
   name: 'mi',

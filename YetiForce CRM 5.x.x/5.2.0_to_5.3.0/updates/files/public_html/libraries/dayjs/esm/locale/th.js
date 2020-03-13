@@ -1,3 +1,4 @@
+// Thai [th]
 import dayjs from '../index';
 var locale = {
   name: 'th',

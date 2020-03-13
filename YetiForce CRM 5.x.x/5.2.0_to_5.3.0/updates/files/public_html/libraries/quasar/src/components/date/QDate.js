@@ -96,13 +96,12 @@ export default Vue.extend({
   computed: {
     classes () {
       const type = this.landscape === true ? 'landscape' : 'portrait'
-      return `q-date--${type} q-date--${type}-${this.minimal === true ? 'minimal' : 'standard'}` +
+      return `q-date q-date--${type} q-date--${type}-${this.minimal === true ? 'minimal' : 'standard'}` +
         (this.isDark === true ? ' q-date--dark q-dark' : '') +
         (this.bordered === true ? ` q-date--bordered` : '') +
         (this.square === true ? ` q-date--square no-border-radius` : '') +
         (this.flat === true ? ` q-date--flat no-shadow` : '') +
-        (this.readonly === true && this.disable !== true ? ' q-date--readonly' : '') +
-        (this.disable === true ? ' disabled' : '')
+        (this.disable === true ? ' disabled' : (this.readonly === true ? ' q-date--readonly' : ''))
     },
 
     headerTitle () {
@@ -263,6 +262,15 @@ export default Vue.extend({
       }
 
       return res
+    },
+
+    attrs () {
+      if (this.disable === true) {
+        return { 'aria-disabled': '' }
+      }
+      if (this.readonly === true) {
+        return { 'aria-readonly': '' }
+      }
     }
   },
 
@@ -756,9 +764,13 @@ export default Vue.extend({
       h('div', { staticClass: 'q-date__actions' }, def)
     )
 
+    if (this.name !== void 0 && this.disable !== true) {
+      this.__injectFormInput(content, 'push')
+    }
+
     return h('div', {
-      staticClass: 'q-date',
       class: this.classes,
+      attrs: this.attrs,
       on: this.$listeners
     }, [
       this.__getHeader(h),

@@ -1,3 +1,4 @@
+// Danish [da]
 import dayjs from '../index';
 var locale = {
   name: 'da',

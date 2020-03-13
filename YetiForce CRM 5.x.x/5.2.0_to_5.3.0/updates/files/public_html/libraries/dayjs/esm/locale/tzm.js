@@ -1,3 +1,4 @@
+// Central Atlas Tamazight [tzm]
 import dayjs from '../index';
 var locale = {
   name: 'tzm',

@@ -1,3 +1,4 @@
+// Georgian [ka]
 import dayjs from '../index';
 var locale = {
   name: 'ka',

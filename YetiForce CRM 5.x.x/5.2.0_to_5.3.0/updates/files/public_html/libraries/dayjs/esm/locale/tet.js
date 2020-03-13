@@ -1,3 +1,4 @@
+// Tetun Dili (East Timor) [tet]
 import dayjs from '../index';
 var locale = {
   name: 'tet',

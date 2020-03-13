@@ -1,3 +1,4 @@
+// Japanese [ja]
 import dayjs from '../index';
 var locale = {
   name: 'ja',

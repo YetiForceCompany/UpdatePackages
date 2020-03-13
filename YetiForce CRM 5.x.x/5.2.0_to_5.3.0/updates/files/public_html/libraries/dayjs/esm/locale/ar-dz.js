@@ -1,3 +1,4 @@
+// Arabic (Algeria) [ar-dz]
 import dayjs from '../index';
 var locale = {
   name: 'ar-dz',

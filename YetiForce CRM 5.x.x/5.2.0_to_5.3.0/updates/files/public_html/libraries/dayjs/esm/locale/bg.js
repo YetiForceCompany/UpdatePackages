@@ -1,3 +1,4 @@
+// Bulgarian [bg]
 import dayjs from '../index';
 var locale = {
   name: 'bg',

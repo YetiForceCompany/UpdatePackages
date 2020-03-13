@@ -1,3 +1,4 @@
+// Croatian [hr]
 import dayjs from '../index';
 var locale = {
   name: 'hr',

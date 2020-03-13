@@ -1,3 +1,4 @@
+// Javanese [jv]
 import dayjs from '../index';
 var locale = {
   name: 'jv',

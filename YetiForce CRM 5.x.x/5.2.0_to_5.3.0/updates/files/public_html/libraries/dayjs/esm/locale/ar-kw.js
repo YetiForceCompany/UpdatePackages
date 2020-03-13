@@ -1,3 +1,4 @@
+// Arabic (Kuwait) [ar-kw]
 import dayjs from '../index';
 var locale = {
   name: 'ar-kw',

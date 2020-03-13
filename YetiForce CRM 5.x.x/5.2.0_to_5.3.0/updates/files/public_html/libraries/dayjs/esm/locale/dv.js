@@ -1,3 +1,4 @@
+// Maldivian [dv]
 import dayjs from '../index';
 var locale = {
   name: 'dv',

@@ -1,3 +1,4 @@
+// Romanian [ro]
 import dayjs from '../index';
 var locale = {
   name: 'ro',

@@ -1,3 +1,4 @@
+// Burmese [my]
 import dayjs from '../index';
 var locale = {
   name: 'my',

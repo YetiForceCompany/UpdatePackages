@@ -1,3 +1,4 @@
+// Azerbaijani [az]
 import dayjs from '../index';
 var locale = {
   name: 'az',

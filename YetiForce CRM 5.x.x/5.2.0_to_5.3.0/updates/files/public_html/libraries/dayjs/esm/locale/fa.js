@@ -1,3 +1,4 @@
+// Persian [fa]
 import dayjs from '../index';
 var locale = {
   name: 'fa',

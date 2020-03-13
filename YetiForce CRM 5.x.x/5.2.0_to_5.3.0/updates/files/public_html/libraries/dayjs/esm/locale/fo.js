@@ -1,3 +1,4 @@
+// Faroese [fo]
 import dayjs from '../index';
 var locale = {
   name: 'fo',
