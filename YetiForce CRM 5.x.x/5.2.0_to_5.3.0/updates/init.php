@@ -261,6 +261,8 @@ class YetiForceUpdate
 				$fieldInstance->uitype = $uiType;
 				$fieldInstance->typeofdata = 'V~O';
 				$fieldInstance->displaytype = 2;
+				$fieldInstance->masseditable = 0;
+				$fieldInstance->quickcreate = 3;
 				$blockInstance->addField($fieldInstance);
 				++$i;
 			}
@@ -276,7 +278,7 @@ class YetiForceUpdate
 
 		\App\Db\Updater::batchUpdate([
 			['s_yf_address_finder_config', ['val' => 'YetiForceGeocoder'], ['name' => 'default_provider', 'type' => 'global', 'val' => '']],
-			['vtiger_field', ['quickcreate' => 3, 'masseditable' => 0, 'displaytype' => 2, 'quickcreatesequence' => 0], ['uitype' => 52, 'columnname' => 'smcreatorid']],
+			['vtiger_field', ['quickcreate' => 3, 'masseditable' => 0, 'displaytype' => 2, 'quickcreatesequence' => 0], ['tablename' => 'vtiger_crmentity', 'columnname' => 'smcreatorid']],
 			['vtiger_approvals_register_status', ['presence' => 0], ['approvals_register_status' => 'PLL_ACCEPTED']],
 			['vtiger_approvals_register_type', ['presence' => 0], ['or', ['approvals_register_type' => 'PLL_ACCEPTANCE'], ['approvals_register_type' => 'PLL_RESIGNATION']]],
 			['vtiger_approvals_status', ['presence' => 0], ['approvals_status' => 'PLL_ACTIVE']],
@@ -382,8 +384,12 @@ class YetiForceUpdate
 			['vtiger_password',	['type' => 'pwned',	'val' => 'false'], ['type' => 'pwned']],
 			['vtiger_password',	['type' => 'pwned_time', 'val' => '7'], ['type' => 'pwned_time']],
 			['vtiger_links', ['tabid' => 0, 'linktype' => 'EDIT_VIEW_RECORD_COLLECTOR', 'linklabel' => 'Vies', 'linkurl' => 'App\RecordCollectors\Vies'], ['linktype' => 'EDIT_VIEW_RECORD_COLLECTOR']],
+			['u_yf_chat_rooms', ['type' => 'crm'], ['type' => 'crm']],
+			['u_yf_chat_rooms', ['type' => 'global'], ['type' => 'global']],
+			['u_yf_chat_rooms', ['type' => 'group'], ['type' => 'group']],
+			['u_yf_chat_rooms', ['type' => 'private'], ['type' => 'private']],
+			['u_yf_chat_rooms', ['type' => 'user'], ['type' => 'user']],
 		]);
-
 		\App\Db\Updater::batchDelete([
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
 			['vtiger_module_dashboard',  ['and', ['<>', 'blockid', 0],  ['NOT IN',  'blockid', (new \App\Db\Query())->select(['id'])->from('vtiger_module_dashboard_blocks')]]],
@@ -415,6 +421,7 @@ class YetiForceUpdate
 				$dbCommand->update('u_yf_servicecontracts_sla_policy', ['conditions' => \App\Json::encode($conditions)], ['id' => $row['id']])->execute();
 			}
 		}
+
 		include_once 'modules/ModComments/ModComments.php';
 		if (class_exists('ModComments')) {
 			\ModComments::addWidgetTo(['Locations', 'Occurrences']);
@@ -612,8 +619,8 @@ class YetiForceUpdate
 		$id = ((new App\Db\Query())->select(['id'])->from('yetiforce_menu')->where(['label' => 'MEN_GDPR'])->scalar()) ?? 0;
 
 		\App\Db\Updater::batchInsert([
-			['yetiforce_menu', ['role' => 0, 'parentid' => $id, 'type' => 0, 'module' => \App\Module::getModuleId('Approvals'), 'label' => '', 'newwindow' => 0, 'dataurl' => null, 'showicon' => 0, 'icon' => '', 'sizeicon' => null, 'hotkey' => '', 'filters' => null, 'source' => 0]],
-			['yetiforce_menu', ['role' => 0, 'parentid' => $id, 'type' => 0, 'module' => \App\Module::getModuleId('ApprovalsRegister'), 'label' => '', 'newwindow' => 0, 'dataurl' => null, 'showicon' => 0, 'icon' => '', 'sizeicon' => null, 'hotkey' => '', 'filters' => null, 'source' => 0]],
+			['yetiforce_menu', ['role' => 0, 'parentid' => $id, 'type' => 0, 'module' => \App\Module::getModuleId('Approvals'), 'label' => '', 'newwindow' => 0, 'dataurl' => null, 'showicon' => 0, 'icon' => '', 'sizeicon' => null, 'hotkey' => '', 'filters' => null, 'source' => 0], ['module' => \App\Module::getModuleId('Approvals')]],
+			['yetiforce_menu', ['role' => 0, 'parentid' => $id, 'type' => 0, 'module' => \App\Module::getModuleId('ApprovalsRegister'), 'label' => '', 'newwindow' => 0, 'dataurl' => null, 'showicon' => 0, 'icon' => '', 'sizeicon' => null, 'hotkey' => '', 'filters' => null, 'source' => 0], ['module' => \App\Module::getModuleId('ApprovalsRegister')]],
 		]);
 
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
@@ -693,7 +700,7 @@ class YetiForceUpdate
 				$blockInstance->delete(false);
 			} elseif ('update' === $block['type']) {
 				$createCommand->update('vtiger_blocks', $data, ['blockid' => $blockInstance->id])->execute();
-			} else {
+			} elseif ('add' === $block['type'] && !(\vtlib\Block::getInstance($data['blocklabel'], $data['tabid']))) {
 				$createCommand->insert('vtiger_blocks', $data)->execute();
 			}
 		}

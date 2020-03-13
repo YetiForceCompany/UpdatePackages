@@ -439,20 +439,4 @@ class Base extends \App\Db\Importers\Base
 			['vtiger_crmentityrel_relcrmid_fk', 'vtiger_crmentityrel', 'relcrmid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
 		];
 	}
-
-	public function data()
-	{
-		$this->data = [
-			'u_yf_chat_rooms' => [
-				'columns' => ['id', 'type', 'sequence', 'active'],
-				'values' => [
-					[1, 'crm', null, 1],
-					[2, 'global', null, 1],
-					[3, 'group', null, 1],
-					[4, 'private', null, 1],
-					[5, 'user', null, 1],
-				]
-			]
-		];
-	}
 }
