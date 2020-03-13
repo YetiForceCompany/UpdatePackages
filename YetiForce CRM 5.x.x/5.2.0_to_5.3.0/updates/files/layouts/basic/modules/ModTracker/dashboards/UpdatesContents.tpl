@@ -15,7 +15,7 @@
 						{assign var=IS_PERMITTED_RECORD value=true}
 					{/if}
 					{if $SHOW_MODULE}
-						<span class="userIcon-{$RECORD_MODEL->getModuleName()} fa-lg fa-fw mr-1"
+						<span class="yfm-{$RECORD_MODEL->getModuleName()} fa-lg fa-fw mr-1"
 							title="{\App\Language::translateSingularModuleName($RECORD_MODEL->getModuleName())}"></span>
 					{/if}
 					<span {if $IS_PERMITTED_RECORD}
@@ -74,7 +74,7 @@
 											<span class="mr-1" style="color: {ModTracker::$colorsActions[$UPDATE_ROW->get('status')]};">
 												<span class="{ModTracker::$iconActions[$UPDATE_ROW->get('status')]} fa-fw"></span>
 											</span>
-											{\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME)|ucfirst}
+											{\App\Utils::mbUcfirst(\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME))}
 											{assign var=COUNTER value=0}
 											{foreach from=$FIELDS item=FIELD}
 													{if $FIELD && $FIELD->getFieldInstance() && $FIELD->getFieldInstance()->isViewableInDetailView()}
@@ -124,7 +124,7 @@
 											<span class="mr-1" style="color: {ModTracker::$colorsActions[$UPDATE_ROW->get('status')]};">
 												<span class="{ModTracker::$iconActions[$UPDATE_ROW->get('status')]} fa-fw"></span>
 											</span>
-											{\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME)|ucfirst}&nbsp;
+											{\App\Utils::mbUcfirst(\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME))}&nbsp;
 											<div class="u-white-space-nowrap u-text-ellipsis--no-hover">
 												{DISPLAY_RECORD_NAME RECORD_MODEL=$RELATION->getLinkedRecord()}
 											</div>
@@ -144,7 +144,7 @@
 											<span class="mr-1" style="color: {ModTracker::$colorsActions[$UPDATE_ROW->get('status')]};">
 												<span class="{ModTracker::$iconActions[$UPDATE_ROW->get('status')]} fa-fw"></span>
 											</span>
-											{\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME)|ucfirst}
+											{\App\Utils::mbUcfirst(\App\Language::translate($UPDATE_ROW->getStatusLabel(), $MODULE_NAME))}
 										</div>
 									</div>
 								{/if}

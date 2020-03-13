@@ -381,6 +381,10 @@ class Base extends \App\Db\Importers\Base
 					'status_rel' => $this->stringType(225),
 					'comment_rel' => $this->text(),
 				],
+				'index' => [
+					['u_yf_relations_members_entity_crmid_idx', 'crmid'],
+					['u_yf_relations_members_entity_relcrmid_idx', 'relcrmid'],
+				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
@@ -397,14 +401,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__occurrences' => [
-				'columns' => [
-					'occurrences_status' => $this->stringType(),
-					'occurrences_type' => $this->stringType(),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'u_#__openstreetmap' => [
 				'columns' => [
 					'crmid' => $this->integer(10)->notNull(),
@@ -417,14 +413,6 @@ class Base extends \App\Db\Importers\Base
 			'u_#__openstreetmap_address_updater' => [
 				'columns' => [
 					'crmid' => $this->integer(10)->notNull(),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'u_#__relations_members_entity' => [
-				'index' => [
-					['u_yf_relations_members_entity_crmid_idx', 'crmid'],
-					['u_yf_relations_members_entity_relcrmid_idx', 'relcrmid'],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

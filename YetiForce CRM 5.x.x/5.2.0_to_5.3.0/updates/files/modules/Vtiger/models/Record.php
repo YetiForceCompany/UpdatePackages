@@ -1,4 +1,5 @@
 <?php
+
  /* +***********************************************************************************
  * The contents of this file are subject to the vtiger CRM Public License Version 1.0
  * ("License"); You may not use this file except in compliance with the License
@@ -92,13 +93,25 @@ class Vtiger_Record_Model extends \App\Base
 	}
 
 	/**
-	 * Set data for save.
+	 * Set custom data for save.
 	 *
-	 * @param array $array
+	 * @param array $data
 	 */
-	public function setDataForSave(array $array)
+	public function setDataForSave(array $data)
 	{
-		$this->dataForSave = array_merge($this->dataForSave, $array);
+		foreach ($data as $tableName => $tableData) {
+			$this->dataForSave[$tableName] = isset($this->dataForSave[$tableName]) ? array_merge($this->dataForSave[$tableName], $tableData) : $tableData;
+		}
+	}
+
+	/**
+	 * Gets custom data for save.
+	 *
+	 * @param array
+	 */
+	public function getDataForSave()
+	{
+		return $this->dataForSave;
 	}
 
 	/**
@@ -805,13 +818,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function isMandatorySave()
 	{
-		if ($this->getModule()->isInventory() && $this->getPreviousInventoryItems()) {
-			return true;
-		}
-		if (!empty($this->dataForSave)) {
-			return true;
-		}
-		return false;
+		return !empty($this->dataForSave) || ($this->getModule()->isInventory() && $this->getPreviousInventoryItems());
 	}
 
 	/**
@@ -1015,7 +1022,7 @@ class Vtiger_Record_Model extends \App\Base
 		if ($mfInstance) {
 			$defaultInvRow = [];
 			$params = $mfInstance->get('params');
-			if ($params['autofill']) {
+			if (!empty($params['autofill'])) {
 				$fieldsList = array_keys($this->getModule()->getFields());
 				$parentFieldsList = array_keys($parentRecordModel->getModule()->getFields());
 				$commonFields = array_intersect($fieldsList, $parentFieldsList);
@@ -1349,20 +1356,22 @@ class Vtiger_Record_Model extends \App\Base
 				'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
 				'linklabel' => 'LBL_EDIT',
 				'linkurl' => $this->getEditViewUrl(),
-				'linkicon' => 'fas fa-edit',
+				'linkicon' => 'yfi yfi-full-editing-view',
 				'linkclass' => 'btn-sm btn-default',
 				'linkhref' => true,
 			];
-			$recordLinks[] = [
-				'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
-				'linklabel' => 'LBL_QUICK_EDIT',
-				'linkicon' => 'mdi mdi-square-edit-outline',
-				'linkclass' => 'btn-sm btn-default js-quick-edit-modal',
-				'linkdata' => [
-					'module' => $this->getModuleName(),
-					'record' => $this->getId(),
-				]
-			];
+			if ($this->getModule()->isQuickCreateSupported()) {
+				$recordLinks[] = [
+					'linktype' => 'LIST_VIEW_ACTIONS_RECORD_LEFT_SIDE',
+					'linklabel' => 'LBL_QUICK_EDIT',
+					'linkicon' => 'yfi yfi-quick-creation',
+					'linkclass' => 'btn-sm btn-default js-quick-edit-modal',
+					'linkdata' => [
+						'module' => $this->getModuleName(),
+						'record' => $this->getId(),
+					]
+				];
+			}
 		}
 		if ($this->isViewable() && $this->getModule()->isPermitted('WatchingRecords')) {
 			$watching = (int) ($this->isWatchingRecord());
@@ -1462,12 +1471,12 @@ class Vtiger_Record_Model extends \App\Base
 				'linklabel' => 'LBL_EDIT',
 				'linkhref' => true,
 				'linkurl' => $this->getEditViewUrl(),
-				'linkicon' => 'fas fa-edit',
+				'linkicon' => 'yfi yfi-full-editing-view',
 				'linkclass' => 'btn-sm btn-default',
 			]);
 			$links['LBL_QUICK_EDIT'] = Vtiger_Link_Model::getInstanceFromValues([
 				'linklabel' => 'LBL_QUICK_EDIT',
-				'linkicon' => 'mdi mdi-square-edit-outline',
+				'linkicon' => 'yfi yfi-quick-creation',
 				'linkclass' => 'btn-sm btn-default js-quick-edit-modal',
 				'linkdata' => [
 					'module' => $this->getModuleName(),

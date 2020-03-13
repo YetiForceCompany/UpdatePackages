@@ -663,7 +663,7 @@ class Importer
 											$this->logs .= "  > foreign key must be removed and added in postUpdate: $tableName:$columnName <> {$value[0]}:{$value[$columnName]} FK:{$keyName}\n";
 											$importer->foreignKey[] = [$keyName, $tableName, $columnName, $value[0], $value[$columnName], 'CASCADE', null];
 											$dbCommand->dropForeignKey($keyName, $tableName)->execute();
-											$tableSchema = $schema->getTableSchema($tableName,true);
+											$tableSchema = $schema->getTableSchema($tableName, true);
 										}
 									}
 								}
@@ -672,7 +672,7 @@ class Importer
 										$this->logs .= "  > foreign key must be removed and added in postUpdate: $tableName:$columnName <> $sourceTableName:{$fk['sourceColumn']} FK:{$keyName}\n";
 										$importer->foreignKey[] = [$keyName, $sourceTableName, $fk['sourceColumn'], $tableName, $columnName, 'CASCADE', null];
 										$dbCommand->dropForeignKey($keyName, $sourceTableName)->execute();
-										$schema->getTableSchema($sourceTableName,true);
+										$schema->getTableSchema($sourceTableName, true);
 									}
 								}
 								$this->logs .= "  > alter column: $tableName:$columnName ... ";
@@ -807,6 +807,9 @@ class Importer
 			$sourceTableName = $importer->db->quoteSql($key[1]);
 			$destTableName = $importer->db->quoteSql($key[3]);
 			$tableSchema = $schema->getTableSchema($sourceTableName, true);
+			if (!\is_object($tableSchema)) {
+				$this->logs .= "# no foreign keys no table ({$sourceTableName}s) " . print_r($key, true) . "\n";
+			}
 			foreach ($tableSchema->foreignKeys as $dbForeignKey) {
 				if ($destTableName === $dbForeignKey[0] && isset($dbForeignKey[$key[2]]) && $key[4] === $dbForeignKey[$key[2]]) {
 					$add = false;

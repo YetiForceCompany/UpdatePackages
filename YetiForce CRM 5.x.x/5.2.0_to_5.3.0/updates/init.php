@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: cf0368156c82e6643c13a677a9678fb2b2cabc91
+// last check: 4ac779d361f555c1ef6d74a19c34a22694a363a1
 /**
  * YetiForceUpdate Class.
  */
@@ -152,7 +152,6 @@ class YetiForceUpdate
 		$this->updateWorkflowTaskSumFieldFromDependent();
 		$this->createdUserId(2);
 		$this->deleteFilesAfterUpgrade();
-		$this->lastUpdateScheme();
 
 		$this->importer->refreshSchema();
 		$this->importer->logs(false);
@@ -166,9 +165,31 @@ class YetiForceUpdate
 	 */
 	public function preUpdateScheme()
 	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$db = \App\Db::getInstance();
 		$subQuery = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['vtiger_crmentity.setype' => 'Campaigns']);
 		$db->createCommand()->delete('vtiger_campaign', ['not in', 'campaignid', $subQuery])->execute();
+		$tables = [
+			'u_yf_relations_members_entity' => ['crmid', 'relcrmid'],
+			'vtiger_crmentityrel' => ['crmid', 'relcrmid'],
+			'u_yf_openstreetmap_record_updater' => ['crmid'],
+			'u_yf_openstreetmap' => ['crmid'],
+		];
+		$subQuery = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity');
+		foreach ($tables as $table => $columns) {
+			if (!$db->isTableExists($table)) {
+				continue;
+			}
+			$conditions = ['or'];
+			foreach ($columns as $column) {
+				$conditions[] = ['not in', $column, $subQuery];
+			}
+			if (\count($conditions) > 1) {
+				$db->createCommand()->delete($table, $conditions)->execute();
+			}
+		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
 	/**
@@ -337,13 +358,31 @@ class YetiForceUpdate
 			['vtiger_links', ['tabid' => \App\Module::getModuleId('Home'), 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_UPDATES', 'linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates'], ['linkurl' => 'index.php?module=ModTracker&view=ShowWidget&name=Updates']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'VTEmailReport', 'label' => 'LBL_EMAIL_REPORT', 'classname' => 'VTEmailReport', 'classpath' => 'modules/com_vtiger_workflow/tasks/VTEmailReport.php', 'templatepath' => 'com_vtiger_workflow/taskforms/VTEmailTemplateTask.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'VTEmailReport']],
 			['vtiger_eventhandlers', ['event_name' => 'EditViewPreSave', 'handler_class' => 'Contacts_DuplicateEmail_Handler', 'is_active' => 1, 'include_modules' => 'Contacts', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Contacts')], ['event_name' => 'EditViewPreSave', 'handler_class' => 'Contacts_DuplicateEmail_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Files_Handler', 'is_active' => 1, 'include_modules' => '', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0], ['event_name' => 'EntityAfterSave', 'handler_class' => 'Vtiger_Files_Handler']],
+			['vtiger_settings_field',
+				[
+					'blockid' => (new \App\Db\Query())->select(['blockid'])->from('vtiger_settings_blocks')->where(['label' => 'LBL_INTEGRATION'])->scalar(),
+					'name' => 'LBL_MAP',
+					'iconpath' => 'far fa-map',
+					'description' => 'LBL_MAP_DESCRIPTION',
+					'linkto' => 'index.php?module=Map&parent=Settings&view=Config',
+					'sequence' => 6,
+					'active' => 0,
+					'pinned' => 0,
+					'admin_access' => null
+				], ['name' => 'LBL_MAP']
+			],
+			['vtiger_password',	['type' => 'pwned',	'val' => 'false'], ['type' => 'pwned']],
+			['vtiger_password',	['type' => 'pwned_time', 'val' => '7'], ['type' => 'pwned_time']],
+			['vtiger_links', ['tabid' => 0, 'linktype' => 'EDIT_VIEW_RECORD_COLLECTOR', 'linklabel' => 'Vies', 'linkurl' => 'App\RecordCollectors\Vies'], ['linktype' => 'EDIT_VIEW_RECORD_COLLECTOR']],
 		]);
 
 		\App\Db\Updater::batchDelete([
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
 			['vtiger_module_dashboard',  ['and', ['<>', 'blockid', 0],  ['NOT IN',  'blockid', (new \App\Db\Query())->select(['id'])->from('vtiger_module_dashboard_blocks')]]],
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
-			['yetiforce_proc_marketing',  ['type' => 'lead',  'param' => 'currentuser_status']]
+			['yetiforce_proc_marketing',  ['type' => 'lead',  'param' => 'currentuser_status']],
+			['vtiger_ws_fieldtype',  ['uitype' => [117, 80]]]
 		]);
 
 		$dbCommand = \App\Db::getInstance()->createCommand();
@@ -437,7 +476,7 @@ class YetiForceUpdate
 			[['generatedtype' => 1, 'uitype' => 80, 'fieldname' => 'date_password_change', 'fieldlabel' => 'FL_DATE_PASSWORD_CHANGE', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => '', 'maximumlength' => null, 'sequence' => 8, 'block' => 'LBL_MORE_INFORMATION', 'displaytype' => 2, 'typeofdata' => 'DT~O', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'date_password_change']],
 			[['generatedtype' => 1, 'uitype' => 56, 'fieldname' => 'force_password_change', 'fieldlabel' => 'FL_FORCE_PASSWORD_CHANGE', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => '', 'maximumlength' => '-128,127', 'sequence' => 4, 'block' => 'LBL_USER_ADV_OPTIONS', 'displaytype' => 1, 'typeofdata' => 'C~O', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'force_password_change']],
 			[['generatedtype' => 1, 'uitype' => 16, 'fieldname' => 'view_date_format', 'fieldlabel' => 'FL_VIEW_DATE_FORMAT', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => 'PLL_ELAPSED', 'maximumlength' => '50', 'sequence' => 9, 'block' => 'LBL_CALENDAR_SETTINGS', 'displaytype' => 1, 'typeofdata' => 'V~M', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'view_date_format']],
-			[['generatedtype' => 1, 'uitype' => 16, 'fieldname' => 'authy_methods', 'fieldlabel' => 'FL_AUTHY_METHODS', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => '', 'maximumlength' => '255', 'sequence' => 3, 'block' => 'LBL_USER_ADV_OPTIONS', 'displaytype' => 10, 'typeofdata' => 'V~M', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'authy_methods']],
+			[['generatedtype' => 1, 'uitype' => 16, 'fieldname' => 'authy_methods', 'fieldlabel' => 'FL_AUTHY_METHODS', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => '', 'maximumlength' => '255', 'sequence' => 3, 'block' => 'LBL_USER_ADV_OPTIONS', 'displaytype' => 9, 'typeofdata' => 'V~O', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'authy_methods']],
 			[['generatedtype' => 1, 'uitype' => 312, 'fieldname' => 'authy_secret_totp', 'fieldlabel' => 'FL_AUTHY_SECRET_TOTP', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => '', 'maximumlength' => '255', 'sequence' => 2, 'block' => 'LBL_USER_ADV_OPTIONS', 'displaytype' => 10, 'typeofdata' => 'V~O', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'authy_secret_totp']],
 			[['generatedtype' => 1, 'uitype' => 16, 'fieldname' => 'login_method', 'fieldlabel' => 'FL_LOGIN_METHOD', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => 'PLL_PASSWORD', 'maximumlength' => '255', 'sequence' => 1, 'block' => 'LBL_USER_ADV_OPTIONS', 'displaytype' => 1, 'typeofdata' => 'V~M', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'login_method']],
 			[['generatedtype' => 1, 'uitype' => 16, 'fieldname' => 'sync_carddav', 'fieldlabel' => 'LBL_CARDDAV_SYNCHRONIZATION_CONTACT', 'readonly' => 0, 'presence' => 2, 'defaultvalue' => 'PLL_OWNER', 'maximumlength' => '255', 'sequence' => 1, 'block' => 'LBL_USER_INTEGRATION', 'displaytype' => 1, 'typeofdata' => 'V~M', 'quickcreate' => 1, 'quickcreatesequence' => 0, 'info_type' => 'BAS', 'masseditable' => 1, 'helpinfo' => '', 'summaryfield' => 0, 'fieldparams' => '', 'header_field' => null, 'maxlengthtext' => 0, 'maxwidthcolumn' => 0, 'visible' => 0, 'tabindex' => 0], ['tablename' => 'vtiger_users', 'columnname' => 'sync_carddav']],
@@ -611,6 +650,8 @@ class YetiForceUpdate
 
 	private function updateBlocks(array $blocks, array $blockNames)
 	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		foreach ($blocks as $block) {
 			$data = array_combine($blockNames, $block['db']);
 			$data['tabid'] = \App\Module::getModuleId($block['module']);
@@ -626,15 +667,13 @@ class YetiForceUpdate
 			$createCommand = \App\Db::getInstance()->createCommand();
 			if ('remove' === $block['type']) {
 				$blockInstance->delete(false);
-			//continue;
 			} elseif ('update' === $block['type']) {
 				$createCommand->update('vtiger_blocks', $data, ['blockid' => $blockInstance->id])->execute();
 			} else {
 				$createCommand->insert('vtiger_blocks', $data)->execute();
 			}
-			// $blockInstance->initialize($data);
-			// $blockInstance->save();
 		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
 	/**
@@ -1006,21 +1045,6 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
-	public function lastUpdateScheme()
-	{
-		$start = microtime(true);
-		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'));
-
-		$base = (new \App\Db\Importers\Base());
-		$base->foreignKey = [
-			//['u_yf_modtracker_inv_id_fk', 'u_yf_modtracker_inv', 'id', 'vtiger_modtracker_basic', 'id', 'CASCADE', null]
-		];
-		$this->importer->updateForeignKey($base);
-
-		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
-		return true;
-	}
-
 	public function stopProcess()
 	{
 		$start = microtime(true);
@@ -1071,6 +1095,8 @@ class YetiForceUpdate
 	 */
 	private function createConfigFiles()
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'));
 		$changeConfiguration = [
 			'base' => [
 				'sounds' => [
@@ -1147,6 +1173,7 @@ class YetiForceUpdate
 				$configFile->create();
 			}
 		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
 	/**
@@ -1181,6 +1208,7 @@ class YetiForceUpdate
 		$query = (new \App\Db\Query())->select(['tablename', 'columnname', 'fieldid', 'maximumlength', 'uitype'])->from('vtiger_field');
 		$dataReader = $query->createCommand()->query();
 		while ($field = $dataReader->read()) {
+			$range = false;
 			$column = $schema->getTableSchema($field['tablename'])->columns[$field['columnname']];
 			preg_match('/^([\w\-]+)/i', $column->dbType, $matches);
 			$type = $matches[1] ?? $column->type;
@@ -1202,9 +1230,10 @@ class YetiForceUpdate
 						break;
 					case 'bigint':
 					case 'mediumint':
-						$this->log("[ERROR] Type not allowed: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} |type:{$type}|{$column->type}|{$column->dbType}");
+						$this->log("[Warning] Type not allowed: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} |type:{$type}|{$column->type}|{$column->dbType}");
 						\App\Log::error("Type not allowed: {$field['tablename']}.{$field['columnname']} |uitype: {$field['uitype']} |maximumlength: {$field['maximumlength']} |type:{$type}|{$column->type}|{$column->dbType}", __METHOD__);
-						break;
+						// break;
+						// no break
 					case 'integer':
 					case 'int':
 						if ($column->unsigned) {
@@ -1260,6 +1289,8 @@ class YetiForceUpdate
 
 	public function baseModuleTools(): int
 	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'));
 		$i = 0;
 		$baseModuleTools = ['Import', 'Export', 'Merge', 'CreateCustomFilter',
 			'DuplicateRecord', 'MassEdit', 'MassArchived', 'MassActive', 'MassDelete', 'MassAddComment', 'MassTransferOwnership',
@@ -1303,6 +1334,7 @@ class YetiForceUpdate
 			++$i;
 		}
 		\Settings_SharingAccess_Module_Model::recalculateSharingRules();
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 		return $i;
 	}
 }
