@@ -124,7 +124,6 @@ class YetiForceUpdate
 			$this->importer->postUpdate();
 			$this->createdUserId(1);
 			$this->addModules(['Approvals', 'ApprovalsRegister', 'MailIntegration']);
-			$this->updateRelationField();
 			$this->updateWidgets();
 			$this->dropColumns();
 			$this->indexes();
@@ -146,6 +145,7 @@ class YetiForceUpdate
 		$this->blocks();
 		$this->addFields();
 		$this->addModules(['Locations', 'Occurrences']);
+		$this->updateRelationField();
 		$this->menu();
 		$this->data();
 		$this->updateUsersFields();
@@ -249,7 +249,7 @@ class YetiForceUpdate
 				\App\Db::getInstance()->createCommand()->update('vtiger_field', ['uitype' => $uiType], ['fieldid' => $fieldId])->execute();
 				++$u;
 			} else {
-				$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['tabid' => $tabId])->orderBy(['sequence' => \SORT_DESC])->scalar();
+				$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['tabid' => $tabId])->orderBy(['sequence' => \SORT_ASC])->scalar();
 				$blockInstance = vtlib\Block::getInstance($blockId, $moduleName);
 				$fieldInstance = new \vtlib\Field();
 				$fieldInstance->name = 'created_user_id';
@@ -350,6 +350,13 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['name' => 'LBL_YETIFORCE_WATCHDOG_HEADER', 'description' => 'LBL_YETIFORCE_WATCHDOG_DESC', 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Watchdog'], ['name' => 'LBL_YETIFORCE_STATUS_HEADER']],
 			['vtiger_occurrences_status', ['presence' => 0], ['occurrences_status' => 'PLL_CANCELLED']],
 			['vtiger_occurrences_status', ['presence' => 0], ['occurrences_status' => 'PLL_ARCHIVED']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-vendor-sms'], ['name' => 'LBL_SMSNOTIFIER']],
+			['vtiger_settings_blocks', ['icon' => 'yfi yfi-adminIcon-menu-summary'], ['label' => 'LBL_MENU_SUMMARRY']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-advanced-permission'], ['name' => 'LBL_ADVANCED_PERMISSION']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-time-control-processes'], ['name' => 'LBL_TIMECONTROL_PROCESSES']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-countries'], ['name' => 'LBL_COUNTRY_SETTINGS']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-backup'], ['name' => 'LBL_BACKUP_MANAGER']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-adminIcon-sla-policy'], ['name' => 'LBL_SLA_POLICY']],
 		]);
 
 		\App\Db\Updater::batchInsert([
@@ -385,7 +392,21 @@ class YetiForceUpdate
 			['vtiger_ws_fieldtype',  ['uitype' => [117, 80]]]
 		]);
 
-		$dbCommand = \App\Db::getInstance()->createCommand();
+		if (!(new \App\Db\Query())->from('vtiger_status_rel')->exists()) {
+			\App\Db\Updater::batchInsert([
+				['vtiger_status_rel', ['status_relid' => 1, 'status_rel' => 'PLL_REGISTERED', 'presence' => 1, 'sortorderid' => 1], ['status_rel' => 'PLL_REGISTERED']],
+				['vtiger_status_rel', ['status_relid' => 2, 'status_rel' => 'PLL_APPROVED', 'presence' => 1, 'sortorderid' => 2], ['status_rel' => 'PLL_APPROVED']],
+				['vtiger_status_rel', ['status_relid' => 3, 'status_rel' => 'PLL_PRESENT', 'presence' => 1, 'sortorderid' => 3], ['status_rel' => 'PLL_PRESENT']],
+				['vtiger_status_rel', ['status_relid' => 4, 'status_rel' => 'PLL_ABSENT', 'presence' => 1, 'sortorderid' => 4], ['status_rel' => 'PLL_ABSENT']],
+			]);
+		}
+		$db = \App\Db::getInstance();
+		$db->createCommand("UPDATE yetiforce_menu SET icon = REPLACE(icon, 'userIcon-', 'yfm-') WHERE icon LIKE 'userIcon-%'")->execute();
+		$db->createCommand("UPDATE vtiger_settings_field SET iconpath = REPLACE(iconpath, 'userIcon-', 'yfm-') WHERE iconpath LIKE 'userIcon-%'")->execute();
+		$db->createCommand("UPDATE vtiger_settings_blocks SET icon = REPLACE(icon, 'userIcon-', 'yfm-') WHERE icon LIKE 'userIcon-%'")->execute();
+		$db->createCommand("UPDATE vtiger_trees_templates_data SET icon = REPLACE(icon, 'userIcon-', 'yfm-') WHERE icon LIKE 'userIcon-%'")->execute();
+
+		$dbCommand = $db->createCommand();
 		$dataReader = (new \App\Db\Query())->select(['id', 'conditions'])->from('u_yf_servicecontracts_sla_policy')->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			if (!\App\Json::isEmpty($row['conditions'])) {
@@ -394,7 +415,10 @@ class YetiForceUpdate
 				$dbCommand->update('u_yf_servicecontracts_sla_policy', ['conditions' => \App\Json::encode($conditions)], ['id' => $row['id']])->execute();
 			}
 		}
-
+		include_once 'modules/ModComments/ModComments.php';
+		if (class_exists('ModComments')) {
+			\ModComments::addWidgetTo(['Locations', 'Occurrences']);
+		}
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
@@ -812,6 +836,9 @@ class YetiForceUpdate
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
 				$importInstance->importModule();
 				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				if ('Locations' === $moduleName && ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar())) {
+					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
+				}
 			} else {
 				$this->log('[INFO] Module exist: ') . $moduleName;
 			}
