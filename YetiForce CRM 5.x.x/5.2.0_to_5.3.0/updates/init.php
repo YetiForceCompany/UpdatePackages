@@ -228,7 +228,7 @@ class YetiForceUpdate
 			'name' => (string) $this->modulenode->label,
 			'from_version' => (string) $this->modulenode->from_version,
 			'to_version' => (string) $this->modulenode->to_version,
-			'result' => $result,
+			'result' => 1,
 			'time' => date('Y-m-d H:i:s'),
 		])->execute();
 		$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
