@@ -806,7 +806,7 @@ class YetiForceUpdate
 							$currencyData['currencyId'] = (int) $row['currency_id'];
 						}
 						$dataReaderRel->close();
-						$db->createCommand()->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row['productid']])->execute();
+						$db->createCommand()->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row[$index]])->execute();
 					}
 					$dataReader->close();
 					$this->importer->dropColumns([[$tableName, 'currency_id']]);
@@ -1268,6 +1268,10 @@ class YetiForceUpdate
 					continue;
 				}
 				try {
+					if ('Campaigns' === $moduleName) {
+						$subQuery = (new \App\Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['vtiger_crmentity.setype' => 'Campaigns']);
+						$db->createCommand()->delete('vtiger_campaign', ['not in', 'campaignid', $subQuery])->execute();
+					}
 					$relatedTableIndex = $focus->tab_name_index[$relatedTable];
 					$query = "INSERT INTO {$relatedTable} ({$relatedTable}.{$relatedTableIndex})
 						SELECT {$baseTable}.{$baseIndex} FROM {$baseTable}

@@ -1,0 +1,15 @@
+<?xml version='1.0'?>
+<module>
+	<exporttime>2019-12-04 14:11:08</exporttime>
+	<name>MailIntegration</name>
+	<tablabel>MailIntegration</tablabel>
+	<premium>1</premium>
+	<type>extension</type>
+	<dependencies>
+		<vtiger_version>5.2.x</vtiger_version>
+	</dependencies>
+	<tables>
+	</tables>
+	<crons>
+	</crons>
+</module>
