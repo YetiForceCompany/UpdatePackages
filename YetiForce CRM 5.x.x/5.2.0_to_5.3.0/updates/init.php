@@ -243,6 +243,8 @@ class YetiForceUpdate
 		\vtlib\Functions::recurseDelete('app_data/LanguagesUpdater.json');
 		\vtlib\Functions::recurseDelete('app_data/SystemUpdater.json');
 		\vtlib\Functions::recurseDelete('app_data/cron.php');
+		\vtlib\Functions::recurseDelete('app_data/ConfReport_AllErrors.php');
+		\vtlib\Functions::recurseDelete('app_data/shop.php');
 		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
 		ob_end_clean();
 		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
