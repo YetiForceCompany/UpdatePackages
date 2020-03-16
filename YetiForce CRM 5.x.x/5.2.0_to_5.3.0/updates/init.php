@@ -1192,6 +1192,7 @@ class YetiForceUpdate
 		];
 		\App\Cache::resetOpcache();
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
+		\App\Config::set('module', 'OSSMail', 'plugins', array_merge(\Config\Modules\OSSMail::$plugins, ['html5_notifier']));
 		$configTemplates = 'config/ConfigTemplates.php';
 		if (file_exists(__DIR__ . '/files/' . $configTemplates)) {
 			copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
