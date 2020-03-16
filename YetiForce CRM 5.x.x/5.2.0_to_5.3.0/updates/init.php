@@ -157,7 +157,20 @@ class YetiForceUpdate
 		$this->importer->logs(false);
 
 		$this->createConfigFiles();
+		$this->postExecuted();
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	public function postExecuted()
+	{
+		$menuRecordModel = new \Settings_Menu_Record_Model();
+		$menuRecordModel->refreshMenuFiles();
+
+		\App\Cache::clearAll();
+		\App\Cache::clear();
+		\App\Cache::clearOpcache();
+		\App\Module::createModuleMetaFile();
+		\App\Colors::generate();
 	}
 
 	/**
@@ -205,24 +218,42 @@ class YetiForceUpdate
 		$this->log('Fixer::profileField: ' . App\Db\Fixer::profileField());
 		$this->log('Fixer::maximumFieldsLength: ' . print_r($this->maximumFieldsLength(), true));
 
-		$menuRecordModel = new \Settings_Menu_Record_Model();
-		$menuRecordModel->refreshMenuFiles();
-
-		\App\Cache::clearAll();
-		\App\Cache::clear();
-		\App\Cache::clearOpcache();
-		\App\Module::createModuleMetaFile();
 		\App\UserPrivilegesFile::recalculateAll();
-
-		\App\Cache::clear();
-		\App\Cache::clearOpcache();
-
-		\App\Colors::generate();
 		if ($this->error || false !== strpos($this->importer->logs, 'Error')) {
 			$this->stopProcess();
 		}
+		$db = \App\Db::getInstance();
+		$db->createCommand()->insert('yetiforce_updates', [
+			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+			'name' => (string) $this->modulenode->label,
+			'from_version' => (string) $this->modulenode->from_version,
+			'to_version' => (string) $this->modulenode->to_version,
+			'result' => $result,
+			'time' => date('Y-m-d H:i:s'),
+		])->execute();
+		$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+		\vtlib\Functions::recurseDelete('cache/updates/updates');
+		register_shutdown_function(function () {
+			$viewer = \Vtiger_Viewer::getInstance();
+			$viewer->clearAllCache();
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+		});
+		\App\Cache::clear();
+		\App\Cache::clearOpcache();
+		\vtlib\Functions::recurseDelete('app_data/LanguagesUpdater.json');
+		\vtlib\Functions::recurseDelete('app_data/SystemUpdater.json');
+		\vtlib\Functions::recurseDelete('app_data/cron.php');
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
+		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
+    -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
+		<h1 class="modal-title"><span class="fas fa-thumbs-up mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
+		</div><div class="modal-body" style="font-size: 27px;">Successfully updated</div><div class="modal-footer">
+		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . '"><span class="fas fa-home mr-2"></span>' . \App\Language::translate('LBL_HOME') . '<a>
+		</div></div></div></div>';
+
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
-		return true;
+		exit;
 	}
 
 	private function createdUserId(int $type)
