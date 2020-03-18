@@ -1,0 +1,12 @@
+License: YetiForce Public License 3.0 licenses/License.html
+
+- Minor improvements in chat
+- Improved Updates widget
+- Corrected ckeditor in the calendar widget (#12713)
+- Added minor improvements in calendar widget
+- Fixed password verification
+- Fixed #12725 (Sorting lists, e.g., Services, does not work)
+- Rebuilt force password change
+- Corrected icons in system (#12714)
+- Minor improvements in the comments and icons
+- and other
