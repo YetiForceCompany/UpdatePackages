@@ -9,4 +9,6 @@ License: YetiForce Public License 3.0 licenses/License.html
 - Rebuilt force password change
 - Corrected icons in system (#12714)
 - Minor improvements in the comments and icons
+- Fixed LDAP password verification
+- Fixed #12732 
 - and other
