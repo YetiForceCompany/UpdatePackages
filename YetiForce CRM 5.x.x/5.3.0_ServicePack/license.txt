@@ -11,4 +11,9 @@ License: YetiForce Public License 3.0 licenses/License.html
 - Minor improvements in the comments and icons
 - Fixed LDAP password verification
 - Fixed #12732 
+- Fixed "Integrity constraint violation: 1062 Duplicate entry in u_yf_crmentity_showners"
+- Fixed icon in modal header
+- Fixed #12765 (#12771)
+- Fixed #12746 (#12772)
+- Improved lead conversion
 - and other
