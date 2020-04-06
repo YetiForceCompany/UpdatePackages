@@ -16,4 +16,8 @@ License: YetiForce Public License 3.0 licenses/License.html
 - Fixed #12765 (#12771)
 - Fixed #12746 (#12772)
 - Improved lead conversion
+- Fixed #12824 (Users images)
+- Cron issue after updating to 5.3 #12729
+- Time chooser for appointments adds space in time which creates invalid date #12781
+- Fixed #12776,#12796
 - and other
