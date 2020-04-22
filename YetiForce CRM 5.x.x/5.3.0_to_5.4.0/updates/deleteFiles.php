@@ -16,5 +16,6 @@ return [
 	'public_html/layouts/basic/modules/Settings/CustomView/resources/Sorting.min.js',
 	'public_html/layouts/basic/modules/Settings/CustomView/resources/Sorting.js',
 	'tests/setup/Nginx/yetiforce.conf',
-	'tests/setup/Nginx/www.conf'
+	'tests/setup/Nginx/www.conf',
+	'tests/setup/my.cnf'
 ];
