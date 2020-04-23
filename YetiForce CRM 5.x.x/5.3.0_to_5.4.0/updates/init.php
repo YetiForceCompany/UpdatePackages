@@ -121,9 +121,7 @@ class YetiForceUpdate
 			$this->importer->updateScheme();
 			$this->importer->importData();
 			$this->importer->postUpdate();
-
-			// $this->addModules(['Approvals', 'ApprovalsRegister', 'MailIntegration']);
-
+			$this->addModules(['ProductCategory']);
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 			$this->importer->logs(false);
@@ -136,6 +134,32 @@ class YetiForceUpdate
 		$this->importer->checkIntegrity(true);
 
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	/**
+	 * Add modules.
+	 *
+	 * @param string[] $modules
+	 */
+	private function addModules(array $modules)
+	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+		$command = \App\Db::getInstance()->createCommand();
+		foreach ($modules as $moduleName) {
+			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
+				$importInstance = new \vtlib\PackageImport();
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
+				$importInstance->importModule();
+				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				if ('Locations' === $moduleName && ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar())) {
+					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
+				}
+			} else {
+				$this->log('[INFO] Module exist: ') . $moduleName;
+			}
+		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
 	/**
