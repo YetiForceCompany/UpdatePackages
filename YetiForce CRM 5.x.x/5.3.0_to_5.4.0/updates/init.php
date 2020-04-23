@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: ?
+// last check: 257d52bf9d8f9f733c01e3236bd7458952242574
 /**
  * YetiForceUpdate Class.
  */
@@ -126,7 +126,6 @@ class YetiForceUpdate
 
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
-			// $this->importer->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
