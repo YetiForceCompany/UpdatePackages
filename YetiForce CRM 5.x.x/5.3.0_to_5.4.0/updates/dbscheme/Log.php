@@ -16,6 +16,18 @@ class Log extends \App\Db\Importers\Base
 	public function scheme()
 	{
 		$this->tables = [
+			'l_#__magento' => [
+				'columns' => [
+					'id' => $this->primaryKey(10)->unsigned(),
+					'time' => $this->dateTime()->notNull(),
+					'category' => $this->stringType(100),
+					'message' => $this->stringType(500),
+					'code' => $this->smallInteger(5),
+					'trace' => $this->text(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 	}
 }
