@@ -231,36 +231,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__productcategory' => [
-				'columns' => [
-					'productcategoryid' => $this->integer(10)->notNull(),
-					'category' => $this->stringType(),
-					'number' => $this->stringType(32),
-					'parent_id' => $this->integer(10)->unsigned()->defaultValue(0),
-					'active' => $this->smallInteger(1)->defaultValue(0),
-				],
-				'columns_mysql' => [
-					'active' => $this->tinyInteger(1)->defaultValue(0),
-				],
-				'index' => [
-					['u_yf_productcategory_parent_id_idx', 'parent_id'],
-				],
-				'primaryKeys' => [
-					['productcategory_pk', 'productcategoryid']
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'u_#__productcategorycf' => [
-				'columns' => [
-					'productcategoryid' => $this->integer(10)->notNull(),
-				],
-				'primaryKeys' => [
-					['productcategorycf_pk', 'productcategoryid']
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'u_#__scalculations' => [
 				'columns' => [
 					'parent_id' => $this->integer(10)->unsigned()->defaultValue(0),
