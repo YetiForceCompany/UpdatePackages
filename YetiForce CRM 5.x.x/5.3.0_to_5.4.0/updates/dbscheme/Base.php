@@ -231,12 +231,52 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__productcategory' => [
+				'columns' => [
+					'productcategoryid' => $this->integer(10)->notNull(),
+					'category' => $this->stringType(),
+					'number' => $this->stringType(32),
+					'parent_id' => $this->integer(10)->unsigned()->defaultValue(0),
+					'active' => $this->smallInteger(1)->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'active' => $this->tinyInteger(1)->defaultValue(0),
+				],
+				'index' => [
+					['u_yf_productcategory_parent_id_idx', 'parent_id'],
+				],
+				'primaryKeys' => [
+					['productcategory_pk', 'productcategoryid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__productcategorycf' => [
+				'columns' => [
+					'productcategoryid' => $this->integer(10)->notNull(),
+				],
+				'primaryKeys' => [
+					['productcategorycf_pk', 'productcategoryid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'u_#__scalculations' => [
 				'columns' => [
 					'parent_id' => $this->integer(10)->unsigned()->defaultValue(0),
 				],
 				'index' => [
 					['u_yf_scalculations_parent_id_idx', 'parent_id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__squotes' => [
+				'columns' => [
+					'parent_id' => $this->integer(10)->unsigned()->defaultValue(0),
+				],
+				'index' => [
+					['u_yf_squotes_parent_id_idx', 'parent_id'],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -270,15 +310,188 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__ssingleorders_address' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+					'first_name_a' => $this->stringType(),
+					'last_name_a' => $this->stringType(),
+					'company_name_a' => $this->stringType(),
+					'vat_id_a' => $this->stringType(50),
+					'email_a' => $this->stringType(100),
+					'phone_a' => $this->stringType(100),
+					'addresslevel8b' => $this->stringType(),
+					'addresslevel7b' => $this->stringType(),
+					'addresslevel6b' => $this->stringType(),
+					'addresslevel5b' => $this->stringType(),
+					'addresslevel4b' => $this->stringType(),
+					'addresslevel3b' => $this->stringType(),
+					'addresslevel2b' => $this->stringType(),
+					'addresslevel1b' => $this->stringType(),
+					'buildingnumberb' => $this->stringType(),
+					'localnumberb' => $this->stringType(50),
+					'poboxb' => $this->stringType(50),
+					'first_name_b' => $this->stringType(),
+					'last_name_b' => $this->stringType(),
+					'company_name_b' => $this->stringType(),
+					'vat_id_b' => $this->stringType(50),
+					'email_b' => $this->stringType(100),
+					'phone_b' => $this->stringType(100),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_account' => [
+				'columns' => [
+					'vat_id' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_accountaddress' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+					'buildingnumberb' => $this->stringType(),
+					'localnumberb' => $this->stringType(50),
+					'buildingnumberc' => $this->stringType(),
+					'localnumberc' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_activity' => [
+				'columns' => [
+					'meeting_utl' => $this->stringType(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_contactaddress' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+					'buildingnumberb' => $this->stringType(),
+					'localnumberb' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_contactdetails' => [
+				'columns' => [
+					'gender' => $this->stringType()->defaultValue(''),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_cron_task' => [
+				'columns' => [
+					'status' => $this->smallInteger(1),
+					'module' => $this->stringType(25),
+					'lase_error' => $this->text(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_customview' => [
+				'columns' => [
+					'sort' => $this->text(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_gender' => [
+				'columns' => [
+					'genderid' => $this->primaryKey(),
+					'gender' => $this->stringType(),
+					'presence' => $this->smallInteger(1)->defaultValue(1),
+					'sortorderid' => $this->smallInteger()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'presence' => $this->tinyInteger(1)->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_leadaddress' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_leaddetails' => [
+				'columns' => [
+					'vat_id' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_payment_methods' => [
+				'columns' => [
+					'payment_methodsid' => $this->primaryKey(),
+					'payment_methods' => $this->stringType(),
+					'presence' => $this->smallInteger(1)->defaultValue(1),
+					'sortorderid' => $this->smallInteger()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'presence' => $this->tinyInteger(1)->defaultValue(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_products' => [
+				'columns' => [
+					'ean' => $this->stringType(64),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_users' => [
+				'columns' => [
+					'secondary_email' => $this->stringType(100)->defaultValue(''),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_vendor' => [
+				'columns' => [
+					'vat_id' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_vendoraddress' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'buildingnumberb' => $this->stringType(),
+					'buildingnumberc' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+					'localnumberb' => $this->stringType(50),
+					'localnumberc' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->dropColumns = [
-			'u_#__ssingleorders' => ['company']
+			'u_#__ssingleorders' => ['company'],
+			'vtiger_account' => ['ownership'],
+			'vtiger_finvoicecost_paymentstatus' => ['picklist_valueid'],
+			'vtiger_relatedlists_fields' => ['fieldname'],
+			'vtiger_troubletickets' => ['ordertime', 'contract_type', 'contracts_end_date'],
 		];
 		$this->dropTables = [
-			'i_#__magento_record'
+			'i_#__magento_record', 'vtiger_fcorectinginvoice_formpayment', 'vtiger_finvoice_formpayment', 'vtiger_finvoicecost_formpayment', 'vtiger_finvoiceproforma_formpayment', 'vtiger_ssingleorders_method_payments'
 		];
 		$this->foreignKey = [
-
+			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', ''],
+			['fk_1_u_#__productcategoryproductcategoryid', 'u_#__productcategory', 'productcategoryid', 'vtiger_crmentity', 'crmid', 'CASCADE', ''],
+			['fk_1_u_#__productcategorycfproductcategoryid', 'u_#__productcategorycf', 'productcategoryid', 'u_#__productcategory', 'productcategoryid', 'CASCADE', ''],
 		];
 	}
 }
