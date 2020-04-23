@@ -156,9 +156,9 @@ class YetiForceUpdate
 			'addresslevel5a' => [3, 255],
 			'addresslevel5b' => [3, 255],
 			'addresslevel5c' => [3, 255],
-			'buildingnumbera' => [4, 50],
-			'buildingnumberb' => [4, 50],
-			'buildingnumberc' => [4, 50],
+			'buildingnumbera' => [4, 255],
+			'buildingnumberb' => [4, 255],
+			'buildingnumberc' => [4, 255],
 			'addresslevel7a' => [5, 255],
 			'addresslevel7b' => [5, 255],
 			'addresslevel7c' => [5, 255],
@@ -189,9 +189,9 @@ class YetiForceUpdate
 			'company_name_a' => [14, 255],
 			'company_name_b' => [14, 255],
 			'company_name_c' => [14, 255],
-			'vat_id_a' => [15, 30],
-			'vat_id_b' => [15, 30],
-			'vat_id_c' => [15, 30],
+			'vat_id_a' => [15, 50],
+			'vat_id_b' => [15, 50],
+			'vat_id_c' => [15, 50],
 			'email_a' => [16, 100],
 			'email_b' => [16, 100],
 			'email_c' => [16, 100],
@@ -199,7 +199,6 @@ class YetiForceUpdate
 			'phone_b' => [17, 100],
 			'phone_c' => [17, 100],
 		];
-
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		foreach ($address as $fieldName => $row) {
 			$dbCommand->update('vtiger_field', ['sequence' => $row[0], 'maximumlength' => $row[1]], ['fieldname' => $fieldName])->execute();
