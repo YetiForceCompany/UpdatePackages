@@ -78,6 +78,11 @@ class YetiForceUpdate
 	/**
 	 * @var integer
 	 */
+	public $tabIdIGRN = \App\Module::getModuleId('IGRN');
+
+	/**
+	 * @var integer
+	 */
 	public $tabIdFCorectingInvoice = \App\Module::getModuleId('FCorectingInvoice');
 
 	/**
@@ -263,6 +268,8 @@ class YetiForceUpdate
 			['vtiger_cron_task', ['description' => NULL, 'lase_error' => NULL], ['or',
 				'name' => ['LBL_MAILER', 'LBL_BROWSING_HISTORY', 'LBL_BATCH_PROCESSES', 'LBL_CARD_DAV', 'LBL_CAL_DAV', 'LBL_MULTI_REFERENCE_VALUE', 'LBL_CACHE', 'LBL_NEVER_ENDING_RECURRING_EVENTS', 'LBL_CLEAR_FILE_UPLOAD_TEMP', 'LBL_SMSNOTIFIER', 'LBK_SYSTEM_WARNINGS']
 			]],
+			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]],
+			['vtiger_eventhandlers', ['include_modules' => 'Contacts,Accounts'], ['handler_class' => 'Contacts_DuplicateEmail_Handler', 'event_name' => 'EditViewPreSave']],
 			['vtiger_field', ['uitype' => 16, 'fieldname' => 'payment_methods', 'fieldlabel' => 'FL_PAYMENTS_METHOD'], ['or',
 				['tabid' => $this->tabIdFCorectingInvoice, 'columnname' => 'fcorectinginvoice_formpayment'],
 				['tabid' => $this->tabIdFInvoice, 'columnname' => 'finvoice_formpayment'],
@@ -296,6 +303,11 @@ class YetiForceUpdate
 				'tabid' =>  \App\Module::getModuleId('Users'), 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek'],
 			]],
 			['vtiger_field', ['fieldlabel' => 'Description', 'helpinfo' => 'Edit,Detail'], ['tabid' => \App\Module::getModuleId('Users'), 'columnname' => 'description']],
+			['vtiger_settings_blocks', ['label' => 'LBL_MENU_DASHBOARD', 'sequence' => 1], ['label' => 'LBL_MENU_SUMMARRY']],
+			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Help&view=Index'], ['name' => 'LBL_GITHUB']],
+			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Logs&view=SystemWarnings'], ['name' => 'LBL_SYSTEM_WARNINGS']],
+			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=YetiForce&view=Vulnerabilities'], ['name' => 'LBL_VULNERABILITIES']],
+			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Map&view=Config'], ['name' => 'LBL_MAP']],
 		]);
 		\App\Db\Updater::batchInsert([]);
 		\App\Db\Updater::batchDelete([]);
@@ -451,6 +463,8 @@ class YetiForceUpdate
 		$importerType = new \App\Db\Importers\Base();
 		if (empty($fields)) {
 			$fields = [
+				[$this->tabIdSingleOrders, 3039,'secondary_email','vtiger_users',2,13,'secondary_email','FL_SECONDARY_EMAIL',0,2,'','100',2,468,1,'E~O',1,0,'BAS',1,'Edit,Detail',0,'',NULL,0,0,0,0,
+					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_USERLOGIN_ROLE', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_USERLOGIN_ROLE'], 'moduleName' => 'Users'],
 				[$this->tabIdFInvoiceProforma, 3021, 'addresslevel1b', 'u_yf_finvoiceproforma_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING'], 'moduleName' => 'FInvoiceProforma'],
 				[$this->tabIdFInvoiceProforma, 3019, 'addresslevel2b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
@@ -554,6 +568,8 @@ class YetiForceUpdate
 				[$this->tabIdSalesProcesses, 2952, 'expected_sale', 'u_yf_ssalesprocesses', 1, 71, 'expected_sale', 'FL_EXPECTED_SALE', 0, 2, '', '1.0E+20', 5, 320, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FINANCES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_FINANCES'], 'moduleName' => 'SSalesProcesses'],
 				[$this->tabIdSingleOrders, 2978, 'parent_id', 'u_yf_ssingleorders', 1, 10, 'parent_id', 'FL_PARENT_SSINGLEORDERS', 0, 2, '', '4294967295', 19, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SSINGLEORDERS_INFORMATION'], 'moduleName' => 'SSingleOrders'],
+				[$this->tabIdSingleOrders, 2953, 'contactid', 'u_yf_ssingleorders', 1, 10, 'contactid', 'FL_CONTACT', 0, 2, '', '4294967295', 6, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SSINGLEORDERS_INFORMATION'], 'moduleName' => 'SSingleOrders'],
 				[$this->tabIdSingleOrders, 2970, 'addresslevel1b', 'u_yf_ssingleorders_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING'], 'moduleName' => 'SSingleOrders'],
