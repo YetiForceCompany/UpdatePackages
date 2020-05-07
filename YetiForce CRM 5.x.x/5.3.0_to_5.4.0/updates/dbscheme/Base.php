@@ -382,19 +382,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'vtiger_gender' => [
-				'columns' => [
-					'genderid' => $this->primaryKey(),
-					'gender' => $this->stringType(),
-					'presence' => $this->smallInteger(1)->defaultValue(1),
-					'sortorderid' => $this->smallInteger()->defaultValue(0),
-				],
-				'columns_mysql' => [
-					'presence' => $this->tinyInteger(1)->defaultValue(1),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'vtiger_leadaddress' => [
 				'columns' => [
 					'buildingnumbera' => $this->stringType(),
@@ -561,14 +548,19 @@ class Base extends \App\Db\Importers\Base
 					[$tabIdProducts,$tabIdProductCategory,'getRelatedList',1,'ProductCategory',0,'SELECT',0,0,0,'RelatedTab',NULL],
 					[$tabIdProductCategory,$tabIdProducts,'getRelatedList',2,'Products',0,'SELECT',0,0,0,'RelatedTab',NULL]
 				]
-				],
+			],
 			'vtiger_settings_blocks' => [
 				'columns' => ['label','sequence','icon','type','linkto','admin_access'],
 				'values' => [
 					['LBL_MARKETPLACE_YETIFORCE',0,'yfi yfi-shop',1,'index.php?module=YetiForce&parent=Settings&view=Shop',NULL]
 				]
+			],
+			'vtiger_ssingleorders_source' => [
+				'columns' => ['ssingleorders_source','sortorderid','presence'],
+				'values' => [
+					[5,'PLL_MAGENTO',5,1]
+				]
 			]
-
 		];
 	}
 }
