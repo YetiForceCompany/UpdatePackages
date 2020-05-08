@@ -19,9 +19,6 @@ class Base extends \App\Db\Importers\Base
 		$tabIdSCalculations = \App\Module::getModuleId('SCalculations');				// 'tabid' => 88
 		$tabIdSQuotes = \App\Module::getModuleId('SQuotes');							// 'tabid' => 89
 		$tabIdSingleOrders = \App\Module::getModuleId('SSingleOrders'); 				// 'tabid' => 90
-		$tabIdFInvoice = \App\Module::getModuleId('FInvoice');							// 'tabid' => 95
-		$tabIdIGRN = \App\Module::getModuleId('IGRN'); 	 								// 'tabid' => 98
-		$tabIdIGDN = \App\Module::getModuleId('IGDN'); 									// 'tabid' => 100
 		$tabIdProductCategory = \App\Module::getModuleId('ProductCategory');			// 'tabid' => 132
 
 		$this->tables = [
@@ -459,7 +456,7 @@ class Base extends \App\Db\Importers\Base
 			['fk_1_u_#__productcategoryproductcategoryid', 'u_#__productcategory', 'productcategoryid', 'vtiger_crmentity', 'crmid', 'CASCADE', ''],
 			['fk_1_u_#__productcategorycfproductcategoryid', 'u_#__productcategorycf', 'productcategoryid', 'u_#__productcategory', 'productcategoryid', 'CASCADE', ''],
 		];
-		$date = [
+		$this->dataInsert = [
 			'u_yf_countries' => [
 				'columns' => ['name','code','status','sortorderid','phone','uitype'],
 				'values' => [
