@@ -100,9 +100,7 @@ class YetiForceUpdate
 			return false;
 		}
 		copy(__DIR__ . '/TempImporter.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
-		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
-		copy(__DIR__ . '/files/vtlib/Vtiger/Block.php', ROOT_DIRECTORY . '/vtlib/Vtiger/Block.php');
 		copy(__DIR__ . '/files/modules/Vtiger/models/Field.php', ROOT_DIRECTORY . '/modules/Vtiger/models/Field.php');
 		return true;
 	}
@@ -120,7 +118,6 @@ class YetiForceUpdate
 			$this->importer->checkIntegrity(false);
 			$this->importer->updateScheme();
 			$this->importer->importData();
-			$this->importer->postUpdate();
 			$this->addModules(['ProductCategory']);
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -133,6 +130,7 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->data();
+		\App\Db\Fixer::maximumFieldsLength();
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -200,12 +198,6 @@ class YetiForceUpdate
 				['tabid' => $tabIdMultiCompanyt, 'columnname' => 'website'],
 				['tabid' => \App\Module::getModuleId('Faq'), 'columnname' => 'subject']
 			]],
-			['vtiger_field', ['maximumlength' => '50'], ['or',
-				['tabid' => $tabIdCompetition, 'columnname' => 'vat_id'],
-				['tabid' => $tabIdPartners, 'columnname' => 'vat_id'],
-				['tabid' => $tabIdAccounts, 'columnname' => 'vat_id'],
-				['tabid' => \App\Module::getModuleId('Vendors'), 'columnname' => 'vat_id']
-			]],
 			['vtiger_field', ['uitype' => 16], ['tabid' => $tabIdFInvoiceCost, 'columnname' => 'finvoicecost_paymentstatus']],
 			['vtiger_field', ['fieldparams' => '{"hideLabel":["EventForm","QuickCreateAjax"]}'], ['tabid' => \App\Module::getModuleId('Calendar'), 'columnname' => 'activitytype']],
 			['vtiger_field', ['uitype' => 12], ['tabid' => $tabIdAccounts, 'columnname' => 'accountname']],
@@ -213,11 +205,11 @@ class YetiForceUpdate
 				'tabid' => [$tabIdAccounts, $tabIdSalesProcesses, \App\Module::getModuleId('SQuotes'), $tabIdSingleOrders, \App\Module::getModuleId('SRecurringOrders'), $tabIdPartners, $tabIdCompetition, \App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Leads'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Vendors'), \App\Module::getModuleId('Campaigns'), \App\Module::getModuleId('ServiceContracts'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('OSSEmployees'), \App\Module::getModuleId('SQuoteEnquiries'), \App\Module::getModuleId('SRequirementsCards'), \App\Module::getModuleId('SCalculations'), \App\Module::getModuleId('SVendorEnquiries')], 'columnname' => 'crmactivity'
 			]],
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tabid' => App\Module::getModuleId('OSSMailView'), 'columnname' => 'rc_user']],
-			['vtiger_field', ['fieldlabel' => 'FL_EAN_SKU', 'maximumlength' => '64'], ['tabid' => \App\Module::getModuleId('Products'), 'columnname' => 'ean']],
+			['vtiger_field', ['fieldlabel' => 'FL_EAN_SKU'], ['tabid' => \App\Module::getModuleId('Products'), 'columnname' => 'ean']],
 			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time']],
 			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time_subordinate']],
 			['vtiger_field', ['helpinfo' => 'Edit,Detail'], [
-				'tabid' =>  $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek', 'dayoftheweek'],
+				'tabid' =>  $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format'],
 			]],
 			['vtiger_field', ['fieldlabel' => 'Description', 'helpinfo' => 'Edit,Detail'], ['tabid' => $tabIdUsers, 'columnname' => 'description']],
 			['vtiger_settings_blocks', ['label' => 'LBL_MENU_DASHBOARD', 'sequence' => 1], ['label' => 'LBL_MENU_SUMMARRY']],
@@ -329,18 +321,17 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$this->updateBlocks([
-			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING', 6, 0, 0, 0, 0, 0, 2, 0, ''], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING', 3, 0, 0, 0, 0, 0, 2, 0, ''], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING', 3, 0, 0, 0, 0, 0, 2, 0, ''], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'add', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_SHIPPING', 4, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_SHIPPING', 8, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_SHIPPING', 5, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_BASIC_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_CUSTOM_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONTACT_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, '']],
-			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONFIGURATION_WORKING_TIME', 10, 0, 0, 0, 0, 0, 2, 0, '']],
+			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'add', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_SHIPPING', 4, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_SHIPPING', 8, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_SHIPPING', 5, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_BASIC_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_CUSTOM_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONTACT_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONFIGURATION_WORKING_TIME', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
 		], ['blocklabel', 'sequence', 'show_title', 'visible', 'create_view', 'edit_view', 'detail_view', 'display_status', 'iscustom', 'icon']);
-
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
