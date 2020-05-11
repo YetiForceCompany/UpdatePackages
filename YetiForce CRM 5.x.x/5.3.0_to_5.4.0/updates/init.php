@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 257d52bf9d8f9f733c01e3236bd7458952242574
+// last check: 07d875d8873a49477a540c8d412872bf56704393
 /**
  * YetiForceUpdate Class.
  */
@@ -177,14 +177,11 @@ class YetiForceUpdate
 		$tabIdMultiCompanyt = \App\Module::getModuleId('MultiCompany');
 
 		\App\Db\Updater::batchUpdate([
-			['vtiger_cron_task', ['description' => 'Recommended frequency for Workflow is 5 mins', 'lase_error' => NULL], ['name' => 'LBL_WORKFLOW']],
-			['vtiger_cron_task', ['description' => '', 'lase_error' => NULL], ['name' => 'LBL_SCHEDULED_IMPORT']],
-			['vtiger_cron_task', ['description' => 'Recommended frequency for MailScanner is 5 mins', 'lase_error' => NULL], ['name' => 'LBL_MAIL_SCANNER_ACTION']],
-			['vtiger_cron_task', ['frequency' => 60, 'description' => NULL, 'lase_error' => NULL], ['name' => 'LBL_BATCH_METHODS']],
-			['vtiger_cron_task', ['lase_error' => NULL], [
-				'name' => ['LBL_ADDRESS_BOOK', 'LBL_SEND_REMINDER', 'LBL_CURRENCY_UPDATE', 'LBL_MAIL_SCANNER_VERIFICATION', 'LBL_MAIL_SCANNER_BIND', 'LBL_ACTIVITY_STATE', 'LBL_MULTI_REFERENCE_VALUE', 'LBL_CRMACTIVITY_DAYS', 'LBL_ASSETS_RENEWAL', 'LBL_SEND_NOTIFICATIONS', 'LBL_RECORD_LABEL_UPDATER', 'LBL_PRIVILEGES_UPDATER', 'LBL_UPDATER_COORDINATES', 'LBL_UPDATER_RECORDS_COORDINATES', 'LBL_MARK_RECORDS_AS_REVIEWED', 'LBL_SESSION_CLEANER', 'LBL_ARCHIVE_OLD_RECORDS', 'LBL_GET_SOCIAL_MEDIA_MESSAGES']
-			]],
-			['vtiger_cron_task', ['description' => NULL, 'lase_error' => NULL], [
+			['vtiger_cron_task', ['description' => 'Recommended frequency for Workflow is 5 mins'], ['name' => 'LBL_WORKFLOW']],
+			['vtiger_cron_task', ['description' => ''], ['name' => 'LBL_SCHEDULED_IMPORT']],
+			['vtiger_cron_task', ['description' => 'Recommended frequency for MailScanner is 5 mins'], ['name' => 'LBL_MAIL_SCANNER_ACTION']],
+			['vtiger_cron_task', ['frequency' => 60, 'description' => NULL], ['name' => 'LBL_BATCH_METHODS']],
+			['vtiger_cron_task', ['description' => NULL], [
 				'name' => ['LBL_MAILER', 'LBL_BROWSING_HISTORY', 'LBL_BATCH_PROCESSES', 'LBL_CARD_DAV', 'LBL_CAL_DAV', 'LBL_MULTI_REFERENCE_VALUE', 'LBL_CACHE', 'LBL_NEVER_ENDING_RECURRING_EVENTS', 'LBL_CLEAR_FILE_UPLOAD_TEMP', 'LBL_SMSNOTIFIER', 'LBK_SYSTEM_WARNINGS']
 			]],
 			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]],
@@ -210,6 +207,7 @@ class YetiForceUpdate
 				['tabid' => \App\Module::getModuleId('Vendors'), 'columnname' => 'vat_id']
 			]],
 			['vtiger_field', ['uitype' => 16], ['tabid' => $tabIdFInvoiceCost, 'columnname' => 'finvoicecost_paymentstatus']],
+			['vtiger_field', ['fieldparams' => '{"hideLabel":["EventForm","QuickCreateAjax"]}'], ['tabid' => \App\Module::getModuleId('Calendar'), 'columnname' => 'activitytype']],
 			['vtiger_field', ['uitype' => 12], ['tabid' => $tabIdAccounts, 'columnname' => 'accountname']],
 			['vtiger_field', ['displaytype' => 2], [
 				'tabid' => [$tabIdAccounts, $tabIdSalesProcesses, \App\Module::getModuleId('SQuotes'), $tabIdSingleOrders, \App\Module::getModuleId('SRecurringOrders'), $tabIdPartners, $tabIdCompetition, \App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Leads'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Vendors'), \App\Module::getModuleId('Campaigns'), \App\Module::getModuleId('ServiceContracts'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('OSSEmployees'), \App\Module::getModuleId('SQuoteEnquiries'), \App\Module::getModuleId('SRequirementsCards'), \App\Module::getModuleId('SCalculations'), \App\Module::getModuleId('SVendorEnquiries')], 'columnname' => 'crmactivity'
@@ -483,7 +481,7 @@ class YetiForceUpdate
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
 				[$tabIdFInvoice, 3010, 'vat_id_b', 'u_yf_finvoice_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[\App\Module::getModuleId('Occurrences'), 3037, 'meeting_utl', 'u_yf_occurrences', 1, 17, 'meeting_utl', 'FL_MEETING_UTL', 0, 2, '', '255', 11, 460, 1, 'V~O', 1, 0, 'BAS', 1, '', 1, '', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('Occurrences'), 3037, 'meeting_url', 'u_yf_occurrences', 1, 17, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 11, 460, 1, 'V~O', 1, 0, 'BAS', 1, '', 1, '{"exp":"date_end"}', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_BASIC_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_BASIC_INFORMATION']],
 				[\App\Module::getModuleId('SCalculations'), 2980, 'parent_id', 'u_yf_scalculations', 1, 10, 'parent_id', 'FL_PARENT_SCALCULATIONS', 0, 2, '', '4294967295', 11, 276, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SCALCULATIONS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SCALCULATIONS_INFORMATION']],
@@ -545,7 +543,7 @@ class YetiForceUpdate
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
 				[$tabIdSingleOrders, 2975, 'vat_id_b', 'u_yf_ssingleorders_address', 1, 1,'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[\App\Module::getModuleId('Calendar'), 3036, 'meeting_utl', 'vtiger_activity', 1, 17, 'meeting_utl', 'FL_MEETING_UTL', 0, 2, '', '255', 28, 19, 1, 'V~O', 1, 0, 'BAS', 1, '', 1, '', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('Calendar'), 3036, 'meeting_url', 'vtiger_activity', 1, 326, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 28, 19, 1, 'V~O', 2, 11, 'BAS', 1, '', 1, '{"exp":"due_date","roomName":"subject"}', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_TASK_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_TASK_INFORMATION']],
 				[\App\Module::getModuleId('Contacts'), 3038, 'gender', 'vtiger_contactdetails', 1, 16, 'gender', 'FL_GENDER', 0, 2, '', '255', 31, 4, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_CONTACT_INFORMATION', 'picklistValues' => ['PLL_WOMAN', 'PLL_MAN'], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_CONTACT_INFORMATION']],
@@ -631,6 +629,7 @@ class YetiForceUpdate
 		$settingFields = [
 			['value' => [5,'LBL_MAGENTO','fab fa-magento','LBL_MAGENTO_DESCRIPTION','index.php?parent=Settings&module=Magento&view=List',13,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION'],
 			['value' => [4,'LBL_EVENT_HANDLER','mdi mdi-car-turbocharger','LBL_EVENT_HANDLER_DESC','index.php?parent=Settings&module=EventHandler&view=Index',13,0,0,NULL], 'blockLabel' => 'LBL_SYSTEM_TOOLS']
+			['value' => [5,'LBL_MEETING_SERVICES','mdi mdi-server-network','LBL_MEETING_SERVICES_DESCRIPTION','index.php?parent=Settings&module=MeetingServices&view=List',15,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION']
 		];
 		$columnName = ['blockid','name','iconpath','description','linkto','sequence','active','pinned','admin_access'];
 		foreach($settingFields as $field){
@@ -696,12 +695,10 @@ class YetiForceUpdate
 		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$workflowManager = new VTWorkflowManager();
 		$taskManager = new VTTaskManager();
-		$workflow[] = [73, 'SSingleOrders', 'IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_ACCEPTED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 3, NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
-		$workflow[] = [75, 'SSingleOrders', 'IGDN', '[]', 5, NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
-		$workflow[] = [77, 'SSingleOrders', 'IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_CANCELLED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 4, NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
-		$workflowTask[] = [142, 73, 'Tworzenie WZ', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:12:"Tworzenie WZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
-		$workflowTask[] = [144, 75, 'Generowanie PZ', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:75;s:7:"summary";s:14:"Generowanie PZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGRN";s:15:"reference_field";s:0:"";s:19:"field_value_mapping";s:94:"[{"fieldname":"igrn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGRN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:144;}'];
-		$workflowTask[] = [146, 77, 'Generowanie PZ', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:77;s:7:"summary";s:14:"Generowanie PZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGRN";s:15:"reference_field";s:0:"";s:19:"field_value_mapping";s:94:"[{"fieldname":"igrn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGRN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:146;}'];
+		$workflow[] = [73,'SSingleOrders','Create IGDN','[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_ACCEPTED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]',3,NULL,NULL,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL];
+		$workflow[] = [77,'SSingleOrders','Cancel IGDN','[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_CANCELLED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]',4,NULL,NULL,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL];
+		$workflowTask[] = [142,73,'Tworzenie WZ','O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:12:"Tworzenie WZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
+		$workflowTask[] = [148,77,'Cancel IGDN','O:24:"VTUpdateRelatedFieldTask":8:{s:18:"executeImmediately";b:0;s:8:"contents";N;s:10:"workflowId";i:77;s:7:"summary";s:11:"Cancel IGDN";s:6:"active";b:0;s:7:"trigger";N;s:19:"field_value_mapping";s:81:"[{"fieldname":"IGDN::igdn_status","value":"PLL_CANCELLED","valuetype":"rawtext"}]";s:2:"id";i:148;}'];
 		foreach ($workflow as $record) {
 			try {
 				$workflowId = (new \App\Db\Query())->select(['workflow_id'])

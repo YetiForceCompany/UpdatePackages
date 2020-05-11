@@ -1,6 +1,7 @@
 <?php
 
 return [
+	'app/SystemWarnings/YetiForce/Updater.php',
 	'app/YetiForce/Shop/Product/ModulesPremium.php',
 	'app/YetiForce/Shop/Product/ModulesPartners.php',
 	'app/YetiForce/Shop/Product/ModulesEnterprise.php',

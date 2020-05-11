@@ -135,29 +135,6 @@ class Base extends \App\Db\Importers\Base
 			'u_#__finvoice_address' => [
 				'columns' => [
 					'buildingnumbera' => $this->stringType(),
-					'first_name_a' => $this->stringType(),
-					'last_name_a' => $this->stringType(),
-					'vat_id_a' => $this->stringType(50),
-					'email_a' => $this->stringType(100),
-					'phone_a' => $this->stringType(100),
-					'addresslevel8b' => $this->stringType(),
-					'localnumberb' => $this->stringType(50),
-					'addresslevel5b' => $this->stringType(),
-					'buildingnumberb' => $this->stringType(),
-					'addresslevel7b' => $this->stringType(),
-					'addresslevel6b' => $this->stringType(),
-					'addresslevel2b' => $this->stringType(),
-					'addresslevel4b' => $this->stringType(),
-					'addresslevel1b' => $this->stringType(),
-					'addresslevel3b' => $this->stringType(),
-					'poboxb' => $this->stringType(50),
-					'first_name_b' => $this->stringType(),
-					'last_name_b' => $this->stringType(),
-					'company_name_b' => $this->stringType(),
-					'vat_id_b' => $this->stringType(50),
-					'email_b' => $this->stringType(100),
-					'phone_b' => $this->stringType(100),
-					'company_name_a' => $this->stringType(),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -173,29 +150,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'localnumberc' => $this->stringType(50),
 					'poboxc' => $this->stringType(50),
-					'addresslevel8b' => $this->stringType(),
-					'localnumberb' => $this->stringType(50),
-					'addresslevel5b' => $this->stringType(),
-					'buildingnumberb' => $this->stringType(),
-					'addresslevel7b' => $this->stringType(),
-					'addresslevel6b' => $this->stringType(),
-					'addresslevel2b' => $this->stringType(),
-					'addresslevel4b' => $this->stringType(),
-					'addresslevel1b' => $this->stringType(),
-					'addresslevel3b' => $this->stringType(),
-					'poboxb' => $this->stringType(50),
-					'first_name_a' => $this->stringType(),
-					'first_name_b' => $this->stringType(),
-					'last_name_a' => $this->stringType(),
-					'last_name_b' => $this->stringType(),
-					'company_name_a' => $this->stringType(),
-					'company_name_b' => $this->stringType(),
-					'vat_id_a' => $this->stringType(50),
-					'vat_id_b' => $this->stringType(50),
-					'email_a' => $this->stringType(100),
-					'email_b' => $this->stringType(100),
-					'phone_a' => $this->stringType(100),
-					'phone_b' => $this->stringType(100),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -225,6 +179,13 @@ class Base extends \App\Db\Importers\Base
 			'u_#__occurrences' => [
 				'columns' => [
 					'meeting_url' => $this->stringType(2048),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__partners' => [
+				'columns' => [
+					'vat_id' => $this->stringType(50),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -265,6 +226,17 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__srecurringorders_address' => [
+				'columns' => [
+					'buildingnumbera' => $this->stringType(),
+					'localnumbera' => $this->stringType(50),
+				],
+				'primaryKeys' => [
+					['srecurringorders_address_pk', 'srecurringordersaddressid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'u_#__ssalesprocesses' => [
 				'columns' => [
 					'estimated_margin' => $this->decimal('28,8'),
@@ -290,29 +262,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'buildingnumbera' => $this->stringType(),
 					'localnumbera' => $this->stringType(50),
-					'first_name_a' => $this->stringType(),
-					'last_name_a' => $this->stringType(),
-					'company_name_a' => $this->stringType(),
-					'vat_id_a' => $this->stringType(50),
-					'email_a' => $this->stringType(100),
-					'phone_a' => $this->stringType(100),
-					'addresslevel8b' => $this->stringType(),
-					'addresslevel7b' => $this->stringType(),
-					'addresslevel6b' => $this->stringType(),
-					'addresslevel5b' => $this->stringType(),
-					'addresslevel4b' => $this->stringType(),
-					'addresslevel3b' => $this->stringType(),
-					'addresslevel2b' => $this->stringType(),
-					'addresslevel1b' => $this->stringType(),
-					'buildingnumberb' => $this->stringType(),
-					'localnumberb' => $this->stringType(50),
-					'poboxb' => $this->stringType(50),
-					'first_name_b' => $this->stringType(),
-					'last_name_b' => $this->stringType(),
-					'company_name_b' => $this->stringType(),
-					'vat_id_b' => $this->stringType(50),
-					'email_b' => $this->stringType(100),
-					'phone_b' => $this->stringType(100),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -449,12 +398,10 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_troubletickets' => ['ordertime', 'contract_type', 'contracts_end_date'],
 		];
 		$this->dropTables = [
-			'i_#__magento_record', 'vtiger_fcorectinginvoice_formpayment', 'vtiger_finvoice_formpayment', 'vtiger_finvoicecost_formpayment', 'vtiger_finvoiceproforma_formpayment', 'vtiger_ssingleorders_method_payments'
+			'i_#__magento_record'
 		];
 		$this->foreignKey = [
 			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', ''],
-			['fk_1_u_#__productcategoryproductcategoryid', 'u_#__productcategory', 'productcategoryid', 'vtiger_crmentity', 'crmid', 'CASCADE', ''],
-			['fk_1_u_#__productcategorycfproductcategoryid', 'u_#__productcategorycf', 'productcategoryid', 'u_#__productcategory', 'productcategoryid', 'CASCADE', ''],
 		];
 		$this->data = [
 			'u_yf_countries' => [
@@ -531,7 +478,10 @@ class Base extends \App\Db\Importers\Base
 					['EditViewPreSave','Accounts_DuplicateVatId_Handler',1,'Accounts','',5,6],
 					['EditViewPreSave','Products_DuplicateEan_Handler',1,'Products','',5,14],
 					['EntityBeforeSave','SSalesProcesses_Finances_Handler',1,'SSalesProcesses','',5,86],
-					['IStoragesAfterUpdateStock','IStorages_RecalculateStockHandler_Handler',0,'','',5,0]
+					['IStoragesAfterUpdateStock','IStorages_RecalculateStockHandler_Handler',0,'','',5,0],
+					['EditViewPreSave','IGDNC_IgdnExist_Handler',1,'IGDNC','',5,109],
+					['EditViewPreSave','IGRNC_IgrnExist_Handler',1,'IGRNC','',5,108],
+					['EntityBeforeSave','Vtiger_Meetings_Handler',1,'Calendar,Occurrences','',5,0]
 				]
 			],
 			'vtiger_relatedlists' => [
