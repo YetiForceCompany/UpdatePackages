@@ -404,21 +404,6 @@ class Base extends \App\Db\Importers\Base
 			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', ''],
 		];
 		$this->data = [
-			'u_yf_countries' => [
-				'columns' => ['name','code','status','sortorderid','phone','uitype'],
-				'values' => [
-				['South Sudan','SS',0,210,0,0],
-				['Bonaire, Sint Eustatius and Saba','BQ',0,27,0,0],
-				['CuraĂ§ao','CW',0,57,0,0],
-				['Guernesey','GG',0,92,0,0],
-				['Isle of Man','IM',0,108,0,0],
-				['Jersey','JE',0,113,0,0],
-				['Saint BarthĂ©lemy','BL',0,187,0,0],
-				['Saint Martin (French part)','MF',0,191,0,0],
-				['Sint Maarten (Dutch part)','SX',0,203,0,0],
-				['Timor-Leste','TL',0,224,0,0],
-				],
-			],
 			'vtiger_cron_task' => [
 				'columns' => ['name','handler_class','frequency','laststart','lastend','status','module','sequence','description','lase_error'],
 				'values' => [
