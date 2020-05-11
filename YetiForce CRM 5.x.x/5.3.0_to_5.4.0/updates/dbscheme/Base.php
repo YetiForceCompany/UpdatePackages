@@ -224,7 +224,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__occurrences' => [
 				'columns' => [
-					'meeting_utl' => $this->stringType(),
+					'meeting_url' => $this->stringType(2048),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -338,7 +338,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_activity' => [
 				'columns' => [
-					'meeting_utl' => $this->stringType(),
+					'meeting_url' => $this->stringType(2048),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
