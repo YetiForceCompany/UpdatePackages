@@ -2,6 +2,7 @@
 
 return [
 	'app/SystemWarnings/YetiForce/Updater.php',
+	'layouts/basic/modules/Users/PasswordModal.tpl',
 	'app/YetiForce/Shop/Product/ModulesPremium.php',
 	'app/YetiForce/Shop/Product/ModulesPartners.php',
 	'app/YetiForce/Shop/Product/ModulesEnterprise.php',
@@ -16,7 +17,4 @@ return [
 	'public_html/layouts/basic/modules/Settings/CustomView/resources/Sorting.min.js.map',
 	'public_html/layouts/basic/modules/Settings/CustomView/resources/Sorting.min.js',
 	'public_html/layouts/basic/modules/Settings/CustomView/resources/Sorting.js',
-	'tests/setup/Nginx/yetiforce.conf',
-	'tests/setup/Nginx/www.conf',
-	'tests/setup/my.cnf'
 ];
