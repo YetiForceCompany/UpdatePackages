@@ -456,7 +456,7 @@ class Base extends \App\Db\Importers\Base
 			['fk_1_u_#__productcategoryproductcategoryid', 'u_#__productcategory', 'productcategoryid', 'vtiger_crmentity', 'crmid', 'CASCADE', ''],
 			['fk_1_u_#__productcategorycfproductcategoryid', 'u_#__productcategorycf', 'productcategoryid', 'u_#__productcategory', 'productcategoryid', 'CASCADE', ''],
 		];
-		$this->dataInsert = [
+		$this->data = [
 			'u_yf_countries' => [
 				'columns' => ['name','code','status','sortorderid','phone','uitype'],
 				'values' => [

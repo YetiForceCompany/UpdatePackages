@@ -15,11 +15,6 @@
  */
 class YetiForceUpdate
 {
-
-
-
-
-
 	/**
 	 * @var string
 	 */
