@@ -562,7 +562,7 @@ class YetiForceUpdate
 			$moduleId = $field[0];
 			$moduleName = \App\Module::getModuleName($moduleId);
 			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
-			if (!$moduleId || $isExists) {
+			if (!$moduleId || $isExists || !$moduleName) {
 				$this->log("[INFO] Skip adding field. Module: {$moduleId}-{$moduleName}; field name: {$field[2]}, field exists: {$isExists}");
 				continue;
 			}
@@ -737,9 +737,57 @@ class YetiForceUpdate
 	}
 
 	/**
+	 * Stop process.
+	 */
+	public function stopProcess()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'), true);
+		try {
+			$dbCommand = \App\Db::getInstance()->createCommand();
+			$dbCommand->insert('yetiforce_updates', [
+				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+				'name' => (string) $this->modulenode->label,
+				'from_version' => (string) $this->modulenode->from_version,
+				'to_version' => (string) $this->modulenode->to_version,
+				'result' => true,
+				'time' => date('Y-m-d H:i:s')
+			])->execute();
+			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+			\vtlib\Functions::recurseDelete('cache/updates');
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+
+			\App\Cache::clear();
+			\App\Cache::clearOpcache();
+			clearstatcache();
+		} catch (\Throwable $ex) {
+			file_put_contents('cache/logs/update.log', $ex->__toString(), FILE_APPEND);
+		}
+		$logs = '';
+		if ($this->error) {
+			$logs = '<blockquote style="font-size: 14px;background: #EDEDED;padding: 10px;white-space: pre-line;margin-top: 10px;">' . implode(PHP_EOL, $this->error) . '</blockquote>';
+		}
+
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
+		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
+    -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
+		<h1 class="modal-title"><span class="fas fa-skull-crossbones mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
+		</div><div class="modal-body" style="font-size: 27px;">Some errors appeared during the update.
+		We recommend verifying logs and updating the system once again.' . $logs . '<blockquote style="font-size: 14px;background: #EDEDED;padding: 10px;white-space: pre-line;">' . $this->importer->logs . '</blockquote></div><div class="modal-footer">
+		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . '"><span class="fas fa-home mr-2"></span>' . \App\Language::translate('LBL_HOME') . '<a>
+		</div></div></div></div>';
+
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+		exit;
+	}
+	/**
 	 * Postupdate.
 	 */
 	public function postupdate()
 	{
+		if ($this->error || false !== strpos($this->importer->logs, 'Error')) {
+			$this->stopProcess();
+		}
 	}
 }
