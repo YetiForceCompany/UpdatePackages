@@ -33,6 +33,8 @@ COPY ./ /var/www/html
 COPY ./tests/setup/crons.conf /etc/cron.d/yetiforcecrm
 COPY ./tests/setup/php/prod.ini /etc/php/7.3/mods-available/yetiforce.ini
 COPY ./tests/setup/docker_entrypoint.sh /
+RUN rm /var/www/html/.user.ini
+RUN rm /var/www/html/public_html/.user.ini
 
 RUN	service mysql start; \
 	mysql -uroot mysql; \
@@ -55,8 +57,8 @@ RUN chmod +x /usr/local/bin/composer
 RUN	chmod +x /var/www/html/tests/setup/dependency.sh
 RUN	chmod +x /docker_entrypoint.sh
 RUN	/var/www/html/tests/setup/dependency.sh
+RUN php -f /var/www/html/tests/setup/docker_post_install.php
 RUN chown -R www-data:www-data /var/www/
-RUN /usr/bin/perl -pi -e "s/password =/password = $DB_ROOT_PASS/g" /etc/mysql/debian.cnf
 
 WORKDIR /var/www/html
 
