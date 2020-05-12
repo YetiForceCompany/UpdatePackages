@@ -184,12 +184,6 @@ class YetiForceUpdate
 			]],
 			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]],
 			['vtiger_eventhandlers', ['include_modules' => 'Contacts,Accounts'], ['handler_class' => 'Contacts_DuplicateEmail_Handler', 'event_name' => 'EditViewPreSave']],
-			['vtiger_field', ['uitype' => 16, 'fieldname' => 'payment_methods', 'fieldlabel' => 'FL_PAYMENTS_METHOD'], ['or',
-				['tabid' =>  \App\Module::getModuleId('FCorectingInvoice'), 'columnname' => 'fcorectinginvoice_formpayment'],
-				['tabid' => \App\Module::getModuleId('FInvoice'), 'columnname' => 'finvoice_formpayment'],
-				['tabid' => $tabIdFInvoiceCost, 'columnname' => 'finvoicecost_formpayment'],
-				['tabid' => \App\Module::getModuleId('FInvoiceProforma'), 'columnname' => 'finvoiceproforma_formpayment']
-			]],
 			['vtiger_field', ['generatedtype' => 1], ['or',
 				['tabid' => $tabIdCompetition, 'columnname' => 'parent_id'],
 				['tabid' => \App\Module::getModuleId('EmailTemplates'), 'columnname' => 'smtp_id'],
@@ -630,7 +624,7 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$settingFields = [
 			['value' => [5,'LBL_MAGENTO','fab fa-magento','LBL_MAGENTO_DESCRIPTION','index.php?parent=Settings&module=Magento&view=List',13,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION'],
-			['value' => [4,'LBL_EVENT_HANDLER','mdi mdi-car-turbocharger','LBL_EVENT_HANDLER_DESC','index.php?parent=Settings&module=EventHandler&view=Index',13,0,0,NULL], 'blockLabel' => 'LBL_SYSTEM_TOOLS']
+			['value' => [4,'LBL_EVENT_HANDLER','mdi mdi-car-turbocharger','LBL_EVENT_HANDLER_DESC','index.php?parent=Settings&module=EventHandler&view=Index',13,0,0,NULL], 'blockLabel' => 'LBL_SYSTEM_TOOLS'],
 			['value' => [5,'LBL_MEETING_SERVICES','mdi mdi-server-network','LBL_MEETING_SERVICES_DESCRIPTION','index.php?parent=Settings&module=MeetingServices&view=List',15,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION']
 		];
 		$columnName = ['blockid','name','iconpath','description','linkto','sequence','active','pinned','admin_access'];
@@ -653,13 +647,19 @@ class YetiForceUpdate
 
 	function syncPicklist()
 	{
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$start = microtime(true);
 		$newPicklistValue = ['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK'];
 		$paymentMethodValue = [];
-		$picklistWithAutomation = ['fcorectinginvoice_formpayment', 'finvoice_formpayment', 'finvoicecost_formpayment', 'finvoiceproforma_formpayment'];
+		$picklistWithAutomation = ['fcorectinginvoice_formpayment', 'finvoice_formpayment', 'finvoicecost_formpayment', 'finvoiceproforma_formpayment', 'ssingleorders_method_payments' ];
 		$db = \App\Db::getInstance();
 		$importer = new \App\Db\Importer();
 		foreach ($picklistWithAutomation as $fieldname) {
+			$oldTableName = 'vtiger_' . $fieldname;
+			if(!$db->isTableExists($oldTableName)){
+				$this->log("[Error] Table: {$oldTableName};  no exists");
+				return;
+			}
 			foreach((new \App\Db\Query())->select([$fieldname])->from('vtiger_' . $fieldname)->all() as $values ){
 				$paymentMethodValue[$fieldname][] = $values[$fieldname];
 			}
@@ -672,16 +672,49 @@ class YetiForceUpdate
 			}
 		}
 		$newTableName = 'vtiger_payment_methods';
+		$updateValue = [];
 		if($db->isTableExists($newTableName)){
 			foreach ($newPicklistValue as $value) {
 				$db->createCommand()->insert($newTableName, ['payment_methods' => $value])->execute();
+				$this->log("[INFO] Add value to: {$newTableName};");
 			}
 			foreach($picklistWithAutomation as $fieldname){
 				$importer->dropTable('vtiger_' . $fieldname);
+				$moduleId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_field')->where(['columnname' => $fieldname])->scalar();
+				$modulesName[$fieldname][] = \App\Module::getModuleName($moduleId);
+				\App\Db::getInstance()->createCommand()->update('vtiger_field', ['uitype' => 16, 'fieldname' => 'payment_methods', 'fieldlabel' => 'FL_PAYMENTS_METHOD'], ['columnname' => $fieldname])->execute();
 			}
-		}else{
-			$existTable = $db->isTableExists($newTableName) ? 'Yes'  : 'No';
-			$this->log("[INFO] Skip adding value to Table: {$newTableName};  table exists: {$existTable}");
+			$updateId = false;
+			$tableUpdate = ['com_vtiger_workflows' => 'test', 'u_yf_cv_condition' => 'field_name', 'vtiger_cvcolumnlist' => 'field_name'];
+			foreach($modulesName as $fieldname => $moduleName){
+				foreach($tableUpdate as $tableName => $columnName){
+					if ((new \App\Db\Query())->from($tableName)->where([$columnName => $fieldname, 'module_name' => $moduleName[0]])->exists()){
+						\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => 'payment_methods'], [$columnName => $fieldname, 'module_name' => $moduleName[0]])->execute();
+					} else {
+						if ($columnName === 'test'){
+							if((new \App\Db\Query())->from($tableName)->where(['module_name' => $moduleName[0]])->exists()){
+								$workflowsData = (new \App\Db\Query())->select([$columnName, 'workflow_id'])->from($tableName)->where(['module_name' => $moduleName[0]])->all();
+								foreach ($workflowsData as $workflow){
+									foreach (\App\Json::decode($workflow[$columnName]) as $value){
+										if($value['fieldname'] === $fieldname){
+											$updateId = $workflow['workflow_id'];
+											$value['fieldname'] = 'payment_methods';
+										}
+										$updateValue[] = $value;
+									}
+								}
+								if ($updateId){
+									\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => \App\Json::encode($updateValue)], ['workflow_id' => $updateId, 'module_name' => $moduleName[0]])->execute();
+								}
+							}
+						} else {
+							$this->log("[INFO] Field no exists: {$fieldname};");
+						}
+					}
+				}
+			}
+		} else {
+			$this->log("[Error] Table: {$newTableName};  no exists");
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
