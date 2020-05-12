@@ -401,7 +401,7 @@ class Base extends \App\Db\Importers\Base
 			'i_#__magento_record'
 		];
 		$this->foreignKey = [
-			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', ''],
+			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', null],
 		];
 		$this->data = [
 			'vtiger_cron_task' => [

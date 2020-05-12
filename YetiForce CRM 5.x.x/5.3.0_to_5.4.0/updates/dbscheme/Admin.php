@@ -71,7 +71,7 @@ class Admin extends \App\Db\Importers\Base
 			]
 		];
 		$this->foreignKey = [
-			['s_#__record_quick_changer_ibfk_1', 's_#__record_quick_changer', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', '']
+			['s_#__record_quick_changer_ibfk_1', 's_#__record_quick_changer', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null]
 		];
 
 		$this->data = [
