@@ -203,7 +203,7 @@ class YetiForceUpdate
 			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time']],
 			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time_subordinate']],
 			['vtiger_field', ['helpinfo' => 'Edit,Detail'], [
-				'tabid' =>  $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format'],
+				'tabid' =>  $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format']
 			]],
 			['vtiger_field', ['fieldlabel' => 'Description', 'helpinfo' => 'Edit,Detail'], ['tabid' => $tabIdUsers, 'columnname' => 'description']],
 			['vtiger_settings_blocks', ['label' => 'LBL_MENU_DASHBOARD', 'sequence' => 1], ['label' => 'LBL_MENU_SUMMARRY']],
@@ -214,16 +214,16 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Map&view=Config'], ['name' => 'LBL_MAP']],
 		]);
 		\App\Db\Updater::batchInsert([
-			['u_yf_countries', ['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0],
-			['u_yf_countries', ['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0],
+			['u_yf_countries', ['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0]],
+			['u_yf_countries', ['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0]]
 		]);
 		\App\Db\Updater::batchDelete([]);
 		$this->blocks();

@@ -89,6 +89,7 @@ class Admin extends \App\Db\Importers\Base
 					[\App\Module::getModuleId('IGDNC'),'{"igdnc_status":"PLL_ACCEPTED"}','{"igdnc_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
 					[\App\Module::getModuleId('IGRN'),'{"igrn_status":"PLL_ACCEPTED"}','{"igrn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
 				],
+			]
 		];
 	}
 }
