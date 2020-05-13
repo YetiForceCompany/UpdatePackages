@@ -384,13 +384,6 @@ class Base extends \App\Db\Importers\Base
 				'charset' => 'utf8'
 			],
 		];
-		$this->dropColumns = [
-			'u_#__ssingleorders' => ['company'],
-			'vtiger_account' => ['ownership'],
-			'vtiger_finvoicecost_paymentstatus' => ['picklist_valueid'],
-			'vtiger_relatedlists_fields' => ['fieldname'],
-			'vtiger_troubletickets' => ['ordertime', 'contract_type', 'contracts_end_date'],
-		];
 		$this->dropTables = [
 			'i_#__magento_record'
 		];

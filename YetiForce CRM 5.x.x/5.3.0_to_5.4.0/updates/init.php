@@ -99,7 +99,7 @@ class YetiForceUpdate
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package. Please have a look at the list of errors:' . PHP_EOL . PHP_EOL . $error;
 			return false;
 		}
-		copy(__DIR__ . '/files/app/Db/TempImporter.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
+		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
 		copy(__DIR__ . '/files/modules/Vtiger/models/Field.php', ROOT_DIRECTORY . '/modules/Vtiger/models/Field.php');
 		return true;
@@ -216,8 +216,6 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Logs&view=SystemWarnings'], ['name' => 'LBL_SYSTEM_WARNINGS']],
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=YetiForce&view=Vulnerabilities'], ['name' => 'LBL_VULNERABILITIES']],
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Map&view=Config'], ['name' => 'LBL_MAP']],
-			['vtiger_relatedlists', ['actions' => ''], ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'label' => 'HelpDesk']],
-			['vtiger_relatedlists', ['name' => 'getDependentsList', 'actions' => '', 'field_name' => 'product_id'], ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'label' => 'HelpDesk']]
 		]);
 		\App\Db\Updater::batchInsert([
 			['u_yf_countries',
@@ -300,15 +298,6 @@ class YetiForceUpdate
 				['currency_name' => 'Zambian Kwacha', 'currency_code' => 'ZMW', 'currency_symbol' => 'ZK'],
 				['currency_name' => 'Ghana, Cedis', 'currency_code' => 'GHS', 'currency_symbol' => 'Â˘'],
 			],
-			['vtiger_relatedlists',
-				['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => $tabIdSingleOrders, 'name' => 'getDependentsList', 'sequence' => 13, 'label' => 'SSingleOrders', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'contactid'],
-				['tabid' => $tabIdSingleOrders, 'related_tabid' => $tabIdSingleOrders, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SSingleOrders', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
-				['tabid' => $tabIdSQuotes, 'related_tabid' => $tabIdSQuotes, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SQuotes', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
-				['tabid' => $tabIdSCalculations, 'related_tabid' => $tabIdSCalculations, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SCalculations', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
-				['tabid' => $tabIdProductCategory, 'related_tabid' => $tabIdProductCategory, 'name' => 'getDependentsList', 'sequence' => 1, 'label' => 'LBL_CHILD_PRODUCTCATEGORY', 'presence' => 0, 'actions' => 'ADD', 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
-				['tabid' => $tabIdProducts, 'related_tabid' => $tabIdProductCategory, 'name' => 'getRelatedList', 'sequence' => 1, 'label' => 'ProductCategory', 'presence' => 0, 'actions' => 'SELECT', 'view_type' => 'RelatedTab'],
-				['tabid' => $tabIdProductCategory, 'related_tabid' => $tabIdProducts, 'name' => 'getRelatedList', 'sequence' => 2, 'label' => 'Products', 'presence' => 0, 'actions' => 'SELECT', 'view_type' => 'RelatedTab']
-			],
 			['vtiger_settings_blocks',
 				['label' => 'LBL_MARKETPLACE_YETIFORCE', 'sequence' => 0, 'icon' => 'yfi yfi-shop', 'type' => 1, 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Shop']
 			],
@@ -323,6 +312,8 @@ class YetiForceUpdate
 		$this->addSettingFields();
 		$this->addWorflows();
 		$this->syncPicklist();
+		$this->dropColumns();
+		$this->setRelations();
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
@@ -406,9 +397,9 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$this->updateBlocks([
-			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING'], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
 			['type' => 'add', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_SHIPPING', 4, 0, 0, 0, 0, 0, 2, 0, NULL]],
 			['type' => 'add', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_SHIPPING', 8, 0, 0, 0, 0, 0, 2, 0, NULL]],
 			['type' => 'add', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_SHIPPING', 5, 0, 0, 0, 0, 0, 2, 0, NULL]],
@@ -457,6 +448,90 @@ class YetiForceUpdate
 			}
 		}
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
+	/**
+	 * Drop column.
+	 *
+	 */
+	public function dropColumns()
+	{
+		$modules = [
+			'u_#__ssingleorders' => ['fields' => 'company', 'moduleName' => 'Accounts'],
+			'vtiger_account' => ['fields' => 'ownership', 'moduleName' => 'SSingleOrders'],
+			'vtiger_finvoicecost_paymentstatus' => ['fields' => 'picklist_valueid'],
+			'vtiger_relatedlists_fields' => ['fields' => 'fieldname'],
+			'vtiger_troubletickets' => ['fields' => ['ordertime', 'contract_type', 'contracts_end_date'], 'moduleName' => 'HelpDesk'],
+		];
+		foreach ($modules as $talbeName => $value) {
+			if(!empty($moduleName = $value['moduleName'])){
+				$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+				$fields = $value['fields'];
+				if (!\is_array($fields)) {
+					$fields = [$fields];
+				}
+				foreach ($fields as $fieldName) {
+					if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
+						if (!$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
+							$this->removeField($fieldModel);
+						} else {
+							$dbCommand->update('vtiger_field', ['presence' => 1], ['fieldid' => $fieldModel->getId()])->execute();
+							$this->log('[Warning] RemoveFields' . __METHOD__ . ': field exists and is in use ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
+						}
+					}
+				}
+			}else{
+				$this->removeField(false, $value['fields'], $talbeName);
+			}
+		}
+	}
+
+
+	/**
+	 * Remove field.
+	 *
+	 * @param Vtiger_Module_Model $fieldModel
+	 * @param mixed $fieldName
+	 * @param mixed $talbeName
+	 */
+	private function removeField($fieldModel, $fieldName = false, $talbeName = false)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$newName} | " . date('Y-m-d H:i:s'));
+		try {
+			if (false === $newName) {
+				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
+				$fieldInstance->delete();
+				if ('vtiger_crmentity' === $fieldModel->getTableName() && !(new \App\Db\Query())->from('vtiger_field')->where(['columnname' => $fieldModel->getColumnName(), 'tablename' => $fieldModel->getTableName()])->exists()) {
+					$this->importer->dropColumns([[$fieldModel->getTableName(), $fieldModel->getColumnName()]]);
+					$this->importer->logs(false);
+				}
+			} else {
+				$this->importer->dropColumns([[$talbeName, $fieldName]]);
+			}
+		} catch (\Throwable $e) {
+			$message = '[ERROR] ' . __METHOD__ . ': ' . $e->__toString();
+			$this->log($message);
+			\App\Log::error($message);
+		}
+		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
+		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Checks if exists value for field.
+	 *
+	 * @param mixed $fields
+	 */
+	private function isExistsValueForField($moduleName, $fieldName)
+	{
+		$queryGenerator = new \App\QueryGenerator($moduleName);
+		$queryGenerator->permission = false;
+		$queryGenerator->setStateCondition('All');
+		$queryGenerator->addNativeCondition(['<>', 'vtiger_crmentity.deleted', [0]]);
+		$queryGenerator->addCondition($fieldName, '', 'ny');
+		return $queryGenerator->createQuery()->exists();
 	}
 
 	/**
@@ -810,6 +885,63 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
+	private function setRelations()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
+			$ralations = [
+				['type' => 'add', 'data' => [0, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders', 0, 'RelatedTab', 'contactid']],
+				['type' => 'add', 'data' => [1, 'SSingleOrders', 'SSingleOrders', 'getDependentsList', 7, 'SSingleOrders', 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [2, 'SQuotes', 'SQuotes', 'getDependentsList', 7, 'SQuotes', 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [3, 'SCalculations', 'SCalculations', 'getDependentsList', 7, 'SCalculations', 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [4, 'ProductCategory',  'ProductCategory', 'getDependentsList', 1, 'LBL_CHILD_PRODUCTCATEGORY', 0, 'actions' => 'ADD', 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [5, 'Products', 'ProductCategory', 'getRelatedList', 1, 'ProductCategory', 0, 'actions' => 'SELECT', 'RelatedTab']],
+				['type' => 'add', 'data' => [6, 'ProductCategory', 'Products', 'getRelatedList', 2, 'Products', 0, 'actions' => 'SELECT', 'RelatedTab']],
+				['type' => 'update', 'data' => [0, 'Products', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getDependentsList']],
+				['type' => 'update', 'data' => [1, 'Services', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
+			];
+
+		foreach ($ralations as $relation) {
+			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName] = $relation['data'];
+			$tabid = \App\Module::getModuleId($moduleName);
+			$relTabid = \App\Module::getModuleId($relModuleName);
+			$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
+			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
+			if (!$isExists && 'add' === $relation['type']) {
+				$dbCommand->insert('vtiger_relatedlists', [
+					'tabid' => $tabid,
+					'related_tabid' => $relTabid,
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName
+				])->execute();
+			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
+				$where = $relation['where'] ?? $where;
+				$dbCommand->update('vtiger_relatedlists', [
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName
+				], $where)->execute();
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
 	/**
 	 * Add worflows.
 	 */
@@ -832,12 +964,20 @@ class YetiForceUpdate
 					->where(['module_name' => $record[1], 'summary' => $record[2], 'execution_condition' => $record[4]])->scalar();
 				if (!$workflowId) {
 					$newWorkflow = $workflowManager->newWorkFlow($record[1]);
+					$newWorkflow->moduleName = $record[1];
 					$newWorkflow->description = $record[2];
 					$newWorkflow->test = $record[3];
 					$newWorkflow->executionCondition = $record[4];
 					$newWorkflow->defaultworkflow = $record[5];
 					$newWorkflow->type = $record[6];
 					$newWorkflow->filtersavedinnew = $record[7];
+					$newWorkflow->schtypeid = $record[8];
+					$newWorkflow->schdayofmonth = $record[9];
+					$newWorkflow->schdayofweek = $record[10];
+					$newWorkflow->schannualdates = $record[11];
+					$newWorkflow->schtime = $record[12];
+					$newWorkflow->nexttrigger_time = $record[13];
+					$newWorkflow->params = $record[14];
 					$workflowManager->save($newWorkflow);
 					$workflowId = $newWorkflow->id;
 					$this->log("[INFO] Create workflow {$record[1]} {$record[2]}");
