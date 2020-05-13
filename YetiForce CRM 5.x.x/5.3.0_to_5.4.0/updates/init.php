@@ -231,7 +231,7 @@ class YetiForceUpdate
 				['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0],
 				['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0],
 				['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0]
-			]
+			],
 			['vtiger_eventhandlers',
 				['event_name' => 'EditViewPreSave', 'handler_class' => 'Accounts_DuplicateVatId_Handler', 'is_active' => 1, 'include_modules' => 'Accounts', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Accounts')],
 				['event_name' => 'EditViewPreSave', 'handler_class' => 'Products_DuplicateEan_Handler', 'is_active' => 1, 'include_modules' => 'Products', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Products')],
