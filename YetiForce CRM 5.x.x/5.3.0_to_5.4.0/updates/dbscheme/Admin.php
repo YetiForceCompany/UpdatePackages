@@ -73,23 +73,5 @@ class Admin extends \App\Db\Importers\Base
 		$this->foreignKey = [
 			['s_#__record_quick_changer_ibfk_1', 's_#__record_quick_changer', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null]
 		];
-
-		$this->data = [
-			's_yf_record_quick_changer' => [
-				'columns' => ['tabid','conditions','values','btn_name','class','icon'],
-				'values' => [
-					[\App\Module::getModuleId('SSingleOrders'),'{"ssingleorders_status":"PLL_ACCEPTED"} ','{"ssingleorders_status":"PLL_CANCELLED"} ','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IGDN'),'{"igdn_status":"PLL_ACCEPTED"}','{"igdn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IIDN'),'{"iidn_status":"PLL_ACCEPTED"}','{"iidn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IGIN'),'{"igin_status":"PLL_ACCEPTED"}','{"igin_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IPreOrder'),'{"ipreorder_status":"PLL_ACCEPTED"}','{"ipreorder_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('ISTDN'),'{"istdn_status":"PLL_ACCEPTED"}','{"istdn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('ISTRN'),'{"istrn_status":"PLL_ACCEPTED"}','{"istrn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IGRNC'),'{"igrnc_status":"PLL_ACCEPTED"}','{"igrnc_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IGDNC'),'{"igdnc_status":"PLL_ACCEPTED"}','{"igdnc_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-					[\App\Module::getModuleId('IGRN'),'{"igrn_status":"PLL_ACCEPTED"}','{"igrn_status":"PLL_CANCELLED"}','BTN_CANCEL','btn-outline-danger','mdi mdi-cancel'],
-				],
-			]
-		];
 	}
 }

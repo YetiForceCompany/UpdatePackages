@@ -99,7 +99,7 @@ class YetiForceUpdate
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package. Please have a look at the list of errors:' . PHP_EOL . PHP_EOL . $error;
 			return false;
 		}
-		copy(__DIR__ . '/TempImporter.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
+		copy(__DIR__ . '/files/app/Db/TempImporter.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
 		copy(__DIR__ . '/files/modules/Vtiger/models/Field.php', ROOT_DIRECTORY . '/modules/Vtiger/models/Field.php');
 		return true;
@@ -173,6 +173,10 @@ class YetiForceUpdate
 		$tabIdCompetition = \App\Module::getModuleId('Competition');
 		$tabIdFInvoiceCost = \App\Module::getModuleId('FInvoiceCost');
 		$tabIdMultiCompanyt = \App\Module::getModuleId('MultiCompany');
+		$tabIdProducts = \App\Module::getModuleId('Products');
+		$tabIdSCalculations = \App\Module::getModuleId('SCalculations');
+		$tabIdSQuotes = \App\Module::getModuleId('SQuotes');
+		$tabIdProductCategory = \App\Module::getModuleId('ProductCategory');
 
 		\App\Db\Updater::batchUpdate([
 			['vtiger_cron_task', ['description' => 'Recommended frequency for Workflow is 5 mins'], ['name' => 'LBL_WORKFLOW']],
@@ -212,18 +216,105 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Logs&view=SystemWarnings'], ['name' => 'LBL_SYSTEM_WARNINGS']],
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=YetiForce&view=Vulnerabilities'], ['name' => 'LBL_VULNERABILITIES']],
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Map&view=Config'], ['name' => 'LBL_MAP']],
+			['vtiger_relatedlists', ['actions' => ''], ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'label' => 'HelpDesk']],
+			['vtiger_relatedlists', ['name' => 'getDependentsList', 'actions' => '', 'field_name' => 'product_id'], ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'label' => 'HelpDesk']]
 		]);
 		\App\Db\Updater::batchInsert([
-			['u_yf_countries', ['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0]],
-			['u_yf_countries', ['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0]]
+			['u_yf_countries',
+				['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0],
+				['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0],
+				['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0]
+			]
+			['vtiger_eventhandlers',
+				['event_name' => 'EditViewPreSave', 'handler_class' => 'Accounts_DuplicateVatId_Handler', 'is_active' => 1, 'include_modules' => 'Accounts', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Accounts')],
+				['event_name' => 'EditViewPreSave', 'handler_class' => 'Products_DuplicateEan_Handler', 'is_active' => 1, 'include_modules' => 'Products', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Products')],
+				['event_name' => 'EntityBeforeSave', 'handler_class' => 'SSalesProcesses_Finances_Handler', 'is_active' => 1, 'include_modules' => 'SSalesProcesses', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('SSalesProcesses')],
+				['event_name' => 'IStoragesAfterUpdateStock', 'handler_class' => 'IStorages_RecalculateStockHandler_Handler', 'is_active' => 0, 'include_modules' => '', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0],
+				['event_name' => 'EditViewPreSave', 'handler_class' => 'IGDNC_IgdnExist_Handler', 'is_active' => 1, 'include_modules' => 'IGDNC', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('IGDNC')],
+				['event_name' => 'EditViewPreSave', 'handler_class' => 'IGRNC_IgrnExist_Handler', 'is_active' => 1, 'include_modules' => 'IGRNC', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('IGRNC')],
+				['event_name' => 'EntityBeforeSave', 'handler_class' => 'Vtiger_Meetings_Handler', 'is_active' => 1, 'include_modules' => 'Calendar,Occurrences', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0]
+			],
+			['s_yf_record_quick_changer',
+				['tabid' => \App\Module::getModuleId('SSingleOrders'), 'conditions' => '{"ssingleorders_status":"PLL_ACCEPTED"}', 'values' => '{"ssingleorders_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IGDN'), 'conditions' => '{"igdn_status":"PLL_ACCEPTED"}', 'values' => '{"igdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IIDN'), 'conditions' => '{"iidn_status":"PLL_ACCEPTED"}', 'values' => '{"iidn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IGIN'), 'conditions' => '{"igin_status":"PLL_ACCEPTED"}', 'values' => '{"igin_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IPreOrder'), 'conditions' => '{"ipreorder_status":"PLL_ACCEPTED"}', 'values' => '{"ipreorder_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('ISTDN'), 'conditions' => '{"istdn_status":"PLL_ACCEPTED"}', 'values' => '{"istdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('ISTRN'), 'conditions' => '{"istrn_status":"PLL_ACCEPTED"}', 'values' => '{"istrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IGRNC'), 'conditions' => '{"igrnc_status":"PLL_ACCEPTED"}', 'values' => '{"igrnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IGDNC'), 'conditions' => '{"igdnc_status":"PLL_ACCEPTED"}', 'values' => '{"igdnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+				['tabid' => \App\Module::getModuleId('IGRN'), 'conditions' => '{"igrn_status":"PLL_ACCEPTED"}', 'values' => '{"igrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
+			],
+			['vtiger_cron_task',
+				['name' => 'LBL_MAGENTO', 'handler_class' => 'Vtiger_Magento_Cron', 'frequency' => 60, 'status' => 0, 'module' => 'Vtiger', 'sequence' => 34]
+			],
+			['vtiger_currencies',
+				['currency_name' => 'South Sudanese pound', 'currency_code' => 'SSP', 'currency_symbol' => 'SSÂŁ'],
+				['currency_name' => 'Afghani', 'currency_code' => 'AFN', 'currency_symbol' => 'Af'],
+				['currency_name' => 'Armenian Dram', 'currency_code' => 'AMD', 'currency_symbol' => 'Ô´'],
+				['currency_name' => 'Kwanza', 'currency_code' => 'AOA', 'currency_symbol' => 'Kz'],
+				['currency_name' => 'Taka', 'currency_code' => 'BDT', 'currency_symbol' => 'ŕ§ł'],
+				['currency_name' => 'Burundi Franc', 'currency_code' => 'BIF', 'currency_symbol' => 'â‚Ł'],
+				['currency_name' => 'Boliviano Mvdol', 'currency_code' => 'BOV', 'currency_symbol' => '$b'],
+				['currency_name' => 'Ngultrum', 'currency_code' => 'BTN', 'currency_symbol' => 'Nu'],
+				['currency_name' => 'Belarussian Ruble', 'currency_code' => 'BYN', 'currency_symbol' => 'p.'],
+				['currency_name' => 'Congolese Franc', 'currency_code' => 'CDF', 'currency_symbol' => 'FC'],
+				['currency_name' => 'Unidad de Fomento', 'currency_code' => 'CLF', 'currency_symbol' => '$'],
+				['currency_name' => 'Unidad de Valor Real', 'currency_code' => 'COU', 'currency_symbol' => '$'],
+				['currency_name' => 'Peso Convertible', 'currency_code' => 'CUC', 'currency_symbol' => 'CUC$'],
+				['currency_name' => 'Cabo Verde Escudo', 'currency_code' => 'CVE', 'currency_symbol' => '$'],
+				['currency_name' => 'Djibouti Franc', 'currency_code' => 'DJF', 'currency_symbol' => 'Fdj'],
+				['currency_name' => 'Algerian Dinar', 'currency_code' => 'DZD', 'currency_symbol' => 'ŘŻŘ¬'],
+				['currency_name' => 'Nakfa', 'currency_code' => 'ERN', 'currency_symbol' => 'Nkf'],
+				['currency_name' => 'Ethiopian Birr', 'currency_code' => 'ETB', 'currency_symbol' => 'Br'],
+				['currency_name' => 'Lari', 'currency_code' => 'GEL', 'currency_symbol' => 'â‚ľ'],
+				['currency_name' => 'Dalasi', 'currency_code' => 'GMD', 'currency_symbol' => 'D'],
+				['currency_name' => 'Guinean Franc', 'currency_code' => 'GNF', 'currency_symbol' => 'FG'],
+				['currency_name' => 'Riel', 'currency_code' => 'KHR', 'currency_symbol' => 'áź›'],
+				['currency_name' => 'Comorian Franc', 'currency_code' => 'KMF', 'currency_symbol' => 'CF'],
+				['currency_name' => 'Loti', 'currency_code' => 'LSL', 'currency_symbol' => 'L'],
+				['currency_name' => 'Moldovan Leu', 'currency_code' => 'MDL', 'currency_symbol' => 'L'],
+				['currency_name' => 'Kyat', 'currency_code' => 'MMK', 'currency_symbol' => 'K'],
+				['currency_name' => 'Pataca', 'currency_code' => 'MOP', 'currency_symbol' => '	MOP$'],
+				['currency_name' => 'Ouguiya', 'currency_code' => 'MRU', 'currency_symbol' => 'UM'],
+				['currency_name' => 'Kina', 'currency_code' => 'PGK', 'currency_symbol' => 'K'],
+				['currency_name' => 'Rwanda Franc', 'currency_code' => 'RWF', 'currency_symbol' => 'Râ‚Ł'],
+				['currency_name' => 'Leone', 'currency_code' => 'SLL', 'currency_symbol' => 'Le'],
+				['currency_name' => 'Dobra', 'currency_code' => 'STN', 'currency_symbol' => 'Db'],
+				['currency_name' => 'Lilangeni', 'currency_code' => 'SZL', 'currency_symbol' => 'L'],
+				['currency_name' => 'Somoni', 'currency_code' => 'TJS', 'currency_symbol' => 'SM'],
+				['currency_name' => 'Turkmenistan New Manat', 'currency_code' => 'TMT', 'currency_symbol' => 'm'],
+				['currency_name' => 'Tunisian Dinar', 'currency_code' => 'TND', 'currency_symbol' => 'ŘŻ.ŘŞ'],
+				['currency_name' => 'Paâ€™anga', 'currency_code' => 'TOP', 'currency_symbol' => 'T$'],
+				['currency_name' => 'BolĂ­var Soberano', 'currency_code' => 'VES', 'currency_symbol' => 'Bs. S.'],
+				['currency_name' => 'Vatu', 'currency_code' => 'VUV', 'currency_symbol' => 'VT'],
+				['currency_name' => 'Tala', 'currency_code' => 'WST', 'currency_symbol' => 'WS$'],
+				['currency_name' => 'Zambian Kwacha', 'currency_code' => 'ZMW', 'currency_symbol' => 'ZK'],
+				['currency_name' => 'Ghana, Cedis', 'currency_code' => 'GHS', 'currency_symbol' => 'Â˘'],
+			],
+			['vtiger_relatedlists',
+				['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => $tabIdSingleOrders, 'name' => 'getDependentsList', 'sequence' => 13, 'label' => 'SSingleOrders', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'contactid'],
+				['tabid' => $tabIdSingleOrders, 'related_tabid' => $tabIdSingleOrders, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SSingleOrders', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
+				['tabid' => $tabIdSQuotes, 'related_tabid' => $tabIdSQuotes, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SQuotes', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
+				['tabid' => $tabIdSCalculations, 'related_tabid' => $tabIdSCalculations, 'name' => 'getDependentsList', 'sequence' => 7, 'label' => 'SCalculations', 'presence' => 0, 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
+				['tabid' => $tabIdProductCategory, 'related_tabid' => $tabIdProductCategory, 'name' => 'getDependentsList', 'sequence' => 1, 'label' => 'LBL_CHILD_PRODUCTCATEGORY', 'presence' => 0, 'actions' => 'ADD', 'view_type' => 'RelatedTab', 'field_name' => 'parent_id'],
+				['tabid' => $tabIdProducts, 'related_tabid' => $tabIdProductCategory, 'name' => 'getRelatedList', 'sequence' => 1, 'label' => 'ProductCategory', 'presence' => 0, 'actions' => 'SELECT', 'view_type' => 'RelatedTab'],
+				['tabid' => $tabIdProductCategory, 'related_tabid' => $tabIdProducts, 'name' => 'getRelatedList', 'sequence' => 2, 'label' => 'Products', 'presence' => 0, 'actions' => 'SELECT', 'view_type' => 'RelatedTab']
+			],
+			['vtiger_settings_blocks',
+				['label' => 'LBL_MARKETPLACE_YETIFORCE', 'sequence' => 0, 'icon' => 'yfi yfi-shop', 'type' => 1, 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Shop']
+			],
+			['vtiger_ssingleorders_source',
+					['ssingleorders_source' => 'PLL_MAGENTO','sortorderid' => 5, 'presence' => 1]
+			]
 		]);
 		\App\Db\Updater::batchDelete([]);
 		$this->blocks();
