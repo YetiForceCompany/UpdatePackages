@@ -74,7 +74,7 @@ class YetiForceUpdate
 		}
 		fwrite($fp, $message);
 		fclose($fp);
-		if (false !== strpos($message, '[ERROR]')) {
+		if (false !== stripos($message, '[ERROR]')) {
 			$this->error[] = $message;
 		}
 	}
@@ -160,7 +160,6 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
-
 	private function data()
 	{
 		$start = microtime(true);
@@ -173,17 +172,13 @@ class YetiForceUpdate
 		$tabIdCompetition = \App\Module::getModuleId('Competition');
 		$tabIdFInvoiceCost = \App\Module::getModuleId('FInvoiceCost');
 		$tabIdMultiCompanyt = \App\Module::getModuleId('MultiCompany');
-		$tabIdProducts = \App\Module::getModuleId('Products');
-		$tabIdSCalculations = \App\Module::getModuleId('SCalculations');
-		$tabIdSQuotes = \App\Module::getModuleId('SQuotes');
-		$tabIdProductCategory = \App\Module::getModuleId('ProductCategory');
 
 		\App\Db\Updater::batchUpdate([
 			['vtiger_cron_task', ['description' => 'Recommended frequency for Workflow is 5 mins'], ['name' => 'LBL_WORKFLOW']],
 			['vtiger_cron_task', ['description' => ''], ['name' => 'LBL_SCHEDULED_IMPORT']],
 			['vtiger_cron_task', ['description' => 'Recommended frequency for MailScanner is 5 mins'], ['name' => 'LBL_MAIL_SCANNER_ACTION']],
-			['vtiger_cron_task', ['frequency' => 60, 'description' => NULL], ['name' => 'LBL_BATCH_METHODS']],
-			['vtiger_cron_task', ['description' => NULL], [
+			['vtiger_cron_task', ['frequency' => 60, 'description' => null], ['name' => 'LBL_BATCH_METHODS']],
+			['vtiger_cron_task', ['description' => null], [
 				'name' => ['LBL_MAILER', 'LBL_BROWSING_HISTORY', 'LBL_BATCH_PROCESSES', 'LBL_CARD_DAV', 'LBL_CAL_DAV', 'LBL_MULTI_REFERENCE_VALUE', 'LBL_CACHE', 'LBL_NEVER_ENDING_RECURRING_EVENTS', 'LBL_CLEAR_FILE_UPLOAD_TEMP', 'LBL_SMSNOTIFIER', 'LBK_SYSTEM_WARNINGS']
 			]],
 			['vtiger_eventhandlers', ['priority' => 5], ['handler_class' => 'Vtiger_Workflow_Handler', 'event_name' => ['EntityAfterDelete', 'EntityAfterSave', 'EntityChangeState']]],
@@ -196,18 +191,14 @@ class YetiForceUpdate
 				['tabid' => $tabIdMultiCompanyt, 'columnname' => 'website'],
 				['tabid' => \App\Module::getModuleId('Faq'), 'columnname' => 'subject']
 			]],
-			['vtiger_field', ['uitype' => 16], ['tabid' => $tabIdFInvoiceCost, 'columnname' => 'finvoicecost_paymentstatus']],
 			['vtiger_field', ['fieldparams' => '{"hideLabel":["EventForm","QuickCreateAjax"]}'], ['tabid' => \App\Module::getModuleId('Calendar'), 'columnname' => 'activitytype']],
 			['vtiger_field', ['uitype' => 12], ['tabid' => $tabIdAccounts, 'columnname' => 'accountname']],
-			['vtiger_field', ['displaytype' => 2], [
-				'tabid' => [$tabIdAccounts, $tabIdSalesProcesses, \App\Module::getModuleId('SQuotes'), $tabIdSingleOrders, \App\Module::getModuleId('SRecurringOrders'), $tabIdPartners, $tabIdCompetition, \App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Leads'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Vendors'), \App\Module::getModuleId('Campaigns'), \App\Module::getModuleId('ServiceContracts'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('OSSEmployees'), \App\Module::getModuleId('SQuoteEnquiries'), \App\Module::getModuleId('SRequirementsCards'), \App\Module::getModuleId('SCalculations'), \App\Module::getModuleId('SVendorEnquiries')], 'columnname' => 'crmactivity'
-			]],
+			['vtiger_field', ['displaytype' => 2], ['tablename' => 'vtiger_entity_stats', 'fieldname' => ['crmactivity']]],
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tabid' => App\Module::getModuleId('OSSMailView'), 'columnname' => 'rc_user']],
 			['vtiger_field', ['fieldlabel' => 'FL_EAN_SKU'], ['tabid' => \App\Module::getModuleId('Products'), 'columnname' => 'ean']],
-			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time']],
-			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => 'sum_time_subordinate']],
+			['vtiger_field', ['displaytype' => 2], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'columnname' => ['sum_time', 'sum_time_subordinate']]],
 			['vtiger_field', ['helpinfo' => 'Edit,Detail'], [
-				'tabid' =>  $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format']
+				'tabid' => $tabIdUsers, 'columnname' => ['roleid', 'accesskey', 'activity_view', 'authy_methods', 'authy_secret_totp', 'auto_assign', 'available', 'confirm_password', 'currency_decimal_separator', 'currency_grouping_pattern', 'currency_grouping_separator', 'currency_id', 'currency_symbol_placement', 'date_format', 'date_password_change', 'dayoftheweek', 'defaultactivitytype', 'defaulteventstatus', 'default_record_view', 'default_search_module', 'email1', 'emailoptout', 'end_hour', 'first_name', 'force_password_change', 'hour_format', 'imagename', 'internal_mailer', 'is_admin', 'is_owner', 'language', 'last_name', 'leftpanelhide', 'login_method', 'mail_scanner_actions', 'mail_scanner_fields', 'no_of_currency_decimals', 'othereventduration', 'phone_crm_extension', 'phone_crm_extension_extra', 'primary_phone', 'primary_phone_extra', 'records_limit', 'reminder_interval', 'reports_to_id', 'rowheight', 'start_hour', 'status', 'sync_caldav', 'sync_carddav', 'theme', 'time_zone', 'truncate_trailing_zeros', 'user_name', 'user_password', 'view_date_format']
 			]],
 			['vtiger_field', ['fieldlabel' => 'Description', 'helpinfo' => 'Edit,Detail'], ['tabid' => $tabIdUsers, 'columnname' => 'description']],
 			['vtiger_settings_blocks', ['label' => 'LBL_MENU_DASHBOARD', 'sequence' => 1], ['label' => 'LBL_MENU_SUMMARRY']],
@@ -218,94 +209,53 @@ class YetiForceUpdate
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Map&view=Config'], ['name' => 'LBL_MAP']],
 		]);
 		\App\Db\Updater::batchInsert([
-			['u_yf_countries',
-				['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0],
-				['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0],
-				['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0]
-			],
-			['vtiger_eventhandlers',
-				['event_name' => 'EditViewPreSave', 'handler_class' => 'Accounts_DuplicateVatId_Handler', 'is_active' => 1, 'include_modules' => 'Accounts', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Accounts')],
-				['event_name' => 'EditViewPreSave', 'handler_class' => 'Products_DuplicateEan_Handler', 'is_active' => 1, 'include_modules' => 'Products', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('Products')],
-				['event_name' => 'EntityBeforeSave', 'handler_class' => 'SSalesProcesses_Finances_Handler', 'is_active' => 1, 'include_modules' => 'SSalesProcesses', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('SSalesProcesses')],
-				['event_name' => 'IStoragesAfterUpdateStock', 'handler_class' => 'IStorages_RecalculateStockHandler_Handler', 'is_active' => 0, 'include_modules' => '', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0],
-				['event_name' => 'EditViewPreSave', 'handler_class' => 'IGDNC_IgdnExist_Handler', 'is_active' => 1, 'include_modules' => 'IGDNC', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('IGDNC')],
-				['event_name' => 'EditViewPreSave', 'handler_class' => 'IGRNC_IgrnExist_Handler', 'is_active' => 1, 'include_modules' => 'IGRNC', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => \App\Module::getModuleId('IGRNC')],
-				['event_name' => 'EntityBeforeSave', 'handler_class' => 'Vtiger_Meetings_Handler', 'is_active' => 1, 'include_modules' => 'Calendar,Occurrences', 'exclude_modules' => '', 'priority' => 5, 'owner_id' => 0]
-			],
-			['s_yf_record_quick_changer',
-				['tabid' => \App\Module::getModuleId('SSingleOrders'), 'conditions' => '{"ssingleorders_status":"PLL_ACCEPTED"}', 'values' => '{"ssingleorders_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IGDN'), 'conditions' => '{"igdn_status":"PLL_ACCEPTED"}', 'values' => '{"igdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IIDN'), 'conditions' => '{"iidn_status":"PLL_ACCEPTED"}', 'values' => '{"iidn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IGIN'), 'conditions' => '{"igin_status":"PLL_ACCEPTED"}', 'values' => '{"igin_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IPreOrder'), 'conditions' => '{"ipreorder_status":"PLL_ACCEPTED"}', 'values' => '{"ipreorder_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('ISTDN'), 'conditions' => '{"istdn_status":"PLL_ACCEPTED"}', 'values' => '{"istdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('ISTRN'), 'conditions' => '{"istrn_status":"PLL_ACCEPTED"}', 'values' => '{"istrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IGRNC'), 'conditions' => '{"igrnc_status":"PLL_ACCEPTED"}', 'values' => '{"igrnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IGDNC'), 'conditions' => '{"igdnc_status":"PLL_ACCEPTED"}', 'values' => '{"igdnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-				['tabid' => \App\Module::getModuleId('IGRN'), 'conditions' => '{"igrn_status":"PLL_ACCEPTED"}', 'values' => '{"igrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel'],
-			],
+			['u_yf_countries',	['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0], ['code' => 'SS']],
+			['u_yf_countries',	['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0], ['code' => 'BQ']],
+			['u_yf_countries',	['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0], ['code' => 'CW']],
+			['u_yf_countries',	['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0], ['code' => 'GG']],
+			['u_yf_countries',	['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0], ['code' => 'IM']],
+			['u_yf_countries',	['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0], ['code' => 'JE']],
+			['u_yf_countries',	['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0], ['code' => 'BL']],
+			['u_yf_countries',	['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0], ['code' => 'MF']],
+			['u_yf_countries',	['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0], ['code' => 'SX']],
+			['u_yf_countries',	['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0], ['code' => 'TL']],
 			['vtiger_cron_task',
-				['name' => 'LBL_MAGENTO', 'handler_class' => 'Vtiger_Magento_Cron', 'frequency' => 60, 'status' => 0, 'module' => 'Vtiger', 'sequence' => 34]
-			],
-			['vtiger_currencies',
-				['currency_name' => 'South Sudanese pound', 'currency_code' => 'SSP', 'currency_symbol' => 'SSÂŁ'],
-				['currency_name' => 'Afghani', 'currency_code' => 'AFN', 'currency_symbol' => 'Af'],
-				['currency_name' => 'Armenian Dram', 'currency_code' => 'AMD', 'currency_symbol' => 'Ô´'],
-				['currency_name' => 'Kwanza', 'currency_code' => 'AOA', 'currency_symbol' => 'Kz'],
-				['currency_name' => 'Taka', 'currency_code' => 'BDT', 'currency_symbol' => 'ŕ§ł'],
-				['currency_name' => 'Burundi Franc', 'currency_code' => 'BIF', 'currency_symbol' => 'â‚Ł'],
-				['currency_name' => 'Boliviano Mvdol', 'currency_code' => 'BOV', 'currency_symbol' => '$b'],
-				['currency_name' => 'Ngultrum', 'currency_code' => 'BTN', 'currency_symbol' => 'Nu'],
-				['currency_name' => 'Belarussian Ruble', 'currency_code' => 'BYN', 'currency_symbol' => 'p.'],
-				['currency_name' => 'Congolese Franc', 'currency_code' => 'CDF', 'currency_symbol' => 'FC'],
-				['currency_name' => 'Unidad de Fomento', 'currency_code' => 'CLF', 'currency_symbol' => '$'],
-				['currency_name' => 'Unidad de Valor Real', 'currency_code' => 'COU', 'currency_symbol' => '$'],
-				['currency_name' => 'Peso Convertible', 'currency_code' => 'CUC', 'currency_symbol' => 'CUC$'],
-				['currency_name' => 'Cabo Verde Escudo', 'currency_code' => 'CVE', 'currency_symbol' => '$'],
-				['currency_name' => 'Djibouti Franc', 'currency_code' => 'DJF', 'currency_symbol' => 'Fdj'],
-				['currency_name' => 'Algerian Dinar', 'currency_code' => 'DZD', 'currency_symbol' => 'ŘŻŘ¬'],
-				['currency_name' => 'Nakfa', 'currency_code' => 'ERN', 'currency_symbol' => 'Nkf'],
-				['currency_name' => 'Ethiopian Birr', 'currency_code' => 'ETB', 'currency_symbol' => 'Br'],
-				['currency_name' => 'Lari', 'currency_code' => 'GEL', 'currency_symbol' => 'â‚ľ'],
-				['currency_name' => 'Dalasi', 'currency_code' => 'GMD', 'currency_symbol' => 'D'],
-				['currency_name' => 'Guinean Franc', 'currency_code' => 'GNF', 'currency_symbol' => 'FG'],
-				['currency_name' => 'Riel', 'currency_code' => 'KHR', 'currency_symbol' => 'áź›'],
-				['currency_name' => 'Comorian Franc', 'currency_code' => 'KMF', 'currency_symbol' => 'CF'],
-				['currency_name' => 'Loti', 'currency_code' => 'LSL', 'currency_symbol' => 'L'],
-				['currency_name' => 'Moldovan Leu', 'currency_code' => 'MDL', 'currency_symbol' => 'L'],
-				['currency_name' => 'Kyat', 'currency_code' => 'MMK', 'currency_symbol' => 'K'],
-				['currency_name' => 'Pataca', 'currency_code' => 'MOP', 'currency_symbol' => '	MOP$'],
-				['currency_name' => 'Ouguiya', 'currency_code' => 'MRU', 'currency_symbol' => 'UM'],
-				['currency_name' => 'Kina', 'currency_code' => 'PGK', 'currency_symbol' => 'K'],
-				['currency_name' => 'Rwanda Franc', 'currency_code' => 'RWF', 'currency_symbol' => 'Râ‚Ł'],
-				['currency_name' => 'Leone', 'currency_code' => 'SLL', 'currency_symbol' => 'Le'],
-				['currency_name' => 'Dobra', 'currency_code' => 'STN', 'currency_symbol' => 'Db'],
-				['currency_name' => 'Lilangeni', 'currency_code' => 'SZL', 'currency_symbol' => 'L'],
-				['currency_name' => 'Somoni', 'currency_code' => 'TJS', 'currency_symbol' => 'SM'],
-				['currency_name' => 'Turkmenistan New Manat', 'currency_code' => 'TMT', 'currency_symbol' => 'm'],
-				['currency_name' => 'Tunisian Dinar', 'currency_code' => 'TND', 'currency_symbol' => 'ŘŻ.ŘŞ'],
-				['currency_name' => 'Paâ€™anga', 'currency_code' => 'TOP', 'currency_symbol' => 'T$'],
-				['currency_name' => 'BolĂ­var Soberano', 'currency_code' => 'VES', 'currency_symbol' => 'Bs. S.'],
-				['currency_name' => 'Vatu', 'currency_code' => 'VUV', 'currency_symbol' => 'VT'],
-				['currency_name' => 'Tala', 'currency_code' => 'WST', 'currency_symbol' => 'WS$'],
-				['currency_name' => 'Zambian Kwacha', 'currency_code' => 'ZMW', 'currency_symbol' => 'ZK'],
-				['currency_name' => 'Ghana, Cedis', 'currency_code' => 'GHS', 'currency_symbol' => 'Â˘'],
+				['name' => 'LBL_MAGENTO', 'handler_class' => 'Vtiger_Magento_Cron', 'frequency' => 60, 'status' => 0, 'module' => 'Vtiger', 'sequence' => 34],
+				['handler_class' => 'Vtiger_Magento_Cron']
 			],
 			['vtiger_settings_blocks',
-				['label' => 'LBL_MARKETPLACE_YETIFORCE', 'sequence' => 0, 'icon' => 'yfi yfi-shop', 'type' => 1, 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Shop']
+				['label' => 'LBL_MARKETPLACE_YETIFORCE', 'sequence' => 0, 'icon' => 'yfi yfi-shop', 'type' => 1, 'linkto' => 'index.php?module=YetiForce&parent=Settings&view=Shop'],
+				['label' => 'LBL_MARKETPLACE_YETIFORCE']
 			],
 			['vtiger_ssingleorders_source',
-					['ssingleorders_source' => 'PLL_MAGENTO','sortorderid' => 5, 'presence' => 1]
+				['ssingleorders_source' => 'PLL_MAGENTO', 'sortorderid' => 5, 'presence' => 1],
+				['ssingleorders_source' => 'PLL_MAGENTO']
 			]
 		]);
-		\App\Db\Updater::batchDelete([]);
+
+		if (!(new \App\Db\Query())->from('s_yf_record_quick_changer')->exists()) {
+			\App\Db\Updater::batchInsert([
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('SSingleOrders'), 'conditions' => '{"ssingleorders_status":"PLL_ACCEPTED"}', 'values' => '{"ssingleorders_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IGDN'), 'conditions' => '{"igdn_status":"PLL_ACCEPTED"}', 'values' => '{"igdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IIDN'), 'conditions' => '{"iidn_status":"PLL_ACCEPTED"}', 'values' => '{"iidn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IGIN'), 'conditions' => '{"igin_status":"PLL_ACCEPTED"}', 'values' => '{"igin_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IPreOrder'), 'conditions' => '{"ipreorder_status":"PLL_ACCEPTED"}', 'values' => '{"ipreorder_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('ISTDN'), 'conditions' => '{"istdn_status":"PLL_ACCEPTED"}', 'values' => '{"istdn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('ISTRN'), 'conditions' => '{"istrn_status":"PLL_ACCEPTED"}', 'values' => '{"istrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IGRNC'), 'conditions' => '{"igrnc_status":"PLL_ACCEPTED"}', 'values' => '{"igrnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IGDNC'), 'conditions' => '{"igdnc_status":"PLL_ACCEPTED"}', 'values' => '{"igdnc_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']],
+				['s_yf_record_quick_changer', ['tabid' => \App\Module::getModuleId('IGRN'), 'conditions' => '{"igrn_status":"PLL_ACCEPTED"}', 'values' => '{"igrn_status":"PLL_CANCELLED"}', 'btn_name' => 'BTN_CANCEL', 'class' => 'btn-outline-danger', 'icon' => 'mdi mdi-cancel']]
+			]);
+		}
+
+		App\EventHandler::registerHandler('EditViewPreSave', 'Accounts_DuplicateVatId_Handler', 'Accounts', '', 5, true, \App\Module::getModuleId('Accounts'));
+		App\EventHandler::registerHandler('EditViewPreSave', 'Products_DuplicateEan_Handler', 'Products', '', 5, true, \App\Module::getModuleId('Products'));
+		App\EventHandler::registerHandler('EntityBeforeSave', 'SSalesProcesses_Finances_Handler', 'SSalesProcesses', '', 5, true, \App\Module::getModuleId('SSalesProcesses'));
+		App\EventHandler::registerHandler('IStoragesAfterUpdateStock', 'IStorages_RecalculateStockHandler_Handler', '', '', 5, false, 0);
+		App\EventHandler::registerHandler('EditViewPreSave', 'IGDNC_IgdnExist_Handler', 'IGDNC', '', 5, true, \App\Module::getModuleId('IGDNC'));
+		App\EventHandler::registerHandler('EditViewPreSave', 'IGRNC_IgrnExist_Handler', 'IGRNC', '', 5, true, \App\Module::getModuleId('IGRNC'));
+		App\EventHandler::registerHandler('EntityBeforeSave', 'Vtiger_Meetings_Handler', 'Calendar,Occurrences', '', 5, true);
+
 		$this->blocks();
 		$this->addFields();
 		$this->updateAdressFields();
@@ -314,7 +264,64 @@ class YetiForceUpdate
 		$this->syncPicklist();
 		$this->dropColumns();
 		$this->setRelations();
+		$this->updateCurrencies();
+		$this->removeRoleToPicklist(['finvoicecost_paymentstatus']);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
+	private function updateCurrencies()
+	{
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$currencies = [
+			['South Sudanese pound', 'SSP', 'SS£'],
+			['Afghani', 'AFN', 'Af'],
+			['Armenian Dram', 'AMD', 'Դ'],
+			['Kwanza', 'AOA', 'Kz'],
+			['Taka', 'BDT', '৳'],
+			['Burundi Franc', 'BIF', '₣'],
+			['Boliviano Mvdol', 'BOV', '$b'],
+			['Ngultrum', 'BTN', 'Nu'],
+			['Belarussian Ruble', 'BYN', 'p.'],
+			['Congolese Franc', 'CDF', 'FC'],
+			['Unidad de Fomento', 'CLF', '$'],
+			['Unidad de Valor Real', 'COU', '$'],
+			['Peso Convertible', 'CUC', 'CUC$'],
+			['Cabo Verde Escudo', 'CVE', '$'],
+			['Djibouti Franc', 'DJF', 'Fdj'],
+			['Algerian Dinar', 'DZD', 'دج'],
+			['Nakfa', 'ERN', 'Nkf'],
+			['Ethiopian Birr', 'ETB', 'Br'],
+			['Lari', 'GEL', '₾'],
+			['Dalasi', 'GMD', 'D'],
+			['Guinean Franc', 'GNF', 'FG'],
+			['Riel', 'KHR', '៛'],
+			['Comorian Franc', 'KMF', 'CF'],
+			['Loti', 'LSL', 'L'],
+			['Moldovan Leu', 'MDL', 'L'],
+			['Kyat', 'MMK', 'K'],
+			['Pataca', 'MOP', '	MOP$'],
+			['Ouguiya', 'MRU', 'UM'],
+			['Kina', 'PGK', 'K'],
+			['Rwanda Franc', 'RWF', 'R₣'],
+			['Leone', 'SLL', 'Le'],
+			['Dobra', 'STN', 'Db'],
+			['Lilangeni', 'SZL', 'L'],
+			['Somoni', 'TJS', 'SM'],
+			['Turkmenistan New Manat', 'TMT', 'm'],
+			['Tunisian Dinar', 'TND', 'د.ت'],
+			['Pa’anga', 'TOP', 'T$'],
+			['Bolívar Soberano', 'VES', 'Bs. S.'],
+			['Vatu', 'VUV', 'VT'],
+			['Tala', 'WST', 'WS$'],
+			['Zambian Kwacha', 'ZMW', 'ZK'],
+			['Ghana, Cedis', 'GHS', '¢']
+		];
+
+		foreach ($currencies as $currency) {
+			if (!(new \App\db\Query())->from('vtiger_currencies')->where(['currency_name' => $currency[0]])->exists()) {
+				$dbCommand->insert('vtiger_currencies', array_combine(['currency_name', 'currency_code', 'currency_symbol'], $currency))->execute();
+			}
+		}
 	}
 
 	/**
@@ -390,23 +397,22 @@ class YetiForceUpdate
 
 	/**
 	 * Blocks.
-	 *
 	 */
 	private function blocks()
 	{
 		$start = microtime(true);
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$this->updateBlocks([
-			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, NULL], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
-			['type' => 'add', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_SHIPPING', 4, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_SHIPPING', 8, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_SHIPPING', 5, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_BASIC_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_CUSTOM_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONTACT_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
-			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONFIGURATION_WORKING_TIME', 10, 0, 0, 0, 0, 0, 2, 0, NULL]],
+			['type' => 'update', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, null], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, null], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'update', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_BILLING', null, 0, 0, 0, 0, 0, 1, 0, null], 'oldLabel' => 'LBL_ADDRESS_INFORMATION'],
+			['type' => 'add', 'module' => 'SSingleOrders', 'db' => ['LBL_ADDRESS_SHIPPING', 4, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'FInvoice', 'db' => ['LBL_ADDRESS_SHIPPING', 8, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'FInvoiceProforma', 'db' => ['LBL_ADDRESS_SHIPPING', 5, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_BASIC_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'ProductCategory', 'db' => ['LBL_CUSTOM_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONTACT_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, null]],
+			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONFIGURATION_WORKING_TIME', 10, 0, 0, 0, 0, 0, 2, 0, null]],
 		], ['blocklabel', 'sequence', 'show_title', 'visible', 'create_view', 'edit_view', 'detail_view', 'display_status', 'iscustom', 'icon']);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
@@ -427,12 +433,11 @@ class YetiForceUpdate
 			if ('add' === $block['type']) {
 				$blockInstance = new \vtlib\Block();
 			} else {
-				if($block['oldLabel']){
+				if ($block['oldLabel']) {
 					$blockInstance = \vtlib\Block::getInstance($block['oldLabel'], $data['tabid']);
-				}else{
+				} else {
 					$blockInstance = \vtlib\Block::getInstance($data['blocklabel'], $data['tabid']);
 				}
-
 			}
 			if (!$blockInstance) {
 				$this->log("[Warning] block does not exist | label:{$data['blocklabel']}, module: {$block['module']}");
@@ -450,9 +455,34 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
+	public function removeRoleToPicklist($fiels)
+	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+		$db = \App\Db::getInstance();
+		$schema = $db->getSchema();
+		$dbCommand = $db->createCommand();
+
+		$query = (new \App\Db\Query())->select(['fieldid', 'fieldname'])->from('vtiger_field')->where(['uitype' => 16])->andWhere(['fieldname' => $fiels]);
+		$dataReader = $query->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$picklistTable = 'vtiger_' . $row['fieldname'];
+			$tableSchema = $schema->getTableSchema($picklistTable);
+			if ($tableSchema && isset($tableSchema->columns['picklist_valueid'])) {
+				$dbCommand->update('vtiger_field', ['uitype' => 15], ['fieldid' => $row['fieldid']])->execute();
+				$dbCommand->dropColumn($picklistTable, 'picklist_valueid')->execute();
+				$picklistId = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist')->where(['name' => $row['fieldname']])->scalar();
+				if ($picklistId) {
+					$dbCommand->delete('vtiger_picklist', ['name' => $row['fieldname']])->execute();
+					$dbCommand->delete('vtiger_role2picklist', ['picklistid' => $picklistId])->execute();
+				}
+			}
+		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
+	}
+
 	/**
 	 * Drop column.
-	 *
 	 */
 	public function dropColumns()
 	{
@@ -460,14 +490,13 @@ class YetiForceUpdate
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$modules = [
-			'u_#__ssingleorders' => ['fields' => 'company', 'moduleName' => 'Accounts'],
-			'vtiger_account' => ['fields' => 'ownership', 'moduleName' => 'SSingleOrders'],
-			'vtiger_finvoicecost_paymentstatus' => ['fields' => 'picklist_valueid'],
+			'u_#__ssingleorders' => ['fields' => 'company', 'moduleName' => 'SSingleOrders'],
+			'vtiger_account' => ['fields' => 'ownership', 'moduleName' => 'Accounts'],
 			'vtiger_relatedlists_fields' => ['fields' => 'fieldname'],
 			'vtiger_troubletickets' => ['fields' => ['ordertime', 'contract_type', 'contracts_end_date'], 'moduleName' => 'HelpDesk'],
 		];
 		foreach ($modules as $talbeName => $value) {
-			if(isset($value['moduleName'])){
+			if (isset($value['moduleName'])) {
 				$moduleName = $value['moduleName'];
 				$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
 				$fields = $value['fields'];
@@ -484,20 +513,19 @@ class YetiForceUpdate
 						}
 					}
 				}
-			}else{
+			} else {
 				$this->removeField(false, $value['fields'], $talbeName);
 			}
 		}
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
-
 	/**
 	 * Remove field.
 	 *
 	 * @param Vtiger_Module_Model $fieldModel
-	 * @param mixed $fieldName
-	 * @param mixed $talbeName
+	 * @param mixed               $fieldName
+	 * @param mixed               $talbeName
 	 */
 	private function removeField($fieldModel, $fieldName = false, $talbeName = false)
 	{
@@ -507,10 +535,6 @@ class YetiForceUpdate
 				$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$fieldName} | " . date('Y-m-d H:i:s'));
 				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
 				$fieldInstance->delete();
-				if ('vtiger_crmentity' === $fieldModel->getTableName() && !(new \App\Db\Query())->from('vtiger_field')->where(['columnname' => $fieldModel->getColumnName(), 'tablename' => $fieldModel->getTableName()])->exists()) {
-					$this->importer->dropColumns([[$fieldModel->getTableName(), $fieldModel->getColumnName()]]);
-					$this->importer->logs(false);
-				}
 			} else {
 				$this->importer->dropColumns([[$talbeName, $fieldName]]);
 				$this->log(__METHOD__ . " | {$talbeName},{$fieldName} | " . date('Y-m-d H:i:s'));
@@ -527,6 +551,8 @@ class YetiForceUpdate
 	 * Checks if exists value for field.
 	 *
 	 * @param mixed $fields
+	 * @param mixed $moduleName
+	 * @param mixed $fieldName
 	 */
 	private function isExistsValueForField($moduleName, $fieldName)
 	{
@@ -546,172 +572,174 @@ class YetiForceUpdate
 	public function addFields($fields = [])
 	{
 		$start = microtime(true);
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
 		$tabIdSalesProcesses = \App\Module::getModuleId('SSalesProcesses');
 		$tabIdSingleOrders = \App\Module::getModuleId('SSingleOrders');
 		$tabIdFInvoice = \App\Module::getModuleId('FInvoice');
 		$tabIdFInvoiceProforma = \App\Module::getModuleId('FInvoiceProforma');
 		$tabIdProductCategory = \App\Module::getModuleId('ProductCategory');
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
 		$importerType = new \App\Db\Importers\Base();
 		if (empty($fields)) {
 			$fields = [
-				[\App\Module::getModuleId('Users'), 3039,'secondary_email','vtiger_users',2,13,'secondary_email','FL_SECONDARY_EMAIL',0,2,'','100',2,468,1,'E~O',1,0,'BAS',1,'Edit,Detail',0,'',NULL,0,0,0,0,
+				[\App\Module::getModuleId('Users'), 3039, 'secondary_email', 'vtiger_users', 2, 13, 'secondary_email', 'FL_SECONDARY_EMAIL', 0, 2, '', '100', 2, 468, 1, 'E~O', 1, 0, 'BAS', 1, 'Edit,Detail', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_USERLOGIN_ROLE', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_USERLOGIN_ROLE']],
-				[$tabIdFInvoiceProforma, 3021, 'addresslevel1b', 'u_yf_finvoiceproforma_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3021, 'addresslevel1b', 'u_yf_finvoiceproforma_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3019, 'addresslevel2b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3019, 'addresslevel2b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3022, 'addresslevel3b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3022, 'addresslevel3b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3020, 'addresslevel4b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3020, 'addresslevel4b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3015, 'addresslevel5b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3015, 'addresslevel5b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3018, 'addresslevel6b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3018, 'addresslevel6b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3017, 'addresslevel7b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3017, 'addresslevel7b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3013, 'addresslevel8b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3013, 'addresslevel8b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3024, 'first_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3024, 'first_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3025, 'first_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3025, 'first_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3026, 'last_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3026, 'last_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3027, 'last_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3027, 'last_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3014, 'localnumberb', 'u_yf_finvoiceproforma_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3014, 'localnumberb', 'u_yf_finvoiceproforma_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3016, 'buildingnumberb', 'u_yf_finvoiceproforma_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3016, 'buildingnumberb', 'u_yf_finvoiceproforma_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3028, 'company_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3028, 'company_name_a', 'u_yf_finvoiceproforma_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3029, 'company_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3029, 'company_name_b', 'u_yf_finvoiceproforma_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3032, 'email_a', 'u_yf_finvoiceproforma_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 325, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3032, 'email_a', 'u_yf_finvoiceproforma_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 325, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3033, 'email_b', 'u_yf_finvoiceproforma_address', 1, 13, 'email_b', 'FL_EMAIL', 0, 2, '', '100', 16, 467, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3033, 'email_b', 'u_yf_finvoiceproforma_address', 1, 13, 'email_b', 'FL_EMAIL', 0, 2, '', '100', 16, 467, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3034, 'phone_a', 'u_yf_finvoiceproforma_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3034, 'phone_a', 'u_yf_finvoiceproforma_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3035, 'phone_b', 'u_yf_finvoiceproforma_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3035, 'phone_b', 'u_yf_finvoiceproforma_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3023, 'poboxb', 'u_yf_finvoiceproforma_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3023, 'poboxb', 'u_yf_finvoiceproforma_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoiceProforma, 3030, 'vat_id_a', 'u_yf_finvoiceproforma_address', 1, 1, 'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3030, 'vat_id_a', 'u_yf_finvoiceproforma_address', 1, 1, 'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 325, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoiceProforma, 3031, 'vat_id_b', 'u_yf_finvoiceproforma_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoiceProforma, 3031, 'vat_id_b', 'u_yf_finvoiceproforma_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3004, 'addresslevel1b', 'u_yf_finvoice_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3004, 'addresslevel1b', 'u_yf_finvoice_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3002, 'addresslevel2b', 'u_yf_finvoice_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3002, 'addresslevel2b', 'u_yf_finvoice_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3005, 'addresslevel3b', 'u_yf_finvoice_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3005, 'addresslevel3b', 'u_yf_finvoice_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3003, 'addresslevel4b', 'u_yf_finvoice_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3003, 'addresslevel4b', 'u_yf_finvoice_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2998, 'addresslevel5b', 'u_yf_finvoice_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2998, 'addresslevel5b', 'u_yf_finvoice_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3001, 'addresslevel6b', 'u_yf_finvoice_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3001, 'addresslevel6b', 'u_yf_finvoice_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3000, 'addresslevel7b', 'u_yf_finvoice_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3000, 'addresslevel7b', 'u_yf_finvoice_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2996, 'addresslevel8b', 'u_yf_finvoice_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2996, 'addresslevel8b', 'u_yf_finvoice_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2999, 'buildingnumberb', 'u_yf_finvoice_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2999, 'buildingnumberb', 'u_yf_finvoice_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2992, 'company_name_a', 'u_yf_finvoice_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2992, 'company_name_a', 'u_yf_finvoice_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoice, 3009, 'company_name_b', 'u_yf_finvoice_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3009, 'company_name_b', 'u_yf_finvoice_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2994, 'email_a', 'u_yf_finvoice_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 312, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2994, 'email_a', 'u_yf_finvoice_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 312, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2990, 'first_name_a', 'u_yf_finvoice_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2990, 'first_name_a', 'u_yf_finvoice_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoice, 3007, 'first_name_b', 'u_yf_finvoice_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3007, 'first_name_b', 'u_yf_finvoice_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2991, 'last_name_a', 'u_yf_finvoice_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2991, 'last_name_a', 'u_yf_finvoice_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoice, 3008, 'last_name_b', 'u_yf_finvoice_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3008, 'last_name_b', 'u_yf_finvoice_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2997, 'localnumberb', 'u_yf_finvoice_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2997, 'localnumberb', 'u_yf_finvoice_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2995, 'phone_a', 'u_yf_finvoice_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2995, 'phone_a', 'u_yf_finvoice_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoice, 3012, 'phone_b', 'u_yf_finvoice_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3012, 'phone_b', 'u_yf_finvoice_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 3006, 'poboxb', 'u_yf_finvoice_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3006, 'poboxb', 'u_yf_finvoice_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdFInvoice, 2993, 'vat_id_a', 'u_yf_finvoice_address', 1, 1, 'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 2993, 'vat_id_a', 'u_yf_finvoice_address', 1, 1, 'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 312, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdFInvoice, 3010, 'vat_id_b', 'u_yf_finvoice_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdFInvoice, 3010, 'vat_id_b', 'u_yf_finvoice_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 466, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[\App\Module::getModuleId('Occurrences'), 3037, 'meeting_url', 'u_yf_occurrences', 1, 17, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 11, 460, 1, 'V~O', 1, 0, 'BAS', 1, '', 1, '{"exp":"date_end"}', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('Occurrences'), 3037, 'meeting_url', 'u_yf_occurrences', 1, 17, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 11, 460, 1, 'V~O', 1, 0, 'BAS', 1, '', 1, '{"exp":"date_end"}', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_BASIC_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_BASIC_INFORMATION']],
-				[\App\Module::getModuleId('SCalculations'), 2980, 'parent_id', 'u_yf_scalculations', 1, 10, 'parent_id', 'FL_PARENT_SCALCULATIONS', 0, 2, '', '4294967295', 11, 276, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('SCalculations'), 2980, 'parent_id', 'u_yf_scalculations', 1, 10, 'parent_id', 'FL_PARENT_SCALCULATIONS', 0, 2, '', '4294967295', 11, 276, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SCALCULATIONS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SCALCULATIONS_INFORMATION']],
-				[\App\Module::getModuleId('SQuotes'), 2979, 'parent_id', 'u_yf_squotes', 1, 10, 'parent_id', 'FL_PARENT_SQUOTES', 0, 2, '', '4294967295', 13, 280, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('SQuotes'), 2979, 'parent_id', 'u_yf_squotes', 1, 10, 'parent_id', 'FL_PARENT_SQUOTES', 0, 2, '', '4294967295', 13, 280, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SQUOTES_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SQUOTES_INFORMATION']],
-				[$tabIdSalesProcesses, 2950, 'estimated_margin', 'u_yf_ssalesprocesses', 1, 71, 'estimated_margin', 'FL_ESTIMATED_MARGIN', 0, 2, '', '1.0E+20', 3, 320, 1, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSalesProcesses, 2950, 'estimated_margin', 'u_yf_ssalesprocesses', 1, 71, 'estimated_margin', 'FL_ESTIMATED_MARGIN', 0, 2, '', '1.0E+20', 3, 320, 1, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FINANCES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_FINANCES']],
-				[$tabIdSalesProcesses, 2951, 'expected_margin', 'u_yf_ssalesprocesses', 1, 71, 'expected_margin', 'FL_EXPECTED_MARGIN', 0, 2, '', '1.0E+20', 4, 320, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSalesProcesses, 2951, 'expected_margin', 'u_yf_ssalesprocesses', 1, 71, 'expected_margin', 'FL_EXPECTED_MARGIN', 0, 2, '', '1.0E+20', 4, 320, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FINANCES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_FINANCES']],
-				[$tabIdSalesProcesses, 2952, 'expected_sale', 'u_yf_ssalesprocesses', 1, 71, 'expected_sale', 'FL_EXPECTED_SALE', 0, 2, '', '1.0E+20', 5, 320, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSalesProcesses, 2952, 'expected_sale', 'u_yf_ssalesprocesses', 1, 71, 'expected_sale', 'FL_EXPECTED_SALE', 0, 2, '', '1.0E+20', 5, 320, 2, 'N~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => 'decimal(28,8)', 'blockLabel' => 'LBL_FINANCES', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_FINANCES']],
-				[$tabIdSingleOrders, 2978, 'parent_id', 'u_yf_ssingleorders', 1, 10, 'parent_id', 'FL_PARENT_SSINGLEORDERS', 0, 2, '', '4294967295', 19, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2978, 'parent_id', 'u_yf_ssingleorders', 1, 10, 'parent_id', 'FL_PARENT_SSINGLEORDERS', 0, 2, '', '4294967295', 19, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SSINGLEORDERS_INFORMATION']],
-				[$tabIdSingleOrders, 2953, 'contactid', 'u_yf_ssingleorders', 1, 10, 'contactid', 'FL_CONTACT', 0, 2, '', '4294967295', 6, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2953, 'contactid', 'u_yf_ssingleorders', 1, 10, 'contactid', 'FL_CONTACT', 0, 2, '', '4294967295', 6, 284, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_SSINGLEORDERS_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_SSINGLEORDERS_INFORMATION']],
-				[$tabIdSingleOrders, 2970, 'addresslevel1b', 'u_yf_ssingleorders_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2970, 'addresslevel1b', 'u_yf_ssingleorders_address', 1, 35, 'addresslevel1b', 'AddressLevel1', 0, 2, '', '255', 9, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2969, 'addresslevel2b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2969, 'addresslevel2b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel2b', 'AddressLevel2', 0, 2, '', '255', 7, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2968, 'addresslevel3b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2968, 'addresslevel3b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel3b', 'AddressLevel3', 0, 2, '', '255', 10, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2967, 'addresslevel4b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2967, 'addresslevel4b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel4b', 'AddressLevel4', 0, 2, '', '255', 8, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2966, 'addresslevel5b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2966, 'addresslevel5b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel5b', 'AddressLevel5', 0, 2, '', '255', 3, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2965, 'addresslevel6b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2965, 'addresslevel6b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel6b', 'AddressLevel6', 0, 2, '', '255', 6, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2964, 'addresslevel7b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2964, 'addresslevel7b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel7b', 'AddressLevel7', 0, 2, '', '255', 5, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2963, 'addresslevel8b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2963, 'addresslevel8b', 'u_yf_ssingleorders_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2961, 'buildingnumberb', 'u_yf_ssingleorders_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2961, 'buildingnumberb', 'u_yf_ssingleorders_address', 1, 1, 'buildingnumberb', 'Building number', 0, 2, '', '255', 4, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2956, 'company_name_a', 'u_yf_ssingleorders_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2956, 'company_name_a', 'u_yf_ssingleorders_address', 1, 1, 'company_name_a', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2974, 'company_name_b', 'u_yf_ssingleorders_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2974, 'company_name_b', 'u_yf_ssingleorders_address', 1, 1, 'company_name_b', 'FL_COMPANY_NAME', 0, 2, '', '255', 14, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2959, 'email_a', 'u_yf_ssingleorders_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 295, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2959, 'email_a', 'u_yf_ssingleorders_address', 1, 13, 'email_a', 'FL_EMAIL', 0, 2, '', '100', 16, 295, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2976, 'email_b', 'u_yf_ssingleorders_address', 1, 13, 'email_b', 'FL_EMAIL', 0, 2, '', '100', 16, 463, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2976, 'email_b', 'u_yf_ssingleorders_address', 1, 13, 'email_b', 'FL_EMAIL', 0, 2, '', '100', 16, 463, 1, 'E~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2954, 'first_name_a', 'u_yf_ssingleorders_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2954, 'first_name_a', 'u_yf_ssingleorders_address', 1, 1, 'first_name_a', 'First Name', 0, 2, '', '255', 12, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2972, 'first_name_b', 'u_yf_ssingleorders_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2972, 'first_name_b', 'u_yf_ssingleorders_address', 1, 1, 'first_name_b', 'First Name', 0, 2, '', '255', 12, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2955, 'last_name_a', 'u_yf_ssingleorders_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2955, 'last_name_a', 'u_yf_ssingleorders_address', 1, 1, 'last_name_a', 'Last Name', 0, 2, '', '255', 13, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2973, 'last_name_b', 'u_yf_ssingleorders_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2973, 'last_name_b', 'u_yf_ssingleorders_address', 1, 1, 'last_name_b', 'Last Name', 0, 2, '', '255', 13, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 962, 'localnumberb', 'u_yf_ssingleorders_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 962, 'localnumberb', 'u_yf_ssingleorders_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2960, 'phone_a', 'u_yf_ssingleorders_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2960, 'phone_a', 'u_yf_ssingleorders_address', 1, 1, 'phone_a', 'FL_PHONE', 0, 2, '', '100', 17, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2977, 'phone_b', 'u_yf_ssingleorders_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2977, 'phone_b', 'u_yf_ssingleorders_address', 1, 1, 'phone_b', 'FL_PHONE', 0, 2, '', '100', 17, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(100), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2971, 'poboxb', 'u_yf_ssingleorders_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2971, 'poboxb', 'u_yf_ssingleorders_address', 1, 1, 'poboxb', 'Po Box', 0, 2, '', '50', 11, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[$tabIdSingleOrders, 2957, 'vat_id_a', 'u_yf_ssingleorders_address', 1, 1,'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2957, 'vat_id_a', 'u_yf_ssingleorders_address', 1, 1, 'vat_id_a', 'Vat ID', 0, 2, '', '50', 15, 295, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_BILLING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_BILLING']],
-				[$tabIdSingleOrders, 2975, 'vat_id_b', 'u_yf_ssingleorders_address', 1, 1,'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[$tabIdSingleOrders, 2975, 'vat_id_b', 'u_yf_ssingleorders_address', 1, 1, 'vat_id_b', 'Vat ID', 0, 2, '', '50', 15, 463, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
-				[\App\Module::getModuleId('Calendar'), 3036, 'meeting_url', 'vtiger_activity', 1, 326, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 28, 19, 1, 'V~O', 2, 11, 'BAS', 1, '', 1, '{"exp":"due_date","roomName":"subject"}', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('Calendar'), 3036, 'meeting_url', 'vtiger_activity', 1, 326, 'meeting_url', 'FL_MEETING_URL', 0, 2, '', '2048', 28, 19, 1, 'V~O', 2, 11, 'BAS', 1, '', 1, '{"exp":"due_date","roomName":"subject"}', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_TASK_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_TASK_INFORMATION']],
-				[\App\Module::getModuleId('Contacts'), 3038, 'gender', 'vtiger_contactdetails', 1, 16, 'gender', 'FL_GENDER', 0, 2, '', '255', 31, 4, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', NULL, 0, 0, 0, 0,
+				[\App\Module::getModuleId('Contacts'), 3038, 'gender', 'vtiger_contactdetails', 1, 16, 'gender', 'FL_GENDER', 0, 2, '', '255', 31, 4, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_CONTACT_INFORMATION', 'picklistValues' => ['PLL_WOMAN', 'PLL_MAN'], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_CONTACT_INFORMATION']],
 				[$tabIdProductCategory, 2989, 'active', 'u_yf_productcategory', 1, 56, 'active', 'FL_ACTIVE', 0, 2, '', '-128,127', 2, 464, 1, 'C~O', 2, 0, 'BAS', 1, '', 1, '', '', 0, 0, 0, 0,
 					'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_BASIC_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_BASIC_INFORMATION']],
@@ -771,9 +799,9 @@ class YetiForceUpdate
 			$fieldInstance->summaryfield = $field[21];
 			$fieldInstance->generatedtype = $field[4];
 			$fieldInstance->defaultvalue = $field[10];
-			if ($field['picklistValues'] && 302 == $field[5]) {
-				$field[22] = $this->setTree($field['picklistValues']);
-			}
+			// if ($field['picklistValues'] && 302 == $field[5]) {
+			// 	$field[22] = $this->setTree($field['picklistValues']);
+			// }
 			$fieldInstance->fieldparams = $field[22];
 			$blockInstance->addField($fieldInstance);
 			if ($field['picklistValues'] && (15 == $field[5] || 16 == $field[5] || 33 == $field[5])) {
@@ -793,62 +821,64 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$settingFields = [
-			['value' => [5,'LBL_MAGENTO','fab fa-magento','LBL_MAGENTO_DESCRIPTION','index.php?parent=Settings&module=Magento&view=List',13,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION'],
-			['value' => [4,'LBL_EVENT_HANDLER','mdi mdi-car-turbocharger','LBL_EVENT_HANDLER_DESC','index.php?parent=Settings&module=EventHandler&view=Index',13,0,0,NULL], 'blockLabel' => 'LBL_SYSTEM_TOOLS'],
-			['value' => [5,'LBL_MEETING_SERVICES','mdi mdi-server-network','LBL_MEETING_SERVICES_DESCRIPTION','index.php?parent=Settings&module=MeetingServices&view=List',15,0,0,NULL], 'blockLabel' => 'LBL_INTEGRATION']
+			['value' => [5, 'LBL_MAGENTO', 'fab fa-magento', 'LBL_MAGENTO_DESCRIPTION', 'index.php?parent=Settings&module=Magento&view=List', 13, 0, 0, null], 'blockLabel' => 'LBL_INTEGRATION'],
+			['value' => [4, 'LBL_EVENT_HANDLER', 'mdi mdi-car-turbocharger', 'LBL_EVENT_HANDLER_DESC', 'index.php?parent=Settings&module=EventHandler&view=Index', 13, 0, 0, null], 'blockLabel' => 'LBL_SYSTEM_TOOLS'],
+			['value' => [5, 'LBL_MEETING_SERVICES', 'mdi mdi-server-network', 'LBL_MEETING_SERVICES_DESCRIPTION', 'index.php?parent=Settings&module=MeetingServices&view=List', 15, 0, 0, null], 'blockLabel' => 'LBL_INTEGRATION']
 		];
-		$columnName = ['blockid','name','iconpath','description','linkto','sequence','active','pinned','admin_access'];
-		foreach($settingFields as $field){
+		$columnName = ['blockid', 'name', 'iconpath', 'description', 'linkto', 'sequence', 'active', 'pinned', 'admin_access'];
+		foreach ($settingFields as $field) {
 			$blockId = (new \App\Db\Query())->select(['blockid'])
-					->from('vtiger_settings_blocks')
-					->where(['label' => $field['blockLabel']])->scalar();
+				->from('vtiger_settings_blocks')
+				->where(['label' => $field['blockLabel']])->scalar();
+			if (!$blockId) {
+				$this->log("[Error] Setting block not exists: {$field['value'][1]}");
+				continue;
+			}
 			$isExistField = (new \App\Db\Query())->from('vtiger_settings_field')->where(['blockid' => $blockId, 'name' => $field['value'][1]])->exists();
-			if (!$blockId || $isExistField) {
+			if ($isExistField) {
 				$this->log("[INFO] Skip adding setting field. BlockId: {$blockId}; Setting field name: {$field['value'][1]}; field exists: {$isExistField}");
 				continue;
 			}
 			$field['value'][0] = $blockId;
 			$data = array_combine($columnName, $field['value']);
 			\App\Db::getInstance()->createCommand()->insert('vtiger_settings_field', $data)->execute();
-
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	function syncPicklist()
+	public function syncPicklist()
 	{
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$start = microtime(true);
-		$newPicklistValue = ['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK'];
-		$paymentMethodValue = [];
-		$picklistWithAutomation = ['fcorectinginvoice_formpayment', 'finvoice_formpayment', 'finvoicecost_formpayment', 'finvoiceproforma_formpayment', 'ssingleorders_method_payments' ];
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+
 		$db = \App\Db::getInstance();
 		$importer = new \App\Db\Importer();
-		foreach ($picklistWithAutomation as $fieldname) {
+		$newPicklistValue = ['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK'];
+		$picklistWithAutomation = ['fcorectinginvoice_formpayment', 'finvoice_formpayment', 'finvoicecost_formpayment', 'finvoiceproforma_formpayment', 'ssingleorders_method_payments'];
+		$picklistFields = (new \App\Db\Query())->select(['fieldname'])->from('vtiger_field')->where(['fieldname' => $picklistWithAutomation, 'presence' => [0, 2], 'uitype' => [15, 16]])->column();
+
+		foreach ($picklistFields as $fieldname) {
 			$oldTableName = 'vtiger_' . $fieldname;
-			if(!$db->isTableExists($oldTableName)){
+			if (!$db->isTableExists($oldTableName)) {
 				$this->log("[Error] Table: {$oldTableName};  no exists");
 				return;
 			}
-			foreach((new \App\Db\Query())->select([$fieldname])->from('vtiger_' . $fieldname)->all() as $values ){
-				$paymentMethodValue[$fieldname][] = $values[$fieldname];
+			foreach ((new \App\Db\Query())->select([$fieldname])->from($oldTableName)->column() as $value) {
+				$newPicklistValue[] = $value;
 			}
 		}
-		foreach($paymentMethodValue as $key => $payment){
-			foreach($payment as $paymenthMethodOld){
-				if(!in_array($paymenthMethodOld, $newPicklistValue)){
-					array_push($newPicklistValue, $paymenthMethodOld);
-				}
-			}
-		}
+		$newPicklistValue = array_unique($newPicklistValue);
+
 		$newTableName = 'vtiger_payment_methods';
 		$updateValue = [];
-		if($db->isTableExists($newTableName)){
-			foreach ($newPicklistValue as $value) {
+		if ($db->isTableExists($newTableName)) {
+			$currentValues = \App\Fields\Picklist::getValues('payment_methods');
+			$currentValues = array_column($currentValues, 'payment_methods');
+			foreach (array_diff($newPicklistValue, $currentValues) as $value) {
 				$db->createCommand()->insert($newTableName, ['payment_methods' => $value])->execute();
-				$this->log("[INFO] Add value to: {$newTableName};");
+				$this->log("[INFO] Add value to: {$newTableName}:{$value};");
 			}
-			foreach($picklistWithAutomation as $fieldname){
+			foreach ($picklistWithAutomation as $fieldname) {
 				$importer->dropTable('vtiger_' . $fieldname);
 				$moduleId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_field')->where(['columnname' => $fieldname])->scalar();
 				$modulesName[$fieldname][] = \App\Module::getModuleName($moduleId);
@@ -856,24 +886,24 @@ class YetiForceUpdate
 			}
 			$updateId = false;
 			$tableUpdate = ['com_vtiger_workflows' => 'test', 'u_yf_cv_condition' => 'field_name', 'vtiger_cvcolumnlist' => 'field_name'];
-			foreach($modulesName as $fieldname => $moduleName){
-				foreach($tableUpdate as $tableName => $columnName){
-					if ((new \App\Db\Query())->from($tableName)->where([$columnName => $fieldname, 'module_name' => $moduleName[0]])->exists()){
+			foreach ($modulesName as $fieldname => $moduleName) {
+				foreach ($tableUpdate as $tableName => $columnName) {
+					if ((new \App\Db\Query())->from($tableName)->where([$columnName => $fieldname, 'module_name' => $moduleName[0]])->exists()) {
 						\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => 'payment_methods'], [$columnName => $fieldname, 'module_name' => $moduleName[0]])->execute();
 					} else {
-						if ($columnName === 'test'){
-							if((new \App\Db\Query())->from($tableName)->where(['module_name' => $moduleName[0]])->exists()){
+						if ('test' === $columnName) {
+							if ((new \App\Db\Query())->from($tableName)->where(['module_name' => $moduleName[0]])->exists()) {
 								$workflowsData = (new \App\Db\Query())->select([$columnName, 'workflow_id'])->from($tableName)->where(['module_name' => $moduleName[0]])->all();
-								foreach ($workflowsData as $workflow){
-									foreach (\App\Json::decode($workflow[$columnName]) as $value){
-										if($value['fieldname'] === $fieldname){
+								foreach ($workflowsData as $workflow) {
+									foreach (\App\Json::decode($workflow[$columnName]) as $value) {
+										if ($value['fieldname'] === $fieldname) {
 											$updateId = $workflow['workflow_id'];
 											$value['fieldname'] = 'payment_methods';
 										}
 										$updateValue[] = $value;
 									}
 								}
-								if ($updateId){
+								if ($updateId) {
 									\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => \App\Json::encode($updateValue)], ['workflow_id' => $updateId, 'module_name' => $moduleName[0]])->execute();
 								}
 							}
@@ -894,17 +924,17 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
 		$dbCommand = \App\Db::getInstance()->createCommand();
-			$ralations = [
-				['type' => 'add', 'data' => [628, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders' , 0, '', 0, 0, 0, 'RelatedTab', 'contactid']],
-				['type' => 'add', 'data' => [629, 'SSingleOrders', 'SSingleOrders', 'getDependentsList', 7, 'SSingleOrders', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [630, 'SQuotes', 'SQuotes', 'getDependentsList', 7, 'SQuotes', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [631, 'SCalculations', 'SCalculations', 'getDependentsList', 7, 'SCalculations', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [632, 'ProductCategory', 'ProductCategory', 'getDependentsList', 1, 'LBL_CHILD_PRODUCTCATEGORY', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [633, 'Products', 'ProductCategory', 'getRelatedList', 1, 'ProductCategory', 0, 'SELECT', 0, 0, 0, 'RelatedTab', NULL]],
-				['type' => 'add', 'data' => [634, 'ProductCategory', 'Products', 'getRelatedList', 2, 'Products', 0, 'SELECT', 0, 0, 0, 'RelatedTab', NULL]],
-				['type' => 'update', 'data' => [38, 'Products', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getDependentsList']],
-				['type' => 'update', 'data' => [159, 'Services', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
-			];
+		$ralations = [
+			['type' => 'add', 'data' => [628, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders', 0, '', 0, 0, 0, 'RelatedTab', 'contactid']],
+			['type' => 'add', 'data' => [629, 'SSingleOrders', 'SSingleOrders', 'getDependentsList', 7, 'SSingleOrders', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+			['type' => 'add', 'data' => [630, 'SQuotes', 'SQuotes', 'getDependentsList', 7, 'SQuotes', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+			['type' => 'add', 'data' => [631, 'SCalculations', 'SCalculations', 'getDependentsList', 7, 'SCalculations', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+			['type' => 'add', 'data' => [632, 'ProductCategory', 'ProductCategory', 'getDependentsList', 1, 'LBL_CHILD_PRODUCTCATEGORY', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'parent_id']],
+			['type' => 'add', 'data' => [633, 'Products', 'ProductCategory', 'getRelatedList', 1, 'ProductCategory', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null]],
+			['type' => 'add', 'data' => [634, 'ProductCategory', 'Products', 'getRelatedList', 2, 'Products', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null]],
+			['type' => 'update', 'data' => [38, 'Products', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getDependentsList']],
+			['type' => 'update', 'data' => [159, 'Services', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
+		];
 
 		foreach ($ralations as $relation) {
 			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName] = $relation['data'];
@@ -957,10 +987,10 @@ class YetiForceUpdate
 		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$workflowManager = new VTWorkflowManager();
 		$taskManager = new VTTaskManager();
-		$workflow[] = [73,'SSingleOrders','Create IGDN','[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_ACCEPTED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]',3,NULL,NULL,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL];
-		$workflow[] = [77,'SSingleOrders','Cancel IGDN','[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_CANCELLED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]',4,NULL,NULL,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL];
-		$workflowTask[] = [142,73,'Tworzenie WZ','O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:12:"Tworzenie WZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
-		$workflowTask[] = [148,77,'Cancel IGDN','O:24:"VTUpdateRelatedFieldTask":8:{s:18:"executeImmediately";b:0;s:8:"contents";N;s:10:"workflowId";i:77;s:7:"summary";s:11:"Cancel IGDN";s:6:"active";b:0;s:7:"trigger";N;s:19:"field_value_mapping";s:81:"[{"fieldname":"IGDN::igdn_status","value":"PLL_CANCELLED","valuetype":"rawtext"}]";s:2:"id";i:148;}'];
+		$workflow[] = [73, 'SSingleOrders', 'Create IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_ACCEPTED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 3, null, null, 6, null, null, null, null, null, null, null];
+		$workflow[] = [77, 'SSingleOrders', 'Cancel IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_CANCELLED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 4, null, null, 6, null, null, null, null, null, null, null];
+		$workflowTask[] = [142, 73, 'Tworzenie WZ', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:12:"Tworzenie WZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
+		$workflowTask[] = [148, 77, 'Cancel IGDN', 'O:24:"VTUpdateRelatedFieldTask":8:{s:18:"executeImmediately";b:0;s:8:"contents";N;s:10:"workflowId";i:77;s:7:"summary";s:11:"Cancel IGDN";s:6:"active";b:0;s:7:"trigger";N;s:19:"field_value_mapping";s:81:"[{"fieldname":"IGDN::igdn_status","value":"PLL_CANCELLED","valuetype":"rawtext"}]";s:2:"id";i:148;}'];
 		foreach ($workflow as $record) {
 			try {
 				$workflowId = (new \App\Db\Query())->select(['workflow_id'])
@@ -989,7 +1019,7 @@ class YetiForceUpdate
 				foreach ($workflowTask as $indexTask) {
 					if ($indexTask[1] === $record[0] &&
 						!(new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId, 'summary' => $indexTask[2]])->exists()
-						) {
+					) {
 						$task = $taskManager->unserializeTask($indexTask[3]);
 						$task->id = '';
 						$task->workflowId = $workflowId;
@@ -998,7 +1028,7 @@ class YetiForceUpdate
 					}
 				}
 			} catch (\Throwable $e) {
-				$this->log("[ERROR] {$e->getMessage()} in {$e->getTraceAsString()}");
+				$this->log("[Error] {$e->getMessage()} in {$e->getTraceAsString()}");
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -1018,7 +1048,7 @@ class YetiForceUpdate
 				'name' => (string) $this->modulenode->label,
 				'from_version' => (string) $this->modulenode->from_version,
 				'to_version' => (string) $this->modulenode->to_version,
-				'result' => true,
+				'result' => false,
 				'time' => date('Y-m-d H:i:s')
 			])->execute();
 			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
@@ -1049,6 +1079,7 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 		exit;
 	}
+
 	/**
 	 * Postupdate.
 	 */
