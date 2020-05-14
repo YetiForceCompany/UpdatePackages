@@ -456,6 +456,9 @@ class YetiForceUpdate
 	 */
 	public function dropColumns()
 	{
+		$start = microtime(true);
+		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
 		$modules = [
 			'u_#__ssingleorders' => ['fields' => 'company', 'moduleName' => 'Accounts'],
 			'vtiger_account' => ['fields' => 'ownership', 'moduleName' => 'SSingleOrders'],
@@ -464,7 +467,8 @@ class YetiForceUpdate
 			'vtiger_troubletickets' => ['fields' => ['ordertime', 'contract_type', 'contracts_end_date'], 'moduleName' => 'HelpDesk'],
 		];
 		foreach ($modules as $talbeName => $value) {
-			if(!empty($moduleName = $value['moduleName'])){
+			if(isset($value['moduleName'])){
+				$moduleName = $value['moduleName'];
 				$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
 				$fields = $value['fields'];
 				if (!\is_array($fields)) {
@@ -484,6 +488,7 @@ class YetiForceUpdate
 				$this->removeField(false, $value['fields'], $talbeName);
 			}
 		}
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
 
@@ -497,9 +502,9 @@ class YetiForceUpdate
 	private function removeField($fieldModel, $fieldName = false, $talbeName = false)
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$newName} | " . date('Y-m-d H:i:s'));
 		try {
-			if (false === $newName) {
+			if (false === $fieldName) {
+				$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$fieldName} | " . date('Y-m-d H:i:s'));
 				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
 				$fieldInstance->delete();
 				if ('vtiger_crmentity' === $fieldModel->getTableName() && !(new \App\Db\Query())->from('vtiger_field')->where(['columnname' => $fieldModel->getColumnName(), 'tablename' => $fieldModel->getTableName()])->exists()) {
@@ -508,14 +513,13 @@ class YetiForceUpdate
 				}
 			} else {
 				$this->importer->dropColumns([[$talbeName, $fieldName]]);
+				$this->log(__METHOD__ . " | {$talbeName},{$fieldName} | " . date('Y-m-d H:i:s'));
 			}
 		} catch (\Throwable $e) {
 			$message = '[ERROR] ' . __METHOD__ . ': ' . $e->__toString();
 			$this->log($message);
 			\App\Log::error($message);
 		}
-		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
-		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -889,17 +893,17 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-
+		$dbCommand = \App\Db::getInstance()->createCommand();
 			$ralations = [
-				['type' => 'add', 'data' => [0, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders', 0, 'RelatedTab', 'contactid']],
-				['type' => 'add', 'data' => [1, 'SSingleOrders', 'SSingleOrders', 'getDependentsList', 7, 'SSingleOrders', 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [2, 'SQuotes', 'SQuotes', 'getDependentsList', 7, 'SQuotes', 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [3, 'SCalculations', 'SCalculations', 'getDependentsList', 7, 'SCalculations', 0, 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [4, 'ProductCategory',  'ProductCategory', 'getDependentsList', 1, 'LBL_CHILD_PRODUCTCATEGORY', 0, 'actions' => 'ADD', 'RelatedTab', 'parent_id']],
-				['type' => 'add', 'data' => [5, 'Products', 'ProductCategory', 'getRelatedList', 1, 'ProductCategory', 0, 'actions' => 'SELECT', 'RelatedTab']],
-				['type' => 'add', 'data' => [6, 'ProductCategory', 'Products', 'getRelatedList', 2, 'Products', 0, 'actions' => 'SELECT', 'RelatedTab']],
-				['type' => 'update', 'data' => [0, 'Products', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getDependentsList']],
-				['type' => 'update', 'data' => [1, 'Services', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
+				['type' => 'add', 'data' => [628, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders' , 0, '', 0, 0, 0, 'RelatedTab', 'contactid']],
+				['type' => 'add', 'data' => [629, 'SSingleOrders', 'SSingleOrders', 'getDependentsList', 7, 'SSingleOrders', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [630, 'SQuotes', 'SQuotes', 'getDependentsList', 7, 'SQuotes', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [631, 'SCalculations', 'SCalculations', 'getDependentsList', 7, 'SCalculations', 0, '', 0, 0, 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [632, 'ProductCategory', 'ProductCategory', 'getDependentsList', 1, 'LBL_CHILD_PRODUCTCATEGORY', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'parent_id']],
+				['type' => 'add', 'data' => [633, 'Products', 'ProductCategory', 'getRelatedList', 1, 'ProductCategory', 0, 'SELECT', 0, 0, 0, 'RelatedTab', NULL]],
+				['type' => 'add', 'data' => [634, 'ProductCategory', 'Products', 'getRelatedList', 2, 'Products', 0, 'SELECT', 0, 0, 0, 'RelatedTab', NULL]],
+				['type' => 'update', 'data' => [38, 'Products', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Products'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getDependentsList']],
+				['type' => 'update', 'data' => [159, 'Services', 'HelpDesk', 'getDependentsList', 1, 'HelpDesk', 0, '', 0, 0, 0, 'RelatedTab', 'product_id'], 'where' => ['tabid' => \App\Module::getModuleId('Services'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList']],
 			];
 
 		foreach ($ralations as $relation) {
