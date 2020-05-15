@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 07d875d8873a49477a540c8d412872bf56704393
+// last check: 30fc2742b5b39729332a8a3e51fc9fa07e3a95ce
 /**
  * YetiForceUpdate Class.
  */
@@ -48,8 +48,7 @@ class YetiForceUpdate
 	/**
 	 * Constructor.
 	 *
-	 * @param object $modulenode
-	 * @param mixed  $moduleNode
+	 * @param mixed $moduleNode
 	 */
 	public function __construct($moduleNode)
 	{
@@ -155,7 +154,7 @@ class YetiForceUpdate
 					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
 				}
 			} else {
-				$this->log('[INFO] Module exist: ') . $moduleName;
+				$this->log('[INFO] Module exist: ' . $moduleName);
 			}
 		}
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
@@ -227,6 +226,10 @@ class YetiForceUpdate
 			['vtiger_ssingleorders_source',
 				['ssingleorders_source' => 'PLL_MAGENTO', 'sortorderid' => 5, 'presence' => 1],
 				['ssingleorders_source' => 'PLL_MAGENTO']
+			],
+			['vtiger_links',
+				['tabid' => 0, 'linktype' => 'EDIT_VIEW_RECORD_COLLECTOR', 'linklabel' => 'GUS', 'linkurl' => 'App\RecordCollectors\Gus'],
+				['tabid' => 0, 'linkurl' => 'App\RecordCollectors\Gus']
 			]
 		]);
 
@@ -1025,6 +1028,101 @@ class YetiForceUpdate
 				}
 			} catch (\Throwable $e) {
 				$this->log("[Error] {$e->getMessage()} in {$e->getTraceAsString()}");
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function actionMapp()
+	{
+		$start = microtime(true);
+		$db = \App\Db::getInstance();
+
+		$inventoryModules = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['type' => 1])->column();
+		$actions = [
+			['type' => 'add', 'name' => 'RecordCollector', 'tabsData' => $inventoryModules, 'permission' => 1],
+			['type' => 'add', 'name' => 'MeetingUrl', 'tabsData' => [\App\Module::getModuleId('Users')], 'permission' => 1]
+		];
+
+		foreach ($actions as $action) {
+			$key = (new \App\Db\Query())->select(['actionid'])->from('vtiger_actionmapping')->where(['actionname' => $action['name']])->limit(1)->scalar();
+			if ('remove' === $action['type']) {
+				if ($key) {
+					$db->createCommand()->delete('vtiger_actionmapping', ['actionid' => $key])->execute();
+					$db->createCommand()->delete('vtiger_profile2utility', ['activityid' => $key])->execute();
+				}
+				continue;
+			}
+			if (empty($key)) {
+				$securitycheck = 0;
+				$key = $db->getUniqueID('vtiger_actionmapping', 'actionid', false);
+				$db->createCommand()->insert('vtiger_actionmapping', ['actionid' => $key, 'actionname' => $action['name'], 'securitycheck' => $securitycheck])->execute();
+			}
+			$permission = 1;
+			if (isset($action['permission'])) {
+				$permission = $action['permission'];
+			}
+
+			$tabsData = $action['tabsData'];
+			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
+			while (false !== ($profileId = $dataReader->readColumn(0))) {
+				foreach ($tabsData as $tabId) {
+					$isExists = (new \App\Db\Query())->from('vtiger_profile2utility')->where(['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key])->exists();
+					if (!$isExists) {
+						$db->createCommand()->insert('vtiger_profile2utility', [
+							'profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission
+						])->execute();
+					}
+				}
+			}
+		}
+		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function settingMenu()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'), true);
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$transformedUrlMapping = [
+			'index.php?module=Administration&action=index&parenttab=Settings' => 'index.php?module=Users&parent=Settings&view=List',
+			'index.php?module=Settings&action=listroles&parenttab=Settings' => 'index.php?module=Roles&parent=Settings&view=Index',
+			'index.php?module=Settings&action=ListProfiles&parenttab=Settings' => 'index.php?module=Profiles&parent=Settings&view=List',
+			'index.php?module=Settings&action=listgroups&parenttab=Settings' => 'index.php?module=Groups&parent=Settings&view=List',
+			'index.php?module=Settings&action=OrgSharingDetailView&parenttab=Settings' => 'index.php?module=SharingAccess&parent=Settings&view=Index',
+			'index.php?module=Settings&action=DefaultFieldPermissions&parenttab=Settings' => 'index.php?module=FieldAccess&parent=Settings&view=Index',
+			'index.php?module=Settings&action=ListLoginHistory&parenttab=Settings' => 'index.php?module=LoginHistory&parent=Settings&view=List',
+			'index.php?module=Settings&action=ModuleManager&parenttab=Settings' => 'index.php?module=ModuleManager&parent=Settings&view=List',
+			'index.php?module=PickList&action=PickList&parenttab=Settings' => 'index.php?parent=Settings&module=Picklist&view=Index',
+			'index.php?module=Settings&action=listwordtemplates&parenttab=Settings' => 'index.php?module=Settings&submodule=ModuleManager&view=WordTemplates',
+			'index.php?module=Settings&action=listnotificationschedulers&parenttab=Settings' => 'index.php?module=Settings&submodule=Vtiger&view=Schedulers',
+			'index.php?module=Settings&action=listinventorynotifications&parenttab=Settings' => 'index.php?module=Settings&submodule=Notifications&view=InventoryAlerts',
+			'index.php?module=Settings&action=CurrencyListView&parenttab=Settings' => 'index.php?parent=Settings&module=Currency&view=List',
+			'index.php?module=Settings&action=TaxConfig&parenttab=Settings' => 'index.php?module=Vtiger&parent=Settings&view=TaxIndex',
+			'index.php?module=Settings&action=ProxyServerConfig&parenttab=Settings' => 'index.php?module=Settings&submodule=Server&view=ProxyConfig',
+			'index.php?module=Settings&action=OrganizationTermsandConditions&parenttab=Settings' => 'index.php?parent=Settings&module=Vtiger&view=TermsAndConditionsEdit',
+			'index.php?module=Settings&action=CustomModEntityNo&parenttab=Settings' => 'index.php?module=Vtiger&parent=Settings&view=CustomRecordNumbering',
+			'index.php?module=com_vtiger_workflow&action=workflowlist&parenttab=Settings' => 'index.php?module=Workflows&parent=Settings&view=List',
+			'index.php?module=com_vtiger_workflow&action=workflowlist' => 'index.php?module=Workflows&parent=Settings&view=List',
+			'index.php?module=ConfigEditor&action=index' => 'index.php?module=Vtiger&parent=Settings&view=ConfigEditorDetail',
+			'index.php?module=Tooltip&action=QuickView&parenttab=Settings' => 'index.php?module=Settings&submodule=Tooltip&view=Index',
+			'index.php?module=Settings&action=Announcements&parenttab=Settings' => 'index.php?parent=Settings&module=Vtiger&view=AnnouncementEdit',
+			'index.php?module=PickList&action=PickListDependencySetup&parenttab=Settings' => 'index.php?parent=Settings&module=PickListDependency&view=List',
+			'index.php?module=ModTracker&action=BasicSettings&parenttab=Settings&formodule=ModTracker' => 'index.php?module=Settings&submodule=ModTracker&view=Index',
+			'index.php?module=CronTasks&action=ListCronJobs&parenttab=Settings' => 'index.php?module=CronTasks&parent=Settings&view=List',
+			'index.php?module=ExchangeConnector&action=index&parenttab=Settings' => 'index.php?module=ExchangeConnector&parent=Settings&view=Index',
+			'index.php?module=RecordAllocation&view=Index&parent=Settings&type=owner' => 'index.php?module=RecordAllocation&view=Index&parent=Settings&mode=owner',
+			'index.php?module=RecordAllocation&view=Index&parent=Settings&type=sharedOwner' => 'index.php?module=RecordAllocation&view=Index&parent=Settings&mode=sharedOwner',
+		];
+		$skipMenuItemList = ['LBL_AUDIT_TRAIL', 'LBL_SYSTEM_INFO', 'LBL_PROXY_SETTINGS', 'LBL_DEFAULT_MODULE_VIEW',
+			'LBL_FIELDFORMULAS', 'LBL_FIELDS_ACCESS', 'LBL_MAIL_MERGE',
+			'NOTIFICATIONSCHEDULERS', 'INVENTORYNOTIFICATION', 'ModTracker',
+			'LBL_WORKFLOW_LIST', 'LBL_TOOLTIP_MANAGEMENT', ];
+		$dbCommand->delete('vtiger_settings_field', ['name' => $skipMenuItemList])->execute();
+
+		foreach ($transformedUrlMapping as $old => $link) {
+			if ($dbCommand->update('vtiger_settings_field', ['linkto' => $link], ['linkto' => $old])->execute()) {
+				$this->log("[Info] Update setting menu: {$link}");
 			}
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');

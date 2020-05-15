@@ -1,0 +1,32 @@
+{
+  "name": "yetiforce/csrf-magic",
+  "description": "Cross Site Request Forgery security library",
+  "keywords": [
+	"CSRF",
+	"security",
+	"php"
+  ],
+  "homepage": "https://github.com/YetiForceCompany/csrf-magic",
+  "type": "library",
+  "license": "BSD-2-Clause",
+  "authors": [
+	{
+	  "name": "Edward Z. Yang",
+	  "email": "ezyang@mit.edu",
+	  "homepage": "https://github.com/ezyang"
+	},
+	{
+	  "name": "YetiForceCompany",
+	  "email": "info@yetiforce.com",
+	  "homepage": "https://yetiforce.com/"
+	}
+  ],
+  "require": {
+    "php": ">=7.1.0"
+  },
+  "autoload": {
+	"psr-4": {
+	  "CsrfMagic\\": "src/"
+	}
+  }
+}

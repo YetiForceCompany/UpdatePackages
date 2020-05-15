@@ -65,7 +65,9 @@
 				{foreach item=COLUMN_SIZE from=$COLUMNS_SIZES}
 				<div class="{$COLUMN_SIZE} px-2">
 					{if $EDIT_VIEW_LAYOUT && 'col-xl-8' === $COLUMN_SIZE}
-						{include file=\App\Layout::getTemplatePath('Edit/Inventory.tpl', $MODULE)}
+						{if 1 === $MODULE_TYPE}
+							{include file=\App\Layout::getTemplatePath('Edit/Inventory.tpl', $MODULE)}
+						{/if}
 						{assign var=RECORD_STRUCTURE value=$RECORD_STRUCTURE_RIGHT}
 					{else}
 						{assign var=RECORD_STRUCTURE value=$RECORD_STRUCTURE}
@@ -128,7 +130,7 @@
 								{else} col-md-12 m-auto{/if} fieldRow row form-group align-items-center my-1">
 										{/if}
 											{assign var=HELPINFO_LABEL value=\App\Language::getTranslateHelpInfo($FIELD_MODEL, $VIEW)}
-										<label class="my-0 col-lg-12 col-xl-3 fieldLabel text-lg-left text-xl-right u-text-small-bold">
+										<label class="flCT_{$MODULE_NAME}_{$FIELD_MODEL->getFieldName()} my-0 col-lg-12 col-xl-3 fieldLabel text-lg-left text-xl-right u-text-small-bold">
 											{if $FIELD_MODEL->isMandatory() eq true}
 												<span class="redColor">*</span>
 											{/if}

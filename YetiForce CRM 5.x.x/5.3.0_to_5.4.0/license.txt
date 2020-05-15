@@ -8,3 +8,6 @@ Log files should be checked after update.
 Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation
 
 After the update process finishes, please also update all the languages in your system.
+
+Dodano weryfikację dupliaktu adresu mailowego na kontrahencie
+Dodano weryfikację dupliaktu ean na Produkcie

@@ -383,6 +383,13 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'vtiger_field' => [
+				'columns' => [
+					'color' => $this->stringType(10)->defaultValue('')
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			]
 		];
 		$this->dropTables = [
 			'i_#__magento_record'
