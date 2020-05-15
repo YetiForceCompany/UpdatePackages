@@ -117,6 +117,7 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->importer->updateScheme();
+			$this->importer->dropColumns([['vtiger_relatedlists_fields', 'fieldname']]);
 			$this->importer->importData();
 			$this->addModules(['ProductCategory']);
 			$this->importer->refreshSchema();
@@ -166,11 +167,7 @@ class YetiForceUpdate
 		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
 		$tabIdAccounts = \App\Module::getModuleId('Accounts');
 		$tabIdUsers = \App\Module::getModuleId('Users');
-		$tabIdSalesProcesses = \App\Module::getModuleId('SSalesProcesses');
-		$tabIdSingleOrders = \App\Module::getModuleId('SSingleOrders');
-		$tabIdPartners = \App\Module::getModuleId('Partners');
 		$tabIdCompetition = \App\Module::getModuleId('Competition');
-		$tabIdFInvoiceCost = \App\Module::getModuleId('FInvoiceCost');
 		$tabIdMultiCompanyt = \App\Module::getModuleId('MultiCompany');
 
 		\App\Db\Updater::batchUpdate([
@@ -211,11 +208,11 @@ class YetiForceUpdate
 		\App\Db\Updater::batchInsert([
 			['u_yf_countries',	['name' => 'South Sudan', 'code' => 'SS', 'status' => 0, 'sortorderid' => 210, 'phone' => 0, 'uitype' => 0], ['code' => 'SS']],
 			['u_yf_countries',	['name' => 'Bonaire, Sint Eustatius and Saba', 'code' => 'BQ', 'status' => 0, 'sortorderid' => 27, 'phone' => 0, 'uitype' => 0], ['code' => 'BQ']],
-			['u_yf_countries',	['name' => 'CuraĂ§ao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0], ['code' => 'CW']],
+			['u_yf_countries',	['name' => 'Curaçao', 'code' => 'CW', 'status' => 0, 'sortorderid' => 57, 'phone' => 0, 'uitype' => 0], ['code' => 'CW']],
 			['u_yf_countries',	['name' => 'Guernesey', 'code' => 'GG', 'status' => 0, 'sortorderid' => 92, 'phone' => 0, 'uitype' => 0], ['code' => 'GG']],
 			['u_yf_countries',	['name' => 'Isle of Man', 'code' => 'IM', 'status' => 0, 'sortorderid' => 108, 'phone' => 0, 'uitype' => 0], ['code' => 'IM']],
 			['u_yf_countries',	['name' => 'Jersey', 'code' => 'JE', 'status' => 0, 'sortorderid' => 113, 'phone' => 0, 'uitype' => 0], ['code' => 'JE']],
-			['u_yf_countries',	['name' => 'Saint BarthĂ©lemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0], ['code' => 'BL']],
+			['u_yf_countries',	['name' => 'Saint Barthélemy', 'code' => 'BL', 'status' => 0, 'sortorderid' => 187, 'phone' => 0, 'uitype' => 0], ['code' => 'BL']],
 			['u_yf_countries',	['name' => 'Saint Martin (French part)', 'code' => 'MF', 'status' => 0, 'sortorderid' => 191, 'phone' => 0, 'uitype' => 0], ['code' => 'MF']],
 			['u_yf_countries',	['name' => 'Sint Maarten (Dutch part)', 'code' => 'SX', 'status' => 0, 'sortorderid' => 203, 'phone' => 0, 'uitype' => 0], ['code' => 'SX']],
 			['u_yf_countries',	['name' => 'Timor-Leste', 'code' => 'TL', 'status' => 0, 'sortorderid' => 224, 'phone' => 0, 'uitype' => 0], ['code' => 'TL']],
@@ -265,7 +262,6 @@ class YetiForceUpdate
 		$this->dropColumns();
 		$this->setRelations();
 		$this->updateCurrencies();
-		$this->removeRoleToPicklist(['finvoicecost_paymentstatus']);
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
@@ -455,32 +451,6 @@ class YetiForceUpdate
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
-	public function removeRoleToPicklist($fiels)
-	{
-		$start = microtime(true);
-		$this->log(__FUNCTION__ . "\t|\t" . date('H:i:s'));
-		$db = \App\Db::getInstance();
-		$schema = $db->getSchema();
-		$dbCommand = $db->createCommand();
-
-		$query = (new \App\Db\Query())->select(['fieldid', 'fieldname'])->from('vtiger_field')->where(['uitype' => 16])->andWhere(['fieldname' => $fiels]);
-		$dataReader = $query->createCommand()->query();
-		while ($row = $dataReader->read()) {
-			$picklistTable = 'vtiger_' . $row['fieldname'];
-			$tableSchema = $schema->getTableSchema($picklistTable);
-			if ($tableSchema && isset($tableSchema->columns['picklist_valueid'])) {
-				$dbCommand->update('vtiger_field', ['uitype' => 15], ['fieldid' => $row['fieldid']])->execute();
-				$dbCommand->dropColumn($picklistTable, 'picklist_valueid')->execute();
-				$picklistId = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist')->where(['name' => $row['fieldname']])->scalar();
-				if ($picklistId) {
-					$dbCommand->delete('vtiger_picklist', ['name' => $row['fieldname']])->execute();
-					$dbCommand->delete('vtiger_role2picklist', ['picklistid' => $picklistId])->execute();
-				}
-			}
-		}
-		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
-	}
-
 	/**
 	 * Drop column.
 	 */
@@ -492,59 +462,121 @@ class YetiForceUpdate
 		$modules = [
 			'u_#__ssingleorders' => ['fields' => 'company', 'moduleName' => 'SSingleOrders'],
 			'vtiger_account' => ['fields' => 'ownership', 'moduleName' => 'Accounts'],
-			'vtiger_relatedlists_fields' => ['fields' => 'fieldname'],
-			'vtiger_troubletickets' => ['fields' => ['ordertime', 'contract_type', 'contracts_end_date'], 'moduleName' => 'HelpDesk'],
+			'vtiger_troubletickets' => ['fields' => ['ordertime', 'contract_type', 'contracts_end_date'], 'moduleName' => 'HelpDesk']
 		];
-		foreach ($modules as $talbeName => $value) {
-			if (isset($value['moduleName'])) {
-				$moduleName = $value['moduleName'];
-				$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
-				$fields = $value['fields'];
-				if (!\is_array($fields)) {
-					$fields = [$fields];
-				}
-				foreach ($fields as $fieldName) {
-					if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
-						if (!$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
-							$this->removeField($fieldModel);
-						} else {
-							$dbCommand->update('vtiger_field', ['presence' => 1], ['fieldid' => $fieldModel->getId()])->execute();
-							$this->log('[Warning] RemoveFields' . __METHOD__ . ': field exists and is in use ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
-						}
+		foreach ($modules as $value) {
+			$moduleName = $value['moduleName'];
+			$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+			$fields = $value['fields'];
+			if (!\is_array($fields)) {
+				$fields = [$fields];
+			}
+			foreach ($fields as $fieldName) {
+				if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
+					if (!$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
+						$this->removeField($fieldModel);
+					} else {
+						$dbCommand->update('vtiger_field', ['presence' => 1], ['fieldid' => $fieldModel->getId()])->execute();
+						$this->log('[Warning] RemoveFields' . __METHOD__ . ': field exists and is in use, deactivated: ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
 					}
+				} else {
+					$this->log("[Info] Skip removing {$moduleName}:{$fieldName}, field not exists");
 				}
-			} else {
-				$this->removeField(false, $value['fields'], $talbeName);
 			}
 		}
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 
-	/**
-	 * Remove field.
-	 *
-	 * @param Vtiger_Module_Model $fieldModel
-	 * @param mixed               $fieldName
-	 * @param mixed               $talbeName
-	 */
-	private function removeField($fieldModel, $fieldName = false, $talbeName = false)
+	private function removeField($fieldModel)
 	{
 		$start = microtime(true);
+		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$newName} | " . date('Y-m-d H:i:s'));
 		try {
-			if (false === $fieldName) {
-				$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()},{$fieldName} | " . date('Y-m-d H:i:s'));
-				$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
-				$fieldInstance->delete();
-			} else {
-				$this->importer->dropColumns([[$talbeName, $fieldName]]);
-				$this->log(__METHOD__ . " | {$talbeName},{$fieldName} | " . date('Y-m-d H:i:s'));
-			}
+			$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
+			$fieldInstance->delete();
 		} catch (\Throwable $e) {
 			$message = '[ERROR] ' . __METHOD__ . ': ' . $e->__toString();
 			$this->log($message);
 			\App\Log::error($message);
 		}
+		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
+		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function renameField($fieldModel, string $newName, array $updateData = [])
+	{
+		$db = \App\Db::getInstance();
+		$transaction = $db->beginTransaction();
+		try {
+			$dbCommand = $db->createCommand();
+
+			$fldModule = $fieldModel->getModuleName();
+			$fieldname = $fieldModel->getName();
+			$tabId = $fieldModel->getModuleId();
+
+			$updateData['fieldname'] = $newName;
+			$dbCommand->update('vtiger_field', $updateData, ['fieldname' => $fieldname, 'tabid' => $tabId]);
+			$dbCommand->update('vtiger_cvcolumnlist', ['field_name' => $newName], ['field_name' => $fieldname, 'module_name' => $fldModule])->execute();
+			$dbCommand->update('u_#__cv_condition', ['field_name' => $newName], ['field_name' => $fieldname, 'module_name' => $fldModule])->execute();
+
+			if ('picklist' === $fieldModel->getFieldDataType() || 'multipicklist' === $fieldModel->getFieldDataType()) {
+				$tableName = 'vtiger_' . $fieldname;
+				$newTableName = 'vtiger_' . $newName;
+				if ($db->isTableExists($newTableName) && $db->isTableExists($tableName)) {
+					$currentValues = (new \App\Db\Query())->select([$fieldname])->from($tableName)->column();
+					$newPicklistValue = (new \App\Db\Query())->select([$newName])->from($newTableName)->column();
+					$sortId = \count($newPicklistValue);
+					foreach (array_diff($currentValues, $newPicklistValue) as $value) {
+						$dbCommand->insert($newTableName, [$newName => $value, 'presence' => 1, 'sortorderid' => ++$sortId])->execute();
+						$this->log("[INFO] Add value to: {$newTableName}:{$value};");
+					}
+				}
+				$query = (new \App\Db\Query())->from('vtiger_field')
+					->where(['fieldname' => $fieldname])
+					->andWhere(['in', 'uitype', [15, 16, 33]]);
+				$dataReader = $query->createCommand()->query();
+				if (!$dataReader->count() && $db->isTableExists($tableName)) {
+					if (15 === $fieldModel->getUIType()) {
+						$picklistId = (new \App\Db\Query())->select(['picklistid'])->from('vtiger_picklist')->where(['name' => $fieldname])->scalar();
+						if ($picklistId) {
+							$dbCommand->delete('vtiger_picklist', ['name' => $fieldname])->execute();
+							$dbCommand->delete('vtiger_role2picklist', ['picklistid' => $picklistId])->execute();
+						}
+					}
+					$dbCommand->dropTable($tableName)->execute();
+					if ($db->isTableExists($tableName . '_seq')) {
+						$dbCommand->dropTable($tableName . '_seq')->execute();
+					}
+					$dbCommand->delete('vtiger_picklist', ['name' => $fieldname])->execute();
+				}
+				$dbCommand->update('vtiger_picklist_dependency', ['sourcefield' => $newName], ['tabid' => $tabId, 'sourcefield' => $fieldname])->execute();
+				$dbCommand->update('vtiger_picklist_dependency', ['targetfield' => $newName], ['tabid' => $tabId, 'targetfield' => $fieldname])->execute();
+			}
+			$entityFieldInfo = \App\Module::getEntityInfo($fldModule);
+			$fieldsName = $entityFieldInfo['fieldnameArr'];
+			$searchColumns = $entityFieldInfo['searchcolumnArr'];
+			if (\in_array($fieldname, $fieldsName) || \in_array($fieldname, $searchColumns)) {
+				if (false !== ($key = array_search($fieldname, $fieldsName))) {
+					$fieldsName[$key] = $newName;
+				}
+				if (false !== ($key = array_search($fieldname, $searchColumns))) {
+					$searchColumns[$key] = $newName;
+				}
+				$dbCommand->update('vtiger_entityname',['fieldname' => implode(',', $fieldsName), 'searchcolumn' => implode(',', $searchColumns)],
+				['modulename' => $entityFieldInfo['modulename']])->execute();
+				\App\Cache::delete('ModuleEntityById', $tabId);
+				\App\Cache::delete('ModuleEntityByName', $fldModule);
+			}
+			$db->createCommand("UPDATE com_vtiger_workflowtasks SET task = REPLACE(task, '{$fieldname}', '{$newName}') WHERE task LIKE '{$fieldname}'")->execute();
+			$db->createCommand("UPDATE com_vtiger_workflows SET test = REPLACE(test, '{$fieldname}', '{$newName}') WHERE test LIKE '{$fieldname}'")->execute();
+			$transaction->commit();
+		} catch (\Throwable $ex) {
+			$transaction->rollBack();
+			throw $ex;
+		}
+		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
+		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
 	}
 
 	/**
@@ -850,71 +882,35 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
-
 		$db = \App\Db::getInstance();
-		$importer = new \App\Db\Importer();
-		$newPicklistValue = ['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK'];
-		$picklistWithAutomation = ['fcorectinginvoice_formpayment', 'finvoice_formpayment', 'finvoicecost_formpayment', 'finvoiceproforma_formpayment', 'ssingleorders_method_payments'];
-		$picklistFields = (new \App\Db\Query())->select(['fieldname'])->from('vtiger_field')->where(['fieldname' => $picklistWithAutomation, 'presence' => [0, 2], 'uitype' => [15, 16]])->column();
 
-		foreach ($picklistFields as $fieldname) {
-			$oldTableName = 'vtiger_' . $fieldname;
-			if (!$db->isTableExists($oldTableName)) {
-				$this->log("[Error] Table: {$oldTableName};  no exists");
-				return;
-			}
-			foreach ((new \App\Db\Query())->select([$fieldname])->from($oldTableName)->column() as $value) {
-				$newPicklistValue[] = $value;
-			}
+		$newFieldName = 'payment_methods';
+		if (!$db->isTableExists("vtiger_{$newFieldName}")) {
+			$fieldModel = Vtiger_Field_Model::init('Vtiger', ['uitype' => 16], $newFieldName);
+			$fieldModel->setPicklistValues(['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK']);
 		}
-		$newPicklistValue = array_unique($newPicklistValue);
-
-		$newTableName = 'vtiger_payment_methods';
-		$updateValue = [];
-		if ($db->isTableExists($newTableName)) {
-			$currentValues = \App\Fields\Picklist::getValues('payment_methods');
-			$currentValues = array_column($currentValues, 'payment_methods');
-			foreach (array_diff($newPicklistValue, $currentValues) as $value) {
-				$db->createCommand()->insert($newTableName, ['payment_methods' => $value])->execute();
-				$this->log("[INFO] Add value to: {$newTableName}:{$value};");
-			}
-			foreach ($picklistWithAutomation as $fieldname) {
-				$importer->dropTable('vtiger_' . $fieldname);
-				$moduleId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_field')->where(['columnname' => $fieldname])->scalar();
-				$modulesName[$fieldname][] = \App\Module::getModuleName($moduleId);
-				\App\Db::getInstance()->createCommand()->update('vtiger_field', ['uitype' => 16, 'fieldname' => 'payment_methods', 'fieldlabel' => 'FL_PAYMENTS_METHOD'], ['columnname' => $fieldname])->execute();
-			}
-			$updateId = false;
-			$tableUpdate = ['com_vtiger_workflows' => 'test', 'u_yf_cv_condition' => 'field_name', 'vtiger_cvcolumnlist' => 'field_name'];
-			foreach ($modulesName as $fieldname => $moduleName) {
-				foreach ($tableUpdate as $tableName => $columnName) {
-					if ((new \App\Db\Query())->from($tableName)->where([$columnName => $fieldname, 'module_name' => $moduleName[0]])->exists()) {
-						\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => 'payment_methods'], [$columnName => $fieldname, 'module_name' => $moduleName[0]])->execute();
-					} else {
-						if ('test' === $columnName) {
-							if ((new \App\Db\Query())->from($tableName)->where(['module_name' => $moduleName[0]])->exists()) {
-								$workflowsData = (new \App\Db\Query())->select([$columnName, 'workflow_id'])->from($tableName)->where(['module_name' => $moduleName[0]])->all();
-								foreach ($workflowsData as $workflow) {
-									foreach (\App\Json::decode($workflow[$columnName]) as $value) {
-										if ($value['fieldname'] === $fieldname) {
-											$updateId = $workflow['workflow_id'];
-											$value['fieldname'] = 'payment_methods';
-										}
-										$updateValue[] = $value;
-									}
-								}
-								if ($updateId) {
-									\App\Db::getInstance()->createCommand()->update($tableName, [$columnName => \App\Json::encode($updateValue)], ['workflow_id' => $updateId, 'module_name' => $moduleName[0]])->execute();
-								}
-							}
-						} else {
-							$this->log("[INFO] Field no exists: {$fieldname};");
-						}
+		$picklistWithAutomation = [
+			'FCorectingInvoice' => ['fcorectinginvoice_formpayment'],
+			'FInvoice' => ['finvoice_formpayment'],
+			'FInvoiceCost' => ['finvoicecost_formpayment'],
+			'FInvoiceProforma' => ['finvoiceproforma_formpayment'],
+			'SSingleOrders' => ['ssingleorders_method_payments']
+		];
+		foreach ($picklistWithAutomation as $moduleName => $fieldNames) {
+			$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+			foreach ($fieldNames as $fieldName) {
+				if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
+					try {
+						$this->renameField($fieldModel, $newFieldName, ['uitype' => 16, 'fieldlabel' => 'FL_PAYMENTS_METHOD']);
+					} catch (\Throwable $e) {
+						$message = '[ERROR] ' . __METHOD__ . ": {$moduleName}:{$fieldName} " . $e->__toString();
+						$this->log($message);
+						\App\Log::error($message);
 					}
+				} else {
+					$this->log("[Warning] Skip renaming {$moduleName}:{$fieldName}, field not exists");
 				}
 			}
-		} else {
-			$this->log("[Error] Table: {$newTableName};  no exists");
 		}
 		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -989,13 +985,13 @@ class YetiForceUpdate
 		$taskManager = new VTTaskManager();
 		$workflow[] = [73, 'SSingleOrders', 'Create IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_ACCEPTED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 3, null, null, 6, null, null, null, null, null, null, null];
 		$workflow[] = [77, 'SSingleOrders', 'Cancel IGDN', '[{"fieldname":"ssingleorders_status","operation":"has changed to","value":"PLL_CANCELLED","valuetype":"rawtext","joincondition":"","groupjoin":"and","groupid":0}]', 4, null, null, 6, null, null, null, null, null, null, null];
-		$workflowTask[] = [142, 73, 'Tworzenie WZ', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:12:"Tworzenie WZ";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
+		$workflowTask[] = [142, 73, 'Create IGDN', 'O:18:"VTCreateEntityTask":11:{s:18:"executeImmediately";b:1;s:8:"contents";N;s:10:"workflowId";i:73;s:7:"summary";s:11:"Create IGDN";s:6:"active";b:0;s:7:"trigger";N;s:11:"entity_type";s:4:"IGDN";s:15:"reference_field";s:15:"ssingleordersid";s:19:"field_value_mapping";s:94:"[{"fieldname":"igdn_status","value":"PLL_ACCEPTED","valuetype":"rawtext","modulename":"IGDN"}]";s:12:"mappingPanel";s:1:"1";s:2:"id";i:142;}'];
 		$workflowTask[] = [148, 77, 'Cancel IGDN', 'O:24:"VTUpdateRelatedFieldTask":8:{s:18:"executeImmediately";b:0;s:8:"contents";N;s:10:"workflowId";i:77;s:7:"summary";s:11:"Cancel IGDN";s:6:"active";b:0;s:7:"trigger";N;s:19:"field_value_mapping";s:81:"[{"fieldname":"IGDN::igdn_status","value":"PLL_CANCELLED","valuetype":"rawtext"}]";s:2:"id";i:148;}'];
 		foreach ($workflow as $record) {
 			try {
 				$workflowId = (new \App\Db\Query())->select(['workflow_id'])
 					->from('com_vtiger_workflows')
-					->where(['module_name' => $record[1], 'summary' => $record[2], 'execution_condition' => $record[4]])->scalar();
+					->where(['module_name' => $record[1], 'summary' => $record[2]])->scalar();
 				if (!$workflowId) {
 					$newWorkflow = $workflowManager->newWorkFlow($record[1]);
 					$newWorkflow->moduleName = $record[1];
