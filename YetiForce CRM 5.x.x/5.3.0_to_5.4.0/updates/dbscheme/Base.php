@@ -305,6 +305,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_cron_task' => [
 				'columns' => [
+					'frequency' => $this->schema->createColumnSchemaBuilder('MEDIUMINT', 6),
 					'status' => $this->smallInteger(1),
 					'module' => $this->stringType(25),
 					'lase_error' => $this->text(),
