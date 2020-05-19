@@ -99,13 +99,13 @@ class YetiForceUpdate
 		if ($error) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package. Please have a look at the list of errors:' . PHP_EOL . PHP_EOL . $error;
 			$this->log($this->package->_errorText);
-			$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 			return false;
 		}
 		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
 		copy(__DIR__ . '/files/modules/Vtiger/models/Field.php', ROOT_DIRECTORY . '/modules/Vtiger/models/Field.php');
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 		return true;
 	}
 
@@ -135,7 +135,7 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->data();
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**
@@ -161,7 +161,7 @@ class YetiForceUpdate
 				$this->log('[INFO] Module exist: ' . $moduleName);
 			}
 		}
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	private function data()
@@ -191,7 +191,7 @@ class YetiForceUpdate
 				['tabid' => $tabIdMultiCompanyt, 'columnname' => 'website'],
 				['tabid' => \App\Module::getModuleId('Faq'), 'columnname' => 'subject']
 			]],
-			['vtiger_field', ['fieldparams' => '{"hideLabel":["EventForm","QuickCreateAjax"]}'], ['tabid' => \App\Module::getModuleId('Calendar'), 'columnname' => 'activitytype']],
+			['vtiger_field', ['fieldparams' => '{"hideLabel":["EventForm","QuickCreateAjax"]}', 'quickcreatesequence' => 0], ['tabid' => \App\Module::getModuleId('Calendar'), 'columnname' => 'activitytype']],
 			['vtiger_field', ['uitype' => 12], ['tabid' => $tabIdAccounts, 'columnname' => 'accountname']],
 			['vtiger_field', ['displaytype' => 2], ['tablename' => 'vtiger_entity_stats', 'fieldname' => ['crmactivity']]],
 			['vtiger_field', ['typeofdata' => 'I~O'], ['tabid' => App\Module::getModuleId('OSSMailView'), 'columnname' => 'rc_user']],
@@ -277,7 +277,7 @@ class YetiForceUpdate
 		$this->updateUserSeq();
 		\App\Db\Fixer::maximumFieldsLength();
 		\App\Db\Fixer::baseModuleTools();
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	private function updateCurrencies()
@@ -337,7 +337,7 @@ class YetiForceUpdate
 				$this->log("[Info] Skip adding currency '{$currency[0]}': currency exists");
 			}
 		}
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**
@@ -408,7 +408,7 @@ class YetiForceUpdate
 				$dbCommand->alterColumn($row2['tablename'], $row2['columnname'], "varchar({$row[1]})")->execute();
 			}
 		}
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**
@@ -430,7 +430,7 @@ class YetiForceUpdate
 			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONTACT_INFORMATION', 10, 0, 0, 0, 0, 0, 2, 0, null]],
 			['type' => 'add', 'module' => 'Users', 'db' => ['LBL_USER_CONFIGURATION_WORKING_TIME', 10, 0, 0, 0, 0, 0, 2, 0, null]],
 		], ['blocklabel', 'sequence', 'show_title', 'visible', 'create_view', 'edit_view', 'detail_view', 'display_status', 'iscustom', 'icon']);
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**
@@ -467,8 +467,10 @@ class YetiForceUpdate
 			} elseif ('add' === $block['type'] && !(\vtlib\Block::getInstance($data['blocklabel'], $data['tabid']))) {
 				$createCommand->insert('vtiger_blocks', $data)->execute();
 			}
+			\App\Cache::delete('BlockInstance', $blockInstance->label . '|' . $blockInstance->tabid);
+			\App\Cache::delete('BlockInstance', $blockInstance->id . '|' . $blockInstance->tabid);
 		}
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	private function updateUserSeq()
@@ -477,67 +479,66 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$db = App\Db::getInstance();
 		$fields = [
-			['accesskey', 4, 'Webservice Access Key', 'LBL_USER_INTEGRATION'],
-			['activity_view', 6, 'Default Activity View', 'LBL_CALENDAR_SETTINGS'],
-			['authy_methods', 3, 'FL_AUTHY_METHODS', 'LBL_USER_ADV_OPTIONS'],
-			['authy_secret_totp', 2, 'FL_AUTHY_SECRET_TOTP', 'LBL_USER_ADV_OPTIONS'],
-			['auto_assign', 3, 'FL_AUTO_ASSIGN_RECORDS', 'LBL_USER_AUTOMATION'],
-			['available', 1, 'FL_AVAILABLE', 'LBL_USER_AUTOMATION'],
+			['user_name', 1, 'User Name', 'LBL_USERLOGIN_ROLE'],
+			['is_admin', 2, 'Admin', 'LBL_USERLOGIN_ROLE'],
+			['user_password', 7, 'Password', 'LBL_USERLOGIN_ROLE'],
 			['confirm_password', 8, 'Confirm Password', 'LBL_USERLOGIN_ROLE'],
-			['currency_decimal_separator', 3, 'Decimal Separator', 'LBL_CURRENCY_CONFIGURATION'],
-			['currency_grouping_pattern', 2, 'Digit Grouping Pattern', 'LBL_CURRENCY_CONFIGURATION'],
-			['currency_grouping_separator', 4, 'Digit Grouping Separator', 'LBL_CURRENCY_CONFIGURATION'],
-			['currency_id', 1, 'Currency', 'LBL_CURRENCY_CONFIGURATION'],
-			['currency_symbol_placement', 5, 'Symbol Placement', 'LBL_CURRENCY_CONFIGURATION'],
+			['first_name', 3, 'First Name', 'LBL_USERLOGIN_ROLE'],
+			['last_name', 4, 'Last Name', 'LBL_USERLOGIN_ROLE'],
+			['roleid', 5, 'Role', 'LBL_USERLOGIN_ROLE'],
+			['email1', 1, 'Email', 'LBL_USER_CONTACT_INFORMATION'],
+			['status', 6, 'Status', 'LBL_USERLOGIN_ROLE'],
+			['activity_view', 5, 'Default Activity View', 'LBL_CALENDAR_SETTINGS'],
+			['hour_format', 2, 'Calendar Hour Format', 'LBL_CALENDAR_SETTINGS'],
+			['start_hour', 1, 'Day starts at', 'LBL_USER_CONFIGURATION_WORKING_TIME'],
+			['reports_to_id', 3, 'Reports To', 'LBL_MORE_INFORMATION'],
 			['date_format', 1, 'Date Format', 'LBL_CALENDAR_SETTINGS'],
+			['description', 2, 'Description', 'LBL_MORE_INFORMATION'],
+			['accesskey', 4, 'Webservice Access Key', 'LBL_USER_INTEGRATION'],
+			['time_zone', 3, 'Time Zone', 'LBL_CALENDAR_SETTINGS'],
+			['currency_id', 1, 'Currency', 'LBL_CURRENCY_CONFIGURATION'],
+			['currency_grouping_pattern', 5, 'Digit Grouping Pattern', 'LBL_CURRENCY_CONFIGURATION'],
+			['currency_decimal_separator', 2, 'Decimal Separator', 'LBL_CURRENCY_CONFIGURATION'],
+			['currency_grouping_separator', 6, 'Digit Grouping Separator', 'LBL_CURRENCY_CONFIGURATION'],
+			['currency_symbol_placement', 3, 'Symbol Placement', 'LBL_CURRENCY_CONFIGURATION'],
+			['imagename', 6, 'User Image', 'LBL_USER_GUI'],
+			['internal_mailer', 3, 'INTERNAL_MAIL_COMPOSER', 'LBL_USER_MAIL'],
+			['theme', 5, 'Theme', 'LBL_USER_GUI'],
+			['language', 1, 'Language', 'LBL_USER_GUI'],
+			['reminder_interval', 10, 'Reminder Interval', 'LBL_CALENDAR_SETTINGS'],
+			['phone_crm_extension', 4, 'CRM Phone Extension', 'LBL_USER_CONTACT_INFORMATION'],
+			['no_of_currency_decimals', 7, 'Number Of Currency Decimals', 'LBL_CURRENCY_CONFIGURATION'],
+			['truncate_trailing_zeros', 4, 'Truncate Trailing Zeros', 'LBL_CURRENCY_CONFIGURATION'],
+			['dayoftheweek', 4, 'Starting Day of the week', 'LBL_CALENDAR_SETTINGS'],
+			['othereventduration', 11, 'Other Event Duration', 'LBL_CALENDAR_SETTINGS'],
+			['default_record_view', 4, 'Default Record View', 'LBL_USER_GUI'],
+			['leftpanelhide', 3, 'LBL_MENU_EXPANDED_BY_DEFAULT', 'LBL_USER_GUI'],
+			['rowheight', 2, 'Row Height', 'LBL_USER_GUI'],
+			['defaulteventstatus', 7, 'Default Event Status', 'LBL_CALENDAR_SETTINGS'],
+			['defaultactivitytype', 6, 'Default Activity Type', 'LBL_CALENDAR_SETTINGS'],
+			['is_owner', 7, 'Account Owner', 'LBL_MORE_INFORMATION'],
+			['end_hour', 2, 'Day ends at', 'LBL_USER_CONFIGURATION_WORKING_TIME'],
+			['emailoptout', 7, 'Approval for email', 'LBL_USER_CONTACT_INFORMATION'],
+			['available', 1, 'FL_AVAILABLE', 'LBL_USER_AUTOMATION'],
+			['auto_assign', 2, 'FL_AUTO_ASSIGN_RECORDS', 'LBL_USER_AUTOMATION'],
+			['records_limit', 3, 'FL_RECORD_LIMIT_IN_MODULE', 'LBL_USER_AUTOMATION'],
+			['phone_crm_extension_extra', 6, 'FL_PHONE_CUSTOM_INFORMATION', 'LBL_USER_CONTACT_INFORMATION'],
 			['date_password_change', 8, 'FL_DATE_PASSWORD_CHANGE', 'LBL_MORE_INFORMATION'],
-			['dayoftheweek', 7, 'Starting Day of the week', 'LBL_CALENDAR_SETTINGS'],
-			['defaultactivitytype', 8, 'Default Activity Type', 'LBL_CALENDAR_SETTINGS'],
-			['defaulteventstatus', 10, 'Default Event Status', 'LBL_CALENDAR_SETTINGS'],
-			['default_record_view', 5, 'Default Record View', 'LBL_USER_GUI'],
+			['force_password_change', 2, 'FL_FORCE_PASSWORD_CHANGE', 'LBL_USER_ADV_OPTIONS'],
+			['view_date_format', 9, 'FL_VIEW_DATE_FORMAT', 'LBL_CALENDAR_SETTINGS'],
+			['authy_methods', 4, 'FL_AUTHY_METHODS', 'LBL_USER_ADV_OPTIONS'],
+			['authy_secret_totp', 3, 'FL_AUTHY_SECRET_TOTP', 'LBL_USER_ADV_OPTIONS'],
+			['login_method', 1, 'FL_LOGIN_METHOD', 'LBL_USER_ADV_OPTIONS'],
+			['sync_carddav', 1, 'LBL_CARDDAV_SYNCHRONIZATION_CONTACT', 'LBL_USER_INTEGRATION'],
+			['sync_caldav', 2, 'LBL_CALDAV_SYNCHRONIZATION_CALENDAR', 'LBL_USER_INTEGRATION'],
+			['sync_carddav_default_country', 3, 'LBL_CARDDAV_DEFAULT_COUNTRY', 'LBL_USER_INTEGRATION'],
 			['default_search_module', 0, 'FL_DEFAULT_SEARCH_MODULE', 'LBL_GLOBAL_SEARCH_SETTINGS'],
 			['default_search_override', 0, 'FL_OVERRIDE_SEARCH_MODULE', 'LBL_GLOBAL_SEARCH_SETTINGS'],
-			['description', 2, 'Description', 'LBL_MORE_INFORMATION'],
-			['email1', 4, 'Email', 'LBL_USERLOGIN_ROLE'],
-			['emailoptout', 4, 'Approval for email', 'LBL_USER_MAIL'],
-			['end_hour', 4, 'Day ends at', 'LBL_CALENDAR_SETTINGS'],
-			['first_name', 3, 'First Name', 'LBL_USERLOGIN_ROLE'],
-			['force_password_change', 4, 'FL_FORCE_PASSWORD_CHANGE', 'LBL_USER_ADV_OPTIONS'],
-			['hour_format', 3, 'Calendar Hour Format', 'LBL_CALENDAR_SETTINGS'],
-			['imagename', 6, 'User Image', 'LBL_USER_GUI'],
-			['internal_mailer', 2, 'INTERNAL_MAIL_COMPOSER', 'LBL_USER_MAIL'],
-			['is_admin', 2, 'Admin', 'LBL_USERLOGIN_ROLE'],
-			['is_owner', 7, 'Account Owner', 'LBL_MORE_INFORMATION'],
-			['language', 1, 'Language', 'LBL_USER_GUI'],
-			['last_name', 5, 'Last Name', 'LBL_USERLOGIN_ROLE'],
-			['lead_view', 12, 'Default Lead View', 'LBL_CALENDAR_SETTINGS'],
-			['leftpanelhide', 3, 'LBL_MENU_EXPANDED_BY_DEFAULT', 'LBL_USER_GUI'],
-			['login_method', 1, 'FL_LOGIN_METHOD', 'LBL_USER_ADV_OPTIONS'],
+			['primary_phone_extra', 5, 'FL_PHONE_CUSTOM_INFORMATION', 'LBL_USER_CONTACT_INFORMATION'],
+			['primary_phone', 3, 'FL_PRIMARY_PHONE', 'LBL_USER_CONTACT_INFORMATION'],
 			['mail_scanner_actions', 1, 'FL_MAIL_SCANNER_ACTIONS', 'LBL_USER_MAIL'],
-			['mail_scanner_fields', 3, 'FL_MAIL_SCANNER_FIELDS', 'LBL_USER_MAIL'],
-			['no_of_currency_decimals', 6, 'Number Of Currency Decimals', 'LBL_CURRENCY_CONFIGURATION'],
-			['othereventduration', 13, 'Other Event Duration', 'LBL_CALENDAR_SETTINGS'],
-			['phone_crm_extension', 12, 'CRM Phone Extension', 'LBL_USERLOGIN_ROLE'],
-			['phone_crm_extension_extra', 13, 'FL_PHONE_CUSTOM_INFORMATION', 'LBL_USERLOGIN_ROLE'],
-			['primary_phone', 10, 'FL_PRIMARY_PHONE', 'LBL_USERLOGIN_ROLE'],
-			['primary_phone_extra', 11, 'FL_PHONE_CUSTOM_INFORMATION', 'LBL_USERLOGIN_ROLE'],
-			['records_limit', 2, 'FL_RECORD_LIMIT_IN_MODULE', 'LBL_USER_AUTOMATION'],
-			['reminder_interval', 11, 'Reminder Interval', 'LBL_CALENDAR_SETTINGS'],
-			['reports_to_id', 3, 'Reports To', 'LBL_MORE_INFORMATION'],
-			['roleid', 6, 'Role', 'LBL_USERLOGIN_ROLE'],
-			['rowheight', 2, 'Row Height', 'LBL_USER_GUI'],
-			['secondary_email', 14, 'FL_SECONDARY_EMAIL', 'LBL_USERLOGIN_ROLE'],
-			['start_hour', 2, 'Day starts at', 'LBL_CALENDAR_SETTINGS'],
-			['status', 9, 'Status', 'LBL_USERLOGIN_ROLE'],
-			['sync_caldav', 3, 'LBL_CALDAV_SYNCHRONIZATION_CALENDAR', 'LBL_USER_INTEGRATION'],
-			['sync_carddav', 1, 'LBL_CARDDAV_SYNCHRONIZATION_CONTACT', 'LBL_USER_INTEGRATION'],
-			['sync_carddav_default_country', 2, 'LBL_CARDDAV_DEFAULT_COUNTRY', 'LBL_USER_INTEGRATION'],
-			['theme', 4, 'Theme', 'LBL_USER_GUI'],
-			['time_zone', 5, 'Time Zone', 'LBL_CALENDAR_SETTINGS'],
-			['truncate_trailing_zeros', 7, 'Truncate Trailing Zeros', 'LBL_CURRENCY_CONFIGURATION'],
-			['user_name', 1, 'User Name', 'LBL_USERLOGIN_ROLE'],
-			['user_password', 7, 'Password', 'LBL_USERLOGIN_ROLE'],
-			['view_date_format', 9, 'FL_VIEW_DATE_FORMAT', 'LBL_CALENDAR_SETTINGS']
+			['mail_scanner_fields', 2, 'FL_MAIL_SCANNER_FIELDS', 'LBL_USER_MAIL'],
+			['secondary_email', 2, 'FL_SECONDARY_EMAIL', 'LBL_USER_CONTACT_INFORMATION']
 		];
 
 		$fieldIdList = [];
@@ -547,35 +548,57 @@ class YetiForceUpdate
 			->where(['tabid' => \App\Module::getModuleId('Users')])->createCommand()->queryAllByGroup();
 
 		$caseSequence = 'CASE';
-		foreach ($fields as &$fieldSequence) {
-			$fieldId = $fieldsAll[$fieldSequence[0]] ?? null;
-			if (!$fieldId) {
-				$this->log("[Warning] field not exists in Users {$fieldSequence[0]}");
-				continue;
-			}
-			$fieldSequence['fieldid'] = $fieldId;
-			$fieldIdList[] = $fieldId;
-			$caseSequence .= " WHEN fieldid = {$db->quoteValue($fieldId)} THEN {$db->quoteValue($fieldSequence[1])}";
-		}
-		$caseSequence .= ' END';
 		$caseBlock = 'CASE';
 		foreach ($fields as $fieldSequence) {
-			if (empty($fieldSequence['fieldid'])) {
-				continue;
-			}
+			$fieldId = $fieldsAll[$fieldSequence[0]] ?? null;
 			$blockId = $blockAll[$fieldSequence[3]] ?? null;
-			if (!$blockId) {
-				$this->log("[Warning] block not exists in Users {$fieldSequence[3]}");
+			if (!$fieldId || !$blockId) {
+				$this->log("[Error] field or block not exists in Users {$fieldSequence[0]}:{$fieldSequence[3]}");
 				continue;
 			}
-			$caseBlock .= " WHEN fieldid = {$db->quoteValue($fieldSequence['fieldid'])} THEN {$db->quoteValue($blockId)}";
+			$fieldIdList[] = $fieldId;
+			$caseSequence .= " WHEN fieldid = {$db->quoteValue($fieldId)} THEN {$db->quoteValue($fieldSequence[1])}";
+			$caseBlock .= " WHEN fieldid = {$db->quoteValue($fieldId)} THEN {$db->quoteValue($blockId)}";
 		}
-		$caseBlock .= ' END';
+		$caseSequence .= ' END';
+		$caseBlock .= ' ELSE block END';
+
 		$db->createCommand()->update('vtiger_field', [
 			'sequence' => new yii\db\Expression($caseSequence),
 			'block' => new yii\db\Expression($caseBlock),
 		], ['fieldid' => $fieldIdList])->execute();
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+
+		// update sequence of blocks
+		$blocks = [
+			['LBL_USERLOGIN_ROLE', 1],
+			['LBL_CURRENCY_CONFIGURATION', 4],
+			['LBL_MORE_INFORMATION', 12],
+			['LBL_USER_ADV_OPTIONS', 7],
+			['LBL_CALENDAR_SETTINGS', 3],
+			['LBL_GLOBAL_SEARCH_SETTINGS', 10],
+			['LBL_USER_MAIL', 8],
+			['LBL_USER_INTEGRATION', 9],
+			['LBL_USER_GUI', 6],
+			['LBL_USER_AUTOMATION', 11],
+			['LBL_USER_CONTACT_INFORMATION', 2],
+			['LBL_USER_CONFIGURATION_WORKING_TIME', 5]
+		];
+		$blockIdList = [];
+		$case = ' CASE blockid ';
+		foreach ($blocks as $sequence) {
+			$blockId = $blockAll[$sequence[0]] ?? null;
+			if (!$blockId) {
+				$this->log("[Warning] block not exists in Users {$sequence[0]}");
+				continue;
+			}
+			$blockIdList[] = $blockId;
+			$case .= " WHEN {$db->quoteValue($blockId)} THEN {$db->quoteValue($sequence[1])}";
+		}
+		$case .= ' END';
+		$db->createCommand()->update('vtiger_blocks', ['sequence' => new yii\db\Expression($case)], ['blockid' => $blockIdList])
+			->execute();
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**
@@ -612,7 +635,7 @@ class YetiForceUpdate
 				}
 			}
 		}
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	private function removeField($fieldModel)
@@ -629,7 +652,7 @@ class YetiForceUpdate
 		}
 		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
 		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function renameField($fieldModel, string $newName, array $updateData = [])
@@ -710,12 +733,14 @@ class YetiForceUpdate
 	/**
 	 * Checks if exists value for field.
 	 *
-	 * @param mixed $fields
-	 * @param mixed $moduleName
-	 * @param mixed $fieldName
+	 * @param string $moduleName
+	 * @param string $fieldName
 	 */
 	private function isExistsValueForField($moduleName, $fieldName)
 	{
+		if ('Users' === $moduleName) {
+			return false;
+		}
 		$queryGenerator = new \App\QueryGenerator($moduleName);
 		$queryGenerator->permission = false;
 		$queryGenerator->setStateCondition('All');
@@ -732,7 +757,7 @@ class YetiForceUpdate
 	public function addFields($fields = [])
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
 		$tabIdSalesProcesses = \App\Module::getModuleId('SSalesProcesses');
 		$tabIdSingleOrders = \App\Module::getModuleId('SSingleOrders');
@@ -744,7 +769,7 @@ class YetiForceUpdate
 		if (empty($fields)) {
 			$fields = [
 				[\App\Module::getModuleId('Users'), 3039, 'secondary_email', 'vtiger_users', 2, 13, 'secondary_email', 'FL_SECONDARY_EMAIL', 0, 2, '', '100', 2, 468, 1, 'E~O', 1, 0, 'BAS', 1, 'Edit,Detail', 0, '', null, 0, 0, 0, 0,
-					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_USERLOGIN_ROLE', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_USERLOGIN_ROLE']],
+					'type' => $importerType->integer(10), 'blockLabel' => 'LBL_USER_CONTACT_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_USER_CONTACT_INFORMATION']],
 				[$tabIdFInvoiceProforma, 3013, 'addresslevel8b', 'u_yf_finvoiceproforma_address', 1, 1, 'addresslevel8b', 'AddressLevel8', 0, 2, '', '255', 1, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
 					'type' => $importerType->stringType(255), 'blockLabel' => 'LBL_ADDRESS_SHIPPING', 'picklistValues' => [], 'relatedModules' => [], 'blockData' => ['label' => 'LBL_ADDRESS_SHIPPING']],
 				[$tabIdFInvoiceProforma, 3014, 'localnumberb', 'u_yf_finvoiceproforma_address', 1, 1, 'localnumberb', 'Local number', 0, 2, '', '50', 2, 467, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0,
@@ -977,7 +1002,7 @@ class YetiForceUpdate
 				$fieldInstance->setRelatedModules($field['relatedModules']);
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -1009,13 +1034,13 @@ class YetiForceUpdate
 			$data = array_combine($columnName, $field['value']);
 			\App\Db::getInstance()->createCommand()->insert('vtiger_settings_field', $data)->execute();
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	public function syncPicklist()
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
 		$newFieldName = 'payment_methods';
 		$fieldModel = Vtiger_Field_Model::init('Vtiger', ['uitype' => 16], $newFieldName);
@@ -1044,13 +1069,13 @@ class YetiForceUpdate
 				}
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function setRelations()
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$ralations = [
 			['type' => 'add', 'data' => [628, 'Contacts', 'SSingleOrders', 'getDependentsList', 13, 'SSingleOrders', 0, '', 0, 0, 0, 'RelatedTab', 'contactid']],
@@ -1101,7 +1126,7 @@ class YetiForceUpdate
 				], $where)->execute();
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
@@ -1110,7 +1135,7 @@ class YetiForceUpdate
 	public function addWorflows()
 	{
 		$start = microtime(true);
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s'));
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		require_once 'modules/com_vtiger_workflow/VTWorkflowManager.php';
 		require_once 'modules/com_vtiger_workflow/VTTaskManager.php';
 		$workflowManager = new VTWorkflowManager();
@@ -1159,7 +1184,7 @@ class YetiForceUpdate
 				$this->log("[Error] {$e->getMessage()} in {$e->getTraceAsString()}");
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function actionMapp()
@@ -1205,7 +1230,7 @@ class YetiForceUpdate
 				}
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function settingMenu()
@@ -1254,13 +1279,19 @@ class YetiForceUpdate
 				$this->log("[Info] Update setting menu: {$link}");
 			}
 		}
-		$this->log(__METHOD__ . '| ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function createConfigFiles()
 	{
 		\App\Cache::resetOpcache();
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
+		$plugins = \App\Config::module('OSSMail', 'plugins', []);
+		if($plugins && !in_array('html5_notifier',$plugins)){
+			$plugins[] = 'html5_notifier';
+			\App\Config::set('module', 'OSSMail', 'plugins', $plugins);
+		}
+
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
@@ -1327,7 +1358,7 @@ class YetiForceUpdate
 		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . '"><span class="fas fa-home mr-2"></span>' . \App\Language::translate('LBL_HOME') . '<a>
 		</div></div></div></div>';
 
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 		exit;
 	}
 
@@ -1343,7 +1374,7 @@ class YetiForceUpdate
 			$this->stopProcess();
 		}
 		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
-		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 		return true;
 	}
 }
