@@ -1285,12 +1285,11 @@ class YetiForceUpdate
 	private function createConfigFiles()
 	{
 		\App\Cache::resetOpcache();
-		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
-		$plugins = \App\Config::module('OSSMail', 'plugins', []);
-		if($plugins && !in_array('html5_notifier',$plugins)){
-			$plugins[] = 'html5_notifier';
-			\App\Config::set('module', 'OSSMail', 'plugins', $plugins);
-		}
+		\App\Config::set('module', 'OSSMail', 'plugins', ['thunderbird_labels', 'zipdownload', 'archive', 'authres_status', 'html5_notifier', 'markasjunk', 'enigma', 'yetiforce']);
+		\App\Config::set('module', 'OSSMail', 'des_key', \App\Encryption::generatePassword(24));
+		\App\Config::set('module', 'OSSMail', 'product_name', '');
+		\App\Config::set('module', 'OSSMail', 'skin', 'elastic');
+		\App\Config::set('module', 'OSSMail', 'skin_logo', '/images/null.png');
 
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
