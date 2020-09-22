@@ -42,6 +42,13 @@
     ],
     "5.3": [
         {
+            "label": "YetiForce CRM 5.3 SecurityFix v1",
+            "version": "1",
+            "fromVersion": "5.3.0",
+            "toVersion": "5.3.0",
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 5.x.x\/5.3.0_SecurityFix\/zip\/5.3.0_SecurityFix.zip"
+        },
+        {
             "label": "YetiForce CRM 5.3 Service Pack v4",
             "version": "4",
             "fromVersion": "5.3.0",
