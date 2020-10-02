@@ -1285,7 +1285,7 @@ class YetiForceUpdate
 	private function createConfigFiles()
 	{
 		\App\Cache::resetOpcache();
-		\App\Config::set('module', 'OSSMail', 'plugins', ['thunderbird_labels', 'zipdownload', 'archive', 'authres_status', 'html5_notifier', 'markasjunk', 'enigma', 'yetiforce']);
+		\App\Config::set('module', 'OSSMail', 'plugins', ['thunderbird_labels', 'zipdownload', 'archive', 'html5_notifier', 'enigma', 'advanced_search', 'contextmenu', 'yetiforce']);
 		\App\Config::set('module', 'OSSMail', 'des_key', \App\Encryption::generatePassword(24));
 		\App\Config::set('module', 'OSSMail', 'product_name', '');
 		\App\Config::set('module', 'OSSMail', 'skin', 'elastic');
