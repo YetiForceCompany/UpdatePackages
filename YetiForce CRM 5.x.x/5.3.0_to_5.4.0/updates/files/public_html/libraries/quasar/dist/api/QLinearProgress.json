@@ -84,6 +84,12 @@
       "type": "Boolean",
       "desc": "Applies a small standard border-radius for a squared shape of the component",
       "category": "style"
+    },
+    "instant-feedback": {
+      "type": "Boolean",
+      "desc": "No transition when model changes",
+      "category": "behavior",
+      "addedIn": "v1.11.2"
     }
   },
   "slots": {

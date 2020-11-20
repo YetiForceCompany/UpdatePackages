@@ -86,6 +86,18 @@
       "category": "virtual-scroll",
       "addedIn": "v1.2.0"
     },
+    "table-colspan": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "The number of columns in the table (you need this if you use table-layout: fixed)",
+      "examples": [
+        "table-colspan=\"12\""
+      ],
+      "category": "virtual-scroll|content",
+      "addedIn": "v1.13.0"
+    },
     "color": {
       "type": "String",
       "desc": "Color name for component from the Quasar Color Palette",
@@ -95,6 +107,54 @@
       ],
       "category": "style",
       "default": "grey-8"
+    },
+    "icon-first-page": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention for stepping to first page; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "addedIn": "v1.12.0"
+    },
+    "icon-prev-page": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention for stepping to previous page; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "addedIn": "v1.12.0"
+    },
+    "icon-next-page": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention for stepping to next page; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "addedIn": "v1.12.0"
+    },
+    "icon-last-page": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention for stepping to last page; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "addedIn": "v1.12.0"
     },
     "grid": {
       "type": "Boolean",
@@ -308,8 +368,26 @@
     },
     "hide-bottom": {
       "type": "Boolean",
-      "desc": "Hide table bottom layer",
+      "desc": "Hide table bottom layer regardless of what it has to display",
       "category": "content"
+    },
+    "hide-selected-banner": {
+      "type": "Boolean",
+      "desc": "Hide the selected rows banner (if any)",
+      "category": "content",
+      "addedIn": "v1.12.0"
+    },
+    "hide-no-data": {
+      "type": "Boolean",
+      "desc": "Hide the default no data bottom layer",
+      "category": "content",
+      "addedIn": "v1.12.0"
+    },
+    "hide-pagination": {
+      "type": "Boolean",
+      "desc": "Hide the pagination controls at the bottom",
+      "category": "content",
+      "addedIn": "v1.12.0"
     },
     "dark": {
       "type": "Boolean",
@@ -537,7 +615,7 @@
         "Array",
         "Object"
       ],
-      "desc": "CSS style to apply to the card (when in grid mode)",
+      "desc": "CSS style to apply to the card (when in grid mode) or container card (when not in grid mode)",
       "examples": [
         "background-color: #ff0000",
         ":card-style=\"{ backgroundColor: '#ff0000' }\""
@@ -550,12 +628,27 @@
         "Array",
         "Object"
       ],
-      "desc": "CSS classes to apply to the card (when in grid mode)",
+      "desc": "CSS classes to apply to the card (when in grid mode) or container card (when not in grid mode)",
       "examples": [
         "my-special-class",
         ":card-class=\"{ 'my-special-class': [Boolean condition] }\""
       ],
       "category": "style"
+    },
+    "title-class": {
+      "type": [
+        "String",
+        "Array",
+        "Object"
+      ],
+      "desc": "CSS classes to apply to the title (if using 'title' prop)",
+      "examples": [
+        "my-special-class",
+        "text-h1",
+        ":title-class=\"{ 'text-h1': [Boolean condition] }\""
+      ],
+      "category": "style",
+      "addedIn": "v1.13.2"
     },
     "filter": {
       "type": [
@@ -623,8 +716,7 @@
     },
     "pagination": {
       "type": "Object",
-      "desc": "Pagination object",
-      "sync": true,
+      "desc": "Pagination object; You can use the '.sync' modifier on it if you want to have access on the current pagination in your components; When not using the .sync modifier it simply initializes the pagination on first render",
       "definition": {
         "sortBy": {
           "type": "String",
@@ -752,19 +844,19 @@
       "scope": {
         "key": {
           "type": "Any",
-          "desc": "Row's key"
+          "desc": "Row/Item's key"
         },
         "row": {
           "type": "Object",
-          "desc": "Row object"
+          "desc": "Row/Item object"
         },
         "rowIndex": {
           "type": "Number",
-          "desc": "Row's index (0 based) in the filtered and sorted table"
+          "desc": "Row/Item's index (0 based) in the filtered and sorted table"
         },
         "pageIndex": {
           "type": "Number",
-          "desc": "Row's index (0 based) in the current page of the filtered and sorted table"
+          "desc": "Row/Item's index (0 based) in the current page of the filtered and sorted table"
         },
         "cols": {
           "type": "Object",
@@ -774,19 +866,57 @@
           "type": "Object",
           "desc": "Column mapping (key is column name, value is column object)"
         },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null,
+          "addedIn": "v1.14.0"
+        },
         "selected": {
           "type": "Boolean",
-          "desc": "Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "desc": "(Only if using selection) Is row/item selected? Can directly be assigned new Boolean value which changes selection state",
           "reactive": true
         },
         "expand": {
           "type": "Boolean",
-          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "desc": "Is row/item expanded? Can directly be assigned new Boolean value which changes expanded state",
           "reactive": true
         },
-        "__trClass": {
+        "color": {
           "type": "String",
-          "desc": "Internal prop passed down to QTr (if used)"
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         }
       }
     },
@@ -817,15 +947,57 @@
           "type": "Object",
           "desc": "Column mapping (key is column name, value is column object)"
         },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null,
+          "addedIn": "v1.14.0"
+        },
         "selected": {
           "type": "Boolean",
-          "desc": "Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
           "reactive": true
         },
         "expand": {
           "type": "Boolean",
           "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
           "reactive": true
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         },
         "__trClass": {
           "type": "String",
@@ -836,6 +1008,19 @@
     "body-cell": {
       "desc": "Slot to define how all body cells look like; Suggestion: QTd",
       "scope": {
+        "col": {
+          "type": "Object",
+          "desc": "Column definition for column associated with table cell"
+        },
+        "value": {
+          "type": "Any",
+          "desc": "Parsed/Formatted value of table cell"
+        },
+        "key": {
+          "type": "Any",
+          "desc": "Row's key",
+          "addedIn": "v1.14.0"
+        },
         "row": {
           "type": "Object",
           "desc": "Row object"
@@ -848,19 +1033,86 @@
           "type": "Number",
           "desc": "Row's index (0 based) in the current page of the filtered and sorted table"
         },
-        "col": {
+        "cols": {
           "type": "Object",
-          "desc": "Column definition for column associated with table cell"
+          "desc": "Column definitions",
+          "addedIn": "v1.14.0"
         },
-        "value": {
-          "type": "Any",
-          "desc": "Parsed/Formatted value of table cell"
+        "colsMap": {
+          "type": "Object",
+          "desc": "Column mapping (key is column name, value is column object)",
+          "addedIn": "v1.14.0"
+        },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null,
+          "addedIn": "v1.14.0"
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         }
       }
     },
     "body-cell-[name]": {
       "desc": "Slot to define how a specific column cell looks like; replace '[name]' with column name (from columns definition object)",
       "scope": {
+        "col": {
+          "type": "Object",
+          "desc": "Column definition for column associated with table cell"
+        },
+        "value": {
+          "type": "Any",
+          "desc": "Parsed/Formatted value of table cell"
+        },
+        "key": {
+          "type": "Any",
+          "desc": "Row's key",
+          "addedIn": "v1.14.0"
+        },
         "row": {
           "type": "Object",
           "desc": "Row object"
@@ -873,13 +1125,69 @@
           "type": "Number",
           "desc": "Row's index (0 based) in the current page of the filtered and sorted table"
         },
-        "col": {
+        "cols": {
           "type": "Object",
-          "desc": "Column definition for column associated with table cell"
+          "desc": "Column definitions",
+          "addedIn": "v1.14.0"
         },
-        "value": {
-          "type": "Any",
-          "desc": "Parsed/Formatted value of table cell"
+        "colsMap": {
+          "type": "Object",
+          "desc": "Column mapping (key is column name, value is column object)",
+          "addedIn": "v1.14.0"
+        },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null,
+          "addedIn": "v1.14.0"
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         }
       }
     },
@@ -911,6 +1219,45 @@
             }
           },
           "returns": null
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "__trClass": {
+          "type": "String",
+          "desc": "Internal prop passed down to QTr (if used)"
         },
         "header": {
           "type": "Boolean",
@@ -950,6 +1297,41 @@
             }
           },
           "returns": null
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         }
       }
     },
@@ -985,9 +1367,184 @@
             }
           },
           "returns": null
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true,
+          "addedIn": "v1.14.0"
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8",
+          "addedIn": "v1.14.0"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style",
+          "addedIn": "v1.14.0"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style",
+          "addedIn": "v1.14.0"
         }
       },
       "addedIn": "v1.1.1"
+    },
+    "body-selection": {
+      "desc": "Slot to define how body selection column looks like; Suggestion: QCheckbox",
+      "scope": {
+        "key": {
+          "type": "Any",
+          "desc": "Row's key"
+        },
+        "row": {
+          "type": "Object",
+          "desc": "Row object"
+        },
+        "rowIndex": {
+          "type": "Number",
+          "desc": "Row's index (0 based) in the filtered and sorted table"
+        },
+        "pageIndex": {
+          "type": "Number",
+          "desc": "Row's index (0 based) in the current page of the filtered and sorted table"
+        },
+        "cols": {
+          "type": "Object",
+          "desc": "Column definitions"
+        },
+        "colsMap": {
+          "type": "Object",
+          "desc": "Column mapping (key is column name, value is column object)"
+        },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style"
+        }
+      },
+      "addedIn": "v1.14.0"
+    },
+    "header-selection": {
+      "desc": "Slot to define how header selection column looks like (available only for multiple selection mode); Suggestion: QCheckbox",
+      "scope": {
+        "cols": {
+          "type": "Object",
+          "desc": "Column definitions"
+        },
+        "colsMap": {
+          "type": "Object",
+          "desc": "Column mapping (key is column name, value is column object)"
+        },
+        "sort": {
+          "type": "Function",
+          "desc": "Trigger a table sort",
+          "params": {
+            "col": {
+              "type": [
+                "String",
+                "Object"
+              ],
+              "desc": "Column name or column definition object",
+              "required": true,
+              "examples": [
+                "calories"
+              ]
+            }
+          },
+          "returns": null
+        },
+        "selected": {
+          "type": "Boolean",
+          "desc": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+          "reactive": true
+        },
+        "expand": {
+          "type": "Boolean",
+          "desc": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+          "reactive": true
+        },
+        "color": {
+          "type": "String",
+          "desc": "Color name for component from the Quasar Color Palette",
+          "examples": [
+            "primary",
+            "teal-10"
+          ],
+          "category": "style",
+          "default": "grey-8"
+        },
+        "dark": {
+          "type": "Boolean",
+          "desc": "Notify the component that the background is a dark color",
+          "category": "style"
+        },
+        "dense": {
+          "type": "Boolean",
+          "desc": "Dense mode; occupies less space",
+          "category": "style"
+        }
+      },
+      "addedIn": "v1.14.0"
     },
     "top-row": {
       "desc": "Slot to define how top extra row looks like",
@@ -1056,6 +1613,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1067,6 +1631,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1129,6 +1700,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1140,6 +1718,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1202,6 +1787,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1213,6 +1805,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1275,6 +1874,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1286,6 +1892,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1348,6 +1961,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1359,6 +1979,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1421,6 +2048,13 @@
           "type": "Boolean",
           "desc": "Are we on last page?"
         },
+        "firstPage": {
+          "type": "Function",
+          "desc": "Navigates to first page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
+        },
         "prevPage": {
           "type": "Function",
           "desc": "Navigates to previous page, if available",
@@ -1432,6 +2066,13 @@
           "desc": "Navigates to next page, if available",
           "params": null,
           "returns": null
+        },
+        "lastPage": {
+          "type": "Function",
+          "desc": "Navigates to last page",
+          "params": null,
+          "returns": null,
+          "addedIn": "v1.12.0"
         },
         "inFullscreen": {
           "type": "Boolean",
@@ -1477,6 +2118,11 @@
         "row": {
           "type": "Object",
           "desc": "The row upon which user has clicked/tapped"
+        },
+        "index": {
+          "type": "Number",
+          "desc": "Index of the row in the current page",
+          "addedIn": "v1.13.0"
         }
       },
       "addedIn": "v1.2.6"
@@ -1492,6 +2138,11 @@
         "row": {
           "type": "Object",
           "desc": "The row upon which user has double clicked/tapped"
+        },
+        "index": {
+          "type": "Number",
+          "desc": "Index of the row in the current page",
+          "addedIn": "v1.13.0"
         }
       },
       "addedIn": "v1.5.10"
@@ -1625,6 +2276,12 @@
             "added": {
               "type": "Boolean",
               "desc": "Were the rows added to selection (true) or removed from selection (false)"
+            },
+            "evt": {
+              "type": "Object",
+              "desc": "JS event object",
+              "required": true,
+              "addedIn": "v1.11.2"
             }
           }
         }
@@ -1874,11 +2531,19 @@
         }
       }
     },
+    "firstPage": {
+      "desc": "Navigates to first page",
+      "addedIn": "v1.12.0"
+    },
     "prevPage": {
       "desc": "Navigates to previous page, if available"
     },
     "nextPage": {
       "desc": "Navigates to next page, if available"
+    },
+    "lastPage": {
+      "desc": "Navigates to last page",
+      "addedIn": "v1.12.0"
     },
     "isRowSelected": {
       "desc": "Determine if a row has been selected by user",

@@ -8,6 +8,7 @@
       "desc": "All native events are being propagated (you don't need the '.native' modifier)"
     }
   },
+  "addedIn": "v1.4.0",
   "props": {
     "tag": {
       "type": "String",
@@ -31,6 +32,16 @@
       "desc": "Pre-render content on server side if using SSR (use it to pre-render above the fold content)",
       "category": "behavior",
       "addedIn": "v1.9.5"
+    },
+    "root": {
+      "type": "Element",
+      "desc": "[Intersection API root prop] Lets you define an alternative to the viewport as your root (through its DOM element); It is important to keep in mind that root needs to be an ancestor of the observed element",
+      "examples": [
+        "$refs.myTable.$el",
+        "getElementById(\"myTable\")"
+      ],
+      "category": "behavior",
+      "addedIn": "v1.14.2"
     },
     "margin": {
       "type": "String",

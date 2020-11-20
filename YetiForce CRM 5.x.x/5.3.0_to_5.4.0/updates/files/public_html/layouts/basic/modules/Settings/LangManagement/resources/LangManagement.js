@@ -17,13 +17,9 @@ var Settings_Index_Js = {
 					enabled: true
 				}
 			});
-			app.showModalWindow(
-				null,
-				'index.php?module=YetiForce&parent=Settings&view=DownloadLanguageModal',
-				() => {
-					progressIndicatorElement.progressIndicator({ mode: 'hide' });
-				}
-			);
+			app.showModalWindow(null, 'index.php?module=YetiForce&parent=Settings&view=DownloadLanguageModal', () => {
+				progressIndicatorElement.progressIndicator({ mode: 'hide' });
+			});
 		});
 		$('.AddNewLangMondal .btn-primary').on('click', Settings_Index_Js.AddLangMondal);
 		$('.AddNewTranslationMondal .btn-primary').on('click', Settings_Index_Js.AddTranslationMondal);
@@ -49,7 +45,7 @@ var Settings_Index_Js = {
 				action: 'DownloadLanguage',
 				prefix: $(e.target).data('prefix')
 			}).done(function (data) {
-				Vtiger_Helper_Js.showPnotify({
+				app.showNotify({
 					text: data['result']['message'],
 					type: data['result']['type']
 				});
@@ -96,13 +92,13 @@ var Settings_Index_Js = {
 		});
 	},
 	initEditLang: function (position) {
-		App.Fields.Picklist.changeSelectElementView(
-			$('.LangManagement .layoutContent .active .select2'),
-			'select2'
-		).on('change', function (e) {
-			e = jQuery(this).closest('.active');
-			Settings_Index_Js.LoadEditLang(e);
-		});
+		App.Fields.Picklist.changeSelectElementView($('.LangManagement .layoutContent .active .select2'), 'select2').on(
+			'change',
+			function (e) {
+				e = jQuery(this).closest('.active');
+				Settings_Index_Js.LoadEditLang(e);
+			}
+		);
 		$('#edit_lang .translation').on('change', function (e) {
 			Settings_Index_Js.changeTranslation(e, position);
 		});
@@ -110,10 +106,7 @@ var Settings_Index_Js = {
 		$('#edit_lang .js-delete').on('click', function (e) {
 			Settings_Index_Js.deleteTranslation(e, position);
 		});
-		$('.LangManagement ' + position + ' .show_differences').on(
-			'click',
-			Settings_Index_Js.ShowDifferences
-		);
+		$('.LangManagement ' + position + ' .show_differences').on('click', Settings_Index_Js.ShowDifferences);
 		$.extend($.fn.dataTable.defaults, {
 			searching: true,
 			ordering: false,
@@ -232,7 +225,12 @@ var Settings_Index_Js = {
 			$(e.currentTarget).popover(makeSureOptions).popover('show');
 			$('.popover_block .setDefaultItem').on('click', function () {
 				$(e.currentTarget).popover('hide');
-				Settings_Index_Js.setAsDefaultLang(element, e);
+				let saveEvent = Settings_Index_Js.registerSaveEvent('setAsDefault', {
+					prefix: element.data('prefix')
+				});
+				if (saveEvent.resp) {
+					window.location.reload();
+				}
 			});
 			$('.popover_block .cancel').on('click', function () {
 				$(e.currentTarget).popover('hide');
@@ -294,32 +292,7 @@ var Settings_Index_Js = {
 		Settings_Index_Js.registerSaveEvent('delete', { prefix: closestTrElement.data('prefix') });
 		closestTrElement.hide();
 	},
-	setAsDefaultLang: function (closestTrElement, e) {
-		var SaveEvent = Settings_Index_Js.registerSaveEvent('setAsDefault', {
-			prefix: closestTrElement.data('prefix')
-		});
-		$(e.currentTarget).closest('td').find('#deleteItemC').remove();
-		$(e.currentTarget).remove();
-		var prefix = SaveEvent.result['prefixOld'];
-		var tbodyElement = closestTrElement.closest('tbody');
-		let OldTrDefaultLang = tbodyElement.find('tr[data-prefix="' + prefix + '"]');
-		let buttonDelete = '';
-		if (!OldTrDefaultLang.data('isDefault')) {
-			buttonDelete =
-				'<button class="btn btn-danger btn-sm marginLeftZero" data-toggle="confirmation" id="deleteItemC">' +
-				'<span class="fas fa-trash fa-xs"></span>' +
-				app.vtranslate('JS_DELETE') +
-				'</button>';
-		}
-		OldTrDefaultLang.find('td:last').append(
-			buttonDelete +
-				'<button class="btn btn-success btn-sm marginLeftZero" data-toggle="confirmation" id="setAsDefault">' +
-				'<span class="fas fa-check fa-xs"></span>' +
-				app.vtranslate('JS_DEFAULT') +
-				'</button>'
-		);
-		Settings_Index_Js.initEvant(OldTrDefaultLang);
-	},
+
 	registerSaveEvent: function (mode, data) {
 		var response = '';
 		var resp = '';
@@ -341,7 +314,7 @@ var Settings_Index_Js = {
 			if (response['success'] == true) {
 				params.type = 'info';
 			}
-			Vtiger_Helper_Js.showPnotify(params);
+			app.showNotify(params);
 			resp = response['success'];
 		});
 		return { resp: resp, params: params.data.params, result: response };

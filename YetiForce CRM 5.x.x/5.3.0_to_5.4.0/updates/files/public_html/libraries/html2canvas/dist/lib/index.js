@@ -62,7 +62,9 @@ var html2canvas = function (element, options) {
     return renderElement(element, options);
 };
 exports.default = html2canvas;
-cache_storage_1.CacheStorage.setContext(window);
+if (typeof window !== 'undefined') {
+    cache_storage_1.CacheStorage.setContext(window);
+}
 var renderElement = function (element, opts) { return __awaiter(_this, void 0, void 0, function () {
     var ownerDocument, defaultView, instanceName, _a, width, height, left, top, defaultResourceOptions, resourceOptions, defaultOptions, options, windowBounds, documentCloner, clonedElement, container, documentBackgroundColor, bodyBackgroundColor, bgColor, defaultBackgroundColor, backgroundColor, renderOptions, canvas, renderer, root, renderer;
     return __generator(this, function (_b) {

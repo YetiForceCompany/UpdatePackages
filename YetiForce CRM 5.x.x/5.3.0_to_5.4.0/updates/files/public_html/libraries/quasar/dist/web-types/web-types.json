@@ -2,7 +2,7 @@
   "$schema": "",
   "framework": "vue",
   "name": "quasar",
-  "version": "1.11.1",
+  "version": "1.14.5",
   "contributions": {
     "html": {
       "types-syntax": "typescript",
@@ -605,6 +605,16 @@
               "type": "boolean"
             },
             {
+              "name": "append",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Equivalent to Vue Router <router-link> 'append' property",
+              "doc-url": "https://v1.quasar.dev/vue-components/button-dropdown",
+              "type": "boolean"
+            },
+            {
               "name": "label",
               "value": {
                 "kind": "expression",
@@ -867,6 +877,16 @@
               "type": "boolean"
             },
             {
+              "name": "no-icon-animation",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Disables the rotation of the dropdown icon when state is toggled",
+              "doc-url": "https://v1.quasar.dev/vue-components/button-dropdown",
+              "type": "boolean"
+            },
+            {
               "name": "content-style",
               "value": {
                 "kind": "expression",
@@ -905,6 +925,16 @@
               "type": "boolean"
             },
             {
+              "name": "no-route-dismiss",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Changing route app won't dismiss the popup; No need to set it if 'persistent' prop is also set",
+              "doc-url": "https://v1.quasar.dev/vue-components/button-dropdown",
+              "type": "boolean"
+            },
+            {
               "name": "auto-close",
               "value": {
                 "kind": "expression",
@@ -918,7 +948,7 @@
               "name": "menu-anchor",
               "value": {
                 "kind": "expression",
-                "type": "'top left'|'top middle'|'top right'|'center left'|'center middle'|'center right'|'bottom left'|'bottom center'|'bottom right'"
+                "type": "'top left'|'top middle'|'top right'|'center left'|'center middle'|'center right'|'bottom left'|'bottom middle'|'bottom right'"
               },
               "description": "Two values setting the starting position or anchor point of the menu relative to its target\n\nExamples:\ntop left\nbottom right",
               "doc-url": "https://v1.quasar.dev/vue-components/button-dropdown",
@@ -928,7 +958,7 @@
               "name": "menu-self",
               "value": {
                 "kind": "expression",
-                "type": "'top left'|'top middle'|'top right'|'center left'|'center middle'|'center right'|'bottom left'|'bottom center'|'bottom right'"
+                "type": "'top left'|'top middle'|'top right'|'center left'|'center middle'|'center right'|'bottom left'|'bottom middle'|'bottom right'"
               },
               "description": "Two values setting the menu's own position relative to its target\n\nExamples:\ntop left\nbottom right",
               "doc-url": "https://v1.quasar.dev/vue-components/button-dropdown",
@@ -1303,6 +1333,15 @@
               "doc-url": "https://v1.quasar.dev/vue-components/button-toggle"
             },
             {
+              "name": "padding",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Apply custom padding (vertical [horizontal]); Size in CSS units, including unit name or standard size name (none|xs|sm|md|lg|xl); Also removes the min width and height when set\n\nExamples:\n16px\n10px 5px\n2rem\nxs\nmd lg\n2px 2px 5px 7px",
+              "doc-url": "https://v1.quasar.dev/vue-components/button-toggle"
+            },
+            {
               "name": "no-caps",
               "value": {
                 "kind": "expression",
@@ -1403,7 +1442,13 @@
               "doc-url": "https://v1.quasar.dev/vue-components/button-toggle"
             }
           ],
-          "slots": [],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Suggestions: QTooltip, QBadge",
+              "doc-url": "https://v1.quasar.dev/vue-components/button-toggle"
+            }
+          ],
           "description": "QBtnToggle - Quasar component",
           "doc-url": "https://v1.quasar.dev/vue-components/button-toggle",
           "vue-model": {
@@ -1463,6 +1508,16 @@
                 "type": "boolean"
               },
               "description": "Equivalent to Vue Router <router-link> 'replace' property",
+              "doc-url": "https://v1.quasar.dev/vue-components/button",
+              "type": "boolean"
+            },
+            {
+              "name": "append",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Equivalent to Vue Router <router-link> 'append' property",
               "doc-url": "https://v1.quasar.dev/vue-components/button",
               "type": "boolean"
             },
@@ -1719,6 +1774,27 @@
               "type": "boolean"
             }
           ],
+          "events": [
+            {
+              "name": "click",
+              "arguments": [
+                {
+                  "name": "evt",
+                  "type": "object",
+                  "description": "JS event object; If you want to cancel navigation set synchronously 'evt.navigate' to false",
+                  "doc-url": "https://v1.quasar.dev/vue-components/button"
+                },
+                {
+                  "name": "navigateFn",
+                  "type": "Function",
+                  "description": "When you need to control the time at which the button should trigger the route navigation then set 'evt.navigate' to false and call this function; Useful if you have async work to be done before the actual route navigation",
+                  "doc-url": "https://v1.quasar.dev/vue-components/button"
+                }
+              ],
+              "description": "Emitted when component is clicked (activated)",
+              "doc-url": "https://v1.quasar.dev/vue-components/button"
+            }
+          ],
           "slots": [
             {
               "name": "default",
@@ -1911,7 +1987,7 @@
                 "kind": "expression",
                 "type": "any"
               },
-              "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"panelName\"",
+              "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive.\n\nExamples:\nv-model=\"panelName\"",
               "doc-url": "https://v1.quasar.dev/vue-components/carousel"
             },
             {
@@ -2107,6 +2183,15 @@
               "doc-url": "https://v1.quasar.dev/vue-components/carousel"
             },
             {
+              "name": "navigation-active-icon",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention for the active (current slide) navigation icon; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+            },
+            {
               "name": "thumbnails",
               "value": {
                 "kind": "expression",
@@ -2179,6 +2264,49 @@
             {
               "name": "control",
               "description": "Slot specific for QCarouselControl",
+              "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+            },
+            {
+              "name": "navigation-icon",
+              "vue-properties": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The 0-based index of corresponding slide",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                },
+                {
+                  "name": "maxIndex",
+                  "type": "number",
+                  "description": "The available number of slides",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                },
+                {
+                  "name": "name",
+                  "type": "any",
+                  "description": "The name of the corresponding slide",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                },
+                {
+                  "name": "active",
+                  "type": "boolean",
+                  "description": "Is this the current slide?",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                },
+                {
+                  "name": "btnProps",
+                  "type": "object",
+                  "description": "Default QBtn props that can be binded to your own QBtn",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                },
+                {
+                  "name": "onClick",
+                  "type": "Function",
+                  "description": "Default trigger when clicked/tapped on",
+                  "doc-url": "https://v1.quasar.dev/vue-components/carousel"
+                }
+              ],
+              "description": "Slot for navigation icon/btn; Suggestion: QBtn",
               "doc-url": "https://v1.quasar.dev/vue-components/carousel"
             }
           ],
@@ -2496,6 +2624,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/checkbox"
             },
             {
+              "name": "toggle-order",
+              "value": {
+                "kind": "expression",
+                "type": "'tf'|'ft'"
+              },
+              "description": "Determines toggle order of the two states ('t' stands for state of true, 'f' for state of false); If 'toggle-indeterminate' is true, then the order is: indet -> first state -> second state -> indet (and repeat), otherwise: indet -> first state -> second state -> first state -> second state -> ...",
+              "doc-url": "https://v1.quasar.dev/vue-components/checkbox",
+              "default": "\"tf\""
+            },
+            {
               "name": "toggle-indeterminate",
               "value": {
                 "kind": "expression",
@@ -2592,6 +2730,12 @@
                   "type": "any",
                   "description": "New model value",
                   "doc-url": "https://v1.quasar.dev/vue-components/checkbox"
+                },
+                {
+                  "name": "evt",
+                  "type": "object",
+                  "description": "JS event object",
+                  "doc-url": "https://v1.quasar.dev/vue-components/checkbox"
                 }
               ],
               "description": "Emitted when the component needs to change the model; Is also used by v-model",
@@ -2669,6 +2813,15 @@
             },
             {
               "name": "icon-right",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/chip"
+            },
+            {
+              "name": "icon-remove",
               "value": {
                 "kind": "expression",
                 "type": "string"
@@ -3195,9 +3348,9 @@
               "name": "value",
               "value": {
                 "kind": "expression",
-                "type": "string"
+                "type": "string|any[]|object"
               },
-              "description": "Date of the component; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"myDate\"",
+              "description": "Date(s) of the component; Must be Array if using 'multiple' prop; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"myDate\"\nv-model=\"[myDate1, myDate2]\"\nv-model=\"[{ from: myDateFrom, to: myDateTo }]\"\nv-model=\"[myDate1, { from: myDateFrom, to: myDateTo }, myDate2]\"",
               "doc-url": "https://v1.quasar.dev/vue-components/date",
               "required": true
             },
@@ -3337,22 +3490,12 @@
               "doc-url": "https://v1.quasar.dev/vue-components/date"
             },
             {
-              "name": "emit-immediately",
-              "value": {
-                "kind": "expression",
-                "type": "boolean"
-              },
-              "description": "Emit model when user browses month and year too",
-              "doc-url": "https://v1.quasar.dev/vue-components/date",
-              "type": "boolean"
-            },
-            {
               "name": "default-year-month",
               "value": {
                 "kind": "expression",
                 "type": "string"
               },
-              "description": "The default year and month to display (in YYYY/MM format) when model is unfilled (undefined or null)\n\nExamples:\n1986/02",
+              "description": "The default year and month to display (in YYYY/MM format) when model is unfilled (undefined or null); Please ensure it is within the navigation min/max year-month (if using them)\n\nExamples:\n1986/02",
               "doc-url": "https://v1.quasar.dev/vue-components/date"
             },
             {
@@ -3364,6 +3507,16 @@
               "description": "The view which will be displayed by default",
               "doc-url": "https://v1.quasar.dev/vue-components/date",
               "default": "\"Calendar\""
+            },
+            {
+              "name": "years-in-month-view",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Show the years selector in months view",
+              "doc-url": "https://v1.quasar.dev/vue-components/date",
+              "type": "boolean"
             },
             {
               "name": "events",
@@ -3389,8 +3542,36 @@
                 "kind": "expression",
                 "type": "any[]|Function"
               },
-              "description": "Optionally configure the days that are selectable; If using a function, it receives the date as a String and must return a Boolean (is date acceptable or not); If using a function then for best performance, reference it from your scope and do not define it inline\n\nExamples:\n:options=\"['2018/11/05', '2018/11/12', '2018/11/19', '2018/11/26' ]\"\n:options=\"date => date[9] % 3 === 0\"\n:options=\"date => date >= '2018/11/03' && date <= '2018/11/15'\"",
+              "description": "Optionally configure the days that are selectable; If using a function, it receives the date as a String and must return a Boolean (is date acceptable or not); If using a function then for best performance, reference it from your scope and do not define it inline; Incompatible with 'range' prop\n\nExamples:\n:options=\"['2018/11/05', '2018/11/12', '2018/11/19', '2018/11/26' ]\"\n:options=\"date => date[9] % 3 === 0\"\n:options=\"date => date >= '2018/11/03' && date <= '2018/11/15'\"",
               "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "navigation-min-year-month",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Lock user from navigating below a specific year+month (in YYYY/MM format); This prop is not used to correct the model; You might want to also use 'default-year-month' prop\n\nExamples:\n2020/07",
+              "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "navigation-max-year-month",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Lock user from navigating above a specific year+month (in YYYY/MM format); This prop is not used to correct the model; You might want to also use 'default-year-month' prop\n\nExamples:\n2020/10",
+              "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "no-unset",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Remove ability to unselect a date; It does not apply to selecting a range over already selected dates",
+              "doc-url": "https://v1.quasar.dev/vue-components/date",
+              "type": "boolean"
             },
             {
               "name": "first-day-of-week",
@@ -3421,6 +3602,36 @@
               "description": "Don’t display the header",
               "doc-url": "https://v1.quasar.dev/vue-components/date",
               "type": "boolean"
+            },
+            {
+              "name": "multiple",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Allow multiple selection; Model must be Array",
+              "doc-url": "https://v1.quasar.dev/vue-components/date",
+              "type": "boolean"
+            },
+            {
+              "name": "range",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Allow range selection; Partial compatibility with 'options' prop: selected ranges might also include 'unselectable' days",
+              "doc-url": "https://v1.quasar.dev/vue-components/date",
+              "type": "boolean"
+            },
+            {
+              "name": "emit-immediately",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Emit model when user browses month and year too; ONLY for single selection (non-multiple, non-range)",
+              "doc-url": "https://v1.quasar.dev/vue-components/date",
+              "type": "boolean"
             }
           ],
           "events": [
@@ -3429,13 +3640,13 @@
               "arguments": [
                 {
                   "name": "value",
-                  "type": "string",
+                  "type": "string|any[]|object",
                   "description": "New model value",
                   "doc-url": "https://v1.quasar.dev/vue-components/date"
                 },
                 {
                   "name": "reason",
-                  "type": "'year'|'month'|'day'|'today'|'locale'|'mask'",
+                  "type": "'add-day'|'remove-day'|'add-range'|'remove-range'|'mask'|'locale'|'year'|'month'",
                   "description": "Reason of the user interaction (what was picked)",
                   "doc-url": "https://v1.quasar.dev/vue-components/date"
                 },
@@ -3447,6 +3658,45 @@
                 }
               ],
               "description": "Emitted when the component needs to change the model; Is also used by v-model",
+              "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "navigation",
+              "arguments": [
+                {
+                  "name": "view",
+                  "type": "object",
+                  "description": "Definition of the current view (year, month)",
+                  "doc-url": "https://v1.quasar.dev/vue-components/date"
+                }
+              ],
+              "description": "Emitted when user navigates to a different month or year (and even when the model changes from an outside source)",
+              "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "range-start",
+              "arguments": [
+                {
+                  "name": "from",
+                  "type": "object",
+                  "description": "Definition of date from where the range begins",
+                  "doc-url": "https://v1.quasar.dev/vue-components/date"
+                }
+              ],
+              "description": "User has started a range selection",
+              "doc-url": "https://v1.quasar.dev/vue-components/date"
+            },
+            {
+              "name": "range-end",
+              "arguments": [
+                {
+                  "name": "range",
+                  "type": "object",
+                  "description": "Definition of the range",
+                  "doc-url": "https://v1.quasar.dev/vue-components/date"
+                }
+              ],
+              "description": "User has ended a range selection",
               "doc-url": "https://v1.quasar.dev/vue-components/date"
             }
           ],
@@ -3874,7 +4124,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Does not auto-closes when app's route changes",
+              "description": "Prevents drawer from auto-closing when app's route changes",
               "doc-url": "https://v1.quasar.dev/layout/drawer",
               "type": "boolean"
             },
@@ -3884,7 +4134,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Force drawer to be shown on screen on initial render if the layout width is above breakpoint, regardless of v-model; This is the default behavior when SSR is taken over by client on initial render",
+              "description": "Forces drawer to be shown on screen on initial render if the layout width is above breakpoint, regardless of v-model; This is the default behavior when SSR is taken over by client on initial render",
               "doc-url": "https://v1.quasar.dev/layout/drawer",
               "type": "boolean"
             },
@@ -3932,7 +4182,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Disable the default behavior where drawer backdrop can be swiped",
+              "description": "Disables the default behavior where drawer backdrop can be swiped",
               "doc-url": "https://v1.quasar.dev/layout/drawer",
               "type": "boolean"
             }
@@ -4308,6 +4558,15 @@
               "description": "Toolbar buttons are rendered \"rounded\"",
               "doc-url": "https://v1.quasar.dev/vue-components/editor",
               "type": "boolean"
+            },
+            {
+              "name": "paragraph-tag",
+              "value": {
+                "kind": "expression",
+                "type": "'div'|'p'"
+              },
+              "description": "Paragraph tag to be used",
+              "doc-url": "https://v1.quasar.dev/vue-components/editor"
             },
             {
               "name": "content-style",
@@ -4919,6 +5178,15 @@
               "type": "boolean"
             },
             {
+              "name": "tabindex",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "Tabindex HTML attribute value\n\nExamples:\n0\n100",
+              "doc-url": "https://v1.quasar.dev/vue-components/floating-action-button"
+            },
+            {
               "name": "value",
               "value": {
                 "kind": "expression",
@@ -5244,6 +5512,15 @@
               "type": "boolean"
             },
             {
+              "name": "tabindex",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "Tabindex HTML attribute value\n\nExamples:\n0\n100",
+              "doc-url": "https://v1.quasar.dev/vue-components/floating-action-button"
+            },
+            {
               "name": "icon",
               "value": {
                 "kind": "expression",
@@ -5532,6 +5809,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/field"
             },
             {
+              "name": "label-slot",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+              "doc-url": "https://v1.quasar.dev/vue-components/field",
+              "type": "boolean"
+            },
+            {
               "name": "bottom-slots",
               "value": {
                 "kind": "expression",
@@ -5547,7 +5834,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+              "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
               "doc-url": "https://v1.quasar.dev/vue-components/field",
               "type": "boolean"
             },
@@ -5740,6 +6027,11 @@
               "doc-url": "https://v1.quasar.dev/vue-components/field"
             },
             {
+              "name": "label",
+              "description": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
+              "doc-url": "https://v1.quasar.dev/vue-components/field"
+            },
+            {
               "name": "error",
               "description": "Slot for errors; Enabled only if 'bottom-slots' prop is used; Suggestion: <div>",
               "doc-url": "https://v1.quasar.dev/vue-components/field"
@@ -5848,10 +6140,19 @@
               "doc-url": "https://v1.quasar.dev/vue-components/file"
             },
             {
+              "name": "capture",
+              "value": {
+                "kind": "expression",
+                "type": "'user'|'environment'"
+              },
+              "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element",
+              "doc-url": "https://v1.quasar.dev/vue-components/file"
+            },
+            {
               "name": "max-file-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of individual file in bytes\n\nExamples:\n1024\n1048576",
               "doc-url": "https://v1.quasar.dev/vue-components/file"
@@ -5860,9 +6161,18 @@
               "name": "max-total-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of all files combined in bytes\n\nExamples:\n1024\n1048576",
+              "doc-url": "https://v1.quasar.dev/vue-components/file"
+            },
+            {
+              "name": "max-files",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "Maximum number of files to contain\n\nExamples:\n:max-files=\"5\"\n10",
               "doc-url": "https://v1.quasar.dev/vue-components/file"
             },
             {
@@ -6093,6 +6403,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/file"
             },
             {
+              "name": "label-slot",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+              "doc-url": "https://v1.quasar.dev/vue-components/file",
+              "type": "boolean"
+            },
+            {
               "name": "bottom-slots",
               "value": {
                 "kind": "expression",
@@ -6108,7 +6428,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+              "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
               "doc-url": "https://v1.quasar.dev/vue-components/file",
               "type": "boolean"
             },
@@ -6212,13 +6532,14 @@
               "required": true
             },
             {
-              "name": "max-files",
+              "name": "append",
               "value": {
                 "kind": "expression",
-                "type": "number|string"
+                "type": "boolean"
               },
-              "description": "Maximum number of files to contain\n\nExamples:\n:max-files=\"5\"\n10",
-              "doc-url": "https://v1.quasar.dev/vue-components/file"
+              "description": "Append file(s) to current model rather than replacing them; Has effect only when using 'multiple' mode",
+              "doc-url": "https://v1.quasar.dev/vue-components/file",
+              "type": "boolean"
             },
             {
               "name": "display-value",
@@ -6278,6 +6599,19 @@
           ],
           "events": [
             {
+              "name": "rejected",
+              "arguments": [
+                {
+                  "name": "rejectedEntries",
+                  "type": "any[]",
+                  "description": "Array of { failedPropValidation: string, file: File } Objects for files that do not pass the validation",
+                  "doc-url": "https://v1.quasar.dev/vue-components/file"
+                }
+              ],
+              "description": "Emitted after files are picked and some do not pass the validation props (accept, max-file-size, max-total-size, filter, etc)",
+              "doc-url": "https://v1.quasar.dev/vue-components/file"
+            },
+            {
               "name": "clear",
               "arguments": [
                 {
@@ -6328,6 +6662,11 @@
             {
               "name": "after",
               "description": "Append outer field; Suggestions: QIcon, QBtn",
+              "doc-url": "https://v1.quasar.dev/vue-components/file"
+            },
+            {
+              "name": "label",
+              "description": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
               "doc-url": "https://v1.quasar.dev/vue-components/file"
             },
             {
@@ -7003,6 +7342,15 @@
               "default": "100"
             },
             {
+              "name": "initial-index",
+              "value": {
+                "kind": "expression",
+                "type": "number"
+              },
+              "description": "Initialize the pagination index (used for the @load event)\n\nExamples:\n2\n3",
+              "doc-url": "https://v1.quasar.dev/vue-components/infinite-scroll"
+            },
+            {
               "name": "scroll-target",
               "value": {
                 "kind": "expression",
@@ -7418,6 +7766,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/input"
             },
             {
+              "name": "label-slot",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+              "doc-url": "https://v1.quasar.dev/vue-components/input",
+              "type": "boolean"
+            },
+            {
               "name": "bottom-slots",
               "value": {
                 "kind": "expression",
@@ -7433,7 +7791,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+              "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
               "doc-url": "https://v1.quasar.dev/vue-components/input",
               "type": "boolean"
             },
@@ -7683,6 +8041,11 @@
               "doc-url": "https://v1.quasar.dev/vue-components/input"
             },
             {
+              "name": "label",
+              "description": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
+              "doc-url": "https://v1.quasar.dev/vue-components/input"
+            },
+            {
               "name": "error",
               "description": "Slot for errors; Enabled only if 'bottom-slots' prop is used; Suggestion: <div>",
               "doc-url": "https://v1.quasar.dev/vue-components/input"
@@ -7746,6 +8109,15 @@
               "description": "Pre-render content on server side if using SSR (use it to pre-render above the fold content)",
               "doc-url": "https://v1.quasar.dev/vue-components/intersection",
               "type": "boolean"
+            },
+            {
+              "name": "root",
+              "value": {
+                "kind": "expression",
+                "type": "Element"
+              },
+              "description": "[Intersection API root prop] Lets you define an alternative to the viewport as your root (through its DOM element); It is important to keep in mind that root needs to be an ancestor of the observed element\n\nExamples:\n$refs.myTable.$el\ngetElementById(\"myTable\")",
+              "doc-url": "https://v1.quasar.dev/vue-components/intersection"
             },
             {
               "name": "margin",
@@ -8589,6 +8961,16 @@
               "description": "Applies a small standard border-radius for a squared shape of the component",
               "doc-url": "https://v1.quasar.dev/vue-components/linear-progress",
               "type": "boolean"
+            },
+            {
+              "name": "instant-feedback",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "No transition when model changes",
+              "doc-url": "https://v1.quasar.dev/vue-components/linear-progress",
+              "type": "boolean"
             }
           ],
           "slots": [
@@ -8841,6 +9223,16 @@
                 "type": "boolean"
               },
               "description": "Allows the menu to not be dismissed by a click/tap outside of the menu or by hitting the ESC key",
+              "doc-url": "https://v1.quasar.dev/vue-components/menu",
+              "type": "boolean"
+            },
+            {
+              "name": "no-route-dismiss",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Changing route app won't dismiss the popup; No need to set it if 'persistent' prop is also set",
               "doc-url": "https://v1.quasar.dev/vue-components/menu",
               "type": "boolean"
             },
@@ -9949,14 +10341,6 @@
             },
             {
               "name": "before-show",
-              "arguments": [
-                {
-                  "name": "evt",
-                  "type": "object",
-                  "description": "JS event object",
-                  "doc-url": "https://v1.quasar.dev/vue-components/popup-edit"
-                }
-              ],
               "description": "Emitted right before Popup gets shown",
               "doc-url": "https://v1.quasar.dev/vue-components/popup-edit"
             },
@@ -9967,14 +10351,6 @@
             },
             {
               "name": "before-hide",
-              "arguments": [
-                {
-                  "name": "evt",
-                  "type": "object",
-                  "description": "JS event object",
-                  "doc-url": "https://v1.quasar.dev/vue-components/popup-edit"
-                }
-              ],
               "description": "Emitted right before Popup gets dismissed",
               "doc-url": "https://v1.quasar.dev/vue-components/popup-edit"
             },
@@ -10439,6 +10815,12 @@
                   "type": "any",
                   "description": "New model value",
                   "doc-url": "https://v1.quasar.dev/vue-components/radio"
+                },
+                {
+                  "name": "evt",
+                  "type": "object",
+                  "description": "JS event object",
+                  "doc-url": "https://v1.quasar.dev/vue-components/radio"
                 }
               ],
               "description": "Emitted when the component needs to change the model; Is also used by v-model",
@@ -10759,6 +11141,19 @@
                 }
               ],
               "description": "Emitted on lazy model value change (after user slides then releases thumb)",
+              "doc-url": "https://v1.quasar.dev/vue-components/range"
+            },
+            {
+              "name": "pan",
+              "arguments": [
+                {
+                  "name": "phase",
+                  "type": "'start'|'end'",
+                  "description": "Phase of panning",
+                  "doc-url": "https://v1.quasar.dev/vue-components/range"
+                }
+              ],
+              "description": "Triggered when user starts panning on the component",
               "doc-url": "https://v1.quasar.dev/vue-components/range"
             }
           ],
@@ -11232,6 +11627,15 @@
               "default": "\"0\""
             },
             {
+              "name": "table-colspan",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "The number of columns in the table (you need this if you use table-layout: fixed)\n\nExamples:\ntable-colspan=\"12\"",
+              "doc-url": "https://v1.quasar.dev/vue-components/select"
+            },
+            {
               "name": "error",
               "value": {
                 "kind": "expression",
@@ -11450,6 +11854,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/select"
             },
             {
+              "name": "label-slot",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+              "doc-url": "https://v1.quasar.dev/vue-components/select",
+              "type": "boolean"
+            },
+            {
               "name": "bottom-slots",
               "value": {
                 "kind": "expression",
@@ -11465,7 +11879,7 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+              "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
               "doc-url": "https://v1.quasar.dev/vue-components/select",
               "type": "boolean"
             },
@@ -12090,6 +12504,11 @@
               "doc-url": "https://v1.quasar.dev/vue-components/select"
             },
             {
+              "name": "label",
+              "description": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
+              "doc-url": "https://v1.quasar.dev/vue-components/select"
+            },
+            {
               "name": "error",
               "description": "Slot for errors; Enabled only if 'bottom-slots' prop is used; Suggestion: <div>",
               "doc-url": "https://v1.quasar.dev/vue-components/select"
@@ -12264,11 +12683,11 @@
               "name": "spaced",
               "value": {
                 "kind": "expression",
-                "type": "boolean"
+                "type": "boolean|string"
               },
-              "description": "If set to true, the top and bottom margins will be set to 8px",
+              "description": "If set to true, the corresponding direction margins will be set to 8px; It can also be set to a size in CSS units, including unit name, or one of the xs|sm|md|lg|xl predefined sizes\n\nExamples:\n12px\nsm\nmd",
               "doc-url": "https://v1.quasar.dev/vue-components/separator",
-              "type": "boolean"
+              "default": "\"md\""
             },
             {
               "name": "inset",
@@ -12288,6 +12707,15 @@
               "description": "If set to true, the separator will be vertical.",
               "doc-url": "https://v1.quasar.dev/vue-components/separator",
               "type": "boolean"
+            },
+            {
+              "name": "size",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Size in CSS units, including unit name\n\nExamples:\n16px\n2rem",
+              "doc-url": "https://v1.quasar.dev/vue-components/separator"
             },
             {
               "name": "color",
@@ -12844,6 +13272,19 @@
                 }
               ],
               "description": "Emitted on lazy model value change (after user slides then releases the thumb)",
+              "doc-url": "https://v1.quasar.dev/vue-components/slider"
+            },
+            {
+              "name": "pan",
+              "arguments": [
+                {
+                  "name": "phase",
+                  "type": "'start'|'end'",
+                  "description": "Phase of panning",
+                  "doc-url": "https://v1.quasar.dev/vue-components/slider"
+                }
+              ],
+              "description": "Triggered when user starts panning on the component",
               "doc-url": "https://v1.quasar.dev/vue-components/slider"
             }
           ],
@@ -13488,7 +13929,7 @@
                 "kind": "expression",
                 "type": "number"
               },
-              "description": "Model of the component defining the split ratio percent (0.0 < x < 100.0) between panels; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"ratio\"",
+              "description": "Model of the component defining the size of first panel (or second if using reverse) in the unit specified (for '%' it's the split ratio percent - 0.0 < x < 100.0; for 'px' it's the size in px); Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"ratio\"",
               "doc-url": "https://v1.quasar.dev/vue-components/splitter"
             },
             {
@@ -13824,7 +14265,7 @@
                 "kind": "expression",
                 "type": "any"
               },
-              "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"panelName\"",
+              "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive.\n\nExamples:\nv-model=\"panelName\"",
               "doc-url": "https://v1.quasar.dev/vue-components/stepper"
             },
             {
@@ -14193,7 +14634,7 @@
                 "kind": "expression",
                 "type": "any"
               },
-              "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive\n\nExamples:\nv-model=\"panelName\"",
+              "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive.\n\nExamples:\nv-model=\"panelName\"",
               "doc-url": "https://v1.quasar.dev/vue-components/tab-panels"
             },
             {
@@ -14431,6 +14872,15 @@
               "default": "\"0\""
             },
             {
+              "name": "table-colspan",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "The number of columns in the table (you need this if you use table-layout: fixed)\n\nExamples:\ntable-colspan=\"12\"",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
               "name": "color",
               "value": {
                 "kind": "expression",
@@ -14439,6 +14889,42 @@
               "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
               "doc-url": "https://v1.quasar.dev/vue-components/table",
               "default": "\"grey-8\""
+            },
+            {
+              "name": "icon-first-page",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention for stepping to first page; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "icon-prev-page",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention for stepping to previous page; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "icon-next-page",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention for stepping to next page; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "icon-last-page",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Icon name following Quasar convention for stepping to last page; Make sure you have the icon library installed unless you are using 'img:' prefix\n\nExamples:\nmap\nion-add\nimg:https://cdn.quasar.dev/logo/svg/quasar-logo.svg\nimg:statics/path/to/some_image.png",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
             },
             {
               "name": "grid",
@@ -14523,7 +15009,37 @@
                 "kind": "expression",
                 "type": "boolean"
               },
-              "description": "Hide table bottom layer",
+              "description": "Hide table bottom layer regardless of what it has to display",
+              "doc-url": "https://v1.quasar.dev/vue-components/table",
+              "type": "boolean"
+            },
+            {
+              "name": "hide-selected-banner",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Hide the selected rows banner (if any)",
+              "doc-url": "https://v1.quasar.dev/vue-components/table",
+              "type": "boolean"
+            },
+            {
+              "name": "hide-no-data",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Hide the default no data bottom layer",
+              "doc-url": "https://v1.quasar.dev/vue-components/table",
+              "type": "boolean"
+            },
+            {
+              "name": "hide-pagination",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Hide the pagination controls at the bottom",
               "doc-url": "https://v1.quasar.dev/vue-components/table",
               "type": "boolean"
             },
@@ -14711,7 +15227,7 @@
                 "kind": "expression",
                 "type": "string|any[]|object"
               },
-              "description": "CSS style to apply to the card (when in grid mode)\n\nExamples:\nbackground-color: #ff0000\n:card-style=\"{ backgroundColor: '#ff0000' }\"",
+              "description": "CSS style to apply to the card (when in grid mode) or container card (when not in grid mode)\n\nExamples:\nbackground-color: #ff0000\n:card-style=\"{ backgroundColor: '#ff0000' }\"",
               "doc-url": "https://v1.quasar.dev/vue-components/table"
             },
             {
@@ -14720,7 +15236,16 @@
                 "kind": "expression",
                 "type": "string|any[]|object"
               },
-              "description": "CSS classes to apply to the card (when in grid mode)\n\nExamples:\nmy-special-class\n:card-class=\"{ 'my-special-class': [Boolean condition] }\"",
+              "description": "CSS classes to apply to the card (when in grid mode) or container card (when not in grid mode)\n\nExamples:\nmy-special-class\n:card-class=\"{ 'my-special-class': [Boolean condition] }\"",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "title-class",
+              "value": {
+                "kind": "expression",
+                "type": "string|any[]|object"
+              },
+              "description": "CSS classes to apply to the title (if using 'title' prop)\n\nExamples:\nmy-special-class\ntext-h1\n:title-class=\"{ 'text-h1': [Boolean condition] }\"",
               "doc-url": "https://v1.quasar.dev/vue-components/table"
             },
             {
@@ -14748,7 +15273,7 @@
                 "kind": "expression",
                 "type": "object"
               },
-              "description": "Pagination object\n\nExamples:\n:pagination.sync=\"myPagination\"",
+              "description": "Pagination object; You can use the '.sync' modifier on it if you want to have access on the current pagination in your components; When not using the .sync modifier it simply initializes the pagination on first render\n\nExamples:\n:pagination.sync=\"myPagination\"",
               "doc-url": "https://v1.quasar.dev/vue-components/table"
             },
             {
@@ -14817,6 +15342,12 @@
                   "type": "object",
                   "description": "The row upon which user has clicked/tapped",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "Index of the row in the current page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
               "description": "Emitted when user clicks/taps on a row; Is not emitted when using body/row/item scoped slots",
@@ -14835,6 +15366,12 @@
                   "name": "row",
                   "type": "object",
                   "description": "The row upon which user has double clicked/tapped",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "Index of the row in the current page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
@@ -14932,25 +15469,25 @@
                 {
                   "name": "key",
                   "type": "any",
-                  "description": "Row's key",
+                  "description": "Row/Item's key",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
                   "name": "row",
                   "type": "object",
-                  "description": "Row object",
+                  "description": "Row/Item object",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
                   "name": "rowIndex",
                   "type": "number",
-                  "description": "Row's index (0 based) in the filtered and sorted table",
+                  "description": "Row/Item's index (0 based) in the filtered and sorted table",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
                   "name": "pageIndex",
                   "type": "number",
-                  "description": "Row's index (0 based) in the current page of the filtered and sorted table",
+                  "description": "Row/Item's index (0 based) in the current page of the filtered and sorted table",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -14966,21 +15503,39 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "selected",
                   "type": "boolean",
-                  "description": "Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "description": "(Only if using selection) Is row/item selected? Can directly be assigned new Boolean value which changes selection state",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
                   "name": "expand",
                   "type": "boolean",
-                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "description": "Is row/item expanded? Can directly be assigned new Boolean value which changes expanded state",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
-                  "name": "__trClass",
+                  "name": "color",
                   "type": "string",
-                  "description": "Internal prop passed down to QTr (if used)",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
@@ -15027,15 +15582,39 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "selected",
                   "type": "boolean",
-                  "description": "Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
                   "name": "expand",
                   "type": "boolean",
                   "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15052,6 +15631,24 @@
               "name": "body-cell",
               "vue-properties": [
                 {
+                  "name": "col",
+                  "type": "object",
+                  "description": "Column definition for column associated with table cell",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "value",
+                  "type": "any",
+                  "description": "Parsed/Formatted value of table cell",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "key",
+                  "type": "any",
+                  "description": "Row's key",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "row",
                   "type": "object",
                   "description": "Row object",
@@ -15070,15 +15667,51 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
-                  "name": "col",
+                  "name": "cols",
                   "type": "object",
-                  "description": "Column definition for column associated with table cell",
+                  "description": "Column definitions",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
-                  "name": "value",
-                  "type": "any",
-                  "description": "Parsed/Formatted value of table cell",
+                  "name": "colsMap",
+                  "type": "object",
+                  "description": "Column mapping (key is column name, value is column object)",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
@@ -15089,6 +15722,24 @@
               "name": "body-cell-[name]",
               "vue-properties": [
                 {
+                  "name": "col",
+                  "type": "object",
+                  "description": "Column definition for column associated with table cell",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "value",
+                  "type": "any",
+                  "description": "Parsed/Formatted value of table cell",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "key",
+                  "type": "any",
+                  "description": "Row's key",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "row",
                   "type": "object",
                   "description": "Row object",
@@ -15107,15 +15758,51 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
-                  "name": "col",
+                  "name": "cols",
                   "type": "object",
-                  "description": "Column definition for column associated with table cell",
+                  "description": "Column definitions",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
-                  "name": "value",
-                  "type": "any",
-                  "description": "Parsed/Formatted value of table cell",
+                  "name": "colsMap",
+                  "type": "object",
+                  "description": "Column mapping (key is column name, value is column object)",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
@@ -15141,6 +15828,42 @@
                   "name": "sort",
                   "type": "Function",
                   "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "__trClass",
+                  "type": "string",
+                  "description": "Internal prop passed down to QTr (if used)",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15179,6 +15902,36 @@
                   "type": "Function",
                   "description": "Trigger a table sort",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
               "description": "Slot to define how each header cell looks like; Suggestion: QTh",
@@ -15210,9 +15963,173 @@
                   "type": "Function",
                   "description": "Trigger a table sort",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
                 }
               ],
               "description": "Slot to define how a specific header cell looks like; replace '[name]' with column name (from columns definition object)",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "body-selection",
+              "vue-properties": [
+                {
+                  "name": "key",
+                  "type": "any",
+                  "description": "Row's key",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "row",
+                  "type": "object",
+                  "description": "Row object",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "rowIndex",
+                  "type": "number",
+                  "description": "Row's index (0 based) in the filtered and sorted table",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "pageIndex",
+                  "type": "number",
+                  "description": "Row's index (0 based) in the current page of the filtered and sorted table",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "cols",
+                  "type": "object",
+                  "description": "Column definitions",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "colsMap",
+                  "type": "object",
+                  "description": "Column mapping (key is column name, value is column object)",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                }
+              ],
+              "description": "Slot to define how body selection column looks like; Suggestion: QCheckbox",
+              "doc-url": "https://v1.quasar.dev/vue-components/table"
+            },
+            {
+              "name": "header-selection",
+              "vue-properties": [
+                {
+                  "name": "cols",
+                  "type": "object",
+                  "description": "Column definitions",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "colsMap",
+                  "type": "object",
+                  "description": "Column mapping (key is column name, value is column object)",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "sort",
+                  "type": "Function",
+                  "description": "Trigger a table sort",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "selected",
+                  "type": "boolean",
+                  "description": "(Only if using selection) Is row selected? Can directly be assigned new Boolean value which changes selection state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "expand",
+                  "type": "boolean",
+                  "description": "Is row expanded? Can directly be assigned new Boolean value which changes expanded state",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "color",
+                  "type": "string",
+                  "description": "Color name for component from the Quasar Color Palette\n\nExamples:\nprimary\nteal-10",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dark",
+                  "type": "boolean",
+                  "description": "Notify the component that the background is a dark color",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "dense",
+                  "type": "boolean",
+                  "description": "Dense mode; occupies less space",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                }
+              ],
+              "description": "Slot to define how header selection column looks like (available only for multiple selection mode); Suggestion: QCheckbox",
               "doc-url": "https://v1.quasar.dev/vue-components/table"
             },
             {
@@ -15269,6 +16186,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15278,6 +16201,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15324,6 +16253,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15333,6 +16268,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15379,6 +16320,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15388,6 +16335,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15434,6 +16387,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15443,6 +16402,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15489,6 +16454,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15498,6 +16469,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15544,6 +16521,12 @@
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
+                  "name": "firstPage",
+                  "type": "Function",
+                  "description": "Navigates to first page",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
                   "name": "prevPage",
                   "type": "Function",
                   "description": "Navigates to previous page, if available",
@@ -15553,6 +16536,12 @@
                   "name": "nextPage",
                   "type": "Function",
                   "description": "Navigates to next page, if available",
+                  "doc-url": "https://v1.quasar.dev/vue-components/table"
+                },
+                {
+                  "name": "lastPage",
+                  "type": "Function",
+                  "description": "Navigates to last page",
                   "doc-url": "https://v1.quasar.dev/vue-components/table"
                 },
                 {
@@ -15857,12 +16846,42 @@
               "type": "boolean"
             },
             {
+              "name": "content-class",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Class definitions to be attributed to the content wrapper\n\nExamples:\nmy-special-class",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+            },
+            {
               "name": "tabindex",
               "value": {
                 "kind": "expression",
                 "type": "number|string"
               },
               "description": "Tabindex HTML attribute value\n\nExamples:\n0\n100",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+            }
+          ],
+          "events": [
+            {
+              "name": "click",
+              "arguments": [
+                {
+                  "name": "evt",
+                  "type": "object",
+                  "description": "JS event object; If you want to cancel navigation set synchronously 'evt.navigate' to false",
+                  "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+                },
+                {
+                  "name": "navigateFn",
+                  "type": "Function",
+                  "description": "When you need to control the time at which the tab should trigger the route navigation then set 'evt.navigate' to false and call this function; Useful if you have async work to be done before the actual route navigation",
+                  "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+                }
+              ],
+              "description": "Emitted when component is clicked (activated)",
               "doc-url": "https://v1.quasar.dev/vue-components/tabs"
             }
           ],
@@ -15950,6 +16969,15 @@
               "type": "boolean"
             },
             {
+              "name": "content-class",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Class definitions to be attributed to the content wrapper\n\nExamples:\nmy-special-class",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+            },
+            {
               "name": "tabindex",
               "value": {
                 "kind": "expression",
@@ -16006,6 +17034,26 @@
               "type": "boolean"
             },
             {
+              "name": "outside-arrows",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Reserve space for arrows to place them on each side of the tabs (the arrows fade when inactive)",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs",
+              "type": "boolean"
+            },
+            {
+              "name": "mobile-arrows",
+              "value": {
+                "kind": "expression",
+                "type": "boolean"
+              },
+              "description": "Force display of arrows (if needed) on mobile",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs",
+              "type": "boolean"
+            },
+            {
               "name": "align",
               "value": {
                 "kind": "expression",
@@ -16050,6 +17098,15 @@
                 "type": "string"
               },
               "description": "The color to be attributed to the indicator (the underline) of the active tab\n\nExamples:\nprimary\nteal-10",
+              "doc-url": "https://v1.quasar.dev/vue-components/tabs"
+            },
+            {
+              "name": "content-class",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "Class definitions to be attributed to the content wrapper\n\nExamples:\nmy-special-class",
               "doc-url": "https://v1.quasar.dev/vue-components/tabs"
             },
             {
@@ -16668,6 +17725,16 @@
               "doc-url": "https://v1.quasar.dev/vue-components/toggle"
             },
             {
+              "name": "toggle-order",
+              "value": {
+                "kind": "expression",
+                "type": "'tf'|'ft'"
+              },
+              "description": "Determines toggle order of the two states ('t' stands for state of true, 'f' for state of false); If 'toggle-indeterminate' is true, then the order is: indet -> first state -> second state -> indet (and repeat), otherwise: indet -> first state -> second state -> first state -> second state -> ...",
+              "doc-url": "https://v1.quasar.dev/vue-components/toggle",
+              "default": "\"tf\""
+            },
+            {
               "name": "toggle-indeterminate",
               "value": {
                 "kind": "expression",
@@ -16808,6 +17875,12 @@
                   "name": "value",
                   "type": "any",
                   "description": "New model value",
+                  "doc-url": "https://v1.quasar.dev/vue-components/toggle"
+                },
+                {
+                  "name": "evt",
+                  "type": "object",
+                  "description": "JS event object",
                   "doc-url": "https://v1.quasar.dev/vue-components/toggle"
                 }
               ],
@@ -17151,6 +18224,16 @@
               "description": "The property name of each node object that holds the label of the node\n\nExamples:\nname\ndescription",
               "doc-url": "https://v1.quasar.dev/vue-components/tree",
               "default": "\"label\""
+            },
+            {
+              "name": "children-key",
+              "value": {
+                "kind": "expression",
+                "type": "string"
+              },
+              "description": "The property name of each node object that holds the list of children of the node\n\nExamples:\nroles\nrelatives",
+              "doc-url": "https://v1.quasar.dev/vue-components/tree",
+              "default": "\"children\""
             },
             {
               "name": "no-connectors",
@@ -17614,10 +18697,19 @@
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
             },
             {
+              "name": "capture",
+              "value": {
+                "kind": "expression",
+                "type": "'user'|'environment'"
+              },
+              "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
+            {
               "name": "max-file-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of individual file in bytes\n\nExamples:\n1024\n1048576",
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
@@ -17626,9 +18718,18 @@
               "name": "max-total-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of all files combined in bytes\n\nExamples:\n1024\n1048576",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
+            {
+              "name": "max-files",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "Maximum number of files to contain\n\nExamples:\n:max-files=\"5\"\n10",
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
             },
             {
@@ -17843,6 +18944,19 @@
           ],
           "events": [
             {
+              "name": "rejected",
+              "arguments": [
+                {
+                  "name": "rejectedEntries",
+                  "type": "any[]",
+                  "description": "Array of { failedPropValidation: string, file: File } Objects for files that do not pass the validation",
+                  "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+                }
+              ],
+              "description": "Emitted after files are picked and some do not pass the validation props (accept, max-file-size, max-total-size, filter, etc)",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
+            {
               "name": "added",
               "arguments": [
                 {
@@ -17989,10 +19103,19 @@
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
             },
             {
+              "name": "capture",
+              "value": {
+                "kind": "expression",
+                "type": "'user'|'environment'"
+              },
+              "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
+            {
               "name": "max-file-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of individual file in bytes\n\nExamples:\n1024\n1048576",
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
@@ -18001,9 +19124,18 @@
               "name": "max-total-size",
               "value": {
                 "kind": "expression",
-                "type": "number"
+                "type": "number|string"
               },
               "description": "Maximum size of all files combined in bytes\n\nExamples:\n1024\n1048576",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
+            {
+              "name": "max-files",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "Maximum number of files to contain\n\nExamples:\n:max-files=\"5\"\n10",
               "doc-url": "https://v1.quasar.dev/vue-components/uploader"
             },
             {
@@ -18134,6 +19266,19 @@
             }
           ],
           "events": [
+            {
+              "name": "rejected",
+              "arguments": [
+                {
+                  "name": "rejectedEntries",
+                  "type": "any[]",
+                  "description": "Array of { failedPropValidation: string, file: File } Objects for files that do not pass the validation",
+                  "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+                }
+              ],
+              "description": "Emitted after files are picked and some do not pass the validation props (accept, max-file-size, max-total-size, filter, etc)",
+              "doc-url": "https://v1.quasar.dev/vue-components/uploader"
+            },
             {
               "name": "added",
               "arguments": [
@@ -18273,6 +19418,15 @@
               "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision\n\nExamples:\n:virtual-scroll-sticky-size-end=\"48\"",
               "doc-url": "https://v1.quasar.dev/vue-components/virtual-scroll",
               "default": "\"0\""
+            },
+            {
+              "name": "table-colspan",
+              "value": {
+                "kind": "expression",
+                "type": "number|string"
+              },
+              "description": "The number of columns in the table (you need this if you use table-layout: fixed)\n\nExamples:\ntable-colspan=\"12\"",
+              "doc-url": "https://v1.quasar.dev/vue-components/virtual-scroll"
             },
             {
               "name": "type",
@@ -18428,6 +19582,47 @@
           "value": {
             "kind": "expression",
             "type": "object|Function"
+          }
+        },
+        {
+          "name": "v-morph",
+          "source": {
+            "module": "quasar",
+            "symbol": "Morph"
+          },
+          "required": false,
+          "description": "Morph - Quasar directive",
+          "doc-url": "https://v1.quasar.dev/vue-directives/morph",
+          "vue-modifiers": [
+            {
+              "name": "resize",
+              "description": "Use resize instead of scale transform for morph (forceResize option of the morph function)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/morph"
+            },
+            {
+              "name": "useCSS",
+              "description": "Use CSS animations for morph (forceCssAnimation option of the morph function)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/morph"
+            },
+            {
+              "name": "hideFromClone",
+              "description": "Hide the spacer for the initial element (hideFromClone option of the morph function)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/morph"
+            },
+            {
+              "name": "keepToClone",
+              "description": "Keep the final element visible while morphing (keepToClone option of the morph function)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/morph"
+            },
+            {
+              "name": "tween",
+              "description": "Use opacity tween morphing between initial and final elements (tween option of the morph function)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/morph"
+            }
+          ],
+          "value": {
+            "kind": "expression",
+            "type": "object|any"
           }
         },
         {
@@ -18614,6 +19809,11 @@
             {
               "name": "mouseAllDir",
               "description": "Ignore initial mouse move direction (do not abort if the first mouse move is in an unaccepted direction)",
+              "doc-url": "https://v1.quasar.dev/vue-directives/touch-pan"
+            },
+            {
+              "name": "preserveCursor",
+              "description": "Prevent the mouse cursor from automatically displaying as grabbing when panning",
               "doc-url": "https://v1.quasar.dev/vue-directives/touch-pan"
             },
             {

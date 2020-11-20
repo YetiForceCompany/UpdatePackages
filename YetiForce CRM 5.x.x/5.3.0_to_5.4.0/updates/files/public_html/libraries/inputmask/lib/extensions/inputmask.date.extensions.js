@@ -4,8 +4,12 @@
  Copyright (c) Robin Herbots
  Licensed under the MIT license
  */
-var Inputmask = require("../inputmask"), $ = Inputmask.dependencyLib,
-	keyCode = require("../keycode"),
+import Inputmask from "../inputmask";
+import keyCode from "../keycode.json";
+import escapeRegex from "../escapeRegex";
+
+const $ = Inputmask.dependencyLib;
+var currentYear = new Date().getFullYear(),
 	//supported codes for formatting
 	//http://blog.stevenlevithan.com/archives/date-time-format
 	//https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings?view=netframework-4.7
@@ -112,23 +116,94 @@ function getTokenizer(opts) {
 	return opts.tokenizer;
 }
 
-function isValidDate(dateParts, currentResult) {
-	return !isFinite(dateParts.rawday)
-	|| (dateParts.day == "29" && !isFinite(dateParts.rawyear))
-	|| new Date(dateParts.date.getFullYear(), isFinite(dateParts.rawmonth) ? dateParts.month : dateParts.date.getMonth() + 1, 0).getDate() >= dateParts.day
-		? currentResult
-		: false; //take corrective action if possible
+function prefillYear(dateParts, currentResult, opts) {
+	if (dateParts.year !== dateParts.rawyear) {
+		var crrntyear = currentYear.toString(),
+			enteredPart = dateParts.rawyear.replace(/[^0-9]/g, ""),
+			currentYearPart = crrntyear.slice(0, enteredPart.length),
+			currentYearNextPart = crrntyear.slice(enteredPart.length);
+		if (enteredPart.length === 2 && enteredPart === currentYearPart) {
+			const entryCurrentYear = new Date(currentYear, dateParts.month - 1, dateParts.day);
+			if (dateParts.day == entryCurrentYear.getDate() && (!opts.max || opts.max.date.getTime() >= entryCurrentYear.getTime())) {
+				//update dateParts
+				dateParts.date.setFullYear(currentYear);
+				dateParts.year = crrntyear;
+				//update result
+				currentResult.insert = [{
+					pos: currentResult.pos + 1,
+					c: currentYearNextPart[0]
+				}, {
+					pos: currentResult.pos + 2,
+					c: currentYearNextPart[1]
+				}];
+			}
+		}
+	}
+
+	return currentResult;
 }
 
-function isDateInRange(dateParts, opts) {
-	var result = true;
+function isValidDate(dateParts, currentResult, opts) {
+	if (!isFinite(dateParts.rawday)
+		|| (dateParts.day == "29" && !isFinite(dateParts.rawyear))
+		|| new Date(dateParts.date.getFullYear(), isFinite(dateParts.rawmonth) ? dateParts.month : dateParts.date.getMonth() + 1, 0).getDate() >= dateParts.day) {
+		return currentResult;
+	} else { //take corrective action if possible
+		if (dateParts.day == "29") {
+			var tokenMatch = getTokenMatch(currentResult.pos, opts);
+			if (tokenMatch.targetMatch[0] === "yyyy" && currentResult.pos - tokenMatch.targetMatchIndex === 2) {
+				currentResult.remove = currentResult.pos + 1;
+				return currentResult;
+			}
+		}
+		return false;
+	}
+}
+
+function isDateInRange(dateParts, result, opts, maskset, fromCheckval) {
+	if (!result) return result;
 	if (opts.min) {
 		if (dateParts["rawyear"]) {
 			var rawYear = dateParts["rawyear"].replace(/[^0-9]/g, ""),
+				minYear = opts.min.year.substr(0, rawYear.length), maxYear;
+			if (rawYear < minYear) { //is out of range?
+				var tokenMatch = getTokenMatch(result.pos, opts);
+				rawYear = dateParts["rawyear"].substr(0, (result.pos - tokenMatch.targetMatchIndex) + 1);
 				minYear = opts.min.year.substr(0, rawYear.length);
-			result = minYear <= rawYear;
+				if (minYear <= rawYear) { //this can match
+					result.remove = tokenMatch.targetMatchIndex + rawYear.length;
+					return result;
+				} else {
+					if (tokenMatch.targetMatch[0] === "yyyy") {
+						rawYear = dateParts["rawyear"].substr(1, 1);
+					} else {
+						rawYear = dateParts["rawyear"].substr(0, 1);
+					}
+					minYear = opts.min.year.substr(2, 1);
+					maxYear = opts.max ? opts.max.year.substr(2, 1) : rawYear;
+					if (rawYear.length === 1 && minYear <= rawYear <= maxYear && fromCheckval !== true) { //this can match
+						if (tokenMatch.targetMatch[0] === "yyyy") {
+							result.insert = [{
+								pos: result.pos + 1, c: rawYear, strict: true
+							}];
+							result.caret = result.pos + 2;
+							maskset.validPositions[result.pos].input = opts.min.year[1];  //postval ~ position is already validated
+						} else {
+							result.insert = [{
+								pos: result.pos + 1, c: opts.min.year[1], strict: true
+							}, {
+								pos: result.pos + 2, c: rawYear, strict: true
+							}];
+							result.caret = result.pos + 3;
+							maskset.validPositions[result.pos].input = opts.min.year[0];  //postval ~ position is already validated
+						}
+						return result;
+					}
+					result = false;
+				}
+			}
 		}
-		if (dateParts["year"] === dateParts["rawyear"]) {
+		if (result && dateParts["year"] && dateParts["year"] === dateParts["rawyear"]) {
 			if (opts.min.date.getTime() === opts.min.date.getTime()) {
 				result = opts.min.date.getTime() <= dateParts.date.getTime();
 			}
@@ -160,7 +235,7 @@ function parse(format, dateObjValue, opts, raw) {
 						mask += ")?";
 						break;
 					default:
-						mask += Inputmask.escapeRegex(match[0]);
+						mask += escapeRegex(match[0]);
 				}
 			}
 		} else {
@@ -192,24 +267,8 @@ function pad(val, len) {
 function analyseMask(maskString, format, opts) {
 	var dateObj = {"date": new Date(1, 0, 1)}, targetProp, mask = maskString, match, dateOperation;
 
-	function extendProperty(value) {
-		var correctedValue = value.replace(/[^0-9]/g, "0");
-		// if (correctedValue != value) { //only do correction on incomplete values
-		//     //determine best validation match
-		//     var enteredPart = value.replace(/[^0-9]/g, ""),
-		//         enteredPartIndex = value.indexOf(enteredPart),
-		//         minPart = (opts.min && opts.min[targetProp] || value).slice(enteredPartIndex, enteredPartIndex + enteredPart.length),
-		//         maxPart = (opts.max && opts.max[targetProp] || value).slice(enteredPartIndex, enteredPartIndex + enteredPart.length),
-		//         correctedPart = enteredPart < minPart ? minPart : (enteredPart > maxPart ? maxPart : correctedValue.slice(enteredPartIndex, enteredPartIndex + enteredPart.length));
-		//     correctedValue = correctedValue.split("");
-		//     correctedValue.splice(enteredPartIndex, 1, correctedPart);
-		//     correctedValue = correctedValue.join("");
-		// }
-		return correctedValue;
-	}
-
 	function setValue(dateObj, value, opts) {
-		dateObj[targetProp] = extendProperty(value);
+		dateObj[targetProp] = value.replace(/[^0-9]/g, "0");
 		dateObj["raw" + targetProp] = value;
 
 		if (dateOperation !== undefined) {
@@ -220,40 +279,36 @@ function analyseMask(maskString, format, opts) {
 	if (typeof mask === "string") {
 		getTokenizer(opts).lastIndex = 0;
 		while ((match = getTokenizer(opts).exec(format))) {
-			var value = mask.slice(0, match[0].length);
-			if (formatCode.hasOwnProperty(match[0])) {
+			let dynMatches = new RegExp("\\d+$").exec(match[0]),
+				fcode = dynMatches ? (match[0][0] + "x") : match[0],
+				value;
+			if (dynMatches) {
+				let lastIndex = getTokenizer(opts).lastIndex,
+					tokanMatch = getTokenMatch(match.index, opts);
+				getTokenizer(opts).lastIndex = lastIndex;
+				value = mask.slice(0, mask.indexOf(tokanMatch.nextMatch[0]));
+			} else {
+				value = mask.slice(0, fcode.length);
+			}
+
+			if (Object.prototype.hasOwnProperty.call(formatCode, fcode)) {
 				// targetValidator = formatCode[match[0]][0];
-				targetProp = formatCode[match[0]][2];
-				dateOperation = formatCode[match[0]][1];
+				targetProp = formatCode[fcode][2];
+				dateOperation = formatCode[fcode][1];
 				setValue(dateObj, value, opts);
 			}
 			mask = mask.slice(value.length);
 		}
 
 		return dateObj;
-	} else if (mask && typeof mask === "object" && mask.hasOwnProperty("date")) {
+	} else if (mask && typeof mask === "object" && Object.prototype.hasOwnProperty.call(mask, "date")) {
 		return mask;
 	}
 	return undefined;
 }
 
 function importDate(dateObj, opts) {
-	var match, date = "";
-
-	getTokenizer(opts).lastIndex = 0;
-	while ((match = getTokenizer(opts).exec(opts.inputFormat))) {
-		if (match[0].charAt(0) === "d") {
-			date += pad(dateObj.getDate(), match[0].length);
-		} else if (match[0].charAt(0) === "m") {
-			date += pad((dateObj.getMonth() + 1), match[0].length);
-		} else if (match[0] === "yyyy") {
-			date += dateObj.getFullYear().toString();
-		} else if (match[0].charAt(0) === "y") {
-			date += pad(dateObj.getYear(), match[0].length);
-		}
-	}
-
-	return date;
+	return parse(opts.inputFormat, {date: dateObj}, opts);
 }
 
 function getTokenMatch(pos, opts) {
@@ -334,7 +389,7 @@ Inputmask.extendAliases({
 			}
 			return true;
 		},
-		postValidation: function (buffer, pos, c, currentResult, opts, maskset, strict) {
+		postValidation: function (buffer, pos, c, currentResult, opts, maskset, strict, fromCheckval) {
 			if (strict) return true;
 			var tokenMatch, validator;
 			if (currentResult === false) {
@@ -368,8 +423,9 @@ Inputmask.extendAliases({
 
 			var result = currentResult, dateParts = analyseMask(buffer.join(""), opts.inputFormat, opts);
 			if (result && dateParts.date.getTime() === dateParts.date.getTime()) { //check for a valid date ~ an invalid date returns NaN which isn't equal
-				result = isValidDate(dateParts, result);
-				result = result && isDateInRange(dateParts, opts);
+				result = prefillYear(dateParts, result, opts);
+				result = isValidDate(dateParts, result, opts);
+				result = isDateInRange(dateParts, result, opts, maskset, fromCheckval);
 			}
 
 			if (pos && result && currentResult.pos !== pos) {
@@ -417,5 +473,3 @@ Inputmask.extendAliases({
 			"numeric"
 	}
 });
-
-module.exports = Inputmask;

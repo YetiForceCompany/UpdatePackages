@@ -22,6 +22,7 @@ final class ClassType
 {
 	use Nette\SmartObject;
 	use Traits\CommentAware;
+	use Traits\AttributeAware;
 
 	public const
 		TYPE_CLASS = 'class',
@@ -73,6 +74,15 @@ final class ClassType
 	public static function from($class): self
 	{
 		return (new Factory)->fromClassReflection(new \ReflectionClass($class));
+	}
+
+
+	/**
+	 * @param  string|object  $class
+	 */
+	public static function withBodiesFrom($class): self
+	{
+		return (new Factory)->fromClassReflection(new \ReflectionClass($class), true);
 	}
 
 
@@ -356,7 +366,9 @@ final class ClassType
 	{
 		$this->consts = [];
 		foreach ($consts as $k => $v) {
-			$const = $v instanceof Constant ? $v : (new Constant($k))->setValue($v);
+			$const = $v instanceof Constant
+				? $v
+				: (new Constant($k))->setValue($v);
 			$this->consts[$const->getName()] = $const;
 		}
 		return $this;

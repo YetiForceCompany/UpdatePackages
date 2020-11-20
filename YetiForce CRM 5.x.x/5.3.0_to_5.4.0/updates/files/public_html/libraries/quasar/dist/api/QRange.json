@@ -257,6 +257,20 @@
           "required": true
         }
       }
+    },
+    "pan": {
+      "desc": "Triggered when user starts panning on the component",
+      "params": {
+        "phase": {
+          "type": "String",
+          "desc": "Phase of panning",
+          "values": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "addedIn": "v1.14.0"
     }
   }
 }

@@ -27,10 +27,7 @@ Vtiger_Detail_Js(
 			var thisInstance = this;
 			var detailContentsHolder = thisInstance.getContentHolder();
 			var detailContainer = detailContentsHolder.closest('div.detailViewInfo');
-			jQuery('.related', detailContainer).on('click', 'li:not(.spaceRelatedList)', function (
-				e,
-				urlAttributes
-			) {
+			jQuery('.related', detailContainer).on('click', 'li:not(.spaceRelatedList)', function (e, urlAttributes) {
 				var tabElement = jQuery(e.currentTarget);
 				if (!tabElement.hasClass('dropdown')) {
 					var element = jQuery('<div></div>');
@@ -52,7 +49,6 @@ Vtiger_Detail_Js(
 							thisInstance.deSelectAllrelatedTabs();
 							thisInstance.markTabAsSelected(tabElement);
 							Vtiger_Helper_Js.showHorizontalTopScrollBar();
-							thisInstance.registerHelpInfo();
 							app.registerModal(detailContentsHolder);
 							element.progressIndicator({ mode: 'hide' });
 							var emailEnabledModule = jQuery(data).find('[name="emailEnabledModules"]').val();

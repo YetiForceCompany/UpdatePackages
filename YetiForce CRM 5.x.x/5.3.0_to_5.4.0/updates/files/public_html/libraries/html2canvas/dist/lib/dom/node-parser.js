@@ -84,7 +84,10 @@ var createsStackingContext = function (styles) { return styles.isPositioned() ||
 exports.isTextNode = function (node) { return node.nodeType === Node.TEXT_NODE; };
 exports.isElementNode = function (node) { return node.nodeType === Node.ELEMENT_NODE; };
 exports.isHTMLElementNode = function (node) {
-    return typeof node.style !== 'undefined';
+    return exports.isElementNode(node) && typeof node.style !== 'undefined' && !exports.isSVGElementNode(node);
+};
+exports.isSVGElementNode = function (element) {
+    return typeof element.className === 'object';
 };
 exports.isLIElement = function (node) { return node.tagName === 'LI'; };
 exports.isOLElement = function (node) { return node.tagName === 'OL'; };

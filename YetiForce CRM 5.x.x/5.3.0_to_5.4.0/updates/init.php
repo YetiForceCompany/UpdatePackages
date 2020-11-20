@@ -468,7 +468,7 @@ class YetiForceUpdate
 		$modules = ['RecordNumbering', 'EventHandler', 'MailRbl', 'MailIntegration', 'ConfigEditor', 'Watchdog', 'Dependencies', 'FieldsDependency'];
 		$dir = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . 'modules/Settings';
 		foreach ((new \DirectoryIterator($dir)) as $item) {
-			if ($item->isDir() && !$item->isDot()) {
+			if ($item->isDir() && !$item->isDot() && (new \FilesystemIterator($item->getPathname()))->valid()) {
 				$modules[] = $item->getFilename();
 			}
 		}
@@ -1590,9 +1590,18 @@ class YetiForceUpdate
 		\App\Config::set('module', 'OSSMail', 'skin', 'elastic');
 		\App\Config::set('module', 'OSSMail', 'skin_logo', '/images/null.png');
 
+		$breadcrumbs = null;
+		if (!class_exists('\\Config\\Layout')) {
+			$breadcrumbs = \App\Config::main('breadcrumbs', true);
+		}
+
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
+			if ($type = 'layout' && false === $breadcrumbs) {
+				\App\Config::set('layout', 'breadcrumbs', $breadcrumbs);
+				(new \App\ConfigFile($type))->create();
+			}
 		}
 		$dirPath = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Modules';
 		if (!is_dir($dirPath)) {

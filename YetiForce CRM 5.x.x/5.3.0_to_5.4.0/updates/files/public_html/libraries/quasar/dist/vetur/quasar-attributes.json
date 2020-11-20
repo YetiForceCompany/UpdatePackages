@@ -183,6 +183,10 @@
     "type": "boolean",
     "description": "Equivalent to Vue Router <router-link> 'replace' property"
   },
+  "q-btn-dropdown/append": {
+    "type": "boolean",
+    "description": "Equivalent to Vue Router <router-link> 'append' property"
+  },
   "q-btn-dropdown/label": {
     "type": "string|number",
     "description": "The text that will be shown on the button"
@@ -291,6 +295,10 @@
     "type": "boolean",
     "description": "Disables dropdown (dropdown button if using along 'split' prop)"
   },
+  "q-btn-dropdown/no-icon-animation": {
+    "type": "boolean",
+    "description": "Disables the rotation of the dropdown icon when state is toggled"
+  },
   "q-btn-dropdown/content-style": {
     "type": "array|string|object",
     "description": "Style definitions to be attributed to the menu"
@@ -306,6 +314,10 @@
   "q-btn-dropdown/persistent": {
     "type": "boolean",
     "description": "Allows the menu to not be dismissed by a click/tap outside of the menu or by hitting the ESC key"
+  },
+  "q-btn-dropdown/no-route-dismiss": {
+    "type": "boolean",
+    "description": "Changing route app won't dismiss the popup; No need to set it if 'persistent' prop is also set"
   },
   "q-btn-dropdown/auto-close": {
     "type": "boolean",
@@ -419,6 +431,10 @@
     "type": "string",
     "description": "Button size name or a CSS unit including unit name"
   },
+  "q-btn-toggle/padding": {
+    "type": "string",
+    "description": "Apply custom padding (vertical [horizontal]); Size in CSS units, including unit name or standard size name (none|xs|sm|md|lg|xl); Also removes the min width and height when set"
+  },
   "q-btn-toggle/no-caps": {
     "type": "boolean",
     "description": "Avoid turning label text into caps (which happens by default)"
@@ -470,6 +486,10 @@
   "q-btn/replace": {
     "type": "boolean",
     "description": "Equivalent to Vue Router <router-link> 'replace' property"
+  },
+  "q-btn/append": {
+    "type": "boolean",
+    "description": "Equivalent to Vue Router <router-link> 'append' property"
   },
   "q-btn/label": {
     "type": "string|number",
@@ -621,7 +641,7 @@
   },
   "q-carousel/value": {
     "type": "any",
-    "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive"
+    "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive."
   },
   "q-carousel/keep-alive": {
     "type": "boolean",
@@ -702,6 +722,10 @@
   "q-carousel/navigation-icon": {
     "type": "string",
     "description": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix"
+  },
+  "q-carousel/navigation-active-icon": {
+    "type": "string",
+    "description": "Icon name following Quasar convention for the active (current slide) navigation icon; Make sure you have the icon library installed unless you are using 'img:' prefix"
   },
   "q-carousel/thumbnails": {
     "type": "boolean",
@@ -807,6 +831,10 @@
     "type": "any",
     "description": "What model value should be considered as 'indeterminate'?"
   },
+  "q-checkbox/toggle-order": {
+    "type": "string",
+    "description": "Determines toggle order of the two states ('t' stands for state of true, 'f' for state of false); If 'toggle-indeterminate' is true, then the order is: indet -> first state -> second state -> indet (and repeat), otherwise: indet -> first state -> second state -> first state -> second state -> ..."
+  },
   "q-checkbox/toggle-indeterminate": {
     "type": "boolean",
     "description": "When user clicks/taps on the component, should we toggle through the indeterminate state too?"
@@ -864,6 +892,10 @@
     "description": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix"
   },
   "q-chip/icon-right": {
+    "type": "string",
+    "description": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix"
+  },
+  "q-chip/icon-remove": {
     "type": "string",
     "description": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix"
   },
@@ -1028,8 +1060,8 @@
     "description": "Used to specify the name of the control; Useful if dealing with forms submitted directly to a URL"
   },
   "q-date/value": {
-    "type": "string",
-    "description": "Date of the component; Either use this property (along with a listener for 'input' event) OR use v-model directive"
+    "type": "string|array|object",
+    "description": "Date(s) of the component; Must be Array if using 'multiple' prop; Either use this property (along with a listener for 'input' event) OR use v-model directive"
   },
   "q-date/landscape": {
     "type": "boolean",
@@ -1087,17 +1119,17 @@
     "type": "string",
     "description": "When specified, it overrides the default header subtitle; Makes sense when not in 'minimal' mode"
   },
-  "q-date/emit-immediately": {
-    "type": "boolean",
-    "description": "Emit model when user browses month and year too"
-  },
   "q-date/default-year-month": {
     "type": "string",
-    "description": "The default year and month to display (in YYYY/MM format) when model is unfilled (undefined or null)"
+    "description": "The default year and month to display (in YYYY/MM format) when model is unfilled (undefined or null); Please ensure it is within the navigation min/max year-month (if using them)"
   },
   "q-date/default-view": {
     "type": "string",
     "description": "The view which will be displayed by default"
+  },
+  "q-date/years-in-month-view": {
+    "type": "boolean",
+    "description": "Show the years selector in months view"
   },
   "q-date/events": {
     "type": "array|function",
@@ -1109,7 +1141,19 @@
   },
   "q-date/options": {
     "type": "array|function",
-    "description": "Optionally configure the days that are selectable; If using a function, it receives the date as a String and must return a Boolean (is date acceptable or not); If using a function then for best performance, reference it from your scope and do not define it inline"
+    "description": "Optionally configure the days that are selectable; If using a function, it receives the date as a String and must return a Boolean (is date acceptable or not); If using a function then for best performance, reference it from your scope and do not define it inline; Incompatible with 'range' prop"
+  },
+  "q-date/navigation-min-year-month": {
+    "type": "string",
+    "description": "Lock user from navigating below a specific year+month (in YYYY/MM format); This prop is not used to correct the model; You might want to also use 'default-year-month' prop"
+  },
+  "q-date/navigation-max-year-month": {
+    "type": "string",
+    "description": "Lock user from navigating above a specific year+month (in YYYY/MM format); This prop is not used to correct the model; You might want to also use 'default-year-month' prop"
+  },
+  "q-date/no-unset": {
+    "type": "boolean",
+    "description": "Remove ability to unselect a date; It does not apply to selecting a range over already selected dates"
   },
   "q-date/first-day-of-week": {
     "type": "string|number",
@@ -1122,6 +1166,18 @@
   "q-date/minimal": {
     "type": "boolean",
     "description": "Don’t display the header"
+  },
+  "q-date/multiple": {
+    "type": "boolean",
+    "description": "Allow multiple selection; Model must be Array"
+  },
+  "q-date/range": {
+    "type": "boolean",
+    "description": "Allow range selection; Partial compatibility with 'options' prop: selected ranges might also include 'unselectable' days"
+  },
+  "q-date/emit-immediately": {
+    "type": "boolean",
+    "description": "Emit model when user browses month and year too; ONLY for single selection (non-multiple, non-range)"
   },
   "q-dialog/content-class": {
     "type": "array|string|object",
@@ -1245,11 +1301,11 @@
   },
   "q-drawer/persistent": {
     "type": "boolean",
-    "description": "Does not auto-closes when app's route changes"
+    "description": "Prevents drawer from auto-closing when app's route changes"
   },
   "q-drawer/show-if-above": {
     "type": "boolean",
-    "description": "Force drawer to be shown on screen on initial render if the layout width is above breakpoint, regardless of v-model; This is the default behavior when SSR is taken over by client on initial render"
+    "description": "Forces drawer to be shown on screen on initial render if the layout width is above breakpoint, regardless of v-model; This is the default behavior when SSR is taken over by client on initial render"
   },
   "q-drawer/content-class": {
     "type": "array|string|object",
@@ -1269,7 +1325,7 @@
   },
   "q-drawer/no-swipe-backdrop": {
     "type": "boolean",
-    "description": "Disable the default behavior where drawer backdrop can be swiped"
+    "description": "Disables the default behavior where drawer backdrop can be swiped"
   },
   "q-editor/fullscreen": {
     "type": "boolean",
@@ -1358,6 +1414,10 @@
   "q-editor/toolbar-rounded": {
     "type": "boolean",
     "description": "Toolbar buttons are rendered \"rounded\""
+  },
+  "q-editor/paragraph-tag": {
+    "type": "string",
+    "description": "Paragraph tag to be used"
   },
   "q-editor/content-style": {
     "type": "object",
@@ -1559,6 +1619,10 @@
     "type": "boolean",
     "description": "Put component in disabled mode"
   },
+  "q-fab/tabindex": {
+    "type": "number|string",
+    "description": "Tabindex HTML attribute value"
+  },
   "q-fab/value": {
     "type": "boolean",
     "description": "Controls state of fab actions (showing/hidden); Works best with v-model directive, otherwise use along listening to 'input' event"
@@ -1654,6 +1718,10 @@
   "q-fab-action/disable": {
     "type": "boolean",
     "description": "Put component in disabled mode"
+  },
+  "q-fab-action/tabindex": {
+    "type": "number|string",
+    "description": "Tabindex HTML attribute value"
   },
   "q-fab-action/icon": {
     "type": "string",
@@ -1763,13 +1831,17 @@
     "type": "boolean|string",
     "description": "Use 'standout' design for the field; Specifies classes to be applied when focused (overriding default ones)"
   },
+  "q-field/label-slot": {
+    "type": "boolean",
+    "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set"
+  },
   "q-field/bottom-slots": {
     "type": "boolean",
     "description": "Enables bottom slots ('error', 'hint', 'counter')"
   },
   "q-field/hide-bottom-space": {
     "type": "boolean",
-    "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
+    "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
   },
   "q-field/counter": {
     "type": "boolean",
@@ -1827,13 +1899,21 @@
     "type": "string",
     "description": "Comma separated list of unique file type specifiers. Maps to 'accept' attribute of native input type=file element"
   },
+  "q-file/capture": {
+    "type": "string",
+    "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element"
+  },
   "q-file/max-file-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of individual file in bytes"
   },
   "q-file/max-total-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of all files combined in bytes"
+  },
+  "q-file/max-files": {
+    "type": "number|string",
+    "description": "Maximum number of files to contain"
   },
   "q-file/filter": {
     "type": "function",
@@ -1931,13 +2011,17 @@
     "type": "boolean|string",
     "description": "Use 'standout' design for the field; Specifies classes to be applied when focused (overriding default ones)"
   },
+  "q-file/label-slot": {
+    "type": "boolean",
+    "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set"
+  },
   "q-file/bottom-slots": {
     "type": "boolean",
     "description": "Enables bottom slots ('error', 'hint', 'counter')"
   },
   "q-file/hide-bottom-space": {
     "type": "boolean",
-    "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
+    "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
   },
   "q-file/counter": {
     "type": "boolean",
@@ -1979,9 +2063,9 @@
     "type": "file|filelist|array",
     "description": "Model of the component; Must be FileList or Array if using 'multiple' prop; Either use this property (along with a listener for 'input' event) OR use v-model directive"
   },
-  "q-file/max-files": {
-    "type": "number|string",
-    "description": "Maximum number of files to contain"
+  "q-file/append": {
+    "type": "boolean",
+    "description": "Append file(s) to current model rather than replacing them; Has effect only when using 'multiple' mode"
   },
   "q-file/display-value": {
     "type": "number|string",
@@ -2171,6 +2255,10 @@
     "type": "string|number",
     "description": "Debounce amount (in milliseconds)"
   },
+  "q-infinite-scroll/initial-index": {
+    "type": "number",
+    "description": "Initialize the pagination index (used for the @load event)"
+  },
   "q-infinite-scroll/scroll-target": {
     "type": "element|string",
     "description": "CSS selector or DOM element to be used as a custom scroll container instead of the auto detected one"
@@ -2319,13 +2407,17 @@
     "type": "boolean|string",
     "description": "Use 'standout' design for the field; Specifies classes to be applied when focused (overriding default ones)"
   },
+  "q-input/label-slot": {
+    "type": "boolean",
+    "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set"
+  },
   "q-input/bottom-slots": {
     "type": "boolean",
     "description": "Enables bottom slots ('error', 'hint', 'counter')"
   },
   "q-input/hide-bottom-space": {
     "type": "boolean",
-    "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
+    "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
   },
   "q-input/counter": {
     "type": "boolean",
@@ -2406,6 +2498,10 @@
   "q-intersection/ssr-prerender": {
     "type": "boolean",
     "description": "Pre-render content on server side if using SSR (use it to pre-render above the fold content)"
+  },
+  "q-intersection/root": {
+    "type": "element",
+    "description": "[Intersection API root prop] Lets you define an alternative to the viewport as your root (through its DOM element); It is important to keep in mind that root needs to be an ancestor of the observed element"
   },
   "q-intersection/margin": {
     "type": "string",
@@ -2663,6 +2759,10 @@
     "type": "boolean",
     "description": "Applies a small standard border-radius for a squared shape of the component"
   },
+  "q-linear-progress/instant-feedback": {
+    "type": "boolean",
+    "description": "No transition when model changes"
+  },
   "q-markup-table/dense": {
     "type": "boolean",
     "description": "Dense mode; occupies less space"
@@ -2750,6 +2850,10 @@
   "q-menu/persistent": {
     "type": "boolean",
     "description": "Allows the menu to not be dismissed by a click/tap outside of the menu or by hitting the ESC key"
+  },
+  "q-menu/no-route-dismiss": {
+    "type": "boolean",
+    "description": "Changing route app won't dismiss the popup; No need to set it if 'persistent' prop is also set"
   },
   "q-menu/auto-close": {
     "type": "boolean",
@@ -3415,6 +3519,10 @@
     "type": "number",
     "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision"
   },
+  "q-select/table-colspan": {
+    "type": "number|string",
+    "description": "The number of columns in the table (you need this if you use table-layout: fixed)"
+  },
   "q-select/error": {
     "type": "boolean",
     "description": "Does field have validation errors?"
@@ -3507,13 +3615,17 @@
     "type": "boolean|string",
     "description": "Use 'standout' design for the field; Specifies classes to be applied when focused (overriding default ones)"
   },
+  "q-select/label-slot": {
+    "type": "boolean",
+    "description": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set"
+  },
   "q-select/bottom-slots": {
     "type": "boolean",
     "description": "Enables bottom slots ('error', 'hint', 'counter')"
   },
   "q-select/hide-bottom-space": {
     "type": "boolean",
-    "description": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
+    "description": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content"
   },
   "q-select/counter": {
     "type": "boolean",
@@ -3700,8 +3812,8 @@
     "description": "Notify the component that the background is a dark color"
   },
   "q-separator/spaced": {
-    "type": "boolean",
-    "description": "If set to true, the top and bottom margins will be set to 8px"
+    "type": "boolean|string",
+    "description": "If set to true, the corresponding direction margins will be set to 8px; It can also be set to a size in CSS units, including unit name, or one of the xs|sm|md|lg|xl predefined sizes"
   },
   "q-separator/inset": {
     "type": "boolean|string",
@@ -3710,6 +3822,10 @@
   "q-separator/vertical": {
     "type": "boolean",
     "description": "If set to true, the separator will be vertical."
+  },
+  "q-separator/size": {
+    "type": "string",
+    "description": "Size in CSS units, including unit name"
   },
   "q-separator/color": {
     "type": "string",
@@ -4029,7 +4145,7 @@
   },
   "q-splitter/value": {
     "type": "number",
-    "description": "Model of the component defining the split ratio percent (0.0 < x < 100.0) between panels; Either use this property (along with a listener for 'input' event) OR use v-model directive"
+    "description": "Model of the component defining the size of first panel (or second if using reverse) in the unit specified (for '%' it's the split ratio percent - 0.0 < x < 100.0; for 'px' it's the size in px); Either use this property (along with a listener for 'input' event) OR use v-model directive"
   },
   "q-splitter/reverse": {
     "type": "boolean",
@@ -4141,7 +4257,7 @@
   },
   "q-stepper/value": {
     "type": "any",
-    "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive"
+    "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive."
   },
   "q-stepper/keep-alive": {
     "type": "boolean",
@@ -4245,7 +4361,7 @@
   },
   "q-tab-panels/value": {
     "type": "any",
-    "description": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive"
+    "description": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive."
   },
   "q-tab-panels/keep-alive": {
     "type": "boolean",
@@ -4311,9 +4427,29 @@
     "type": "number",
     "description": "Size in pixels of the sticky footer part (if using one); A correct value will improve scroll precision"
   },
+  "q-table/table-colspan": {
+    "type": "number|string",
+    "description": "The number of columns in the table (you need this if you use table-layout: fixed)"
+  },
   "q-table/color": {
     "type": "string",
     "description": "Color name for component from the Quasar Color Palette"
+  },
+  "q-table/icon-first-page": {
+    "type": "string",
+    "description": "Icon name following Quasar convention for stepping to first page; Make sure you have the icon library installed unless you are using 'img:' prefix"
+  },
+  "q-table/icon-prev-page": {
+    "type": "string",
+    "description": "Icon name following Quasar convention for stepping to previous page; Make sure you have the icon library installed unless you are using 'img:' prefix"
+  },
+  "q-table/icon-next-page": {
+    "type": "string",
+    "description": "Icon name following Quasar convention for stepping to next page; Make sure you have the icon library installed unless you are using 'img:' prefix"
+  },
+  "q-table/icon-last-page": {
+    "type": "string",
+    "description": "Icon name following Quasar convention for stepping to last page; Make sure you have the icon library installed unless you are using 'img:' prefix"
   },
   "q-table/grid": {
     "type": "boolean",
@@ -4349,7 +4485,19 @@
   },
   "q-table/hide-bottom": {
     "type": "boolean",
-    "description": "Hide table bottom layer"
+    "description": "Hide table bottom layer regardless of what it has to display"
+  },
+  "q-table/hide-selected-banner": {
+    "type": "boolean",
+    "description": "Hide the selected rows banner (if any)"
+  },
+  "q-table/hide-no-data": {
+    "type": "boolean",
+    "description": "Hide the default no data bottom layer"
+  },
+  "q-table/hide-pagination": {
+    "type": "boolean",
+    "description": "Hide the pagination controls at the bottom"
   },
   "q-table/dark": {
     "type": "boolean",
@@ -4429,11 +4577,15 @@
   },
   "q-table/card-style": {
     "type": "string|array|object",
-    "description": "CSS style to apply to the card (when in grid mode)"
+    "description": "CSS style to apply to the card (when in grid mode) or container card (when not in grid mode)"
   },
   "q-table/card-class": {
     "type": "string|array|object",
-    "description": "CSS classes to apply to the card (when in grid mode)"
+    "description": "CSS classes to apply to the card (when in grid mode) or container card (when not in grid mode)"
+  },
+  "q-table/title-class": {
+    "type": "string|array|object",
+    "description": "CSS classes to apply to the title (if using 'title' prop)"
   },
   "q-table/filter": {
     "type": "string|object",
@@ -4445,7 +4597,7 @@
   },
   "q-table/pagination": {
     "type": "object",
-    "description": "Pagination object"
+    "description": "Pagination object; You can use the '.sync' modifier on it if you want to have access on the current pagination in your components; When not using the .sync modifier it simply initializes the pagination on first render"
   },
   "q-table/rows-per-page-options": {
     "type": "array",
@@ -4551,6 +4703,10 @@
     "type": "boolean",
     "description": "Turns off capitalizing all letters within the tab (which is the default)"
   },
+  "q-route-tab/content-class": {
+    "type": "string",
+    "description": "Class definitions to be attributed to the content wrapper"
+  },
   "q-route-tab/tabindex": {
     "type": "number|string",
     "description": "Tabindex HTML attribute value"
@@ -4583,6 +4739,10 @@
     "type": "boolean",
     "description": "Turns off capitalizing all letters within the tab (which is the default)"
   },
+  "q-tab/content-class": {
+    "type": "string",
+    "description": "Class definitions to be attributed to the content wrapper"
+  },
   "q-tab/tabindex": {
     "type": "number|string",
     "description": "Tabindex HTML attribute value"
@@ -4598,6 +4758,14 @@
   "q-tabs/vertical": {
     "type": "boolean",
     "description": "Use vertical design (tabs one on top of each other rather than one next to the other horizontally)"
+  },
+  "q-tabs/outside-arrows": {
+    "type": "boolean",
+    "description": "Reserve space for arrows to place them on each side of the tabs (the arrows fade when inactive)"
+  },
+  "q-tabs/mobile-arrows": {
+    "type": "boolean",
+    "description": "Force display of arrows (if needed) on mobile"
   },
   "q-tabs/align": {
     "type": "string",
@@ -4618,6 +4786,10 @@
   "q-tabs/indicator-color": {
     "type": "string",
     "description": "The color to be attributed to the indicator (the underline) of the active tab"
+  },
+  "q-tabs/content-class": {
+    "type": "string",
+    "description": "Class definitions to be attributed to the content wrapper"
   },
   "q-tabs/left-icon": {
     "type": "string",
@@ -4823,6 +4995,10 @@
     "type": "any",
     "description": "What model value should be considered as 'indeterminate'?"
   },
+  "q-toggle/toggle-order": {
+    "type": "string",
+    "description": "Determines toggle order of the two states ('t' stands for state of true, 'f' for state of false); If 'toggle-indeterminate' is true, then the order is: indet -> first state -> second state -> indet (and repeat), otherwise: indet -> first state -> second state -> first state -> second state -> ..."
+  },
   "q-toggle/toggle-indeterminate": {
     "type": "boolean",
     "description": "When user clicks/taps on the component, should we toggle through the indeterminate state too?"
@@ -4959,6 +5135,10 @@
     "type": "string",
     "description": "The property name of each node object that holds the label of the node"
   },
+  "q-tree/children-key": {
+    "type": "string",
+    "description": "The property name of each node object that holds the list of children of the node"
+  },
   "q-tree/no-connectors": {
     "type": "boolean",
     "description": "Do not display the connector lines between nodes"
@@ -5039,13 +5219,21 @@
     "type": "string",
     "description": "Comma separated list of unique file type specifiers. Maps to 'accept' attribute of native input type=file element"
   },
+  "q-uploader/capture": {
+    "type": "string",
+    "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element"
+  },
   "q-uploader/max-file-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of individual file in bytes"
   },
   "q-uploader/max-total-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of all files combined in bytes"
+  },
+  "q-uploader/max-files": {
+    "type": "number|string",
+    "description": "Maximum number of files to contain"
   },
   "q-uploader/filter": {
     "type": "function",
@@ -5143,13 +5331,21 @@
     "type": "string",
     "description": "Comma separated list of unique file type specifiers. Maps to 'accept' attribute of native input type=file element"
   },
+  "q-uploader-base/capture": {
+    "type": "string",
+    "description": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element"
+  },
   "q-uploader-base/max-file-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of individual file in bytes"
   },
   "q-uploader-base/max-total-size": {
-    "type": "number",
+    "type": "number|string",
     "description": "Maximum size of all files combined in bytes"
+  },
+  "q-uploader-base/max-files": {
+    "type": "number|string",
+    "description": "Maximum number of files to contain"
   },
   "q-uploader-base/filter": {
     "type": "function",
@@ -5230,6 +5426,10 @@
   "q-virtual-scroll/virtual-scroll-sticky-size-end": {
     "type": "number",
     "description": "Size in pixels (height if vertical, width if horizontal) of the sticky part (if using one) at the end of the list; A correct value will improve scroll precision"
+  },
+  "q-virtual-scroll/table-colspan": {
+    "type": "number|string",
+    "description": "The number of columns in the table (you need this if you use table-layout: fixed)"
   },
   "q-virtual-scroll/type": {
     "type": "string",

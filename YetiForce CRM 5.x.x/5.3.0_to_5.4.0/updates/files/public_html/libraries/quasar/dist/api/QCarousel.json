@@ -26,7 +26,7 @@
     },
     "value": {
       "type": "Any",
-      "desc": "Model of the component defining current panel's name; If used as Number, it does not defines panel index though but slide name's which may be an Integer; Either use this property (along with a listener for 'input' event) OR use v-model directive",
+      "desc": "Model of the component defining the current panel's name; If a Number is used, it does not define the panel's index, but rather the panel's name which can also be an Integer; Either use this property (along with a listener for 'input' event) OR use the v-model directive.",
       "examples": [
         "v-model=\"panelName\""
       ],
@@ -202,6 +202,18 @@
       ],
       "category": "content"
     },
+    "navigation-active-icon": {
+      "type": "String",
+      "desc": "Icon name following Quasar convention for the active (current slide) navigation icon; Make sure you have the icon library installed unless you are using 'img:' prefix",
+      "examples": [
+        "map",
+        "ion-add",
+        "img:https://cdn.quasar.dev/logo/svg/quasar-logo.svg",
+        "img:statics/path/to/some_image.png"
+      ],
+      "category": "content",
+      "addedIn": "v1.13.2"
+    },
     "thumbnails": {
       "type": "Boolean",
       "desc": "Show thumbnails",
@@ -214,6 +226,46 @@
     },
     "control": {
       "desc": "Slot specific for QCarouselControl"
+    }
+  },
+  "scopedSlots": {
+    "navigation-icon": {
+      "desc": "Slot for navigation icon/btn; Suggestion: QBtn",
+      "scope": {
+        "index": {
+          "type": "Number",
+          "desc": "The 0-based index of corresponding slide"
+        },
+        "maxIndex": {
+          "type": "Number",
+          "desc": "The available number of slides"
+        },
+        "name": {
+          "type": "Any",
+          "desc": "The name of the corresponding slide"
+        },
+        "active": {
+          "type": "Boolean",
+          "desc": "Is this the current slide?"
+        },
+        "btnProps": {
+          "type": "Object",
+          "desc": "Default QBtn props that can be binded to your own QBtn"
+        },
+        "onClick": {
+          "type": "Function",
+          "desc": "Default trigger when clicked/tapped on",
+          "params": {
+            "evt": {
+              "type": "Object",
+              "desc": "JS event object",
+              "required": true
+            }
+          },
+          "returns": null
+        }
+      },
+      "addedIn": "v1.13.2"
     }
   },
   "events": {

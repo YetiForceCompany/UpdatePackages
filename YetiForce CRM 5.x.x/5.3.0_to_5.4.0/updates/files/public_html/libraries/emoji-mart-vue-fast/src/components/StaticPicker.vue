@@ -196,7 +196,17 @@ export default {
       return Object.freeze(deepMerge(I18N, this.i18n))
     },
     idleEmoji() {
-      return this.data.emoji(this.emoji)
+      try {
+        return this.data.emoji(this.emoji)
+      } catch (e) {
+        console.error(
+          'Default preview emoji `' +
+            this.emoji +
+            '` is not available, check the Picker `emoji` property',
+        )
+        console.error(e)
+        return this.data.firstEmoji()
+      }
     },
   },
   created() {
@@ -246,11 +256,7 @@ export default {
             this.$refs.scroll.scrollTop = top
           }
         }
-      if (this.searchEmojis) {
-        this.onSearch(null)
-        this.$refs.search.clear()
-        this.$nextTick(scrollToComponent)
-      } else if (this.infiniteScroll) {
+      if (this.infiniteScroll) {
         scrollToComponent()
       } else {
         this.activeCategory = this.filteredCategories[i]

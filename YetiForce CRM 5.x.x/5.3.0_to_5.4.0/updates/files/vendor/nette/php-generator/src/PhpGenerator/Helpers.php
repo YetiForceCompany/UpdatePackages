@@ -61,6 +61,12 @@ final class Helpers
 	}
 
 
+	public static function unindent(string $s, int $level = 1): string
+	{
+		return preg_replace('#^(\t|\ \ \ \ ){1,' . $level . '}#m', '', $s);
+	}
+
+
 	public static function isIdentifier($value): bool
 	{
 		return is_string($value) && preg_match('#^' . self::PHP_IDENT . '$#D', $value);
@@ -82,7 +88,9 @@ final class Helpers
 
 	public static function extractShortName(string $name): string
 	{
-		return ($pos = strrpos($name, '\\')) === false ? $name : substr($name, $pos + 1);
+		return ($pos = strrpos($name, '\\')) === false
+			? $name
+			: substr($name, $pos + 1);
 	}
 
 

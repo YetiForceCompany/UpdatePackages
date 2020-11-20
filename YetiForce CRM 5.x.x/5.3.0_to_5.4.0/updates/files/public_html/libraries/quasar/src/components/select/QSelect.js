@@ -24,6 +24,7 @@ import CompositionMixin from '../../mixins/composition.js'
 import ListenersMixin from '../../mixins/listeners.js'
 
 const validateNewValueMode = v => ['add', 'add-unique', 'toggle'].includes(v)
+const reEscapeList = '.*+?^${}()|[]\\'
 
 export default Vue.extend({
   name: 'QSelect',
@@ -170,7 +171,9 @@ export default Vue.extend({
     },
 
     fieldClass () {
-      return `q-select q-field--auto-height q-select--with${this.useInput !== true ? 'out' : ''}-input`
+      return `q-select q-field--auto-height q-select--with${this.useInput !== true ? 'out' : ''}-input` +
+        ` q-select--with${this.useChips !== true ? 'out' : ''}-chips` +
+        ` q-select--${this.multiple === true ? 'multiple' : 'single'}`
     },
 
     computedInputClass () {
@@ -342,20 +345,6 @@ export default Vue.extend({
       return this.__getPropValueFn('optionDisable', 'disable')
     },
 
-    autocompleteControlEvents () {
-      const on = {
-        keydown: this.__onTargetKeydown,
-        keyup: this.__onTargetAutocomplete,
-        keypress: this.__onTargetKeypress
-      }
-
-      if (this.$q.platform.is.mobile === true) {
-        on.focus = ev => { ev.target.blur() }
-      }
-
-      return on
-    },
-
     inputControlEvents () {
       const on = {
         input: this.__onInput,
@@ -367,14 +356,13 @@ export default Vue.extend({
         keydown: this.__onTargetKeydown,
         keyup: this.__onTargetKeyup,
         keypress: this.__onTargetKeypress,
-        focus: this.__selectInputText
+        focus: this.__selectInputText,
+        click: e => {
+          this.hasDialog === true && stop(e)
+        }
       }
 
       on.compositionstart = on.compositionupdate = on.compositionend = this.__onComposition
-
-      if (this.hasDialog === true) {
-        on.click = stop
-      }
 
       return on
     }
@@ -448,8 +436,6 @@ export default Vue.extend({
       const optValue = this.getOptionValue(opt)
 
       if (this.multiple !== true) {
-        this.$refs.target !== void 0 && this.$refs.target.focus()
-
         if (keepOpen !== true) {
           this.updateInputValue(
             this.fillInput === true ? this.getOptionLabel(opt) : '',
@@ -459,6 +445,8 @@ export default Vue.extend({
 
           this.hidePopup()
         }
+
+        this.$refs.target !== void 0 && this.$refs.target.focus()
 
         if (isDeepEqual(this.getOptionValue(this.innerValue[0]), optValue) !== true) {
           this.$emit('input', this.emitValue === true ? optValue : opt)
@@ -585,7 +573,6 @@ export default Vue.extend({
 
       if (e.keyCode !== void 0) {
         this.__onTargetKeyup(e)
-
         return
       }
 
@@ -655,6 +642,7 @@ export default Vue.extend({
       if (
         e.keyCode === 8 &&
         this.multiple === true &&
+        this.hideSelected !== true &&
         this.inputValue.length === 0 &&
         Array.isArray(this.value)
       ) {
@@ -670,29 +658,36 @@ export default Vue.extend({
 
       const optionsLength = this.virtualScrollLength
 
+      // clear search buffer if expired
+      if (this.searchBuffer === void 0 || this.searchBufferExp < Date.now()) {
+        this.searchBuffer = ''
+      }
+
       // keyboard search when not having use-input
-      if (optionsLength > 0 && this.useInput !== true && e.keyCode >= 48 && e.keyCode <= 90) {
+      if (
+        optionsLength > 0 &&
+        this.useInput !== true &&
+        e.key.length === 1 && // printable char
+        e.altKey === e.ctrlKey && // not kbd shortcut
+        (e.keyCode !== 32 || this.searchBuffer.length > 0) // space in middle of search
+      ) {
         this.menu !== true && this.showPopup(e)
 
-        // clear search buffer if expired
-        if (this.searchBuffer === void 0 || this.searchBufferExp < Date.now()) {
-          this.searchBuffer = ''
-        }
-
         const
-          char = String.fromCharCode(e.keyCode).toLocaleLowerCase(),
+          char = e.key.toLocaleLowerCase(),
           keyRepeat = this.searchBuffer.length === 1 && this.searchBuffer[0] === char
 
         this.searchBufferExp = Date.now() + 1500
         if (keyRepeat === false) {
+          stopAndPrevent(e)
           this.searchBuffer += char
         }
 
-        const searchRe = new RegExp('^' + this.searchBuffer.split('').join('.*'), 'i')
+        const searchRe = new RegExp('^' + this.searchBuffer.split('').map(l => reEscapeList.indexOf(l) > -1 ? '\\' + l : l).join('.*'), 'i')
 
         let index = this.optionIndex
 
-        if (keyRepeat === true || searchRe.test(this.getOptionLabel(this.options[index])) !== true) {
+        if (keyRepeat === true || index < 0 || searchRe.test(this.getOptionLabel(this.options[index])) !== true) {
           do {
             index = normalizeToInterval(index + 1, -1, optionsLength - 1)
           }
@@ -716,12 +711,12 @@ export default Vue.extend({
         return
       }
 
-      // enter, space (when not using use-input), or tab (when not using multiple and option selected)
+      // enter, space (when not using use-input and not in search), or tab (when not using multiple and option selected)
       // same target is checked above
       if (
         e.keyCode !== 13 &&
-        (this.useInput === true || e.keyCode !== 32) &&
-        (tabShouldSelect === false || e.keyCode !== 9)
+        (e.keyCode !== 32 || this.useInput === true || this.searchBuffer !== '') &&
+        (e.keyCode !== 9 || tabShouldSelect === false)
       ) { return }
 
       e.keyCode !== 9 && stopAndPrevent(e)
@@ -855,22 +850,33 @@ export default Vue.extend({
         child.push(this.__getInput(h, fromDialog))
       }
       else if (this.editable === true) {
-        const options = {
-          staticClass: 'q-select__autocomplete-input no-outline',
-          attrs: {
-            autocomplete: this.qAttrs.autocomplete,
-            tabindex: this.tabindex
-          },
-          on: this.autocompleteControlEvents
-        }
+        isTarget === true && child.push(
+          h('div', {
+            // there can be only one (when dialog is opened the control in dialog should be target)
+            ref: 'target',
+            key: 'd_t',
+            staticClass: 'no-outline',
+            attrs: {
+              id: this.targetUid,
+              tabindex: this.tabindex
+            },
+            on: cache(this, 'f-tget', {
+              keydown: this.__onTargetKeydown,
+              keyup: this.__onTargetKeyup,
+              keypress: this.__onTargetKeypress
+            })
+          })
+        )
 
-        if (isTarget === true) {
-          // there can be only one (when dialog is opened the control in dialog should be target)
-          options.ref = 'target'
-          options.attrs.id = this.targetUid
-        }
-
-        child.push(h('input', options))
+        this.qAttrs.autocomplete !== void 0 && child.push(
+          h('input', {
+            staticClass: 'q-select__autocomplete-input no-outline',
+            attrs: { autocomplete: this.qAttrs.autocomplete },
+            on: cache(this, 'autoinp', {
+              keyup: this.__onTargetAutocomplete
+            })
+          })
+        )
       }
 
       if (this.nameProp !== void 0 && this.disable !== true && this.innerOptionsValue.length > 0) {
@@ -923,10 +929,10 @@ export default Vue.extend({
     },
 
     __getInnerAppend (h) {
-      return this.loading !== true && this.innerLoading !== true && this.hideDropdownIcon !== true
+      return this.loading !== true && this.innerLoadingIndicator !== true && this.hideDropdownIcon !== true
         ? [
           h(QIcon, {
-            staticClass: 'q-select__dropdown-icon',
+            staticClass: 'q-select__dropdown-icon' + (this.menu === true ? ' rotate-180' : ''),
             props: { name: this.dropdownArrowIcon }
           })
         ]
@@ -936,6 +942,7 @@ export default Vue.extend({
     __getInput (h, fromDialog) {
       const options = {
         ref: 'target',
+        key: 'i_t',
         staticClass: 'q-field__input q-placeholder col',
         style: this.inputStyle,
         class: this.computedInputClass,
@@ -1024,6 +1031,7 @@ export default Vue.extend({
       }
       else {
         this.innerLoading = true
+        this.innerLoadingIndicator = true
       }
 
       if (
@@ -1051,13 +1059,19 @@ export default Vue.extend({
 
             typeof fn === 'function' && fn()
 
+            // hide indicator to allow arrow to animate
+            this.innerLoadingIndicator = false
+
             this.$nextTick(() => {
               this.innerLoading = false
-              if (this.menu === true) {
-                this.__updateMenu(true)
-              }
-              else {
-                this.menu = true
+
+              if (this.editable === true) {
+                if (this.menu === true) {
+                  this.__updateMenu(true)
+                }
+                else {
+                  this.menu = true
+                }
               }
 
               typeof afterFn === 'function' && this.$nextTick(() => { afterFn(this) })
@@ -1068,6 +1082,7 @@ export default Vue.extend({
           if (this.focused === true && this.filterId === filterId) {
             clearTimeout(this.filterId)
             this.innerLoading = false
+            this.innerLoadingIndicator = false
           }
           this.menu === true && (this.menu = false)
         }
@@ -1185,8 +1200,9 @@ export default Vue.extend({
             for: this.targetUid,
             dark: this.isOptionsDark,
             square: true,
-            loading: this.innerLoading,
             filled: true,
+            itemAligned: false,
+            loading: this.innerLoadingIndicator,
             stackLabel: this.inputValue.length > 0
           },
           on: {
@@ -1254,7 +1270,7 @@ export default Vue.extend({
 
     __onDialogHide (e) {
       this.hidePopup()
-      this.$emit('blur', e)
+      this.focused === false && this.$emit('blur', e)
       this.__resetInputValue()
     },
 
@@ -1288,11 +1304,16 @@ export default Vue.extend({
         if (this.innerLoading === true) {
           this.$emit('filter-abort')
           this.innerLoading = false
+          this.innerLoadingIndicator = false
         }
       }
     },
 
     showPopup (e) {
+      if (this.editable !== true) {
+        return
+      }
+
       if (this.hasDialog === true) {
         this.__onControlFocusin(e)
         this.dialog = true

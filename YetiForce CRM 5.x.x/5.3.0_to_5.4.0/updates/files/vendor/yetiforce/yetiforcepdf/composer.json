@@ -25,7 +25,7 @@
     "ext-gd": "*",
     "ext-filter": "*",
     "phenx/php-font-lib": "^0.5.1",
-    "guzzlehttp/guzzle": "^6.3",
+    "guzzlehttp/guzzle": "^7.0",
     "composer/ca-bundle": "^1.1",
     "milon/barcode": "^7.0.0",
     "sabberworm/php-css-parser": "^8.3"

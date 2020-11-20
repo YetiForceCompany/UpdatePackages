@@ -25,6 +25,18 @@
       "desc": "Use vertical design (tabs one on top of each other rather than one next to the other horizontally)",
       "category": "content"
     },
+    "outside-arrows": {
+      "type": "Boolean",
+      "desc": "Reserve space for arrows to place them on each side of the tabs (the arrows fade when inactive)",
+      "category": "content",
+      "addedIn": "v1.12.9"
+    },
+    "mobile-arrows": {
+      "type": "Boolean",
+      "desc": "Force display of arrows (if needed) on mobile",
+      "category": "content",
+      "addedIn": "v1.12.9"
+    },
     "align": {
       "type": "String",
       "desc": "Horizontal alignment the tabs within the tabs container",
@@ -78,6 +90,15 @@
         "teal-10"
       ],
       "category": "style"
+    },
+    "content-class": {
+      "type": "String",
+      "desc": "Class definitions to be attributed to the content wrapper",
+      "examples": [
+        "my-special-class"
+      ],
+      "category": "style",
+      "addedIn": "v1.12.0"
     },
     "left-icon": {
       "type": "String",

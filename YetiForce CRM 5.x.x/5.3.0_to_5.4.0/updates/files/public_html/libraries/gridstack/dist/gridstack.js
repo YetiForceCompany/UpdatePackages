@@ -1,12 +1,11 @@
 /**
- * gridstack.js 1.1.1
+ * gridstack.js 1.2.1
  * https://gridstackjs.com/
  * (c) 2014-2020 Alain Dumesny, Dylan Weiss, Pavel Reznikov
  * gridstack.js may be freely distributed under the MIT license.
  * @preserve
 */
 (function(factory) {
-  /* [alain] we compile jquery with our code, so no need to 'load' externally
   if (typeof define === 'function' && define.amd) {
     define(['jquery', 'exports'], factory);
   } else if (typeof exports !== 'undefined') {
@@ -15,7 +14,7 @@
     try { jQueryModule = require('jquery'); } catch (e) {}
 
     factory(jQueryModule || window.jQuery, exports);
-  } else */{
+  } else {
     factory(window.jQuery, window);
   }
 })(function($, scope) {
@@ -168,7 +167,7 @@
 
       sources.forEach(function(source) {
         for (var prop in source) {
-          if (source.hasOwnProperty(prop) && (!target.hasOwnProperty(prop) || target[prop] === undefined)) {
+          if (Object.prototype.hasOwnProperty.call(source, prop) && (!Object.prototype.hasOwnProperty.call(target, prop) || target[prop] === undefined)) {
             target[prop] = source[prop];
           }
         }
@@ -733,6 +732,7 @@
       placeholderText: '',
       handle: '.grid-stack-item-content',
       handleClass: null,
+      styleInHead: false,
       cellHeight: 60,
       verticalMargin: 20,
       auto: true,
@@ -867,14 +867,12 @@
         self._updateHeightsOnResize();
       }
 
-      if (self.opts.staticGrid) { return; }
-
       if (!self.opts.disableOneColumnMode && (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) <= self.opts.minWidth) {
-        if (self.oneColumnMode) {  return; }
+        if (self.oneColumnMode) { return }
         self.oneColumnMode = true;
         self.column(1);
       } else {
-        if (!self.oneColumnMode) { return; }
+        if (!self.oneColumnMode) { return }
         self.oneColumnMode = false;
         self.column(self._prevColumn);
       }
@@ -1094,8 +1092,9 @@
       Utils.removeStylesheet(this._stylesId);
     }
     this._stylesId = 'gridstack-style-' + (Math.random() * 100000).toFixed();
-    // insert style to parent (instead of 'head') to support WebComponent
-    this._styles = Utils.createStylesheet(this._stylesId, this.el.parentNode);
+    var styleLocation = this.opts.styleInHead ? undefined : this.el.parentNode
+    // if styleInHead === false insert style to parent to support WebComponent
+    this._styles = Utils.createStylesheet(this._stylesId, styleLocation);
     if (this._styles !== null) {
       this._styles._max = 0;
     }
@@ -1427,8 +1426,8 @@
 
   /** call to write any default attributes back to element */
   GridStack.prototype._writeAttr = function(el, node) {
+    if (!node) { return; }
     el = $(el);
-    node = node || {};
     // Note: passing null removes the attr in jquery
     if (node.x !== undefined) { el.attr('data-gs-x', node.x); }
     if (node.y !== undefined) { el.attr('data-gs-y', node.y); }
@@ -1446,7 +1445,7 @@
     if (node.id !== undefined) { el.attr('data-gs-id', node.id); }
   };
 
-  /** call to write any default attributes back to element */
+  /** call to read any default attributes back to element */
   GridStack.prototype._readAttr = function(el, node) {
     el = $(el);
     node = node || {};
@@ -1490,6 +1489,9 @@
 
     el = $(el);
     if (opt) { // see knockout above
+      // make sure we load any DOM attributes that are not specified in passed in options (which override)
+      var domAttr = this._readAttr(el);
+      Utils.defaults(opt, domAttr);
       this.engine._prepareNode(opt);
     }
     this._writeAttr(el, opt);
@@ -1519,6 +1521,7 @@
     if (!node) {
       node = this.engine.getNodeDataByDOMEl(el.get(0));
     }
+    if (!node || node.el.parentElement !== this.el) return; // not our child!
     // remove our DOM data (circular link) and drag&drop permanently
     el.removeData('_gridstack_node');
     this.dd.draggable(el, 'destroy').resizable(el, 'destroy');
@@ -2107,7 +2110,7 @@
     var el = $(elOrString).get(0);
     if (!el) return;
     if (!el.gridstack) {
-      el.gridstack = new GridStack(el, opts);
+      el.gridstack = new GridStack(el, Utils.clone(opts));
     }
     return el.gridstack
   };

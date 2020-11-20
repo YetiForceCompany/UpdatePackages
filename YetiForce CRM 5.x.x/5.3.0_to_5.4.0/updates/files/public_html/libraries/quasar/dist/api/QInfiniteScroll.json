@@ -32,6 +32,17 @@
       "category": "behavior",
       "addedIn": "v1.1.0"
     },
+    "initial-index": {
+      "type": "Number",
+      "desc": "Initialize the pagination index (used for the @load event)",
+      "default": 0,
+      "examples": [
+        2,
+        3
+      ],
+      "category": "behavior",
+      "addedIn": "v1.13.0"
+    },
     "scroll-target": {
       "type": [
         "Element",
@@ -106,6 +117,10 @@
     },
     "resume": {
       "desc": "Starts working. Checks scroll position upon call and if trigger is hit, it loads more content"
+    },
+    "setIndex": {
+      "desc": "Overwrite the current pagination index",
+      "addedIn": "v1.13.0"
     },
     "updateScrollTarget": {
       "desc": "Updates the scroll target; Useful when the parent elements change so that the scrolling target also changes"

@@ -3,6 +3,7 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-directives/mutation"
   },
+  "addedIn": "v1.3.0",
   "value": {
     "type": [
       "Function"
@@ -72,7 +73,6 @@
     "once": {
       "type": "Boolean",
       "desc": "Call handler only once, when the first mutation was triggered, then stop monitoring",
-      "reactive": true,
       "examples": [
         "v-mutation.once"
       ]
@@ -80,7 +80,6 @@
     "childList": {
       "type": "Boolean",
       "desc": "Monitor the target node (and, if 'subtree' is also set, its descendants) for the addition of new child nodes or removal of existing child nodes",
-      "reactive": true,
       "examples": [
         "v-mutation.childList"
       ]
@@ -88,7 +87,6 @@
     "subtree": {
       "type": "Boolean",
       "desc": "Extend monitoring to the entire subtree of nodes rooted at target",
-      "reactive": true,
       "examples": [
         "v-mutation.subtree"
       ]
@@ -96,7 +94,6 @@
     "attributes": {
       "type": "Boolean",
       "desc": "Watch for changes to the value of attributes on the node or nodes being monitored",
-      "reactive": true,
       "examples": [
         "v-mutation.attributes"
       ]
@@ -104,7 +101,6 @@
     "characterData": {
       "type": "Boolean",
       "desc": "Monitor the specified target node or subtree for changes to the character data contained within the node or nodes",
-      "reactive": true,
       "examples": [
         "v-mutation.characterData"
       ]
@@ -112,7 +108,6 @@
     "attributeOldValue": {
       "type": "Boolean",
       "desc": "Record the previous value of any attribute that changes when monitoring the node or nodes for attribute changes",
-      "reactive": true,
       "examples": [
         "v-mutation.attributeOldValue"
       ]
@@ -120,7 +115,6 @@
     "characterDataOldValue": {
       "type": "Boolean",
       "desc": "Record the previous value of a node's text whenever the text changes on nodes being monitored",
-      "reactive": true,
       "examples": [
         "v-mutation.characterDataOldValue"
       ]

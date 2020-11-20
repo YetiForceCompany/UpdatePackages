@@ -86,6 +86,28 @@
                     "textarea"
                   ]
                 },
+                "isValid": {
+                  "type": "Function",
+                  "desc": "Is typed content valid?",
+                  "params": {
+                    "val": {
+                      "type": "String",
+                      "desc": "The value of the input"
+                    }
+                  },
+                  "returns": {
+                    "type": "Boolean",
+                    "desc": "The text passed validation or not"
+                  }
+                },
+                "attrs": {
+                  "type": "Object",
+                  "desc": "Attributes to pass to prompt control",
+                  "examples": [
+                    "{ autocomplete: 'off' }"
+                  ],
+                  "addedIn": "v1.9.12"
+                },
                 "label": {
                   "type": "String",
                   "desc": "A text label that will “float” up above the input field, once the field gets focus",
@@ -94,7 +116,7 @@
                   ],
                   "addedIn": "v1.9.3"
                 },
-                "stack-label": {
+                "stackLabel": {
                   "type": "Boolean",
                   "desc": "Label will be always shown above the field regardless of field content (if any)",
                   "addedIn": "v1.9.3"
@@ -121,27 +143,48 @@
                   ],
                   "addedIn": "v1.9.3"
                 },
-                "isValid": {
-                  "type": "Function",
-                  "desc": "Is typed content valid?",
-                  "params": {
-                    "val": {
-                      "type": "String",
-                      "desc": "The value of the input"
-                    }
-                  },
-                  "returns": {
-                    "type": "Boolean",
-                    "desc": "The text passed validation or not"
-                  }
+                "rounded": {
+                  "type": "Boolean",
+                  "desc": "Applies a small standard border-radius for a squared shape of the component",
+                  "category": "style",
+                  "addedIn": "v1.12.3"
                 },
-                "attrs": {
-                  "type": "Object",
-                  "desc": "Attributes to pass to prompt control",
-                  "examples": [
-                    "{ autocomplete: 'off' }"
+                "square": {
+                  "type": "Boolean",
+                  "desc": "Remove border-radius so borders are squared; Overrides 'rounded' prop",
+                  "addedIn": "v1.12.3"
+                },
+                "counter": {
+                  "type": "Boolean",
+                  "desc": "Show an automatic counter on bottom right",
+                  "addedIn": "v1.12.3"
+                },
+                "maxlength": {
+                  "type": [
+                    "String",
+                    "Number"
                   ],
-                  "addedIn": "v1.9.12"
+                  "desc": "Specify a max length of model",
+                  "examples": [
+                    "12"
+                  ],
+                  "addedIn": "v1.12.3"
+                },
+                "prefix": {
+                  "type": "String",
+                  "desc": "Prefix",
+                  "examples": [
+                    "$"
+                  ],
+                  "addedIn": "v1.12.3"
+                },
+                "suffix": {
+                  "type": "String",
+                  "desc": "Suffix",
+                  "examples": [
+                    "@gmail.com"
+                  ],
+                  "addedIn": "v1.12.3"
                 }
               }
             },
@@ -205,6 +248,29 @@
                 }
               }
             },
+            "progress": {
+              "type": [
+                "Boolean",
+                "Object"
+              ],
+              "desc": "Display a Quasar spinner (if value is true, then the defaults are used); Useful for conveying the idea that something is happening behind the covers; Tip: use along with persistent, ok: false and update() method",
+              "definition": {
+                "spinner": {
+                  "type": "Component",
+                  "desc": "One of the QSpinners"
+                },
+                "color": {
+                  "type": "String",
+                  "desc": "Color name for component from the Quasar Color Palette",
+                  "examples": [
+                    "primary",
+                    "teal-10"
+                  ],
+                  "category": "style"
+                }
+              },
+              "addedIn": "v1.14.0"
+            },
             "ok": {
               "type": [
                 "String",
@@ -266,15 +332,15 @@
               "type": "Boolean",
               "desc": "User cannot dismiss Dialog if clicking outside of it or hitting ESC key; Also, an app route change won't dismiss it"
             },
-            "no-esc-dismiss": {
+            "noEscDismiss": {
               "type": "Boolean",
               "desc": "User cannot dismiss Dialog by hitting ESC key; No need to set it if 'persistent' prop is also set"
             },
-            "no-backdrop-dismiss": {
+            "noBackdropDismiss": {
               "type": "Boolean",
               "desc": "User cannot dismiss Dialog by clicking outside of it; No need to set it if 'persistent' prop is also set"
             },
-            "no-route-dismiss": {
+            "noRouteDismiss": {
               "type": "Boolean",
               "desc": "Changing route app won't dismiss Dialog; No need to set it if 'persistent' prop is also set"
             },
@@ -286,15 +352,15 @@
               "type": "Boolean",
               "desc": "Put Dialog into maximized mode"
             },
-            "full-width": {
+            "fullWidth": {
               "type": "Boolean",
               "desc": "Dialog will try to render with same width as the window"
             },
-            "full-height": {
+            "fullHeight": {
               "type": "Boolean",
               "desc": "Dialog will try to render with same height as the window"
             },
-            "transition-show": {
+            "transitionShow": {
               "type": "String",
               "desc": "One of Quasar's embedded transitions",
               "examples": [
@@ -304,7 +370,7 @@
               "category": "behavior",
               "default": "scale"
             },
-            "transition-hide": {
+            "transitionHide": {
               "type": "String",
               "desc": "One of Quasar's embedded transitions",
               "examples": [
@@ -409,6 +475,22 @@
               "desc": "Chained Object",
               "tsType": "DialogChainObject"
             }
+          },
+          "update": {
+            "type": "Function",
+            "desc": "Updates the initial properties (given as create() param) except for 'component' and 'parent' (and deprecated 'root')",
+            "params": {
+              "opts": {
+                "type": "Object",
+                "desc": "Props (except 'component' and 'parent') which will overwrite the initial create() params"
+              }
+            },
+            "returns": {
+              "type": "Object",
+              "desc": "Chained Object",
+              "tsType": "DialogChainObject"
+            },
+            "addedIn": "v1.14.0"
           }
         }
       },

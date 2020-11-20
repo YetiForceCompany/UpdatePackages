@@ -154,6 +154,19 @@
       "desc": "Put component in disabled mode",
       "category": "state"
     },
+    "tabindex": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "Tabindex HTML attribute value",
+      "examples": [
+        "0",
+        "100"
+      ],
+      "category": "general",
+      "addedIn": "v1.13.0"
+    },
     "icon": {
       "type": "String",
       "desc": "Icon name following Quasar convention; Make sure you have the icon library installed unless you are using 'img:' prefix",

@@ -8,6 +8,7 @@
       "desc": "All native events are being propagated (you don't need the '.native' modifier)"
     }
   },
+  "addedIn": "v1.6.0",
   "props": {
     "tag": {
       "type": "String",

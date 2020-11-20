@@ -18,25 +18,19 @@ namespace App\RecordCollectors;
  */
 class Gus extends Base
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	protected $allowedModules = ['Accounts', 'Leads', 'Vendors', 'Competition'];
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
+	public static $allowedModules = ['Accounts', 'Leads', 'Vendors', 'Competition'];
+
+	/** {@inheritdoc} */
 	public $icon = 'yfi yfi-gus';
-	/**
-	 * {@inheritdoc}
-	 */
+
+	/** {@inheritdoc} */
 	public $label = 'GUS';
-	/**
-	 * {@inheritdoc}
-	 */
+
+	/** {@inheritdoc} */
 	public $displayType = 'FillFields';
-	/**
-	 * {@inheritdoc}
-	 */
+
+	/** {@inheritdoc} */
 	protected $fields = [
 		'vatId' => [
 			'labelModule' => '_Base',
@@ -52,9 +46,7 @@ class Gus extends Base
 		]
 	];
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	protected $modulesFieldsMap = [
 		'Accounts' => [
 			'vatId' => 'vat_id',
@@ -77,9 +69,8 @@ class Gus extends Base
 			'ncr' => 'registration_number_1'
 		]
 	];
-	/**
-	 * {@inheritdoc}
-	 */
+
+	/** {@inheritdoc} */
 	public $formFieldsToRecordMap = [
 		'Accounts' => [
 			'Regon' => 'registration_number_2',
@@ -141,17 +132,13 @@ class Gus extends Base
 		],
 	];
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function isActive(): bool
 	{
-		return \App\YetiForce\Shop::check('YetiForcePlGus') && \in_array($this->moduleName, $this->allowedModules);
+		return parent::isActive() && \App\YetiForce\Shop::check('YetiForcePlGus');
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
+	/** {@inheritdoc} */
 	public function search(): array
 	{
 		if (!$this->isActive()) {
@@ -166,16 +153,40 @@ class Gus extends Base
 			$infoFromGus = $client->search($vatId, $ncr, $taxNumber);
 			foreach ($infoFromGus as &$info) {
 				$client->getAdvanceData($info);
-				unset($info['SilosID'], $info['Typ']);
 			}
 			$moduleName = $this->request->getModule();
-			$response['formFieldsToRecordMap'] = $this->formFieldsToRecordMap[$moduleName];
 			if ($recordId = $this->request->getInteger('record')) {
 				$recordModel = \Vtiger_Record_Model::getInstanceById($recordId, $moduleName);
 				$response['recordModel'] = $recordModel;
+				$fields = $recordModel->getModule()->getFields();
+			} else {
+				$fields = \Vtiger_Module_Model::getInstance($moduleName)->getFields();
 			}
-			if ($infoFromGus) {
-				$response['fields'] = $info;
+			if ($infoFromGus && isset($this->formFieldsToRecordMap[$moduleName])) {
+				$data = $skip = [];
+				foreach ($infoFromGus as $key => &$row) {
+					foreach ($this->formFieldsToRecordMap[$moduleName] as $apiName => $fieldName) {
+						if (empty($fields[$fieldName]) || !$fields[$fieldName]->isActiveField()) {
+							if (empty($skip[$fieldName]['label'])) {
+								$skip[$fieldName]['label'] = \App\Language::translate($fields[$fieldName]->getFieldLabel(), $moduleName);
+							}
+							$skip[$fieldName]['data'][$key]['display'] = $row[$apiName] ?? '';
+							continue;
+						}
+						if (isset($row[$apiName])) {
+							if (empty($data[$fieldName]['label'])) {
+								$data[$fieldName]['label'] = \App\Language::translate($fields[$fieldName]->getFieldLabel(), $moduleName);
+							}
+							$data[$fieldName]['data'][$key] = [
+								'raw' => $row[$apiName],
+								'display' => $fields[$fieldName]->getDisplayValue($row[$apiName]),
+							];
+						}
+					}
+				}
+				$response['fields'] = $data;
+				$response['keys'] = array_keys($data[$fieldName]['data']);
+				$response['skip'] = $skip;
 			}
 		} catch (\SoapFault $e) {
 			\App\Log::warning($e->faultstring, 'RecordCollectors');

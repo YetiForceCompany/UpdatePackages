@@ -144,7 +144,28 @@ export class EmojiIndex {
   }
 
   buildIndex() {
-    this._data.categories.forEach((categoryData) => {
+    let allCategories = this._data.categories
+
+    if (this._include) {
+      // Remove categories that are not in the include list.
+      allCategories = allCategories.filter((item) => {
+        return this._include.includes(item.id)
+      })
+      // Sort categories according to the include list.
+      allCategories = allCategories.sort((a, b) => {
+        const indexA = this._include.indexOf(a.id)
+        const indexB = this._include.indexOf(b.id)
+        if (indexA < indexB) {
+          return -1
+        }
+        if (indexA > indexB) {
+          return 1
+        }
+        return 0
+      })
+    }
+
+    allCategories.forEach((categoryData) => {
       if (!this.isCategoryNeeded(categoryData.id)) {
         return
       }
@@ -243,6 +264,14 @@ export class EmojiIndex {
     let emoji = this._emojis[emojiId]
     if (!emoji) {
       throw new Error('Can not find emoji by id: ' + emojiId)
+    }
+    return emoji
+  }
+
+  firstEmoji() {
+    let emoji = this._emojis[Object.keys(this._emojis)[0]]
+    if (!emoji) {
+      throw new Error('Can not get first emoji')
     }
     return emoji
   }
@@ -445,6 +474,7 @@ export class EmojiData {
           skinData[k] = variationData[k]
         }
         delete skinData.skin_variations
+        skinData['skin_tone'] = parseInt(skinIdx) + 1
         this._skins.push(new EmojiData(skinData))
       }
     }

@@ -5,8 +5,9 @@
  Licensed under the MIT license
  */
 
-var jquery = require("jquery");
-if(jquery === undefined) {
+import jQuery from "jquery";
+
+if (jQuery === undefined) {
 	throw "jQuery not loaded!";
 }
-module.exports = jquery;
+export default jQuery;

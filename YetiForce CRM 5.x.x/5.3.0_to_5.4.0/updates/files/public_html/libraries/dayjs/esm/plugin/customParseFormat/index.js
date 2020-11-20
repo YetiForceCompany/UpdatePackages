@@ -1,3 +1,4 @@
+import { u } from '../localizedFormat/utils';
 var formattingTokens = /(\[[^[]*\])|([-:/.()\s]+)|(A|a|YYYY|YY?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g;
 var match1 = /\d/; // 0 - 9
 
@@ -9,8 +10,6 @@ var match4 = /\d{4}/; // 0000 - 9999
 
 var match1to2 = /\d\d?/; // 0 - 99
 
-var matchUpperCaseAMPM = /[AP]M/;
-var matchLowerCaseAMPM = /[ap]m/;
 var matchSigned = /[+-]?\d+/; // -inf - inf
 
 var matchOffset = /[+-]\d\d:?\d\d/; // +00:00 -00:00 +0000 or -0000
@@ -41,12 +40,32 @@ var getLocalePart = function getLocalePart(name) {
   return part && (part.indexOf ? part : part.s.concat(part.f));
 };
 
+var meridiemMatch = function meridiemMatch(input, isLowerCase) {
+  var isAfternoon;
+  var _locale = locale,
+      meridiem = _locale.meridiem;
+
+  if (!meridiem) {
+    isAfternoon = input === (isLowerCase ? 'pm' : 'PM');
+  } else {
+    for (var i = 1; i <= 24; i += 1) {
+      // todo: fix input === meridiem(i, 0, isLowerCase)
+      if (input.indexOf(meridiem(i, 0, isLowerCase)) > -1) {
+        isAfternoon = i > 12;
+        break;
+      }
+    }
+  }
+
+  return isAfternoon;
+};
+
 var expressions = {
-  A: [matchUpperCaseAMPM, function (input) {
-    this.afternoon = input === 'PM';
+  A: [matchWord, function (input) {
+    this.afternoon = meridiemMatch(input, false);
   }],
-  a: [matchLowerCaseAMPM, function (input) {
-    this.afternoon = input === 'pm';
+  a: [matchWord, function (input) {
+    this.afternoon = meridiemMatch(input, true);
   }],
   S: [match1, function (input) {
     this.milliseconds = +input * 100;
@@ -68,8 +87,8 @@ var expressions = {
   D: [match1to2, addInput('day')],
   DD: [match2, addInput('day')],
   Do: [matchWord, function (input) {
-    var _locale = locale,
-        ordinal = _locale.ordinal;
+    var _locale2 = locale,
+        ordinal = _locale2.ordinal;
 
     var _input$match = input.match(/\d+/);
 
@@ -89,23 +108,23 @@ var expressions = {
     var monthsShort = getLocalePart('monthsShort');
     var matchIndex = (monthsShort || months.map(function (_) {
       return _.substr(0, 3);
-    })).indexOf(input);
+    })).indexOf(input) + 1;
 
-    if (matchIndex < 0) {
+    if (matchIndex < 1) {
       throw new Error();
     }
 
-    this.month = (matchIndex + 1) % 12;
+    this.month = matchIndex % 12 || matchIndex;
   }],
   MMMM: [matchWord, function (input) {
     var months = getLocalePart('months');
-    var matchIndex = months.indexOf(input);
+    var matchIndex = months.indexOf(input) + 1;
 
-    if (matchIndex < 0) {
+    if (matchIndex < 1) {
       throw new Error();
     }
 
-    this.month = (matchIndex + 1) % 12;
+    this.month = matchIndex % 12 || matchIndex;
   }],
   Y: [matchSigned, addInput('year')],
   YY: [match2, function (input) {
@@ -136,6 +155,7 @@ function correctHours(time) {
 }
 
 function makeParser(format) {
+  format = u(format, locale && locale.formats);
   var array = format.match(formattingTokens);
   var length = array.length;
 
@@ -226,6 +246,7 @@ var parseFormattedInput = function parseFormattedInput(input, format, utc) {
 };
 
 export default (function (o, C, d) {
+  d.p.customParseFormat = true;
   var proto = C.prototype;
   var oldParse = proto.parse;
 
@@ -256,7 +277,10 @@ export default (function (o, C, d) {
 
       if (isStrict && date !== this.format(format)) {
         this.$d = new Date('');
-      }
+      } // reset global locale to make parallel unit test
+
+
+      locale = undefined;
     } else if (format instanceof Array) {
       var len = format.length;
 

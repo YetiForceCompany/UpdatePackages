@@ -1,6 +1,6 @@
 {
   "name": "gantt-elastic",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Gantt chart. Elastic javascript gantt chart. Vue gantt. Project manager responsive gantt. jquery gantt.",
   "main": "src/GanttElastic.vue",
   "dependencies": {
@@ -67,7 +67,6 @@
   "bugs": {
     "url": "https://github.com/neuronetio/gantt-elastic/issues"
   },
-  "homepage": "https://neuronetio.github.io/gantt-elastic/",
   "postcss": {
     "plugins": {
       "autoprefixer": {}

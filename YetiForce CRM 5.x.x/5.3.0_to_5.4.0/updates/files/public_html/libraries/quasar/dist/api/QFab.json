@@ -154,6 +154,19 @@
       "desc": "Put component in disabled mode",
       "category": "state"
     },
+    "tabindex": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "Tabindex HTML attribute value",
+      "examples": [
+        "0",
+        "100"
+      ],
+      "category": "general",
+      "addedIn": "v1.13.0"
+    },
     "value": {
       "type": "Boolean",
       "desc": "Controls state of fab actions (showing/hidden); Works best with v-model directive, otherwise use along listening to 'input' event",

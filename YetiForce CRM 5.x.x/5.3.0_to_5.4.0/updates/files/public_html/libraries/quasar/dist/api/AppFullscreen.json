@@ -11,8 +11,12 @@
     },
     "isActive": {
       "type": "Boolean",
-      "desc": "Is Fullscreen active?",
-      "reactive": true
+      "desc": "Is Fullscreen active?"
+    },
+    "activeEl": {
+      "type": "Object",
+      "desc": "The DOM element used as root for fullscreen, otherwise 'null'",
+      "addedIn": "v1.12.5"
     }
   },
   "methods": {

@@ -18,8 +18,8 @@
       "desc": "Configure a target element to trigger component toggle; 'true' means it enables the parent DOM element, 'false' means it disables attaching events to any DOM elements; By using a String (CSS selector) or a DOM element it attaches the events to the specified DOM element (if it exists)",
       "default": true,
       "values": [
-        true,
-        false,
+        "(Boolean) true",
+        "(Boolean) false",
         "(CSS selector)",
         "(DOM Element)"
       ],
@@ -161,6 +161,12 @@
       "type": "Boolean",
       "desc": "Allows the menu to not be dismissed by a click/tap outside of the menu or by hitting the ESC key",
       "category": "behavior"
+    },
+    "no-route-dismiss": {
+      "type": "Boolean",
+      "desc": "Changing route app won't dismiss the popup; No need to set it if 'persistent' prop is also set",
+      "category": "behavior",
+      "addedIn": "v1.13.0"
     },
     "auto-close": {
       "type": "Boolean",

@@ -36,6 +36,17 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 	/**
 	 * {@inheritdoc}
 	 */
+	public function preProcessAjax(\App\Request $request)
+	{
+		$recordModel = Vtiger_Record_Model::getInstanceById($request->getInteger('record'), $request->getModule());
+		$viewer = $this->getViewer($request);
+		$viewer->assign('QUICKCREATE_LINKS', $this->getLinks($recordModel));
+		parent::preProcessAjax($request);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	protected function preProcessTplName(App\Request $request)
 	{
 		return 'Modals/QuickEditHeader.tpl';
@@ -93,6 +104,7 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		$viewer->assign('ADDRESS_BLOCK_LABELS', ['LBL_ADDRESS_INFORMATION', 'LBL_ADDRESS_MAILING_INFORMATION', 'LBL_ADDRESS_DELIVERY_INFORMATION', 'LBL_ADDRESS_BILLING', 'LBL_ADDRESS_SHIPPING']);
 		$viewer->assign('PICKIST_DEPENDENCY_DATASOURCE', \App\Json::encode(\App\Fields\Picklist::getPicklistDependencyDatasource($moduleName)));
 		$viewer->assign('MAPPING_RELATED_FIELD', \App\Json::encode(\App\ModuleHierarchy::getRelationFieldByHierarchy($moduleName)));
+		$viewer->assign('LIST_FILTER_FIELDS', \App\Json::encode(\App\ModuleHierarchy::getFieldsForListFilter($moduleName)));
 		$viewer->assign('LAYOUT', $layout);
 		$viewer->assign('RECORD', $recordModel);
 		$viewer->assign('RECORD_ID', $record);
@@ -161,17 +173,44 @@ class Vtiger_QuickEditModal_View extends \App\Controller\Modal
 		} else {
 			$fieldModelList = $moduleModel->getQuickCreateFields();
 		}
+		$fieldsDependency = \App\FieldsDependency::getByRecordModel('QuickEdit', $recordModel);
 		foreach ($fieldModelList as $fieldName => $fieldModel) {
+			if ($fieldsDependency['hide']['backend'] && \in_array($fieldName, $fieldsDependency['hide']['backend'])) {
+				continue;
+			}
 			$fieldModel->set('fieldvalue', $recordModel->get($fieldName));
 			if ($fieldModel->get('tabindex') > Vtiger_Field_Model::$tabIndexLastSeq) {
 				Vtiger_Field_Model::$tabIndexLastSeq = $fieldModel->get('tabindex');
 			}
-			if ($mandatoryFields && \in_array($fieldName, $mandatoryFields)) {
+			if (($mandatoryFields && \in_array($fieldName, $mandatoryFields)) || ($fieldsDependency['mandatory'] && \in_array($fieldName, $fieldsDependency['mandatory']))) {
 				$fieldModel->set('isMandatory', true);
+			}
+			if ($fieldsDependency['hide']['frontend'] && \in_array($fieldName, $fieldsDependency['hide']['frontend'])) {
+				$fieldModel->set('hideField', true);
 			}
 			$values[$fieldName] = $fieldModel;
 		}
 		++Vtiger_Field_Model::$tabIndexLastSeq;
 		return $values;
+	}
+
+	/**
+	 * Function to get the list of links for the module.
+	 *
+	 * @param \Vtiger_Record_Model $recordMode
+	 *
+	 * @return Vtiger_Link_Model[] - Associate array of Link Type to List of Vtiger_Link_Model instances
+	 */
+	public function getLinks(Vtiger_Record_Model $recordModel)
+	{
+		$links['QUICKEDIT_VIEW_HEADER'][] = Vtiger_Link_Model::getInstanceFromValues([
+			'linktype' => 'QUICKEDIT_VIEW_HEADER',
+			'linkhint' => 'LBL_GO_TO_FULL_FORM',
+			'showLabel' => 1,
+			'linkicon' => 'yfi yfi-full-editing-view',
+			'linkdata' => ['js' => 'click', 'url' => $recordModel->getEditViewUrl()],
+			'linkclass' => 'btn-light js-full-editlink fontBold u-text-ellipsis mb-2 mb-md-0 col-12'
+		]);
+		return $links;
 	}
 }

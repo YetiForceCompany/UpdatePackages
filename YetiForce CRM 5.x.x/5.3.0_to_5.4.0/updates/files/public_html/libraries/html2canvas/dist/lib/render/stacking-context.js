@@ -90,7 +90,7 @@ var parseStackTree = function (parent, stackingContext, realStackingContext, lis
                 else if (order_1 > 0) {
                     var index_2 = 0;
                     parentStack.positiveZIndex.some(function (current, i) {
-                        if (order_1 > current.element.container.styles.zIndex.order) {
+                        if (order_1 >= current.element.container.styles.zIndex.order) {
                             index_2 = i + 1;
                             return false;
                         }

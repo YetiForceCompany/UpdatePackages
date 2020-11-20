@@ -110,7 +110,7 @@ Settings_Workflows_Edit_Js(
 					if (typeof this[customValidationFunctionName] !== 'undefined') {
 						let result = this[customValidationFunctionName].apply(this);
 						if (result !== true) {
-							Vtiger_Helper_Js.showPnotify({
+							app.showNotify({
 								title: app.vtranslate('JS_MESSAGE'),
 								text: result,
 								type: 'error'
@@ -142,9 +142,7 @@ Settings_Workflows_Edit_Js(
 			return this.checkDuplicateFieldsSelected();
 		},
 		checkDuplicateFieldsSelected: function () {
-			var selectedFieldNames = $('#save_fieldvaluemapping')
-				.find('.js-conditions-row')
-				.find('[name="fieldname"]');
+			var selectedFieldNames = $('#save_fieldvaluemapping').find('.js-conditions-row').find('[name="fieldname"]');
 			var result = true;
 			var failureMessage = app.vtranslate('JS_SAME_FIELDS_SELECTED_MORE_THAN_ONCE');
 			$.each(selectedFieldNames, function (i, ele) {
@@ -250,17 +248,9 @@ Settings_Workflows_Edit_Js(
 								}
 							}
 							rowValues[field] = newValuesArr.join(',');
-						} else if (
-							field === 'value' &&
-							valueSelectElement.is('select') &&
-							fieldType == 'picklist'
-						) {
+						} else if (field === 'value' && valueSelectElement.is('select') && fieldType == 'picklist') {
 							rowValues[field] = valueSelectElement.val();
-						} else if (
-							field === 'value' &&
-							valueSelectElement.is('select') &&
-							fieldType == 'multipicklist'
-						) {
+						} else if (field === 'value' && valueSelectElement.is('select') && fieldType == 'multipicklist') {
 							var value = valueSelectElement.val();
 							if (value === null) {
 								rowValues[field] = value;
@@ -281,10 +271,7 @@ Settings_Workflows_Edit_Js(
 						}
 					}
 				}
-				if (
-					$('[name="valuetype"]', rowElement).val() == 'false' ||
-					$('[name="valuetype"]', rowElement).length == 0
-				) {
+				if ($('[name="valuetype"]', rowElement).val() == 'false' || $('[name="valuetype"]', rowElement).length == 0) {
 					rowValues['valuetype'] = 'rawtext';
 				}
 
@@ -311,15 +298,6 @@ Settings_Workflows_Edit_Js(
 				progressIndicatorElement.progressIndicator({ mode: 'hide' });
 			});
 		},
-		/**
-		 * Function to get ckEditorInstance
-		 */
-		getckEditorInstance: function () {
-			if (this.ckEditorInstance === false) {
-				this.ckEditorInstance = new App.Fields.Text.Editor();
-			}
-			return this.ckEditorInstance;
-		},
 		registerTaskStatusChangeEvent: function () {
 			var container = this.getContainer();
 			container.on('change', '.taskStatus', function (e) {
@@ -343,7 +321,7 @@ Settings_Workflows_Edit_Js(
 							text: app.vtranslate('JS_STATUS_CHANGED_SUCCESSFULLY'),
 							type: 'success'
 						};
-						Vtiger_Helper_Js.showPnotify(params);
+						app.showNotify(params);
 					}
 					progressIndicatorElement.progressIndicator({ mode: 'hide' });
 				});
@@ -368,7 +346,7 @@ Settings_Workflows_Edit_Js(
 								text: app.vtranslate('JS_TASK_DELETED_SUCCESSFULLY'),
 								type: 'success'
 							};
-							Vtiger_Helper_Js.showPnotify(params);
+							app.showNotify(params);
 						}
 					});
 				});
@@ -390,23 +368,9 @@ Settings_Workflows_Edit_Js(
 				inputElement.val(newValue);
 			});
 		},
-		registerFillMailContentEvent: function () {
-			$('#task-fieldnames,#task_timefields,#task-templates').on('change', function (e) {
-				var textarea = CKEDITOR.instances.content;
-				var value = $(e.currentTarget).val();
-				if (textarea != undefined) {
-					textarea.insertHtml(value);
-				} else if ($('textarea[name="content"]')) {
-					var textArea = $('textarea[name="content"]');
-					textArea.insertAtCaret(value);
-				}
-			});
-		},
 		registerVTEmailTaskEvents: function () {
 			var textAreaElement = $('#content');
-			var ckEditorInstance = this.getckEditorInstance();
-			ckEditorInstance.loadEditor(textAreaElement);
-			this.registerFillMailContentEvent();
+			new App.Fields.Text.Editor(textAreaElement);
 			this.registerFillTaskFromEmailFieldEvent();
 			this.registerCcAndBccEvents();
 		},
@@ -736,10 +700,7 @@ $.fn.extend({
 				var startPos = this.selectionStart;
 				var endPos = this.selectionEnd;
 				var scrollTop = this.scrollTop;
-				this.value =
-					this.value.substring(0, startPos) +
-					myValue +
-					this.value.substring(endPos, this.value.length);
+				this.value = this.value.substring(0, startPos) + myValue + this.value.substring(endPos, this.value.length);
 				this.focus();
 				this.selectionStart = startPos + myValue.length;
 				this.selectionEnd = startPos + myValue.length;

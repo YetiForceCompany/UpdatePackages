@@ -118,6 +118,12 @@
           "type": "Any",
           "desc": "New model value",
           "required": true
+        },
+        "evt": {
+          "type": "Object",
+          "desc": "JS event object",
+          "required": true,
+          "addedIn": "v1.11.2"
         }
       }
     }

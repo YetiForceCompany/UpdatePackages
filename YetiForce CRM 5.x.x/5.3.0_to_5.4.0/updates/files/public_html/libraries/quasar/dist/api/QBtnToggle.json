@@ -44,6 +44,14 @@
       "desc": "Array of Objects defining each option",
       "required": true,
       "definition": {
+        "attrs": {
+          "type": "Object",
+          "desc": "Key-value for attributes to be set on the button",
+          "examples": [
+            "{ 'aria-label': 'Button label' }"
+          ],
+          "addedIn": "v1.13.0"
+        },
         "label": {
           "type": "String",
           "desc": "Label of option button; Use this prop and/or 'icon', but at least one is required",
@@ -76,7 +84,7 @@
         },
         "...props": {
           "type": "Any",
-          "desc": "Any other QBtn props"
+          "desc": "Any other QBtn props (including class and style)"
         }
       },
       "examples": [
@@ -170,6 +178,20 @@
       ],
       "category": "style"
     },
+    "padding": {
+      "type": "String",
+      "desc": "Apply custom padding (vertical [horizontal]); Size in CSS units, including unit name or standard size name (none|xs|sm|md|lg|xl); Also removes the min width and height when set",
+      "examples": [
+        "16px",
+        "10px 5px",
+        "2rem",
+        "xs",
+        "md lg",
+        "2px 2px 5px 7px"
+      ],
+      "category": "style",
+      "addedIn": "v1.13.0"
+    },
     "no-caps": {
       "type": "Boolean",
       "desc": "Avoid turning label text into caps (which happens by default)",
@@ -210,6 +232,12 @@
       "desc": "Clears model on click of the already selected button",
       "category": "model",
       "addedIn": "v1.4.4"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Suggestions: QTooltip, QBadge",
+      "addedIn": "v1.13.2"
     }
   },
   "events": {

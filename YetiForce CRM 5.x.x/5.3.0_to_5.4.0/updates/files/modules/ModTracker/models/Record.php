@@ -19,10 +19,13 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 	const UNLINK = 5;
 	const CONVERTTOACCOUNT = 6;
 	const DISPLAYED = 7;
+	const ARCHIVED = 8;
+	const REMOVED = 9;
 	const TRANSFER_EDIT = 10;
 	const TRANSFER_DELETE = 11;
 	const TRANSFER_UNLINK = 12;
 	const TRANSFER_LINK = 13;
+	const SHOW_HIDDEN_DATA = 14;
 
 	/**
 	 * Status labels.
@@ -33,16 +36,18 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 		0 => 'LBL_UPDATED',
 		1 => 'LBL_DELETED',
 		2 => 'LBL_CREATED',
+		3 => 'LBL_ACTIVE',
 		4 => 'LBL_ADDED',
 		5 => 'LBL_REMOVED',
 		6 => 'LBL_CONVERTED_FROM_LEAD',
 		7 => 'LBL_DISPLAYED',
-		3 => 'LBL_ACTIVE',
 		8 => 'LBL_ARCHIVED',
+		// 9 => 'LBL_REMOVED',
 		10 => 'LBL_TRANSFER_EDIT',
 		11 => 'LBL_TRANSFER_DELETE',
 		12 => 'LBL_TRANSFER_UNLINK',
 		13 => 'LBL_TRANSFER_LINK',
+		14 => 'LBL_SHOW_HIDDEN_DATA',
 	];
 
 	/**
@@ -51,10 +56,11 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 	 * @param int                 $parentRecordId
 	 * @param Vtiger_Paging_Model $pagingModel
 	 * @param string              $type
+	 * @param int|null            $startWith
 	 *
-	 * @return array - list of  ModTracker_Record_Model
+	 * @return self[] - list of  ModTracker_Record_Model
 	 */
-	public static function getUpdates($parentRecordId, Vtiger_Paging_Model $pagingModel, $type)
+	public static function getUpdates(int $parentRecordId, Vtiger_Paging_Model $pagingModel, string $type, ?int $startWith = null)
 	{
 		$recordInstances = [];
 		$startIndex = $pagingModel->getStartIndex();
@@ -63,10 +69,13 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 		$query = (new \App\Db\Query())
 			->from('vtiger_modtracker_basic')
 			->where(['crmid' => $parentRecordId])
-			->andWhere(($where))
+			->andWhere($where)
 			->limit($pageLimit)
 			->offset($startIndex)
 			->orderBy(['changedon' => SORT_DESC]);
+		if (!empty($startWith)) {
+			$query->andWhere(['>=', 'id', $startWith]);
+		}
 		$dataReader = $query->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			$recordInstance = new self();
@@ -74,7 +83,6 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 			$recordInstances[] = $recordInstance;
 		}
 		$dataReader->close();
-
 		return $recordInstances;
 	}
 
@@ -327,6 +335,16 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 	}
 
 	/**
+	 * Function check if status is Transfer.
+	 *
+	 * @return bool
+	 */
+	public function isShowHiddenData()
+	{
+		return $this->checkStatus(static::SHOW_HIDDEN_DATA);
+	}
+
+	/**
 	 * Has changed state.
 	 *
 	 * @return bool
@@ -475,10 +493,10 @@ class ModTracker_Record_Model extends Vtiger_Record_Model
 		$where = [];
 		switch ($type) {
 			case 'changes':
-				$where = ['<>', 'status', self::DISPLAYED];
+				$where = ['not in', 'status', [self::DISPLAYED, self::SHOW_HIDDEN_DATA]];
 				break;
 			case 'review':
-				$where = ['status' => self::DISPLAYED];
+				$where = ['status' => [self::DISPLAYED, self::SHOW_HIDDEN_DATA]];
 				break;
 			default:
 				break;

@@ -148,10 +148,7 @@
           ]
         },
         "param": {
-          "type": [
-            "String",
-            "Function"
-          ],
+          "type": "String",
           "desc": "Only set a param if using a \"cmd\". This is commonly text or HTML to inject, but is highly dependent upon the specific cmd being called.",
           "examples": [
             "<img src=\"://uploads/001.jpg\" alt=\"nice pic\" />"
@@ -177,6 +174,18 @@
           "examples": [
             "no-state"
           ]
+        },
+        "fixedLabel": {
+          "type": "Boolean",
+          "desc": "Lock the button label, so it doesn't change based on the child option selected."
+        },
+        "fixedIcon": {
+          "type": "Boolean",
+          "desc": "Lock the button icon, so it doesn't change based on the child option selected."
+        },
+        "highlight": {
+          "type": "Boolean",
+          "desc": "Highlight the toolbar button, when a child option has been selected."
         }
       },
       "category": "toolbar"
@@ -273,6 +282,16 @@
       "desc": "Toolbar buttons are rendered \"rounded\"",
       "category": "toolbar|style"
     },
+    "paragraph-tag": {
+      "type": "String",
+      "desc": "Paragraph tag to be used",
+      "values": [
+        "div",
+        "p"
+      ],
+      "category": "behavior",
+      "addedIn": "v1.14.4"
+    },
     "content-style": {
       "type": "Object",
       "desc": "Object with CSS properties and values for styling the container of QEditor",
@@ -362,7 +381,7 @@
     "getContentEl": {
       "desc": "Retrieve the content of the Editor",
       "returns": {
-        "type": "String",
+        "type": "Element",
         "desc": "Provides the pure HTML within the editable area"
       }
     }

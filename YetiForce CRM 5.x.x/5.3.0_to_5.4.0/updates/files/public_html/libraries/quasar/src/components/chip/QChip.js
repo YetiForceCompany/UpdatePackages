@@ -34,6 +34,7 @@ export default Vue.extend({
 
     icon: String,
     iconRight: String,
+    iconRemove: String,
     label: [String, Number],
 
     color: String,
@@ -86,7 +87,7 @@ export default Vue.extend({
 
     attrs () {
       return this.disable === true
-        ? { tabindex: -1, 'aria-disabled': '' }
+        ? { tabindex: -1, 'aria-disabled': 'true' }
         : { tabindex: this.tabindex || 0 }
     }
   },
@@ -144,7 +145,7 @@ export default Vue.extend({
       this.removable === true && child.push(
         h(QIcon, {
           staticClass: 'q-chip__icon q-chip__icon--remove cursor-pointer',
-          props: { name: this.$q.iconSet.chip.remove },
+          props: { name: this.iconRemove || this.$q.iconSet.chip.remove },
           attrs: this.attrs,
           on: cache(this, 'non', {
             click: this.__onRemove,

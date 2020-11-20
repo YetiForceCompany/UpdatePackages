@@ -4,7 +4,11 @@
  Copyright (c) Robin Herbots
  Licensed under the MIT license
  */
-var Inputmask = require("../inputmask"), $ = Inputmask.dependencyLib, keyCode = require("../keycode");
+import Inputmask from "../inputmask";
+import keyCode from "../keycode.json";
+import escapeRegex from "../escapeRegex";
+
+const $ = Inputmask.dependencyLib;
 
 function autoEscape(txt, opts) {
 	var escapedTxt = "";
@@ -28,7 +32,12 @@ function autoEscape(txt, opts) {
 
 function alignDigits(buffer, digits, opts, force) {
 	if (buffer.length > 0 && digits > 0 && (!opts.digitsOptional || force)) {
-		var radixPosition = $.inArray(opts.radixPoint, buffer);
+		var radixPosition = buffer.indexOf(opts.radixPoint), negationBack = false;
+		if (opts.negationSymbol.back === buffer[buffer.length - 1]) {
+			negationBack = true;
+			buffer.length--;
+		}
+
 		if (radixPosition === -1) {
 			buffer.push(opts.radixPoint);
 			radixPosition = buffer.length - 1;
@@ -40,14 +49,15 @@ function alignDigits(buffer, digits, opts, force) {
 		}
 	}
 
-
+	if (negationBack)
+		buffer.push(opts.negationSymbol.back);
 	return buffer;
 }
 
 function findValidator(symbol, maskset) {
 	var posNdx = 0;
 	if (symbol === "+") {
-		for (posNdx in maskset.validPositions);
+		for (posNdx in maskset.validPositions) ;
 		posNdx = parseInt(posNdx);
 	}
 	for (var tstNdx in maskset.tests) {
@@ -65,12 +75,13 @@ function findValidator(symbol, maskset) {
 
 function findValid(symbol, maskset) {
 	var ret = -1;
-	$.each(maskset.validPositions, function (ndx, tst) {
+	for (let ndx in maskset.validPositions) {
+		let tst = maskset.validPositions[ndx];
 		if (tst && tst.match.def === symbol) {
 			ret = parseInt(ndx);
-			return false;
+			break;
 		}
-	});
+	}
 	return ret;
 }
 
@@ -78,13 +89,13 @@ function parseMinMaxOptions(opts) {
 	if (opts.parseMinMaxOptions === undefined) {
 		// convert min and max options
 		if (opts.min !== null) {
-			opts.min = opts.min.toString().replace(new RegExp(Inputmask.escapeRegex(opts.groupSeparator), "g"), "");
+			opts.min = opts.min.toString().replace(new RegExp(escapeRegex(opts.groupSeparator), "g"), "");
 			if (opts.radixPoint === ",") opts.min = opts.min.replace(opts.radixPoint, ".");
 			opts.min = isFinite(opts.min) ? parseFloat(opts.min) : NaN;
 			if (isNaN(opts.min)) opts.min = Number.MIN_VALUE;
 		}
 		if (opts.max !== null) {
-			opts.max = opts.max.toString().replace(new RegExp(Inputmask.escapeRegex(opts.groupSeparator), "g"), "");
+			opts.max = opts.max.toString().replace(new RegExp(escapeRegex(opts.groupSeparator), "g"), "");
 			if (opts.radixPoint === ",") opts.max = opts.max.replace(opts.radixPoint, ".");
 			opts.max = isFinite(opts.max) ? parseFloat(opts.max) : NaN;
 			if (isNaN(opts.max)) opts.max = Number.MAX_VALUE;
@@ -212,7 +223,7 @@ function decimalValidator(chrs, maskset, pos, strict, opts) {
 
 function checkForLeadingZeroes(buffer, opts) {
 	//check leading zeros
-	var numberMatches = new RegExp("(^" + (opts.negationSymbol.front !== "" ? Inputmask.escapeRegex(opts.negationSymbol.front) + "?" : "") + Inputmask.escapeRegex(opts.prefix) + ")(.*)(" + Inputmask.escapeRegex(opts.suffix) + (opts.negationSymbol.back != "" ? Inputmask.escapeRegex(opts.negationSymbol.back) + "?" : "") + "$)").exec(buffer.slice().reverse().join("")),
+	var numberMatches = new RegExp("(^" + (opts.negationSymbol.front !== "" ? escapeRegex(opts.negationSymbol.front) + "?" : "") + escapeRegex(opts.prefix) + ")(.*)(" + escapeRegex(opts.suffix) + (opts.negationSymbol.back != "" ? escapeRegex(opts.negationSymbol.back) + "?" : "") + "$)").exec(buffer.slice().reverse().join("")),
 		number = numberMatches ? numberMatches[2] : "", leadingzeroes = false;
 	if (number) {
 		number = number.split(opts.radixPoint.charAt(0))[0];
@@ -244,11 +255,13 @@ Inputmask.extendAliases({
 		suffix: "",
 		min: null, //minimum value
 		max: null, //maximum value
+		SetMaxOnOverflow: false,
 		step: 1,
+		inputType: "text", //number ~ specify that values which are set are in textform (radix point  is same as in the options) or in numberform (radixpoint = .)
 		unmaskAsNumber: false,
 		roundingFN: Math.round, //Math.floor ,  fn(x)
 		inputmode: "numeric",
-		shortcuts: { k: "000", m: "000000" },
+		shortcuts: {k: "000", m: "000000"},
 		//global options
 		placeholder: "0",
 		greedy: false,
@@ -284,7 +297,7 @@ Inputmask.extendAliases({
 				if (pattern.length > 1) {
 					var inserts = [];
 					for (var i = 0; i < pattern.length; i++) {
-						inserts.push({ pos: pos + i, c: pattern[i], strict: false });
+						inserts.push({pos: pos + i, c: pattern[i], strict: false});
 					}
 				}
 				return {
@@ -292,7 +305,7 @@ Inputmask.extendAliases({
 				};
 			}
 
-			var radixPos = $.inArray(opts.radixPoint, buffer), initPos = pos;
+			var radixPos = buffer.indexOf(opts.radixPoint), initPos = pos;
 			pos = hanndleRadixDance(pos, c, radixPos, maskset, opts);
 			if (c === "-" || c === opts.negationSymbol.front) {
 				if (opts.allowMinus !== true) return false;
@@ -304,13 +317,17 @@ Inputmask.extendAliases({
 
 				return isNegative !== false ? {
 					remove: isNegative,
-					caret: initPos
+					caret: initPos - opts.negationSymbol.front.length
 				} : {
-						insert: [
-							{ pos: findValidator("+", maskset), c: opts.negationSymbol.front, fromIsValid: true },
-							{ pos: findValidator("-", maskset), c: opts.negationSymbol.back, fromIsValid: undefined }],
-						caret: initPos + opts.negationSymbol.back.length
-					};
+					insert: [
+						{pos: findValidator("+", maskset), c: opts.negationSymbol.front, fromIsValid: true},
+						{pos: findValidator("-", maskset), c: opts.negationSymbol.back, fromIsValid: undefined}],
+					caret: initPos + opts.negationSymbol.back.length
+				};
+			}
+
+			if (c === opts.groupSeparator) {
+				return {caret: initPos};
 			}
 
 			if (strict) return true;
@@ -322,26 +339,26 @@ Inputmask.extendAliases({
 			if (opts.__financeInput === false) {
 				if (isSelection) {
 					if (opts.digitsOptional) {
-						return { rewritePosition: caretPos.end };
+						return {rewritePosition: caretPos.end};
 					} else if (!opts.digitsOptional) {
 						if (caretPos.begin > radixPos && caretPos.end <= radixPos) {
 							if (c === opts.radixPoint) {
 								return {
-									insert: { pos: radixPos + 1, c: "0", fromIsValid: true },
+									insert: {pos: radixPos + 1, c: "0", fromIsValid: true},
 									rewritePosition: radixPos
 								};
 							} else {
-								return { rewritePosition: radixPos + 1 };
+								return {rewritePosition: radixPos + 1};
 							}
 						} else if (caretPos.begin < radixPos) {
-							return { rewritePosition: caretPos.begin - 1 };
+							return {rewritePosition: caretPos.begin - 1};
 						}
 					}
 				} else if (!opts.showMaskOnHover && !opts.showMaskOnFocus && !opts.digitsOptional && opts.digits > 0 && this.inputmask.__valueGet.call(this) === "") {
-					return { rewritePosition: radixPos };
+					return {rewritePosition: radixPos};
 				}
 			}
-			return { rewritePosition: pos };
+			return {rewritePosition: pos};
 		},
 		postValidation: function (buffer, pos, c, currentResult, opts, maskset, strict) {
 			if (currentResult === false) return currentResult;
@@ -350,7 +367,7 @@ Inputmask.extendAliases({
 				var unmasked = opts.onUnMask(buffer.slice().reverse().join(""), undefined, $.extend({}, opts, {
 					unmaskAsNumber: true
 				}));
-				if (opts.min !== null && unmasked < opts.min && (unmasked.toString().length >= opts.min.toString().length || unmasked < 0)) {
+				if (opts.min !== null && unmasked < opts.min && (unmasked.toString().length > opts.min.toString().length || unmasked < 0)) {
 					return false;
 					// return {
 					// 	refreshFromBuffer: true,
@@ -359,11 +376,10 @@ Inputmask.extendAliases({
 				}
 
 				if (opts.max !== null && unmasked > opts.max) {
-					return false;
-					// return {
-					// 	refreshFromBuffer: true,
-					// 	buffer: alignDigits(opts.max.toString().replace(".", opts.radixPoint).split(""), opts.digits, opts).reverse()
-					// };
+					return opts.SetMaxOnOverflow ? {
+						refreshFromBuffer: true,
+						buffer: alignDigits(opts.max.toString().replace(".", opts.radixPoint).split(""), opts.digits, opts).reverse()
+					} : false;
 				}
 			}
 
@@ -375,14 +391,14 @@ Inputmask.extendAliases({
 			}
 			var processValue = maskedValue.replace(opts.prefix, "");
 			processValue = processValue.replace(opts.suffix, "");
-			processValue = processValue.replace(new RegExp(Inputmask.escapeRegex(opts.groupSeparator), "g"), "");
+			processValue = processValue.replace(new RegExp(escapeRegex(opts.groupSeparator), "g"), "");
 			if (opts.placeholder.charAt(0) !== "") {
 				processValue = processValue.replace(new RegExp(opts.placeholder.charAt(0), "g"), "0");
 			}
 			if (opts.unmaskAsNumber) {
-				if (opts.radixPoint !== "" && processValue.indexOf(opts.radixPoint) !== -1) processValue = processValue.replace(Inputmask.escapeRegex.call(this, opts.radixPoint), ".");
-				processValue = processValue.replace(new RegExp("^" + Inputmask.escapeRegex(opts.negationSymbol.front)), "-");
-				processValue = processValue.replace(new RegExp(Inputmask.escapeRegex(opts.negationSymbol.back) + "$"), "");
+				if (opts.radixPoint !== "" && processValue.indexOf(opts.radixPoint) !== -1) processValue = processValue.replace(escapeRegex.call(this, opts.radixPoint), ".");
+				processValue = processValue.replace(new RegExp("^" + escapeRegex(opts.negationSymbol.front)), "-");
+				processValue = processValue.replace(new RegExp(escapeRegex(opts.negationSymbol.back) + "$"), "");
 				return Number(processValue);
 			}
 			return processValue;
@@ -390,15 +406,14 @@ Inputmask.extendAliases({
 		,
 		isComplete: function (buffer, opts) {
 			var maskedValue = (opts.numericInput ? buffer.slice().reverse() : buffer).join("");
-			maskedValue = maskedValue.replace(new RegExp("^" + Inputmask.escapeRegex(opts.negationSymbol.front)), "-");
-			maskedValue = maskedValue.replace(new RegExp(Inputmask.escapeRegex(opts.negationSymbol.back) + "$"), "");
+			maskedValue = maskedValue.replace(new RegExp("^" + escapeRegex(opts.negationSymbol.front)), "-");
+			maskedValue = maskedValue.replace(new RegExp(escapeRegex(opts.negationSymbol.back) + "$"), "");
 			maskedValue = maskedValue.replace(opts.prefix, "");
 			maskedValue = maskedValue.replace(opts.suffix, "");
-			maskedValue = maskedValue.replace(new RegExp(Inputmask.escapeRegex(opts.groupSeparator) + "([0-9]{3})", "g"), "$1");
-			if (opts.radixPoint === ",") maskedValue = maskedValue.replace(Inputmask.escapeRegex(opts.radixPoint), ".");
+			maskedValue = maskedValue.replace(new RegExp(escapeRegex(opts.groupSeparator) + "([0-9]{3})", "g"), "$1");
+			if (opts.radixPoint === ",") maskedValue = maskedValue.replace(escapeRegex(opts.radixPoint), ".");
 			return isFinite(maskedValue);
-		}
-		,
+		},
 		onBeforeMask: function (initialValue, opts) {
 			var radixPoint = opts.radixPoint || ",";
 			if (isFinite(opts.digits)) opts.digits = parseInt(opts.digits);
@@ -406,7 +421,7 @@ Inputmask.extendAliases({
 			if ((typeof initialValue == "number" || opts.inputType === "number") && radixPoint !== "") {
 				initialValue = initialValue.toString().replace(".", radixPoint);
 			}
-
+			var isNagtive = initialValue.charAt(0) === "-" || initialValue.charAt(0) === opts.negationSymbol.front;
 			var valueParts = initialValue.split(radixPoint),
 				integerPart = valueParts[0].replace(/[^\-0-9]/g, ""),
 				decimalPart = valueParts.length > 1 ? valueParts[1].replace(/[^0-9]/g, "") : "",
@@ -421,7 +436,7 @@ Inputmask.extendAliases({
 					var digitsFactor = Math.pow(10, digits || 1);
 
 					//make the initialValue a valid javascript number for the parsefloat
-					initialValue = initialValue.replace(Inputmask.escapeRegex(radixPoint), ".");
+					initialValue = initialValue.replace(escapeRegex(radixPoint), ".");
 					if (!isNaN(parseFloat(initialValue))) {
 						initialValue = (opts.roundingFN(parseFloat(initialValue) * digitsFactor) / digitsFactor).toFixed(digits);
 					}
@@ -442,13 +457,16 @@ Inputmask.extendAliases({
 				}
 			}
 
+			if (isNagtive && initialValue.charAt(0) !== "-") {
+				initialValue = "-" + initialValue;
+			}
 			return alignDigits(initialValue.toString().split(""), digits, opts, forceDigits).join("");
 		}
 		,
 		onBeforeWrite: function (e, buffer, caretPos, opts) {
 			function stripBuffer(buffer, stripRadix) {
 				if (opts.__financeInput !== false || stripRadix) {
-					var position = $.inArray(opts.radixPoint, buffer);
+					var position = buffer.indexOf(opts.radixPoint);
 					if (position !== -1) {
 						buffer.splice(position, 1);
 					}
@@ -466,15 +484,12 @@ Inputmask.extendAliases({
 				leadingzeroes = checkForLeadingZeroes(buffer, opts);
 
 			if (leadingzeroes) {
-				var buf = buffer.slice().reverse(), caretNdx = buf.join("").indexOf(leadingzeroes[0]);
-				buf.splice(caretNdx, leadingzeroes[0].length);
-				var newCaretPos = buf.length - caretNdx;
-				stripBuffer(buf);
-				result = {
-					refreshFromBuffer: true,
-					buffer: buf.reverse(),
-					caret: caretPos < newCaretPos ? caretPos : newCaretPos
-				};
+				const caretNdx = buffer.join("").lastIndexOf(leadingzeroes[0].split("").reverse().join("")) - (leadingzeroes[0] == leadingzeroes.input ? 0 : 1),
+					offset = (leadingzeroes[0] == leadingzeroes.input ? 1 : 0);
+				for (let i = leadingzeroes[0].length - offset; i > 0; i--) {
+					delete this.maskset.validPositions[caretNdx + i];
+					delete buffer[caretNdx + i];
+				}
 			}
 
 			if (e) {
@@ -493,10 +508,10 @@ Inputmask.extendAliases({
 							}
 						}
 						if (buffer[buffer.length - 1] === opts.negationSymbol.front) {  //strip negation symbol on blur when value is 0
-							var nmbrMtchs = new RegExp("(^" + (opts.negationSymbol.front != "" ? Inputmask.escapeRegex(opts.negationSymbol.front) + "?" : "") + Inputmask.escapeRegex(opts.prefix) + ")(.*)(" + Inputmask.escapeRegex(opts.suffix) + (opts.negationSymbol.back != "" ? Inputmask.escapeRegex(opts.negationSymbol.back) + "?" : "") + "$)").exec(stripBuffer(buffer.slice(), true).reverse().join("")),
+							var nmbrMtchs = new RegExp("(^" + (opts.negationSymbol.front != "" ? escapeRegex(opts.negationSymbol.front) + "?" : "") + escapeRegex(opts.prefix) + ")(.*)(" + escapeRegex(opts.suffix) + (opts.negationSymbol.back != "" ? escapeRegex(opts.negationSymbol.back) + "?" : "") + "$)").exec(stripBuffer(buffer.slice(), true).reverse().join("")),
 								number = nmbrMtchs ? nmbrMtchs[2] : "";
 							if (number == 0) {
-								result = { refreshFromBuffer: true, buffer: [0] };
+								result = {refreshFromBuffer: true, buffer: [0]};
 							}
 						} else if (opts.radixPoint !== "" && buffer[0] === opts.radixPoint) { //strip radixpoint on blur when it is the latest char
 							if (result && result.buffer) {
@@ -504,7 +519,7 @@ Inputmask.extendAliases({
 							} else {
 								buffer.shift();
 								result =
-									{ refreshFromBuffer: true, buffer: stripBuffer(buffer) };
+									{refreshFromBuffer: true, buffer: stripBuffer(buffer)};
 							}
 						}
 
@@ -516,7 +531,6 @@ Inputmask.extendAliases({
 						}
 				}
 			}
-
 
 			return result;
 		},
@@ -542,7 +556,7 @@ Inputmask.extendAliases({
 					$input.trigger("setvalue", [bffr.join(""), caretPos.begin]);
 					return false;
 				} else if (opts._radixDance === true) {
-					var radixPos = $.inArray(opts.radixPoint, buffer);
+					var radixPos = buffer.indexOf(opts.radixPoint);
 					if (!opts.digitsOptional) {
 						if (radixPos !== -1 && (caretPos.begin < radixPos || caretPos.end < radixPos || (e.keyCode === keyCode.DELETE && caretPos.begin === radixPos))) {
 							if (caretPos.begin === caretPos.end && (e.keyCode === keyCode.BACKSPACE || e.keyCode === keyCode.BACKSPACE_SAFARI)) { //only adjust when not a selection
@@ -599,4 +613,3 @@ Inputmask.extendAliases({
 		digitsOptional: false
 	}
 });
-module.exports = Inputmask;

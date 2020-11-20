@@ -3,6 +3,7 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/file"
   },
+  "addedIn": "v1.8.0",
   "props": {
     "name": {
       "type": "String",
@@ -28,8 +29,21 @@
       ],
       "category": "behavior"
     },
+    "capture": {
+      "type": "String",
+      "desc": "Optionally, specify that a new file should be captured, and which device should be used to capture that new media of a type defined by the 'accept' prop. Maps to 'capture' attribute of native input type=file element",
+      "values": [
+        "user",
+        "environment"
+      ],
+      "category": "behavior",
+      "addedIn": "v1.12.6"
+    },
     "max-file-size": {
-      "type": "Number",
+      "type": [
+        "Number",
+        "String"
+      ],
       "desc": "Maximum size of individual file in bytes",
       "examples": [
         1024,
@@ -38,11 +52,26 @@
       "category": "behavior"
     },
     "max-total-size": {
-      "type": "Number",
+      "type": [
+        "Number",
+        "String"
+      ],
       "desc": "Maximum size of all files combined in bytes",
       "examples": [
         1024,
         1048576
+      ],
+      "category": "behavior"
+    },
+    "max-files": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "Maximum number of files to contain",
+      "examples": [
+        ":max-files=\"5\"",
+        "10"
       ],
       "category": "behavior"
     },
@@ -107,8 +136,8 @@
       ],
       "desc": "If set to boolean true then it checks validation status against the 'rules' only after field loses focus for first time; If set to 'ondemand' then it will trigger only when component's validate() method is manually called or when the wrapper QForm submits itself",
       "values": [
-        false,
-        true,
+        "(Boolean) true",
+        "(Boolean) false",
         "ondemand"
       ],
       "category": "behavior"
@@ -233,6 +262,12 @@
       ],
       "category": "style"
     },
+    "label-slot": {
+      "type": "Boolean",
+      "desc": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+      "category": "content",
+      "addedIn": "v1.12.9"
+    },
     "bottom-slots": {
       "type": "Boolean",
       "desc": "Enables bottom slots ('error', 'hint', 'counter')",
@@ -240,7 +275,7 @@
     },
     "hide-bottom-space": {
       "type": "Boolean",
-      "desc": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+      "desc": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
       "category": "style"
     },
     "counter": {
@@ -305,17 +340,11 @@
       ],
       "category": "model"
     },
-    "max-files": {
-      "type": [
-        "Number",
-        "String"
-      ],
-      "desc": "Maximum number of files to contain",
-      "examples": [
-        ":max-files=\"5\"",
-        "10"
-      ],
-      "category": "behavior"
+    "append": {
+      "type": "Boolean",
+      "desc": "Append file(s) to current model rather than replacing them; Has effect only when using 'multiple' mode",
+      "category": "behavior",
+      "addedIn": "v1.11.3"
     },
     "display-value": {
       "type": [
@@ -345,7 +374,7 @@
               "type": "String",
               "desc": "The total size of files in human readable format",
               "examples": [
-                "1.42 MB"
+                "1.42MB"
               ]
             },
             "filesNumber": {
@@ -432,6 +461,10 @@
     "after": {
       "desc": "Append outer field; Suggestions: QIcon, QBtn"
     },
+    "label": {
+      "desc": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
+      "addedIn": "v1.12.9"
+    },
     "error": {
       "desc": "Slot for errors; Enabled only if 'bottom-slots' prop is used; Suggestion: <div>"
     },
@@ -484,6 +517,16 @@
     }
   },
   "events": {
+    "rejected": {
+      "desc": "Emitted after files are picked and some do not pass the validation props (accept, max-file-size, max-total-size, filter, etc)",
+      "params": {
+        "rejectedEntries": {
+          "type": "Array",
+          "desc": "Array of { failedPropValidation: string, file: File } Objects for files that do not pass the validation"
+        }
+      },
+      "addedIn": "v1.11.2"
+    },
     "clear": {
       "desc": "When using the 'clearable' property, this event is emitted when the clear icon is clicked",
       "addedIn": "v1.1.5",

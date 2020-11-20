@@ -60,24 +60,10 @@ window.App.Fields = {
 			'JS_DECEMBER'
 		].map((monthName) => app.vtranslate(monthName)),
 		days: ['JS_SUN', 'JS_MON', 'JS_TUE', 'JS_WED', 'JS_THU', 'JS_FRI', 'JS_SAT'],
-		daysTranslated: [
-			'JS_SUN',
-			'JS_MON',
-			'JS_TUE',
-			'JS_WED',
-			'JS_THU',
-			'JS_FRI',
-			'JS_SAT'
-		].map((monthName) => app.vtranslate(monthName)),
-		fullDays: [
-			'JS_SUNDAY',
-			'JS_MONDAY',
-			'JS_TUESDAY',
-			'JS_WEDNESDAY',
-			'JS_THURSDAY',
-			'JS_FRIDAY',
-			'JS_SATURDAY'
-		],
+		daysTranslated: ['JS_SUN', 'JS_MON', 'JS_TUE', 'JS_WED', 'JS_THU', 'JS_FRI', 'JS_SAT'].map((monthName) =>
+			app.vtranslate(monthName)
+		),
+		fullDays: ['JS_SUNDAY', 'JS_MONDAY', 'JS_TUESDAY', 'JS_WEDNESDAY', 'JS_THURSDAY', 'JS_FRIDAY', 'JS_SATURDAY'],
 		fullDaysTranslated: [
 			'JS_SUNDAY',
 			'JS_MONDAY',
@@ -192,16 +178,10 @@ window.App.Fields = {
 			let ranges = {};
 			ranges[app.vtranslate('JS_TODAY')] = [moment(), moment()];
 			ranges[app.vtranslate('JS_TOMORROW')] = [moment().add(1, 'days'), moment().add(1, 'days')];
-			ranges[app.vtranslate('JS_YESTERDAY')] = [
-				moment().subtract(1, 'days'),
-				moment().subtract(1, 'days')
-			];
+			ranges[app.vtranslate('JS_YESTERDAY')] = [moment().subtract(1, 'days'), moment().subtract(1, 'days')];
 			ranges[app.vtranslate('JS_LAST_7_DAYS')] = [moment().subtract(6, 'days'), moment()];
 			ranges[app.vtranslate('JS_NEXT_7_DAYS')] = [moment(), moment().add(6, 'days')];
-			ranges[app.vtranslate('JS_CURRENT_MONTH')] = [
-				moment().startOf('month'),
-				moment().endOf('month')
-			];
+			ranges[app.vtranslate('JS_CURRENT_MONTH')] = [moment().startOf('month'), moment().endOf('month')];
 			ranges[app.vtranslate('JS_NEXT_MONTH')] = [
 				moment().add(1, 'month').startOf('month'),
 				moment().add(1, 'month').endOf('month')
@@ -218,18 +198,12 @@ window.App.Fields = {
 				moment().subtract(3, 'month').startOf('month'),
 				moment().subtract(1, 'month').endOf('month')
 			];
-			ranges[app.vtranslate('JS_NEXT_3_MONTHS')] = [
-				moment().startOf('month'),
-				moment().add(3, 'month').endOf('month')
-			];
+			ranges[app.vtranslate('JS_NEXT_3_MONTHS')] = [moment().startOf('month'), moment().add(3, 'month').endOf('month')];
 			ranges[app.vtranslate('JS_LAST_6_MONTHS')] = [
 				moment().subtract(6, 'month').startOf('month'),
 				moment().subtract(1, 'month').endOf('month')
 			];
-			ranges[app.vtranslate('JS_NEXT_6_MONTHS')] = [
-				moment().startOf('month'),
-				moment().add(6, 'month').endOf('month')
-			];
+			ranges[app.vtranslate('JS_NEXT_6_MONTHS')] = [moment().startOf('month'), moment().add(6, 'month').endOf('month')];
 			let params = {
 				autoUpdateInput: false,
 				autoApply: true,
@@ -409,9 +383,7 @@ window.App.Fields = {
 					app.hideModalWindow(false, modalContainer.closest('.js-modal-container')[0].id);
 				});
 			};
-			let url = `index.php?module=AppComponents&view=ColorPickerModal${
-				color ? '&color=' + color : ''
-			}`;
+			let url = `index.php?module=AppComponents&view=ColorPickerModal${color ? '&color=' + color : ''}`;
 			app.showModalWindow({ url, cb: registerPickerEvents.bind(this) });
 		}
 	},
@@ -435,7 +407,7 @@ window.App.Fields = {
 			return new ClipboardJS(elements, {
 				container: container,
 				text: function (trigger) {
-					Vtiger_Helper_Js.showPnotify({
+					app.showNotify({
 						text: app.vtranslate('JS_NOTIFY_COPY_TEXT'),
 						type: 'success'
 					});
@@ -458,34 +430,56 @@ window.App.Fields = {
 			});
 		},
 		Editor: class {
-			constructor(parentElement, params) {
-				let elements;
-				if (typeof parentElement === 'undefined') {
-					parentElement = $('body');
-				} else {
-					parentElement = $(parentElement);
+			constructor(container, params) {
+				this.container = container;
+				this.init(container, params);
+			}
+			/**
+			 * Register function
+			 * @param {jQuery} container
+			 * @param {Object} params
+			 */
+			static register(container, params) {
+				if (typeof container === 'undefined') {
+					container = $('body');
 				}
-				if (parentElement.hasClass('js-editor') && !parentElement.prop('disabled')) {
-					elements = parentElement;
-				} else {
-					elements = $('.js-editor:not([disabled])', parentElement);
+				if (container.hasClass('js-editor') && !container.prop('disabled')) {
+					return new App.Fields.Text.Editor(container, params);
 				}
-				if (elements.length !== 0 && typeof elements !== 'undefined') {
-					this.isModal = elements.closest('.js-modal-container').length;
-					if (this.isModal) {
-						let self = this;
-						this.progressInstance = $.progressIndicator({
-							blockInfo: {
-								enabled: true,
-								onBlock: () => {
-									self.loadEditor(elements, params);
-								}
+				const instances = [];
+				container.find('.js-editor:not([disabled])').each((_, e) => {
+					instances.push(new App.Fields.Text.Editor($(e), params));
+				});
+				return instances;
+			}
+			/**
+			 * Initiation
+			 * @param {jQuery} element
+			 * @param {Object} params
+			 */
+			init(element, params) {
+				let config = {};
+				if (element.hasClass('js-editor--basic')) {
+					config.toolbar = 'Min';
+				}
+				if (element.data('height')) {
+					config.height = element.data('height');
+				}
+				params = $.extend(config, params);
+				this.isModal = element.closest('.js-modal-container').length;
+				if (this.isModal) {
+					let self = this;
+					this.progressInstance = $.progressIndicator({
+						blockInfo: {
+							enabled: true,
+							onBlock: () => {
+								self.loadEditor(element, params);
 							}
-						});
-					} else {
-						App.Fields.Text.destroyEditor(elements);
-						this.loadEditor(elements, params);
-					}
+						}
+					});
+				} else {
+					App.Fields.Text.destroyEditor(element);
+					this.loadEditor(element, params);
 				}
 			}
 
@@ -560,13 +554,7 @@ window.App.Fields = {
 						{ name: 'links', items: ['Link', 'Unlink'] },
 						{
 							name: 'insert',
-							items: [
-								'ckeditor-image-to-base',
-								'Table',
-								'HorizontalRule',
-								'SpecialChar',
-								'PageBreak'
-							]
+							items: ['ckeditor-image-to-base', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak']
 						},
 						{ name: 'tools', items: ['Maximize', 'ShowBlocks'] },
 						{ name: 'paragraph', items: ['Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv'] },
@@ -855,10 +843,7 @@ window.App.Fields = {
 					this.registerCompletionsButtons();
 				}
 				if (this.params.emojiPanel) {
-					this.registerEmojiPanel(
-						this.inputDiv,
-						this.inputDiv.parents().eq(3).find('.js-completions__emojis')
-					);
+					this.registerEmojiPanel(this.inputDiv, this.inputDiv.parents().eq(3).find('.js-completions__emojis'));
 				}
 				if (App.emoji === undefined) {
 					fetch(`${CONFIG.siteUrl}/vendor/ckeditor/ckeditor/plugins/emoji/emoji.json`)
@@ -993,11 +978,7 @@ window.App.Fields = {
 		 * @param {jQuery} element
 		 */
 		destroyEditor(element) {
-			if (
-				typeof CKEDITOR !== 'undefined' &&
-				CKEDITOR.instances &&
-				element.attr('id') in CKEDITOR.instances
-			) {
+			if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && element.attr('id') in CKEDITOR.instances) {
 				CKEDITOR.instances[element.attr('id')].destroy();
 			}
 		},
@@ -1077,17 +1058,12 @@ window.App.Fields = {
 			const computeDropdownHeight = (e, dropdownContainer) => {
 				setTimeout(() => {
 					if (!dropdownContainer.find('.select2-dropdown--above').length) {
-						const dropdownList = dropdownContainer.find(
-							'.select2-results > .select2-results__options'
-						);
+						const dropdownList = dropdownContainer.find('.select2-results > .select2-results__options');
 						const marginBottom = 35;
 						const selectOffsetTop = $(e.currentTarget).offset().top;
 						dropdownList.css({
 							'max-height':
-								$(window).height() -
-								selectOffsetTop -
-								marginBottom -
-								(dropdownList.offset().top - selectOffsetTop)
+								$(window).height() - selectOffsetTop - marginBottom - (dropdownList.offset().top - selectOffsetTop)
 						});
 					}
 				}, 100);
@@ -1181,19 +1157,10 @@ window.App.Fields = {
 
 			//formatSelectionTooBig param is not defined even it has the maximumSelectionLength,
 			//then we should send our custom function for formatSelectionTooBig
-			if (
-				typeof params.maximumSelectionLength !== 'undefined' &&
-				typeof params.formatSelectionTooBig === 'undefined'
-			) {
+			if (typeof params.maximumSelectionLength !== 'undefined' && typeof params.formatSelectionTooBig === 'undefined') {
 				//custom function which will return the maximum selection size exceeds message.
 				var formatSelectionExceeds = function (limit) {
-					return (
-						app.vtranslate('JS_YOU_CAN_SELECT_ONLY') +
-						' ' +
-						limit.maximum +
-						' ' +
-						app.vtranslate('JS_ITEMS')
-					);
+					return app.vtranslate('JS_YOU_CAN_SELECT_ONLY') + ' ' + limit.maximum + ' ' + app.vtranslate('JS_ITEMS');
 				};
 				params.language.maximumSelected = formatSelectionExceeds;
 			}
@@ -1208,10 +1175,7 @@ window.App.Fields = {
 						$(container).addClass(data.element.className);
 					}
 					let actualElement = $(data.element);
-					if (
-						typeof selectElement.data('showAdditionalIcons') !== 'undefined' &&
-						actualElement.is('option')
-					) {
+					if (typeof selectElement.data('showAdditionalIcons') !== 'undefined' && actualElement.is('option')) {
 						return (
 							'<div class="js-element__title d-flex justify-content-between" data-js="appendTo"><div class="u-text-ellipsis--no-hover">' +
 							actualElement.text() +
@@ -1423,20 +1387,19 @@ window.App.Fields = {
 						if (response && response.result) {
 							if (optionElement.attr('data-state') === 'active') {
 								optionElement.attr('data-state', 'inactive');
-								currentTarget.toggleClass(
-									currentElementData.iconActive + ' ' + currentElementData.iconInactive
-								);
+								currentTarget.toggleClass(currentElementData.iconActive + ' ' + currentElementData.iconInactive);
 							} else {
 								optionElement.attr('data-state', 'active');
-								currentTarget.toggleClass(
-									currentElementData.iconInactive + ' ' + currentElementData.iconActive
-								);
+								currentTarget.toggleClass(currentElementData.iconInactive + ' ' + currentElementData.iconActive);
 							}
 							if (response.message) {
-								Vtiger_Helper_Js.showPnotify({ text: response.message, type: 'success' });
+								app.showNotify({ text: response.message, type: 'success' });
 							}
 						} else if (response && response.message) {
-							Vtiger_Helper_Js.showPnotify({ text: response.message });
+							app.showNotify({
+								text: response.message,
+								type: 'error'
+							});
 						}
 					})
 					.fail(function () {
@@ -1469,10 +1432,7 @@ window.App.Fields = {
 						options.page = 1;
 					}
 					let data = {};
-					data.results = results.slice(
-						(options.page - 1) * params.lazyElements,
-						options.page * params.lazyElements
-					);
+					data.results = results.slice((options.page - 1) * params.lazyElements, options.page * params.lazyElements);
 					data.pagination = {};
 					data.pagination.more = options.page * params.lazyElements < results.length;
 					callback(data);
@@ -1486,7 +1446,10 @@ window.App.Fields = {
 				let selectedOption = selectElement.data('selected-value');
 				if (selectedOption) {
 					let text = selectedOption;
-					if (selectElement.data('fieldinfo').picklistvalues.hasOwnProperty(selectedOption)) {
+					if (
+						selectElement.data('fieldinfo').picklistvalues.hasOwnProperty(selectedOption) &&
+						!selectElement.get(0).dataset.templateResult
+					) {
 						text = selectElement.data('fieldinfo').picklistvalues[selectedOption];
 					}
 					this.createSelectedOption(selectElement, text, selectedOption);
@@ -1502,7 +1465,11 @@ window.App.Fields = {
 		 */
 		registerLazySelectOptions(selectElement) {
 			let options = [];
-			if (selectElement.data('fieldinfo') && selectElement.data('fieldinfo').picklistvalues) {
+			if (
+				selectElement.data('fieldinfo') &&
+				selectElement.data('fieldinfo').picklistvalues &&
+				!selectElement.get(0).dataset.templateResult
+			) {
 				options = $.map(selectElement.data('fieldinfo').picklistvalues, function (val, key) {
 					return { id: key, text: val };
 				});
@@ -1552,8 +1519,7 @@ window.App.Fields = {
 		findOption(selectElement, searchValue, type = 'value') {
 			let foundOption = false;
 			const selectValues = this.getSelectOptions(selectElement);
-			const getFieldValueFromText = () =>
-				Object.keys(selectValues).find((key) => selectValues[key] === searchValue);
+			const getFieldValueFromText = () => Object.keys(selectValues).find((key) => selectValues[key] === searchValue);
 			const valueExists = () => selectValues.hasOwnProperty(searchValue);
 			const createOption = () => {
 				return { text: selectValues[foundOption], value: foundOption };
@@ -1815,11 +1781,7 @@ window.App.Fields = {
 			let lastField = container.find('.js-multi-field-row').last();
 			let selectFields = lastField.find('select.select2');
 			if (selectFields.length) {
-				selectFields
-					.select2('destroy')
-					.removeAttr('data-select2-id')
-					.find('option')
-					.removeAttr('data-select2-id');
+				selectFields.select2('destroy').removeAttr('data-select2-id').find('option').removeAttr('data-select2-id');
 				newField = lastField.clone(false, false);
 				App.Fields.Picklist.showSelect2ElementView(lastField.find('select.select2'));
 			} else {
@@ -1860,11 +1822,7 @@ window.App.Fields = {
 		 * data-sort: do we want to sort slave options by text when master has two items selected? if not - just append options to slave
 		 */
 		register(container) {
-			if (
-				typeof container === 'undefined' ||
-				typeof container.length === 'undefined' ||
-				!container.length
-			) {
+			if (typeof container === 'undefined' || typeof container.length === 'undefined' || !container.length) {
 				return app.errorLog('Dependend select field container is missing.');
 			}
 			container.each(function () {
@@ -1968,9 +1926,7 @@ window.App.Fields = {
 				let base = 10 ** numberOfDecimal;
 				value =
 					Math.round(
-						value * base +
-							Math.sign(value) *
-								0.1 ** (17 - 2 - (Math.round(value * base) / base).toString().length)
+						value * base + Math.sign(value) * 0.1 ** (17 - 2 - (Math.round(value * base) / base).toString().length)
 					) / base;
 			}
 			let splittedFloat = value.toString().split('.');
@@ -2044,9 +2000,7 @@ window.App.Fields = {
 				.off('click')
 				.on('click', (_) => {
 					let sourceFieldElement = this.container.find('input.sourceField'),
-						fieldDisplayElement = this.container.find(
-							'input[name="' + sourceFieldElement.attr('name') + '_display"]'
-						);
+						fieldDisplayElement = this.container.find('input[name="' + sourceFieldElement.attr('name') + '_display"]');
 					AppConnector.request({
 						module: sourceFieldElement.data('modulename'),
 						view: 'TreeModal',
@@ -2101,16 +2055,13 @@ window.App.Fields = {
 				},
 				select: function (event, ui) {
 					let selectedItemData = ui.item;
-					if (
-						typeof selectedItemData.type !== 'undefined' &&
-						selectedItemData.type == 'no results'
-					) {
+					if (typeof selectedItemData.type !== 'undefined' && selectedItemData.type == 'no results') {
 						return false;
 					}
 					selectedItemData.name = selectedItemData.value;
 					this.value = selectedItemData.label;
 					let element = $(this).attr('readonly', true);
-					element.closest('.js-tree-container').find('input.sourceField').val(selectedItemData.id);
+					element.closest('.js-tree-container').find('input.sourceField').val(selectedItemData.id).trigger('change');
 					return false;
 				},
 				change: function (event, ui) {},
@@ -2197,15 +2148,9 @@ window.App.Fields = {
 				<div class="input-group-append">
 					<a href class="btn btn-default c-time-period-input-modifier c-time-period-input-modifier--plus-1"><span class="fas fa-plus"></span></a>
 					<select class="select2 js-time-period-select time-period-${this.container.attr('name')}">
-						<option value="d"${this.period === 'd' ? ' selected="selected"' : ''}>${app.vtranslate(
-				'JS_DAYS_FULL'
-			)}</option>
-						<option value="H"${this.period === 'H' ? ' selected="selected"' : ''}>${app.vtranslate(
-				'JS_HOURS_FULL'
-			)}</option>
-						<option value="i"${this.period === 'i' ? ' selected="selected"' : ''}>${app.vtranslate(
-				'JS_MINUTES_FULL'
-			)}</option>
+						<option value="d"${this.period === 'd' ? ' selected="selected"' : ''}>${app.vtranslate('JS_DAYS_FULL')}</option>
+						<option value="H"${this.period === 'H' ? ' selected="selected"' : ''}>${app.vtranslate('JS_HOURS_FULL')}</option>
+						<option value="i"${this.period === 'i' ? ' selected="selected"' : ''}>${app.vtranslate('JS_MINUTES_FULL')}</option>
 					</select>
 				</div>
 			</div>`;
@@ -2296,9 +2241,7 @@ window.App.Fields = {
 			$('.js-multicurrency-event', this.container)
 				.off('click')
 				.on('click', () => {
-					let modal = $('<form>').append(
-						this.container.find('.js-currencies-container .js-currencies-modal').clone()
-					);
+					let modal = $('<form>').append(this.container.find('.js-currencies-container .js-currencies-modal').clone());
 					this.registerEnableCurrencyEvent(modal);
 					this.registerResetCurrencyEvent(modal);
 					this.loadData(modal);
@@ -2340,9 +2283,7 @@ window.App.Fields = {
 				let row = modalContainer.find('[data-currency-id="' + i + '"]');
 				if (row.length) {
 					row.find('.js-enable-currency').prop('checked', true);
-					row
-						.find('.js-currency-reset,.js-base-currency,[name^="currencies["]')
-						.prop('disabled', false);
+					row.find('.js-currency-reset,.js-base-currency,[name^="currencies["]').prop('disabled', false);
 					row.find('.js-converted-price').val(values['currencies'][i]['price']);
 					if (i == baseCurrencyId) {
 						row.find('.js-base-currency').prop('checked', true);
@@ -2434,10 +2375,7 @@ window.App.Fields = {
 				let element = $(domElement);
 				if (!element.is(baseCurrencyConversionRate)) {
 					element.val(
-						App.Fields.Double.formatToDisplay(
-							element.getNumberFromValue() / baseCurrencyRatePrevValue,
-							false
-						)
+						App.Fields.Double.formatToDisplay(element.getNumberFromValue() / baseCurrencyRatePrevValue, false)
 					);
 				}
 			});
@@ -2453,15 +2391,13 @@ window.App.Fields = {
 				let parentRow = element.closest('tr');
 				if (element.is(':checked')) {
 					element.attr('checked', 'checked');
-					let price =
-						this.getField().getNumberFromValue() *
-						parentRow.find('.js-conversion-rate').getNumberFromValue();
+					let price = this.getField().getNumberFromValue() * parentRow.find('.js-conversion-rate').getNumberFromValue();
 					$('input', parentRow).removeAttr('disabled');
 					parentRow.find('.js-currency-reset').removeAttr('disabled');
 					parentRow.find('.js-converted-price').val(App.Fields.Double.formatToDisplay(price));
 				} else {
 					if (parentRow.find('.js-base-currency').is(':checked')) {
-						Vtiger_Helper_Js.showPnotify({
+						app.showNotify({
 							type: 'error',
 							title:
 								'"' +
@@ -2486,9 +2422,7 @@ window.App.Fields = {
 		registerResetCurrencyEvent(container) {
 			container.on('click', '.js-currency-reset', (e) => {
 				let parentElem = $(e.currentTarget).closest('tr');
-				let price =
-					this.getField().getNumberFromValue() *
-					parentElem.find('.js-conversion-rate').getNumberFromValue();
+				let price = this.getField().getNumberFromValue() * parentElem.find('.js-conversion-rate').getNumberFromValue();
 				$('.js-converted-price', parentElem).val(App.Fields.Double.formatToDisplay(price));
 			});
 		}
@@ -2533,12 +2467,18 @@ window.App.Fields = {
 						if (result && result.success && result.url) {
 							valElement.attr('readonly', true).val(result.url);
 						} else {
-							Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_ERROR'));
+							app.showNotify({
+								text: app.vtranslate('JS_ERROR'),
+								type: 'error'
+							});
 						}
 						progressIndicatorElement.progressIndicator({ mode: 'hide' });
 					})
 					.fail((_) => {
-						Vtiger_Helper_Js.showPnotify(app.vtranslate('JS_ERROR'));
+						app.showNotify({
+							text: app.vtranslate('JS_ERROR'),
+							type: 'error'
+						});
 						progressIndicatorElement.progressIndicator({ mode: 'hide' });
 					});
 			});
@@ -2582,7 +2522,7 @@ window.App.Fields = {
 				formElement.on('change', `[name=${fieldName}]`, (_) => {
 					if (data['domain'] && valElement.val().indexOf(data['domain']) === 0) {
 						addButton.trigger('click');
-						Vtiger_Helper_Js.showPnotify({
+						app.showNotify({
 							type: 'info',
 							text: app.vtranslate('JS_MEETING_URL_CHANGED')
 						});

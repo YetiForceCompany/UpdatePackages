@@ -1,6 +1,6 @@
 {
     "name": "datatables.net-responsive-bs4",
-    "version": "2.2.4",
+    "version": "2.2.6",
     "description": "Responsive for DataTables with styling for [Bootstrap 4](http://getbootstrap.com/)",
     "files": [
         "css/**/*.css",
@@ -24,7 +24,7 @@
     "dependencies": {
         "jquery": ">=1.7",
         "datatables.net-bs4": "^1.10.15",
-        "datatables.net-responsive": "2.2.4"
+        "datatables.net-responsive": "2.2.6"
     },
     "style": "css/responsive.bootstrap4.css"
 }

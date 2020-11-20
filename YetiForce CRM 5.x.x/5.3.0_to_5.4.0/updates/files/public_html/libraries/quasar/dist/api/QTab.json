@@ -83,6 +83,15 @@
       "desc": "Turns off capitalizing all letters within the tab (which is the default)",
       "category": "content"
     },
+    "content-class": {
+      "type": "String",
+      "desc": "Class definitions to be attributed to the content wrapper",
+      "examples": [
+        "my-special-class"
+      ],
+      "category": "style",
+      "addedIn": "v1.12.0"
+    },
     "tabindex": {
       "type": [
         "Number",

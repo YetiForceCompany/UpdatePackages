@@ -4,7 +4,7 @@
  Copyright (c) Robin Herbots
  Licensed under the MIT license
  */
-var Inputmask = require("../inputmask");
+import  Inputmask from "../inputmask";
 //extra definitions
 Inputmask.extendDefinitions({
 	"A": {
@@ -38,8 +38,10 @@ Inputmask.extendAliases({
 		regex: "[+-]?[0-9]+\\.?([0-9]+)?(px|em|rem|ex|%|in|cm|mm|pt|pc)"
 	},
 	"url": { //needs update => https://en.wikipedia.org/wiki/URL
-		regex: "(https?|ftp)//.*",
-		autoUnmask: false
+		regex: "(https?|ftp)://.*",
+		autoUnmask: false,
+		keepStatic: false,
+		tabThrough: true
 	},
 	"ip": { //ip-address mask
 		mask: "i[i[i]].j[j[j]].k[k[k]].l[l[l]]",
@@ -111,4 +113,3 @@ Inputmask.extendAliases({
 		}
 	},
 });
-module.exports = Inputmask;

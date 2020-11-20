@@ -6,7 +6,7 @@ import { isSSR, fromSSR } from './plugins/Platform.js'
 function getLocale () {
   if (isSSR === true) { return }
 
-  let val =
+  const val =
     navigator.language ||
     navigator.languages[0] ||
     navigator.browserLanguage ||
@@ -24,7 +24,7 @@ export default {
   install ($q, queues, lang) {
     const initialLang = lang || langEn
 
-    this.set = (langObject, ssrContext) => {
+    this.set = (langObject = langEn, ssrContext) => {
       const lang = {
         ...langObject,
         rtl: langObject.rtl === true,

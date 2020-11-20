@@ -3,6 +3,7 @@
   "meta": {
     "docsUrl": "https://v1.quasar.dev/vue-components/virtual-scroll"
   },
+  "addedIn": "v1.1.0",
   "props": {
     "virtual-scroll-horizontal": {
       "type": "Boolean",
@@ -44,6 +45,18 @@
         ":virtual-scroll-sticky-size-end=\"48\""
       ],
       "category": "virtual-scroll"
+    },
+    "table-colspan": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "The number of columns in the table (you need this if you use table-layout: fixed)",
+      "examples": [
+        "table-colspan=\"12\""
+      ],
+      "category": "virtual-scroll|content",
+      "addedIn": "v1.13.0"
     },
     "type": {
       "type": "String",
@@ -207,6 +220,19 @@
             "1",
             23
           ]
+        },
+        "edge": {
+          "type": "String",
+          "desc": "The edge to align to if the item is not visible already (by default it aligns to end if scrolling towards the end and to start otherwise); If the '-force' version is used then it always aligns",
+          "values": [
+            "start",
+            "center",
+            "end",
+            "start-force",
+            "center-force",
+            "end-force"
+          ],
+          "addedIn": "v1.13.0"
         }
       }
     },

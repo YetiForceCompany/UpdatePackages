@@ -55,6 +55,18 @@
       ],
       "category": "virtual-scroll"
     },
+    "table-colspan": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "The number of columns in the table (you need this if you use table-layout: fixed)",
+      "examples": [
+        "table-colspan=\"12\""
+      ],
+      "category": "virtual-scroll|content",
+      "addedIn": "v1.13.0"
+    },
     "error": {
       "type": "Boolean",
       "desc": "Does field have validation errors?",
@@ -95,8 +107,8 @@
       ],
       "desc": "If set to boolean true then it checks validation status against the 'rules' only after field loses focus for first time; If set to 'ondemand' then it will trigger only when component's validate() method is manually called or when the wrapper QForm submits itself",
       "values": [
-        false,
-        true,
+        "(Boolean) true",
+        "(Boolean) false",
         "ondemand"
       ],
       "category": "behavior"
@@ -221,6 +233,12 @@
       ],
       "category": "style"
     },
+    "label-slot": {
+      "type": "Boolean",
+      "desc": "Enables label slot; You need to set it to force use of the 'label' slot if the 'label' prop is not set",
+      "category": "content",
+      "addedIn": "v1.12.9"
+    },
     "bottom-slots": {
       "type": "Boolean",
       "desc": "Enables bottom slots ('error', 'hint', 'counter')",
@@ -228,7 +246,7 @@
     },
     "hide-bottom-space": {
       "type": "Boolean",
-      "desc": "Does not reserves space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
+      "desc": "Do not reserve space for hint/error/counter anymore when these are not used; As a result, it also disables the animation for those; It also allows the hint/error area to stretch vertically based on its content",
       "category": "style"
     },
     "counter": {
@@ -640,6 +658,10 @@
     "after": {
       "desc": "Append outer field; Suggestions: QIcon, QBtn"
     },
+    "label": {
+      "desc": "Slot for label; Used only if 'label-slot' prop is set or the 'label' prop is set; When it is used the text in the 'label' prop is ignored",
+      "addedIn": "v1.12.9"
+    },
     "error": {
       "desc": "Slot for errors; Enabled only if 'bottom-slots' prop is used; Suggestion: <div>"
     },
@@ -1026,6 +1048,19 @@
             "1",
             23
           ]
+        },
+        "edge": {
+          "type": "String",
+          "desc": "The edge to align to if the item is not visible already (by default it aligns to end if scrolling towards the end and to start otherwise); If the '-force' version is used then it always aligns",
+          "values": [
+            "start",
+            "center",
+            "end",
+            "start-force",
+            "center-force",
+            "end-force"
+          ],
+          "addedIn": "v1.13.0"
         }
       }
     },

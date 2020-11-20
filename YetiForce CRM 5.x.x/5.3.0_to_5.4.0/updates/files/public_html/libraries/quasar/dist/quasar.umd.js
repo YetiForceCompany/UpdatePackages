@@ -1,5 +1,5 @@
 /*!
- * Quasar Framework v1.11.1
+ * Quasar Framework v1.14.5
  * (c) 2015-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -12,7 +12,7 @@
 
   Vue = Vue && Object.prototype.hasOwnProperty.call(Vue, 'default') ? Vue['default'] : Vue;
 
-  var version = "1.11.1";
+  var version = "1.14.5";
 
   /* eslint-disable no-useless-escape */
 
@@ -479,6 +479,19 @@
     e.stopPropagation();
   }
 
+  function stopAndPreventClick (evt) {
+    stopAndPrevent(evt);
+
+    if (evt.type === 'mousedown') {
+      var handler = function (e) {
+        e.target === evt.target && stopAndPrevent(e);
+        document.removeEventListener('click', handler, listenOpts.notPassiveCapture);
+      };
+
+      document.addEventListener('click', handler, listenOpts.notPassiveCapture);
+    }
+  }
+
   function preventDraggable (el, status) {
     if (el === void 0 || (status === true && el.__dragPrevented === true)) {
       return
@@ -503,13 +516,36 @@
     var cancelable = ref.cancelable; if ( cancelable === void 0 ) cancelable = false;
 
     try {
-      return new Event(name, { bubbles: bubbles, cancelable: cancelable })
+      return new CustomEvent(name, { bubbles: bubbles, cancelable: cancelable })
     }
     catch (e) {
       // IE doesn't support `new Event()`, so...
       var evt = document.createEvent('Event');
       evt.initEvent(name, bubbles, cancelable);
       return evt
+    }
+  }
+
+  function addEvt (ctx, targetName, events) {
+    var name = "__q_" + targetName + "_evt";
+
+    ctx[name] = ctx[name] !== void 0
+      ? ctx[name].concat(events)
+      : events;
+
+    events.forEach(function (evt) {
+      evt[0].addEventListener(evt[1], ctx[evt[2]], listenOpts[evt[3]]);
+    });
+  }
+
+  function cleanEvt (ctx, targetName) {
+    var name = "__q_" + targetName + "_evt";
+
+    if (ctx[name] !== void 0) {
+      ctx[name].forEach(function (evt) {
+        evt[0].removeEventListener(evt[1], ctx[evt[2]], listenOpts[evt[3]]);
+      });
+      ctx[name] = void 0;
     }
   }
 
@@ -823,6 +859,40 @@
 
   var getTrue = function () { return true; };
 
+  function filterInvalidPath (path) {
+    return typeof path === 'string' &&
+      path !== '' &&
+      path !== '/' &&
+      path !== '#/'
+  }
+
+  function normalizeExitPath (path) {
+    path.startsWith('#') === true && (path = path.substr(1));
+    path.startsWith('/') === false && (path = '/' + path);
+    path.endsWith('/') === true && (path = path.substr(0, path.length - 1));
+    return '#' + path
+  }
+
+  function getShouldExitFn (cfg) {
+    if (cfg.backButtonExit === false) {
+      return function () { return false; }
+    }
+
+    if (cfg.backButtonExit === '*') {
+      return getTrue
+    }
+
+    // Add default root path
+    var exitPaths = [ '#/' ];
+
+    // Add custom exit paths
+    Array.isArray(cfg.backButtonExit) === true && exitPaths.push.apply(
+      exitPaths, cfg.backButtonExit.filter(filterInvalidPath).map(normalizeExitPath)
+    );
+
+    return function () { return exitPaths.includes(window.location.hash); }
+  }
+
   var History = {
     __history: [],
     add: noop,
@@ -843,12 +913,19 @@
         return
       }
 
+      var qConf = cfg[cordova === true ? 'cordova' : 'capacitor'];
+
+      if (qConf !== void 0 && qConf.backButton === false) {
+        return
+      }
+
       this.add = function (entry) {
         if (entry.condition === void 0) {
           entry.condition = getTrue;
         }
         this$1.__history.push(entry);
       };
+
       this.remove = function (entry) {
         var index = this$1.__history.indexOf(entry);
         if (index >= 0) {
@@ -856,7 +933,14 @@
         }
       };
 
-      var fn = function () {
+      var shouldExit = getShouldExitFn(
+        Object.assign(
+          { backButtonExit: true },
+          qConf
+        )
+      );
+
+      var backHandler = function () {
         if (this$1.__history.length) {
           var entry = this$1.__history[this$1.__history.length - 1];
 
@@ -865,7 +949,7 @@
             entry.handler();
           }
         }
-        else if (exit && window.location.hash === '#/') {
+        else if (shouldExit() === true) {
           navigator.app.exitApp();
         }
         else {
@@ -873,16 +957,13 @@
         }
       };
 
-      var prop = cordova === true ? 'cordova' : 'capacitor';
-      var exit = cfg[prop] === void 0 || cfg[prop].backButtonExit !== false;
-
       if (cordova === true) {
         document.addEventListener('deviceready', function () {
-          document.addEventListener('backbutton', fn, false);
+          document.addEventListener('backbutton', backHandler, false);
         });
       }
       else {
-        window.Capacitor.Plugins.App.addListener('backButton', fn);
+        window.Capacitor.Plugins.App.addListener('backButton', backHandler);
       }
     }
   };
@@ -911,7 +992,8 @@
       months: 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_'),
       monthsShort: 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_'),
       firstDayOfWeek: 0, // 0-6, 0 - Sunday, 1 Monday, ...
-      format24h: false
+      format24h: false,
+      pluralDay: 'days'
     },
     table: {
       noData: 'No data available',
@@ -1004,6 +1086,8 @@
       var initialLang = lang || langEn;
 
       this.set = function (langObject, ssrContext) {
+        if ( langObject === void 0 ) langObject = langEn;
+
         var lang = Object.assign({}, langObject,
           {rtl: langObject.rtl === true,
           getLocale: getLocale});
@@ -1127,16 +1211,17 @@
     var v = ref.v;
     var a = ref.a;
 
-    var r, g, b, i, f, p, q, t;
+    var r, g, b;
     s = s / 100;
     v = v / 100;
 
     h = h / 360;
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
+    var
+      i = Math.floor(h * 6),
+      f = h * 6 - i,
+      p = v * (1 - s),
+      q = v * (1 - f * s),
+      t = v * (1 - (1 - f) * s);
 
     switch (i % 6) {
       case 0:
@@ -1186,11 +1271,12 @@
     var a = ref.a;
 
     var
-      max = Math.max(r, g, b), min = Math.min(r, g, b),
+      max = Math.max(r, g, b),
+      min = Math.min(r, g, b),
       d = max - min,
-      h,
       s = (max === 0 ? 0 : d / max),
       v = max / 255;
+    var h;
 
     switch (max) {
       case min:
@@ -1661,8 +1747,10 @@
     table: {
       arrowUp: 'arrow_upward',
       warning: 'warning',
+      firstPage: 'first_page',
       prevPage: 'chevron_left',
-      nextPage: 'chevron_right'
+      nextPage: 'chevron_right',
+      lastPage: 'last_page'
     },
     tree: {
       icon: 'play_arrow'
@@ -1847,6 +1935,67 @@
     pad: pad
   };
 
+  function cache (vm, key, obj) {
+    if (isSSR === true) { return obj }
+
+    var k = "__qcache_" + key;
+    return vm[k] === void 0
+      ? (vm[k] = obj)
+      : vm[k]
+  }
+
+  function cacheWithFn (vm, key, fn) {
+    if (isSSR === true) { return fn() }
+
+    var k = "__qcache_" + key;
+    return vm[k] === void 0
+      ? (vm[k] = fn())
+      : vm[k]
+  }
+
+  function getPropCacheMixin (propName, proxyPropName) {
+    var obj;
+
+    return {
+      data: function data () {
+        var obj;
+
+        var target = {};
+        var source = this[propName];
+
+        for (var prop in source) {
+          target[prop] = source[prop];
+        }
+
+        return ( obj = {}, obj[proxyPropName] = target, obj )
+      },
+
+      watch: ( obj = {}, obj[propName] = function (newObj, oldObj) {
+          var target = this[proxyPropName];
+
+          if (oldObj !== void 0) {
+            // we first delete obsolete events
+            for (var prop in oldObj) {
+              if (newObj[prop] === void 0) {
+                this.$delete(target, prop);
+              }
+            }
+          }
+
+          for (var prop$1 in newObj) {
+            // we then update changed events
+            if (target[prop$1] !== newObj[prop$1]) {
+              this.$set(target, prop$1, newObj[prop$1]);
+            }
+          }
+        }, obj )
+    }
+  }
+
+  var ariaHidden = { 'aria-hidden': 'true' };
+
+  var AttrsMixin = getPropCacheMixin('$attrs', 'qAttrs');
+
   var
     xhr = isSSR ? null : XMLHttpRequest,
     send = isSSR ? null : xhr.prototype.send,
@@ -1996,9 +2145,7 @@
             'aria-valuemax': 100,
             'aria-valuenow': this.progress
           }
-          : {
-            'aria-hidden': 'true'
-          }
+          : ariaHidden
       }
     },
 
@@ -2136,50 +2283,6 @@
     }
   };
 
-  function cache (vm, key, obj) {
-    if (isSSR === true) { return obj }
-
-    var k = "__qcache_" + key;
-    return vm[k] === void 0
-      ? (vm[k] = obj)
-      : vm[k]
-  }
-
-  function getPropCacheMixin (propName, proxyPropName) {
-    var obj;
-
-    return {
-      data: function data () {
-        var obj;
-
-        return ( obj = {}, obj[proxyPropName] = {}, obj )
-      },
-
-      watch: ( obj = {}, obj[propName] = {
-          immediate: true,
-          handler: function handler (newObj, oldObj) {
-            var target = this[proxyPropName];
-
-            if (oldObj !== void 0) {
-              // we first delete obsolete events
-              for (var prop in oldObj) {
-                if (newObj[prop] === void 0) {
-                  this.$delete(target, prop);
-                }
-              }
-            }
-
-            for (var prop$1 in newObj) {
-              // we then update changed events
-              if (target[prop$1] !== newObj[prop$1]) {
-                this.$set(target, prop$1, newObj[prop$1]);
-              }
-            }
-          }
-        }, obj )
-    }
-  }
-
   var ListenersMixin = getPropCacheMixin('$listeners', 'qListeners');
 
   function slot (vm, slotName, otherwise) {
@@ -2308,6 +2411,19 @@
           }
         }
 
+        if (icon.startsWith('svguse:') === true) {
+          var ref$1 = icon.split('|');
+          var def$1 = ref$1[0];
+          var viewBox$1 = ref$1[1];
+
+          return {
+            svguse: true,
+            cls: this.classes,
+            src: def$1.substring(7),
+            viewBox: viewBox$1 !== void 0 ? viewBox$1 : '0 0 24 24'
+          }
+        }
+
         var content = ' ';
 
         if (/^[l|f]a[s|r|l|b|d]{0,1} /.test(icon) || icon.startsWith('icon-') === true) {
@@ -2386,6 +2502,19 @@
 
         return h('svg', data, mergeSlot(this.type.nodes, this, 'default'))
       }
+      if (this.type.svguse === true) {
+        data.attrs.focusable = 'false'; /* needed for IE11 */
+        data.attrs.viewBox = this.type.viewBox;
+
+        return h('svg', data, [
+          h('use', {
+            attrs: {
+              'xlink:href': this.type.src
+            }
+          }),
+          mergeSlot(this.type.nodes, this, 'default')
+        ])
+      }
 
       return h(this.tag, data, mergeSlot([
         this.type.content
@@ -2410,10 +2539,10 @@
     },
 
     computed: {
-      contentClass: function contentClass () {
+      classes: function classes () {
         var obj;
 
-        return ( obj = {}, obj[("bg-" + (this.color))] = this.color, obj[("text-" + (this.textColor) + " q-chip--colored")] = this.textColor, obj['q-avatar__content--square'] = this.square, obj['rounded-borders'] = this.rounded, obj )
+        return ( obj = {}, obj[("bg-" + (this.color))] = this.color, obj[("text-" + (this.textColor) + " q-chip--colored")] = this.textColor, obj['q-avatar--square'] = this.square, obj['rounded-borders'] = this.rounded, obj )
       },
 
       contentStyle: function contentStyle () {
@@ -2431,11 +2560,11 @@
       return h('div', {
         staticClass: 'q-avatar',
         style: this.sizeStyle,
+        class: this.classes,
         on: Object.assign({}, this.qListeners)
       }, [
         h('div', {
           staticClass: 'q-avatar__content row flex-center overflow-hidden',
-          class: this.contentClass,
           style: this.contentStyle
         }, mergeSlotSafely(icon, this, 'default'))
       ])
@@ -2741,7 +2870,7 @@
           replace: this.replace,
           activeClass: this.activeClass || 'q-router-link--active',
           exactActiveClass: this.exactActiveClass || 'q-router-link--exact-active',
-          event: this.disable === true ? '' : void 0
+          event: this.disable === true ? [] : void 0
         }
       }
     }
@@ -2895,6 +3024,7 @@
     document.addEventListener('DOMContentLoaded', fn, false);
   }
 
+  // internal
   function childHasFocus (el, focusedEl) {
     if (el === void 0 || el.contains(focusedEl) === true) {
       return true
@@ -2909,6 +3039,18 @@
     return false
   }
 
+  // internal
+  function getBodyFullscreenElement (isFullscreen, activeEl) {
+    return isFullscreen === true
+      ? (
+        // when a video tag enters fullscreen activeEl is null
+        activeEl === document.documentElement || activeEl === null
+          ? document.body
+          : activeEl
+      )
+      : document.body
+  }
+
   var dom = {
     offset: offset,
     style: style,
@@ -2918,108 +3060,6 @@
     cssBatch: cssBatch,
     ready: ready
   };
-
-  var directions = [ 'left', 'right', 'up', 'down', 'horizontal', 'vertical' ];
-
-  var modifiersAll = {
-    left: true,
-    right: true,
-    up: true,
-    down: true,
-    horizontal: true,
-    vertical: true,
-    all: true
-  };
-
-  function getModifierDirections (mod) {
-    var dir = {};
-
-    directions.forEach(function (direction) {
-      if (mod[direction]) {
-        dir[direction] = true;
-      }
-    });
-
-    if (Object.keys(dir).length === 0) {
-      return modifiersAll
-    }
-
-    if (dir.horizontal === true) {
-      dir.left = dir.right = true;
-    }
-    if (dir.vertical === true) {
-      dir.up = dir.down = true;
-    }
-    if (dir.left === true && dir.right === true) {
-      dir.horizontal = true;
-    }
-    if (dir.up === true && dir.down === true) {
-      dir.vertical = true;
-    }
-    if (dir.horizontal === true && dir.vertical === true) {
-      dir.all = true;
-    }
-
-    return dir
-  }
-
-  function updateModifiers (ctx, ref) {
-    var oldValue = ref.oldValue;
-    var value = ref.value;
-    var modifiers = ref.modifiers;
-
-    if (oldValue !== value) {
-      typeof value !== 'function' && ctx.end();
-      ctx.handler = value;
-    }
-
-    if (
-      ctx.modifiers.mouseAllDir !== modifiers.mouseAllDir ||
-      directions.some(function (direction) { return modifiers[direction] !== ctx.modifiers[direction]; })
-    ) {
-      ctx.modifiers = modifiers;
-      ctx.direction = getModifierDirections(modifiers);
-    }
-  }
-
-  function addEvt (ctx, target, events) {
-    target += 'Evt';
-
-    ctx[target] = ctx[target] !== void 0
-      ? ctx[target].concat(events)
-      : events;
-
-    events.forEach(function (evt) {
-      evt[0].addEventListener(evt[1], ctx[evt[2]], listenOpts[evt[3]]);
-    });
-  }
-
-  function cleanEvt (ctx, target) {
-    target += 'Evt';
-
-    if (ctx[target] !== void 0) {
-      ctx[target].forEach(function (evt) {
-        evt[0].removeEventListener(evt[1], ctx[evt[2]], listenOpts[evt[3]]);
-      });
-      ctx[target] = void 0;
-    }
-  }
-
-  var getTouchTarget = isSSR === false && iosEmulated !== true && (
-    client.is.ios === true ||
-    window.navigator.vendor.toLowerCase().indexOf('apple') > -1
-  )
-    ? function () { return document; }
-    : function (target) { return target; };
-
-  function shouldStart (evt, ctx) {
-    return ctx.event === void 0 &&
-      evt.target !== void 0 &&
-      evt.target.draggable !== true &&
-      typeof ctx.handler === 'function' &&
-      evt.target.nodeName.toUpperCase() !== 'INPUT' &&
-      (evt.qClonedBy === void 0 || evt.qClonedBy.indexOf(ctx.uid) === -1)
-  }
 
   function throttle (fn, limit) {
     if ( limit === void 0 ) limit = 250;
@@ -3040,20 +3080,19 @@
   function showRipple (evt, el, ctx, forceCenter) {
     ctx.modifiers.stop === true && stop(evt);
 
-    var ref = ctx.modifiers;
-    var center = ref.center;
-    var color = ref.color;
+    var color = ctx.modifiers.color;
+    var center = ctx.modifiers.center;
     center = center === true || forceCenter === true;
 
     var
       node = document.createElement('span'),
       innerNode = document.createElement('span'),
       pos = position(evt);
-    var ref$1 = el.getBoundingClientRect();
-    var left = ref$1.left;
-    var top = ref$1.top;
-    var width = ref$1.width;
-    var height = ref$1.height;
+    var ref = el.getBoundingClientRect();
+    var left = ref.left;
+    var top = ref.top;
+    var width = ref.width;
+    var height = ref.height;
     var diameter = Math.sqrt(width * width + height * height),
       radius = diameter / 2,
       centerX = ((width - diameter) / 2) + "px",
@@ -3098,22 +3137,27 @@
     }, 50);
   }
 
-  function updateCtx (ctx, ref) {
-    var value = ref.value;
+  function updateModifiers (ctx, ref) {
     var modifiers = ref.modifiers;
+    var value = ref.value;
     var arg = ref.arg;
 
-    ctx.enabled = value !== false;
+    var cfg = Object.assign({}, $q.config.ripple, modifiers, value);
+    ctx.modifiers = {
+      early: cfg.early === true,
+      stop: cfg.stop === true,
+      center: cfg.center === true,
+      color: cfg.color || arg,
+      keyCodes: [].concat(cfg.keyCodes || 13)
+    };
+  }
 
-    if (ctx.enabled === true) {
-      var cfg = Object.assign({}, $q.config.ripple, modifiers, value);
-      ctx.modifiers = {
-        early: cfg.early === true,
-        stop: cfg.stop === true,
-        center: cfg.center === true,
-        color: cfg.color || arg,
-        keyCodes: [].concat(cfg.keyCodes || 13)
-      };
+  function destroy (el) {
+    var ctx = el.__qripple;
+    if (ctx !== void 0) {
+      ctx.abort.forEach(function (fn) { fn(); });
+      cleanEvt(ctx, 'main');
+      delete el._qripple;
     }
   }
 
@@ -3121,7 +3165,13 @@
     name: 'ripple',
 
     inserted: function inserted (el, binding) {
+      if (el.__qripple !== void 0) {
+        destroy(el);
+        el.__qripple_destroyed = true;
+      }
+
       var ctx = {
+        enabled: binding.value !== false,
         modifiers: {},
         abort: [],
 
@@ -3153,11 +3203,7 @@
         }, 300)
       };
 
-      updateCtx(ctx, binding);
-
-      if (el.__qripple) {
-        el.__qripple_old = el.__qripple;
-      }
+      updateModifiers(ctx, binding);
 
       el.__qripple = ctx;
 
@@ -3171,15 +3217,22 @@
     },
 
     update: function update (el, binding) {
-      el.__qripple !== void 0 && updateCtx(el.__qripple, binding);
+      var ctx = el.__qripple;
+      if (ctx !== void 0 && binding.oldValue !== binding.value) {
+        ctx.enabled = binding.value !== false;
+
+        if (ctx.enabled === true && Object(binding.value) === binding.value) {
+          updateModifiers(ctx, binding);
+        }
+      }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qripple_old || el.__qripple;
-      if (ctx !== void 0) {
-        ctx.abort.forEach(function (fn) { fn(); });
-        cleanEvt(ctx, 'main');
-        delete el[el.__qripple_old ? '__qripple_old' : '__qripple'];
+      if (el.__qripple_destroyed === void 0) {
+        destroy(el);
+      }
+      else {
+        delete el.__qripple_destroyed;
       }
     }
   };
@@ -3222,8 +3275,10 @@
 
     props: {
       type: String,
+
       to: [ Object, String ],
       replace: Boolean,
+      append: Boolean,
 
       label: [ Number, String ],
       icon: String,
@@ -3295,6 +3350,17 @@
         return 'standard'
       },
 
+      currentLocation: function currentLocation () {
+        if (this.hasRouterLink === true) {
+          // we protect from accessing this.$route without
+          // actually needing it so that we won't trigger
+          // unnecessary updates
+          return this.append === true
+            ? this.$router.resolve(this.to, this.$route, true)
+            : this.$router.resolve(this.to)
+        }
+      },
+
       attrs: function attrs () {
         var attrs = { tabindex: this.computedTabIndex };
 
@@ -3303,7 +3369,7 @@
         }
 
         if (this.hasRouterLink === true) {
-          attrs.href = this.$router.resolve(this.to).href;
+          attrs.href = this.currentLocation.href;
           attrs.role = 'link';
         }
         else {
@@ -3319,7 +3385,7 @@
 
         if (this.disable === true) {
           attrs.disabled = '';
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
 
         return attrs
@@ -3373,6 +3439,66 @@
     }
   };
 
+  var directions = [ 'left', 'right', 'up', 'down', 'horizontal', 'vertical' ];
+
+  var modifiersAll = {
+    left: true,
+    right: true,
+    up: true,
+    down: true,
+    horizontal: true,
+    vertical: true,
+    all: true
+  };
+
+  function getModifierDirections (mod) {
+    var dir = {};
+
+    directions.forEach(function (direction) {
+      if (mod[direction]) {
+        dir[direction] = true;
+      }
+    });
+
+    if (Object.keys(dir).length === 0) {
+      return modifiersAll
+    }
+
+    if (dir.horizontal === true) {
+      dir.left = dir.right = true;
+    }
+    if (dir.vertical === true) {
+      dir.up = dir.down = true;
+    }
+    if (dir.left === true && dir.right === true) {
+      dir.horizontal = true;
+    }
+    if (dir.up === true && dir.down === true) {
+      dir.vertical = true;
+    }
+    if (dir.horizontal === true && dir.vertical === true) {
+      dir.all = true;
+    }
+
+    return dir
+  }
+
+  var getTouchTarget = isSSR === false && iosEmulated !== true && (
+    client.is.ios === true ||
+    window.navigator.vendor.toLowerCase().indexOf('apple') > -1
+  )
+    ? function () { return document; }
+    : function (target) { return target; };
+
+  function shouldStart (evt, ctx) {
+    return ctx.event === void 0 &&
+      evt.target !== void 0 &&
+      evt.target.draggable !== true &&
+      typeof ctx.handler === 'function' &&
+      evt.target.nodeName.toUpperCase() !== 'INPUT' &&
+      (evt.qClonedBy === void 0 || evt.qClonedBy.indexOf(ctx.uid) === -1)
+  }
+
   var passiveCapture = listenOpts.passiveCapture;
 
   var
@@ -3400,10 +3526,8 @@
       computedRipple: function computedRipple () {
         return this.ripple === false
           ? false
-          : Object.assign(
-            { keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ] },
-            this.ripple === true ? {} : this.ripple
-          )
+          : Object.assign({}, {keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ]},
+            (this.ripple === true ? {} : this.ripple))
       },
 
       percentageStyle: function percentageStyle () {
@@ -3504,14 +3628,10 @@
         }
 
         var go = function () {
-          var res = this$1.$router[this$1.replace === true ? 'replace' : 'push'](this$1.to);
-
           // vue-router now throwing error if navigating
           // to the same route that the user is currently at
           // https://github.com/vuejs/vue-router/issues/2872
-          if (res !== void 0 && typeof res.catch === 'function') {
-            res.catch(noop);
-          }
+          this$1.$router[this$1.replace === true ? 'replace' : 'push'](this$1.currentLocation.route, void 0, noop);
         };
 
         this.$emit('click', e, go);
@@ -3610,7 +3730,6 @@
         ) {
           blurTarget.setAttribute('tabindex', -1);
           blurTarget.focus();
-          blurTarget.removeAttribute('tabindex');
         }
 
         if (touchTarget === this.$el) {
@@ -4204,25 +4323,76 @@
     }
   }
 
-  var PortalMixin = {
+  function isOnGlobalDialog (vm) {
+    while (vm !== void 0) {
+      if (vm.$options.name === 'QGlobalDialog') {
+        return true
+      }
+      if (vm.$options.name === 'QDialog') {
+        return false
+      }
+
+      vm = vm.$parent;
+    }
+    return false
+  }
+
+  var Portal = {
     inheritAttrs: false,
 
     props: {
-      contentClass: [Array, String, Object],
-      contentStyle: [Array, String, Object]
+      contentClass: [ Array, String, Object ],
+      contentStyle: [ Array, String, Object ]
     },
 
     methods: {
       __showPortal: function __showPortal () {
-        if (this.__portal !== void 0) {
+        var this$1 = this;
+
+        if (this.$q.fullscreen !== void 0 && this.$q.fullscreen.isCapable === true) {
+          var append = function (isFullscreen) {
+            if (this$1.__portal === void 0) {
+              return
+            }
+
+            var newParent = getBodyFullscreenElement(
+              isFullscreen,
+              this$1.$q.fullscreen.activeEl
+            );
+
+            if (
+              this$1.__portal.$el.parentElement !== newParent &&
+              newParent.contains(this$1.$el) === (this$1.__onGlobalDialog === false)
+            ) {
+              newParent.appendChild(this$1.__portal.$el);
+            }
+          };
+
+          this.unwatchFullscreen = this.$watch('$q.fullscreen.isActive', append);
+
+          var isActive = this.$q.fullscreen.isActive;
+
+          if (this.__onGlobalDialog === false || isActive === true) {
+            append(isActive);
+          }
+        }
+        else if (this.__portal !== void 0 && this.__onGlobalDialog === false) {
           document.body.appendChild(this.__portal.$el);
         }
       },
 
       __hidePortal: function __hidePortal () {
         if (this.__portal !== void 0) {
-          this.__portal.$destroy();
-          this.__portal.$el.remove();
+          if (this.unwatchFullscreen !== void 0) {
+            this.unwatchFullscreen();
+            this.unwatchFullscreen = void 0;
+          }
+
+          if (this.__onGlobalDialog === false) {
+            this.__portal.$destroy();
+            this.__portal.$el.remove();
+          }
+
           this.__portal = void 0;
         }
       },
@@ -4231,29 +4401,46 @@
         var this$1 = this;
 
         if (this.__portal === void 0) {
-          this.__portal = new Vue({
-            name: 'QPortal',
-            parent: this,
+          this.__portal = this.__onGlobalDialog === true
+            ? {
+              $el: this.$el,
+              $refs: this.$refs
+            }
+            : new Vue({
+              name: 'QPortal',
+              parent: this,
 
-            inheritAttrs: false,
+              inheritAttrs: false,
 
-            render: function (h) { return this$1.__renderPortal(h); },
+              render: function (h) { return this$1.__renderPortal(h); },
 
-            components: this.$options.components,
-            directives: this.$options.directives
-          }).$mount();
+              components: this.$options.components,
+              directives: this.$options.directives
+            }).$mount();
         }
       }
     },
 
-    render: function render () {
-      this.__portal !== void 0 && this.__portal.$forceUpdate();
+    render: function render (h) {
+      if (this.__onGlobalDialog === true) {
+        return this.__renderPortal(h)
+      }
+
+      if (this.__portal !== void 0) {
+        this.__portal.$forceUpdate();
+      }
     },
 
     beforeDestroy: function beforeDestroy () {
       this.__hidePortal();
     }
   };
+
+  if (isSSR === false) {
+    Portal.created = function () {
+      this.__onGlobalDialog = isOnGlobalDialog(this.$parent);
+    };
+  }
 
   var TransitionMixin = {
     props: {
@@ -4291,8 +4478,6 @@
     }
   };
 
-  var AttrsMixin = getPropCacheMixin('$attrs', 'qAttrs');
-
   function getVmOfNode (el) {
     for (var node = el; node !== null; node = node.parentNode) {
       // node.__vue__ can be null if the instance was destroyed
@@ -4322,6 +4507,16 @@
       click: [],
       focus: []
     };
+
+  function hasModalsAbove (node) {
+    while ((node = node.nextElementSibling) !== null) {
+      if (node.classList.contains('q-dialog--modal')) {
+        return true
+      }
+    }
+
+    return false
+  }
 
   function execHandlers (list, evt) {
     for (var i = list.length - 1; i >= 0; i--) {
@@ -4367,6 +4562,7 @@
             // directives that prevent click by using pointer-events none generate click on html element
             target !== document.documentElement &&
             target.classList.contains('no-pointer-events') === false &&
+            hasModalsAbove(el) !== true &&
             (
               ctx.toggleEl === void 0 ||
               ctx.toggleEl.contains(target) === false
@@ -4376,7 +4572,7 @@
               isVmChildOf(getVmOfNode(target), vmEl) === false
             )
           ) {
-            // mark the event as beeing processed by clickOutside
+            // mark the event as being processed by clickOutside
             // used to prevent refocus after menu close
             evt.qClickOutside = true;
 
@@ -4651,13 +4847,24 @@
   };
 
   var handlers$1 = [];
+  var escDown = false;
 
   var EscapeKey = {
     __install: function __install () {
       this.__installed = true;
+      window.addEventListener('keydown', function (evt) {
+        escDown = evt.keyCode === 27;
+      });
+      window.addEventListener('blur', function () {
+        escDown === true && (escDown = false);
+      });
       window.addEventListener('keyup', function (evt) {
-        if (handlers$1.length !== 0 && isKeyCode(evt, 27) === true) {
-          handlers$1[handlers$1.length - 1].fn(evt);
+        if (escDown === true) {
+          escDown = false;
+
+          if (handlers$1.length !== 0 && isKeyCode(evt, 27) === true) {
+            handlers$1[handlers$1.length - 1].fn(evt);
+          }
         }
       });
     },
@@ -4821,19 +5028,19 @@
     applyBoundaries(props, anchorProps, targetProps, cfg.anchorOrigin, cfg.selfOrigin);
 
     elStyle = {
-      top: Math.floor(props.top) + 'px',
-      left: Math.floor(props.left) + 'px'
+      top: props.top + 'px',
+      left: props.left + 'px'
     };
 
     if (props.maxHeight !== void 0) {
-      elStyle.maxHeight = Math.floor(props.maxHeight) + 'px';
+      elStyle.maxHeight = props.maxHeight + 'px';
 
       if (anchorProps.height > props.maxHeight) {
         elStyle.minHeight = elStyle.maxHeight;
       }
     }
     if (props.maxWidth !== void 0) {
-      elStyle.maxWidth = Math.floor(props.maxWidth) + 'px';
+      elStyle.maxWidth = props.maxWidth + 'px';
 
       if (anchorProps.width > props.maxWidth) {
         elStyle.minWidth = elStyle.maxWidth;
@@ -4920,7 +5127,7 @@
       DarkMixin,
       AnchorMixin,
       ModelToggleMixin,
-      PortalMixin,
+      Portal,
       TransitionMixin
     ],
 
@@ -4933,6 +5140,7 @@
       autoClose: Boolean,
       separateClosePopup: Boolean,
 
+      noRouteDismiss: Boolean,
       noRefocus: Boolean,
       noFocus: Boolean,
 
@@ -4995,7 +5203,8 @@
       },
 
       hideOnRouteChange: function hideOnRouteChange () {
-        return this.persistent !== true
+        return this.persistent !== true &&
+          this.noRouteDismiss !== true
       },
 
       onEvents: function onEvents () {
@@ -5062,7 +5271,10 @@
         }
 
         if (this.unwatch === void 0) {
-          this.unwatch = this.$watch(function () { return this$1.$q.screen.width + '|' + this$1.$q.screen.height; }, this.updatePosition);
+          this.unwatch = this.$watch(
+            function () { return this$1.$q.screen.width + '|' + this$1.$q.screen.height + '|' + this$1.self + '|' + this$1.anchor; },
+            this.updatePosition
+          );
         }
 
         this.$el.dispatchEvent(create('popup-show', { bubbles: true }));
@@ -5195,7 +5407,7 @@
             // prevent click if it's on a dialog backdrop
             targetClassList.contains('q-dialog__backdrop')
           ) {
-            stopAndPrevent(e);
+            stopAndPreventClick(e);
           }
           return true
         }
@@ -5239,18 +5451,21 @@
   var QBtnDropdown = Vue.extend({
     name: 'QBtnDropdown',
 
-    mixins: [ BtnMixin ],
+    mixins: [ BtnMixin, AttrsMixin ],
+
+    inheritAttrs: false,
 
     props: {
       value: Boolean,
       split: Boolean,
       dropdownIcon: String,
 
-      contentClass: [Array, String, Object],
-      contentStyle: [Array, String, Object],
+      contentClass: [ Array, String, Object ],
+      contentStyle: [ Array, String, Object ],
 
       cover: Boolean,
       persistent: Boolean,
+      noRouteDismiss: Boolean,
       autoClose: Boolean,
 
       menuAnchor: {
@@ -5264,7 +5479,9 @@
       menuOffset: Array,
 
       disableMainBtn: Boolean,
-      disableDropdown: Boolean
+      disableDropdown: Boolean,
+
+      noIconAnimation: Boolean
     },
 
     data: function data () {
@@ -5276,6 +5493,10 @@
     watch: {
       value: function value (val) {
         this.$refs.menu !== void 0 && this.$refs.menu[val ? 'show' : 'hide']();
+      },
+
+      split: function split () {
+        this.hide();
       }
     },
 
@@ -5285,7 +5506,7 @@
       var label = slot(this, 'label', []);
       var attrs = {
         'aria-expanded': this.showing === true ? 'true' : 'false',
-        'aria-haspopup': true
+        'aria-haspopup': 'true'
       };
 
       if (
@@ -5295,19 +5516,15 @@
           this.disableDropdown === true
         )
       ) {
-        attrs['aria-disabled'] = '';
+        attrs['aria-disabled'] = 'true';
       }
 
       var Arrow = [
         h(QIcon, {
-          props: {
-            name: this.dropdownIcon || this.$q.iconSet.arrow.dropdown
-          },
-          staticClass: 'q-btn-dropdown__arrow',
-          class: {
-            'rotate-180': this.showing,
-            'q-btn-dropdown__arrow-container': this.split === false
-          }
+          props: { name: this.dropdownIcon || this.$q.iconSet.arrow.dropdown },
+          class: 'q-btn-dropdown__arrow' +
+            (this.showing === true && this.noIconAnimation === false ? ' rotate-180' : '') +
+            (this.split === false ? ' q-btn-dropdown__arrow-container' : '')
         })
       ];
 
@@ -5318,6 +5535,7 @@
             cover: this.cover,
             fit: true,
             persistent: this.persistent,
+            noRouteDismiss: this.noRouteDismiss,
             autoClose: this.autoClose,
             anchor: this.menuAnchor,
             self: this.menuSelf,
@@ -5354,7 +5572,8 @@
             {disable: this.disable === true || this.disableMainBtn === true,
             noWrap: true,
             round: false}),
-          attrs: attrs,
+          attrs: Object.assign({}, this.qAttrs,
+            attrs),
           on: cache(this, 'nonSpl', {
             click: function (e) {
               this$1.$emit('click', e);
@@ -5370,8 +5589,10 @@
           noWrap: true,
           iconRight: this.iconRight,
           round: false}),
+        attrs: this.qAttrs,
         on: cache(this, 'spl', {
           click: function (e) {
+            stop(e); // prevent showing the menu on click
             this$1.hide();
             this$1.$emit('click', e);
           }
@@ -5393,7 +5614,7 @@
         Btn,
 
         h(QBtn, {
-          staticClass: 'q-btn-dropdown__arrow-container',
+          staticClass: 'q-btn-dropdown__arrow-container q-anchor--skip',
           attrs: attrs,
           props: {
             disable: this.disable === true || this.disableDropdown === true,
@@ -5506,6 +5727,7 @@
       glossy: Boolean,
 
       size: String,
+      padding: String,
 
       noCaps: Boolean,
       noWrap: Boolean,
@@ -5534,11 +5756,57 @@
           name: this.name,
           value: this.value
         }
+      },
+
+      btnOptions: function btnOptions () {
+        var this$1 = this;
+
+        var mergeOption = function (opt, key) { return opt[key] === void 0 ? this$1[key] : opt[key]; };
+
+        return this.options.map(function (opt, i) { return ({
+          slot: opt.slot,
+
+          options: {
+            key: i,
+            class: opt.class,
+            style: opt.style,
+            on: Object.assign({}, this$1.qListeners,
+              {click: function (e) { return this$1.__set(opt.value, opt, e); }}),
+            attrs: opt.attrs,
+            props: Object.assign({}, opt,
+              {slot: void 0,
+              class: void 0,
+              style: void 0,
+              value: void 0,
+              attrs: void 0,
+
+              outline: this$1.outline,
+              flat: this$1.flat,
+              rounded: this$1.rounded,
+              push: this$1.push,
+              unelevated: this$1.unelevated,
+              dense: this$1.dense,
+
+              disable: this$1.disable === true || opt.disable === true,
+
+              // Options that come from the button specific options first, then from general props
+              color: opt.value === this$1.value ? mergeOption(opt, 'toggleColor') : mergeOption(opt, 'color'),
+              textColor: opt.value === this$1.value ? mergeOption(opt, 'toggleTextColor') : mergeOption(opt, 'textColor'),
+              noCaps: mergeOption(opt, 'noCaps') === true,
+              noWrap: mergeOption(opt, 'noWrap') === true,
+
+              size: mergeOption(opt, 'size'),
+              padding: mergeOption(opt, 'padding'),
+              ripple: mergeOption(opt, 'ripple'),
+              stack: mergeOption(opt, 'stack') === true,
+              stretch: mergeOption(opt, 'stretch') === true})
+          }
+        }); })
       }
     },
 
     methods: {
-      __set: function __set (value, opt) {
+      __set: function __set (value, opt, e) {
         if (this.readonly !== true) {
           if (this.value === value) {
             if (this.clearable === true) {
@@ -5549,6 +5817,8 @@
           else {
             this.$emit('input', value, opt);
           }
+
+          this.$emit('click', e);
         }
       }
     },
@@ -5556,33 +5826,8 @@
     render: function render (h) {
       var this$1 = this;
 
-      var child = this.options.map(function (opt, i) {
-        return h(QBtn, {
-          key: i,
-          on: { click: function () { return this$1.__set(opt.value, opt); } },
-          props: {
-            disable: this$1.disable || opt.disable,
-            label: opt.label,
-            // Colors come from the button specific options first, then from general props
-            color: opt.value === this$1.value ? opt.toggleColor || this$1.toggleColor : opt.color || this$1.color,
-            textColor: opt.value === this$1.value ? opt.toggleTextColor || this$1.toggleTextColor : opt.textColor || this$1.textColor,
-            icon: opt.icon,
-            iconRight: opt.iconRight,
-            noCaps: this$1.noCaps === true || opt.noCaps === true,
-            noWrap: this$1.noWrap === true || opt.noWrap === true,
-            outline: this$1.outline,
-            flat: this$1.flat,
-            rounded: this$1.rounded,
-            push: this$1.push,
-            unelevated: this$1.unelevated,
-            size: this$1.size,
-            dense: this$1.dense,
-            ripple: this$1.ripple !== void 0 ? this$1.ripple : opt.ripple,
-            stack: this$1.stack === true || opt.stack === true,
-            tabindex: opt.tabindex,
-            stretch: this$1.stretch
-          }
-        }, opt.slot !== void 0 ? slot(this$1, opt.slot) : void 0)
+      var child = this.btnOptions.map(function (opt) {
+        return h(QBtn, opt.options, opt.slot !== void 0 ? slot(this$1, opt.slot) : void 0)
       });
 
       if (this.name !== void 0 && this.disable !== true && this.hasActiveValue === true) {
@@ -5600,9 +5845,8 @@
           unelevated: this.unelevated,
           glossy: this.glossy,
           spread: this.spread
-        },
-        on: Object.assign({}, this.qListeners)
-      }, child)
+        }
+      }, mergeSlot(child, this, 'default'))
     }
   });
 
@@ -5699,6 +5943,20 @@
     return data
   }
 
+  function destroy$1 (el) {
+    var ctx = el.__qtouchswipe;
+
+    if (ctx !== void 0) {
+      cleanEvt(ctx, 'main');
+      cleanEvt(ctx, 'temp');
+
+      client.is.firefox === true && preventDraggable(el, false);
+      ctx.styleCleanup !== void 0 && ctx.styleCleanup();
+
+      delete el.__qtouchswipe;
+    }
+  }
+
   var TouchSwipe = {
     name: 'touch-swipe',
 
@@ -5706,6 +5964,11 @@
       var value = ref.value;
       var arg = ref.arg;
       var modifiers = ref.modifiers;
+
+      if (el.__qtouchswipe !== void 0) {
+        destroy$1(el);
+        el.__qtouchswipe_destroyed = true;
+      }
 
       // early return, we don't need to do anything
       if (modifiers.mouse !== true && client.has.touch !== true) {
@@ -5907,10 +6170,6 @@
         }
       };
 
-      if (el.__qtouchswipe) {
-        el.__qtouchswipe_old = el.__qtouchswipe;
-      }
-
       el.__qtouchswipe = ctx;
 
       modifiers.mouse === true && addEvt(ctx, 'main', [
@@ -5923,21 +6182,23 @@
       ]);
     },
 
-    update: function update (el, binding) {
-      el.__qtouchswipe !== void 0 && updateModifiers(el.__qtouchswipe, binding);
+    update: function update (el, ref) {
+      var oldValue = ref.oldValue;
+      var value = ref.value;
+
+      var ctx = el.__qtouchswipe;
+      if (ctx !== void 0 && oldValue !== value) {
+        typeof value !== 'function' && ctx.end();
+        ctx.handler = value;
+      }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qtouchswipe_old || el.__qtouchswipe;
-
-      if (ctx !== void 0) {
-        cleanEvt(ctx, 'main');
-        cleanEvt(ctx, 'temp');
-
-        client.is.firefox === true && preventDraggable(el, false);
-        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
-
-        delete el[el.__qtouchswipe_old ? '__qtouchswipe_old' : '__qtouchswipe'];
+      if (el.__qtouchswipe_destroyed === void 0) {
+        destroy$1(el);
+      }
+      else {
+        delete el.__qtouchswipe_destroyed;
       }
     }
   };
@@ -6059,30 +6320,17 @@
 
       __getPanelIndex: function __getPanelIndex (name) {
         return this.panels.findIndex(function (panel) {
-          var opt = panel.componentOptions;
-          return opt &&
-            opt.propsData.name === name &&
-            opt.propsData.disable !== '' &&
-            opt.propsData.disable !== true
+          var opt = panel.componentOptions.propsData;
+          return opt.name === name &&
+            opt.disable !== '' &&
+            opt.disable !== true
         })
       },
 
-      __getAllPanels: function __getAllPanels () {
-        var this$1 = this;
-
-        return this.panels.filter(
-          function (panel) { return panel.componentOptions !== void 0 &&
-            this$1.__isValidPanelName(panel.componentOptions.propsData.name); }
-        )
-      },
-
-      __getAvailablePanels: function __getAvailablePanels () {
+      __getEnabledPanels: function __getEnabledPanels () {
         return this.panels.filter(function (panel) {
-          var opt = panel.componentOptions;
-          return opt &&
-            opt.propsData.name !== void 0 &&
-            opt.propsData.disable !== '' &&
-            opt.propsData.disable !== true
+          var opt = panel.componentOptions.propsData;
+          return opt.disable !== '' && opt.disable !== true
         })
       },
 
@@ -6184,7 +6432,15 @@
     },
 
     render: function render (h) {
-      this.panels = slot(this, 'default', []);
+      var this$1 = this;
+
+      this.panels = slot(this, 'default', []).filter(
+        function (panel) { return panel !== void 0 &&
+          panel.componentOptions !== void 0 &&
+          panel.componentOptions.propsData !== void 0 &&
+          this$1.__isValidPanelName(panel.componentOptions.propsData.name); }
+      );
+
       return this.__renderPanels(h)
     }
   };
@@ -6305,7 +6561,7 @@
         return false
       }
 
-      var length, i, keys;
+      var length, i;
 
       if (a.constructor === Array) {
         length = a.length;
@@ -6391,7 +6647,7 @@
         return a.toString() === b.toString()
       }
 
-      keys = Object.keys(a);
+      var keys = Object.keys(a);
       length = keys.length;
 
       if (length !== Object.keys(b).length) {
@@ -6437,7 +6693,7 @@
       controlColor: String,
       controlTextColor: String,
 
-      autoplay: [Number, Boolean],
+      autoplay: [ Number, Boolean ],
 
       arrows: Boolean,
       prevIcon: String,
@@ -6446,9 +6702,10 @@
       navigation: Boolean,
       navigationPosition: {
         type: String,
-        validator: function (v) { return ['top', 'right', 'bottom', 'left'].includes(v); }
+        validator: function (v) { return [ 'top', 'right', 'bottom', 'left' ].includes(v); }
       },
       navigationIcon: String,
+      navigationActiveIcon: String,
 
       thumbnails: Boolean
     },
@@ -6489,6 +6746,10 @@
         return this.navigationIcon || this.$q.iconSet.carousel.navigationIcon
       },
 
+      navActiveIcon: function navActiveIcon () {
+        return this.navigationActiveIcon || this.navIcon
+      },
+
       navigationPositionComputed: function navigationPositionComputed () {
         return this.navigationPosition || (this.vertical === true ? 'right' : 'bottom')
       },
@@ -6500,7 +6761,7 @@
           color: this.controlColor,
           textColor: this.controlTextColor,
           round: true
-        }, obj[this.controlType] = true, obj.dense = true, obj )
+        }, obj[ this.controlType ] = true, obj.dense = true, obj )
       },
 
       transitionPrevComputed: function transitionPrevComputed () {
@@ -6545,8 +6806,8 @@
             (this.controlColor !== void 0 ? (" text-" + (this.controlColor)) : '')
         }, [
           h('div', {
-            staticClass: 'q-carousel__navigation-inner flex no-wrap justify-center'
-          }, this.__getAvailablePanels().map(mapping))
+            staticClass: 'q-carousel__navigation-inner flex flex-center no-wrap'
+          }, this.__getEnabledPanels().map(mapping))
         ])
       },
 
@@ -6556,19 +6817,33 @@
         var node = [];
 
         if (this.navigation === true) {
-          node.push(this.__getNavigationContainer(h, 'buttons', function (panel) {
-            var name = panel.componentOptions.propsData.name;
+          var fn = this.$scopedSlots['navigation-icon'] !== void 0
+            ? this.$scopedSlots['navigation-icon']
+            : function (opts) { return h(QBtn, {
+                key: 'nav' + opts.name,
+                class: ("q-carousel__navigation-icon q-carousel__navigation-icon--" + (opts.active === true ? '' : 'in') + "active"),
+                props: opts.btnProps,
+                on: cache(this$1, 'nav#' + opts.name, { click: opts.onClick })
+              }); };
 
-            return h(QBtn, {
-              key: name,
-              class: ("q-carousel__navigation-icon q-carousel__navigation-icon--" + (name === this$1.value ? '' : 'in') + "active"),
-              props: Object.assign({
-                icon: this$1.navIcon,
-                size: 'sm'
-              }, this$1.controlProps),
-              on: cache(this$1, 'nav#' + name, { click: function () { this$1.goTo(name); } })
+          var maxIndex = this.panels.length - 1;
+          node.push(
+            this.__getNavigationContainer(h, 'buttons', function (panel, index) {
+              var name = panel.componentOptions.propsData.name;
+              var active = this$1.panelIndex === index;
+
+              return fn({
+                index: index,
+                maxIndex: maxIndex,
+                name: name,
+                active: active,
+                btnProps: Object.assign({}, {icon: active === true ? this$1.navActiveIcon : this$1.navIcon,
+                  size: 'sm'},
+                  this$1.controlProps),
+                onClick: function () { this$1.goTo(name); }
+              })
             })
-          }));
+          );
         }
         else if (this.thumbnails === true) {
           var color = this.controlColor !== void 0
@@ -6589,25 +6864,34 @@
           }));
         }
 
-        if (this.arrows === true) {
-          node.push(
-            h('div', {
-              staticClass: ("q-carousel__control q-carousel__arrow q-carousel__prev-arrow q-carousel__prev-arrow--" + (this.direction) + " absolute flex flex-center")
-            }, [
-              h(QBtn, {
-                props: Object.assign({}, {icon: this.arrowIcons[0]}, this.controlProps),
-                on: cache(this, 'prev', { click: this.previous })
-              })
-            ]),
-            h('div', {
-              staticClass: ("q-carousel__control q-carousel__arrow q-carousel__next-arrow q-carousel__next-arrow--" + (this.direction) + " absolute flex flex-center")
-            }, [
-              h(QBtn, {
-                props: Object.assign({}, {icon: this.arrowIcons[1]}, this.controlProps),
-                on: cache(this, 'next', { click: this.next })
-              })
-            ])
-          );
+        if (this.arrows === true && this.panelIndex >= 0) {
+          if (this.infinite === true || this.panelIndex > 0) {
+            node.push(
+              h('div', {
+                key: 'prev',
+                staticClass: ("q-carousel__control q-carousel__arrow q-carousel__prev-arrow q-carousel__prev-arrow--" + (this.direction) + " absolute flex flex-center")
+              }, [
+                h(QBtn, {
+                  props: Object.assign({}, {icon: this.arrowIcons[0]}, this.controlProps),
+                  on: cache(this, 'prev', { click: this.previous })
+                })
+              ])
+            );
+          }
+
+          if (this.infinite === true || this.panelIndex < this.panels.length - 1) {
+            node.push(
+              h('div', {
+                key: 'next',
+                staticClass: ("q-carousel__control q-carousel__arrow q-carousel__next-arrow q-carousel__next-arrow--" + (this.direction) + " absolute flex flex-center")
+              }, [
+                h(QBtn, {
+                  props: Object.assign({}, {icon: this.arrowIcons[1]}, this.controlProps),
+                  on: cache(this, 'next', { click: this.next })
+                })
+              ])
+            );
+          }
         }
 
         return mergeSlot(node, this, 'control')
@@ -6910,9 +7194,13 @@
 
       trueValue: { default: true },
       falseValue: { default: false },
-
-      toggleIndeterminate: Boolean,
       indeterminateValue: { default: null },
+
+      toggleOrder: {
+        type: String,
+        validator: function (v) { return v === 'tf' || v === 'ft'; }
+      },
+      toggleIndeterminate: Boolean,
 
       label: String,
       leftLabel: Boolean,
@@ -6940,8 +7228,7 @@
       },
 
       isIndeterminate: function isIndeterminate () {
-        return this.value === this.indeterminateValue &&
-          this.value !== this.falseValue
+        return this.isTrue === false && this.isFalse === false
       },
 
       index: function index () {
@@ -7005,11 +7292,11 @@
           'aria-label': this.label,
           'aria-checked': this.isIndeterminate === true
             ? 'mixed'
-            : this.isTrue === true ? 'true' : 'false'
+            : (this.isTrue === true ? 'true' : 'false')
         };
 
         if (this.disable === true) {
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
 
         return attrs
@@ -7023,34 +7310,39 @@
           this.__refocusTarget(e);
         }
 
-        if (this.disable === true) {
-          return
+        if (this.disable !== true) {
+          this.$emit('input', this.__getNextValue(), e);
         }
+      },
 
-        var val;
-
+      __getNextValue: function __getNextValue () {
         if (this.modelIsArray === true) {
           if (this.isTrue === true) {
-            val = this.value.slice();
+            var val = this.value.slice();
             val.splice(this.index, 1);
+            return val
           }
-          else {
-            val = this.value.concat([ this.val ]);
-          }
-        }
-        else if (this.isTrue === true) {
-          val = this.toggleIndeterminate === true
-            ? this.indeterminateValue
-            : this.falseValue;
-        }
-        else if (this.isFalse === true) {
-          val = this.trueValue;
-        }
-        else {
-          val = this.falseValue;
+
+          return this.value.concat([ this.val ])
         }
 
-        this.$emit('input', val);
+        if (this.isTrue === true) {
+          if (this.toggleOrder !== 'ft' || this.toggleIndeterminate === false) {
+            return this.falseValue
+          }
+        }
+        else if (this.isFalse === true) {
+          if (this.toggleOrder === 'ft' || this.toggleIndeterminate === false) {
+            return this.trueValue
+          }
+        }
+        else {
+          return this.toggleOrder !== 'ft'
+            ? this.trueValue
+            : this.falseValue
+        }
+
+        return this.indeterminateValue
       },
 
       __onKeydown: function __onKeydown (e) {
@@ -7072,12 +7364,12 @@
       this.disable !== true && this.__injectFormInput(
         inner,
         'unshift',
-        ("q-" + (this.type) + "__native absolute q-ma-none q-pa-none invisible")
+        ("q-" + (this.type) + "__native absolute q-ma-none q-pa-none")
       );
 
       var child = [
         h('div', {
-          staticClass: ("q-" + (this.type) + "__inner relative-position no-pointer-events"),
+          staticClass: ("q-" + (this.type) + "__inner relative-position non-selectable"),
           class: this.innerClass,
           style: this.sizeStyle
         }, inner)
@@ -7122,7 +7414,7 @@
           }, [
             h('svg', {
               staticClass: 'q-checkbox__svg fit absolute-full',
-              attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24' }
+              attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24', 'aria-hidden': 'true' }
             }, [
               h('path', {
                 staticClass: 'q-checkbox__truthy',
@@ -7173,6 +7465,7 @@
 
       icon: String,
       iconRight: String,
+      iconRemove: String,
       label: [String, Number],
 
       color: String,
@@ -7217,7 +7510,7 @@
 
       attrs: function attrs () {
         return this.disable === true
-          ? { tabindex: -1, 'aria-disabled': '' }
+          ? { tabindex: -1, 'aria-disabled': 'true' }
           : { tabindex: this.tabindex || 0 }
       }
     },
@@ -7275,7 +7568,7 @@
         this.removable === true && child.push(
           h(QIcon, {
             staticClass: 'q-chip__icon q-chip__icon--remove cursor-pointer',
-            props: { name: this.$q.iconSet.chip.remove },
+            props: { name: this.iconRemove || this.$q.iconSet.chip.remove },
             attrs: this.attrs,
             on: cache(this, 'non', {
               click: this.__onRemove,
@@ -7474,7 +7767,8 @@
           style: this.svgStyle,
           attrs: {
             focusable: 'false' /* needed for IE11 */,
-            viewBox: this.viewBoxAttr
+            viewBox: this.viewBoxAttr,
+            'aria-hidden': 'true'
           }
         }, svgChild)
       ];
@@ -7529,8 +7823,8 @@
   };
 
   function getChanges (evt, ctx, isFinal) {
+    var pos = position(evt);
     var
-      pos = position(evt),
       dir,
       distX = pos.left - ctx.event.x,
       distY = pos.top - ctx.event.y,
@@ -7639,6 +7933,24 @@
     }
   }
 
+  function destroy$2 (el) {
+    var ctx = el.__qtouchpan;
+    if (ctx !== void 0) {
+      // emit the end event when the directive is destroyed while active
+      // this is only needed in TouchPan because the rest of the touch directives do not emit an end event
+      // the condition is also checked in the start of function but we avoid the call
+      ctx.event !== void 0 && ctx.end();
+
+      cleanEvt(ctx, 'main');
+      cleanEvt(ctx, 'temp');
+
+      client.is.firefox === true && preventDraggable(el, false);
+      ctx.styleCleanup !== void 0 && ctx.styleCleanup();
+
+      delete el.__qtouchpan;
+    }
+  }
+
   var uid = 0;
 
   var TouchPan = {
@@ -7647,6 +7959,11 @@
     bind: function bind (el, ref) {
       var value = ref.value;
       var modifiers = ref.modifiers;
+
+      if (el.__qtouchpan !== void 0) {
+        destroy$2(el);
+        el.__qtouchpan_destroyed = true;
+      }
 
       // early return, we don't need to do anything
       if (modifiers.mouse !== true && client.has.touch !== true) {
@@ -7761,7 +8078,9 @@
           var start = function () {
             handleEvent(evt, isMouseEvt);
 
-            document.documentElement.style.cursor = 'grabbing';
+            if (modifiers.preserveCursor !== true) {
+              document.documentElement.style.cursor = 'grabbing';
+            }
             isMouseEvt === true && document.body.classList.add('no-pointer-events--children');
             document.body.classList.add('non-selectable');
             clearSelection();
@@ -7769,7 +8088,9 @@
             ctx.styleCleanup = function (withDelayedFn) {
               ctx.styleCleanup = void 0;
 
-              document.documentElement.style.cursor = '';
+              if (modifiers.preserveCursor !== true) {
+                document.documentElement.style.cursor = '';
+              }
               document.body.classList.remove('non-selectable');
 
               if (isMouseEvt === true) {
@@ -7888,10 +8209,6 @@
         }
       };
 
-      if (el.__qtouchpan) {
-        el.__qtouchpan_old = el.__qtouchpan;
-      }
-
       el.__qtouchpan = ctx;
 
       modifiers.mouse === true && addEvt(ctx, 'main', [
@@ -7904,21 +8221,23 @@
       ]);
     },
 
-    update: function update (el, binding) {
-      el.__qtouchpan !== void 0 && updateModifiers(el.__qtouchpan, binding);
+    update: function update (el, ref) {
+      var oldValue = ref.oldValue;
+      var value = ref.value;
+
+      var ctx = el.__qtouchpan;
+      if (ctx !== void 0 && oldValue !== value) {
+        typeof value !== 'function' && ctx.end();
+        ctx.handler = value;
+      }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qtouchpan_old || el.__qtouchpan;
-
-      if (ctx !== void 0) {
-        cleanEvt(ctx, 'main');
-        cleanEvt(ctx, 'temp');
-
-        client.is.firefox === true && preventDraggable(el, false);
-        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
-
-        delete el[el.__qtouchpan_old ? '__qtouchpan_old' : '__qtouchpan'];
+      if (el.__qtouchpan_destroyed === void 0) {
+        destroy$2(el);
+      }
+      else {
+        delete el.__qtouchpan_destroyed;
       }
     }
   };
@@ -8014,8 +8333,7 @@
         return "q-slider q-slider" + (this.axis) + " q-slider--" + (this.active === true ? '' : 'in') + "active" +
           (this.isReversed === true ? ' q-slider--reversed' : '') +
           (this.color !== void 0 ? (" text-" + (this.color)) : '') +
-          (this.disable === true ? ' disabled' : '') +
-          (this.editable === true ? ' q-slider--editable' : '') +
+          (this.disable === true ? ' disabled' : ' q-slider--enabled' + (this.editable === true ? ' q-slider--editable' : '')) +
           (this.focus === 'both' ? ' q-slider--focus' : '') +
           (this.label || this.labelAlways === true ? ' q-slider--label' : '') +
           (this.labelAlways === true ? ' q-slider--label-always' : '') +
@@ -8024,7 +8342,7 @@
       },
 
       editable: function editable () {
-        return !this.disable && !this.readonly
+        return this.disable !== true && this.readonly !== true
       },
 
       decimals: function decimals () {
@@ -8078,10 +8396,10 @@
         };
 
         if (this.disable === true) {
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
         else if (this.readonly === true) {
-          attrs['aria-readonly'] = '';
+          attrs['aria-readonly'] = 'true';
         }
 
         return attrs
@@ -8108,7 +8426,8 @@
             focusable: 'false', /* needed for IE11 */
             viewBox: '0 0 20 20',
             width: '20',
-            height: '20'
+            height: '20',
+            'aria-hidden': 'true'
           }
         }, [
           h('path', {
@@ -8143,6 +8462,7 @@
             // only if touch, because we also have mousedown/up:
             event.touch === true && this.__updateValue(true);
             this.dragging = void 0;
+            this.$emit('pan', 'end');
           }
           this.active = false;
         }
@@ -8151,6 +8471,7 @@
           this.__updatePosition(event.evt);
           this.__updateValue();
           this.active = true;
+          this.$emit('pan', 'start');
         }
         else {
           this.__updatePosition(event.evt);
@@ -8647,13 +8968,18 @@
       leftIcon: String,
       rightIcon: String,
 
+      outsideArrows: Boolean,
+      mobileArrows: Boolean,
+
       switchIndicator: Boolean,
 
       narrowIndicator: Boolean,
       inlineLabel: Boolean,
       noCaps: Boolean,
 
-      dense: Boolean
+      dense: Boolean,
+
+      contentClass: String
     },
 
     data: function data () {
@@ -8713,10 +9039,26 @@
 
       noCaps: function noCaps (v) {
         this.tabs.noCaps = v;
+      },
+
+      outsideArrows: function outsideArrows () {
+        this.$nextTick(this.__recalculateScroll());
+      },
+
+      arrowsEnabled: function arrowsEnabled (v) {
+        this.__updateArrows = v === true
+          ? this.__updateArrowsFn
+          : noop;
+
+        this.$nextTick(this.__recalculateScroll());
       }
     },
 
     computed: {
+      arrowsEnabled: function arrowsEnabled () {
+        return this.$q.platform.is.desktop === true || this.mobileArrows === true
+      },
+
       alignClass: function alignClass () {
         var align = this.scrollable === true
           ? 'left'
@@ -8728,15 +9070,20 @@
       classes: function classes () {
         return "q-tabs--" + (this.scrollable === true ? '' : 'not-') + "scrollable" +
           " q-tabs--" + (this.vertical === true ? 'vertical' : 'horizontal') +
+          " q-tabs__arrows--" + (this.arrowsEnabled === true && this.outsideArrows === true ? 'outside' : 'inside') +
           (this.dense === true ? ' q-tabs--dense' : '') +
           (this.shrink === true ? ' col-shrink' : '') +
           (this.stretch === true ? ' self-stretch' : '')
       },
 
+      innerClass: function innerClass () {
+        return this.alignClass + (this.contentClass !== void 0 ? (" " + (this.contentClass)) : '')
+      },
+
       domProps: function domProps () {
         return this.vertical === true
-          ? { container: 'height', content: 'scrollHeight', posLeft: 'top', posRight: 'bottom' }
-          : { container: 'width', content: 'scrollWidth', posLeft: 'left', posRight: 'right' }
+          ? { container: 'height', content: 'offsetHeight', posLeft: 'top', posRight: 'bottom' }
+          : { container: 'width', content: 'offsetWidth', posLeft: 'left', posRight: 'right' }
       },
 
       onEvents: function onEvents () {
@@ -8809,7 +9156,11 @@
 
         var
           size = domSize[this.domProps.container],
-          scrollSize = this.$refs.content[this.domProps.content],
+          scrollSize = Array.prototype.reduce.call(
+            this.$refs.content.children,
+            function (acc, el) { return acc + el[this$1.domProps.content]; },
+            0
+          ),
           scroll = size > 0 && scrollSize > size; // when there is no tab, in Chrome, size === 0 and scrollSize === 1
 
         if (this.scrollable !== scroll) {
@@ -8857,12 +9208,12 @@
             ? ("translate3d(0," + (oldPos.top - newPos.top) + "px,0) scale3d(1," + (newPos.height ? oldPos.height / newPos.height : 1) + ",1)")
             : ("translate3d(" + (oldPos.left - newPos.left) + "px,0,0) scale3d(" + (newPos.width ? oldPos.width / newPos.width : 1) + ",1,1)");
 
-          // allow scope updates to kick in
+          // allow scope updates to kick in (QRouteTab needs more time)
           this.$nextTick(function () {
             this$1.animateTimer = setTimeout(function () {
               newEl.style.transition = 'transform .25s cubic-bezier(.4, 0, .2, 1)';
               newEl.style.transform = 'none';
-            }, 30);
+            }, 70);
           });
         }
 
@@ -8890,7 +9241,7 @@
         }
       },
 
-      __updateArrows: function __updateArrows () {
+      __updateArrowsFn: function __updateArrowsFn () {
         var
           content = this.$refs.content,
           rect = content.getBoundingClientRect(),
@@ -8928,11 +9279,11 @@
       },
 
       __scrollTowards: function __scrollTowards (value) {
+        var content = this.$refs.content;
         var
-          content = this.$refs.content,
           pos = this.vertical === true ? content.scrollTop : content.scrollLeft,
-          direction = value < pos ? -1 : 1,
           done = false;
+        var direction = value < pos ? -1 : 1;
 
         pos += direction * 5;
         if (pos < 0) {
@@ -8955,10 +9306,9 @@
 
     created: function created () {
       this.buffer = [];
-
-      if (this.$q.platform.is.desktop !== true) {
-        this.__updateArrows = noop;
-      }
+      this.__updateArrows = this.arrowsEnabled === true
+        ? this.__updateArrowsFn
+        : noop;
     },
 
     beforeDestroy: function beforeDestroy () {
@@ -8975,11 +9325,11 @@
         h('div', {
           ref: 'content',
           staticClass: 'q-tabs__content row no-wrap items-center self-stretch hide-scrollbar',
-          class: this.alignClass
+          class: this.innerClass
         }, slot(this, 'default'))
       ];
 
-      this.$q.platform.is.desktop === true && child.push(
+      this.arrowsEnabled === true && child.push(
         h(QIcon, {
           staticClass: 'q-tabs__arrow q-tabs__arrow--left absolute q-tab__icon',
           class: this.leftArrow === true ? '' : 'q-tabs__arrow--faded',
@@ -9048,7 +9398,9 @@
       noCaps: Boolean,
 
       tabindex: [String, Number],
-      disable: Boolean
+      disable: Boolean,
+
+      contentClass: String
     },
 
     computed: {
@@ -9060,6 +9412,11 @@
         var obj;
 
         return ( obj = {}, obj[("q-tab--" + (this.isActive ? '' : 'in') + "active")] = true, obj[("text-" + (this.tabs.activeColor))] = this.isActive && this.tabs.activeColor, obj[("bg-" + (this.tabs.activeBgColor))] = this.isActive && this.tabs.activeBgColor, obj['q-tab--full'] = this.icon && this.label && !this.tabs.inlineLabel, obj['q-tab--no-caps'] = this.noCaps === true || this.tabs.noCaps === true, obj['q-focusable q-hoverable cursor-pointer'] = !this.disable, obj.disabled = this.disable, obj )
+      },
+
+      innerClass: function innerClass () {
+        return (this.tabs.inlineLabel === true ? 'row no-wrap q-tab__content--inline' : 'column') +
+          (this.contentClass !== void 0 ? (" " + (this.contentClass)) : '')
       },
 
       computedTabIndex: function computedTabIndex () {
@@ -9081,7 +9438,7 @@
         };
 
         if (this.disable === true) {
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
 
         return attrs
@@ -9150,7 +9507,7 @@
 
           h('div', {
             staticClass: 'q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable',
-            class: this.tabs.inlineLabel === true ? 'row no-wrap q-tab__content--inline' : 'column'
+            class: this.innerClass
           }, mergeSlot(content, this, 'default'))
         ];
 
@@ -9408,10 +9765,10 @@
 
       attrs: function attrs () {
         if (this.disable === true) {
-          return { 'aria-disabled': '' }
+          return { 'aria-disabled': 'true' }
         }
         if (this.readonly === true) {
-          return { 'aria-readonly': '' }
+          return { 'aria-readonly': 'true' }
         }
       }
     },
@@ -10160,7 +10517,8 @@
       @returns number of years since the last leap year (0 to 4)
    */
   function jalCalLeap (jy) {
-    var bl = breaks.length,
+    var bl = breaks.length;
+    var
       jp = breaks[0],
       jm,
       jump,
@@ -10203,15 +10561,15 @@
     @see: http://www.fourmilab.ch/documents/calendar/
   */
   function jalCal (jy, withoutLeap) {
-    var bl = breaks.length,
-      gy = jy + 621,
+    var
+      bl = breaks.length,
+      gy = jy + 621;
+    var
       leapJ = -14,
       jp = breaks[0],
       jm,
       jump,
       leap,
-      leapG,
-      march,
       n,
       i;
 
@@ -10233,10 +10591,10 @@
     if (mod(jump, 33) === 4 && jump - n === 4) { leapJ += 1; }
 
     // And the same in the Gregorian calendar (until the year gy).
-    leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+    var leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
 
     // Determine the Gregorian date of Farvardin the 1st.
-    march = 20 + leapJ - leapG;
+    var march = 20 + leapJ - leapG;
 
     // Find how many years have passed since the last leap year.
     if (!withoutLeap) {
@@ -10277,13 +10635,15 @@
       jd: Jalaali day (1 to 29/31)
   */
   function d2j (jdn) {
-    var gy = d2g(jdn).gy, // Calculate Gregorian year (gy).
+    var gy = d2g(jdn).gy; // Calculate Gregorian year (gy).
+    var
       jy = gy - 621,
-      r = jalCal(jy, false),
-      jdn1f = g2d(gy, 3, r.march),
       jd,
       jm,
       k;
+    var
+      r = jalCal(jy, false),
+      jdn1f = g2d(gy, 3, r.march);
 
     // Find number of days that passed since 1 Farvardin.
     k = jdn - jdn1f;
@@ -10348,17 +10708,13 @@
       gd: Calendar day of the month M (1 to 28/29/30/31)
   */
   function d2g (jdn) {
-    var j,
-      i,
-      gd,
-      gm,
-      gy;
-    j = 4 * jdn + 139361631;
+    var j = 4 * jdn + 139361631;
     j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
-    i = div(mod(j, 1461), 4) * 5 + 308;
-    gd = div(mod(i, 153), 5) + 1;
-    gm = mod(div(i, 153), 12) + 1;
-    gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+    var
+      i = div(mod(j, 1461), 4) * 5 + 308,
+      gd = div(mod(i, 153), 5) + 1,
+      gm = mod(div(i, 153), 12) + 1,
+      gy = div(j, 1461) - 100100 + div(8 - gm, 6);
     return {
       gy: gy,
       gm: gm,
@@ -10378,6 +10734,8 @@
     return a - ~~(a / b) * b
   }
 
+  var calendars = [ 'gregorian', 'persian' ];
+
   var DateTimeMixin = {
     mixins: [ DarkMixin, FormMixin, ListenersMixin ],
 
@@ -10393,7 +10751,7 @@
 
       calendar: {
         type: String,
-        validator: function (v) { return ['gregorian', 'persian'].includes(v); },
+        validator: function (v) { return calendars.includes(v); },
         default: 'gregorian'
       },
 
@@ -10410,25 +10768,15 @@
       disable: Boolean
     },
 
-    watch: {
-      mask: function mask () {
-        var this$1 = this;
-
-        this.$nextTick(function () {
-          this$1.__updateValue({}, /* reason for QDate only */ 'mask');
-        });
+    computed: {
+      computedMask: function computedMask () {
+        return this.__getMask()
       },
 
       computedLocale: function computedLocale () {
-        var this$1 = this;
+        return this.__getLocale()
+      },
 
-        this.$nextTick(function () {
-          this$1.__updateValue({}, /* reason for QDate only */ 'locale');
-        });
-      }
-    },
-
-    computed: {
       editable: function editable () {
         return this.disable !== true && this.readonly !== true
       },
@@ -10450,15 +10798,11 @@
         this.color !== void 0 && cls.push(("bg-" + (this.color)));
         this.textColor !== void 0 && cls.push(("text-" + (this.textColor)));
         return cls.join(' ')
-      },
-
-      computedLocale: function computedLocale () {
-        return this.__getComputedLocale()
       }
     },
 
     methods: {
-      __getComputedLocale: function __getComputedLocale () {
+      __getLocale: function __getLocale () {
         return this.locale || this.$q.lang.date
       },
 
@@ -10477,7 +10821,11 @@
         return {
           year: d.getFullYear(),
           month: d.getMonth() + 1,
-          day: d.getDate()
+          day: d.getDate(),
+          hour: 0,
+          minute: 0,
+          second: 0,
+          millisecond: 0
         }
       },
 
@@ -10663,7 +11011,7 @@
   }
 
   function __splitDate (str, mask, dateLocale, calendar, defaultModel) {
-    var date = Object.assign({
+    var date = {
       year: null,
       month: null,
       day: null,
@@ -10674,7 +11022,9 @@
       timezoneOffset: null,
       dateHash: null,
       timeHash: null
-    }, defaultModel);
+    };
+
+    defaultModel !== void 0 && Object.assign(date, defaultModel);
 
     if (
       str === void 0 ||
@@ -10962,9 +11312,9 @@
     return t
   }
 
-  function getMaxDate (/* date, ...args */) {
-    var t = 0;
-    Array.prototype.slice.call(arguments).forEach(function (d) {
+  function getMaxDate (date /* , ...args */) {
+    var t = new Date(date);
+    Array.prototype.slice.call(arguments, 1).forEach(function (d) {
       t = Math.max(t, new Date(d));
     });
     return t
@@ -11377,7 +11727,10 @@
   };
 
   var yearsInterval = 20;
-  var viewIsValid = function (v) { return ['Calendar', 'Years', 'Months'].includes(v); };
+  var views = [ 'Calendar', 'Years', 'Months' ];
+  var viewIsValid = function (v) { return views.includes(v); };
+  var yearMonthValidator = function (v) { return /^-?[\d]+\/[0-1]\d$/.test(v); };
+  var lineStr = ' \u2014 ';
 
   var QDate = Vue.extend({
     name: 'QDate',
@@ -11385,10 +11738,11 @@
     mixins: [ DateTimeMixin ],
 
     props: {
+      multiple: Boolean,
+      range: Boolean,
+
       title: String,
       subtitle: String,
-
-      emitImmediately: Boolean,
 
       mask: {
         // this mask is forced
@@ -11398,15 +11752,31 @@
 
       defaultYearMonth: {
         type: String,
-        validator: function (v) { return /^-?[\d]+\/[0-1]\d$/.test(v); }
+        validator: yearMonthValidator
       },
 
-      events: [Array, Function],
-      eventColor: [String, Function],
+      yearsInMonthView: Boolean,
 
-      options: [Array, Function],
+      events: [ Array, Function ],
+      eventColor: [ String, Function ],
 
-      firstDayOfWeek: [String, Number],
+      emitImmediately: Boolean,
+
+      options: [ Array, Function ],
+
+      navigationMinYearMonth: {
+        type: String,
+        validator: yearMonthValidator
+      },
+
+      navigationMaxYearMonth: {
+        type: String,
+        validator: yearMonthValidator
+      },
+
+      noUnset: Boolean,
+
+      firstDayOfWeek: [ String, Number ],
       todayBtn: Boolean,
       minimal: Boolean,
       defaultView: {
@@ -11417,51 +11787,58 @@
     },
 
     data: function data () {
-      var ref = this.__getModels(this.value, this.mask, this.__getComputedLocale());
-      var inner = ref.inner;
-      var external = ref.external;
-      var direction = this.$q.lang.rtl === true ? 'right' : 'left';
+      var
+        innerMask = this.__getMask(),
+        innerLocale = this.__getLocale(),
+        viewModel = this.__getViewModel(innerMask, innerLocale),
+        year = viewModel.year,
+        direction = this.$q.lang.rtl === true ? 'right' : 'left';
 
       return {
         view: this.defaultView,
         monthDirection: direction,
         yearDirection: direction,
-        startYear: inner.year - inner.year % yearsInterval,
-        innerModel: inner,
-        extModel: external
+        startYear: year - (year % yearsInterval) - (year < 0 ? yearsInterval : 0),
+        editRange: void 0,
+        innerMask: innerMask,
+        innerLocale: innerLocale,
+        viewModel: viewModel // model of current calendar view
       }
     },
 
     watch: {
       value: function value (v) {
-        var this$1 = this;
-
-        var ref = this.__getModels(v, this.mask, this.__getComputedLocale());
-        var inner = ref.inner;
-        var external = ref.external;
-
-        if (
-          this.extModel.dateHash !== external.dateHash ||
-          this.extModel.timeHash !== external.timeHash
-        ) {
-          this.extModel = external;
+        if (this.lastEmitValue === v) {
+          this.lastEmitValue = 0;
         }
-
-        if (inner.dateHash !== this.innerModel.dateHash) {
-          this.monthDirection = (this.innerModel.dateHash < inner.dateHash) === (this.$q.lang.rtl !== true) ? 'left' : 'right';
-          if (inner.year !== this.innerModel.year) {
-            this.yearDirection = this.monthDirection;
-          }
-
-          this.$nextTick(function () {
-            this$1.startYear = inner.year - inner.year % yearsInterval;
-            this$1.innerModel = inner;
-          });
+        else {
+          var ref = this.__getViewModel(this.innerMask, this.innerLocale);
+          var year = ref.year;
+          var month = ref.month;
+          this.__updateViewModel(year, month);
         }
       },
 
       view: function view () {
         this.$refs.blurTarget !== void 0 && this.$refs.blurTarget.focus();
+      },
+
+      'viewModel.year': function viewModel_year (year) {
+        this.$emit('navigation', { year: year, month: this.viewModel.month });
+      },
+
+      'viewModel.month': function viewModel_month (month) {
+        this.$emit('navigation', { year: this.viewModel.year, month: month });
+      },
+
+      computedMask: function computedMask (val) {
+        this.__updateValue(val, this.innerLocale, 'mask');
+        this.innerMask = val;
+      },
+
+      computedLocale: function computedLocale (val) {
+        this.__updateValue(this.innerMask, val, 'locale');
+        this.innerLocale = val;
       }
     },
 
@@ -11476,43 +11853,158 @@
           (this.disable === true ? ' disabled' : (this.readonly === true ? ' q-date--readonly' : ''))
       },
 
+      isImmediate: function isImmediate () {
+        return this.emitImmediately === true &&
+          this.multiple !== true &&
+          this.range !== true
+      },
+
+      normalizedModel: function normalizedModel () {
+        return Array.isArray(this.value) === true
+          ? this.value
+          : (this.value !== null && this.value !== void 0 ? [ this.value ] : [])
+      },
+
+      daysModel: function daysModel () {
+        var this$1 = this;
+
+        return this.normalizedModel
+          .filter(function (date) { return typeof date === 'string'; })
+          .map(function (date) { return this$1.__decodeString(date, this$1.innerMask, this$1.innerLocale); })
+          .filter(function (date) { return date.dateHash !== null; })
+      },
+
+      rangeModel: function rangeModel () {
+        var this$1 = this;
+
+        var fn = function (date) { return this$1.__decodeString(date, this$1.innerMask, this$1.innerLocale); };
+        return this.normalizedModel
+          .filter(function (date) { return Object(date) === date && date.from !== void 0 && date.to !== void 0; })
+          .map(function (range) { return ({ from: fn(range.from), to: fn(range.to) }); })
+          .filter(function (range) { return range.from.dateHash !== null && range.to.dateHash !== null && range.from.dateHash < range.to.dateHash; })
+      },
+
+      getNativeDateFn: function getNativeDateFn () {
+        return this.calendar !== 'persian'
+          ? function (model) { return new Date(model.year, model.month - 1, model.day); }
+          : function (model) {
+            var gDate = toGregorian(model.year, model.month, model.day);
+            return new Date(gDate.gy, gDate.gm - 1, gDate.gd)
+          }
+      },
+
+      encodeObjectFn: function encodeObjectFn () {
+        var this$1 = this;
+
+        return this.calendar === 'persian'
+          ? this.__getDayHash
+          : function (date, mask, locale) { return formatDate(
+            new Date(
+              date.year,
+              date.month - 1,
+              date.day,
+              date.hour,
+              date.minute,
+              date.second,
+              date.millisecond
+            ),
+            mask === void 0 ? this$1.innerMask : mask,
+            locale === void 0 ? this$1.innerLocale : locale,
+            date.year,
+            date.timezoneOffset
+          ); }
+      },
+
+      daysInModel: function daysInModel () {
+        var this$1 = this;
+
+        return this.daysModel.length + this.rangeModel.reduce(
+          function (acc, range) { return acc + 1 + getDateDiff(
+            this$1.getNativeDateFn(range.to),
+            this$1.getNativeDateFn(range.from)
+          ); },
+          0
+        )
+      },
+
       headerTitle: function headerTitle () {
         if (this.title !== void 0 && this.title !== null && this.title.length > 0) {
           return this.title
         }
 
-        var model = this.extModel;
-        if (model.dateHash === null) { return ' --- ' }
+        if (this.editRange !== void 0) {
+          var model$1 = this.editRange.init;
+          var date$1 = this.getNativeDateFn(model$1);
 
-        var date;
-
-        if (this.calendar !== 'persian') {
-          date = new Date(model.year, model.month - 1, model.day);
-        }
-        else {
-          var gDate = toGregorian(model.year, model.month, model.day);
-          date = new Date(gDate.gy, gDate.gm - 1, gDate.gd);
+          return this.innerLocale.daysShort[ date$1.getDay() ] + ', ' +
+            this.innerLocale.monthsShort[ model$1.month - 1 ] + ' ' +
+            model$1.day + lineStr + '?'
         }
 
-        if (isNaN(date.valueOf()) === true) { return ' --- ' }
-
-        if (this.computedLocale.headerTitle !== void 0) {
-          return this.computedLocale.headerTitle(date, model)
+        if (this.daysInModel === 0) {
+          return lineStr
         }
 
-        return this.computedLocale.daysShort[ date.getDay() ] + ', ' +
-          this.computedLocale.monthsShort[ model.month - 1 ] + ' ' +
+        if (this.daysInModel > 1) {
+          return ((this.daysInModel) + " " + (this.innerLocale.pluralDay))
+        }
+
+        var model = this.daysModel[0];
+        var date = this.getNativeDateFn(model);
+
+        if (isNaN(date.valueOf()) === true) {
+          return lineStr
+        }
+
+        if (this.innerLocale.headerTitle !== void 0) {
+          return this.innerLocale.headerTitle(date, model)
+        }
+
+        return this.innerLocale.daysShort[ date.getDay() ] + ', ' +
+          this.innerLocale.monthsShort[ model.month - 1 ] + ' ' +
           model.day
       },
 
       headerSubtitle: function headerSubtitle () {
-        return this.subtitle !== void 0 && this.subtitle !== null && this.subtitle.length > 0
-          ? this.subtitle
-          : (
-            this.extModel.year !== null
-              ? this.extModel.year
-              : ' --- '
-          )
+        if (this.subtitle !== void 0 && this.subtitle !== null && this.subtitle.length > 0) {
+          return this.subtitle
+        }
+
+        if (this.daysInModel === 0) {
+          return lineStr
+        }
+
+        if (this.daysInModel > 1) {
+          var from = this.minSelectedModel;
+          var to = this.maxSelectedModel;
+          var month = this.innerLocale.monthsShort;
+
+          return month[from.month - 1] + (
+            from.year !== to.year
+              ? ' ' + from.year + lineStr + month[to.month - 1] + ' '
+              : (
+                from.month !== to.month
+                  ? lineStr + month[to.month - 1]
+                  : ''
+              )
+          ) + ' ' + to.year
+        }
+
+        return this.daysModel[0].year
+      },
+
+      minSelectedModel: function minSelectedModel () {
+        var model = this.daysModel.concat(this.rangeModel.map(function (range) { return range.from; }))
+          .sort(function (a, b) { return a.year - b.year || a.month - b.month; });
+
+        return model[0]
+      },
+
+      maxSelectedModel: function maxSelectedModel () {
+        var model = this.daysModel.concat(this.rangeModel.map(function (range) { return range.to; }))
+          .sort(function (a, b) { return b.year - a.year || b.month - a.month; });
+
+        return model[0]
       },
 
       dateArrow: function dateArrow () {
@@ -11523,12 +12015,12 @@
       computedFirstDayOfWeek: function computedFirstDayOfWeek () {
         return this.firstDayOfWeek !== void 0
           ? Number(this.firstDayOfWeek)
-          : this.computedLocale.firstDayOfWeek
+          : this.innerLocale.firstDayOfWeek
       },
 
       daysOfWeek: function daysOfWeek () {
         var
-          days = this.computedLocale.daysShort,
+          days = this.innerLocale.daysShort,
           first = this.computedFirstDayOfWeek;
 
         return first > 0
@@ -11537,19 +12029,14 @@
       },
 
       daysInMonth: function daysInMonth () {
-        return this.__getDaysInMonth(this.innerModel)
+        var date = this.viewModel;
+        return this.calendar !== 'persian'
+          ? (new Date(date.year, date.month, 0)).getDate()
+          : jalaaliMonthLength(date.year, date.month)
       },
 
       today: function today () {
         return this.__getCurrentDate()
-      },
-
-      evtFn: function evtFn () {
-        var this$1 = this;
-
-        return typeof this.events === 'function'
-          ? this.events
-          : function (date) { return this$1.events.includes(date); }
       },
 
       evtColor: function evtColor () {
@@ -11557,31 +12044,228 @@
 
         return typeof this.eventColor === 'function'
           ? this.eventColor
-          : function (date) { return this$1.eventColor; }
+          : function () { return this$1.eventColor; }
       },
 
-      isInSelection: function isInSelection () {
+      minNav: function minNav () {
+        if (this.navigationMinYearMonth !== void 0) {
+          var data = this.navigationMinYearMonth.split('/');
+          return { year: parseInt(data[0], 10), month: parseInt(data[1], 10) }
+        }
+      },
+
+      maxNav: function maxNav () {
+        if (this.navigationMaxYearMonth !== void 0) {
+          var data = this.navigationMaxYearMonth.split('/');
+          return { year: parseInt(data[0], 10), month: parseInt(data[1], 10) }
+        }
+      },
+
+      navBoundaries: function navBoundaries () {
+        var data = {
+          month: { prev: true, next: true },
+          year: { prev: true, next: true }
+        };
+
+        if (this.minNav !== void 0 && this.minNav.year >= this.viewModel.year) {
+          data.year.prev = false;
+          if (this.minNav.year === this.viewModel.year && this.minNav.month >= this.viewModel.month) {
+            data.month.prev = false;
+          }
+        }
+
+        if (this.maxNav !== void 0 && this.maxNav.year <= this.viewModel.year) {
+          data.year.next = false;
+          if (this.maxNav.year === this.viewModel.year && this.maxNav.month <= this.viewModel.month) {
+            data.month.next = false;
+          }
+        }
+
+        return data
+      },
+
+      daysMap: function daysMap () {
         var this$1 = this;
 
-        return typeof this.options === 'function'
-          ? this.options
-          : function (date) { return this$1.options.includes(date); }
+        var map = {};
+
+        this.daysModel.forEach(function (entry) {
+          var hash = this$1.__getMonthHash(entry);
+
+          if (map[hash] === void 0) {
+            map[hash] = [];
+          }
+
+          map[hash].push(entry.day);
+        });
+
+        return map
       },
 
-      days: function days () {
-        var date, endDay;
+      rangeMap: function rangeMap () {
+        var this$1 = this;
 
-        var res = [];
+        var map = {};
 
-        if (this.calendar !== 'persian') {
-          date = new Date(this.innerModel.year, this.innerModel.month - 1, 1);
-          endDay = (new Date(this.innerModel.year, this.innerModel.month - 1, 0)).getDate();
+        this.rangeModel.forEach(function (entry) {
+          var hashFrom = this$1.__getMonthHash(entry.from);
+          var hashTo = this$1.__getMonthHash(entry.to);
+
+          if (map[hashFrom] === void 0) {
+            map[hashFrom] = [];
+          }
+
+          map[hashFrom].push({
+            from: entry.from.day,
+            to: hashFrom === hashTo ? entry.to.day : void 0,
+            range: entry
+          });
+
+          if (hashFrom < hashTo) {
+            var hash;
+            var ref = entry.from;
+            var year = ref.year;
+            var month = ref.month;
+            var cur = month < 12
+              ? { year: year, month: month + 1 }
+              : { year: year + 1, month: 1 };
+
+            while ((hash = this$1.__getMonthHash(cur)) <= hashTo) {
+              if (map[hash] === void 0) {
+                map[hash] = [];
+              }
+
+              map[hash].push({
+                from: void 0,
+                to: hash === hashTo ? entry.to.day : void 0,
+                range: entry
+              });
+
+              cur.month++;
+              if (cur.month > 12) {
+                cur.year++;
+                cur.month = 1;
+              }
+            }
+          }
+        });
+
+        return map
+      },
+
+      rangeView: function rangeView () {
+        if (this.editRange === void 0) {
+          return
+        }
+
+        var ref = this.editRange;
+        var init = ref.init;
+        var initHash = ref.initHash;
+        var final = ref.final;
+        var finalHash = ref.finalHash;
+
+        var ref$1 = initHash <= finalHash
+          ? [ init, final ]
+          : [ final, init ];
+        var from = ref$1[0];
+        var to = ref$1[1];
+
+        var fromHash = this.__getMonthHash(from);
+        var toHash = this.__getMonthHash(to);
+
+        if (fromHash !== this.viewMonthHash && toHash !== this.viewMonthHash) {
+          return
+        }
+
+        var view = {};
+
+        if (fromHash === this.viewMonthHash) {
+          view.from = from.day;
+          view.includeFrom = true;
         }
         else {
-          var gDate = toGregorian(this.innerModel.year, this.innerModel.month, 1);
+          view.from = 1;
+        }
+
+        if (toHash === this.viewMonthHash) {
+          view.to = to.day;
+          view.includeTo = true;
+        }
+        else {
+          view.to = this.daysInMonth;
+        }
+
+        return view
+      },
+
+      viewMonthHash: function viewMonthHash () {
+        return this.__getMonthHash(this.viewModel)
+      },
+
+      selectionDaysMap: function selectionDaysMap () {
+        var this$1 = this;
+
+        var map = {};
+
+        if (this.options === void 0) {
+          for (var i = 1; i <= this.daysInMonth; i++) {
+            map[i] = true;
+          }
+
+          return map
+        }
+
+        var fn = typeof this.options === 'function'
+          ? this.options
+          : function (date) { return this$1.options.includes(date); };
+
+        for (var i$1 = 1; i$1 <= this.daysInMonth; i$1++) {
+          var dayHash = this.viewMonthHash + '/' + pad(i$1);
+          map[i$1] = fn(dayHash);
+        }
+
+        return map
+      },
+
+      eventDaysMap: function eventDaysMap () {
+        var this$1 = this;
+
+        var map = {};
+
+        if (this.events === void 0) {
+          for (var i = 1; i <= this.daysInMonth; i++) {
+            map[i] = false;
+          }
+        }
+        else {
+          var fn = typeof this.events === 'function'
+            ? this.events
+            : function (date) { return this$1.events.includes(date); };
+
+          for (var i$1 = 1; i$1 <= this.daysInMonth; i$1++) {
+            var dayHash = this.viewMonthHash + '/' + pad(i$1);
+            map[i$1] = fn(dayHash) === true && this.evtColor(dayHash);
+          }
+        }
+
+        return map
+      },
+
+      viewDays: function viewDays () {
+        var date, endDay;
+        var ref = this.viewModel;
+        var year = ref.year;
+        var month = ref.month;
+
+        if (this.calendar !== 'persian') {
+          date = new Date(year, month - 1, 1);
+          endDay = (new Date(year, month - 1, 0)).getDate();
+        }
+        else {
+          var gDate = toGregorian(year, month, 1);
           date = new Date(gDate.gy, gDate.gm - 1, gDate.gd);
-          var prevJM = this.innerModel.month - 1;
-          var prevJY = this.innerModel.year;
+          var prevJM = month - 1;
+          var prevJY = year;
           if (prevJM === 0) {
             prevJM = 12;
             prevJY--;
@@ -11589,7 +12273,19 @@
           endDay = jalaaliMonthLength(prevJY, prevJM);
         }
 
-        var days = (date.getDay() - this.computedFirstDayOfWeek - 1);
+        return {
+          days: date.getDay() - this.computedFirstDayOfWeek - 1,
+          endDay: endDay
+        }
+      },
+
+      days: function days () {
+        var this$1 = this;
+
+        var res = [];
+        var ref = this.viewDays;
+        var days = ref.days;
+        var endDay = ref.endDay;
 
         var len = days < 0 ? days + 7 : days;
         if (len < 6) {
@@ -11598,64 +12294,161 @@
           }
         }
 
-        var
-          index = res.length,
-          prefix = this.innerModel.year + '/' + pad(this.innerModel.month) + '/';
+        var index = res.length;
 
         for (var i$1 = 1; i$1 <= this.daysInMonth; i$1++) {
-          var day = prefix + pad(i$1);
+          var day = { i: i$1, event: this.eventDaysMap[i$1], classes: [] };
 
-          if (this.options !== void 0 && this.isInSelection(day) !== true) {
-            res.push({ i: i$1 });
+          if (this.selectionDaysMap[i$1] === true) {
+            day.in = true;
+            day.flat = true;
           }
-          else {
-            var event = this.events !== void 0 && this.evtFn(day) === true
-              ? this.evtColor(day)
-              : false;
 
-            res.push({ i: i$1, in: true, flat: true, event: event });
-          }
+          res.push(day);
         }
 
-        if (this.innerModel.year === this.extModel.year && this.innerModel.month === this.extModel.month) {
-          var i$2 = index + this.innerModel.day - 1;
-          res[i$2] !== void 0 && Object.assign(res[i$2], {
-            unelevated: true,
-            flat: false,
-            color: this.computedColor,
-            textColor: this.computedTextColor
+        // if current view has days in model
+        if (this.daysMap[this.viewMonthHash] !== void 0) {
+          this.daysMap[this.viewMonthHash].forEach(function (day) {
+            var i = index + day - 1;
+            Object.assign(res[i], {
+              selected: true,
+              unelevated: true,
+              flat: false,
+              color: this$1.computedColor,
+              textColor: this$1.computedTextColor
+            });
           });
         }
 
-        if (this.innerModel.year === this.today.year && this.innerModel.month === this.today.month) {
+        // if current view has ranges in model
+        if (this.rangeMap[this.viewMonthHash] !== void 0) {
+          this.rangeMap[this.viewMonthHash].forEach(function (entry) {
+            if (entry.from !== void 0) {
+              var from = index + entry.from - 1;
+              var to = index + (entry.to || this$1.daysInMonth) - 1;
+
+              for (var day = from; day <= to; day++) {
+                Object.assign(res[day], {
+                  range: entry.range,
+                  unelevated: true,
+                  color: this$1.computedColor,
+                  textColor: this$1.computedTextColor
+                });
+              }
+
+              Object.assign(res[from], {
+                rangeFrom: true,
+                flat: false
+              });
+
+              entry.to !== void 0 && Object.assign(res[to], {
+                rangeTo: true,
+                flat: false
+              });
+            }
+            else if (entry.to !== void 0) {
+              var to$1 = index + entry.to - 1;
+
+              for (var day$1 = index; day$1 <= to$1; day$1++) {
+                Object.assign(res[day$1], {
+                  range: entry.range,
+                  unelevated: true,
+                  color: this$1.computedColor,
+                  textColor: this$1.computedTextColor
+                });
+              }
+
+              Object.assign(res[to$1], {
+                flat: false,
+                rangeTo: true
+              });
+            }
+            else {
+              var to$2 = index + this$1.daysInMonth - 1;
+              for (var day$2 = index; day$2 <= to$2; day$2++) {
+                Object.assign(res[day$2], {
+                  range: entry.range,
+                  unelevated: true,
+                  color: this$1.computedColor,
+                  textColor: this$1.computedTextColor
+                });
+              }
+            }
+          });
+        }
+
+        if (this.rangeView !== void 0) {
+          var from = index + this.rangeView.from - 1;
+          var to = index + this.rangeView.to - 1;
+
+          for (var day$1 = from; day$1 <= to; day$1++) {
+            res[day$1].color = this.computedColor;
+            res[day$1].editRange = true;
+          }
+
+          if (this.rangeView.includeFrom === true) {
+            res[from].editRangeFrom = true;
+          }
+          if (this.rangeView.includeTo === true) {
+            res[to].editRangeTo = true;
+          }
+        }
+
+        if (this.viewModel.year === this.today.year && this.viewModel.month === this.today.month) {
           res[index + this.today.day - 1].today = true;
         }
 
         var left = res.length % 7;
         if (left > 0) {
           var afterDays = 7 - left;
-          for (var i$3 = 1; i$3 <= afterDays; i$3++) {
-            res.push({ i: i$3, fill: true });
+          for (var i$2 = 1; i$2 <= afterDays; i$2++) {
+            res.push({ i: i$2, fill: true });
           }
         }
+
+        res.forEach(function (day) {
+          var cls = "q-date__calendar-item ";
+
+          if (day.fill === true) {
+            cls += 'q-date__calendar-item--fill';
+          }
+          else {
+            cls += "q-date__calendar-item--" + (day.in === true ? 'in' : 'out');
+
+            if (day.range !== void 0) {
+              cls += " q-date__range" + (day.rangeTo === true ? '-to' : (day.rangeFrom === true ? '-from' : ''));
+            }
+
+            if (day.editRange === true) {
+              cls += " q-date__edit-range" + (day.editRangeFrom === true ? '-from' : '') + (day.editRangeTo === true ? '-to' : '');
+            }
+
+            if (day.range !== void 0 || day.editRange === true) {
+              cls += " text-" + (day.color);
+            }
+          }
+
+          day.classes = cls;
+        });
 
         return res
       },
 
       attrs: function attrs () {
         if (this.disable === true) {
-          return { 'aria-disabled': '' }
+          return { 'aria-disabled': 'true' }
         }
         if (this.readonly === true) {
-          return { 'aria-readonly': '' }
+          return { 'aria-readonly': 'true' }
         }
       }
     },
 
     methods: {
       setToday: function setToday () {
-        this.__updateValue(Object.assign({}, this.today), 'today');
-        this.view = 'Calendar';
+        this.__toggleDate(this.today, this.__getMonthHash(this.today));
+        this.setCalendarTo(this.today.year, this.today.month);
       },
 
       setView: function setView (view) {
@@ -11672,23 +12465,72 @@
         }
       },
 
-      __getModels: function __getModels (val, mask, locale) {
-        var external = __splitDate(
-          val,
-          this.calendar === 'persian' ? 'YYYY/MM/DD' : mask,
-          locale,
-          this.calendar
-        );
-
-        return {
-          external: external,
-          inner: external.dateHash === null
-            ? this.__getDefaultModel()
-            : Object.assign({}, external)
-        }
+      setCalendarTo: function setCalendarTo (year, month) {
+        this.view = 'Calendar';
+        this.__updateViewModel(year, month);
       },
 
-      __getDefaultModel: function __getDefaultModel () {
+      setEditingRange: function setEditingRange (from, to) {
+        if (this.range === false || !from) {
+          this.editRange = void 0;
+          return
+        }
+
+        var init = Object.assign(Object.assign({}, this.viewModel), from);
+        var final = to !== void 0
+          ? Object.assign(Object.assign({}, this.viewModel), to)
+          : init;
+
+        this.editRange = {
+          init: init,
+          initHash: this.__getDayHash(init),
+          final: final,
+          finalHash: this.__getDayHash(final)
+        };
+
+        this.setCalendarTo(init.year, init.month);
+      },
+
+      __getMask: function __getMask () {
+        return this.calendar === 'persian' ? 'YYYY/MM/DD' : this.mask
+      },
+
+      __decodeString: function __decodeString (date, mask, locale) {
+        return __splitDate(
+          date,
+          mask,
+          locale,
+          this.calendar,
+          {
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0
+          }
+        )
+      },
+
+      __getViewModel: function __getViewModel (mask, locale) {
+        var model = Array.isArray(this.value) === true
+          ? this.value
+          : (this.value ? [ this.value ] : []);
+
+        if (model.length === 0) {
+          return this.__getDefaultViewModel()
+        }
+
+        var decoded = this.__decodeString(
+          model[0].from !== void 0 ? model[0].from : model[0],
+          mask,
+          locale
+        );
+
+        return decoded.dateHash === null
+          ? this.__getDefaultViewModel()
+          : decoded
+      },
+
+      __getDefaultViewModel: function __getDefaultViewModel () {
         var year, month;
 
         if (this.defaultYearMonth !== void 0) {
@@ -11774,7 +12616,7 @@
             ]),
 
             this.todayBtn === true ? h(QBtn, {
-              staticClass: 'q-date__header-today',
+              staticClass: 'q-date__header-today self-start',
               props: {
                 icon: this.$q.iconSet.datetime.today,
                 flat: true,
@@ -11795,6 +12637,7 @@
         var key = ref.key;
         var dir = ref.dir;
         var goTo = ref.goTo;
+        var boundaries = ref.boundaries;
         var cls = ref.cls;
 
         return [
@@ -11808,7 +12651,8 @@
                 size: 'sm',
                 flat: true,
                 icon: this.dateArrow[0],
-                tabindex: this.computedTabindex
+                tabindex: this.computedTabindex,
+                disable: boundaries.prev === false
               },
               on: cache(this, 'go-#' + view, { click: function click () { goTo(-1); } })
             })
@@ -11847,7 +12691,8 @@
                 size: 'sm',
                 flat: true,
                 icon: this.dateArrow[1],
-                tabindex: this.computedTabindex
+                tabindex: this.computedTabindex,
+                disable: boundaries.next === false
               },
               on: cache(this, 'go+#' + view, { click: function click () { goTo(1); } })
             })
@@ -11866,18 +12711,20 @@
             h('div', {
               staticClass: 'q-date__navigation row items-center no-wrap'
             }, this.__getNavigation(h, {
-              label: this.computedLocale.months[ this.innerModel.month - 1 ],
+              label: this.innerLocale.months[ this.viewModel.month - 1 ],
               view: 'Months',
-              key: this.innerModel.month,
+              key: this.viewModel.month,
               dir: this.monthDirection,
               goTo: this.__goToMonth,
+              boundaries: this.navBoundaries.month,
               cls: ' col'
             }).concat(this.__getNavigation(h, {
-              label: this.innerModel.year,
+              label: this.viewModel.year,
               view: 'Years',
-              key: this.innerModel.year,
+              key: this.viewModel.year,
               dir: this.yearDirection,
               goTo: this.__goToYear,
+              boundaries: this.navBoundaries.year,
               cls: ''
             }))),
 
@@ -11894,11 +12741,9 @@
                 }
               }, [
                 h('div', {
-                  key: this.innerModel.year + '/' + this.innerModel.month,
+                  key: this.viewMonthHash,
                   staticClass: 'q-date__calendar-days fit'
-                }, this.days.map(function (day) { return h('div', {
-                  staticClass: ("q-date__calendar-item q-date__calendar-item--" + (day.fill === true ? 'fill' : (day.in === true ? 'in' : 'out')))
-                }, [
+                }, this.days.map(function (day) { return h('div', { staticClass: day.classes }, [
                   day.in === true
                     ? h(QBtn, {
                       staticClass: day.today === true ? 'q-date__today' : null,
@@ -11911,7 +12756,10 @@
                         label: day.i,
                         tabindex: this$1.computedTabindex
                       },
-                      on: cache(this$1, 'day#' + day.i, { click: function () { this$1.__setDay(day.i); } })
+                      on: cache(this$1, 'day#' + day.i, {
+                        click: function () { this$1.__onDayClick(day.i); },
+                        mouseover: function () { this$1.__onDayMouseover(day.i); }
+                      })
                     }, day.event !== false ? [
                       h('div', { staticClass: 'q-date__event bg-' + day.event })
                     ] : null)
@@ -11926,10 +12774,16 @@
       __getMonthsView: function __getMonthsView (h) {
         var this$1 = this;
 
-        var currentYear = this.innerModel.year === this.today.year;
+        var currentYear = this.viewModel.year === this.today.year;
+        var isDisabled = function (month) {
+          return (
+            (this$1.minNav !== void 0 && this$1.viewModel.year === this$1.minNav.year && this$1.minNav.month > month) ||
+            (this$1.maxNav !== void 0 && this$1.viewModel.year === this$1.maxNav.year && this$1.maxNav.month < month)
+          )
+        };
 
-        var content = this.computedLocale.monthsShort.map(function (month, i) {
-          var active = this$1.innerModel.month === i + 1;
+        var content = this.innerLocale.monthsShort.map(function (month, i) {
+          var active = this$1.viewModel.month === i + 1;
 
           return h('div', {
             staticClass: 'q-date__months-item flex flex-center'
@@ -11937,17 +12791,32 @@
             h(QBtn, {
               staticClass: currentYear === true && this$1.today.month === i + 1 ? 'q-date__today' : null,
               props: {
-                flat: !active,
+                flat: active !== true,
                 label: month,
                 unelevated: active,
-                color: active ? this$1.computedColor : null,
-                textColor: active ? this$1.computedTextColor : null,
-                tabindex: this$1.computedTabindex
+                color: active === true ? this$1.computedColor : null,
+                textColor: active === true ? this$1.computedTextColor : null,
+                tabindex: this$1.computedTabindex,
+                disable: isDisabled(i + 1)
               },
               on: cache(this$1, 'month#' + i, { click: function () { this$1.__setMonth(i + 1); } })
             })
           ])
         });
+
+        this.yearsInMonthView === true && content.unshift(
+          h('div', { staticClass: 'row no-wrap full-width' }, [
+            this.__getNavigation(h, {
+              label: this.viewModel.year,
+              view: 'Years',
+              key: this.viewModel.year,
+              dir: this.yearDirection,
+              goTo: this.__goToYear,
+              boundaries: this.navBoundaries.year,
+              cls: ' col'
+            })
+          ])
+        );
 
         return h('div', {
           key: 'months-view',
@@ -11963,8 +12832,15 @@
           stop = start + yearsInterval,
           years = [];
 
+        var isDisabled = function (year) {
+          return (
+            (this$1.minNav !== void 0 && this$1.minNav.year > year) ||
+            (this$1.maxNav !== void 0 && this$1.maxNav.year < year)
+          )
+        };
+
         var loop = function ( i ) {
-          var active = this$1.innerModel.year === i;
+          var active = this$1.viewModel.year === i;
 
           years.push(
             h('div', {
@@ -11978,9 +12854,10 @@
                   label: i,
                   dense: true,
                   unelevated: active,
-                  color: active ? this$1.computedColor : null,
-                  textColor: active ? this$1.computedTextColor : null,
-                  tabindex: this$1.computedTabindex
+                  color: active === true ? this$1.computedColor : null,
+                  textColor: active === true ? this$1.computedTextColor : null,
+                  tabindex: this$1.computedTabindex,
+                  disable: isDisabled(i)
                 },
                 on: cache(this$1, 'yr#' + i, { click: function () { this$1.__setYear(i); } })
               })
@@ -12002,7 +12879,8 @@
                 dense: true,
                 flat: true,
                 icon: this.dateArrow[0],
-                tabindex: this.computedTabindex
+                tabindex: this.computedTabindex,
+                disable: isDisabled(start)
               },
               on: cache(this, 'y-', { click: function () { this$1.startYear -= yearsInterval; } })
             })
@@ -12021,7 +12899,8 @@
                 dense: true,
                 flat: true,
                 icon: this.dateArrow[1],
-                tabindex: this.computedTabindex
+                tabindex: this.computedTabindex,
+                disable: isDisabled(stop)
               },
               on: cache(this, 'y+', { click: function () { this$1.startYear += yearsInterval; } })
             })
@@ -12029,119 +12908,302 @@
         ])
       },
 
-      __getDaysInMonth: function __getDaysInMonth (obj) {
-        return this.calendar !== 'persian'
-          ? (new Date(obj.year, obj.month, 0)).getDate()
-          : jalaaliMonthLength(obj.year, obj.month)
-      },
-
       __goToMonth: function __goToMonth (offset) {
-        var
-          month = Number(this.innerModel.month) + offset,
-          yearDir = this.yearDirection;
+        var year = this.viewModel.year;
+        var month = Number(this.viewModel.month) + offset;
 
         if (month === 13) {
           month = 1;
-          this.innerModel.year++;
-          yearDir = (this.$q.lang.rtl !== true) ? 'left' : 'right';
+          year++;
         }
         else if (month === 0) {
           month = 12;
-          this.innerModel.year--;
-          yearDir = (this.$q.lang.rtl !== true) ? 'right' : 'left';
+          year--;
         }
 
-        this.monthDirection = (offset > 0) === (this.$q.lang.rtl !== true) ? 'left' : 'right';
-        this.yearDirection = yearDir;
-        this.innerModel.month = month;
-        this.emitImmediately === true && this.__updateValue({}, 'month');
+        this.__updateViewModel(year, month);
+        this.isImmediate === true && this.__emitImmediately('month');
       },
 
       __goToYear: function __goToYear (offset) {
-        this.monthDirection = this.yearDirection = (offset > 0) === (this.$q.lang.rtl !== true) ? 'left' : 'right';
-        this.innerModel.year = Number(this.innerModel.year) + offset;
-        this.emitImmediately === true && this.__updateValue({}, 'year');
+        var year = Number(this.viewModel.year) + offset;
+        this.__updateViewModel(year, this.viewModel.month);
+        this.isImmediate === true && this.__emitImmediately('year');
       },
 
       __setYear: function __setYear (year) {
-        this.innerModel.year = year;
-        this.emitImmediately === true && this.__updateValue({ year: year }, 'year');
-        this.view = this.extModel.month === null || this.defaultView === 'Years' ? 'Months' : 'Calendar';
+        this.__updateViewModel(year, this.viewModel.month);
+        this.view = this.defaultView === 'Years' ? 'Months' : 'Calendar';
+        this.isImmediate === true && this.__emitImmediately('year');
       },
 
       __setMonth: function __setMonth (month) {
-        this.innerModel.month = month;
-        this.emitImmediately === true && this.__updateValue({ month: month }, 'month');
+        this.__updateViewModel(this.viewModel.year, month);
         this.view = 'Calendar';
+        this.isImmediate === true && this.__emitImmediately('month');
       },
 
-      __setDay: function __setDay (day) {
-        this.__updateValue({ day: day }, 'day');
+      __getMonthHash: function __getMonthHash (date) {
+        return date.year + '/' + pad(date.month)
       },
 
-      __updateValue: function __updateValue (date, reason) {
+      __getDayHash: function __getDayHash (date) {
+        return date.year + '/' + pad(date.month) + '/' + pad(date.day)
+      },
+
+      __toggleDate: function __toggleDate (date, monthHash) {
+        var month = this.daysMap[monthHash];
+        var fn = month !== void 0 && month.includes(date.day) === true
+          ? this.__removeFromModel
+          : this.__addToModel;
+
+        fn(date);
+      },
+
+      __getShortDate: function __getShortDate (date) {
+        return { year: date.year, month: date.month, day: date.day }
+      },
+
+      __onDayClick: function __onDayClick (dayIndex) {
+        var day = Object.assign({}, this.viewModel, {day: dayIndex});
+
+        if (this.range === false) {
+          this.__toggleDate(day, this.viewMonthHash);
+          return
+        }
+
+        if (this.editRange === void 0) {
+          var dayProps = this.days.find(function (day) { return day.fill !== true && day.i === dayIndex; });
+
+          if (dayProps.range !== void 0) {
+            this.__removeFromModel({ target: day, from: dayProps.range.from, to: dayProps.range.to });
+            return
+          }
+
+          if (dayProps.selected === true) {
+            this.__removeFromModel(day);
+            return
+          }
+
+          var initHash = this.__getDayHash(day);
+
+          this.editRange = {
+            init: day,
+            initHash: initHash,
+            final: day,
+            finalHash: initHash
+          };
+
+          this.$emit('range-start', this.__getShortDate(day));
+        }
+        else {
+          var
+            initHash$1 = this.editRange.initHash,
+            finalHash = this.__getDayHash(day),
+            payload = initHash$1 <= finalHash
+              ? { from: this.editRange.init, to: day }
+              : { from: day, to: this.editRange.init };
+
+          this.editRange = void 0;
+          this.__addToModel(initHash$1 === finalHash ? day : Object.assign({}, {target: day}, payload));
+
+          this.$emit('range-end', {
+            from: this.__getShortDate(payload.from),
+            to: this.__getShortDate(payload.to)
+          });
+        }
+      },
+
+      __onDayMouseover: function __onDayMouseover (dayIndex) {
+        if (this.editRange !== void 0) {
+          var final = Object.assign({}, this.viewModel, {day: dayIndex});
+
+          Object.assign(this.editRange, {
+            final: final,
+            finalHash: this.__getDayHash(final)
+          });
+        }
+      },
+
+      __updateViewModel: function __updateViewModel (year, month) {
         var this$1 = this;
 
-        if (date.year === void 0) {
-          date.year = this.innerModel.year;
-        }
-        if (date.month === void 0) {
-          date.month = this.innerModel.month;
-        }
-        if (
-          date.day === void 0 ||
-          (this.emitImmediately === true && (reason === 'year' || reason === 'month'))
-        ) {
-          date.day = this.innerModel.day;
-          var maxDay = this.emitImmediately === true
-            ? this.__getDaysInMonth(date)
-            : this.daysInMonth;
-
-          date.day = Math.min(Math.max(1, date.day), maxDay);
-        }
-
-        var val = this.calendar === 'persian'
-          ? date.year + '/' + pad(date.month) + '/' + pad(date.day)
-          : formatDate(
-            new Date(
-              date.year,
-              date.month - 1,
-              date.day,
-              this.extModel.hour,
-              this.extModel.minute,
-              this.extModel.second,
-              this.extModel.millisecond
-            ),
-            this.mask,
-            this.computedLocale,
-            date.year,
-            this.extModel.timezoneOffset
-          );
-
-        date.changed = val !== this.value;
-        this.$emit('input', val, reason, date);
-
-        if (val === this.value && reason === 'today') {
-          var newHash = date.year + '/' + pad(date.month) + '/' + pad(date.day);
-          var curHash = this.innerModel.year + '/' + pad(this.innerModel.month) + '/' + pad(this.innerModel.day);
-
-          if (newHash !== curHash) {
-            this.monthDirection = (curHash < newHash) === (this.$q.lang.rtl !== true) ? 'left' : 'right';
-            if (date.year !== this.innerModel.year) {
-              this.yearDirection = this.monthDirection;
-            }
-
-            this.$nextTick(function () {
-              this$1.startYear = date.year - date.year % yearsInterval;
-              Object.assign(this$1.innerModel, {
-                year: date.year,
-                month: date.month,
-                day: date.day,
-                dateHash: newHash
-              });
-            });
+        if (this.minNav !== void 0 && year <= this.minNav.year) {
+          year = this.minNav.year;
+          if (month < this.minNav.month) {
+            month = this.minNav.month;
           }
         }
+
+        if (this.maxNav !== void 0 && year >= this.maxNav.year) {
+          year = this.maxNav.year;
+          if (month > this.maxNav.month) {
+            month = this.maxNav.month;
+          }
+        }
+
+        var newHash = year + '/' + pad(month) + '/01';
+
+        if (newHash !== this.viewModel.dateHash) {
+          this.monthDirection = (this.viewModel.dateHash < newHash) === (this.$q.lang.rtl !== true) ? 'left' : 'right';
+          if (year !== this.viewModel.year) {
+            this.yearDirection = this.monthDirection;
+          }
+
+          this.$nextTick(function () {
+            this$1.startYear = year - year % yearsInterval - (year < 0 ? yearsInterval : 0);
+            Object.assign(this$1.viewModel, {
+              year: year,
+              month: month,
+              day: 1,
+              dateHash: newHash
+            });
+          });
+        }
+      },
+
+      __emitValue: function __emitValue (val, action, date) {
+        var value = val !== null && val.length === 1 && this.multiple === false
+          ? val[0]
+          : val;
+
+        this.lastEmitValue = value;
+
+        var ref = this.__getEmitParams(action, date);
+        var reason = ref.reason;
+        var details = ref.details;
+        this.$emit('input', value, reason, details);
+      },
+
+      __emitImmediately: function __emitImmediately (reason) {
+        var this$1 = this;
+
+        var date = this.daysModel[0] !== void 0 && this.daysModel[0].dateHash !== null
+          ? this.daysModel[0]
+          : Object.assign({}, this.viewModel); // inherit day, hours, minutes, milliseconds...
+
+        // nextTick required because of animation delay in viewModel
+        this.$nextTick(function () {
+          date.year = this$1.viewModel.year;
+          date.month = this$1.viewModel.month;
+
+          var maxDay = this$1.calendar !== 'persian'
+            ? (new Date(date.year, date.month, 0)).getDate()
+            : jalaaliMonthLength(date.year, date.month);
+
+          date.day = Math.min(Math.max(1, date.day), maxDay);
+
+          var value = this$1.__encodeEntry(date);
+          this$1.lastEmitValue = value;
+
+          var ref = this$1.__getEmitParams('', date);
+          var details = ref.details;
+          this$1.$emit('input', value, reason, details);
+        });
+      },
+
+      __getEmitParams: function __getEmitParams (action, date) {
+        return date.from !== void 0
+          ? {
+            reason: (action + "-range"),
+            details: Object.assign({}, this.__getShortDate(date.target),
+              {from: this.__getShortDate(date.from),
+              to: this.__getShortDate(date.to),
+              changed: true})
+          }
+          : {
+            reason: (action + "-day"),
+            details: Object.assign({}, this.__getShortDate(date),
+              {changed: true})
+          }
+      },
+
+      __encodeEntry: function __encodeEntry (date, mask, locale) {
+        return date.from !== void 0
+          ? { from: this.encodeObjectFn(date.from, mask, locale), to: this.encodeObjectFn(date.to, mask, locale) }
+          : this.encodeObjectFn(date, mask, locale)
+      },
+
+      __addToModel: function __addToModel (date) {
+        var this$1 = this;
+
+        var value;
+
+        if (this.multiple === true) {
+          if (date.from !== void 0) {
+            // we also need to filter out intersections
+
+            var fromHash = this.__getDayHash(date.from);
+            var toHash = this.__getDayHash(date.to);
+
+            var days = this.daysModel
+              .filter(function (day) { return day.dateHash < fromHash || day.dateHash > toHash; });
+
+            var ranges = this.rangeModel
+              .filter(function (ref) {
+                var from = ref.from;
+                var to = ref.to;
+
+                return to.dateHash < fromHash || from.dateHash > toHash;
+            });
+
+            value = days.concat(ranges).concat(date).map(function (entry) { return this$1.__encodeEntry(entry); });
+          }
+          else {
+            var model = this.normalizedModel.slice();
+            model.push(this.__encodeEntry(date));
+            value = model;
+          }
+        }
+        else {
+          value = this.__encodeEntry(date);
+        }
+
+        this.__emitValue(value, 'add', date);
+      },
+
+      __removeFromModel: function __removeFromModel (date) {
+        if (this.noUnset === true) {
+          return
+        }
+
+        var model = null;
+
+        if (this.multiple === true && Array.isArray(this.value) === true) {
+          var val = this.__encodeEntry(date);
+
+          if (date.from !== void 0) {
+            model = this.value.filter(
+              function (date) { return date.from !== void 0
+                ? (date.from !== val.from && date.to !== val.to)
+                : true; }
+            );
+          }
+          else {
+            model = this.value.filter(function (date) { return date !== val; });
+          }
+
+          if (model.length === 0) {
+            model = null;
+          }
+        }
+
+        this.__emitValue(model, 'remove', date);
+      },
+
+      __updateValue: function __updateValue (mask, locale, reason) {
+        var this$1 = this;
+
+        var model = this.daysModel
+          .concat(this.rangeModel)
+          .map(function (entry) { return this$1.__encodeEntry(entry, mask, locale); })
+          .filter(function (entry) {
+            return entry.from !== void 0
+              ? entry.from.dateHash !== null && entry.to.dateHash !== null
+              : entry.dateHash !== null
+          });
+
+        this.$emit('input', (this.multiple === true ? model : model[0]) || null, reason);
       }
     },
 
@@ -12259,7 +13321,7 @@
   function onAppleScroll (e) {
     if (e.target === document) {
       // required, otherwise iOS blocks further scrolling
-      // until the mobile scrollbar dissapears
+      // until the mobile scrollbar dissappears
       document.scrollingElement.scrollTop = document.scrollingElement.scrollTop; // eslint-disable-line
     }
   }
@@ -12311,6 +13373,7 @@
       }
 
       body.classList.add('q-body--prevent-scroll');
+      document.qScrollPrevented = true;
       if (client.is.ios === true) {
         if (hasViewport === true) {
           window.scrollTo(0, 0);
@@ -12342,6 +13405,7 @@
 
       body.classList.remove('q-body--prevent-scroll');
       body.classList.remove('q-body--force-scrollbar');
+      document.qScrollPrevented = false;
 
       body.style.left = bodyLeft;
       body.style.top = bodyTop;
@@ -12433,7 +13497,7 @@
       AttrsMixin,
       HistoryMixin,
       ModelToggleMixin,
-      PortalMixin,
+      Portal,
       PreventScrollMixin
     ],
 
@@ -12555,6 +13619,7 @@
 
       shake: function shake () {
         this.focus();
+        this.$emit('shake');
 
         var node = this.__getInnerNode();
 
@@ -12619,24 +13684,14 @@
                   : innerHeight;
 
               if (top > 0 && bottom > height / 2) {
-                var scrollTop = Math.min(
+                document.scrollingElement.scrollTop = Math.min(
                   document.scrollingElement.scrollHeight - height,
                   bottom >= innerHeight
                     ? Infinity
                     : Math.ceil(document.scrollingElement.scrollTop + bottom - height / 2)
                 );
-
-                var fn = function () {
-                  requestAnimationFrame(function () {
-                    document.scrollingElement.scrollTop += Math.ceil((scrollTop - document.scrollingElement.scrollTop) / 8);
-                    if (document.scrollingElement.scrollTop !== scrollTop) {
-                      fn();
-                    }
-                  });
-                };
-
-                fn();
               }
+
               document.activeElement.scrollIntoView();
             }
 
@@ -12734,7 +13789,7 @@
 
       __renderPortal: function __renderPortal (h) {
         return h('div', {
-          staticClass: 'q-dialog fullscreen no-pointer-events',
+          staticClass: ("q-dialog fullscreen no-pointer-events q-dialog--" + (this.useBackdrop === true ? 'modal' : 'seamless')),
           class: this.contentClass,
           style: this.contentStyle,
           attrs: this.qAttrs
@@ -12744,6 +13799,7 @@
           }, this.useBackdrop === true ? [
             h('div', {
               staticClass: 'q-dialog__backdrop fixed-full',
+              attrs: ariaHidden,
               on: cache(this, 'bkdrop', {
                 click: this.__onBackdropClick
               })
@@ -12993,7 +14049,7 @@
       },
 
       backdropClass: function backdropClass () {
-        return this.showing === false ? 'no-pointer-events' : null
+        return this.showing === false ? 'hidden' : null
       },
 
       headerSlot: function headerSlot () {
@@ -13169,6 +14225,12 @@
         }
       },
 
+      __setBackdropVisible: function __setBackdropVisible (v) {
+        if (this.$refs.backdrop !== void 0) {
+          this.$refs.backdrop.classList[v === true ? 'remove' : 'add']('hidden');
+        }
+      },
+
       __setScrollable: function __setScrollable (v) {
         var action = v === true
           ? 'remove'
@@ -13219,6 +14281,7 @@
             this.__applyPosition(this.stateDirection * width);
             el.classList.remove('q-drawer--delimiter');
             el.classList.add('q-layout--prevent-focus');
+            this.__setBackdropVisible(false);
           }
 
           return
@@ -13238,6 +14301,7 @@
           el$1.classList.add('no-transition');
           el$1.classList.add('q-drawer--delimiter');
           el$1.classList.remove('q-layout--prevent-focus');
+          this.__setBackdropVisible(true);
         }
       },
 
@@ -13284,6 +14348,7 @@
 
         this.__addHistory();
 
+        this.__setBackdropVisible(true);
         evt !== false && this.layout.__animate();
         this.__applyPosition(0);
 
@@ -13316,6 +14381,7 @@
 
         this.__applyBackdrop(0);
         this.__applyPosition(this.stateDirection * this.size);
+        this.__setBackdropVisible(false);
 
         this.__cleanup();
 
@@ -13376,7 +14442,9 @@
       };
 
       if (this.layout.totalWidth !== 0) {
-        fn();
+        // make sure that all computed properties
+        // have been updated before calling __show/__hide()
+        this.$nextTick(fn);
         return
       }
 
@@ -13414,6 +14482,7 @@
         this.noSwipeOpen !== true && child.push(
           h('div', {
             staticClass: ("q-drawer__opener fixed-" + (this.side)),
+            attrs: ariaHidden,
             directives: this.openDirective
           })
         );
@@ -13423,11 +14492,14 @@
             ref: 'backdrop',
             staticClass: 'fullscreen q-drawer__backdrop',
             class: this.backdropClass,
+            attrs: ariaHidden,
             style: this.lastBackdropBg !== void 0
               ? { backgroundColor: this.lastBackdropBg }
               : null,
             on: cache(this, 'bkdrop', { click: this.hide }),
-            directives: this.backdropCloseDirective
+            directives: this.showing === false
+              ? void 0
+              : this.backdropCloseDirective
           })
         );
       }
@@ -13465,6 +14537,2504 @@
       );
 
       return h('div', { staticClass: 'q-drawer-container' }, child)
+    }
+  });
+
+  var QTooltip = Vue.extend({
+    name: 'QTooltip',
+
+    mixins: [ AnchorMixin, ModelToggleMixin, Portal, TransitionMixin ],
+
+    props: {
+      maxHeight: {
+        type: String,
+        default: null
+      },
+      maxWidth: {
+        type: String,
+        default: null
+      },
+
+      transitionShow: {
+        default: 'jump-down'
+      },
+      transitionHide: {
+        default: 'jump-up'
+      },
+
+      anchor: {
+        type: String,
+        default: 'bottom middle',
+        validator: validatePosition
+      },
+      self: {
+        type: String,
+        default: 'top middle',
+        validator: validatePosition
+      },
+      offset: {
+        type: Array,
+        default: function () { return [14, 14]; },
+        validator: validateOffset
+      },
+
+      scrollTarget: {
+        default: void 0
+      },
+
+      delay: {
+        type: Number,
+        default: 0
+      },
+
+      hideDelay: {
+        type: Number,
+        default: 0
+      }
+    },
+
+    computed: {
+      anchorOrigin: function anchorOrigin () {
+        return parsePosition(this.anchor)
+      },
+
+      selfOrigin: function selfOrigin () {
+        return parsePosition(this.self)
+      },
+
+      hideOnRouteChange: function hideOnRouteChange () {
+        return this.persistent !== true
+      }
+    },
+
+    methods: {
+      __show: function __show (evt) {
+        var this$1 = this;
+
+        this.__showPortal();
+
+        this.__nextTick(function () {
+          this$1.observer = new MutationObserver(function () { return this$1.updatePosition(); });
+          this$1.observer.observe(this$1.__portal.$el, { attributes: false, childList: true, characterData: true, subtree: true });
+          this$1.updatePosition();
+          this$1.__configureScrollTarget();
+        });
+
+        this.__setTimeout(function () {
+          this$1.$emit('show', evt);
+        }, 300);
+      },
+
+      __hide: function __hide (evt) {
+        var this$1 = this;
+
+        this.__anchorCleanup();
+
+        this.__setTimeout(function () {
+          this$1.__hidePortal();
+          this$1.$emit('hide', evt);
+        }, 300);
+      },
+
+      __anchorCleanup: function __anchorCleanup () {
+        if (this.observer !== void 0) {
+          this.observer.disconnect();
+          this.observer = void 0;
+        }
+
+        this.__unconfigureScrollTarget();
+        cleanEvt(this, 'tooltipTemp');
+      },
+
+      updatePosition: function updatePosition () {
+        if (this.anchorEl === void 0 || this.__portal === void 0) {
+          return
+        }
+
+        var el = this.__portal.$el;
+
+        if (el.nodeType === 8) { // IE replaces the comment with delay
+          setTimeout(this.updatePosition, 25);
+          return
+        }
+
+        setPosition({
+          el: el,
+          offset: this.offset,
+          anchorEl: this.anchorEl,
+          anchorOrigin: this.anchorOrigin,
+          selfOrigin: this.selfOrigin,
+          maxHeight: this.maxHeight,
+          maxWidth: this.maxWidth
+        });
+      },
+
+      __delayShow: function __delayShow (evt) {
+        var this$1 = this;
+
+        if (this.$q.platform.is.mobile === true) {
+          clearSelection();
+          document.body.classList.add('non-selectable');
+
+          var target = getTouchTarget(this.anchorEl);
+          var evts = ['touchmove', 'touchcancel', 'touchend', 'click']
+            .map(function (e) { return ([ target, e, '__delayHide', 'passiveCapture' ]); });
+
+          addEvt(this, 'tooltipTemp', evts);
+        }
+
+        this.__setTimeout(function () {
+          this$1.show(evt);
+        }, this.delay);
+      },
+
+      __delayHide: function __delayHide (evt) {
+        var this$1 = this;
+
+        this.__clearTimeout();
+
+        if (this.$q.platform.is.mobile === true) {
+          cleanEvt(this, 'tooltipTemp');
+          clearSelection();
+          // delay needed otherwise selection still occurs
+          setTimeout(function () {
+            document.body.classList.remove('non-selectable');
+          }, 10);
+        }
+
+        this.__setTimeout(function () {
+          this$1.hide(evt);
+        }, this.hideDelay);
+      },
+
+      __configureAnchorEl: function __configureAnchorEl () {
+        if (this.noParentEvent === true || this.anchorEl === void 0) { return }
+
+        var evts = this.$q.platform.is.mobile === true
+          ? [
+            [ this.anchorEl, 'touchstart', '__delayShow', 'passive' ]
+          ]
+          : [
+            [ this.anchorEl, 'mouseenter', '__delayShow', 'passive' ],
+            [ this.anchorEl, 'mouseleave', '__delayHide', 'passive' ]
+          ];
+
+        addEvt(this, 'anchor', evts);
+      },
+
+      __unconfigureScrollTarget: function __unconfigureScrollTarget () {
+        if (this.__scrollTarget !== void 0) {
+          this.__changeScrollEvent(this.__scrollTarget);
+          this.__scrollTarget = void 0;
+        }
+      },
+
+      __configureScrollTarget: function __configureScrollTarget () {
+        if (this.anchorEl !== void 0 || this.scrollTarget !== void 0) {
+          this.__scrollTarget = getScrollTarget(this.anchorEl, this.scrollTarget);
+          var fn = this.noParentEvent === true
+            ? this.updatePosition
+            : this.hide;
+
+          this.__changeScrollEvent(this.__scrollTarget, fn);
+        }
+      },
+
+      __renderPortal: function __renderPortal (h) {
+        return h('transition', {
+          props: { name: this.transition }
+        }, [
+          this.showing === true ? h('div', {
+            staticClass: 'q-tooltip q-tooltip--style q-position-engine no-pointer-events',
+            class: this.contentClass,
+            style: this.contentStyle,
+            attrs: {
+              role: 'complementary'
+            }
+          }, slot(this, 'default')) : null
+        ])
+      }
+    },
+
+    mounted: function mounted () {
+      this.__processModelChange(this.value);
+    }
+  });
+
+  var QList = Vue.extend({
+    name: 'QList',
+
+    mixins: [ ListenersMixin, DarkMixin ],
+
+    props: {
+      bordered: Boolean,
+      dense: Boolean,
+      separator: Boolean,
+      padding: Boolean
+    },
+
+    computed: {
+      classes: function classes () {
+        return 'q-list' +
+          (this.bordered === true ? ' q-list--bordered' : '') +
+          (this.dense === true ? ' q-list--dense' : '') +
+          (this.separator === true ? ' q-list--separator' : '') +
+          (this.isDark === true ? ' q-list--dark' : '') +
+          (this.padding === true ? ' q-list--padding' : '')
+      }
+    },
+
+    render: function render (h) {
+      return h('div', {
+        class: this.classes,
+        on: Object.assign({}, this.qListeners)
+      }, slot(this, 'default'))
+    }
+  });
+
+  var QItem = Vue.extend({
+    name: 'QItem',
+
+    mixins: [ DarkMixin, RouterLinkMixin, TagMixin, ListenersMixin ],
+
+    props: {
+      active: Boolean,
+
+      clickable: Boolean,
+      dense: Boolean,
+      insetLevel: Number,
+
+      tabindex: [ String, Number ],
+
+      focused: Boolean,
+      manualFocus: Boolean
+    },
+
+    computed: {
+      isActionable: function isActionable () {
+        return this.clickable === true ||
+          this.hasRouterLink === true ||
+          this.tag === 'a' ||
+          this.tag === 'label'
+      },
+
+      isClickable: function isClickable () {
+        return this.disable !== true && this.isActionable === true
+      },
+
+      classes: function classes () {
+        var obj;
+
+        return ( obj = {
+          'q-item--clickable q-link cursor-pointer': this.isClickable,
+          'q-focusable q-hoverable': this.isClickable === true && this.manualFocus === false,
+
+          'q-manual-focusable': this.isClickable === true && this.manualFocus === true,
+          'q-manual-focusable--focused': this.isClickable === true && this.focused === true,
+
+          'q-item--dense': this.dense,
+          'q-item--dark': this.isDark,
+          'q-item--active': this.active
+        }, obj[this.activeClass] = this.active === true && this.hasRouterLink !== true && this.activeClass !== void 0, obj['disabled'] = this.disable, obj )
+      },
+
+      style: function style () {
+        var obj;
+
+        if (this.insetLevel !== void 0) {
+          var dir = this.$q.lang.rtl === true ? 'Right' : 'Left';
+          return ( obj = {}, obj['padding' + dir] = (16 + this.insetLevel * 56) + 'px', obj )
+        }
+      },
+
+      onEvents: function onEvents () {
+        return Object.assign({}, this.qListeners,
+          {click: this.__onClick,
+          keyup: this.__onKeyup})
+      }
+    },
+
+    methods: {
+      __getContent: function __getContent (h) {
+        var child = uniqueSlot(this, 'default', []);
+        this.isClickable === true && child.unshift(
+          h('div', { staticClass: 'q-focus-helper', attrs: { tabindex: -1 }, ref: 'blurTarget' })
+        );
+        return child
+      },
+
+      __onClick: function __onClick (e) {
+        if (this.isClickable === true) {
+          if (this.$refs.blurTarget !== void 0) {
+            if (e.qKeyEvent !== true && document.activeElement === this.$el) {
+              this.$refs.blurTarget.focus();
+            }
+            else if (document.activeElement === this.$refs.blurTarget) {
+              this.$el.focus();
+            }
+          }
+
+          this.$emit('click', e);
+        }
+      },
+
+      __onKeyup: function __onKeyup (e) {
+        if (this.isClickable === true && isKeyCode(e, 13) === true) {
+          stopAndPrevent(e);
+
+          // for ripple
+          e.qKeyEvent = true;
+
+          // for click trigger
+          var evt = new MouseEvent('click', e);
+          evt.qKeyEvent = true;
+          this.$el.dispatchEvent(evt);
+        }
+
+        this.$emit('keyup', e);
+      }
+    },
+
+    render: function render (h) {
+      var data = {
+        staticClass: 'q-item q-item-type row no-wrap',
+        class: this.classes,
+        style: this.style
+      };
+      data[ this.hasRouterLink === true ? 'nativeOn' : 'on' ] = this.onEvents;
+
+      if (this.isClickable === true) {
+        data.attrs = {
+          tabindex: this.tabindex || '0'
+        };
+      }
+      else if (this.isActionable === true) {
+        data.attrs = {
+          'aria-disabled': 'true'
+        };
+      }
+
+      if (this.hasRouterLink === true) {
+        data.tag = 'a';
+        data.props = this.routerLinkProps;
+
+        return h('router-link', data, this.__getContent(h))
+      }
+
+      return h(
+        this.tag,
+        data,
+        this.__getContent(h)
+      )
+    }
+  });
+
+  var QItemSection = Vue.extend({
+    name: 'QItemSection',
+
+    mixins: [ ListenersMixin ],
+
+    props: {
+      avatar: Boolean,
+      thumbnail: Boolean,
+      side: Boolean,
+      top: Boolean,
+      noWrap: Boolean
+    },
+
+    computed: {
+      classes: function classes () {
+        var obj;
+
+        var side = this.avatar || this.side || this.thumbnail;
+
+        return ( obj = {
+          'q-item__section--top': this.top,
+          'q-item__section--avatar': this.avatar,
+          'q-item__section--thumbnail': this.thumbnail,
+          'q-item__section--side': side,
+          'q-item__section--nowrap': this.noWrap,
+          'q-item__section--main': !side
+        }, obj[("justify-" + (this.top ? 'start' : 'center'))] = true, obj )
+      }
+    },
+
+    render: function render (h) {
+      return h('div', {
+        staticClass: 'q-item__section column',
+        class: this.classes,
+        on: Object.assign({}, this.qListeners)
+      }, slot(this, 'default'))
+    }
+  });
+
+  function run (e, btn, vm) {
+    if (btn.handler) {
+      btn.handler(e, vm, vm.caret);
+    }
+    else {
+      vm.runCmd(btn.cmd, btn.param);
+    }
+  }
+
+  function __getGroup (h, children) {
+    return h('div', {
+      staticClass: 'q-editor__toolbar-group'
+    }, children)
+  }
+
+  function getBtn (h, vm, btn, clickHandler, active) {
+    if ( active === void 0 ) active = false;
+
+    var
+      toggled = active || (btn.type === 'toggle'
+        ? (btn.toggled ? btn.toggled(vm) : btn.cmd && vm.caret.is(btn.cmd, btn.param))
+        : false),
+      child = [],
+      events = {
+        click: function click (e) {
+          clickHandler && clickHandler();
+          run(e, btn, vm);
+        }
+      };
+
+    if (btn.tip && vm.$q.platform.is.desktop) {
+      var Key = btn.key
+        ? h('div', [h('small', ("(CTRL + " + (String.fromCharCode(btn.key)) + ")"))])
+        : null;
+      child.push(
+        h(QTooltip, { props: { delay: 1000 } }, [
+          h('div', { domProps: { innerHTML: btn.tip } }),
+          Key
+        ])
+      );
+    }
+
+    return h(QBtn, {
+      props: Object.assign({}, vm.buttonProps,
+        {icon: btn.icon !== null ? btn.icon : void 0,
+        color: toggled ? btn.toggleColor || vm.toolbarToggleColor : btn.color || vm.toolbarColor,
+        textColor: toggled && !vm.toolbarPush ? null : btn.textColor || vm.toolbarTextColor,
+        label: btn.label,
+        disable: btn.disable ? (typeof btn.disable === 'function' ? btn.disable(vm) : true) : false,
+        size: 'sm'}),
+      on: events
+    }, child)
+  }
+
+  function getDropdown (h, vm, btn) {
+    var onlyIcons = btn.list === 'only-icons';
+    var
+      label = btn.label,
+      icon = btn.icon !== null ? btn.icon : void 0,
+      contentClass,
+      Items;
+
+    function closeDropdown () {
+      Dropdown.componentInstance.hide();
+    }
+
+    if (onlyIcons) {
+      Items = btn.options.map(function (btn) {
+        var active = btn.type === void 0
+          ? vm.caret.is(btn.cmd, btn.param)
+          : false;
+
+        if (active) {
+          label = btn.tip;
+          icon = btn.icon !== null ? btn.icon : void 0;
+        }
+        return getBtn(h, vm, btn, closeDropdown, active)
+      });
+      contentClass = vm.toolbarBackgroundClass;
+      Items = [
+        __getGroup(h, Items)
+      ];
+    }
+    else {
+      var activeClass = vm.toolbarToggleColor !== void 0
+        ? ("text-" + (vm.toolbarToggleColor))
+        : null;
+      var inactiveClass = vm.toolbarTextColor !== void 0
+        ? ("text-" + (vm.toolbarTextColor))
+        : null;
+
+      var noIcons = btn.list === 'no-icons';
+
+      Items = btn.options.map(function (btn) {
+        var disable = btn.disable ? btn.disable(vm) : false;
+        var active = btn.type === void 0
+          ? vm.caret.is(btn.cmd, btn.param)
+          : false;
+
+        if (active) {
+          label = btn.tip;
+          icon = btn.icon !== null ? btn.icon : void 0;
+        }
+
+        var htmlTip = btn.htmlTip;
+
+        return h(
+          QItem,
+          {
+            props: { active: active, activeClass: activeClass, clickable: true, disable: disable, dense: true },
+            on: {
+              click: function click (e) {
+                closeDropdown();
+                vm.$refs.content && vm.$refs.content.focus();
+                vm.caret.restore();
+                run(e, btn, vm);
+              }
+            }
+          },
+          [
+            noIcons === true
+              ? null
+              : h(QItemSection, {
+                class: active ? activeClass : inactiveClass,
+                props: { side: true }
+              }, [
+                h(QIcon, { props: { name: btn.icon !== null ? btn.icon : void 0 } })
+              ]),
+
+            h(QItemSection, [
+              htmlTip
+                ? h('div', {
+                  staticClass: 'text-no-wrap',
+                  domProps: { innerHTML: btn.htmlTip }
+                })
+                : (
+                  btn.tip
+                    ? h('div', { staticClass: 'text-no-wrap' }, [ btn.tip ])
+                    : null
+                )
+            ])
+          ]
+        )
+      });
+      contentClass = [vm.toolbarBackgroundClass, inactiveClass];
+      Items = [
+        h(QList, [ Items ])
+      ];
+    }
+
+    var highlight = btn.highlight && label !== btn.label;
+    var Dropdown = h(
+      QBtnDropdown,
+      {
+        props: Object.assign({}, vm.buttonProps,
+          {noCaps: true,
+          noWrap: true,
+          color: highlight ? vm.toolbarToggleColor : vm.toolbarColor,
+          textColor: highlight && !vm.toolbarPush ? null : vm.toolbarTextColor,
+          label: btn.fixedLabel ? btn.label : label,
+          icon: btn.fixedIcon ? (btn.icon !== null ? btn.icon : void 0) : icon,
+          contentClass: contentClass})
+      },
+      Items
+    );
+    return Dropdown
+  }
+
+  function getToolbar (h, vm) {
+    if (vm.caret) {
+      return vm.buttons
+        .filter(function (f) {
+          return !vm.isViewingSource || f.find(function (fb) { return fb.cmd === 'viewsource'; })
+        })
+        .map(function (group) { return __getGroup(
+          h,
+          group.map(function (btn) {
+            if (vm.isViewingSource && btn.cmd !== 'viewsource') {
+              return false
+            }
+
+            if (btn.type === 'slot') {
+              return slot(vm, btn.slot)
+            }
+
+            if (btn.type === 'dropdown') {
+              return getDropdown(h, vm, btn)
+            }
+
+            return getBtn(h, vm, btn)
+          })
+        ); })
+    }
+  }
+
+  function getFonts (defaultFont, defaultFontLabel, defaultFontIcon, fonts) {
+    if ( fonts === void 0 ) fonts = {};
+
+    var aliases = Object.keys(fonts);
+    if (aliases.length === 0) {
+      return {}
+    }
+
+    var def = {
+      default_font: {
+        cmd: 'fontName',
+        param: defaultFont,
+        icon: defaultFontIcon,
+        tip: defaultFontLabel
+      }
+    };
+
+    aliases.forEach(function (alias) {
+      var name = fonts[alias];
+      def[alias] = {
+        cmd: 'fontName',
+        param: name,
+        icon: defaultFontIcon,
+        tip: name,
+        htmlTip: ("<font face=\"" + name + "\">" + name + "</font>")
+      };
+    });
+
+    return def
+  }
+
+  function getLinkEditor (h, vm, ie11) {
+    if (vm.caret) {
+      var color = vm.toolbarColor || vm.toolbarTextColor;
+      var link = vm.editLinkUrl;
+      var updateLink = function () {
+        vm.caret.restore();
+
+        if (link !== vm.editLinkUrl) {
+          document.execCommand('createLink', false, link === '' ? ' ' : link);
+        }
+
+        vm.editLinkUrl = null;
+
+        ie11 === true && vm.$nextTick(vm.__onInput);
+      };
+
+      return [
+        h('div', { staticClass: 'q-mx-xs', 'class': ("text-" + color) }, [((vm.$q.lang.editor.url) + ": ")]),
+        h('input', {
+          key: 'qedt_btm_input',
+          staticClass: 'col q-editor__link-input',
+          domProps: {
+            value: link
+          },
+          on: {
+            input: function (e) {
+              stop(e);
+              link = e.target.value;
+            },
+            keydown: function (event) {
+              if (shouldIgnoreKey(event) === true) {
+                return
+              }
+
+              switch (event.keyCode) {
+                case 13: // ENTER key
+                  prevent(event);
+                  return updateLink()
+                case 27: // ESCAPE key
+                  prevent(event);
+                  vm.caret.restore();
+                  if (!vm.editLinkUrl || vm.editLinkUrl === 'https://') {
+                    document.execCommand('unlink');
+                  }
+                  vm.editLinkUrl = null;
+                  break
+              }
+            }
+          }
+        }),
+        __getGroup(h, [
+          h(QBtn, {
+            key: 'qedt_btm_rem',
+            attrs: { tabindex: -1 },
+            props: Object.assign({}, vm.buttonProps,
+              {label: vm.$q.lang.label.remove,
+              noCaps: true}),
+            on: {
+              click: function () {
+                vm.caret.restore();
+                document.execCommand('unlink');
+                vm.editLinkUrl = null;
+
+                ie11 === true && vm.$nextTick(vm.__onInput);
+              }
+            }
+          }),
+          h(QBtn, {
+            key: 'qedt_btm_upd',
+            props: Object.assign({}, vm.buttonProps,
+              {label: vm.$q.lang.label.update,
+              noCaps: true}),
+            on: {
+              click: updateLink
+            }
+          })
+        ])
+      ]
+    }
+  }
+
+  function getBlockElement (el, parent) {
+    if (parent && el === parent) {
+      return null
+    }
+
+    var nodeName = el.nodeName.toLowerCase();
+
+    if (['div', 'li', 'ul', 'ol', 'blockquote'].includes(nodeName) === true) {
+      return el
+    }
+
+    var
+      style = window.getComputedStyle
+        ? window.getComputedStyle(el)
+        : el.currentStyle,
+      display = style.display;
+
+    if (display === 'block' || display === 'table') {
+      return el
+    }
+
+    return getBlockElement(el.parentNode)
+  }
+
+  function isChildOf (el, parent, orSame) {
+    return !el || el === document.body
+      ? false
+      : (orSame === true && el === parent) || (parent === document ? document.body : parent).contains(el.parentNode)
+  }
+
+  function createRange (node, chars, range) {
+    if (!range) {
+      range = document.createRange();
+      range.selectNode(node);
+      range.setStart(node, 0);
+    }
+
+    if (chars.count === 0) {
+      range.setEnd(node, chars.count);
+    }
+    else if (chars.count > 0) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent.length < chars.count) {
+          chars.count -= node.textContent.length;
+        }
+        else {
+          range.setEnd(node, chars.count);
+          chars.count = 0;
+        }
+      }
+      else {
+        for (var lp = 0; chars.count !== 0 && lp < node.childNodes.length; lp++) {
+          range = createRange(node.childNodes[lp], chars, range);
+        }
+      }
+    }
+
+    return range
+  }
+
+  var urlRegex = /^https?:\/\//;
+
+  var Caret = function Caret (el, vm) {
+    this.el = el;
+    this.vm = vm;
+    this._range = null;
+  };
+
+  var prototypeAccessors = { selection: { configurable: true },hasSelection: { configurable: true },range: { configurable: true },parent: { configurable: true },blockParent: { configurable: true } };
+
+  prototypeAccessors.selection.get = function () {
+    if (this.el) {
+      var sel = document.getSelection();
+
+      // only when the selection in element
+      if (isChildOf(sel.anchorNode, this.el, true) && isChildOf(sel.focusNode, this.el, true)) {
+        return sel
+      }
+    }
+
+    return null
+  };
+
+  prototypeAccessors.hasSelection.get = function () {
+    return this.selection !== null
+      ? this.selection.toString().length > 0
+      : false
+  };
+
+  prototypeAccessors.range.get = function () {
+    var sel = this.selection;
+
+    if (sel !== null && sel.rangeCount) {
+      return sel.getRangeAt(0)
+    }
+
+    return this._range
+  };
+
+  prototypeAccessors.parent.get = function () {
+    var range = this.range;
+
+    if (range !== null) {
+      var node = range.startContainer;
+
+      return node.nodeType === document.ELEMENT_NODE
+        ? node
+        : node.parentNode
+    }
+
+    return null
+  };
+
+  prototypeAccessors.blockParent.get = function () {
+    var parent = this.parent;
+
+    if (parent !== null) {
+      return getBlockElement(parent, this.el)
+    }
+
+    return null
+  };
+
+  Caret.prototype.save = function save (range) {
+      if ( range === void 0 ) range = this.range;
+
+    if (range !== null) {
+      this._range = range;
+    }
+  };
+
+  Caret.prototype.restore = function restore (range) {
+      if ( range === void 0 ) range = this._range;
+
+    var
+      r = document.createRange(),
+      sel = document.getSelection();
+
+    if (range !== null) {
+      r.setStart(range.startContainer, range.startOffset);
+      r.setEnd(range.endContainer, range.endOffset);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }
+    else {
+      sel.selectAllChildren(this.el);
+      sel.collapseToEnd();
+    }
+  };
+
+  Caret.prototype.savePosition = function savePosition () {
+    var charCount = -1, node;
+    var
+      selection = document.getSelection(),
+      parentEl = this.el.parentNode;
+
+    if (selection.focusNode && isChildOf(selection.focusNode, parentEl)) {
+      node = selection.focusNode;
+      charCount = selection.focusOffset;
+
+      while (node && node !== parentEl) {
+        if (node !== this.el && node.previousSibling) {
+          node = node.previousSibling;
+          charCount += node.textContent.length;
+        }
+        else {
+          node = node.parentNode;
+        }
+      }
+    }
+
+    this.savedPos = charCount;
+  };
+
+  Caret.prototype.restorePosition = function restorePosition (length) {
+      if ( length === void 0 ) length = 0;
+
+    if (this.savedPos > 0 && this.savedPos < length) {
+      var
+        selection = window.getSelection(),
+        range = createRange(this.el, { count: this.savedPos });
+
+      if (range) {
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  };
+
+  Caret.prototype.hasParent = function hasParent (name, spanLevel) {
+    var el = spanLevel
+      ? this.parent
+      : this.blockParent;
+
+    return el !== null
+      ? el.nodeName.toLowerCase() === name.toLowerCase()
+      : false
+  };
+
+  Caret.prototype.hasParents = function hasParents (list, recursive, el) {
+      if ( el === void 0 ) el = this.parent;
+
+    if (el === null) {
+      return false
+    }
+
+    if (el !== null && list.includes(el.nodeName.toLowerCase()) === true) {
+      return true
+    }
+
+    return recursive === true
+      ? this.hasParents(list, recursive, el.parentNode)
+      : false
+  };
+
+  Caret.prototype.is = function is (cmd, param) {
+    switch (cmd) {
+      case 'formatBlock':
+        if (param === 'DIV' && this.parent === this.el) {
+          return true
+        }
+        return this.hasParent(param, param === 'PRE')
+      case 'link':
+        return this.hasParent('A', true)
+      case 'fontSize':
+        return document.queryCommandValue(cmd) === param
+      case 'fontName':
+        var res = document.queryCommandValue(cmd);
+        return res === ("\"" + param + "\"") || res === param
+      case 'fullscreen':
+        return this.vm.inFullscreen
+      case 'viewsource':
+        return this.vm.isViewingSource
+      case void 0:
+        return false
+      default:
+        var state = document.queryCommandState(cmd);
+        return param !== void 0 ? state === param : state
+    }
+  };
+
+  Caret.prototype.getParentAttribute = function getParentAttribute (attrib) {
+    if (this.parent !== null) {
+      return this.parent.getAttribute(attrib)
+    }
+
+    return null
+  };
+
+  Caret.prototype.can = function can (name) {
+    if (name === 'outdent') {
+      return this.hasParents(['blockquote', 'li'], true)
+    }
+
+    if (name === 'indent') {
+      return this.hasParents(['li'], true)
+    }
+
+    if (name === 'link') {
+      return this.selection !== null || this.is('link')
+    }
+  };
+
+  Caret.prototype.apply = function apply (cmd, param, done) {
+      if ( done === void 0 ) done = noop;
+
+    if (cmd === 'formatBlock') {
+      if (['BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(param) && this.is(cmd, param)) {
+        cmd = 'outdent';
+        param = null;
+      }
+
+      if (param === 'PRE' && this.is(cmd, 'PRE')) {
+        param = 'P';
+      }
+    }
+    else if (cmd === 'print') {
+      done();
+
+      var win = window.open();
+
+      win.document.write(("\n        <!doctype html>\n        <html>\n          <head>\n            <title>Print - " + (document.title) + "</title>\n          </head>\n          <body>\n            <div>" + (this.el.innerHTML) + "</div>\n          </body>\n        </html>\n      "));
+      win.print();
+      win.close();
+
+      return
+    }
+    else if (cmd === 'link') {
+      var link = this.getParentAttribute('href');
+
+      if (link === null) {
+        var selection = this.selectWord(this.selection);
+        var url = selection ? selection.toString() : '';
+
+        if (!url.length) {
+          if (!this.range || !this.range.cloneContents().querySelector('img')) {
+            return
+          }
+        }
+
+        this.vm.editLinkUrl = urlRegex.test(url) ? url : 'https://';
+        document.execCommand('createLink', false, this.vm.editLinkUrl);
+
+        this.save(selection.getRangeAt(0));
+      }
+      else {
+        this.vm.editLinkUrl = link;
+
+        this.range.selectNodeContents(this.parent);
+        this.save();
+      }
+
+      return
+    }
+    else if (cmd === 'fullscreen') {
+      this.vm.toggleFullscreen();
+      done();
+
+      return
+    }
+    else if (cmd === 'viewsource') {
+      this.vm.isViewingSource = this.vm.isViewingSource === false;
+      this.vm.__setContent(this.vm.value);
+      done();
+
+      return
+    }
+
+    document.execCommand(cmd, false, param);
+
+    done();
+  };
+
+  Caret.prototype.selectWord = function selectWord (sel) {
+    if (sel === null || sel.isCollapsed !== true || /* IE 11 */ sel.modify === void 0) {
+      return sel
+    }
+
+    // Detect if selection is backwards
+    var range = document.createRange();
+    range.setStart(sel.anchorNode, sel.anchorOffset);
+    range.setEnd(sel.focusNode, sel.focusOffset);
+    var direction = range.collapsed ? ['backward', 'forward'] : ['forward', 'backward'];
+    range.detach();
+
+    // modify() works on the focus of the selection
+    var
+      endNode = sel.focusNode,
+      endOffset = sel.focusOffset;
+    sel.collapse(sel.anchorNode, sel.anchorOffset);
+    sel.modify('move', direction[0], 'character');
+    sel.modify('move', direction[1], 'word');
+    sel.extend(endNode, endOffset);
+    sel.modify('extend', direction[1], 'character');
+    sel.modify('extend', direction[0], 'word');
+
+    return sel
+  };
+
+  Object.defineProperties( Caret.prototype, prototypeAccessors );
+
+  var
+    toString = Object.prototype.toString,
+    hasOwn = Object.prototype.hasOwnProperty,
+    class2type = {};
+
+  'Boolean Number String Function Array Date RegExp Object'.split(' ').forEach(function (name) {
+    class2type['[object ' + name + ']'] = name.toLowerCase();
+  });
+
+  function type (obj) {
+    return obj === null ? String(obj) : class2type[toString.call(obj)] || 'object'
+  }
+
+  function isPlainObject (obj) {
+    if (!obj || type(obj) !== 'object') {
+      return false
+    }
+
+    if (obj.constructor &&
+      !hasOwn.call(obj, 'constructor') &&
+      !hasOwn.call(obj.constructor.prototype, 'isPrototypeOf')) {
+      return false
+    }
+
+    var key;
+    for (key in obj) {}
+
+    return key === undefined || hasOwn.call(obj, key)
+  }
+
+  function extend () {
+    var arguments$1 = arguments;
+
+    var
+      options, name, src, copy, copyIsArray, clone,
+      target = arguments[0] || {},
+      i = 1,
+      deep = false;
+    var length = arguments.length;
+
+    if (typeof target === 'boolean') {
+      deep = target;
+      target = arguments[1] || {};
+      i = 2;
+    }
+
+    if (Object(target) !== target && type(target) !== 'function') {
+      target = {};
+    }
+
+    if (length === i) {
+      target = this;
+      i--;
+    }
+
+    for (; i < length; i++) {
+      if ((options = arguments$1[i]) !== null) {
+        for (name in options) {
+          src = target[name];
+          copy = options[name];
+
+          if (target === copy) {
+            continue
+          }
+
+          if (deep && copy && (isPlainObject(copy) || (copyIsArray = type(copy) === 'array'))) {
+            if (copyIsArray) {
+              copyIsArray = false;
+              clone = src && type(src) === 'array' ? src : [];
+            }
+            else {
+              clone = src && isPlainObject(src) ? src : {};
+            }
+
+            target[name] = extend(deep, clone, copy);
+          }
+          else if (copy !== undefined) {
+            target[name] = copy;
+          }
+        }
+      }
+    }
+
+    return target
+  }
+
+  var QEditor = Vue.extend({
+    name: 'QEditor',
+
+    mixins: [ ListenersMixin, FullscreenMixin, DarkMixin ],
+
+    props: {
+      value: {
+        type: String,
+        required: true
+      },
+      readonly: Boolean,
+      disable: Boolean,
+      minHeight: {
+        type: String,
+        default: '10rem'
+      },
+      maxHeight: String,
+      height: String,
+      definitions: Object,
+      fonts: Object,
+      placeholder: String,
+
+      toolbar: {
+        type: Array,
+        validator: function (v) { return v.length === 0 || v.every(function (group) { return group.length; }); },
+        default: function default$1 () {
+          return [
+            ['left', 'center', 'right', 'justify'],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['undo', 'redo']
+          ]
+        }
+      },
+      toolbarColor: String,
+      toolbarBg: String,
+      toolbarTextColor: String,
+      toolbarToggleColor: {
+        type: String,
+        default: 'primary'
+      },
+      toolbarOutline: Boolean,
+      toolbarPush: Boolean,
+      toolbarRounded: Boolean,
+
+      paragraphTag: {
+        type: String,
+        validator: function (v) { return ['div', 'p'].includes(v); },
+        default: 'div'
+      },
+
+      contentStyle: Object,
+      contentClass: [Object, Array, String],
+
+      square: Boolean,
+      flat: Boolean,
+      dense: Boolean
+    },
+
+    computed: {
+      editable: function editable () {
+        return !this.readonly && !this.disable
+      },
+
+      hasToolbar: function hasToolbar () {
+        return this.toolbar && this.toolbar.length > 0
+      },
+
+      toolbarBackgroundClass: function toolbarBackgroundClass () {
+        if (this.toolbarBg) {
+          return ("bg-" + (this.toolbarBg))
+        }
+      },
+
+      buttonProps: function buttonProps () {
+        var flat = this.toolbarOutline !== true &&
+          this.toolbarPush !== true;
+
+        return {
+          type: 'a',
+          flat: flat,
+          noWrap: true,
+          outline: this.toolbarOutline,
+          push: this.toolbarPush,
+          rounded: this.toolbarRounded,
+          dense: true,
+          color: this.toolbarColor,
+          disable: !this.editable,
+          size: 'sm'
+        }
+      },
+
+      buttonDef: function buttonDef () {
+        var
+          e = this.$q.lang.editor,
+          i = this.$q.iconSet.editor;
+
+        return {
+          bold: { cmd: 'bold', icon: i.bold, tip: e.bold, key: 66 },
+          italic: { cmd: 'italic', icon: i.italic, tip: e.italic, key: 73 },
+          strike: { cmd: 'strikeThrough', icon: i.strikethrough, tip: e.strikethrough, key: 83 },
+          underline: { cmd: 'underline', icon: i.underline, tip: e.underline, key: 85 },
+          unordered: { cmd: 'insertUnorderedList', icon: i.unorderedList, tip: e.unorderedList },
+          ordered: { cmd: 'insertOrderedList', icon: i.orderedList, tip: e.orderedList },
+          subscript: { cmd: 'subscript', icon: i.subscript, tip: e.subscript, htmlTip: 'x<subscript>2</subscript>' },
+          superscript: { cmd: 'superscript', icon: i.superscript, tip: e.superscript, htmlTip: 'x<superscript>2</superscript>' },
+          link: { cmd: 'link', disable: function (vm) { return vm.caret && !vm.caret.can('link'); }, icon: i.hyperlink, tip: e.hyperlink, key: 76 },
+          fullscreen: { cmd: 'fullscreen', icon: i.toggleFullscreen, tip: e.toggleFullscreen, key: 70 },
+          viewsource: { cmd: 'viewsource', icon: i.viewSource, tip: e.viewSource },
+
+          quote: { cmd: 'formatBlock', param: 'BLOCKQUOTE', icon: i.quote, tip: e.quote, key: 81 },
+          left: { cmd: 'justifyLeft', icon: i.left, tip: e.left },
+          center: { cmd: 'justifyCenter', icon: i.center, tip: e.center },
+          right: { cmd: 'justifyRight', icon: i.right, tip: e.right },
+          justify: { cmd: 'justifyFull', icon: i.justify, tip: e.justify },
+
+          print: { type: 'no-state', cmd: 'print', icon: i.print, tip: e.print, key: 80 },
+          outdent: { type: 'no-state', disable: function (vm) { return vm.caret && !vm.caret.can('outdent'); }, cmd: 'outdent', icon: i.outdent, tip: e.outdent },
+          indent: { type: 'no-state', disable: function (vm) { return vm.caret && !vm.caret.can('indent'); }, cmd: 'indent', icon: i.indent, tip: e.indent },
+          removeFormat: { type: 'no-state', cmd: 'removeFormat', icon: i.removeFormat, tip: e.removeFormat },
+          hr: { type: 'no-state', cmd: 'insertHorizontalRule', icon: i.hr, tip: e.hr },
+          undo: { type: 'no-state', cmd: 'undo', icon: i.undo, tip: e.undo, key: 90 },
+          redo: { type: 'no-state', cmd: 'redo', icon: i.redo, tip: e.redo, key: 89 },
+
+          h1: { cmd: 'formatBlock', param: 'H1', icon: i.heading1 || i.heading, tip: e.heading1, htmlTip: ("<h1 class=\"q-ma-none\">" + (e.heading1) + "</h1>") },
+          h2: { cmd: 'formatBlock', param: 'H2', icon: i.heading2 || i.heading, tip: e.heading2, htmlTip: ("<h2 class=\"q-ma-none\">" + (e.heading2) + "</h2>") },
+          h3: { cmd: 'formatBlock', param: 'H3', icon: i.heading3 || i.heading, tip: e.heading3, htmlTip: ("<h3 class=\"q-ma-none\">" + (e.heading3) + "</h3>") },
+          h4: { cmd: 'formatBlock', param: 'H4', icon: i.heading4 || i.heading, tip: e.heading4, htmlTip: ("<h4 class=\"q-ma-none\">" + (e.heading4) + "</h4>") },
+          h5: { cmd: 'formatBlock', param: 'H5', icon: i.heading5 || i.heading, tip: e.heading5, htmlTip: ("<h5 class=\"q-ma-none\">" + (e.heading5) + "</h5>") },
+          h6: { cmd: 'formatBlock', param: 'H6', icon: i.heading6 || i.heading, tip: e.heading6, htmlTip: ("<h6 class=\"q-ma-none\">" + (e.heading6) + "</h6>") },
+          p: { cmd: 'formatBlock', param: this.paragraphTag.toUpperCase(), icon: i.heading, tip: e.paragraph },
+          code: { cmd: 'formatBlock', param: 'PRE', icon: i.code, htmlTip: ("<code>" + (e.code) + "</code>") },
+
+          'size-1': { cmd: 'fontSize', param: '1', icon: i.size1 || i.size, tip: e.size1, htmlTip: ("<font size=\"1\">" + (e.size1) + "</font>") },
+          'size-2': { cmd: 'fontSize', param: '2', icon: i.size2 || i.size, tip: e.size2, htmlTip: ("<font size=\"2\">" + (e.size2) + "</font>") },
+          'size-3': { cmd: 'fontSize', param: '3', icon: i.size3 || i.size, tip: e.size3, htmlTip: ("<font size=\"3\">" + (e.size3) + "</font>") },
+          'size-4': { cmd: 'fontSize', param: '4', icon: i.size4 || i.size, tip: e.size4, htmlTip: ("<font size=\"4\">" + (e.size4) + "</font>") },
+          'size-5': { cmd: 'fontSize', param: '5', icon: i.size5 || i.size, tip: e.size5, htmlTip: ("<font size=\"5\">" + (e.size5) + "</font>") },
+          'size-6': { cmd: 'fontSize', param: '6', icon: i.size6 || i.size, tip: e.size6, htmlTip: ("<font size=\"6\">" + (e.size6) + "</font>") },
+          'size-7': { cmd: 'fontSize', param: '7', icon: i.size7 || i.size, tip: e.size7, htmlTip: ("<font size=\"7\">" + (e.size7) + "</font>") }
+        }
+      },
+
+      buttons: function buttons () {
+        var this$1 = this;
+
+        var userDef = this.definitions || {};
+        var def = this.definitions || this.fonts
+          ? extend(
+            true,
+            {},
+            this.buttonDef,
+            userDef,
+            getFonts(
+              this.defaultFont,
+              this.$q.lang.editor.defaultFont,
+              this.$q.iconSet.editor.font,
+              this.fonts
+            )
+          )
+          : this.buttonDef;
+
+        return this.toolbar.map(
+          function (group) { return group.map(function (token) {
+            if (token.options) {
+              return {
+                type: 'dropdown',
+                icon: token.icon,
+                label: token.label,
+                size: 'sm',
+                dense: true,
+                fixedLabel: token.fixedLabel,
+                fixedIcon: token.fixedIcon,
+                highlight: token.highlight,
+                list: token.list,
+                options: token.options.map(function (item) { return def[item]; })
+              }
+            }
+
+            var obj = def[token];
+
+            if (obj) {
+              return obj.type === 'no-state' || (userDef[token] && (
+                obj.cmd === void 0 || (this$1.buttonDef[obj.cmd] && this$1.buttonDef[obj.cmd].type === 'no-state')
+              ))
+                ? obj
+                : Object.assign({ type: 'toggle' }, obj)
+            }
+            else {
+              return {
+                type: 'slot',
+                slot: token
+              }
+            }
+          }); }
+        )
+      },
+
+      keys: function keys () {
+        var
+          k = {},
+          add = function (btn) {
+            if (btn.key) {
+              k[btn.key] = {
+                cmd: btn.cmd,
+                param: btn.param
+              };
+            }
+          };
+
+        this.buttons.forEach(function (group) {
+          group.forEach(function (token) {
+            if (token.options) {
+              token.options.forEach(add);
+            }
+            else {
+              add(token);
+            }
+          });
+        });
+        return k
+      },
+
+      innerStyle: function innerStyle () {
+        return this.inFullscreen
+          ? this.contentStyle
+          : [
+            {
+              minHeight: this.minHeight,
+              height: this.height,
+              maxHeight: this.maxHeight
+            },
+            this.contentStyle
+          ]
+      },
+
+      classes: function classes () {
+        return "q-editor q-editor--" + (this.isViewingSource === true ? 'source' : 'default') +
+          (this.disable === true ? ' disabled' : '') +
+          (this.inFullscreen === true ? ' fullscreen column' : '') +
+          (this.square === true ? ' q-editor--square no-border-radius' : '') +
+          (this.flat === true ? ' q-editor--flat' : '') +
+          (this.dense === true ? ' q-editor--dense' : '') +
+          (this.isDark === true ? ' q-editor--dark q-dark' : '')
+      },
+
+      innerClass: function innerClass () {
+        return [
+          this.contentClass,
+          { col: this.inFullscreen, 'overflow-auto': this.inFullscreen || this.maxHeight }
+        ]
+      },
+
+      attrs: function attrs () {
+        if (this.disable === true) {
+          return { 'aria-disabled': 'true' }
+        }
+        if (this.readonly === true) {
+          return { 'aria-readonly': 'true' }
+        }
+      }
+    },
+
+    data: function data () {
+      return {
+        lastEmit: this.value,
+        editLinkUrl: null,
+        isViewingSource: false
+      }
+    },
+
+    watch: {
+      value: function value (v) {
+        if (this.lastEmit !== v) {
+          this.lastEmit = v;
+          this.__setContent(v, true);
+        }
+      }
+    },
+
+    methods: {
+      __onInput: function __onInput () {
+        if (this.$refs.content !== void 0) {
+          var val = this.isViewingSource === true
+            ? this.$refs.content.innerText
+            : this.$refs.content.innerHTML;
+
+          if (val !== this.value) {
+            this.lastEmit = val;
+            this.$emit('input', val);
+          }
+        }
+      },
+
+      __onKeydown: function __onKeydown (e) {
+        this.$emit('keydown', e);
+
+        if (e.ctrlKey !== true || shouldIgnoreKey(e) === true) {
+          this.refreshToolbar();
+          this.$q.platform.is.ie && this.$nextTick(this.__onInput);
+          return
+        }
+
+        var key = e.keyCode;
+        var target = this.keys[key];
+        if (target !== void 0) {
+          var cmd = target.cmd;
+          var param = target.param;
+          stopAndPrevent(e);
+          this.runCmd(cmd, param, false);
+        }
+      },
+
+      __onClick: function __onClick (e) {
+        this.refreshToolbar();
+        this.$emit('click', e);
+      },
+
+      __onBlur: function __onBlur (e) {
+        if (this.$refs.content !== void 0) {
+          var ref = this.$refs.content;
+          var scrollTop = ref.scrollTop;
+          var scrollHeight = ref.scrollHeight;
+          this.__offsetBottom = scrollHeight - scrollTop;
+        }
+        this.$q.platform.is.ie !== true && this.caret.save();
+        this.$emit('blur', e);
+      },
+
+      __onFocus: function __onFocus (e) {
+        var this$1 = this;
+
+        this.$nextTick(function () {
+          if (this$1.$refs.content !== void 0 && this$1.__offsetBottom !== void 0) {
+            this$1.$refs.content.scrollTop = this$1.$refs.content.scrollHeight - this$1.__offsetBottom;
+          }
+        });
+        this.$emit('focus', e);
+      },
+
+      __onMouseup: function __onMouseup (e) {
+        this.caret.save();
+        if (this.qListeners.mouseup !== void 0) {
+          this.$emit('mouseup', e);
+        }
+      },
+
+      __onKeyup: function __onKeyup (e) {
+        this.caret.save();
+        if (this.qListeners.keyup !== void 0) {
+          this.$emit('keyup', e);
+        }
+      },
+
+      __onTouchend: function __onTouchend (e) {
+        this.caret.save();
+        if (this.qListeners.touchend !== void 0) {
+          this.$emit('touchend', e);
+        }
+      },
+
+      runCmd: function runCmd (cmd, param, update) {
+        var this$1 = this;
+        if ( update === void 0 ) update = true;
+
+        this.focus();
+        this.caret.restore();
+        this.caret.apply(cmd, param, function () {
+          this$1.focus();
+          this$1.caret.save();
+          if (this$1.$q.platform.is.ie === true || this$1.$q.platform.is.edge === true) {
+            this$1.$nextTick(this$1.__onInput);
+          }
+          if (update) {
+            this$1.refreshToolbar();
+          }
+        });
+      },
+
+      refreshToolbar: function refreshToolbar () {
+        var this$1 = this;
+
+        setTimeout(function () {
+          this$1.editLinkUrl = null;
+          this$1.$forceUpdate();
+        }, 1);
+      },
+
+      focus: function focus () {
+        this.$refs.content !== void 0 && this.$refs.content.focus();
+      },
+
+      getContentEl: function getContentEl () {
+        return this.$refs.content
+      },
+
+      __setContent: function __setContent (v, restorePosition) {
+        if (this.$refs.content !== void 0) {
+          if (restorePosition === true) {
+            this.caret.savePosition();
+          }
+
+          var prop = "inner" + (this.isViewingSource === true ? 'Text' : 'HTML');
+          this.$refs.content[prop] = v;
+
+          if (restorePosition === true) {
+            this.caret.restorePosition(this.$refs.content[prop].length);
+            this.refreshToolbar();
+          }
+        }
+      }
+    },
+
+    created: function created () {
+      if (isSSR === false) {
+        document.execCommand('defaultParagraphSeparator', false, this.paragraphTag);
+        this.defaultFont = window.getComputedStyle(document.body).fontFamily;
+      }
+    },
+
+    mounted: function mounted () {
+      this.caret = new Caret(this.$refs.content, this);
+      this.__setContent(this.value);
+      this.refreshToolbar();
+    },
+
+    render: function render (h) {
+      var toolbars;
+
+      if (this.hasToolbar) {
+        var bars = [
+          h('div', {
+            key: 'qedt_top',
+            staticClass: 'q-editor__toolbar row no-wrap scroll-x',
+            class: this.toolbarBackgroundClass
+          }, getToolbar(h, this))
+        ];
+
+        this.editLinkUrl !== null && bars.push(
+          h('div', {
+            key: 'qedt_btm',
+            staticClass: 'q-editor__toolbar row no-wrap items-center scroll-x',
+            class: this.toolbarBackgroundClass
+          }, getLinkEditor(h, this, this.$q.platform.is.ie))
+        );
+
+        toolbars = h('div', {
+          key: 'toolbar_ctainer',
+          staticClass: 'q-editor__toolbars-container'
+        }, bars);
+      }
+
+      var on = Object.assign({}, this.qListeners,
+        {input: this.__onInput,
+        keydown: this.__onKeydown,
+        click: this.__onClick,
+        blur: this.__onBlur,
+        focus: this.__onFocus,
+
+        // save caret
+        mouseup: this.__onMouseup,
+        keyup: this.__onKeyup,
+        touchend: this.__onTouchend});
+
+      return h('div', {
+        style: {
+          height: this.inFullscreen === true ? '100vh' : null
+        },
+        class: this.classes,
+        attrs: this.attrs
+      }, [
+        toolbars,
+
+        h(
+          'div',
+          {
+            ref: 'content',
+            staticClass: "q-editor__content",
+            style: this.innerStyle,
+            class: this.innerClass,
+            attrs: {
+              contenteditable: this.editable,
+              placeholder: this.placeholder
+            },
+            domProps: isSSR
+              ? { innerHTML: this.value }
+              : undefined,
+            on: on
+          }
+        )
+      ])
+    }
+  });
+
+  var QItemLabel = Vue.extend({
+    name: 'QItemLabel',
+
+    mixins: [ ListenersMixin ],
+
+    props: {
+      overline: Boolean,
+      caption: Boolean,
+      header: Boolean,
+      lines: [ Number, String ]
+    },
+
+    computed: {
+      classes: function classes () {
+        return {
+          'q-item__label--overline text-overline': this.overline,
+          'q-item__label--caption text-caption': this.caption,
+          'q-item__label--header': this.header,
+          'ellipsis': parseInt(this.lines, 10) === 1
+        }
+      },
+
+      style: function style () {
+        if (this.lines !== void 0 && parseInt(this.lines, 10) > 1) {
+          return {
+            overflow: 'hidden',
+            display: '-webkit-box',
+            '-webkit-box-orient': 'vertical',
+            '-webkit-line-clamp': this.lines
+          }
+        }
+      }
+    },
+
+    render: function render (h) {
+      return h('div', {
+        staticClass: 'q-item__label',
+        style: this.style,
+        class: this.classes,
+        on: Object.assign({}, this.qListeners)
+      }, slot(this, 'default'))
+    }
+  });
+
+  var QSlideTransition = Vue.extend({
+    name: 'QSlideTransition',
+
+    props: {
+      appear: Boolean,
+      duration: {
+        type: Number,
+        default: 300
+      }
+    },
+
+    methods: {
+      __begin: function __begin (el, height, done) {
+        el.style.overflowY = 'hidden';
+        if (height !== void 0) {
+          el.style.height = height + "px";
+        }
+        el.style.transition = "height " + (this.duration) + "ms cubic-bezier(.25, .8, .50, 1)";
+
+        this.animating = true;
+        this.done = done;
+      },
+
+      __end: function __end (el, event) {
+        el.style.overflowY = null;
+        el.style.height = null;
+        el.style.transition = null;
+        this.__cleanup();
+        event !== this.lastEvent && this.$emit(event);
+      },
+
+      __cleanup: function __cleanup () {
+        this.done && this.done();
+        this.done = null;
+        this.animating = false;
+
+        clearTimeout(this.timer);
+        clearTimeout(this.timerFallback);
+        this.el !== void 0 && this.el.removeEventListener('transitionend', this.animListener);
+        this.animListener = null;
+      }
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      this.animating && this.__cleanup();
+    },
+
+    render: function render (h) {
+      var this$1 = this;
+
+      return h('transition', {
+        props: {
+          css: false,
+          appear: this.appear
+        },
+        on: cache(this, 'tr', {
+          enter: function (el, done) {
+            var pos = 0;
+            this$1.el = el;
+
+            if (this$1.animating === true) {
+              this$1.__cleanup();
+              pos = el.offsetHeight === el.scrollHeight ? 0 : void 0;
+            }
+            else {
+              this$1.lastEvent = 'hide';
+            }
+
+            this$1.__begin(el, pos, done);
+
+            this$1.timer = setTimeout(function () {
+              el.style.height = (el.scrollHeight) + "px";
+              this$1.animListener = function (ev) {
+                if (Object(ev) !== ev || ev.target === el) {
+                  this$1.__end(el, 'show');
+                }
+              };
+              el.addEventListener('transitionend', this$1.animListener);
+              this$1.timerFallback = setTimeout(this$1.animListener, this$1.duration * 1.1);
+            }, 100);
+          },
+
+          leave: function (el, done) {
+            var pos;
+            this$1.el = el;
+
+            if (this$1.animating === true) {
+              this$1.__cleanup();
+            }
+            else {
+              this$1.lastEvent = 'show';
+              pos = el.scrollHeight;
+            }
+
+            this$1.__begin(el, pos, done);
+
+            this$1.timer = setTimeout(function () {
+              el.style.height = 0;
+              this$1.animListener = function (ev) {
+                if (Object(ev) !== ev || ev.target === el) {
+                  this$1.__end(el, 'hide');
+                }
+              };
+              el.addEventListener('transitionend', this$1.animListener);
+              this$1.timerFallback = setTimeout(this$1.animListener, this$1.duration * 1.1);
+            }, 100);
+          }
+        })
+      }, slot(this, 'default'))
+    }
+  });
+
+  var insetMap = {
+    true: 'inset',
+    item: 'item-inset',
+    'item-thumbnail': 'item-thumbnail-inset'
+  };
+
+  var margins = {
+    xs: 2,
+    sm: 4,
+    md: 8,
+    lg: 16,
+    xl: 24
+  };
+
+  var QSeparator = Vue.extend({
+    name: 'QSeparator',
+
+    mixins: [ DarkMixin, ListenersMixin ],
+
+    props: {
+      spaced: [ Boolean, String ],
+      inset: [ Boolean, String ],
+      vertical: Boolean,
+      color: String,
+      size: String
+    },
+
+    computed: {
+      orientation: function orientation () {
+        return this.vertical === true
+          ? 'vertical'
+          : 'horizontal'
+      },
+
+      classPrefix: function classPrefix () {
+        return (" q-separator--" + (this.orientation))
+      },
+
+      insetClass: function insetClass () {
+        return this.inset !== false
+          ? ((this.classPrefix) + "-" + (insetMap[this.inset]))
+          : ''
+      },
+
+      classes: function classes () {
+        return "q-separator" + (this.classPrefix) + (this.insetClass) +
+          (this.color !== void 0 ? (" bg-" + (this.color)) : '') +
+          (this.isDark === true ? ' q-separator--dark' : '')
+      },
+
+      style: function style () {
+        var style = {};
+
+        if (this.size !== void 0) {
+          style[ this.vertical === true ? 'width' : 'height' ] = this.size;
+        }
+
+        if (this.spaced !== false) {
+          var size = this.spaced === true
+            ? ((margins.md) + "px")
+            : this.spaced in margins ? ((margins[this.spaced]) + "px") : this.spaced;
+
+          var props = this.vertical === true
+            ? [ 'Left', 'Right' ]
+            : [ 'Top', 'Bottom' ];
+
+          style[("margin" + (props[0]))] = style[("margin" + (props[1]))] = size;
+        }
+
+        return style
+      },
+
+      attrs: function attrs () {
+        return {
+          role: 'separator',
+          'aria-orientation': this.orientation
+        }
+      }
+    },
+
+    render: function render (h) {
+      return h('hr', {
+        staticClass: 'q-separator',
+        class: this.classes,
+        style: this.style,
+        attrs: this.attrs,
+        on: Object.assign({}, this.qListeners)
+      })
+    }
+  });
+
+  var eventName = 'q:expansion-item:close';
+
+  var QExpansionItem = Vue.extend({
+    name: 'QExpansionItem',
+
+    mixins: [ DarkMixin, RouterLinkMixin, ModelToggleMixin ],
+
+    props: {
+      icon: String,
+
+      label: String,
+      labelLines: [ Number, String ],
+
+      caption: String,
+      captionLines: [ Number, String ],
+
+      dense: Boolean,
+
+      expandIcon: String,
+      expandedIcon: String,
+      expandIconClass: [ Array, String, Object ],
+      duration: Number,
+
+      headerInsetLevel: Number,
+      contentInsetLevel: Number,
+
+      expandSeparator: Boolean,
+      defaultOpened: Boolean,
+      expandIconToggle: Boolean,
+      switchToggleSide: Boolean,
+      denseToggle: Boolean,
+      group: String,
+      popup: Boolean,
+
+      headerStyle: [Array, String, Object],
+      headerClass: [Array, String, Object]
+    },
+
+    data: function data () {
+      return {
+        showing: this.value !== void 0
+          ? this.value
+          : this.defaultOpened
+      }
+    },
+
+    watch: {
+      showing: function showing (val) {
+        val === true && this.group !== void 0 && this.$root.$emit(eventName, this);
+      },
+
+      group: function group (newVal, oldVal) {
+        if (newVal !== void 0 && oldVal === void 0) {
+          this.$root.$on(eventName, this.__eventHandler);
+        }
+        else if (newVal === void 0 && oldVal !== void 0) {
+          this.$root.$off(eventName, this.__eventHandler);
+        }
+      }
+    },
+
+    computed: {
+      classes: function classes () {
+        return "q-expansion-item--" + (this.showing === true ? 'expanded' : 'collapsed') +
+          " q-expansion-item--" + (this.popup === true ? 'popup' : 'standard')
+      },
+
+      contentStyle: function contentStyle () {
+        var obj;
+
+        if (this.contentInsetLevel !== void 0) {
+          var dir = this.$q.lang.rtl === true ? 'Right' : 'Left';
+          return ( obj = {}, obj['padding' + dir] = (this.contentInsetLevel * 56) + 'px', obj )
+        }
+      },
+
+      isClickable: function isClickable () {
+        return this.hasRouterLink === true || this.expandIconToggle !== true
+      },
+
+      expansionIcon: function expansionIcon () {
+        return this.expandedIcon !== void 0 && this.showing === true
+          ? this.expandedIcon
+          : this.expandIcon || this.$q.iconSet.expansionItem[this.denseToggle === true ? 'denseIcon' : 'icon']
+      },
+
+      activeToggleIcon: function activeToggleIcon () {
+        return this.disable !== true && (this.hasRouterLink === true || this.expandIconToggle === true)
+      }
+    },
+
+    methods: {
+      __onHeaderClick: function __onHeaderClick (e) {
+        this.hasRouterLink !== true && this.toggle(e);
+        this.$emit('click', e);
+      },
+
+      __toggleIconKeyboard: function __toggleIconKeyboard (e) {
+        e.keyCode === 13 && this.__toggleIcon(e, true);
+      },
+
+      __toggleIcon: function __toggleIcon (e, keyboard) {
+        keyboard !== true && this.$refs.blurTarget !== void 0 && this.$refs.blurTarget.focus();
+        this.toggle(e);
+        stopAndPrevent(e);
+      },
+
+      __eventHandler: function __eventHandler (comp) {
+        this !== comp && this.group === comp.group && this.hide();
+      },
+
+      __getToggleIcon: function __getToggleIcon (h) {
+        var data = {
+          staticClass: ("q-focusable relative-position cursor-pointer" + (this.denseToggle === true && this.switchToggleSide === true ? ' items-end' : '')),
+          class: this.expandIconClass,
+          props: {
+            side: this.switchToggleSide !== true,
+            avatar: this.switchToggleSide
+          }
+        };
+
+        var child = [
+          h(QIcon, {
+            staticClass: 'q-expansion-item__toggle-icon',
+            class: this.expandedIcon === void 0 && this.showing === true
+              ? 'q-expansion-item__toggle-icon--rotated'
+              : void 0,
+            props: { name: this.expansionIcon }
+          })
+        ];
+
+        if (this.activeToggleIcon === true) {
+          Object.assign(data, {
+            attrs: { tabindex: 0 },
+            on: cache(this, 'inpExt', {
+              click: this.__toggleIcon,
+              keyup: this.__toggleIconKeyboard
+            })
+          });
+
+          child.unshift(
+            h('div', {
+              ref: 'blurTarget',
+              staticClass: 'q-expansion-item__toggle-focus q-icon q-focus-helper q-focus-helper--rounded',
+              attrs: { tabindex: -1 }
+            })
+          );
+        }
+
+        return h(QItemSection, data, child)
+      },
+
+      __getHeader: function __getHeader (h) {
+        var child;
+
+        if (this.$scopedSlots.header !== void 0) {
+          child = this.$scopedSlots.header().slice();
+        }
+        else {
+          child = [
+            h(QItemSection, [
+              h(QItemLabel, {
+                props: { lines: this.labelLines }
+              }, [ this.label || '' ]),
+
+              this.caption
+                ? h(QItemLabel, {
+                  props: { lines: this.captionLines, caption: true }
+                }, [ this.caption ])
+                : null
+            ])
+          ];
+
+          this.icon && child[this.switchToggleSide === true ? 'push' : 'unshift'](
+            h(QItemSection, {
+              props: {
+                side: this.switchToggleSide === true,
+                avatar: this.switchToggleSide !== true
+              }
+            }, [
+              h(QIcon, {
+                props: { name: this.icon }
+              })
+            ])
+          );
+        }
+
+        this.disable !== true && child[this.switchToggleSide === true ? 'unshift' : 'push'](
+          this.__getToggleIcon(h)
+        );
+
+        var data = {
+          ref: 'item',
+          style: this.headerStyle,
+          class: this.headerClass,
+          props: {
+            dark: this.isDark,
+            disable: this.disable,
+            dense: this.dense,
+            insetLevel: this.headerInsetLevel
+          }
+        };
+
+        if (this.isClickable === true) {
+          var evtProp = this.hasRouterLink === true ? 'nativeOn' : 'on';
+
+          data.props.clickable = true;
+          data[evtProp] = Object.assign({}, this.qListeners,
+            {click: this.__onHeaderClick});
+
+          this.hasRouterLink === true && Object.assign(
+            data.props,
+            this.routerLinkProps
+          );
+        }
+
+        return h(QItem, data, child)
+      },
+
+      __getContent: function __getContent (h) {
+        var this$1 = this;
+
+        var node = [
+          this.__getHeader(h),
+
+          h(QSlideTransition, {
+            props: { duration: this.duration },
+            on: cache(this, 'slide', {
+              show: function () { this$1.$emit('after-show'); },
+              hide: function () { this$1.$emit('after-hide'); }
+            })
+          }, [
+            h('div', {
+              staticClass: 'q-expansion-item__content relative-position',
+              style: this.contentStyle,
+              directives: [{ name: 'show', value: this.showing }]
+            }, slot(this, 'default'))
+          ])
+        ];
+
+        if (this.expandSeparator) {
+          node.push(
+            h(QSeparator, {
+              staticClass: 'q-expansion-item__border q-expansion-item__border--top absolute-top',
+              props: { dark: this.isDark }
+            }),
+            h(QSeparator, {
+              staticClass: 'q-expansion-item__border q-expansion-item__border--bottom absolute-bottom',
+              props: { dark: this.isDark }
+            })
+          );
+        }
+
+        return node
+      }
+    },
+
+    render: function render (h) {
+      return h('div', {
+        staticClass: 'q-expansion-item q-item-type',
+        class: this.classes
+      }, [
+        h(
+          'div',
+          { staticClass: 'q-expansion-item__container relative-position' },
+          this.__getContent(h)
+        )
+      ])
+    },
+
+    created: function created () {
+      this.group !== void 0 && this.$root.$on(eventName, this.__eventHandler);
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      this.group !== void 0 && this.$root.$off(eventName, this.__eventHandler);
+    }
+  });
+
+  var labelPositions = ['top', 'right', 'bottom', 'left'];
+
+  var FabMixin = {
+    mixins: [ ListenersMixin ],
+
+    props: {
+      type: {
+        type: String,
+        default: 'a'
+      },
+
+      outline: Boolean,
+      push: Boolean,
+      flat: Boolean,
+      unelevated: Boolean,
+
+      color: String,
+      textColor: String,
+      glossy: Boolean,
+
+      square: Boolean,
+      padding: String,
+
+      label: {
+        type: [ String, Number ],
+        default: ''
+      },
+      labelPosition: {
+        type: String,
+        default: 'right',
+        validator: function (v) { return labelPositions.includes(v); }
+      },
+      externalLabel: Boolean,
+      hideLabel: {
+        type: Boolean
+      },
+      labelClass: [ Array, String, Object ],
+      labelStyle: [ Array, String, Object ],
+
+      disable: Boolean,
+
+      tabindex: [ Number, String ]
+    },
+
+    computed: {
+      formClass: function formClass () {
+        return ("q-fab--form-" + (this.square === true ? 'square' : 'rounded'))
+      },
+
+      stacked: function stacked () {
+        return this.externalLabel === false && ['top', 'bottom'].includes(this.labelPosition)
+      },
+
+      labelProps: function labelProps () {
+        if (this.externalLabel === true) {
+          var hideLabel = this.hideLabel === null
+            ? this.showing === false
+            : this.hideLabel;
+
+          return {
+            action: 'push',
+            data: {
+              staticClass: "q-fab__label q-tooltip--style q-fab__label--external" +
+                " q-fab__label--external-" + (this.labelPosition) +
+                (hideLabel === true ? ' q-fab__label--external-hidden' : ''),
+              style: this.labelStyle,
+              class: this.labelClass
+            }
+          }
+        }
+
+        return {
+          action: [ 'left', 'top' ].includes(this.labelPosition)
+            ? 'unshift'
+            : 'push',
+          data: {
+            staticClass: "q-fab__label q-fab__label--internal q-fab__label--internal-" + (this.labelPosition) +
+              (this.hideLabel === true ? ' q-fab__label--internal-hidden' : ''),
+            style: this.labelStyle,
+            class: this.labelClass
+          }
+        }
+      }
+    }
+  };
+
+  var directions$1 = ['up', 'right', 'down', 'left'];
+  var alignValues$1 = [ 'left', 'center', 'right' ];
+
+  var QFab = Vue.extend({
+    name: 'QFab',
+
+    inheritAttrs: false,
+
+    mixins: [ FabMixin, AttrsMixin, ModelToggleMixin ],
+
+    provide: function provide () {
+      return {
+        __qFab: this
+      }
+    },
+
+    props: {
+      icon: String,
+      activeIcon: String,
+
+      hideIcon: Boolean,
+      hideLabel: {
+        default: null
+      },
+
+      direction: {
+        type: String,
+        default: 'right',
+        validator: function (v) { return directions$1.includes(v); }
+      },
+
+      persistent: Boolean,
+
+      verticalActionsAlign: {
+        type: String,
+        default: 'center',
+        validator: function (v) { return alignValues$1.includes(v); }
+      }
+    },
+
+    data: function data () {
+      return {
+        showing: this.value === true
+      }
+    },
+
+    computed: {
+      hideOnRouteChange: function hideOnRouteChange () {
+        return this.persistent !== true
+      },
+
+      classes: function classes () {
+        return "q-fab--align-" + (this.verticalActionsAlign) + " " + (this.formClass) +
+          (this.showing === true ? ' q-fab--opened' : '')
+      },
+
+      attrs: function attrs () {
+        return Object.assign({}, {'aria-expanded': this.showing === true ? 'true' : 'false',
+          'aria-haspopup': 'true'},
+          this.qAttrs)
+      }
+    },
+
+    methods: {
+      __onChildClick: function __onChildClick (evt) {
+        this.hide(evt);
+
+        if (this.$refs.trigger && this.$refs.trigger.$el) {
+          this.$refs.trigger.$el.focus();
+        }
+      }
+    },
+
+    render: function render (h) {
+      var child = [];
+
+      this.hideIcon !== true && child.push(
+        h('div', { staticClass: 'q-fab__icon-holder' }, [
+          h(QIcon, {
+            staticClass: 'q-fab__icon absolute-full',
+            props: { name: this.icon || this.$q.iconSet.fab.icon }
+          }),
+          h(QIcon, {
+            staticClass: 'q-fab__active-icon absolute-full',
+            props: { name: this.activeIcon || this.$q.iconSet.fab.activeIcon }
+          })
+        ])
+      );
+
+      this.label !== '' && child[this.labelProps.action](
+        h('div', this.labelProps.data, [ this.label ])
+      );
+
+      return h('div', {
+        staticClass: 'q-fab z-fab row inline justify-center',
+        class: this.classes,
+        on: Object.assign({}, this.qListeners)
+      }, [
+        h(QBtn, {
+          ref: 'trigger',
+          class: this.formClass,
+          props: Object.assign({}, this.$props,
+            {noWrap: true,
+            stack: this.stacked,
+            align: void 0,
+            icon: void 0,
+            label: void 0,
+            noCaps: true,
+            fab: true}),
+          attrs: this.attrs,
+          on: cache(this, 'tog', {
+            click: this.toggle
+          })
+        }, mergeSlot(child, this, 'tooltip')),
+
+        h('div', {
+          staticClass: 'q-fab__actions flex no-wrap inline',
+          class: ("q-fab__actions--" + (this.direction))
+        }, slot(this, 'default'))
+      ])
+    }
+  });
+
+  var anchorMap = {
+    start: 'self-end',
+    center: 'self-center',
+    end: 'self-start'
+  };
+
+  var anchorValues = Object.keys(anchorMap);
+
+  var QFabAction = Vue.extend({
+    name: 'QFabAction',
+
+    mixins: [ FabMixin ],
+
+    props: {
+      icon: {
+        type: String,
+        default: ''
+      },
+
+      anchor: {
+        type: String,
+        validator: function (v) { return anchorValues.includes(v); }
+      },
+
+      to: [ String, Object ],
+      replace: Boolean
+    },
+
+    inject: {
+      __qFab: {
+        default: function default$1 () {
+          console.error('QFabAction needs to be child of QFab');
+        }
+      }
+    },
+
+    computed: {
+      classes: function classes () {
+        var align = anchorMap[this.anchor];
+        return this.formClass + (align !== void 0 ? (" " + align) : '')
+      },
+
+      onEvents: function onEvents () {
+        return Object.assign({}, this.qListeners,
+          {click: this.click})
+      },
+
+      isDisabled: function isDisabled () {
+        return this.__qFab.showing !== true || this.disable === true
+      }
+    },
+
+    methods: {
+      click: function click (e) {
+        this.__qFab.__onChildClick(e);
+        this.$emit('click', e);
+      }
+    },
+
+    render: function render (h) {
+      var child = [];
+
+      this.icon !== '' && child.push(
+        h(QIcon, {
+          props: { name: this.icon }
+        })
+      );
+
+      this.label !== '' && child[this.labelProps.action](
+        h('div', this.labelProps.data, [ this.label ])
+      );
+
+      return h(QBtn, {
+        class: this.classes,
+        props: Object.assign({}, this.$props,
+          {noWrap: true,
+          stack: this.stacked,
+          icon: void 0,
+          label: void 0,
+          noCaps: true,
+          fabMini: true,
+          disable: this.isDisabled}),
+        on: this.onEvents
+      }, mergeSlot(child, this, 'default'))
     }
   });
 
@@ -13685,8 +17255,8 @@
 
   var
     buf,
-    bufIdx = 0,
-    hexBytes = new Array(256);
+    bufIdx = 0;
+  var hexBytes = new Array(256);
 
   // Pre-calculate toString(16) for speed
   for (var i = 0; i < 256; i++) {
@@ -13784,6 +17354,8 @@
 
       loading: Boolean,
 
+      labelSlot: Boolean,
+
       bottomSlots: Boolean,
       hideBottomSpace: Boolean,
 
@@ -13879,7 +17451,7 @@
       classes: function classes () {
         var obj;
 
-        return ( obj = {}, obj[this.fieldClass] = this.fieldClass !== void 0, obj[("q-field--" + (this.styleType))] = true, obj['q-field--rounded'] = this.rounded, obj['q-field--square'] = this.square, obj['q-field--focused'] = this.focused === true || this.hasError === true, obj['q-field--float'] = this.floatingLabel, obj['q-field--labeled'] = this.label !== void 0, obj['q-field--dense'] = this.dense, obj['q-field--item-aligned q-item-type'] = this.itemAligned, obj['q-field--dark'] = this.isDark, obj['q-field--auto-height'] = this.__getControl === void 0, obj['q-field--with-bottom'] = this.hideBottomSpace !== true && this.shouldRenderBottom === true, obj['q-field--error'] = this.hasError, obj['q-field--readonly'] = this.readonly === true && this.disable !== true, obj['q-field--disabled'] = this.disable, obj )
+        return ( obj = {}, obj[this.fieldClass] = this.fieldClass !== void 0, obj[("q-field--" + (this.styleType))] = true, obj['q-field--rounded'] = this.rounded, obj['q-field--square'] = this.square, obj['q-field--focused'] = this.focused === true || this.hasError === true, obj['q-field--float'] = this.floatingLabel, obj['q-field--labeled'] = this.hasLabel, obj['q-field--dense'] = this.dense, obj['q-field--item-aligned q-item-type'] = this.itemAligned, obj['q-field--dark'] = this.isDark, obj['q-field--auto-height'] = this.__getControl === void 0, obj['q-field--with-bottom'] = this.hideBottomSpace !== true && this.shouldRenderBottom === true, obj['q-field--error'] = this.hasError, obj['q-field--readonly'] = this.readonly === true && this.disable !== true, obj['q-field--disabled'] = this.disable, obj )
       },
 
       styleType: function styleType () {
@@ -13910,6 +17482,10 @@
         return cls
       },
 
+      hasLabel: function hasLabel () {
+        return this.labelSlot === true || this.label !== void 0
+      },
+
       labelClass: function labelClass () {
         if (
           this.labelColor !== void 0 &&
@@ -13937,10 +17513,10 @@
         };
 
         if (this.disable === true) {
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
         else if (this.readonly === true) {
-          attrs['aria-readonly'] = '';
+          attrs['aria-readonly'] = 'true';
         }
 
         return attrs
@@ -14074,11 +17650,11 @@
           );
         }
 
-        this.label !== void 0 && node.push(
+        this.hasLabel === true && node.push(
           h('div', {
             staticClass: 'q-field__label no-pointer-events absolute ellipsis',
             class: this.labelClass
-          }, [ this.label ])
+          }, [ slot(this, 'label', this.label) ])
         );
 
         this.suffix !== void 0 && this.suffix !== null && node.push(
@@ -14201,19 +17777,18 @@
       },
 
       __clearValue: function __clearValue (e) {
-        this.focused = false;
-
         // prevent activating the field but keep focus on desktop
         stopAndPrevent(e);
-        this.$el.focus();
+        var el = this.$refs.target || this.$el;
+        el.focus();
 
         if (this.type === 'file') {
           // do not let focus be triggered
           // as it will make the native file dialog
           // appear for another selection
-          prevent(e);
           this.$refs.input.value = null;
         }
+
         this.$emit('input', null);
         this.$emit('clear', this.value);
       },
@@ -14228,7 +17803,7 @@
       this.__onPostRender !== void 0 && this.$nextTick(this.__onPostRender);
 
       return h('label', {
-        staticClass: 'q-field row no-wrap items-start',
+        staticClass: 'q-field q-validation-component row no-wrap items-start',
         class: this.classes,
         attrs: this.attrs
       }, [
@@ -14290,12 +17865,29 @@
     }
   });
 
+  function filterFiles (files, rejectedFiles, failedPropValidation, filterFn) {
+    var acceptedFiles = [];
+
+    files.forEach(function (file) {
+      if (filterFn(file) === true) {
+        acceptedFiles.push(file);
+      }
+      else {
+        rejectedFiles.push({ failedPropValidation: failedPropValidation, file: file });
+      }
+    });
+
+    return acceptedFiles
+  }
+
   var FileMixin = {
     props: {
       multiple: Boolean,
       accept: String,
-      maxFileSize: Number,
-      maxTotalSize: Number,
+      capture: String,
+      maxFileSize: [ Number, String ],
+      maxTotalSize: [ Number, String ],
+      maxFiles: [ Number, String ],
       filter: Function
     },
 
@@ -14304,19 +17896,29 @@
         if (this.accept !== void 0) {
           return this.accept.split(',').map(function (ext) {
             ext = ext.trim();
-            // support "image/*"
-            if (ext.endsWith('/*')) {
+            if (ext === '*') { // support "*"
+              return '*/'
+            }
+            else if (ext.endsWith('/*')) { // support "image/*" or "*/*"
               ext = ext.slice(0, ext.length - 1);
             }
-            return ext
+            return ext.toUpperCase()
           })
         }
+      },
+
+      maxFilesNumber: function maxFilesNumber () {
+        return parseInt(this.maxFiles, 10)
+      },
+
+      maxTotalSizeNumber: function maxTotalSizeNumber () {
+        return parseInt(this.maxTotalSize, 10)
       }
     },
 
     methods: {
       pickFiles: function pickFiles (e) {
-        if (this.editable === true) {
+        if (this.editable) {
           var input = this.__getFileInput();
           input && input.click(e);
         }
@@ -14328,26 +17930,38 @@
         }
       },
 
-      __processFiles: function __processFiles (e, files) {
+      __processFiles: function __processFiles (e, filesToProcess, currentFileList, append) {
         var this$1 = this;
 
-        files = Array.from(files || e.target.files);
+        var files = Array.from(filesToProcess || e.target.files);
+        var rejectedFiles = [];
+
+        var done = function () {
+          if (rejectedFiles.length > 0) {
+            this$1.$emit('rejected', rejectedFiles);
+          }
+        };
 
         // filter file types
-        if (this.accept !== void 0) {
-          files = files.filter(function (file) {
+        if (this.accept !== void 0 && this.extensions.indexOf('*/') === -1) {
+          files = filterFiles(files, rejectedFiles, 'accept', function (file) {
             return this$1.extensions.some(function (ext) { return (
-              file.type.toUpperCase().startsWith(ext.toUpperCase()) ||
-              file.name.toUpperCase().endsWith(ext.toUpperCase())
+              file.type.toUpperCase().startsWith(ext) ||
+              file.name.toUpperCase().endsWith(ext)
             ); })
           });
-          if (files.length === 0) { return }
+
+          if (files.length === 0) { return done() }
         }
 
         // filter max file size
         if (this.maxFileSize !== void 0) {
-          files = files.filter(function (file) { return file.size <= this$1.maxFileSize; });
-          if (files.length === 0) { return }
+          var maxFileSize = parseInt(this.maxFileSize, 10);
+          files = filterFiles(files, rejectedFiles, 'max-file-size', function (file) {
+            return file.size <= maxFileSize
+          });
+
+          if (files.length === 0) { return done() }
         }
 
         // Cordova/iOS allows selecting multiple files even when the
@@ -14358,26 +17972,40 @@
         }
 
         if (this.maxTotalSize !== void 0) {
-          var size = 0;
-          for (var i = 0; i < files.length; i++) {
-            size += files[i].size;
-            if (size > this.maxTotalSize) {
-              if (i > 0) {
-                files = files.slice(0, i);
-                break
-              }
-              else {
-                return
-              }
-            }
-          }
-          if (files.length === 0) { return }
+          var size = append === true
+            ? currentFileList.reduce(function (total, file) { return total + file.size; }, 0)
+            : 0;
+
+          files = filterFiles(files, rejectedFiles, 'max-total-size', function (file) {
+            size += file.size;
+            return size <= this$1.maxTotalSizeNumber
+          });
+
+          if (files.length === 0) { return done() }
         }
 
         // do we have custom filter function?
         if (typeof this.filter === 'function') {
-          files = this.filter(files);
+          var filteredFiles = this.filter(files);
+          files = filterFiles(files, rejectedFiles, 'filter', function (file) {
+            return filteredFiles.includes(file)
+          });
         }
+
+        if (this.maxFiles !== void 0) {
+          var filesNumber = append === true
+            ? currentFileList.length
+            : 0;
+
+          files = filterFiles(files, rejectedFiles, 'max-files', function () {
+            filesNumber++;
+            return filesNumber <= this$1.maxFilesNumber
+          });
+
+          if (files.length === 0) { return done() }
+        }
+
+        done();
 
         if (files.length > 0) {
           return files
@@ -14457,6 +18085,1391 @@
       }
     }
   };
+
+  var QFile = Vue.extend({
+    name: 'QFile',
+
+    mixins: [ QField, FileMixin, FormFieldMixin, FileValueMixin ],
+
+    props: {
+      /* SSR does not know about File & FileList */
+      value: isSSR === true
+        ? {}
+        : [ File, FileList, Array ],
+
+      append: Boolean,
+      useChips: Boolean,
+      displayValue: [ String, Number ],
+
+      tabindex: {
+        type: [ String, Number ],
+        default: 0
+      },
+
+      counterLabel: Function,
+
+      inputClass: [ Array, String, Object ],
+      inputStyle: [ Array, String, Object ]
+    },
+
+    data: function data () {
+      return {
+        dnd: false
+      }
+    },
+
+    computed: {
+      innerValue: function innerValue () {
+        return Object(this.value) === this.value
+          ? ('length' in this.value ? Array.from(this.value) : [ this.value ])
+          : []
+      },
+
+      selectedString: function selectedString () {
+        return this.innerValue
+          .map(function (file) { return file.name; })
+          .join(', ')
+      },
+
+      totalSize: function totalSize () {
+        return humanStorageSize(
+          this.innerValue.reduce(function (acc, file) { return acc + file.size; }, 0)
+        )
+      },
+
+      counterProps: function counterProps () {
+        return {
+          totalSize: this.totalSize,
+          filesNumber: this.innerValue.length,
+          maxFiles: this.maxFiles
+        }
+      },
+
+      computedCounter: function computedCounter () {
+        if (this.counterLabel !== void 0) {
+          return this.counterLabel(this.counterProps)
+        }
+
+        var max = this.maxFiles;
+        return ("" + (this.innerValue.length) + (max !== void 0 ? ' / ' + max : '') + " (" + (this.totalSize) + ")")
+      },
+
+      inputAttrs: function inputAttrs () {
+        return Object.assign({}, {tabindex: -1,
+          type: 'file',
+          title: '', // try to remove default tooltip,
+          accept: this.accept,
+          capture: this.capture,
+          name: this.nameProp},
+          this.qAttrs,
+          {id: this.targetUid,
+          disabled: this.editable !== true})
+      },
+
+      isAppending: function isAppending () {
+        return this.multiple === true && this.append === true
+      }
+    },
+
+    methods: {
+      removeAtIndex: function removeAtIndex (index) {
+        var files = this.innerValue.slice();
+        files.splice(index, 1);
+        this.__emitValue(files);
+      },
+
+      removeFile: function removeFile (file) {
+        var index = this.innerValue.findIndex(file);
+        if (index > -1) {
+          this.removeAtIndex(index);
+        }
+      },
+
+      __emitValue: function __emitValue (files) {
+        this.$emit('input', this.multiple === true ? files : files[0]);
+      },
+
+      __onKeyup: function __onKeyup (e) {
+        // only on ENTER
+        e.keyCode === 13 && this.pickFiles(e);
+      },
+
+      __getFileInput: function __getFileInput () {
+        return this.$refs.input
+      },
+
+      __addFiles: function __addFiles (e, fileList) {
+        var files = this.__processFiles(e, fileList, this.innerValue, this.isAppending);
+
+        files !== void 0 && this.__emitValue(
+          this.isAppending === true
+            ? this.innerValue.concat(files)
+            : files
+        );
+      },
+
+      __getControl: function __getControl (h) {
+        var data = {
+          ref: 'target',
+          staticClass: 'q-field__native row items-center cursor-pointer',
+          attrs: {
+            tabindex: this.tabindex
+          }
+        };
+
+        if (this.editable === true) {
+          data.on = cache(this, 'native', {
+            dragover: this.__onDragOver,
+            keyup: this.__onKeyup
+          });
+        }
+
+        return h('div', data, [ this.__getInput(h) ].concat(this.__getSelection(h)))
+      },
+
+      __getControlChild: function __getControlChild (h) {
+        return this.__getDnd(h, 'file')
+      },
+
+      __getSelection: function __getSelection (h) {
+        var this$1 = this;
+
+        if (this.$scopedSlots.file !== void 0) {
+          return this.innerValue.map(function (file, index) { return this$1.$scopedSlots.file({ index: index, file: file, ref: this$1 }); })
+        }
+
+        if (this.$scopedSlots.selected !== void 0) {
+          return this.$scopedSlots.selected({ files: this.innerValue, ref: this })
+        }
+
+        if (this.useChips === true) {
+          return this.innerValue.map(function (file, i) { return h(QChip, {
+            key: 'file-' + i,
+            props: {
+              removable: this$1.editable,
+              dense: true,
+              textColor: this$1.color,
+              tabindex: this$1.tabindex
+            },
+            on: cache(this$1, 'rem#' + i, {
+              remove: function () { this$1.removeAtIndex(i); }
+            })
+          }, [
+            h('span', {
+              staticClass: 'ellipsis',
+              domProps: {
+                textContent: file.name
+              }
+            })
+          ]); })
+        }
+
+        return [
+          h('div', {
+            style: this.inputStyle,
+            class: this.inputClass,
+            domProps: {
+              textContent: this.displayValue !== void 0
+                ? this.displayValue
+                : this.selectedString
+            }
+          })
+        ]
+      },
+
+      __getInput: function __getInput (h) {
+        var data = {
+          ref: 'input',
+          staticClass: 'q-field__input fit absolute-full cursor-pointer',
+          attrs: this.inputAttrs,
+          domProps: this.formDomProps,
+          on: cache(this, 'input', {
+            change: this.__addFiles
+          })
+        };
+
+        if (this.multiple === true) {
+          data.attrs.multiple = true;
+        }
+
+        return h('input', data)
+      }
+    },
+
+    created: function created () {
+      this.fieldClass = 'q-file q-field--auto-height';
+
+      // necessary for QField's clearable
+      // and FileValueMixin
+      this.type = 'file';
+    }
+  });
+
+  var QFooter = Vue.extend({
+    name: 'QFooter',
+
+    mixins: [ ListenersMixin ],
+
+    inject: {
+      layout: {
+        default: function default$1 () {
+          console.error('QFooter needs to be child of QLayout');
+        }
+      }
+    },
+
+    props: {
+      value: {
+        type: Boolean,
+        default: true
+      },
+      reveal: Boolean,
+      bordered: Boolean,
+      elevated: Boolean,
+
+      heightHint: {
+        type: [String, Number],
+        default: 50
+      }
+    },
+
+    data: function data () {
+      return {
+        size: parseInt(this.heightHint, 10),
+        revealed: true,
+        windowHeight: onSSR || this.layout.container ? 0 : window.innerHeight
+      }
+    },
+
+    watch: {
+      value: function value (val) {
+        this.__update('space', val);
+        this.__updateLocal('revealed', true);
+        this.layout.__animate();
+      },
+
+      offset: function offset (val) {
+        this.__update('offset', val);
+      },
+
+      reveal: function reveal (val) {
+        val === false && this.__updateLocal('revealed', this.value);
+      },
+
+      revealed: function revealed (val) {
+        this.layout.__animate();
+        this.$emit('reveal', val);
+      },
+
+      'layout.scroll': function layout_scroll () {
+        this.__updateRevealed();
+      },
+
+      'layout.height': function layout_height () {
+        this.__updateRevealed();
+      },
+
+      size: function size () {
+        this.__updateRevealed();
+      },
+
+      '$q.screen.height': function $q_screen_height (val) {
+        this.layout.container !== true && this.__updateLocal('windowHeight', val);
+      }
+    },
+
+    computed: {
+      fixed: function fixed () {
+        return this.reveal === true ||
+          this.layout.view.indexOf('F') > -1 ||
+          this.layout.container === true
+      },
+
+      containerHeight: function containerHeight () {
+        return this.layout.container === true
+          ? this.layout.containerHeight
+          : this.windowHeight
+      },
+
+      offset: function offset () {
+        if (this.value !== true) {
+          return 0
+        }
+        if (this.fixed === true) {
+          return this.revealed === true ? this.size : 0
+        }
+        var offset = this.layout.scroll.position + this.containerHeight + this.size - this.layout.height;
+        return offset > 0 ? offset : 0
+      },
+
+      hidden: function hidden () {
+        return this.value !== true || (this.fixed === true && this.revealed !== true)
+      },
+
+      revealOnFocus: function revealOnFocus () {
+        return this.value === true && this.hidden === true && this.reveal === true
+      },
+
+      classes: function classes () {
+        return (this.fixed === true ? 'fixed' : 'absolute') + '-bottom' +
+          (this.bordered === true ? ' q-footer--bordered' : '') +
+          (this.hidden === true ? ' q-footer--hidden' : '') +
+          (this.value !== true ? ' q-layout--prevent-focus' : '') +
+          (this.value !== true && this.fixed !== true ? ' hidden' : '')
+      },
+
+      style: function style () {
+        var
+          view = this.layout.rows.bottom,
+          css = {};
+
+        if (view[0] === 'l' && this.layout.left.space === true) {
+          css[this.$q.lang.rtl === true ? 'right' : 'left'] = (this.layout.left.size) + "px";
+        }
+        if (view[2] === 'r' && this.layout.right.space === true) {
+          css[this.$q.lang.rtl === true ? 'left' : 'right'] = (this.layout.right.size) + "px";
+        }
+
+        return css
+      },
+
+      onEvents: function onEvents () {
+        return Object.assign({}, this.qListeners,
+          {focusin: this.__onFocusin,
+          input: stop})
+      }
+    },
+
+    render: function render (h) {
+      var child = mergeSlot([
+        h(QResizeObserver, {
+          props: { debounce: 0 },
+          on: cache(this, 'resize', { resize: this.__onResize })
+        })
+      ], this, 'default');
+
+      this.elevated === true && child.push(
+        h('div', {
+          staticClass: 'q-layout__shadow absolute-full overflow-hidden no-pointer-events'
+        })
+      );
+
+      return h('footer', {
+        staticClass: 'q-footer q-layout__section--marginal',
+        class: this.classes,
+        style: this.style,
+        on: this.onEvents
+      }, child)
+    },
+
+    created: function created () {
+      this.layout.instances.footer = this;
+      this.value === true && this.__update('size', this.size);
+      this.__update('space', this.value);
+      this.__update('offset', this.offset);
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      if (this.layout.instances.footer === this) {
+        this.layout.instances.footer = void 0;
+        this.__update('size', 0);
+        this.__update('offset', 0);
+        this.__update('space', false);
+      }
+    },
+
+    methods: {
+      __onResize: function __onResize (ref) {
+        var height = ref.height;
+
+        this.__updateLocal('size', height);
+        this.__update('size', height);
+      },
+
+      __update: function __update (prop, val) {
+        if (this.layout.footer[prop] !== val) {
+          this.layout.footer[prop] = val;
+        }
+      },
+
+      __updateLocal: function __updateLocal (prop, val) {
+        if (this[prop] !== val) {
+          this[prop] = val;
+        }
+      },
+
+      __updateRevealed: function __updateRevealed () {
+        if (this.reveal !== true) { return }
+
+        var ref = this.layout.scroll;
+        var direction = ref.direction;
+        var position = ref.position;
+        var inflexionPosition = ref.inflexionPosition;
+
+        this.__updateLocal('revealed', (
+          direction === 'up' ||
+          position - inflexionPosition < 100 ||
+          this.layout.height - this.containerHeight - position - this.size < 300
+        ));
+      },
+
+      __onFocusin: function __onFocusin (evt) {
+        if (this.revealOnFocus === true) {
+          this.__updateLocal('revealed', true);
+        }
+
+        this.$emit('focusin', evt);
+      }
+    }
+  });
+
+  var QForm = Vue.extend({
+    name: 'QForm',
+
+    mixins: [ ListenersMixin ],
+
+    props: {
+      autofocus: Boolean,
+      noErrorFocus: Boolean,
+      noResetFocus: Boolean,
+      greedy: Boolean
+    },
+
+    computed: {
+      onEvents: function onEvents () {
+        return Object.assign({}, this.qListeners,
+          {submit: this.submit,
+          reset: this.reset})
+      }
+    },
+
+    mounted: function mounted () {
+      this.validateIndex = 0;
+      this.autofocus === true && this.focus();
+    },
+
+    methods: {
+      validate: function validate (shouldFocus) {
+        var this$1 = this;
+
+        var promises = [];
+        var focus = typeof shouldFocus === 'boolean'
+          ? shouldFocus
+          : this.noErrorFocus !== true;
+
+        this.validateIndex++;
+
+        var components = this.getValidationComponents();
+
+        var emit = function (res, ref) {
+          this$1.$emit('validation-' + (res === true ? 'success' : 'error'), ref);
+        };
+
+        var loop = function ( i ) {
+          var comp = components[i];
+          var valid = comp.validate();
+
+          if (typeof valid.then === 'function') {
+            promises.push(
+              valid.then(
+                function (valid) { return ({ valid: valid, comp: comp }); },
+                function (error) { return ({ valid: false, comp: comp, error: error }); }
+              )
+            );
+          }
+          else if (valid !== true) {
+            if (this$1.greedy === false) {
+              emit(false, comp);
+
+              if (focus === true && typeof comp.focus === 'function') {
+                comp.focus();
+              }
+
+              return { v: Promise.resolve(false) }
+            }
+
+            promises.push({ valid: false, comp: comp });
+          }
+        };
+
+        for (var i = 0; i < components.length; i++) {
+          var returned = loop( i );
+
+          if ( returned ) return returned.v;
+        }
+
+        if (promises.length === 0) {
+          emit(true);
+          return Promise.resolve(true)
+        }
+
+        var index = this.validateIndex;
+
+        return Promise.all(promises).then(
+          function (res) {
+            if (index === this$1.validateIndex) {
+              var errors = res.filter(function (r) { return r.valid !== true; });
+
+              if (errors.length === 0) {
+                emit(true);
+                return true
+              }
+
+              var ref = errors[0];
+              var valid = ref.valid;
+              var comp = ref.comp;
+
+              emit(false, comp);
+
+              if (
+                focus === true &&
+                valid !== true &&
+                typeof comp.focus === 'function'
+              ) {
+                comp.focus();
+              }
+
+              return false
+            }
+          }
+        )
+      },
+
+      resetValidation: function resetValidation () {
+        this.validateIndex++;
+
+        this.getValidationComponents().forEach(function (comp) {
+          comp.resetValidation();
+        });
+      },
+
+      submit: function submit (evt) {
+        var this$1 = this;
+
+        evt !== void 0 && stopAndPrevent(evt);
+
+        this.validate().then(function (val) {
+          if (val === true) {
+            if (this$1.qListeners.submit !== void 0) {
+              this$1.$emit('submit', evt);
+            }
+            else if (evt !== void 0 && evt.target !== void 0 && typeof evt.target.submit === 'function') {
+              evt.target.submit();
+            }
+          }
+        });
+      },
+
+      reset: function reset (evt) {
+        var this$1 = this;
+
+        evt !== void 0 && stopAndPrevent(evt);
+
+        this.$emit('reset');
+
+        this.$nextTick(function () { // allow userland to reset values before
+          this$1.resetValidation();
+          if (this$1.autofocus === true && this$1.noResetFocus !== true) {
+            this$1.focus();
+          }
+        });
+      },
+
+      focus: function focus () {
+        var target = this.$el.querySelector('[autofocus], [data-autofocus]') ||
+          Array.prototype.find.call(this.$el.querySelectorAll('[tabindex]'), function (el) { return el.tabIndex > -1; });
+
+        target !== null && target !== void 0 && target.focus();
+      },
+
+      getValidationComponents: function getValidationComponents () {
+        return Array.prototype.map.call(
+          this.$el.getElementsByClassName('q-validation-component'),
+          function (field) { return field.__vue__; }
+        ).filter(function (c) { return c !== void 0 && typeof c.validate === 'function'; })
+      }
+    },
+
+    render: function render (h) {
+      return h('form', {
+        staticClass: 'q-form',
+        on: this.onEvents
+      }, slot(this, 'default'))
+    }
+  });
+
+  var QHeader = Vue.extend({
+    name: 'QHeader',
+
+    mixins: [ ListenersMixin ],
+
+    inject: {
+      layout: {
+        default: function default$1 () {
+          console.error('QHeader needs to be child of QLayout');
+        }
+      }
+    },
+
+    props: {
+      value: {
+        type: Boolean,
+        default: true
+      },
+      reveal: Boolean,
+      revealOffset: {
+        type: Number,
+        default: 250
+      },
+      bordered: Boolean,
+      elevated: Boolean,
+
+      heightHint: {
+        type: [String, Number],
+        default: 50
+      }
+    },
+
+    data: function data () {
+      return {
+        size: parseInt(this.heightHint, 10),
+        revealed: true
+      }
+    },
+
+    watch: {
+      value: function value (val) {
+        this.__update('space', val);
+        this.__updateLocal('revealed', true);
+        this.layout.__animate();
+      },
+
+      offset: function offset (val) {
+        this.__update('offset', val);
+      },
+
+      reveal: function reveal (val) {
+        val === false && this.__updateLocal('revealed', this.value);
+      },
+
+      revealed: function revealed (val) {
+        this.layout.__animate();
+        this.$emit('reveal', val);
+      },
+
+      'layout.scroll': function layout_scroll (scroll) {
+        this.reveal === true && this.__updateLocal('revealed',
+          scroll.direction === 'up' ||
+          scroll.position <= this.revealOffset ||
+          scroll.position - scroll.inflexionPosition < 100
+        );
+      }
+    },
+
+    computed: {
+      fixed: function fixed () {
+        return this.reveal === true ||
+          this.layout.view.indexOf('H') > -1 ||
+          this.layout.container === true
+      },
+
+      offset: function offset () {
+        if (this.value !== true) {
+          return 0
+        }
+        if (this.fixed === true) {
+          return this.revealed === true ? this.size : 0
+        }
+        var offset = this.size - this.layout.scroll.position;
+        return offset > 0 ? offset : 0
+      },
+
+      hidden: function hidden () {
+        return this.value !== true || (this.fixed === true && this.revealed !== true)
+      },
+
+      revealOnFocus: function revealOnFocus () {
+        return this.value === true && this.hidden === true && this.reveal === true
+      },
+
+      classes: function classes () {
+        return (this.fixed === true ? 'fixed' : 'absolute') + '-top' +
+          (this.bordered === true ? ' q-header--bordered' : '') +
+          (this.hidden === true ? ' q-header--hidden' : '') +
+          (this.value !== true ? ' q-layout--prevent-focus' : '')
+      },
+
+      style: function style () {
+        var
+          view = this.layout.rows.top,
+          css = {};
+
+        if (view[0] === 'l' && this.layout.left.space === true) {
+          css[this.$q.lang.rtl === true ? 'right' : 'left'] = (this.layout.left.size) + "px";
+        }
+        if (view[2] === 'r' && this.layout.right.space === true) {
+          css[this.$q.lang.rtl === true ? 'left' : 'right'] = (this.layout.right.size) + "px";
+        }
+
+        return css
+      },
+
+      onEvents: function onEvents () {
+        return Object.assign({}, this.qListeners,
+          {focusin: this.__onFocusin,
+          input: stop})
+      }
+    },
+
+    render: function render (h) {
+      var child = uniqueSlot(this, 'default', []);
+
+      this.elevated === true && child.push(
+        h('div', {
+          staticClass: 'q-layout__shadow absolute-full overflow-hidden no-pointer-events'
+        })
+      );
+
+      child.push(
+        h(QResizeObserver, {
+          props: { debounce: 0 },
+          on: cache(this, 'resize', { resize: this.__onResize })
+        })
+      );
+
+      return h('header', {
+        staticClass: 'q-header q-layout__section--marginal',
+        class: this.classes,
+        style: this.style,
+        on: this.onEvents
+      }, child)
+    },
+
+    created: function created () {
+      this.layout.instances.header = this;
+      this.value === true && this.__update('size', this.size);
+      this.__update('space', this.value);
+      this.__update('offset', this.offset);
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      if (this.layout.instances.header === this) {
+        this.layout.instances.header = void 0;
+        this.__update('size', 0);
+        this.__update('offset', 0);
+        this.__update('space', false);
+      }
+    },
+
+    methods: {
+      __onResize: function __onResize (ref) {
+        var height = ref.height;
+
+        this.__updateLocal('size', height);
+        this.__update('size', height);
+      },
+
+      __update: function __update (prop, val) {
+        if (this.layout.header[prop] !== val) {
+          this.layout.header[prop] = val;
+        }
+      },
+
+      __updateLocal: function __updateLocal (prop, val) {
+        if (this[prop] !== val) {
+          this[prop] = val;
+        }
+      },
+
+      __onFocusin: function __onFocusin (evt) {
+        if (this.revealOnFocus === true) {
+          this.__updateLocal('revealed', true);
+        }
+
+        this.$emit('focusin', evt);
+      }
+    }
+  });
+
+  var RatioMixin = {
+    props: {
+      ratio: [ String, Number ]
+    },
+
+    computed: {
+      ratioStyle: function ratioStyle () {
+        var ratio = this.ratio || this.naturalRatio;
+
+        if (ratio !== void 0) {
+          return { paddingBottom: ((100 / ratio) + "%") }
+        }
+      }
+    }
+  };
+
+  var QImg = Vue.extend({
+    name: 'QImg',
+
+    mixins: [ ListenersMixin, RatioMixin ],
+
+    props: {
+      src: String,
+      srcset: String,
+      sizes: String,
+      alt: String,
+      width: String,
+      height: String,
+
+      placeholderSrc: String,
+
+      basic: Boolean,
+      contain: Boolean,
+      position: {
+        type: String,
+        default: '50% 50%'
+      },
+
+      transition: {
+        type: String,
+        default: 'fade'
+      },
+
+      imgClass: [ Array, String, Object ],
+      imgStyle: Object,
+
+      nativeContextMenu: Boolean,
+
+      noDefaultSpinner: Boolean,
+      spinnerColor: String,
+      spinnerSize: String
+    },
+
+    data: function data () {
+      return {
+        currentSrc: '',
+        image: null,
+        isLoading: !!this.src,
+        hasError: false,
+        naturalRatio: void 0
+      }
+    },
+
+    watch: {
+      src: function src () {
+        this.__load();
+      },
+
+      srcset: function srcset (val) {
+        this.__updateWatcher(val);
+      }
+    },
+
+    computed: {
+      url: function url () {
+        return this.currentSrc || this.placeholderSrc || void 0
+      },
+
+      attrs: function attrs () {
+        var att = { role: 'img' };
+        if (this.alt !== void 0) {
+          att['aria-label'] = this.alt;
+        }
+        return att
+      },
+
+      imgContainerStyle: function imgContainerStyle () {
+        return Object.assign(
+          {
+            backgroundSize: this.contain === true ? 'contain' : 'cover',
+            backgroundPosition: this.position
+          },
+          this.imgStyle,
+          { backgroundImage: ("url(\"" + (this.url) + "\")") })
+      },
+
+      style: function style () {
+        return {
+          width: this.width,
+          height: this.height
+        }
+      },
+
+      classes: function classes () {
+        return 'q-img overflow-hidden' +
+          (this.nativeContextMenu === true ? ' q-img--menu' : '')
+      }
+    },
+
+    methods: {
+      __onLoad: function __onLoad (img) {
+        this.isLoading = false;
+        this.hasError = false;
+        this.__computeRatio(img);
+        this.__updateSrc();
+        this.__updateWatcher(this.srcset);
+        this.$emit('load', this.currentSrc);
+      },
+
+      __onError: function __onError (err) {
+        clearTimeout(this.ratioTimer);
+        this.isLoading = false;
+        this.hasError = true;
+        this.currentSrc = '';
+        this.$emit('error', err);
+      },
+
+      __updateSrc: function __updateSrc () {
+        if (this.image !== void 0 && this.isLoading === false) {
+          var src = this.image.currentSrc || this.image.src;
+          if (this.currentSrc !== src) {
+            this.currentSrc = src;
+          }
+        }
+      },
+
+      __updateWatcher: function __updateWatcher (srcset) {
+        if (srcset) {
+          if (this.unwatch === void 0) {
+            this.unwatch = this.$watch('$q.screen.width', this.__updateSrc);
+          }
+        }
+        else if (this.unwatch !== void 0) {
+          this.unwatch();
+          this.unwatch = void 0;
+        }
+      },
+
+      __load: function __load () {
+        var this$1 = this;
+
+        clearTimeout(this.ratioTimer);
+        this.hasError = false;
+
+        if (!this.src) {
+          this.isLoading = false;
+          this.image = void 0;
+          this.currentSrc = '';
+          return
+        }
+
+        this.isLoading = true;
+
+        var img = new Image();
+        this.image = img;
+
+        img.onerror = function (err) {
+          // if we are still rendering same image
+          if (this$1.image === img && this$1.destroyed !== true) {
+            this$1.__onError(err);
+          }
+        };
+
+        img.onload = function () {
+          if (this$1.destroyed === true) {
+            return
+          }
+
+          // if we are still rendering same image
+          if (this$1.image === img) {
+            if (img.decode !== void 0) {
+              img
+                .decode()
+                .catch(function (err) {
+                  if (this$1.image === img && this$1.destroyed !== true) {
+                    this$1.__onError(err);
+                  }
+                })
+                .then(function () {
+                  if (this$1.image === img && this$1.destroyed !== true) {
+                    this$1.__onLoad(img);
+                  }
+                });
+            }
+            else {
+              this$1.__onLoad(img);
+            }
+          }
+        };
+
+        img.src = this.src;
+
+        if (this.srcset) {
+          img.srcset = this.srcset;
+        }
+
+        if (this.sizes !== void 0) {
+          img.sizes = this.sizes;
+        }
+        else {
+          Object.assign(img, {
+            height: this.height,
+            width: this.width
+          });
+        }
+      },
+
+      __computeRatio: function __computeRatio (img) {
+        var this$1 = this;
+
+        var naturalHeight = img.naturalHeight;
+        var naturalWidth = img.naturalWidth;
+
+        if (naturalHeight || naturalWidth) {
+          this.naturalRatio = naturalHeight === 0
+            ? 1
+            : naturalWidth / naturalHeight;
+        }
+        else {
+          this.ratioTimer = setTimeout(function () {
+            if (this$1.image === img && this$1.destroyed !== true) {
+              this$1.__computeRatio(img);
+            }
+          }, 100);
+        }
+      },
+
+      __getImage: function __getImage (h) {
+        var nativeImg = this.nativeContextMenu === true
+          ? [
+            h('img', {
+              staticClass: 'absolute-full fit',
+              attrs: { src: this.url, 'aria-hidden': 'true' }
+            })
+          ]
+          : void 0;
+
+        var content = this.url !== void 0
+          ? h('div', {
+            key: this.url,
+            staticClass: 'q-img__image absolute-full',
+            class: this.imgClass,
+            style: this.imgContainerStyle
+          }, nativeImg)
+          : null;
+
+        return this.basic === true
+          ? content
+          : h('transition', {
+            props: { name: 'q-transition--' + this.transition }
+          }, [ content ])
+      },
+
+      __getContent: function __getContent (h) {
+        var slotVm = slot(this, this.hasError === true ? 'error' : 'default');
+
+        if (this.basic === true) {
+          return h('div', {
+            key: 'content',
+            staticClass: 'q-img__content absolute-full'
+          }, slotVm)
+        }
+
+        var content = this.isLoading === true
+          ? h('div', {
+            key: 'placeholder',
+            staticClass: 'q-img__loading absolute-full flex flex-center'
+          }, this.$scopedSlots.loading !== void 0
+            ? this.$scopedSlots.loading()
+            : (
+              this.noDefaultSpinner === false
+                ? [
+                  h(QSpinner, {
+                    props: {
+                      color: this.spinnerColor,
+                      size: this.spinnerSize
+                    }
+                  })
+                ]
+                : void 0
+            )
+          )
+          : h('div', {
+            key: 'content',
+            staticClass: 'q-img__content absolute-full'
+          }, slotVm);
+
+        return h('transition', {
+          props: { name: 'q-transition--fade' }
+        }, [ content ])
+      }
+    },
+
+    render: function render (h) {
+      return h('div', {
+        class: this.classes,
+        style: this.style,
+        attrs: this.attrs,
+        on: Object.assign({}, this.qListeners)
+      }, [
+        h('div', { style: this.ratioStyle }),
+        this.__getImage(h),
+        this.__getContent(h)
+      ])
+    },
+
+    beforeMount: function beforeMount () {
+      if (this.placeholderSrc !== void 0 && this.ratio === void 0) {
+        var img = new Image();
+        img.src = this.placeholderSrc;
+        this.__computeRatio(img);
+      }
+      this.isLoading === true && this.__load();
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      this.destroyed = true;
+      clearTimeout(this.ratioTimer);
+      this.unwatch !== void 0 && this.unwatch();
+    }
+  });
+
+  var QInfiniteScroll = Vue.extend({
+    name: 'QInfiniteScroll',
+
+    mixins: [ ListenersMixin ],
+
+    props: {
+      offset: {
+        type: Number,
+        default: 500
+      },
+
+      debounce: {
+        type: [ String, Number ],
+        default: 100
+      },
+
+      scrollTarget: {
+        default: void 0
+      },
+
+      initialIndex: Number,
+
+      disable: Boolean,
+      reverse: Boolean
+    },
+
+    data: function data () {
+      return {
+        index: this.initialIndex || 0,
+        fetching: false,
+        working: true
+      }
+    },
+
+    watch: {
+      disable: function disable (val) {
+        if (val === true) {
+          this.stop();
+        }
+        else {
+          this.resume();
+        }
+      },
+
+      scrollTarget: function scrollTarget () {
+        this.updateScrollTarget();
+      },
+
+      debounce: function debounce (val) {
+        this.__setDebounce(val);
+      }
+    },
+
+    methods: {
+      poll: function poll () {
+        if (this.disable === true || this.fetching === true || this.working === false) {
+          return
+        }
+
+        var
+          scrollHeight = getScrollHeight(this.__scrollTarget),
+          scrollPosition = getScrollPosition(this.__scrollTarget),
+          containerHeight = height(this.__scrollTarget);
+
+        if (this.reverse === false) {
+          if (scrollPosition + containerHeight + this.offset >= scrollHeight) {
+            this.trigger();
+          }
+        }
+        else {
+          if (scrollPosition < this.offset) {
+            this.trigger();
+          }
+        }
+      },
+
+      trigger: function trigger () {
+        var this$1 = this;
+
+        if (this.disable === true || this.fetching === true || this.working === false) {
+          return
+        }
+
+        this.index++;
+        this.fetching = true;
+
+        var heightBefore = getScrollHeight(this.__scrollTarget);
+
+        this.$emit('load', this.index, function (stop) {
+          if (this$1.working === true) {
+            this$1.fetching = false;
+            this$1.$nextTick(function () {
+              if (this$1.reverse === true) {
+                var
+                  heightAfter = getScrollHeight(this$1.__scrollTarget),
+                  scrollPosition = getScrollPosition(this$1.__scrollTarget),
+                  heightDifference = heightAfter - heightBefore;
+
+                setScrollPosition(this$1.__scrollTarget, scrollPosition + heightDifference);
+              }
+
+              if (stop === true) {
+                this$1.stop();
+              }
+              else {
+                this$1.$el.closest('body') && this$1.poll();
+              }
+            });
+          }
+        });
+      },
+
+      reset: function reset () {
+        this.index = 0;
+      },
+
+      resume: function resume () {
+        if (this.working === false) {
+          this.working = true;
+          this.__scrollTarget.addEventListener('scroll', this.poll, listenOpts.passive);
+        }
+        this.immediatePoll();
+      },
+
+      stop: function stop () {
+        if (this.working === true) {
+          this.working = false;
+          this.fetching = false;
+          this.__scrollTarget.removeEventListener('scroll', this.poll, listenOpts.passive);
+        }
+      },
+
+      updateScrollTarget: function updateScrollTarget () {
+        if (this.__scrollTarget && this.working === true) {
+          this.__scrollTarget.removeEventListener('scroll', this.poll, listenOpts.passive);
+        }
+
+        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
+
+        if (this.working === true) {
+          this.__scrollTarget.addEventListener('scroll', this.poll, listenOpts.passive);
+        }
+      },
+
+      setIndex: function setIndex (index) {
+        this.index = index;
+      },
+
+      __setDebounce: function __setDebounce (val) {
+        val = parseInt(val, 10);
+        if (val <= 0) {
+          this.poll = this.immediatePoll;
+        }
+        else {
+          this.poll = debounce(this.immediatePoll, isNaN(val) === true ? 100 : val);
+        }
+      }
+    },
+
+    mounted: function mounted () {
+      this.immediatePoll = this.poll;
+      this.__setDebounce(this.debounce);
+
+      this.updateScrollTarget();
+
+      if (this.reverse === true) {
+        var
+          scrollHeight = getScrollHeight(this.__scrollTarget),
+          containerHeight = height(this.__scrollTarget);
+
+        setScrollPosition(this.__scrollTarget, scrollHeight - containerHeight);
+      }
+
+      this.immediatePoll();
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      if (this.working === true) {
+        this.__scrollTarget.removeEventListener('scroll', this.poll, listenOpts.passive);
+      }
+    },
+
+    render: function render (h) {
+      var child = uniqueSlot(this, 'default', []);
+
+      if (this.disable !== true && this.working === true) {
+        child[this.reverse === false ? 'push' : 'unshift'](
+          h('div', {
+            staticClass: 'q-infinite-scroll__loading',
+            class: this.fetching === true ? '' : 'invisible'
+          }, slot(this, 'loading'))
+        );
+      }
+
+      return h('div', {
+        staticClass: 'q-infinite-scroll',
+        on: Object.assign({}, this.qListeners)
+      }, child)
+    }
+  });
+
+  var QInnerLoading = Vue.extend({
+    name: 'QInnerLoading',
+
+    mixins: [ ListenersMixin, DarkMixin, TransitionMixin ],
+
+    props: {
+      showing: Boolean,
+      color: String,
+
+      size: {
+        type: [String, Number],
+        default: 42
+      }
+    },
+
+    render: function render (h) {
+      var child = this.showing === true
+        ? [
+          h('div',
+            {
+              staticClass: 'q-inner-loading absolute-full column flex-center',
+              class: this.isDark === true ? 'q-inner-loading--dark' : null,
+              on: Object.assign({}, this.qListeners)
+            },
+            this.$scopedSlots.default !== void 0
+              ? this.$scopedSlots.default()
+              : [
+                h(QSpinner, {
+                  props: {
+                    size: this.size,
+                    color: this.color
+                  }
+                })
+              ]
+          )
+        ]
+        : void 0;
+
+      return h('transition', {
+        props: {
+          name: this.transition,
+          appear: true
+        }
+      }, child)
+    }
+  });
 
   // leave NAMED_MASKS at top of file (code referenced from docs)
   var NAMED_MASKS = {
@@ -14551,8 +19564,9 @@
 
         var
           maskMarked = this.maskMarked,
-          padPos = maskMarked.indexOf(MARKER),
           pad = '';
+        var
+          padPos = maskMarked.indexOf(MARKER);
 
         if (padPos > -1) {
           for (var i = size - maskMarked.length; i > 0; i--) {
@@ -14698,7 +19712,7 @@
 
         changed === true && (this.innerValue = masked);
 
-        this.$nextTick(function () {
+        document.activeElement === inp && this.$nextTick(function () {
           if (masked === this$1.maskReplaced) {
             var cursor = this$1.reverseFillMask === true ? this$1.maskReplaced.length : 0;
             inp.setSelectionRange(cursor, cursor, 'forward');
@@ -15180,6 +20194,8 @@
           var inp = e.target;
           this.__moveCursorForPaste(inp, inp.selectionStart, inp.selectionEnd);
         }
+
+        this.$emit('paste', e);
       },
 
       __onInput: function __onInput (e) {
@@ -15217,9 +20233,15 @@
             delete this$1.tempValue;
           }
 
-          if (this$1.value !== val) {
+          if (this$1.value !== val && this$1.emitCachedValue !== val) {
+            this$1.emitCachedValue = val;
+
             stopWatcher === true && (this$1.stopValueWatcher = true);
             this$1.$emit('input', val);
+
+            this$1.$nextTick(function () {
+              this$1.emitCachedValue === val && (this$1.emitCachedValue = NaN);
+            });
           }
 
           this$1.emitValueFn = void 0;
@@ -15314,6 +20336,10 @@
       }
     },
 
+    created: function created () {
+      this.emitCachedValue = NaN;
+    },
+
     mounted: function mounted () {
       // textarea only
       this.autogrow === true && this.__adjustHeight();
@@ -15324,3740 +20350,13 @@
     }
   });
 
-  var QTooltip = Vue.extend({
-    name: 'QTooltip',
-
-    mixins: [ AnchorMixin, ModelToggleMixin, PortalMixin, TransitionMixin ],
-
-    props: {
-      maxHeight: {
-        type: String,
-        default: null
-      },
-      maxWidth: {
-        type: String,
-        default: null
-      },
-
-      transitionShow: {
-        default: 'jump-down'
-      },
-      transitionHide: {
-        default: 'jump-up'
-      },
-
-      anchor: {
-        type: String,
-        default: 'bottom middle',
-        validator: validatePosition
-      },
-      self: {
-        type: String,
-        default: 'top middle',
-        validator: validatePosition
-      },
-      offset: {
-        type: Array,
-        default: function () { return [14, 14]; },
-        validator: validateOffset
-      },
-
-      scrollTarget: {
-        default: void 0
-      },
-
-      delay: {
-        type: Number,
-        default: 0
-      },
-
-      hideDelay: {
-        type: Number,
-        default: 0
-      }
-    },
-
-    computed: {
-      anchorOrigin: function anchorOrigin () {
-        return parsePosition(this.anchor)
-      },
-
-      selfOrigin: function selfOrigin () {
-        return parsePosition(this.self)
-      },
-
-      hideOnRouteChange: function hideOnRouteChange () {
-        return this.persistent !== true
-      }
-    },
-
-    methods: {
-      __show: function __show (evt) {
-        var this$1 = this;
-
-        this.__showPortal();
-
-        this.__nextTick(function () {
-          this$1.observer = new MutationObserver(function () { return this$1.updatePosition(); });
-          this$1.observer.observe(this$1.__portal.$el, { attributes: false, childList: true, characterData: true, subtree: true });
-          this$1.updatePosition();
-          this$1.__configureScrollTarget();
-        });
-
-        this.__setTimeout(function () {
-          this$1.$emit('show', evt);
-        }, 300);
-      },
-
-      __hide: function __hide (evt) {
-        var this$1 = this;
-
-        this.__anchorCleanup();
-
-        this.__setTimeout(function () {
-          this$1.__hidePortal();
-          this$1.$emit('hide', evt);
-        }, 300);
-      },
-
-      __anchorCleanup: function __anchorCleanup () {
-        if (this.observer !== void 0) {
-          this.observer.disconnect();
-          this.observer = void 0;
-        }
-
-        this.__unconfigureScrollTarget();
-        cleanEvt(this, 'tooltipTemp');
-      },
-
-      updatePosition: function updatePosition () {
-        if (this.anchorEl === void 0 || this.__portal === void 0) {
-          return
-        }
-
-        var el = this.__portal.$el;
-
-        if (el.nodeType === 8) { // IE replaces the comment with delay
-          setTimeout(this.updatePosition, 25);
-          return
-        }
-
-        setPosition({
-          el: el,
-          offset: this.offset,
-          anchorEl: this.anchorEl,
-          anchorOrigin: this.anchorOrigin,
-          selfOrigin: this.selfOrigin,
-          maxHeight: this.maxHeight,
-          maxWidth: this.maxWidth
-        });
-      },
-
-      __delayShow: function __delayShow (evt) {
-        var this$1 = this;
-
-        if (this.$q.platform.is.mobile === true) {
-          clearSelection();
-          document.body.classList.add('non-selectable');
-
-          var target = getTouchTarget(this.anchorEl);
-          var evts = ['touchmove', 'touchcancel', 'touchend', 'click']
-            .map(function (e) { return ([ target, e, '__delayHide', 'passiveCapture' ]); });
-
-          addEvt(this, 'tooltipTemp', evts);
-        }
-
-        this.__setTimeout(function () {
-          this$1.show(evt);
-        }, this.delay);
-      },
-
-      __delayHide: function __delayHide (evt) {
-        var this$1 = this;
-
-        this.__clearTimeout();
-
-        if (this.$q.platform.is.mobile === true) {
-          cleanEvt(this, 'tooltipTemp');
-          clearSelection();
-          // delay needed otherwise selection still occurs
-          setTimeout(function () {
-            document.body.classList.remove('non-selectable');
-          }, 10);
-        }
-
-        this.__setTimeout(function () {
-          this$1.hide(evt);
-        }, this.hideDelay);
-      },
-
-      __configureAnchorEl: function __configureAnchorEl () {
-        if (this.noParentEvent === true || this.anchorEl === void 0) { return }
-
-        var evts = this.$q.platform.is.mobile === true
-          ? [
-            [ this.anchorEl, 'touchstart', '__delayShow', 'passive' ]
-          ]
-          : [
-            [ this.anchorEl, 'mouseenter', '__delayShow', 'passive' ],
-            [ this.anchorEl, 'mouseleave', '__delayHide', 'passive' ]
-          ];
-
-        addEvt(this, 'anchor', evts);
-      },
-
-      __unconfigureScrollTarget: function __unconfigureScrollTarget () {
-        if (this.__scrollTarget !== void 0) {
-          this.__changeScrollEvent(this.__scrollTarget);
-          this.__scrollTarget = void 0;
-        }
-      },
-
-      __configureScrollTarget: function __configureScrollTarget () {
-        if (this.anchorEl !== void 0 || this.scrollTarget !== void 0) {
-          this.__scrollTarget = getScrollTarget(this.anchorEl, this.scrollTarget);
-          var fn = this.noParentEvent === true
-            ? this.updatePosition
-            : this.hide;
-
-          this.__changeScrollEvent(this.__scrollTarget, fn);
-        }
-      },
-
-      __renderPortal: function __renderPortal (h) {
-        return h('transition', {
-          props: { name: this.transition }
-        }, [
-          this.showing === true ? h('div', {
-            staticClass: 'q-tooltip q-tooltip--style q-position-engine no-pointer-events',
-            class: this.contentClass,
-            style: this.contentStyle,
-            attrs: {
-              role: 'complementary'
-            }
-          }, slot(this, 'default')) : null
-        ])
-      }
-    },
-
-    mounted: function mounted () {
-      this.__processModelChange(this.value);
-    }
-  });
-
-  var QList = Vue.extend({
-    name: 'QList',
-
-    mixins: [ ListenersMixin, DarkMixin ],
-
-    props: {
-      bordered: Boolean,
-      dense: Boolean,
-      separator: Boolean,
-      padding: Boolean
-    },
-
-    computed: {
-      classes: function classes () {
-        return 'q-list' +
-          (this.bordered === true ? ' q-list--bordered' : '') +
-          (this.dense === true ? ' q-list--dense' : '') +
-          (this.separator === true ? ' q-list--separator' : '') +
-          (this.isDark === true ? ' q-list--dark' : '') +
-          (this.padding === true ? ' q-list--padding' : '')
-      }
-    },
-
-    render: function render (h) {
-      return h('div', {
-        class: this.classes,
-        on: Object.assign({}, this.qListeners)
-      }, slot(this, 'default'))
-    }
-  });
-
-  var QItem = Vue.extend({
-    name: 'QItem',
-
-    mixins: [ DarkMixin, RouterLinkMixin, TagMixin, ListenersMixin ],
-
-    props: {
-      active: Boolean,
-
-      clickable: Boolean,
-      dense: Boolean,
-      insetLevel: Number,
-
-      tabindex: [ String, Number ],
-
-      focused: Boolean,
-      manualFocus: Boolean
-    },
-
-    computed: {
-      isActionable: function isActionable () {
-        return this.clickable === true ||
-          this.hasRouterLink === true ||
-          this.tag === 'a' ||
-          this.tag === 'label'
-      },
-
-      isClickable: function isClickable () {
-        return this.disable !== true && this.isActionable === true
-      },
-
-      classes: function classes () {
-        var obj;
-
-        return ( obj = {
-          'q-item--clickable q-link cursor-pointer': this.isClickable,
-          'q-focusable q-hoverable': this.isClickable === true && this.manualFocus === false,
-
-          'q-manual-focusable': this.isClickable === true && this.manualFocus === true,
-          'q-manual-focusable--focused': this.isClickable === true && this.focused === true,
-
-          'q-item--dense': this.dense,
-          'q-item--dark': this.isDark,
-          'q-item--active': this.active
-        }, obj[this.activeClass] = this.active === true && this.hasRouterLink !== true && this.activeClass !== void 0, obj['disabled'] = this.disable, obj )
-      },
-
-      style: function style () {
-        var obj;
-
-        if (this.insetLevel !== void 0) {
-          var dir = this.$q.lang.rtl === true ? 'Right' : 'Left';
-          return ( obj = {}, obj['padding' + dir] = (16 + this.insetLevel * 56) + 'px', obj )
-        }
-      },
-
-      onEvents: function onEvents () {
-        return Object.assign({}, this.qListeners,
-          {click: this.__onClick,
-          keyup: this.__onKeyup})
-      }
-    },
-
-    methods: {
-      __getContent: function __getContent (h) {
-        var child = uniqueSlot(this, 'default', []);
-        this.isClickable === true && child.unshift(
-          h('div', { staticClass: 'q-focus-helper', attrs: { tabindex: -1 }, ref: 'blurTarget' })
-        );
-        return child
-      },
-
-      __onClick: function __onClick (e) {
-        if (this.isClickable === true) {
-          if (this.$refs.blurTarget !== void 0) {
-            if (e.qKeyEvent !== true && document.activeElement === this.$el) {
-              this.$refs.blurTarget.focus();
-            }
-            else if (document.activeElement === this.$refs.blurTarget) {
-              this.$el.focus();
-            }
-          }
-
-          this.$emit('click', e);
-        }
-      },
-
-      __onKeyup: function __onKeyup (e) {
-        if (this.isClickable === true && isKeyCode(e, 13) === true) {
-          stopAndPrevent(e);
-
-          // for ripple
-          e.qKeyEvent = true;
-
-          // for click trigger
-          var evt = new MouseEvent('click', e);
-          evt.qKeyEvent = true;
-          this.$el.dispatchEvent(evt);
-        }
-
-        this.$emit('keyup', e);
-      }
-    },
-
-    render: function render (h) {
-      var data = {
-        staticClass: 'q-item q-item-type row no-wrap',
-        class: this.classes,
-        style: this.style
-      };
-      data[ this.hasRouterLink === true ? 'nativeOn' : 'on' ] = this.onEvents;
-
-      if (this.isClickable === true) {
-        data.attrs = {
-          tabindex: this.tabindex || '0'
-        };
-      }
-      else if (this.isActionable === true) {
-        data.attrs = {
-          'aria-disabled': ''
-        };
-      }
-
-      if (this.hasRouterLink === true) {
-        data.tag = 'a';
-        data.props = this.routerLinkProps;
-
-        return h('router-link', data, this.__getContent(h))
-      }
-
-      return h(
-        this.tag,
-        data,
-        this.__getContent(h)
-      )
-    }
-  });
-
-  var QItemSection = Vue.extend({
-    name: 'QItemSection',
-
-    mixins: [ ListenersMixin ],
-
-    props: {
-      avatar: Boolean,
-      thumbnail: Boolean,
-      side: Boolean,
-      top: Boolean,
-      noWrap: Boolean
-    },
-
-    computed: {
-      classes: function classes () {
-        var obj;
-
-        var side = this.avatar || this.side || this.thumbnail;
-
-        return ( obj = {
-          'q-item__section--top': this.top,
-          'q-item__section--avatar': this.avatar,
-          'q-item__section--thumbnail': this.thumbnail,
-          'q-item__section--side': side,
-          'q-item__section--nowrap': this.noWrap,
-          'q-item__section--main': !side
-        }, obj[("justify-" + (this.top ? 'start' : 'center'))] = true, obj )
-      }
-    },
-
-    render: function render (h) {
-      return h('div', {
-        staticClass: 'q-item__section column',
-        class: this.classes,
-        on: Object.assign({}, this.qListeners)
-      }, slot(this, 'default'))
-    }
-  });
-
-  function run (e, btn, vm) {
-    if (btn.handler) {
-      btn.handler(e, vm, vm.caret);
-    }
-    else {
-      vm.runCmd(btn.cmd, btn.param);
-    }
-  }
-
-  function __getGroup (h, children) {
-    return h('div', {
-      staticClass: 'q-editor__toolbar-group'
-    }, children)
-  }
-
-  function getBtn (h, vm, btn, clickHandler, active) {
-    if ( active === void 0 ) active = false;
-
-    var
-      toggled = active || (btn.type === 'toggle'
-        ? (btn.toggled ? btn.toggled(vm) : btn.cmd && vm.caret.is(btn.cmd, btn.param))
-        : false),
-      child = [],
-      events = {
-        click: function click (e) {
-          clickHandler && clickHandler();
-          run(e, btn, vm);
-        }
-      };
-
-    if (btn.tip && vm.$q.platform.is.desktop) {
-      var Key = btn.key
-        ? h('div', [h('small', ("(CTRL + " + (String.fromCharCode(btn.key)) + ")"))])
-        : null;
-      child.push(
-        h(QTooltip, { props: { delay: 1000 } }, [
-          h('div', { domProps: { innerHTML: btn.tip } }),
-          Key
-        ])
-      );
-    }
-
-    return h(QBtn, {
-      props: Object.assign({}, vm.buttonProps,
-        {icon: btn.icon,
-        color: toggled ? btn.toggleColor || vm.toolbarToggleColor : btn.color || vm.toolbarColor,
-        textColor: toggled && !vm.toolbarPush ? null : btn.textColor || vm.toolbarTextColor,
-        label: btn.label,
-        disable: btn.disable ? (typeof btn.disable === 'function' ? btn.disable(vm) : true) : false,
-        size: 'sm'}),
-      on: events
-    }, child)
-  }
-
-  function getDropdown (h, vm, btn) {
-    var
-      label = btn.label,
-      icon = btn.icon,
-      onlyIcons = btn.list === 'only-icons',
-      contentClass,
-      Items;
-
-    function closeDropdown () {
-      Dropdown.componentInstance.hide();
-    }
-
-    if (onlyIcons) {
-      Items = btn.options.map(function (btn) {
-        var active = btn.type === void 0
-          ? vm.caret.is(btn.cmd, btn.param)
-          : false;
-
-        if (active) {
-          label = btn.tip;
-          icon = btn.icon;
-        }
-        return getBtn(h, vm, btn, closeDropdown, active)
-      });
-      contentClass = vm.toolbarBackgroundClass;
-      Items = [
-        __getGroup(h, Items)
-      ];
-    }
-    else {
-      var activeClass = vm.toolbarToggleColor !== void 0
-        ? ("text-" + (vm.toolbarToggleColor))
-        : null;
-      var inactiveClass = vm.toolbarTextColor !== void 0
-        ? ("text-" + (vm.toolbarTextColor))
-        : null;
-
-      Items = btn.options.map(function (btn) {
-        var disable = btn.disable ? btn.disable(vm) : false;
-        var active = btn.type === void 0
-          ? vm.caret.is(btn.cmd, btn.param)
-          : false;
-
-        if (active) {
-          label = btn.tip;
-          icon = btn.icon;
-        }
-
-        var htmlTip = btn.htmlTip;
-
-        return h(
-          QItem,
-          {
-            props: { active: active, activeClass: activeClass, clickable: true, disable: disable, dense: true },
-            on: {
-              click: function click (e) {
-                closeDropdown();
-                vm.$refs.content && vm.$refs.content.focus();
-                vm.caret.restore();
-                run(e, btn, vm);
-              }
-            }
-          },
-          [
-            btn.list === 'no-icons'
-              ? null
-              : h(QItemSection, {
-                class: active ? activeClass : inactiveClass,
-                props: { side: true }
-              }, [
-                h(QIcon, { props: { name: btn.icon } })
-              ]),
-
-            h(QItemSection, [
-              htmlTip
-                ? h('div', {
-                  domProps: { innerHTML: btn.htmlTip }
-                })
-                : (btn.tip ? h('div', [ btn.tip ]) : null)
-            ])
-          ]
-        )
-      });
-      contentClass = [vm.toolbarBackgroundClass, inactiveClass];
-      Items = [
-        h(QList, [ Items ])
-      ];
-    }
-
-    var highlight = btn.highlight && label !== btn.label;
-    var Dropdown = h(
-      QBtnDropdown,
-      {
-        props: Object.assign({}, vm.buttonProps,
-          {noCaps: true,
-          noWrap: true,
-          color: highlight ? vm.toolbarToggleColor : vm.toolbarColor,
-          textColor: highlight && !vm.toolbarPush ? null : vm.toolbarTextColor,
-          label: btn.fixedLabel ? btn.label : label,
-          icon: btn.fixedIcon ? btn.icon : icon,
-          contentClass: contentClass})
-      },
-      Items
-    );
-    return Dropdown
-  }
-
-  function getToolbar (h, vm) {
-    if (vm.caret) {
-      return vm.buttons
-        .filter(function (f) {
-          return !vm.isViewingSource || f.find(function (fb) { return fb.cmd === 'viewsource'; })
-        })
-        .map(function (group) { return __getGroup(
-          h,
-          group.map(function (btn) {
-            if (vm.isViewingSource && btn.cmd !== 'viewsource') {
-              return false
-            }
-
-            if (btn.type === 'slot') {
-              return slot(vm, btn.slot)
-            }
-
-            if (btn.type === 'dropdown') {
-              return getDropdown(h, vm, btn)
-            }
-
-            return getBtn(h, vm, btn)
-          })
-        ); })
-    }
-  }
-
-  function getFonts (defaultFont, defaultFontLabel, defaultFontIcon, fonts) {
-    if ( fonts === void 0 ) fonts = {};
-
-    var aliases = Object.keys(fonts);
-    if (aliases.length === 0) {
-      return {}
-    }
-
-    var def = {
-      default_font: {
-        cmd: 'fontName',
-        param: defaultFont,
-        icon: defaultFontIcon,
-        tip: defaultFontLabel
-      }
-    };
-
-    aliases.forEach(function (alias) {
-      var name = fonts[alias];
-      def[alias] = {
-        cmd: 'fontName',
-        param: name,
-        icon: defaultFontIcon,
-        tip: name,
-        htmlTip: ("<font face=\"" + name + "\">" + name + "</font>")
-      };
-    });
-
-    return def
-  }
-
-  function getLinkEditor (h, vm, ie11) {
-    if (vm.caret) {
-      var color = vm.toolbarColor || vm.toolbarTextColor;
-      var link = vm.editLinkUrl;
-      var updateLink = function () {
-        vm.caret.restore();
-
-        if (link !== vm.editLinkUrl) {
-          document.execCommand('createLink', false, link === '' ? ' ' : link);
-        }
-
-        vm.editLinkUrl = null;
-
-        ie11 === true && vm.$nextTick(vm.__onInput);
-      };
-
-      return [
-        h('div', { staticClass: 'q-mx-xs', 'class': ("text-" + color) }, [((vm.$q.lang.editor.url) + ": ")]),
-        h(QInput, {
-          key: 'qedt_btm_input',
-          staticClass: 'q-ma-none q-pa-none col q-editor-input',
-          props: {
-            value: link,
-            color: color,
-            autofocus: true,
-            borderless: true,
-            dense: true
-          },
-          on: {
-            input: function (val) { link = val; },
-            keydown: function (event) {
-              if (shouldIgnoreKey(event) === true) {
-                return
-              }
-
-              switch (event.keyCode) {
-                case 13: // ENTER key
-                  prevent(event);
-                  return updateLink()
-                case 27: // ESCAPE key
-                  prevent(event);
-                  vm.caret.restore();
-                  if (!vm.editLinkUrl || vm.editLinkUrl === 'https://') {
-                    document.execCommand('unlink');
-                  }
-                  vm.editLinkUrl = null;
-                  break
-              }
-            }
-          }
-        }),
-        __getGroup(h, [
-          h(QBtn, {
-            key: 'qedt_btm_rem',
-            attrs: { tabindex: -1 },
-            props: Object.assign({}, vm.buttonProps,
-              {label: vm.$q.lang.label.remove,
-              noCaps: true}),
-            on: {
-              click: function () {
-                vm.caret.restore();
-                document.execCommand('unlink');
-                vm.editLinkUrl = null;
-
-                ie11 === true && vm.$nextTick(vm.__onInput);
-              }
-            }
-          }),
-          h(QBtn, {
-            key: 'qedt_btm_upd',
-            props: Object.assign({}, vm.buttonProps,
-              {label: vm.$q.lang.label.update,
-              noCaps: true}),
-            on: {
-              click: updateLink
-            }
-          })
-        ])
-      ]
-    }
-  }
-
-  function getBlockElement (el, parent) {
-    if (parent && el === parent) {
-      return null
-    }
-
-    var nodeName = el.nodeName.toLowerCase();
-
-    if (['div', 'li', 'ul', 'ol', 'blockquote'].includes(nodeName) === true) {
-      return el
-    }
-
-    var
-      style = window.getComputedStyle
-        ? window.getComputedStyle(el)
-        : el.currentStyle,
-      display = style.display;
-
-    if (display === 'block' || display === 'table') {
-      return el
-    }
-
-    return getBlockElement(el.parentNode)
-  }
-
-  function isChildOf (el, parent) {
-    return !el || el === document.body
-      ? false
-      : (parent === document ? document.body : parent).contains(el.parentNode)
-  }
-
-  var urlRegex = /^https?:\/\//;
-
-  var Caret = function Caret (el, vm) {
-    this.el = el;
-    this.vm = vm;
-    this._range = null;
-  };
-
-  var prototypeAccessors = { selection: { configurable: true },hasSelection: { configurable: true },range: { configurable: true },parent: { configurable: true },blockParent: { configurable: true } };
-
-  prototypeAccessors.selection.get = function () {
-    if (this.el) {
-      var sel = document.getSelection();
-
-      // only when the selection in element
-      if (isChildOf(sel.anchorNode, this.el) && isChildOf(sel.focusNode, this.el)) {
-        return sel
-      }
-    }
-
-    return null
-  };
-
-  prototypeAccessors.hasSelection.get = function () {
-    return this.selection !== null
-      ? this.selection.toString().length > 0
-      : false
-  };
-
-  prototypeAccessors.range.get = function () {
-    var sel = this.selection;
-
-    if (sel !== null && sel.rangeCount) {
-      return sel.getRangeAt(0)
-    }
-
-    return this._range
-  };
-
-  prototypeAccessors.parent.get = function () {
-    var range = this.range;
-
-    if (range !== null) {
-      var node = range.startContainer;
-
-      return node.nodeType === document.ELEMENT_NODE
-        ? node
-        : node.parentNode
-    }
-
-    return null
-  };
-
-  prototypeAccessors.blockParent.get = function () {
-    var parent = this.parent;
-
-    if (parent !== null) {
-      return getBlockElement(parent, this.el)
-    }
-
-    return null
-  };
-
-  Caret.prototype.save = function save (range) {
-      if ( range === void 0 ) range = this.range;
-
-    if (range !== null) {
-      this._range = range;
-    }
-  };
-
-  Caret.prototype.restore = function restore (range) {
-      if ( range === void 0 ) range = this._range;
-
-    var
-      r = document.createRange(),
-      sel = document.getSelection();
-
-    if (range !== null) {
-      r.setStart(range.startContainer, range.startOffset);
-      r.setEnd(range.endContainer, range.endOffset);
-      sel.removeAllRanges();
-      sel.addRange(r);
-    }
-    else {
-      sel.selectAllChildren(this.el);
-      sel.collapseToEnd();
-    }
-  };
-
-  Caret.prototype.hasParent = function hasParent (name, spanLevel) {
-    var el = spanLevel
-      ? this.parent
-      : this.blockParent;
-
-    return el !== null
-      ? el.nodeName.toLowerCase() === name.toLowerCase()
-      : false
-  };
-
-  Caret.prototype.hasParents = function hasParents (list, recursive, el) {
-      if ( el === void 0 ) el = this.parent;
-
-    if (el === null) {
-      return false
-    }
-
-    if (el !== null && list.includes(el.nodeName.toLowerCase()) === true) {
-      return true
-    }
-
-    return recursive === true
-      ? this.hasParents(list, recursive, el.parentNode)
-      : false
-  };
-
-  Caret.prototype.is = function is (cmd, param) {
-    switch (cmd) {
-      case 'formatBlock':
-        if (param === 'DIV' && this.parent === this.el) {
-          return true
-        }
-        return this.hasParent(param, param === 'PRE')
-      case 'link':
-        return this.hasParent('A', true)
-      case 'fontSize':
-        return document.queryCommandValue(cmd) === param
-      case 'fontName':
-        var res = document.queryCommandValue(cmd);
-        return res === ("\"" + param + "\"") || res === param
-      case 'fullscreen':
-        return this.vm.inFullscreen
-      case 'viewsource':
-        return this.vm.isViewingSource
-      case void 0:
-        return false
-      default:
-        var state = document.queryCommandState(cmd);
-        return param !== void 0 ? state === param : state
-    }
-  };
-
-  Caret.prototype.getParentAttribute = function getParentAttribute (attrib) {
-    if (this.parent !== null) {
-      return this.parent.getAttribute(attrib)
-    }
-
-    return null
-  };
-
-  Caret.prototype.can = function can (name) {
-    if (name === 'outdent') {
-      return this.hasParents(['blockquote', 'li'], true)
-    }
-
-    if (name === 'indent') {
-      return this.hasParents(['li'], true)
-    }
-
-    if (name === 'link') {
-      return this.selection !== null || this.is('link')
-    }
-  };
-
-  Caret.prototype.apply = function apply (cmd, param, done) {
-      if ( done === void 0 ) done = noop;
-
-    if (cmd === 'formatBlock') {
-      if (['BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(param) && this.is(cmd, param)) {
-        cmd = 'outdent';
-        param = null;
-      }
-
-      if (param === 'PRE' && this.is(cmd, 'PRE')) {
-        param = 'P';
-      }
-    }
-    else if (cmd === 'print') {
-      done();
-
-      var win = window.open();
-
-      win.document.write(("\n        <!doctype html>\n        <html>\n          <head>\n            <title>Print - " + (document.title) + "</title>\n          </head>\n          <body>\n            <div>" + (this.el.innerHTML) + "</div>\n          </body>\n        </html>\n      "));
-      win.print();
-      win.close();
-
-      return
-    }
-    else if (cmd === 'link') {
-      var link = this.getParentAttribute('href');
-
-      if (link === null) {
-        var selection = this.selectWord(this.selection);
-        var url = selection ? selection.toString() : '';
-
-        if (!url.length) {
-          return
-        }
-
-        this.vm.editLinkUrl = urlRegex.test(url) ? url : 'https://';
-        document.execCommand('createLink', false, this.vm.editLinkUrl);
-
-        this.save(selection.getRangeAt(0));
-      }
-      else {
-        this.vm.editLinkUrl = link;
-
-        this.range.selectNodeContents(this.parent);
-        this.save();
-      }
-
-      return
-    }
-    else if (cmd === 'fullscreen') {
-      this.vm.toggleFullscreen();
-      done();
-
-      return
-    }
-    else if (cmd === 'viewsource') {
-      this.vm.isViewingSource = this.vm.isViewingSource === false;
-      this.vm.__setContent(this.vm.value);
-      done();
-
-      return
-    }
-
-    document.execCommand(cmd, false, param);
-
-    done();
-  };
-
-  Caret.prototype.selectWord = function selectWord (sel) {
-    if (sel === null || sel.isCollapsed !== true || /* IE 11 */ sel.modify === void 0) {
-      return sel
-    }
-
-    // Detect if selection is backwards
-    var range = document.createRange();
-    range.setStart(sel.anchorNode, sel.anchorOffset);
-    range.setEnd(sel.focusNode, sel.focusOffset);
-    var direction = range.collapsed ? ['backward', 'forward'] : ['forward', 'backward'];
-    range.detach();
-
-    // modify() works on the focus of the selection
-    var
-      endNode = sel.focusNode,
-      endOffset = sel.focusOffset;
-    sel.collapse(sel.anchorNode, sel.anchorOffset);
-    sel.modify('move', direction[0], 'character');
-    sel.modify('move', direction[1], 'word');
-    sel.extend(endNode, endOffset);
-    sel.modify('extend', direction[1], 'character');
-    sel.modify('extend', direction[0], 'word');
-
-    return sel
-  };
-
-  Object.defineProperties( Caret.prototype, prototypeAccessors );
-
-  var
-    toString = Object.prototype.toString,
-    hasOwn = Object.prototype.hasOwnProperty,
-    class2type = {};
-
-  'Boolean Number String Function Array Date RegExp Object'.split(' ').forEach(function (name) {
-    class2type['[object ' + name + ']'] = name.toLowerCase();
-  });
-
-  function type (obj) {
-    return obj === null ? String(obj) : class2type[toString.call(obj)] || 'object'
-  }
-
-  function isPlainObject (obj) {
-    if (!obj || type(obj) !== 'object') {
-      return false
-    }
-
-    if (obj.constructor &&
-      !hasOwn.call(obj, 'constructor') &&
-      !hasOwn.call(obj.constructor.prototype, 'isPrototypeOf')) {
-      return false
-    }
-
-    var key;
-    for (key in obj) {}
-
-    return key === undefined || hasOwn.call(obj, key)
-  }
-
-  function extend () {
-    var arguments$1 = arguments;
-
-    var
-      options, name, src, copy, copyIsArray, clone,
-      target = arguments[0] || {},
-      i = 1,
-      length = arguments.length,
-      deep = false;
-
-    if (typeof target === 'boolean') {
-      deep = target;
-      target = arguments[1] || {};
-      i = 2;
-    }
-
-    if (Object(target) !== target && type(target) !== 'function') {
-      target = {};
-    }
-
-    if (length === i) {
-      target = this;
-      i--;
-    }
-
-    for (; i < length; i++) {
-      if ((options = arguments$1[i]) !== null) {
-        for (name in options) {
-          src = target[name];
-          copy = options[name];
-
-          if (target === copy) {
-            continue
-          }
-
-          if (deep && copy && (isPlainObject(copy) || (copyIsArray = type(copy) === 'array'))) {
-            if (copyIsArray) {
-              copyIsArray = false;
-              clone = src && type(src) === 'array' ? src : [];
-            }
-            else {
-              clone = src && isPlainObject(src) ? src : {};
-            }
-
-            target[name] = extend(deep, clone, copy);
-          }
-          else if (copy !== undefined) {
-            target[name] = copy;
-          }
-        }
-      }
-    }
-
-    return target
-  }
-
-  var QEditor = Vue.extend({
-    name: 'QEditor',
-
-    mixins: [ ListenersMixin, FullscreenMixin, DarkMixin ],
-
-    props: {
-      value: {
-        type: String,
-        required: true
-      },
-      readonly: Boolean,
-      disable: Boolean,
-      minHeight: {
-        type: String,
-        default: '10rem'
-      },
-      maxHeight: String,
-      height: String,
-      definitions: Object,
-      fonts: Object,
-      placeholder: String,
-
-      toolbar: {
-        type: Array,
-        validator: function (v) { return v.length === 0 || v.every(function (group) { return group.length; }); },
-        default: function default$1 () {
-          return [
-            ['left', 'center', 'right', 'justify'],
-            ['bold', 'italic', 'underline', 'strike'],
-            ['undo', 'redo']
-          ]
-        }
-      },
-      toolbarColor: String,
-      toolbarBg: String,
-      toolbarTextColor: String,
-      toolbarToggleColor: {
-        type: String,
-        default: 'primary'
-      },
-      toolbarOutline: Boolean,
-      toolbarPush: Boolean,
-      toolbarRounded: Boolean,
-
-      contentStyle: Object,
-      contentClass: [Object, Array, String],
-
-      square: Boolean,
-      flat: Boolean,
-      dense: Boolean
-    },
-
-    computed: {
-      editable: function editable () {
-        return !this.readonly && !this.disable
-      },
-
-      hasToolbar: function hasToolbar () {
-        return this.toolbar && this.toolbar.length > 0
-      },
-
-      toolbarBackgroundClass: function toolbarBackgroundClass () {
-        if (this.toolbarBg) {
-          return ("bg-" + (this.toolbarBg))
-        }
-      },
-
-      buttonProps: function buttonProps () {
-        var flat = this.toolbarOutline !== true &&
-          this.toolbarPush !== true;
-
-        return {
-          type: 'a',
-          flat: flat,
-          noWrap: true,
-          outline: this.toolbarOutline,
-          push: this.toolbarPush,
-          rounded: this.toolbarRounded,
-          dense: true,
-          color: this.toolbarColor,
-          disable: !this.editable,
-          size: 'sm'
-        }
-      },
-
-      buttonDef: function buttonDef () {
-        var
-          e = this.$q.lang.editor,
-          i = this.$q.iconSet.editor;
-
-        return {
-          bold: { cmd: 'bold', icon: i.bold, tip: e.bold, key: 66 },
-          italic: { cmd: 'italic', icon: i.italic, tip: e.italic, key: 73 },
-          strike: { cmd: 'strikeThrough', icon: i.strikethrough, tip: e.strikethrough, key: 83 },
-          underline: { cmd: 'underline', icon: i.underline, tip: e.underline, key: 85 },
-          unordered: { cmd: 'insertUnorderedList', icon: i.unorderedList, tip: e.unorderedList },
-          ordered: { cmd: 'insertOrderedList', icon: i.orderedList, tip: e.orderedList },
-          subscript: { cmd: 'subscript', icon: i.subscript, tip: e.subscript, htmlTip: 'x<subscript>2</subscript>' },
-          superscript: { cmd: 'superscript', icon: i.superscript, tip: e.superscript, htmlTip: 'x<superscript>2</superscript>' },
-          link: { cmd: 'link', disable: function (vm) { return vm.caret && !vm.caret.can('link'); }, icon: i.hyperlink, tip: e.hyperlink, key: 76 },
-          fullscreen: { cmd: 'fullscreen', icon: i.toggleFullscreen, tip: e.toggleFullscreen, key: 70 },
-          viewsource: { cmd: 'viewsource', icon: i.viewSource, tip: e.viewSource },
-
-          quote: { cmd: 'formatBlock', param: 'BLOCKQUOTE', icon: i.quote, tip: e.quote, key: 81 },
-          left: { cmd: 'justifyLeft', icon: i.left, tip: e.left },
-          center: { cmd: 'justifyCenter', icon: i.center, tip: e.center },
-          right: { cmd: 'justifyRight', icon: i.right, tip: e.right },
-          justify: { cmd: 'justifyFull', icon: i.justify, tip: e.justify },
-
-          print: { type: 'no-state', cmd: 'print', icon: i.print, tip: e.print, key: 80 },
-          outdent: { type: 'no-state', disable: function (vm) { return vm.caret && !vm.caret.can('outdent'); }, cmd: 'outdent', icon: i.outdent, tip: e.outdent },
-          indent: { type: 'no-state', disable: function (vm) { return vm.caret && !vm.caret.can('indent'); }, cmd: 'indent', icon: i.indent, tip: e.indent },
-          removeFormat: { type: 'no-state', cmd: 'removeFormat', icon: i.removeFormat, tip: e.removeFormat },
-          hr: { type: 'no-state', cmd: 'insertHorizontalRule', icon: i.hr, tip: e.hr },
-          undo: { type: 'no-state', cmd: 'undo', icon: i.undo, tip: e.undo, key: 90 },
-          redo: { type: 'no-state', cmd: 'redo', icon: i.redo, tip: e.redo, key: 89 },
-
-          h1: { cmd: 'formatBlock', param: 'H1', icon: i.heading1 || i.heading, tip: e.heading1, htmlTip: ("<h1 class=\"q-ma-none\">" + (e.heading1) + "</h1>") },
-          h2: { cmd: 'formatBlock', param: 'H2', icon: i.heading2 || i.heading, tip: e.heading2, htmlTip: ("<h2 class=\"q-ma-none\">" + (e.heading2) + "</h2>") },
-          h3: { cmd: 'formatBlock', param: 'H3', icon: i.heading3 || i.heading, tip: e.heading3, htmlTip: ("<h3 class=\"q-ma-none\">" + (e.heading3) + "</h3>") },
-          h4: { cmd: 'formatBlock', param: 'H4', icon: i.heading4 || i.heading, tip: e.heading4, htmlTip: ("<h4 class=\"q-ma-none\">" + (e.heading4) + "</h4>") },
-          h5: { cmd: 'formatBlock', param: 'H5', icon: i.heading5 || i.heading, tip: e.heading5, htmlTip: ("<h5 class=\"q-ma-none\">" + (e.heading5) + "</h5>") },
-          h6: { cmd: 'formatBlock', param: 'H6', icon: i.heading6 || i.heading, tip: e.heading6, htmlTip: ("<h6 class=\"q-ma-none\">" + (e.heading6) + "</h6>") },
-          p: { cmd: 'formatBlock', param: 'DIV', icon: i.heading, tip: e.paragraph },
-          code: { cmd: 'formatBlock', param: 'PRE', icon: i.code, htmlTip: ("<code>" + (e.code) + "</code>") },
-
-          'size-1': { cmd: 'fontSize', param: '1', icon: i.size1 || i.size, tip: e.size1, htmlTip: ("<font size=\"1\">" + (e.size1) + "</font>") },
-          'size-2': { cmd: 'fontSize', param: '2', icon: i.size2 || i.size, tip: e.size2, htmlTip: ("<font size=\"2\">" + (e.size2) + "</font>") },
-          'size-3': { cmd: 'fontSize', param: '3', icon: i.size3 || i.size, tip: e.size3, htmlTip: ("<font size=\"3\">" + (e.size3) + "</font>") },
-          'size-4': { cmd: 'fontSize', param: '4', icon: i.size4 || i.size, tip: e.size4, htmlTip: ("<font size=\"4\">" + (e.size4) + "</font>") },
-          'size-5': { cmd: 'fontSize', param: '5', icon: i.size5 || i.size, tip: e.size5, htmlTip: ("<font size=\"5\">" + (e.size5) + "</font>") },
-          'size-6': { cmd: 'fontSize', param: '6', icon: i.size6 || i.size, tip: e.size6, htmlTip: ("<font size=\"6\">" + (e.size6) + "</font>") },
-          'size-7': { cmd: 'fontSize', param: '7', icon: i.size7 || i.size, tip: e.size7, htmlTip: ("<font size=\"7\">" + (e.size7) + "</font>") }
-        }
-      },
-
-      buttons: function buttons () {
-        var this$1 = this;
-
-        var userDef = this.definitions || {};
-        var def = this.definitions || this.fonts
-          ? extend(
-            true,
-            {},
-            this.buttonDef,
-            userDef,
-            getFonts(
-              this.defaultFont,
-              this.$q.lang.editor.defaultFont,
-              this.$q.iconSet.editor.font,
-              this.fonts
-            )
-          )
-          : this.buttonDef;
-
-        return this.toolbar.map(
-          function (group) { return group.map(function (token) {
-            if (token.options) {
-              return {
-                type: 'dropdown',
-                icon: token.icon,
-                label: token.label,
-                size: 'sm',
-                dense: true,
-                fixedLabel: token.fixedLabel,
-                fixedIcon: token.fixedIcon,
-                highlight: token.highlight,
-                list: token.list,
-                options: token.options.map(function (item) { return def[item]; })
-              }
-            }
-
-            var obj = def[token];
-
-            if (obj) {
-              return obj.type === 'no-state' || (userDef[token] && (
-                obj.cmd === void 0 || (this$1.buttonDef[obj.cmd] && this$1.buttonDef[obj.cmd].type === 'no-state')
-              ))
-                ? obj
-                : Object.assign({ type: 'toggle' }, obj)
-            }
-            else {
-              return {
-                type: 'slot',
-                slot: token
-              }
-            }
-          }); }
-        )
-      },
-
-      keys: function keys () {
-        var
-          k = {},
-          add = function (btn) {
-            if (btn.key) {
-              k[btn.key] = {
-                cmd: btn.cmd,
-                param: btn.param
-              };
-            }
-          };
-
-        this.buttons.forEach(function (group) {
-          group.forEach(function (token) {
-            if (token.options) {
-              token.options.forEach(add);
-            }
-            else {
-              add(token);
-            }
-          });
-        });
-        return k
-      },
-
-      innerStyle: function innerStyle () {
-        return this.inFullscreen
-          ? this.contentStyle
-          : [
-            {
-              minHeight: this.minHeight,
-              height: this.height,
-              maxHeight: this.maxHeight
-            },
-            this.contentStyle
-          ]
-      },
-
-      innerClass: function innerClass () {
-        return [
-          this.contentClass,
-          { col: this.inFullscreen, 'overflow-auto': this.inFullscreen || this.maxHeight }
-        ]
-      },
-
-      attrs: function attrs () {
-        if (this.disable === true) {
-          return { 'aria-disabled': '' }
-        }
-        if (this.readonly === true) {
-          return { 'aria-readonly': '' }
-        }
-      }
-    },
-
-    data: function data () {
-      return {
-        editWatcher: true,
-        editLinkUrl: null,
-        isViewingSource: false
-      }
-    },
-
-    watch: {
-      value: function value (v) {
-        if (this.editWatcher === true) {
-          this.__setContent(v);
-        }
-        else {
-          this.editWatcher = true;
-        }
-      }
-    },
-
-    methods: {
-      __onInput: function __onInput () {
-        if (this.editWatcher === true && this.$refs.content !== void 0) {
-          var val = this.isViewingSource
-            ? this.$refs.content.innerText
-            : this.$refs.content.innerHTML;
-
-          if (val !== this.value) {
-            this.editWatcher = false;
-            this.$emit('input', val);
-          }
-        }
-      },
-
-      __onKeydown: function __onKeydown (e) {
-        this.$emit('keydown', e);
-
-        if (e.ctrlKey !== true || shouldIgnoreKey(e) === true) {
-          this.refreshToolbar();
-          this.$q.platform.is.ie && this.$nextTick(this.__onInput);
-          return
-        }
-
-        var key = e.keyCode;
-        var target = this.keys[key];
-        if (target !== void 0) {
-          var cmd = target.cmd;
-          var param = target.param;
-          stopAndPrevent(e);
-          this.runCmd(cmd, param, false);
-        }
-      },
-
-      __onClick: function __onClick (e) {
-        this.refreshToolbar();
-        this.$emit('click', e);
-      },
-
-      __onBlur: function __onBlur () {
-        if (this.$refs.content !== void 0) {
-          var ref = this.$refs.content;
-          var scrollTop = ref.scrollTop;
-          var scrollHeight = ref.scrollHeight;
-          this.__offsetBottom = scrollHeight - scrollTop;
-        }
-        this.$q.platform.is.ie !== true && this.caret.save();
-        this.$emit('blur');
-      },
-
-      __onFocus: function __onFocus () {
-        var this$1 = this;
-
-        this.$nextTick(function () {
-          if (this$1.$refs.content !== void 0 && this$1.__offsetBottom !== void 0) {
-            this$1.$refs.content.scrollTop = this$1.$refs.content.scrollHeight - this$1.__offsetBottom;
-          }
-        });
-      },
-
-      __onMouseup: function __onMouseup (e) {
-        this.caret.save();
-        if (this.qListeners.mouseup !== void 0) {
-          this.$emit('mouseup', e);
-        }
-      },
-
-      __onKeyup: function __onKeyup (e) {
-        this.caret.save();
-        if (this.qListeners.keyup !== void 0) {
-          this.$emit('keyup', e);
-        }
-      },
-
-      __onTouchend: function __onTouchend (e) {
-        this.caret.save();
-        if (this.qListeners.touchend !== void 0) {
-          this.$emit('touchend', e);
-        }
-      },
-
-      runCmd: function runCmd (cmd, param, update) {
-        var this$1 = this;
-        if ( update === void 0 ) update = true;
-
-        this.focus();
-        this.caret.restore();
-        this.caret.apply(cmd, param, function () {
-          this$1.focus();
-          this$1.caret.save();
-          if (this$1.$q.platform.is.ie === true || this$1.$q.platform.is.edge === true) {
-            this$1.$nextTick(this$1.__onInput);
-          }
-          if (update) {
-            this$1.refreshToolbar();
-          }
-        });
-      },
-
-      refreshToolbar: function refreshToolbar () {
-        var this$1 = this;
-
-        setTimeout(function () {
-          this$1.editLinkUrl = null;
-          this$1.$forceUpdate();
-        }, 1);
-      },
-
-      focus: function focus () {
-        this.$refs.content !== void 0 && this.$refs.content.focus();
-      },
-
-      getContentEl: function getContentEl () {
-        return this.$refs.content
-      },
-
-      __setContent: function __setContent (v) {
-        if (this.$refs.content !== void 0) {
-          if (this.isViewingSource) {
-            this.$refs.content.innerText = v;
-          }
-          else {
-            this.$refs.content.innerHTML = v;
-          }
-        }
-      }
-    },
-
-    created: function created () {
-      if (isSSR === false) {
-        document.execCommand('defaultParagraphSeparator', false, 'div');
-        this.defaultFont = window.getComputedStyle(document.body).fontFamily;
-      }
-    },
-
-    mounted: function mounted () {
-      this.caret = new Caret(this.$refs.content, this);
-      this.__setContent(this.value);
-      this.refreshToolbar();
-    },
-
-    render: function render (h) {
-      var toolbars;
-
-      if (this.hasToolbar) {
-        var bars = [];
-
-        bars.push(
-          h('div', {
-            key: 'qedt_top',
-            staticClass: 'q-editor__toolbar row no-wrap scroll-x',
-            class: this.toolbarBackgroundClass
-          }, getToolbar(h, this))
-        );
-
-        this.editLinkUrl !== null && bars.push(
-          h('div', {
-            key: 'qedt_btm',
-            staticClass: 'q-editor__toolbar row no-wrap items-center scroll-x',
-            class: this.toolbarBackgroundClass
-          }, getLinkEditor(h, this, this.$q.platform.is.ie))
-        );
-
-        toolbars = h('div', {
-          key: 'toolbar_ctainer',
-          staticClass: 'q-editor__toolbars-container'
-        }, bars);
-      }
-
-      var on = Object.assign({}, this.qListeners,
-        {input: this.__onInput,
-        keydown: this.__onKeydown,
-        click: this.__onClick,
-        blur: this.__onBlur,
-        focus: this.__onFocus,
-
-        // save caret
-        mouseup: this.__onMouseup,
-        keyup: this.__onKeyup,
-        touchend: this.__onTouchend});
-
-      return h(
-        'div',
-        {
-          staticClass: 'q-editor',
-          style: {
-            height: this.inFullscreen === true ? '100vh' : null
-          },
-          'class': {
-            disabled: this.disable,
-            'fullscreen column': this.inFullscreen,
-            'q-editor--square no-border-radius': this.square,
-            'q-editor--flat': this.flat,
-            'q-editor--dense': this.dense,
-            'q-editor--dark q-dark': this.isDark
-          },
-          attrs: this.attrs
-        },
-        [
-          toolbars,
-
-          h(
-            'div',
-            {
-              ref: 'content',
-              staticClass: "q-editor__content",
-              style: this.innerStyle,
-              class: this.innerClass,
-              attrs: {
-                contenteditable: this.editable,
-                placeholder: this.placeholder
-              },
-              domProps: isSSR
-                ? { innerHTML: this.value }
-                : undefined,
-              on: on
-            }
-          )
-        ]
-      )
-    }
-  });
-
-  var QItemLabel = Vue.extend({
-    name: 'QItemLabel',
-
-    mixins: [ ListenersMixin ],
-
-    props: {
-      overline: Boolean,
-      caption: Boolean,
-      header: Boolean,
-      lines: [ Number, String ]
-    },
-
-    computed: {
-      classes: function classes () {
-        return {
-          'q-item__label--overline text-overline': this.overline,
-          'q-item__label--caption text-caption': this.caption,
-          'q-item__label--header': this.header,
-          'ellipsis': parseInt(this.lines, 10) === 1
-        }
-      },
-
-      style: function style () {
-        if (this.lines !== void 0 && parseInt(this.lines, 10) > 1) {
-          return {
-            overflow: 'hidden',
-            display: '-webkit-box',
-            '-webkit-box-orient': 'vertical',
-            '-webkit-line-clamp': this.lines
-          }
-        }
-      }
-    },
-
-    render: function render (h) {
-      return h('div', {
-        staticClass: 'q-item__label',
-        style: this.style,
-        class: this.classes,
-        on: Object.assign({}, this.qListeners)
-      }, slot(this, 'default'))
-    }
-  });
-
-  var QSlideTransition = Vue.extend({
-    name: 'QSlideTransition',
-
-    props: {
-      appear: Boolean,
-      duration: {
-        type: Number,
-        default: 300
-      }
-    },
-
-    methods: {
-      __begin: function __begin (el, height, done) {
-        el.style.overflowY = 'hidden';
-        if (height !== void 0) {
-          el.style.height = height + "px";
-        }
-        el.style.transition = "height " + (this.duration) + "ms cubic-bezier(.25, .8, .50, 1)";
-
-        this.animating = true;
-        this.done = done;
-      },
-
-      __end: function __end (el, event) {
-        el.style.overflowY = null;
-        el.style.height = null;
-        el.style.transition = null;
-        this.__cleanup();
-        event !== this.lastEvent && this.$emit(event);
-      },
-
-      __cleanup: function __cleanup () {
-        this.done && this.done();
-        this.done = null;
-        this.animating = false;
-
-        clearTimeout(this.timer);
-        clearTimeout(this.timerFallback);
-        this.el !== void 0 && this.el.removeEventListener('transitionend', this.animListener);
-        this.animListener = null;
-      }
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      this.animating && this.__cleanup();
-    },
-
-    render: function render (h) {
-      var this$1 = this;
-
-      return h('transition', {
-        props: {
-          css: false,
-          appear: this.appear
-        },
-        on: cache(this, 'tr', {
-          enter: function (el, done) {
-            var pos = 0;
-            this$1.el = el;
-
-            if (this$1.animating === true) {
-              this$1.__cleanup();
-              pos = el.offsetHeight === el.scrollHeight ? 0 : void 0;
-            }
-            else {
-              this$1.lastEvent = 'hide';
-            }
-
-            this$1.__begin(el, pos, done);
-
-            this$1.timer = setTimeout(function () {
-              el.style.height = (el.scrollHeight) + "px";
-              this$1.animListener = function (ev) {
-                if (Object(ev) !== ev || ev.target === el) {
-                  this$1.__end(el, 'show');
-                }
-              };
-              el.addEventListener('transitionend', this$1.animListener);
-              this$1.timerFallback = setTimeout(this$1.animListener, this$1.duration * 1.1);
-            }, 100);
-          },
-
-          leave: function (el, done) {
-            var pos;
-            this$1.el = el;
-
-            if (this$1.animating === true) {
-              this$1.__cleanup();
-            }
-            else {
-              this$1.lastEvent = 'show';
-              pos = el.scrollHeight;
-            }
-
-            this$1.__begin(el, pos, done);
-
-            this$1.timer = setTimeout(function () {
-              el.style.height = 0;
-              this$1.animListener = function (ev) {
-                if (Object(ev) !== ev || ev.target === el) {
-                  this$1.__end(el, 'hide');
-                }
-              };
-              el.addEventListener('transitionend', this$1.animListener);
-              this$1.timerFallback = setTimeout(this$1.animListener, this$1.duration * 1.1);
-            }, 100);
-          }
-        })
-      }, slot(this, 'default'))
-    }
-  });
-
-  var QSeparator = Vue.extend({
-    name: 'QSeparator',
-
-    mixins: [ DarkMixin, ListenersMixin ],
-
-    props: {
-      spaced: Boolean,
-      inset: [Boolean, String],
-      vertical: Boolean,
-      color: String
-    },
-
-    computed: {
-      insetClass: function insetClass () {
-        switch (this.inset) {
-          case true:
-            return ' q-separator--inset'
-          case 'item':
-            return ' q-separator--item-inset'
-          case 'item-thumbnail':
-            return ' q-separator--item-thumbnail-inset'
-          default:
-            return ''
-        }
-      },
-
-      classes: function classes () {
-        return 'q-separator' + this.insetClass +
-          " q-separator--" + (this.vertical === true ? 'vertical self-stretch' : 'horizontal col-grow') +
-          (this.color !== void 0 ? (" bg-" + (this.color)) : '') +
-          (this.isDark === true ? ' q-separator--dark' : '') +
-          (this.spaced === true ? ' q-separator--spaced' : '')
-      },
-
-      attrs: function attrs () {
-        return {
-          role: 'separator',
-          'aria-orientation': this.vertical === true ? 'vertical' : 'horizontal'
-        }
-      }
-    },
-
-    render: function render (h) {
-      return h('hr', {
-        staticClass: 'q-separator',
-        class: this.classes,
-        attrs: this.attrs,
-        on: Object.assign({}, this.qListeners)
-      })
-    }
-  });
-
-  var eventName = 'q:expansion-item:close';
-
-  var QExpansionItem = Vue.extend({
-    name: 'QExpansionItem',
-
-    mixins: [ DarkMixin, RouterLinkMixin, ModelToggleMixin ],
-
-    props: {
-      icon: String,
-
-      label: String,
-      labelLines: [ Number, String ],
-
-      caption: String,
-      captionLines: [ Number, String ],
-
-      dense: Boolean,
-
-      expandIcon: String,
-      expandedIcon: String,
-      expandIconClass: [ Array, String, Object ],
-      duration: Number,
-
-      headerInsetLevel: Number,
-      contentInsetLevel: Number,
-
-      expandSeparator: Boolean,
-      defaultOpened: Boolean,
-      expandIconToggle: Boolean,
-      switchToggleSide: Boolean,
-      denseToggle: Boolean,
-      group: String,
-      popup: Boolean,
-
-      headerStyle: [Array, String, Object],
-      headerClass: [Array, String, Object]
-    },
-
-    data: function data () {
-      return {
-        showing: this.value !== void 0
-          ? this.value
-          : this.defaultOpened
-      }
-    },
-
-    watch: {
-      showing: function showing (val) {
-        val === true && this.group !== void 0 && this.$root.$emit(eventName, this);
-      },
-
-      group: function group (newVal, oldVal) {
-        if (newVal !== void 0 && oldVal === void 0) {
-          this.$root.$on(eventName, this.__eventHandler);
-        }
-        else if (newVal === void 0 && oldVal !== void 0) {
-          this.$root.$off(eventName, this.__eventHandler);
-        }
-      }
-    },
-
-    computed: {
-      classes: function classes () {
-        return "q-expansion-item--" + (this.showing === true ? 'expanded' : 'collapsed') +
-          " q-expansion-item--" + (this.popup === true ? 'popup' : 'standard')
-      },
-
-      contentStyle: function contentStyle () {
-        var obj;
-
-        if (this.contentInsetLevel !== void 0) {
-          var dir = this.$q.lang.rtl === true ? 'Right' : 'Left';
-          return ( obj = {}, obj['padding' + dir] = (this.contentInsetLevel * 56) + 'px', obj )
-        }
-      },
-
-      isClickable: function isClickable () {
-        return this.hasRouterLink === true || this.expandIconToggle !== true
-      },
-
-      expansionIcon: function expansionIcon () {
-        return this.expandedIcon !== void 0 && this.showing === true
-          ? this.expandedIcon
-          : this.expandIcon || this.$q.iconSet.expansionItem[this.denseToggle === true ? 'denseIcon' : 'icon']
-      },
-
-      activeToggleIcon: function activeToggleIcon () {
-        return this.disable !== true && (this.hasRouterLink === true || this.expandIconToggle === true)
-      }
-    },
-
-    methods: {
-      __onHeaderClick: function __onHeaderClick (e) {
-        this.hasRouterLink !== true && this.toggle(e);
-        this.$emit('click', e);
-      },
-
-      __toggleIconKeyboard: function __toggleIconKeyboard (e) {
-        e.keyCode === 13 && this.__toggleIcon(e, true);
-      },
-
-      __toggleIcon: function __toggleIcon (e, keyboard) {
-        keyboard !== true && this.$refs.blurTarget !== void 0 && this.$refs.blurTarget.focus();
-        this.toggle(e);
-        stopAndPrevent(e);
-      },
-
-      __eventHandler: function __eventHandler (comp) {
-        this !== comp && this.group === comp.group && this.hide();
-      },
-
-      __getToggleIcon: function __getToggleIcon (h) {
-        var data = {
-          staticClass: ("q-focusable relative-position cursor-pointer" + (this.denseToggle === true && this.switchToggleSide === true ? ' items-end' : '')),
-          class: this.expandIconClass,
-          props: {
-            side: this.switchToggleSide !== true,
-            avatar: this.switchToggleSide
-          }
-        };
-
-        var child = [
-          h(QIcon, {
-            staticClass: 'q-expansion-item__toggle-icon',
-            class: this.expandedIcon === void 0 && this.showing === true
-              ? 'q-expansion-item__toggle-icon--rotated'
-              : void 0,
-            props: { name: this.expansionIcon }
-          })
-        ];
-
-        if (this.activeToggleIcon === true) {
-          Object.assign(data, {
-            attrs: { tabindex: 0 },
-            on: cache(this, 'inpExt', {
-              click: this.__toggleIcon,
-              keyup: this.__toggleIconKeyboard
-            })
-          });
-
-          child.unshift(
-            h('div', {
-              ref: 'blurTarget',
-              staticClass: 'q-expansion-item__toggle-focus q-icon q-focus-helper q-focus-helper--rounded',
-              attrs: { tabindex: -1 }
-            })
-          );
-        }
-
-        return h(QItemSection, data, child)
-      },
-
-      __getHeader: function __getHeader (h) {
-        var child;
-
-        if (this.$scopedSlots.header !== void 0) {
-          child = this.$scopedSlots.header().slice();
-        }
-        else {
-          child = [
-            h(QItemSection, [
-              h(QItemLabel, {
-                props: { lines: this.labelLines }
-              }, [ this.label || '' ]),
-
-              this.caption
-                ? h(QItemLabel, {
-                  props: { lines: this.captionLines, caption: true }
-                }, [ this.caption ])
-                : null
-            ])
-          ];
-
-          this.icon && child[this.switchToggleSide === true ? 'push' : 'unshift'](
-            h(QItemSection, {
-              props: {
-                side: this.switchToggleSide === true,
-                avatar: this.switchToggleSide !== true
-              }
-            }, [
-              h(QIcon, {
-                props: { name: this.icon }
-              })
-            ])
-          );
-        }
-
-        this.disable !== true && child[this.switchToggleSide === true ? 'unshift' : 'push'](
-          this.__getToggleIcon(h)
-        );
-
-        var data = {
-          ref: 'item',
-          style: this.headerStyle,
-          class: this.headerClass,
-          props: {
-            dark: this.isDark,
-            disable: this.disable,
-            dense: this.dense,
-            insetLevel: this.headerInsetLevel
-          }
-        };
-
-        if (this.isClickable === true) {
-          var evtProp = this.hasRouterLink === true ? 'nativeOn' : 'on';
-
-          data.props.clickable = true;
-          data[evtProp] = Object.assign({}, this.qListeners,
-            {click: this.__onHeaderClick});
-
-          this.hasRouterLink === true && Object.assign(
-            data.props,
-            this.routerLinkProps
-          );
-        }
-
-        return h(QItem, data, child)
-      },
-
-      __getContent: function __getContent (h) {
-        var this$1 = this;
-
-        var node = [
-          this.__getHeader(h),
-
-          h(QSlideTransition, {
-            props: { duration: this.duration },
-            on: cache(this, 'slide', {
-              show: function () { this$1.$emit('after-show'); },
-              hide: function () { this$1.$emit('after-hide'); }
-            })
-          }, [
-            h('div', {
-              staticClass: 'q-expansion-item__content relative-position',
-              style: this.contentStyle,
-              directives: [{ name: 'show', value: this.showing }]
-            }, slot(this, 'default'))
-          ])
-        ];
-
-        if (this.expandSeparator) {
-          node.push(
-            h(QSeparator, {
-              staticClass: 'q-expansion-item__border q-expansion-item__border--top absolute-top',
-              props: { dark: this.isDark }
-            }),
-            h(QSeparator, {
-              staticClass: 'q-expansion-item__border q-expansion-item__border--bottom absolute-bottom',
-              props: { dark: this.isDark }
-            })
-          );
-        }
-
-        return node
-      }
-    },
-
-    render: function render (h) {
-      return h('div', {
-        staticClass: 'q-expansion-item q-item-type',
-        class: this.classes
-      }, [
-        h(
-          'div',
-          { staticClass: 'q-expansion-item__container relative-position' },
-          this.__getContent(h)
-        )
-      ])
-    },
-
-    created: function created () {
-      this.group !== void 0 && this.$root.$on(eventName, this.__eventHandler);
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      this.group !== void 0 && this.$root.$off(eventName, this.__eventHandler);
-    }
-  });
-
-  var labelPositions = [ 'top', 'right', 'bottom', 'left' ];
-
-  var FabMixin = {
-    props: {
-      type: {
-        type: String,
-        default: 'a'
-      },
-
-      outline: Boolean,
-      push: Boolean,
-      flat: Boolean,
-      unelevated: Boolean,
-
-      color: String,
-      textColor: String,
-      glossy: Boolean,
-
-      square: Boolean,
-      padding: String,
-
-      label: {
-        type: [ String, Number ],
-        default: ''
-      },
-      labelPosition: {
-        type: String,
-        default: 'right',
-        validator: function (v) { return labelPositions.includes(v); }
-      },
-      externalLabel: Boolean,
-      hideLabel: {
-        type: Boolean
-      },
-      labelClass: [ Array, String, Object ],
-      labelStyle: [ Array, String, Object ],
-
-      disable: Boolean
-    },
-
-    computed: {
-      formClass: function formClass () {
-        return ("q-fab--form-" + (this.square === true ? 'square' : 'rounded'))
-      },
-
-      stacked: function stacked () {
-        return this.externalLabel === false && ['top', 'bottom'].includes(this.labelPosition)
-      },
-
-      labelProps: function labelProps () {
-        if (this.externalLabel === true) {
-          var hideLabel = this.hideLabel === null
-            ? this.showing === false
-            : this.hideLabel;
-
-          return {
-            action: 'push',
-            data: {
-              staticClass: "q-fab__label q-tooltip--style q-fab__label--external" +
-                " q-fab__label--external-" + (this.labelPosition) +
-                (hideLabel === true ? ' q-fab__label--external-hidden' : ''),
-              style: this.labelStyle,
-              class: this.labelClass
-            }
-          }
-        }
-
-        return {
-          action: [ 'left', 'top' ].includes(this.labelPosition)
-            ? 'unshift'
-            : 'push',
-          data: {
-            staticClass: "q-fab__label q-fab__label--internal q-fab__label--internal-" + (this.labelPosition) +
-              (this.hideLabel === true ? ' q-fab__label--internal-hidden' : ''),
-            style: this.labelStyle,
-            class: this.labelClass
-          }
-        }
-      }
-    }
-  };
-
-  var directions$1 = ['up', 'right', 'down', 'left'];
-  var alignValues$1 = [ 'left', 'center', 'right' ];
-
-  var QFab = Vue.extend({
-    name: 'QFab',
-
-    mixins: [ FabMixin, ModelToggleMixin ],
-
-    provide: function provide () {
-      var this$1 = this;
-
-      return {
-        __qFabClose: function (evt) {
-          this$1.hide(evt);
-
-          if (this$1.$refs.trigger && this$1.$refs.trigger.$el) {
-            this$1.$refs.trigger.$el.focus();
-          }
-        }
-      }
-    },
-
-    props: {
-      icon: String,
-      activeIcon: String,
-
-      hideIcon: Boolean,
-      hideLabel: {
-        default: null
-      },
-
-      direction: {
-        type: String,
-        default: 'right',
-        validator: function (v) { return directions$1.includes(v); }
-      },
-
-      persistent: Boolean,
-
-      verticalActionsAlign: {
-        type: String,
-        default: 'center',
-        validator: function (v) { return alignValues$1.includes(v); }
-      }
-    },
-
-    data: function data () {
-      return {
-        showing: this.value === true
-      }
-    },
-
-    computed: {
-      hideOnRouteChange: function hideOnRouteChange () {
-        return this.persistent !== true
-      },
-
-      classes: function classes () {
-        return "q-fab--align-" + (this.verticalActionsAlign) + " " + (this.formClass) +
-          (this.showing === true ? ' q-fab--opened' : '')
-      }
-    },
-
-    render: function render (h) {
-      var child = [];
-
-      this.hideIcon !== true && child.push(
-        h('div', { staticClass: 'q-fab__icon-holder' }, [
-          h(QIcon, {
-            staticClass: 'q-fab__icon absolute-full',
-            props: { name: this.icon || this.$q.iconSet.fab.icon }
-          }),
-          h(QIcon, {
-            staticClass: 'q-fab__active-icon absolute-full',
-            props: { name: this.activeIcon || this.$q.iconSet.fab.activeIcon }
-          })
-        ])
-      );
-
-      this.label !== '' && child[this.labelProps.action](
-        h('div', this.labelProps.data, [ this.label ])
-      );
-
-      return h('div', {
-        staticClass: 'q-fab z-fab row inline justify-center',
-        class: this.classes,
-        on: Object.assign({}, this.qListeners)
-      }, [
-        h('div', {
-          staticClass: 'q-fab__actions flex no-wrap inline',
-          class: ("q-fab__actions--" + (this.direction))
-        }, slot(this, 'default')),
-
-        h(QBtn, {
-          ref: 'trigger',
-          class: this.formClass,
-          props: Object.assign({}, this.$props,
-            {noWrap: true,
-            stack: this.stacked,
-            align: void 0,
-            icon: void 0,
-            label: void 0,
-            noCaps: true,
-            fab: true}),
-          on: cache(this, 'tog', {
-            click: this.toggle
-          })
-        }, mergeSlot(child, this, 'tooltip'))
-      ])
-    }
-  });
-
-  var anchorMap = {
-    start: 'self-end',
-    center: 'self-center',
-    end: 'self-start'
-  };
-
-  var anchorValues = Object.keys(anchorMap);
-
-  var QFabAction = Vue.extend({
-    name: 'QFabAction',
-
-    mixins: [ ListenersMixin, FabMixin ],
-
-    props: {
-      icon: {
-        type: String,
-        default: ''
-      },
-
-      anchor: {
-        type: String,
-        validator: function (v) { return anchorValues.includes(v); }
-      },
-
-      to: [String, Object],
-      replace: Boolean
-    },
-
-    inject: {
-      __qFabClose: {
-        default: function default$1 () {
-          console.error('QFabAction needs to be child of QFab');
-        }
-      }
-    },
-
-    computed: {
-      classes: function classes () {
-        var align = anchorMap[this.anchor];
-        return this.formClass + (align !== void 0 ? (" " + align) : '')
-      },
-
-      onEvents: function onEvents () {
-        return Object.assign({}, this.qListeners,
-          {click: this.click})
-      }
-    },
-
-    methods: {
-      click: function click (e) {
-        this.__qFabClose();
-        this.$emit('click', e);
-      }
-    },
-
-    render: function render (h) {
-      var child = [];
-
-      this.icon !== '' && child.push(
-        h(QIcon, {
-          props: { name: this.icon }
-        })
-      );
-
-      this.label !== '' && child[this.labelProps.action](
-        h('div', this.labelProps.data, [ this.label ])
-      );
-
-      return h(QBtn, {
-        class: this.classes,
-        props: Object.assign({}, this.$props,
-          {noWrap: true,
-          stack: this.stacked,
-          icon: void 0,
-          label: void 0,
-          noCaps: true,
-          fabMini: true}),
-        on: this.onEvents
-      }, mergeSlot(child, this, 'default'))
-    }
-  });
-
-  var QFile = Vue.extend({
-    name: 'QFile',
-
-    mixins: [ QField, FileMixin, FormFieldMixin, FileValueMixin ],
-
-    props: {
-      /* SSR does not know about File & FileList */
-      value: isSSR === true
-        ? {}
-        : [ File, FileList, Array ],
-
-      useChips: Boolean,
-      displayValue: [ String, Number ],
-      maxFiles: [ Number, String ],
-
-      tabindex: {
-        type: [ String, Number ],
-        default: 0
-      },
-
-      counterLabel: Function,
-
-      inputClass: [ Array, String, Object ],
-      inputStyle: [ Array, String, Object ]
-    },
-
-    data: function data () {
-      return {
-        dnd: false
-      }
-    },
-
-    computed: {
-      innerValue: function innerValue () {
-        return Object(this.value) === this.value
-          ? ('length' in this.value ? Array.from(this.value) : [ this.value ])
-          : []
-      },
-
-      selectedString: function selectedString () {
-        return this.innerValue
-          .map(function (file) { return file.name; })
-          .join(', ')
-      },
-
-      totalSize: function totalSize () {
-        return humanStorageSize(
-          this.innerValue.reduce(function (acc, file) { return acc + file.size; }, 0)
-        )
-      },
-
-      counterProps: function counterProps () {
-        return {
-          totalSize: this.totalSize,
-          filesNumber: this.innerValue.length,
-          maxFiles: this.maxFiles
-        }
-      },
-
-      computedCounter: function computedCounter () {
-        if (this.counterLabel !== void 0) {
-          return this.counterLabel(this.counterProps)
-        }
-
-        var max = this.maxFiles;
-        return ("" + (this.innerValue.length) + (max !== void 0 ? ' / ' + max : '') + " (" + (this.totalSize) + ")")
-      },
-
-      inputAttrs: function inputAttrs () {
-        return Object.assign({}, {tabindex: -1,
-          type: 'file',
-          title: '', // try to remove default tooltip,
-          accept: this.accept,
-          name: this.nameProp},
-          this.qAttrs,
-          {id: this.targetUid,
-          disabled: this.editable !== true})
-      }
-    },
-
-    methods: {
-      removeAtIndex: function removeAtIndex (index) {
-        var files = this.innerValue.slice();
-        files.splice(index, 1);
-        this.__emitValue(files);
-      },
-
-      removeFile: function removeFile (file) {
-        var index = this.innerValue.findIndex(file);
-        if (index > -1) {
-          this.removeAtIndex(index);
-        }
-      },
-
-      __emitValue: function __emitValue (files) {
-        this.$emit('input', this.multiple === true ? files : files[0]);
-      },
-
-      __onKeyup: function __onKeyup (e) {
-        // only on ENTER
-        e.keyCode === 13 && this.pickFiles(e);
-      },
-
-      __getFileInput: function __getFileInput () {
-        return this.$refs.input
-      },
-
-      __addFiles: function __addFiles (e, fileList) {
-        var files = this.__processFiles(e, fileList);
-
-        files !== void 0 && this.__emitValue(
-          this.maxFiles !== void 0
-            ? files.slice(0, parseInt(this.maxFiles, 10))
-            : files
-        );
-      },
-
-      __getControl: function __getControl (h) {
-        var data = {
-          ref: 'target',
-          staticClass: 'q-field__native row items-center cursor-pointer',
-          attrs: {
-            tabindex: this.tabindex
-          }
-        };
-
-        if (this.editable === true) {
-          data.on = cache(this, 'native', {
-            dragover: this.__onDragOver,
-            keyup: this.__onKeyup
-          });
-        }
-
-        return h('div', data, [ this.__getInput(h) ].concat(this.__getSelection(h)))
-      },
-
-      __getControlChild: function __getControlChild (h) {
-        return this.__getDnd(h, 'file')
-      },
-
-      __getSelection: function __getSelection (h) {
-        var this$1 = this;
-
-        if (this.$scopedSlots.file !== void 0) {
-          return this.innerValue.map(function (file, index) { return this$1.$scopedSlots.file({ index: index, file: file, ref: this$1 }); })
-        }
-
-        if (this.$scopedSlots.selected !== void 0) {
-          return this.$scopedSlots.selected({ files: this.innerValue, ref: this })
-        }
-
-        if (this.useChips === true) {
-          return this.innerValue.map(function (file, i) { return h(QChip, {
-            key: 'file-' + i,
-            props: {
-              removable: this$1.editable,
-              dense: true,
-              textColor: this$1.color,
-              tabindex: this$1.tabindex
-            },
-            on: cache(this$1, 'rem#' + i, {
-              remove: function () { this$1.removeAtIndex(i); }
-            })
-          }, [
-            h('span', {
-              staticClass: 'ellipsis',
-              domProps: {
-                textContent: file.name
-              }
-            })
-          ]); })
-        }
-
-        return [
-          h('div', {
-            style: this.inputStyle,
-            class: this.inputClass,
-            domProps: {
-              textContent: this.displayValue !== void 0
-                ? this.displayValue
-                : this.selectedString
-            }
-          })
-        ]
-      },
-
-      __getInput: function __getInput (h) {
-        var data = {
-          ref: 'input',
-          staticClass: 'q-field__input fit absolute-full cursor-pointer',
-          attrs: this.inputAttrs,
-          domProps: this.formDomProps,
-          on: cache(this, 'input', {
-            change: this.__addFiles
-          })
-        };
-
-        if (this.multiple === true) {
-          data.attrs.multiple = true;
-        }
-
-        return h('input', data)
-      }
-    },
-
-    created: function created () {
-      this.fieldClass = 'q-file q-field--auto-height';
-      this.type = 'file'; // necessary for QField's clearable
-    }
-  });
-
-  var QFooter = Vue.extend({
-    name: 'QFooter',
-
-    mixins: [ ListenersMixin ],
-
-    inject: {
-      layout: {
-        default: function default$1 () {
-          console.error('QFooter needs to be child of QLayout');
-        }
-      }
-    },
-
-    props: {
-      value: {
-        type: Boolean,
-        default: true
-      },
-      reveal: Boolean,
-      bordered: Boolean,
-      elevated: Boolean,
-
-      heightHint: {
-        type: [String, Number],
-        default: 50
-      }
-    },
-
-    data: function data () {
-      return {
-        size: parseInt(this.heightHint, 10),
-        revealed: true,
-        windowHeight: onSSR || this.layout.container ? 0 : window.innerHeight
-      }
-    },
-
-    watch: {
-      value: function value (val) {
-        this.__update('space', val);
-        this.__updateLocal('revealed', true);
-        this.layout.__animate();
-      },
-
-      offset: function offset (val) {
-        this.__update('offset', val);
-      },
-
-      reveal: function reveal (val) {
-        val === false && this.__updateLocal('revealed', this.value);
-      },
-
-      revealed: function revealed (val) {
-        this.layout.__animate();
-        this.$emit('reveal', val);
-      },
-
-      'layout.scroll': function layout_scroll () {
-        this.__updateRevealed();
-      },
-
-      'layout.height': function layout_height () {
-        this.__updateRevealed();
-      },
-
-      size: function size () {
-        this.__updateRevealed();
-      },
-
-      '$q.screen.height': function $q_screen_height (val) {
-        this.layout.container !== true && this.__updateLocal('windowHeight', val);
-      }
-    },
-
-    computed: {
-      fixed: function fixed () {
-        return this.reveal === true ||
-          this.layout.view.indexOf('F') > -1 ||
-          this.layout.container === true
-      },
-
-      containerHeight: function containerHeight () {
-        return this.layout.container === true
-          ? this.layout.containerHeight
-          : this.windowHeight
-      },
-
-      offset: function offset () {
-        if (this.value !== true) {
-          return 0
-        }
-        if (this.fixed === true) {
-          return this.revealed === true ? this.size : 0
-        }
-        var offset = this.layout.scroll.position + this.containerHeight + this.size - this.layout.height;
-        return offset > 0 ? offset : 0
-      },
-
-      hidden: function hidden () {
-        return this.value !== true || (this.fixed === true && this.revealed !== true)
-      },
-
-      revealOnFocus: function revealOnFocus () {
-        return this.value === true && this.hidden === true && this.reveal === true
-      },
-
-      classes: function classes () {
-        return (this.fixed === true ? 'fixed' : 'absolute') + '-bottom' +
-          (this.bordered === true ? ' q-footer--bordered' : '') +
-          (this.hidden === true ? ' q-footer--hidden' : '') +
-          (this.value !== true ? ' q-layout--prevent-focus' : '') +
-          (this.value !== true && this.fixed !== true ? ' hidden' : '')
-      },
-
-      style: function style () {
-        var
-          view = this.layout.rows.bottom,
-          css = {};
-
-        if (view[0] === 'l' && this.layout.left.space === true) {
-          css[this.$q.lang.rtl === true ? 'right' : 'left'] = (this.layout.left.size) + "px";
-        }
-        if (view[2] === 'r' && this.layout.right.space === true) {
-          css[this.$q.lang.rtl === true ? 'left' : 'right'] = (this.layout.right.size) + "px";
-        }
-
-        return css
-      },
-
-      onEvents: function onEvents () {
-        return Object.assign({}, this.qListeners,
-          {focusin: this.__onFocusin,
-          input: stop})
-      }
-    },
-
-    render: function render (h) {
-      var child = mergeSlot([
-        h(QResizeObserver, {
-          props: { debounce: 0 },
-          on: cache(this, 'resize', { resize: this.__onResize })
-        })
-      ], this, 'default');
-
-      this.elevated === true && child.push(
-        h('div', {
-          staticClass: 'q-layout__shadow absolute-full overflow-hidden no-pointer-events'
-        })
-      );
-
-      return h('footer', {
-        staticClass: 'q-footer q-layout__section--marginal',
-        class: this.classes,
-        style: this.style,
-        on: this.onEvents
-      }, child)
-    },
-
-    created: function created () {
-      this.layout.instances.footer = this;
-      this.value === true && this.__update('size', this.size);
-      this.__update('space', this.value);
-      this.__update('offset', this.offset);
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      if (this.layout.instances.footer === this) {
-        this.layout.instances.footer = void 0;
-        this.__update('size', 0);
-        this.__update('offset', 0);
-        this.__update('space', false);
-      }
-    },
-
-    methods: {
-      __onResize: function __onResize (ref) {
-        var height = ref.height;
-
-        this.__updateLocal('size', height);
-        this.__update('size', height);
-      },
-
-      __update: function __update (prop, val) {
-        if (this.layout.footer[prop] !== val) {
-          this.layout.footer[prop] = val;
-        }
-      },
-
-      __updateLocal: function __updateLocal (prop, val) {
-        if (this[prop] !== val) {
-          this[prop] = val;
-        }
-      },
-
-      __updateRevealed: function __updateRevealed () {
-        if (this.reveal !== true) { return }
-
-        var ref = this.layout.scroll;
-        var direction = ref.direction;
-        var position = ref.position;
-        var inflexionPosition = ref.inflexionPosition;
-
-        this.__updateLocal('revealed', (
-          direction === 'up' ||
-          position - inflexionPosition < 100 ||
-          this.layout.height - this.containerHeight - position - this.size < 300
-        ));
-      },
-
-      __onFocusin: function __onFocusin (evt) {
-        if (this.revealOnFocus === true) {
-          this.__updateLocal('revealed', true);
-        }
-
-        this.$emit('focusin', evt);
-      }
-    }
-  });
-
-  var QForm = Vue.extend({
-    name: 'QForm',
-
-    mixins: [ ListenersMixin ],
-
-    props: {
-      autofocus: Boolean,
-      noErrorFocus: Boolean,
-      noResetFocus: Boolean,
-      greedy: Boolean
-    },
-
-    computed: {
-      onEvents: function onEvents () {
-        return Object.assign({}, this.qListeners,
-          {submit: this.submit,
-          reset: this.reset})
-      }
-    },
-
-    mounted: function mounted () {
-      this.validateIndex = 0;
-      this.autofocus === true && this.focus();
-    },
-
-    methods: {
-      validate: function validate (shouldFocus) {
-        var this$1 = this;
-
-        var promises = [];
-        var focus = typeof shouldFocus === 'boolean'
-          ? shouldFocus
-          : this.noErrorFocus !== true;
-
-        this.validateIndex++;
-
-        var components = this.getValidationComponents();
-
-        var emit = function (res, ref) {
-          this$1.$emit('validation-' + (res === true ? 'success' : 'error'), ref);
-        };
-
-        var loop = function ( i ) {
-          var comp = components[i];
-          var valid = comp.validate();
-
-          if (typeof valid.then === 'function') {
-            promises.push(
-              valid.then(
-                function (valid) { return ({ valid: valid, comp: comp }); },
-                function (error) { return ({ valid: false, comp: comp, error: error }); }
-              )
-            );
-          }
-          else if (valid !== true) {
-            if (this$1.greedy === false) {
-              emit(false, comp);
-
-              if (focus === true && typeof comp.focus === 'function') {
-                comp.focus();
-              }
-
-              return { v: Promise.resolve(false) }
-            }
-
-            promises.push({ valid: false, comp: comp });
-          }
-        };
-
-        for (var i = 0; i < components.length; i++) {
-          var returned = loop( i );
-
-          if ( returned ) return returned.v;
-        }
-
-        if (promises.length === 0) {
-          emit(true);
-          return Promise.resolve(true)
-        }
-
-        var index = this.validateIndex;
-
-        return Promise.all(promises).then(
-          function (res) {
-            if (index === this$1.validateIndex) {
-              var errors = res.filter(function (r) { return r.valid !== true; });
-
-              if (errors.length === 0) {
-                emit(true);
-                return true
-              }
-
-              var ref = errors[0];
-              var valid = ref.valid;
-              var comp = ref.comp;
-
-              emit(false, comp);
-
-              if (
-                focus === true &&
-                valid !== true &&
-                typeof comp.focus === 'function'
-              ) {
-                comp.focus();
-              }
-
-              return false
-            }
-          }
-        )
-      },
-
-      resetValidation: function resetValidation () {
-        this.validateIndex++;
-
-        this.getValidationComponents().forEach(function (comp) {
-          comp.resetValidation();
-        });
-      },
-
-      submit: function submit (evt) {
-        var this$1 = this;
-
-        evt !== void 0 && stopAndPrevent(evt);
-
-        this.validate().then(function (val) {
-          if (val === true) {
-            if (this$1.qListeners.submit !== void 0) {
-              this$1.$emit('submit', evt);
-            }
-            else if (evt !== void 0 && evt.target !== void 0 && typeof evt.target.submit === 'function') {
-              evt.target.submit();
-            }
-          }
-        });
-      },
-
-      reset: function reset (evt) {
-        var this$1 = this;
-
-        evt !== void 0 && stopAndPrevent(evt);
-
-        this.$emit('reset');
-
-        this.$nextTick(function () { // allow userland to reset values before
-          this$1.resetValidation();
-          if (this$1.autofocus === true && this$1.noResetFocus !== true) {
-            this$1.focus();
-          }
-        });
-      },
-
-      focus: function focus () {
-        var target = this.$el.querySelector('[autofocus], [data-autofocus]') ||
-          Array.prototype.find.call(this.$el.querySelectorAll('[tabindex]'), function (el) { return el.tabIndex > -1; });
-
-        target !== null && target !== void 0 && target.focus();
-      },
-
-      getValidationComponents: function getValidationComponents () {
-        return Array.prototype.map.call(
-          this.$el.getElementsByClassName('q-field'),
-          function (field) { return field.__vue__; }
-        ).filter(function (c) { return c !== void 0 && typeof c.validate === 'function'; })
-      }
-    },
-
-    render: function render (h) {
-      return h('form', {
-        staticClass: 'q-form',
-        on: this.onEvents
-      }, slot(this, 'default'))
-    }
-  });
-
-  var QHeader = Vue.extend({
-    name: 'QHeader',
-
-    mixins: [ ListenersMixin ],
-
-    inject: {
-      layout: {
-        default: function default$1 () {
-          console.error('QHeader needs to be child of QLayout');
-        }
-      }
-    },
-
-    props: {
-      value: {
-        type: Boolean,
-        default: true
-      },
-      reveal: Boolean,
-      revealOffset: {
-        type: Number,
-        default: 250
-      },
-      bordered: Boolean,
-      elevated: Boolean,
-
-      heightHint: {
-        type: [String, Number],
-        default: 50
-      }
-    },
-
-    data: function data () {
-      return {
-        size: parseInt(this.heightHint, 10),
-        revealed: true
-      }
-    },
-
-    watch: {
-      value: function value (val) {
-        this.__update('space', val);
-        this.__updateLocal('revealed', true);
-        this.layout.__animate();
-      },
-
-      offset: function offset (val) {
-        this.__update('offset', val);
-      },
-
-      reveal: function reveal (val) {
-        val === false && this.__updateLocal('revealed', this.value);
-      },
-
-      revealed: function revealed (val) {
-        this.layout.__animate();
-        this.$emit('reveal', val);
-      },
-
-      'layout.scroll': function layout_scroll (scroll) {
-        this.reveal === true && this.__updateLocal('revealed',
-          scroll.direction === 'up' ||
-          scroll.position <= this.revealOffset ||
-          scroll.position - scroll.inflexionPosition < 100
-        );
-      }
-    },
-
-    computed: {
-      fixed: function fixed () {
-        return this.reveal === true ||
-          this.layout.view.indexOf('H') > -1 ||
-          this.layout.container === true
-      },
-
-      offset: function offset () {
-        if (this.value !== true) {
-          return 0
-        }
-        if (this.fixed === true) {
-          return this.revealed === true ? this.size : 0
-        }
-        var offset = this.size - this.layout.scroll.position;
-        return offset > 0 ? offset : 0
-      },
-
-      hidden: function hidden () {
-        return this.value !== true || (this.fixed === true && this.revealed !== true)
-      },
-
-      revealOnFocus: function revealOnFocus () {
-        return this.value === true && this.hidden === true && this.reveal === true
-      },
-
-      classes: function classes () {
-        return (this.fixed === true ? 'fixed' : 'absolute') + '-top' +
-          (this.bordered === true ? ' q-header--bordered' : '') +
-          (this.hidden === true ? ' q-header--hidden' : '') +
-          (this.value !== true ? ' q-layout--prevent-focus' : '')
-      },
-
-      style: function style () {
-        var
-          view = this.layout.rows.top,
-          css = {};
-
-        if (view[0] === 'l' && this.layout.left.space === true) {
-          css[this.$q.lang.rtl === true ? 'right' : 'left'] = (this.layout.left.size) + "px";
-        }
-        if (view[2] === 'r' && this.layout.right.space === true) {
-          css[this.$q.lang.rtl === true ? 'left' : 'right'] = (this.layout.right.size) + "px";
-        }
-
-        return css
-      },
-
-      onEvents: function onEvents () {
-        return Object.assign({}, this.qListeners,
-          {focusin: this.__onFocusin,
-          input: stop})
-      }
-    },
-
-    render: function render (h) {
-      var child = uniqueSlot(this, 'default', []);
-
-      this.elevated === true && child.push(
-        h('div', {
-          staticClass: 'q-layout__shadow absolute-full overflow-hidden no-pointer-events'
-        })
-      );
-
-      child.push(
-        h(QResizeObserver, {
-          props: { debounce: 0 },
-          on: cache(this, 'resize', { resize: this.__onResize })
-        })
-      );
-
-      return h('header', {
-        staticClass: 'q-header q-layout__section--marginal',
-        class: this.classes,
-        style: this.style,
-        on: this.onEvents
-      }, child)
-    },
-
-    created: function created () {
-      this.layout.instances.header = this;
-      this.value === true && this.__update('size', this.size);
-      this.__update('space', this.value);
-      this.__update('offset', this.offset);
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      if (this.layout.instances.header === this) {
-        this.layout.instances.header = void 0;
-        this.__update('size', 0);
-        this.__update('offset', 0);
-        this.__update('space', false);
-      }
-    },
-
-    methods: {
-      __onResize: function __onResize (ref) {
-        var height = ref.height;
-
-        this.__updateLocal('size', height);
-        this.__update('size', height);
-      },
-
-      __update: function __update (prop, val) {
-        if (this.layout.header[prop] !== val) {
-          this.layout.header[prop] = val;
-        }
-      },
-
-      __updateLocal: function __updateLocal (prop, val) {
-        if (this[prop] !== val) {
-          this[prop] = val;
-        }
-      },
-
-      __onFocusin: function __onFocusin (evt) {
-        if (this.revealOnFocus === true) {
-          this.__updateLocal('revealed', true);
-        }
-
-        this.$emit('focusin', evt);
-      }
-    }
-  });
-
-  var RatioMixin = {
-    props: {
-      ratio: [ String, Number ]
-    },
-
-    computed: {
-      ratioStyle: function ratioStyle () {
-        var ratio = this.ratio || this.naturalRatio;
-
-        if (ratio !== void 0) {
-          return { paddingBottom: ((100 / ratio) + "%") }
-        }
-      }
-    }
-  };
-
-  var QImg = Vue.extend({
-    name: 'QImg',
-
-    mixins: [ ListenersMixin, RatioMixin ],
-
-    props: {
-      src: String,
-      srcset: String,
-      sizes: String,
-      alt: String,
-      width: String,
-      height: String,
-
-      placeholderSrc: String,
-
-      basic: Boolean,
-      contain: Boolean,
-      position: {
-        type: String,
-        default: '50% 50%'
-      },
-
-      transition: {
-        type: String,
-        default: 'fade'
-      },
-
-      imgClass: [ Array, String, Object ],
-      imgStyle: Object,
-
-      nativeContextMenu: Boolean,
-
-      noDefaultSpinner: Boolean,
-      spinnerColor: String,
-      spinnerSize: String
-    },
-
-    data: function data () {
-      return {
-        currentSrc: '',
-        image: null,
-        isLoading: !!this.src,
-        hasError: false,
-        naturalRatio: void 0
-      }
-    },
-
-    watch: {
-      src: function src () {
-        this.__load();
-      },
-
-      srcset: function srcset (val) {
-        this.__updateWatcher(val);
-      }
-    },
-
-    computed: {
-      url: function url () {
-        return this.currentSrc || this.placeholderSrc || void 0
-      },
-
-      attrs: function attrs () {
-        var att = { role: 'img' };
-        if (this.alt !== void 0) {
-          att['aria-label'] = this.alt;
-        }
-        return att
-      },
-
-      imgContainerStyle: function imgContainerStyle () {
-        return Object.assign(
-          {
-            backgroundSize: this.contain === true ? 'contain' : 'cover',
-            backgroundPosition: this.position
-          },
-          this.imgStyle,
-          { backgroundImage: ("url(\"" + (this.url) + "\")") })
-      },
-
-      style: function style () {
-        return {
-          width: this.width,
-          height: this.height
-        }
-      },
-
-      classes: function classes () {
-        return 'q-img overflow-hidden' +
-          (this.nativeContextMenu === true ? ' q-img--menu' : '')
-      }
-    },
-
-    methods: {
-      __onLoad: function __onLoad (img) {
-        this.isLoading = false;
-        this.hasError = false;
-        this.__computeRatio(img);
-        this.__updateSrc();
-        this.__updateWatcher(this.srcset);
-        this.$emit('load', this.currentSrc);
-      },
-
-      __onError: function __onError (err) {
-        clearTimeout(this.ratioTimer);
-        this.isLoading = false;
-        this.hasError = true;
-        this.currentSrc = '';
-        this.$emit('error', err);
-      },
-
-      __updateSrc: function __updateSrc () {
-        if (this.image !== void 0 && this.isLoading === false) {
-          var src = this.image.currentSrc || this.image.src;
-          if (this.currentSrc !== src) {
-            this.currentSrc = src;
-          }
-        }
-      },
-
-      __updateWatcher: function __updateWatcher (srcset) {
-        if (srcset) {
-          if (this.unwatch === void 0) {
-            this.unwatch = this.$watch('$q.screen.width', this.__updateSrc);
-          }
-        }
-        else if (this.unwatch !== void 0) {
-          this.unwatch();
-          this.unwatch = void 0;
-        }
-      },
-
-      __load: function __load () {
-        var this$1 = this;
-
-        clearTimeout(this.ratioTimer);
-        this.hasError = false;
-
-        if (!this.src) {
-          this.isLoading = false;
-          this.image = void 0;
-          this.currentSrc = '';
-          return
-        }
-
-        this.isLoading = true;
-
-        var img = new Image();
-        this.image = img;
-
-        img.onerror = function (err) {
-          // if we are still rendering same image
-          if (this$1.image === img && this$1.destroyed !== true) {
-            this$1.__onError(err);
-          }
-        };
-
-        img.onload = function () {
-          if (this$1.destroyed === true) {
-            return
-          }
-
-          // if we are still rendering same image
-          if (this$1.image === img) {
-            if (img.decode !== void 0) {
-              img
-                .decode()
-                .catch(function (err) {
-                  if (this$1.image === img && this$1.destroyed !== true) {
-                    this$1.__onError(err);
-                  }
-                })
-                .then(function () {
-                  if (this$1.image === img && this$1.destroyed !== true) {
-                    this$1.__onLoad(img);
-                  }
-                });
-            }
-            else {
-              this$1.__onLoad(img);
-            }
-          }
-        };
-
-        img.src = this.src;
-
-        if (this.srcset) {
-          img.srcset = this.srcset;
-        }
-
-        if (this.sizes !== void 0) {
-          img.sizes = this.sizes;
-        }
-        else {
-          Object.assign(img, {
-            height: this.height,
-            width: this.width
-          });
-        }
-      },
-
-      __computeRatio: function __computeRatio (img) {
-        var this$1 = this;
-
-        var naturalHeight = img.naturalHeight;
-        var naturalWidth = img.naturalWidth;
-
-        if (naturalHeight || naturalWidth) {
-          this.naturalRatio = naturalHeight === 0
-            ? 1
-            : naturalWidth / naturalHeight;
-        }
-        else {
-          this.ratioTimer = setTimeout(function () {
-            if (this$1.image === img && this$1.destroyed !== true) {
-              this$1.__computeRatio(img);
-            }
-          }, 100);
-        }
-      },
-
-      __getImage: function __getImage (h) {
-        var nativeImg = this.nativeContextMenu === true
-          ? [
-            h('img', {
-              staticClass: 'absolute-full fit',
-              attrs: { src: this.url }
-            })
-          ]
-          : void 0;
-
-        var content = this.url !== void 0
-          ? h('div', {
-            key: this.url,
-            staticClass: 'q-img__image absolute-full',
-            class: this.imgClass,
-            style: this.imgContainerStyle
-          }, nativeImg)
-          : null;
-
-        return this.basic === true
-          ? content
-          : h('transition', {
-            props: { name: 'q-transition--' + this.transition }
-          }, [ content ])
-      },
-
-      __getContent: function __getContent (h) {
-        var slotVm = slot(this, this.hasError === true ? 'error' : 'default');
-
-        if (this.basic === true) {
-          return h('div', {
-            key: 'content',
-            staticClass: 'q-img__content absolute-full'
-          }, slotVm)
-        }
-
-        var content = this.isLoading === true
-          ? h('div', {
-            key: 'placeholder',
-            staticClass: 'q-img__loading absolute-full flex flex-center'
-          }, this.$scopedSlots.loading !== void 0
-            ? this.$scopedSlots.loading()
-            : (
-              this.noDefaultSpinner === false
-                ? [
-                  h(QSpinner, {
-                    props: {
-                      color: this.spinnerColor,
-                      size: this.spinnerSize
-                    }
-                  })
-                ]
-                : void 0
-            )
-          )
-          : h('div', {
-            key: 'content',
-            staticClass: 'q-img__content absolute-full'
-          }, slotVm);
-
-        return h('transition', {
-          props: { name: 'q-transition--fade' }
-        }, [ content ])
-      }
-    },
-
-    render: function render (h) {
-      return h('div', {
-        class: this.classes,
-        style: this.style,
-        attrs: this.attrs,
-        on: Object.assign({}, this.qListeners)
-      }, [
-        h('div', { style: this.ratioStyle }),
-        this.__getImage(h),
-        this.__getContent(h)
-      ])
-    },
-
-    beforeMount: function beforeMount () {
-      if (this.placeholderSrc !== void 0 && this.ratio === void 0) {
-        var img = new Image();
-        img.src = this.placeholderSrc;
-        this.__computeRatio(img);
-      }
-      this.isLoading === true && this.__load();
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      this.destroyed = true;
-      clearTimeout(this.ratioTimer);
-      this.unwatch !== void 0 && this.unwatch();
-    }
-  });
-
-  var QInfiniteScroll = Vue.extend({
-    name: 'QInfiniteScroll',
-
-    mixins: [ ListenersMixin ],
-
-    props: {
-      offset: {
-        type: Number,
-        default: 500
-      },
-      debounce: {
-        type: [String, Number],
-        default: 100
-      },
-      scrollTarget: {
-        default: void 0
-      },
-      disable: Boolean,
-      reverse: Boolean
-    },
-
-    data: function data () {
-      return {
-        index: 0,
-        fetching: false,
-        working: true
-      }
-    },
-
-    watch: {
-      disable: function disable (val) {
-        if (val === true) {
-          this.stop();
-        }
-        else {
-          this.resume();
-        }
-      },
-
-      scrollTarget: function scrollTarget () {
-        this.updateScrollTarget();
-      },
-
-      debounce: function debounce (val) {
-        this.__setDebounce(val);
-      }
-    },
-
-    methods: {
-      poll: function poll () {
-        if (this.disable === true || this.fetching === true || this.working === false) {
-          return
-        }
-
-        var
-          scrollHeight = getScrollHeight(this.scrollContainer),
-          scrollPosition = getScrollPosition(this.scrollContainer),
-          containerHeight = height(this.scrollContainer);
-
-        if (this.reverse === false) {
-          if (scrollPosition + containerHeight + this.offset >= scrollHeight) {
-            this.trigger();
-          }
-        }
-        else {
-          if (scrollPosition < this.offset) {
-            this.trigger();
-          }
-        }
-      },
-
-      trigger: function trigger () {
-        var this$1 = this;
-
-        if (this.disable === true || this.fetching === true || this.working === false) {
-          return
-        }
-
-        this.index++;
-        this.fetching = true;
-
-        var heightBefore = getScrollHeight(this.scrollContainer);
-
-        this.$emit('load', this.index, function (stop) {
-          if (this$1.working === true) {
-            this$1.fetching = false;
-            this$1.$nextTick(function () {
-              if (this$1.reverse === true) {
-                var
-                  heightAfter = getScrollHeight(this$1.scrollContainer),
-                  scrollPosition = getScrollPosition(this$1.scrollContainer),
-                  heightDifference = heightAfter - heightBefore;
-
-                setScrollPosition(this$1.scrollContainer, scrollPosition + heightDifference);
-              }
-
-              if (stop === true) {
-                this$1.stop();
-              }
-              else {
-                this$1.$el.closest('body') && this$1.poll();
-              }
-            });
-          }
-        });
-      },
-
-      reset: function reset () {
-        this.index = 0;
-      },
-
-      resume: function resume () {
-        if (this.working === false) {
-          this.working = true;
-          this.scrollContainer.addEventListener('scroll', this.poll, listenOpts.passive);
-        }
-        this.immediatePoll();
-      },
-
-      stop: function stop () {
-        if (this.working === true) {
-          this.working = false;
-          this.fetching = false;
-          this.scrollContainer.removeEventListener('scroll', this.poll, listenOpts.passive);
-        }
-      },
-
-      updateScrollTarget: function updateScrollTarget () {
-        if (this.scrollContainer && this.working === true) {
-          this.scrollContainer.removeEventListener('scroll', this.poll, listenOpts.passive);
-        }
-
-        this.scrollContainer = getScrollTarget(this.$el, this.scrollTarget);
-
-        if (this.working === true) {
-          this.scrollContainer.addEventListener('scroll', this.poll, listenOpts.passive);
-        }
-      },
-
-      __setDebounce: function __setDebounce (val) {
-        val = parseInt(val, 10);
-        if (val <= 0) {
-          this.poll = this.immediatePoll;
-        }
-        else {
-          this.poll = debounce(this.immediatePoll, isNaN(val) === true ? 100 : val);
-        }
-      }
-    },
-
-    mounted: function mounted () {
-      this.immediatePoll = this.poll;
-      this.__setDebounce(this.debounce);
-
-      this.updateScrollTarget();
-      this.immediatePoll();
-
-      if (this.reverse === true) {
-        var
-          scrollHeight = getScrollHeight(this.scrollContainer),
-          containerHeight = height(this.scrollContainer);
-
-        setScrollPosition(this.scrollContainer, scrollHeight - containerHeight);
-      }
-    },
-
-    beforeDestroy: function beforeDestroy () {
-      if (this.working === true) {
-        this.scrollContainer.removeEventListener('scroll', this.poll, listenOpts.passive);
-      }
-    },
-
-    render: function render (h) {
-      var child = uniqueSlot(this, 'default', []);
-
-      if (this.disable !== true && this.working === true) {
-        child[this.reverse === false ? 'push' : 'unshift'](
-          h('div', {
-            staticClass: 'q-infinite-scroll__loading',
-            class: this.fetching === true ? '' : 'invisible'
-          }, slot(this, 'loading'))
-        );
-      }
-
-      return h('div', {
-        staticClass: 'q-infinite-scroll',
-        on: Object.assign({}, this.qListeners)
-      }, child)
-    }
-  });
-
-  var QInnerLoading = Vue.extend({
-    name: 'QInnerLoading',
-
-    mixins: [ ListenersMixin, DarkMixin, TransitionMixin ],
-
-    props: {
-      showing: Boolean,
-      color: String,
-
-      size: {
-        type: [String, Number],
-        default: 42
-      }
-    },
-
-    render: function render (h) {
-      var child = this.showing === true
-        ? [
-          h('div',
-            {
-              staticClass: 'q-inner-loading absolute-full column flex-center',
-              class: this.isDark === true ? 'q-inner-loading--dark' : null,
-              on: Object.assign({}, this.qListeners)
-            },
-            this.$scopedSlots.default !== void 0
-              ? this.$scopedSlots.default()
-              : [
-                h(QSpinner, {
-                  props: {
-                    size: this.size,
-                    color: this.color
-                  }
-                })
-              ]
-          )
-        ]
-        : void 0;
-
-      return h('transition', {
-        props: {
-          name: this.transition,
-          appear: true
-        }
-      }, child)
-    }
-  });
-
   var defaultCfg = {
     threshold: 0,
     root: null,
     rootMargin: '0px'
   };
 
-  function update (el, ctx, ref) {
-    var modifiers = ref.modifiers;
-    var value = ref.value;
-
-    ctx.once = modifiers.once;
-
+  function update (el, ctx, value) {
     var handler, cfg, changed;
 
     if (typeof value === 'function') {
@@ -19100,7 +20399,7 @@
             res === false ||
             (ctx.once === true && entry.isIntersecting === true)
           ) {
-            destroy(el);
+            destroy$3(el);
           }
         }
       }, cfg);
@@ -19109,7 +20408,7 @@
     }
   }
 
-  function destroy (el) {
+  function destroy$3 (el) {
     var ctx = el.__qvisible;
 
     if (ctx !== void 0) {
@@ -19121,18 +20420,37 @@
   var Intersection = {
     name: 'intersection',
 
-    inserted: function inserted (el, binding) {
-      var ctx = {};
-      update(el, ctx, binding);
+    inserted: function inserted (el, ref) {
+      var modifiers = ref.modifiers;
+      var value = ref.value;
+
+      if (el.__qvisible !== void 0) {
+        destroy$3(el);
+        el.__qvisible_destroyed = true;
+      }
+
+      var ctx = {
+        once: modifiers.once === true
+      };
+
+      update(el, ctx, value);
+
       el.__qvisible = ctx;
     },
 
     update: function update$1 (el, binding) {
       var ctx = el.__qvisible;
-      ctx !== void 0 && update(el, ctx, binding);
+      ctx !== void 0 && update(el, ctx, binding.value);
     },
 
-    unbind: destroy
+    unbind: function unbind (el) {
+      if (el.__qvisible_destroyed === void 0) {
+        destroy$3(el);
+      }
+      else {
+        delete el.__qvisible_destroyed;
+      }
+    }
   };
 
   var QIntersection = Vue.extend({
@@ -19152,6 +20470,9 @@
 
       margin: String,
       threshold: [ Number, Array ],
+      root: {
+        default: null
+      },
 
       disable: Boolean
     },
@@ -19168,6 +20489,7 @@
           ? {
             handler: this.__trigger,
             cfg: {
+              root: this.root,
               rootMargin: this.margin,
               threshold: this.threshold
             }
@@ -19462,7 +20784,6 @@
     },
 
     render: function render (h) {
-      console.log(this.instantFeedback);
       var data = {
         class: this.classes,
         attrs: this.attrs,
@@ -19753,7 +21074,9 @@
       },
 
       __onPageScroll: function __onPageScroll (data) {
-        this.scroll = data;
+        if (this.container === true || document.qScrollPrevented !== true) {
+          this.scroll = data;
+        }
         this.qListeners.scroll !== void 0 && this.$emit('scroll', data);
       },
 
@@ -19961,7 +21284,7 @@
         };
 
         if (this.disable === true) {
-          attrs['aria-disabled'] = '';
+          attrs['aria-disabled'] = 'true';
         }
 
         return attrs
@@ -19976,7 +21299,7 @@
         }
 
         if (this.disable !== true && this.isTrue !== true) {
-          this.$emit('input', this.val);
+          this.$emit('input', this.val, e);
         }
       }
     },
@@ -19986,8 +21309,8 @@
 
       var content = [
         h('svg', {
-          staticClass: 'q-radio__bg absolute',
-          attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24' }
+          staticClass: 'q-radio__bg absolute non-selectable',
+          attrs: { focusable: 'false' /* needed for IE11 */, viewBox: '0 0 24 24', 'aria-hidden': 'true' }
         }, [
           h('path', {
             attrs: {
@@ -20007,12 +21330,12 @@
       this.disable !== true && this.__injectFormInput(
         content,
         'unshift',
-        'q-radio__native q-ma-none q-pa-none invisible'
+        'q-radio__native q-ma-none q-pa-none'
       );
 
       var child = [
         h('div', {
-          staticClass: 'q-radio__inner relative-position no-pointer-events',
+          staticClass: 'q-radio__inner relative-position',
           class: this.innerClass,
           style: this.sizeStyle
         }, content)
@@ -20174,7 +21497,7 @@
           };
 
           if (this.disable === true) {
-            attrs['aria-disabled'] = '';
+            attrs['aria-disabled'] = 'true';
           }
 
           return attrs
@@ -20725,7 +22048,7 @@
       attrs: function attrs () {
         if (this.disable === true) {
           return {
-            'aria-disabled': ''
+            'aria-disabled': 'true'
           }
         }
       },
@@ -20989,6 +22312,8 @@
     return debounced
   }
 
+  var passive$2 = listenOpts.passive;
+
   var QParallax = Vue.extend({
     name: 'QParallax',
 
@@ -21020,12 +22345,14 @@
 
     watch: {
       height: function height () {
-        this.__updatePos();
+        this.working === true && this.__updatePos();
       },
 
       scrollTarget: function scrollTarget () {
-        this.__unconfigureScrollTarget();
-        this.__configureScrollTarget();
+        if (this.working === true) {
+          this.__stop();
+          this.__start();
+        }
       }
     },
 
@@ -21035,15 +22362,8 @@
         this.qListeners.scroll !== void 0 && this.$emit('scroll', percentage);
       },
 
-      __onResize: function __onResize () {
-        if (this.__scrollTarget) {
-          this.mediaHeight = this.media.naturalHeight || this.media.videoHeight || height(this.media);
-          this.__updatePos();
-        }
-      },
-
       __updatePos: function __updatePos () {
-        var containerTop, containerHeight, containerBottom, top, bottom;
+        var containerTop, containerHeight, containerBottom;
 
         if (this.__scrollTarget === window) {
           containerTop = 0;
@@ -21056,10 +22376,10 @@
           containerBottom = containerTop + containerHeight;
         }
 
-        top = offset(this.$el).top;
-        bottom = top + this.height;
+        var top = offset(this.$el).top;
+        var bottom = top + this.height;
 
-        if (bottom > containerTop && top < containerBottom) {
+        if (this.observer !== void 0 || (bottom > containerTop && top < containerBottom)) {
           var percent = (containerBottom - top) / (this.height + containerHeight);
           this.__setPos((this.mediaHeight - this.height) * percent * this.speed);
           this.__update(percent);
@@ -21071,15 +22391,24 @@
         this.media.style.transform = "translate3D(-50%," + (Math.round(offset)) + "px, 0)";
       },
 
-      __configureScrollTarget: function __configureScrollTarget () {
-        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
-        this.__scrollTarget.addEventListener('scroll', this.__updatePos, listenOpts.passive);
-        this.__onResize();
+      __onResize: function __onResize () {
+        this.mediaHeight = this.media.naturalHeight || this.media.videoHeight || height(this.media);
+        this.working === true && this.__updatePos();
       },
 
-      __unconfigureScrollTarget: function __unconfigureScrollTarget () {
-        if (this.__scrollTarget !== void 0) {
-          this.__scrollTarget.removeEventListener('scroll', this.__updatePos, listenOpts.passive);
+      __start: function __start () {
+        this.working = true;
+        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
+        this.__scrollTarget.addEventListener('scroll', this.__updatePos, passive$2);
+        window.addEventListener('resize', this.__resizeHandler, passive$2);
+        this.__updatePos();
+      },
+
+      __stop: function __stop () {
+        if (this.working === true) {
+          this.working = false;
+          this.__scrollTarget.removeEventListener('scroll', this.__updatePos, passive$2);
+          window.removeEventListener('resize', this.__resizeHandler, passive$2);
           this.__scrollTarget = void 0;
         }
       }
@@ -21113,28 +22442,36 @@
       ])
     },
 
-    beforeMount: function beforeMount () {
-      this.__setPos = frameDebounce(this.__setPos);
-    },
-
     mounted: function mounted () {
+      var this$1 = this;
+
+      this.__setPos = frameDebounce(this.__setPos);
       this.__update = frameDebounce(this.__update);
-      this.resizeHandler = frameDebounce(this.__onResize);
+      this.__resizeHandler = frameDebounce(this.__onResize);
 
       this.media = this.$scopedSlots.media !== void 0
         ? this.$refs.mediaParent.children[0]
         : this.$refs.media;
 
       this.media.onload = this.media.onloadstart = this.media.loadedmetadata = this.__onResize;
+      this.__onResize();
+      this.media.style.display = 'initial';
 
-      window.addEventListener('resize', this.resizeHandler, listenOpts.passive);
+      if (window.IntersectionObserver !== void 0) {
+        this.observer = new IntersectionObserver(function (entries) {
+          this$1[entries[0].isIntersecting === true ? '__start' : '__stop']();
+        });
 
-      this.__configureScrollTarget();
+        this.observer.observe(this.$el);
+      }
+      else {
+        this.__start();
+      }
     },
 
     beforeDestroy: function beforeDestroy () {
-      window.removeEventListener('resize', this.resizeHandler, listenOpts.passive);
-      this.__unconfigureScrollTarget();
+      this.__stop();
+      this.observer !== void 0 && this.observer.disconnect();
       this.media.onload = this.media.onloadstart = this.media.loadedmetadata = null;
     }
   });
@@ -21229,6 +22566,14 @@
           this.$emit('cancel', this.value, this.initialValue);
         }
         this.__close();
+      },
+
+      show: function show (e) {
+        this.$refs.menu !== void 0 && this.$refs.menu.show(e);
+      },
+
+      hide: function hide (e) {
+        this.$refs.menu !== void 0 && this.$refs.menu.hide(e);
       },
 
       __hasChanged: function __hasChanged () {
@@ -21433,7 +22778,7 @@
 
       var data = {
         ref: 'popup',
-        props: Object.assign(props, this.qAttrs),
+        props: Object.assign({}, props, this.qAttrs),
         on: this.onEvents
       };
 
@@ -21454,7 +22799,10 @@
     }
   });
 
-  function width$1 (val) {
+  function width$1 (val, reverse) {
+    if (reverse === true) {
+      return { transform: ("translateX(100%) scale3d(" + (-val) + ",1,1)") }
+    }
     return { transform: ("scale3d(" + val + ",1,1)") }
   }
 
@@ -21487,7 +22835,9 @@
       stripe: Boolean,
       indeterminate: Boolean,
       query: Boolean,
-      rounded: Boolean
+      rounded: Boolean,
+
+      instantFeedback: Boolean
     },
 
     computed: {
@@ -21503,20 +22853,22 @@
       },
 
       trackStyle: function trackStyle () {
-        return width$1(this.buffer !== void 0 ? this.buffer : 1)
+        return width$1(this.buffer !== void 0 ? this.buffer : 1, this.reverse)
       },
 
       trackClass: function trackClass () {
-        return 'q-linear-progress__track--' + (this.isDark === true ? 'dark' : 'light') +
+        return "q-linear-progress__track--with" + (this.instantFeedback === true ? 'out' : '') + "-transition" +
+          " q-linear-progress__track--" + (this.isDark === true ? 'dark' : 'light') +
           (this.trackColor !== void 0 ? (" bg-" + (this.trackColor)) : '')
       },
 
       modelStyle: function modelStyle () {
-        return width$1(this.motion ? 1 : this.value)
+        return width$1(this.motion === true ? 1 : this.value, this.reverse)
       },
 
       modelClasses: function modelClasses () {
-        return ("q-linear-progress__model--" + (this.motion ? 'in' : '') + "determinate")
+        return "q-linear-progress__model--with" + (this.instantFeedback === true ? 'out' : '') + "-transition" +
+          " q-linear-progress__model--" + (this.motion === true ? 'in' : '') + "determinate"
       },
 
       stripeStyle: function stripeStyle () {
@@ -21612,6 +22964,29 @@
         return 'q-pull-to-refresh__puller row flex-center' +
           (this.animating === true ? ' q-pull-to-refresh__puller--animating' : '') +
           (this.bgColor !== void 0 ? (" bg-" + (this.bgColor)) : '')
+      },
+
+      directives: function directives () {
+        if (this.disable !== true) {
+          var modifiers = {
+            down: true,
+            mightPrevent: true
+          };
+
+          if (this.noMouse !== true) {
+            modifiers.mouse = true;
+          }
+
+          return [{
+            name: 'touch-pan',
+            modifiers: modifiers,
+            value: this.__pull
+          }]
+        }
+      },
+
+      contentClass: function contentClass () {
+        return ("q-pull-to-refresh__content" + (this.pulling === true ? ' no-pointer-events' : ''))
       }
     },
 
@@ -21633,7 +23008,7 @@
       },
 
       updateScrollTarget: function updateScrollTarget () {
-        this.scrollContainer = getScrollTarget(this.$el, this.scrollTarget);
+        this.__scrollTarget = getScrollTarget(this.$el, this.scrollTarget);
       },
 
       __pull: function __pull (event) {
@@ -21659,8 +23034,8 @@
         }
 
         if (event.isFirst === true) {
-          if (getScrollPosition(this.scrollContainer) !== 0) {
-            if (this.pulling) {
+          if (getScrollPosition(this.__scrollTarget) !== 0) {
+            if (this.pulling === true) {
               this.pulling = false;
               this.state = 'pull';
               this.__animateTo({ pos: -PULLER_HEIGHT, ratio: 0 });
@@ -21688,6 +23063,7 @@
         this.pullRatio = between(distance / (OFFSET_TOP + PULLER_HEIGHT), 0, 1);
 
         var state = this.pullPosition > OFFSET_TOP ? 'pulled' : 'pull';
+
         if (this.state !== state) {
           this.state = state;
         }
@@ -21723,23 +23099,12 @@
 
     render: function render (h) {
       return h('div', {
-        staticClass: 'q-pull-to-refresh overflow-hidden',
+        staticClass: 'q-pull-to-refresh',
         on: Object.assign({}, this.qListeners),
-        directives: this.disable === true
-          ? null
-          : cache(this, 'dir#' + this.noMouse, [{
-            name: 'touch-pan',
-            modifiers: {
-              down: true,
-              mightPrevent: true,
-              mouse: this.noMouse !== true
-            },
-            value: this.__pull
-          }])
+        directives: this.directives
       }, [
         h('div', {
-          staticClass: 'q-pull-to-refresh__content',
-          class: this.pulling === true ? 'no-pointer-events' : ''
+          class: this.contentClass
         }, slot(this, 'default')),
 
         h('div', {
@@ -22036,9 +23401,8 @@
           ratioMax: (this.model.max - this.min) / diff
         };
 
-        var
-          ratio = getRatio(event, dragging, this.isReversed, this.vertical),
-          type;
+        var ratio = getRatio(event, dragging, this.isReversed, this.vertical);
+        var type;
 
         if (this.dragOnlyRange !== true && ratio < dragging.ratioMin + sensitivity) {
           type = dragType.MIN;
@@ -22074,8 +23438,8 @@
 
         var
           ratio = getRatio(event, dragging, this.isReversed, this.vertical),
-          model = getModel(ratio, this.min, this.max, this.step, this.decimals),
-          pos;
+          model = getModel(ratio, this.min, this.max, this.step, this.decimals);
+        var pos;
 
         switch (dragging.type) {
           case dragType.MIN:
@@ -22372,10 +23736,10 @@
 
       attrs: function attrs () {
         if (this.disable === true) {
-          return { 'aria-disabled': '' }
+          return { 'aria-disabled': 'true' }
         }
         if (this.readonly === true) {
-          return { 'aria-readonly': '' }
+          return { 'aria-readonly': 'true' }
         }
       }
     },
@@ -22630,6 +23994,16 @@
       barClass: function barClass () {
         return "q-scrollarea__bar--" + (this.dirProps.classSuffix) +
           (this.thumbHidden === true ? ' q-scrollarea__bar--invisible' : '')
+      },
+
+      thumbDirectives: function thumbDirectives () {
+        var obj;
+
+        return [{
+          name: 'touch-pan',
+          modifiers: ( obj = {}, obj[ this.horizontal === true ? 'horizontal' : 'vertical' ] = true, obj.prevent = true, obj.mouse = true, obj.mouseAllDir = true, obj ),
+          value: this.__panThumb
+        }]
       }
     },
 
@@ -22648,6 +24022,13 @@
           : setScrollPosition;
 
         fn(this.$refs.target, offset, duration);
+      },
+
+      setScrollPercentage: function setScrollPercentage (percentage, duration) {
+        this.setScrollPosition(
+          percentage * (this.scrollSize - this.containerSize),
+          duration
+        );
       },
 
       __updateContainer: function __updateContainer (ref) {
@@ -22788,6 +24169,7 @@
           staticClass: 'q-scrollarea__bar',
           style: this.barStyle,
           class: this.barClass,
+          attrs: ariaHidden,
           on: cache(this, 'bar', {
             mousedown: this.__mouseDown
           })
@@ -22798,17 +24180,8 @@
           staticClass: 'q-scrollarea__thumb',
           style: this.style,
           class: this.thumbClass,
-          directives: cache(this, 'thumb#' + this.horizontal, [{
-            name: 'touch-pan',
-            modifiers: {
-              vertical: this.horizontal !== true,
-              horizontal: this.horizontal,
-              prevent: true,
-              mouse: true,
-              mouseAllDir: true
-            },
-            value: this.__panThumb
-          }])
+          attrs: ariaHidden,
+          directives: this.thumbDirectives
         })
       ])
     },
@@ -22837,7 +24210,40 @@
 
   var aggBucketSize = 1000;
 
+  var scrollToEdges = [
+    'start',
+    'center',
+    'end',
+    'start-force',
+    'center-force',
+    'end-force'
+  ];
+
   var slice = Array.prototype.slice;
+
+  var buggyRTL = void 0;
+
+  // mobile Chrome takes the crown for this
+  function detectBuggyRTL () {
+    var scroller = document.createElement('div');
+    var spacer = document.createElement('div');
+
+    scroller.setAttribute('dir', 'rtl');
+    scroller.style.width = '1px';
+    scroller.style.height = '1px';
+    scroller.style.overflow = 'auto';
+
+    spacer.style.width = '1000px';
+    spacer.style.height = '1px';
+
+    document.body.appendChild(scroller);
+    scroller.appendChild(spacer);
+    scroller.scrollLeft = -1000;
+
+    buggyRTL = scroller.scrollLeft >= 0;
+
+    scroller.remove();
+  }
 
   function sumFn (acc, h) {
     return acc + h
@@ -22849,6 +24255,7 @@
     beforeRef,
     afterRef,
     horizontal,
+    rtl,
     stickyStart,
     stickyEnd
   ) {
@@ -22873,6 +24280,10 @@
         details.scrollViewSize += parentCalc.clientWidth;
       }
       details.scrollMaxSize = parentCalc.scrollWidth;
+
+      if (rtl === true) {
+        details.scrollStart = (buggyRTL === true ? details.scrollMaxSize - details.scrollViewSize : 0) - details.scrollStart;
+      }
     }
     else {
       if (parent === window) {
@@ -22888,12 +24299,16 @@
 
     if (beforeRef !== void 0) {
       for (var el = beforeRef.previousElementSibling; el !== null; el = el.previousElementSibling) {
-        details.offsetStart += el[propElSize];
+        if (el.classList.contains('q-virtual-scroll--skip') === false) {
+          details.offsetStart += el[propElSize];
+        }
       }
     }
     if (afterRef !== void 0) {
       for (var el$1 = afterRef.nextElementSibling; el$1 !== null; el$1 = el$1.nextElementSibling) {
-        details.offsetEnd += el$1[propElSize];
+        if (el$1.classList.contains('q-virtual-scroll--skip') === false) {
+          details.offsetEnd += el$1[propElSize];
+        }
       }
     }
 
@@ -22920,17 +24335,26 @@
     return details
   }
 
-  function setScroll$1 (parent, scroll, horizontal) {
+  function setScroll$1 (parent, scroll, horizontal, rtl) {
     if (parent === window) {
       if (horizontal === true) {
+        if (rtl === true) {
+          scroll = (buggyRTL === true ? document.body.scrollWidth - window.innerWidth : 0) - scroll;
+        }
         window.scrollTo(scroll, window.pageYOffset || window.scrollY || document.body.scrollTop || 0);
       }
       else {
         window.scrollTo(window.pageXOffset || window.scrollX || document.body.scrollLeft || 0, scroll);
       }
     }
+    else if (horizontal === true) {
+      if (rtl === true) {
+        scroll = (buggyRTL === true ? parent.scrollWidth - parent.offsetWidth : 0) - scroll;
+      }
+      parent.scrollLeft = scroll;
+    }
     else {
-      parent[horizontal === true ? 'scrollLeft' : 'scrollTop'] = scroll;
+      parent.scrollTop = scroll;
     }
   }
 
@@ -22957,7 +24381,7 @@
   var commonVirtScrollProps = {
     virtualScrollSliceSize: {
       type: Number,
-      default: 30
+      default: null
     },
 
     virtualScrollItemSize: {
@@ -22973,7 +24397,9 @@
     virtualScrollStickySizeEnd: {
       type: Number,
       default: 0
-    }
+    },
+
+    tableColspan: [ Number, String ]
   };
 
   var commonVirtPropsList = Object.keys(commonVirtScrollProps);
@@ -23004,6 +24430,12 @@
 
         return ['virtualScrollItemSize', 'virtualScrollHorizontal']
           .map(function (p) { return this$1[p]; }).join(';')
+      },
+
+      colspanAttr: function colspanAttr () {
+        return this.tableColspan !== void 0
+          ? { colspan: this.tableColspan }
+          : { colspan: 100 }
       }
     },
 
@@ -23016,27 +24448,32 @@
         this.__resetVirtualScroll(toIndex === void 0 ? this.prevToIndex : toIndex);
       },
 
-      scrollTo: function scrollTo (toIndex) {
+      scrollTo: function scrollTo (toIndex, edge) {
         var scrollEl = this.__getVirtualScrollTarget();
 
         if (scrollEl === void 0 || scrollEl === null || scrollEl.nodeType === 8) {
           return
         }
 
+        var scrollDetails = getScrollDetails(
+          scrollEl,
+          this.__getVirtualScrollEl(),
+          this.$refs.before,
+          this.$refs.after,
+          this.virtualScrollHorizontal,
+          this.$q.lang.rtl,
+          this.virtualScrollStickySizeStart,
+          this.virtualScrollStickySizeEnd
+        );
+
+        this.__scrollViewSize !== scrollDetails.scrollViewSize && this.__setVirtualScrollSize(scrollDetails.scrollViewSize);
+
         this.__setVirtualScrollSliceRange(
           scrollEl,
-          getScrollDetails(
-            scrollEl,
-            this.__getVirtualScrollEl(),
-            this.$refs.before,
-            this.$refs.after,
-            this.virtualScrollHorizontal,
-            this.virtualScrollStickySizeStart,
-            this.virtualScrollStickySizeEnd
-          ),
+          scrollDetails,
           Math.min(this.virtualScrollLength - 1, Math.max(0, parseInt(toIndex, 10) || 0)),
           0,
-          this.prevToIndex > -1 && toIndex > this.prevToIndex ? 'end' : 'start'
+          scrollToEdges.indexOf(edge) > -1 ? edge : (this.prevToIndex > -1 && toIndex > this.prevToIndex ? 'end' : 'start')
         );
       },
 
@@ -23054,24 +24491,34 @@
             this.$refs.before,
             this.$refs.after,
             this.virtualScrollHorizontal,
+            this.$q.lang.rtl,
             this.virtualScrollStickySizeStart,
             this.virtualScrollStickySizeEnd
           ),
-          scrollMaxStart = scrollDetails.scrollMaxSize - Math.max(scrollDetails.scrollViewSize, scrollDetails.offsetEnd),
-          listLastIndex = this.virtualScrollLength - 1;
+          listLastIndex = this.virtualScrollLength - 1,
+          listEndOffset = scrollDetails.scrollMaxSize - scrollDetails.offsetStart - scrollDetails.offsetEnd - this.virtualScrollPaddingAfter;
 
         if (this.prevScrollStart === scrollDetails.scrollStart) {
           return
         }
         this.prevScrollStart = void 0;
 
+        if (scrollDetails.scrollMaxSize <= 0) {
+          this.__setVirtualScrollSliceRange(scrollEl, scrollDetails, 0, 0);
+          return
+        }
+
+        this.__scrollViewSize !== scrollDetails.scrollViewSize && this.__setVirtualScrollSize(scrollDetails.scrollViewSize);
+
         this.__updateVirtualScrollSizes(this.virtualScrollSliceRange.from);
+
+        var scrollMaxStart = scrollDetails.scrollMaxSize - Math.max(scrollDetails.scrollViewSize, scrollDetails.offsetEnd) - this.virtualScrollSizes[listLastIndex];
 
         if (scrollMaxStart > 0 && scrollDetails.scrollStart >= scrollMaxStart) {
           this.__setVirtualScrollSliceRange(
             scrollEl,
             scrollDetails,
-            this.virtualScrollLength - 1,
+            listLastIndex,
             scrollDetails.scrollMaxSize - scrollDetails.offsetEnd - this.virtualScrollSizesAgg.reduce(sumFn, 0)
           );
 
@@ -23083,9 +24530,16 @@
           listOffset = scrollDetails.scrollStart - scrollDetails.offsetStart,
           offset = listOffset;
 
-        for (var j = 0; listOffset >= this.virtualScrollSizesAgg[j] && toIndex < listLastIndex; j++) {
-          listOffset -= this.virtualScrollSizesAgg[j];
-          toIndex += aggBucketSize;
+        if (listOffset <= listEndOffset && listOffset + scrollDetails.scrollViewSize >= this.virtualScrollPaddingBefore) {
+          listOffset -= this.virtualScrollPaddingBefore;
+          toIndex = this.virtualScrollSliceRange.from;
+          offset = listOffset;
+        }
+        else {
+          for (var j = 0; listOffset >= this.virtualScrollSizesAgg[j] && toIndex < listLastIndex; j++) {
+            listOffset -= this.virtualScrollSizesAgg[j];
+            toIndex += aggBucketSize;
+          }
         }
 
         while (listOffset > 0 && toIndex < listLastIndex) {
@@ -23110,8 +24564,11 @@
       __setVirtualScrollSliceRange: function __setVirtualScrollSliceRange (scrollEl, scrollDetails, toIndex, offset, align) {
         var this$1 = this;
 
+        var alignForce = typeof align === 'string' && align.indexOf('-force') > -1;
+        var alignEnd = alignForce === true ? align.replace('-force', '') : align;
+
         var
-          from = Math.max(0, Math.ceil(toIndex - (align === void 0 ? 3 : 2) * this.virtualScrollSliceSizeComputed / 6)),
+          from = Math.max(0, Math.ceil(toIndex - this.virtualScrollSliceSizeComputed / (alignEnd === void 0 || alignEnd === 'center' ? 2 : (alignEnd === 'start' ? 3 : 1.5)))),
           to = from + this.virtualScrollSliceSizeComputed;
 
         if (to > this.virtualScrollLength) {
@@ -23121,11 +24578,14 @@
 
         var rangeChanged = from !== this.virtualScrollSliceRange.from || to !== this.virtualScrollSliceRange.to;
 
-        if (rangeChanged === false && align === void 0) {
+        if (rangeChanged === false && alignEnd === void 0) {
           this.__emitScroll(toIndex);
 
           return
         }
+
+        var hadFocus = rangeChanged === true && typeof scrollEl.contains === 'function' && scrollEl.contains(document.activeElement);
+        var sizeBefore = alignEnd !== void 0 ? this.virtualScrollSizes.slice(from, toIndex).reduce(sumFn, 0) : 0;
 
         if (rangeChanged === true) {
           this.virtualScrollSliceRange = { from: from, to: to };
@@ -23133,29 +24593,49 @@
           this.virtualScrollPaddingAfter = sumSize(this.virtualScrollSizesAgg, this.virtualScrollSizes, to, this.virtualScrollLength);
         }
 
-        this.$nextTick(function () {
+        this.__activeScrollStart = scrollDetails.scrollStart;
+
+        requestAnimationFrame(function () {
+          if (hadFocus === true && scrollEl.contains(document.activeElement) !== true) {
+            scrollEl.focus();
+          }
+
+          if (this$1.__activeScrollStart !== scrollDetails.scrollStart) {
+            return
+          }
+
           if (rangeChanged === true) {
             this$1.__updateVirtualScrollSizes(from);
           }
 
           var
-            posStart = this$1.virtualScrollSizes.slice(from, toIndex).reduce(sumFn, scrollDetails.offsetStart + this$1.virtualScrollPaddingBefore),
-            posEnd = posStart + this$1.virtualScrollSizes[toIndex];
+            sizeAfter = this$1.virtualScrollSizes.slice(from, toIndex).reduce(sumFn, 0),
+            posStart = sizeAfter + scrollDetails.offsetStart + this$1.virtualScrollPaddingBefore,
+            posEnd = posStart + this$1.virtualScrollSizes[toIndex],
+            rtl = this$1.$q.lang.rtl === true;
 
           var scrollPosition = posStart + offset;
 
-          if (align !== void 0) {
-            scrollPosition = scrollDetails.scrollStart < posStart && posEnd < scrollDetails.scrollStart + scrollDetails.scrollViewSize
-              ? scrollDetails.scrollStart
-              : (align === 'end' ? posEnd - scrollDetails.scrollViewSize : posStart);
+          if (alignEnd !== void 0) {
+            var sizeDiff = sizeAfter - sizeBefore;
+            var scrollStart = scrollDetails.scrollStart + sizeDiff;
+
+            scrollPosition = alignForce !== true && scrollStart < posStart && posEnd < scrollStart + scrollDetails.scrollViewSize
+              ? scrollStart
+              : (
+                alignEnd === 'end'
+                  ? posEnd - scrollDetails.scrollViewSize
+                  : posStart - (alignEnd === 'start' ? 0 : Math.round((scrollDetails.scrollViewSize - this$1.virtualScrollSizes[toIndex]) / 2))
+              );
           }
 
           this$1.prevScrollStart = scrollPosition;
 
-          this$1.__setScroll(
+          setScroll$1(
             scrollEl,
             scrollPosition,
-            this$1.virtualScrollHorizontal
+            this$1.virtualScrollHorizontal,
+            rtl
           );
 
           this$1.__emitScroll(toIndex);
@@ -23169,18 +24649,20 @@
           var
             children = slice.call(contentEl.children).filter(function (el) { return el.classList.contains('q-virtual-scroll--skip') === false; }),
             childrenLength = children.length,
-            sizeProp = this.virtualScrollHorizontal === true ? 'offsetWidth' : 'offsetHeight';
+            sizeFn = this.virtualScrollHorizontal === true
+              ? function (el) { return el.getBoundingClientRect().width; }
+              : function (el) { return el.offsetHeight; };
 
           var
             index = from,
             size, diff;
 
           for (var i = 0; i < childrenLength;) {
-            size = children[i][sizeProp];
+            size = sizeFn(children[i]);
             i++;
 
             while (i < childrenLength && children[i].classList.contains('q-virtual-scroll--with-prev') === true) {
-              size += children[i][sizeProp];
+              size += sizeFn(children[i]);
               i++;
             }
 
@@ -23242,17 +24724,35 @@
         }
       },
 
-      __setVirtualScrollSize: function __setVirtualScrollSize () {
-        if (this.virtualScrollHorizontal === true) {
-          this.virtualScrollSliceSizeComputed = typeof window === 'undefined'
-            ? this.virtualScrollSliceSize
-            : Math.max(this.virtualScrollSliceSize, Math.ceil(window.innerWidth / this.virtualScrollItemSize * 2));
+      __setVirtualScrollSize: function __setVirtualScrollSize (scrollViewSize) {
+        if (this.virtualScrollSliceSize > 0) {
+          this.virtualScrollSliceSizeComputed = this.virtualScrollSliceSize;
+
+          return
         }
-        else {
-          this.virtualScrollSliceSizeComputed = typeof window === 'undefined'
-            ? this.virtualScrollSliceSize
-            : Math.max(this.virtualScrollSliceSize, Math.ceil(window.innerHeight / this.virtualScrollItemSize * 2));
+
+        if (scrollViewSize === void 0 && typeof window !== 'undefined') {
+          var scrollEl = this.__getVirtualScrollTarget();
+
+          if (scrollEl !== void 0 && scrollEl !== null && scrollEl.nodeType !== 8) {
+            scrollViewSize = getScrollDetails(
+              scrollEl,
+              this.__getVirtualScrollEl(),
+              this.$refs.before,
+              this.$refs.after,
+              this.virtualScrollHorizontal,
+              this.$q.lang.rtl,
+              this.virtualScrollStickySizeStart,
+              this.virtualScrollStickySizeEnd
+            ).scrollViewSize;
+          }
         }
+
+        this.__scrollViewSize = scrollViewSize;
+
+        this.virtualScrollSliceSizeComputed = scrollViewSize === void 0 || scrollViewSize <= 0
+          ? 30
+          : Math.ceil(scrollViewSize / this.virtualScrollItemSize * 3);
       },
 
       __padVirtualScroll: function __padVirtualScroll (h, tag, content) {
@@ -23270,7 +24770,7 @@
               h('tr', [
                 h('td', {
                   style: ( obj = {}, obj[paddingSize] = ((this.virtualScrollPaddingBefore) + "px"), obj ),
-                  attrs: { colspan: '100%' }
+                  attrs: this.colspanAttr
                 })
               ])
             ])
@@ -23296,7 +24796,7 @@
               h('tr', [
                 h('td', {
                   style: ( obj$2 = {}, obj$2[paddingSize] = ((this.virtualScrollPaddingAfter) + "px"), obj$2 ),
-                  attrs: { colspan: '100%' }
+                  attrs: this.colspanAttr
                 })
               ])
             ])
@@ -23329,13 +24829,14 @@
     },
 
     beforeMount: function beforeMount () {
-      this.__onVirtualScrollEvt = debounce(this.__onVirtualScrollEvt, 70);
-      this.__setScroll = frameDebounce(setScroll$1);
+      buggyRTL === void 0 && detectBuggyRTL();
+      this.__onVirtualScrollEvt = debounce(this.__onVirtualScrollEvt, this.$q.platform.is.ios === true ? 120 : 70);
       this.__setVirtualScrollSize();
     }
   };
 
   var validateNewValueMode = function (v) { return ['add', 'add-unique', 'toggle'].includes(v); };
+  var reEscapeList = '.*+?^${}()|[]\\';
 
   var QSelect = Vue.extend({
     name: 'QSelect',
@@ -23482,7 +24983,9 @@
       },
 
       fieldClass: function fieldClass () {
-        return ("q-select q-field--auto-height q-select--with" + (this.useInput !== true ? 'out' : '') + "-input")
+        return "q-select q-field--auto-height q-select--with" + (this.useInput !== true ? 'out' : '') + "-input" +
+          " q-select--with" + (this.useChips !== true ? 'out' : '') + "-chips" +
+          " q-select--" + (this.multiple === true ? 'multiple' : 'single')
       },
 
       computedInputClass: function computedInputClass () {
@@ -23666,21 +25169,9 @@
         return this.__getPropValueFn('optionDisable', 'disable')
       },
 
-      autocompleteControlEvents: function autocompleteControlEvents () {
-        var on = {
-          keydown: this.__onTargetKeydown,
-          keyup: this.__onTargetAutocomplete,
-          keypress: this.__onTargetKeypress
-        };
-
-        if (this.$q.platform.is.mobile === true) {
-          on.focus = function (ev) { ev.target.blur(); };
-        }
-
-        return on
-      },
-
       inputControlEvents: function inputControlEvents () {
+        var this$1 = this;
+
         var on = {
           input: this.__onInput,
           // Safari < 10.2 & UIWebView doesn't fire compositionend when
@@ -23691,14 +25182,13 @@
           keydown: this.__onTargetKeydown,
           keyup: this.__onTargetKeyup,
           keypress: this.__onTargetKeypress,
-          focus: this.__selectInputText
+          focus: this.__selectInputText,
+          click: function (e) {
+            this$1.hasDialog === true && stop(e);
+          }
         };
 
         on.compositionstart = on.compositionupdate = on.compositionend = this.__onComposition;
-
-        if (this.hasDialog === true) {
-          on.click = stop;
-        }
 
         return on
       }
@@ -23772,8 +25262,6 @@
         var optValue = this.getOptionValue(opt);
 
         if (this.multiple !== true) {
-          this.$refs.target !== void 0 && this.$refs.target.focus();
-
           if (keepOpen !== true) {
             this.updateInputValue(
               this.fillInput === true ? this.getOptionLabel(opt) : '',
@@ -23783,6 +25271,8 @@
 
             this.hidePopup();
           }
+
+          this.$refs.target !== void 0 && this.$refs.target.focus();
 
           if (isDeepEqual(this.getOptionValue(this.innerValue[0]), optValue) !== true) {
             this.$emit('input', this.emitValue === true ? optValue : opt);
@@ -23916,7 +25406,6 @@
 
         if (e.keyCode !== void 0) {
           this.__onTargetKeyup(e);
-
           return
         }
 
@@ -23988,6 +25477,7 @@
         if (
           e.keyCode === 8 &&
           this.multiple === true &&
+          this.hideSelected !== true &&
           this.inputValue.length === 0 &&
           Array.isArray(this.value)
         ) {
@@ -24003,29 +25493,36 @@
 
         var optionsLength = this.virtualScrollLength;
 
+        // clear search buffer if expired
+        if (this.searchBuffer === void 0 || this.searchBufferExp < Date.now()) {
+          this.searchBuffer = '';
+        }
+
         // keyboard search when not having use-input
-        if (optionsLength > 0 && this.useInput !== true && e.keyCode >= 48 && e.keyCode <= 90) {
+        if (
+          optionsLength > 0 &&
+          this.useInput !== true &&
+          e.key.length === 1 && // printable char
+          e.altKey === e.ctrlKey && // not kbd shortcut
+          (e.keyCode !== 32 || this.searchBuffer.length > 0) // space in middle of search
+        ) {
           this.menu !== true && this.showPopup(e);
 
-          // clear search buffer if expired
-          if (this.searchBuffer === void 0 || this.searchBufferExp < Date.now()) {
-            this.searchBuffer = '';
-          }
-
           var
-            char = String.fromCharCode(e.keyCode).toLocaleLowerCase(),
+            char = e.key.toLocaleLowerCase(),
             keyRepeat = this.searchBuffer.length === 1 && this.searchBuffer[0] === char;
 
           this.searchBufferExp = Date.now() + 1500;
           if (keyRepeat === false) {
+            stopAndPrevent(e);
             this.searchBuffer += char;
           }
 
-          var searchRe = new RegExp('^' + this.searchBuffer.split('').join('.*'), 'i');
+          var searchRe = new RegExp('^' + this.searchBuffer.split('').map(function (l) { return reEscapeList.indexOf(l) > -1 ? '\\' + l : l; }).join('.*'), 'i');
 
           var index = this.optionIndex;
 
-          if (keyRepeat === true || searchRe.test(this.getOptionLabel(this.options[index])) !== true) {
+          if (keyRepeat === true || index < 0 || searchRe.test(this.getOptionLabel(this.options[index])) !== true) {
             do {
               index = normalizeToInterval(index + 1, -1, optionsLength - 1);
             }
@@ -24049,12 +25546,12 @@
           return
         }
 
-        // enter, space (when not using use-input), or tab (when not using multiple and option selected)
+        // enter, space (when not using use-input and not in search), or tab (when not using multiple and option selected)
         // same target is checked above
         if (
           e.keyCode !== 13 &&
-          (this.useInput === true || e.keyCode !== 32) &&
-          (tabShouldSelect === false || e.keyCode !== 9)
+          (e.keyCode !== 32 || this.useInput === true || this.searchBuffer !== '') &&
+          (e.keyCode !== 9 || tabShouldSelect === false)
         ) { return }
 
         e.keyCode !== 9 && stopAndPrevent(e);
@@ -24191,22 +25688,33 @@
           child.push(this.__getInput(h, fromDialog));
         }
         else if (this.editable === true) {
-          var options = {
-            staticClass: 'q-select__autocomplete-input no-outline',
-            attrs: {
-              autocomplete: this.qAttrs.autocomplete,
-              tabindex: this.tabindex
-            },
-            on: this.autocompleteControlEvents
-          };
+          isTarget === true && child.push(
+            h('div', {
+              // there can be only one (when dialog is opened the control in dialog should be target)
+              ref: 'target',
+              key: 'd_t',
+              staticClass: 'no-outline',
+              attrs: {
+                id: this.targetUid,
+                tabindex: this.tabindex
+              },
+              on: cache(this, 'f-tget', {
+                keydown: this.__onTargetKeydown,
+                keyup: this.__onTargetKeyup,
+                keypress: this.__onTargetKeypress
+              })
+            })
+          );
 
-          if (isTarget === true) {
-            // there can be only one (when dialog is opened the control in dialog should be target)
-            options.ref = 'target';
-            options.attrs.id = this.targetUid;
-          }
-
-          child.push(h('input', options));
+          this.qAttrs.autocomplete !== void 0 && child.push(
+            h('input', {
+              staticClass: 'q-select__autocomplete-input no-outline',
+              attrs: { autocomplete: this.qAttrs.autocomplete },
+              on: cache(this, 'autoinp', {
+                keyup: this.__onTargetAutocomplete
+              })
+            })
+          );
         }
 
         if (this.nameProp !== void 0 && this.disable !== true && this.innerOptionsValue.length > 0) {
@@ -24263,10 +25771,10 @@
       },
 
       __getInnerAppend: function __getInnerAppend (h) {
-        return this.loading !== true && this.innerLoading !== true && this.hideDropdownIcon !== true
+        return this.loading !== true && this.innerLoadingIndicator !== true && this.hideDropdownIcon !== true
           ? [
             h(QIcon, {
-              staticClass: 'q-select__dropdown-icon',
+              staticClass: 'q-select__dropdown-icon' + (this.menu === true ? ' rotate-180' : ''),
               props: { name: this.dropdownArrowIcon }
             })
           ]
@@ -24276,6 +25784,7 @@
       __getInput: function __getInput (h, fromDialog) {
         var options = {
           ref: 'target',
+          key: 'i_t',
           staticClass: 'q-field__input q-placeholder col',
           style: this.inputStyle,
           class: this.computedInputClass,
@@ -24365,6 +25874,7 @@
         }
         else {
           this.innerLoading = true;
+          this.innerLoadingIndicator = true;
         }
 
         if (
@@ -24392,13 +25902,19 @@
 
               typeof fn === 'function' && fn();
 
+              // hide indicator to allow arrow to animate
+              this$1.innerLoadingIndicator = false;
+
               this$1.$nextTick(function () {
                 this$1.innerLoading = false;
-                if (this$1.menu === true) {
-                  this$1.__updateMenu(true);
-                }
-                else {
-                  this$1.menu = true;
+
+                if (this$1.editable === true) {
+                  if (this$1.menu === true) {
+                    this$1.__updateMenu(true);
+                  }
+                  else {
+                    this$1.menu = true;
+                  }
                 }
 
                 typeof afterFn === 'function' && this$1.$nextTick(function () { afterFn(this$1); });
@@ -24409,6 +25925,7 @@
             if (this$1.focused === true && this$1.filterId === filterId) {
               clearTimeout(this$1.filterId);
               this$1.innerLoading = false;
+              this$1.innerLoadingIndicator = false;
             }
             this$1.menu === true && (this$1.menu = false);
           }
@@ -24531,8 +26048,9 @@
               {for: this.targetUid,
               dark: this.isOptionsDark,
               square: true,
-              loading: this.innerLoading,
               filled: true,
+              itemAligned: false,
+              loading: this.innerLoadingIndicator,
               stackLabel: this.inputValue.length > 0}),
             on: Object.assign({}, this.qListeners,
               {focus: this.__onDialogFieldFocus,
@@ -24595,7 +26113,7 @@
 
       __onDialogHide: function __onDialogHide (e) {
         this.hidePopup();
-        this.$emit('blur', e);
+        this.focused === false && this.$emit('blur', e);
         this.__resetInputValue();
       },
 
@@ -24629,12 +26147,17 @@
           if (this.innerLoading === true) {
             this.$emit('filter-abort');
             this.innerLoading = false;
+            this.innerLoadingIndicator = false;
           }
         }
       },
 
       showPopup: function showPopup (e) {
         var this$1 = this;
+
+        if (this.editable !== true) {
+          return
+        }
 
         if (this.hasDialog === true) {
           this.__onControlFocusin(e);
@@ -24914,10 +26437,13 @@
 
       var
         content = [],
-        left = this.$scopedSlots[this.langDir.right] !== void 0,
-        right = this.$scopedSlots[this.langDir.left] !== void 0,
-        up = this.$scopedSlots.bottom !== void 0,
-        down = this.$scopedSlots.top !== void 0;
+        slots = {
+          left: this.$scopedSlots[this.langDir.right] !== void 0,
+          right: this.$scopedSlots[this.langDir.left] !== void 0,
+          up: this.$scopedSlots.bottom !== void 0,
+          down: this.$scopedSlots.top !== void 0
+        },
+        dirs = Object.keys(slots).filter(function (key) { return slots[key] === true; });
 
       slotsDef.forEach(function (slot) {
         var dir = slot[0];
@@ -24940,19 +26466,25 @@
           ref: 'content',
           key: 'content',
           staticClass: 'q-slide-item__content',
-          directives: left === true || right === true || up === true || down === true ? [{
-            name: 'touch-pan',
-            value: this.__pan,
-            modifiers: {
-              left: left,
-              right: right,
-              up: up,
-              down: down,
-              prevent: true,
-              stop: true,
-              mouse: true
-            }
-          }] : null
+          directives: dirs.length > 0
+            ? cacheWithFn(this, 'dir#' + dirs.join(''), function () {
+              var modifiers = {
+                prevent: true,
+                stop: true,
+                mouse: true
+              };
+
+              dirs.forEach(function (dir) {
+                modifiers[dir] = true;
+              });
+
+              return [{
+                name: 'touch-pan',
+                value: this$1.__pan,
+                modifiers: modifiers
+              }]
+            })
+            : null
         }, slot(this, 'default'))
       );
 
@@ -27242,6 +28774,18 @@
         var obj, obj$1;
 
         return ( obj$1 = {}, obj$1[this.side] = ( obj = {}, obj[this.prop] = this.__getCSSValue(this.value), obj ), obj$1 )
+      },
+
+      separatorDirectives: function separatorDirectives () {
+        var obj;
+
+        if (this.disable !== true) {
+          return [{
+            name: 'touch-pan',
+            value: this.__pan,
+            modifiers: ( obj = {}, obj[ this.horizontal === true ? 'vertical' : 'horizontal' ] = true, obj.prevent = true, obj.stop = true, obj.mouse = true, obj.mouseAllDir = true, obj )
+          }]
+        }
       }
     },
 
@@ -27299,7 +28843,7 @@
     },
 
     render: function render (h) {
-      var attrs = this.disable === true ? { 'aria-disabled': '' } : void 0;
+      var attrs = this.disable === true ? { 'aria-disabled': 'true' } : void 0;
       var child = [
         h('div', {
           ref: 'before',
@@ -27317,18 +28861,7 @@
         }, [
           h('div', {
             staticClass: 'absolute-full q-splitter__separator-area',
-            directives: this.disable === true ? void 0 : cache(this, 'dir#' + this.horizontal, [{
-              name: 'touch-pan',
-              value: this.__pan,
-              modifiers: {
-                horizontal: this.horizontal !== true,
-                vertical: this.horizontal,
-                prevent: true,
-                stop: true,
-                mouse: true,
-                mouseAllDir: true
-              }
-            }])
+            directives: this.separatorDirectives
           }, slot(this, 'separator'))
         ]),
 
@@ -27390,7 +28923,7 @@
 
         return this.isDisable === false &&
           this.stepper.headerNav &&
-          (this.isActive === true || nav)
+          nav
       },
 
       hasPrefix: function hasPrefix () {
@@ -27469,17 +29002,15 @@
         }];
       }
 
-      if (this.headerNav === true) {
-        Object.assign(data, {
-          on: cache(this, 'headnavon', {
-            click: this.activate,
-            keyup: this.keyup
-          }),
-          attrs: this.isDisable === true
-            ? { tabindex: -1, 'aria-disabled': '' }
-            : { tabindex: this.qAttrs.tabindex || 0 }
-        });
-      }
+      this.headerNav === true && Object.assign(data, {
+        on: cache(this, 'headnavon', {
+          click: this.activate,
+          keyup: this.keyup
+        }),
+        attrs: this.isDisable === true
+          ? { tabindex: -1, 'aria-disabled': 'true' }
+          : { tabindex: this.qAttrs.tabindex || 0 }
+      });
 
       var child = [
         h('div', { staticClass: 'q-focus-helper', attrs: { tabindex: -1 }, ref: 'blurTarget' }),
@@ -27684,18 +29215,20 @@
         if (this.vertical === true) {
           this.__isValidPanelName(this.value) && this.__updatePanelIndex();
 
-          return top.concat(
-            h('div', {
-              staticClass: 'q-stepper__content',
-              // stop propagation of content emitted @input
-              // which would tamper with Panel's model
-              on: cache(this, 'stop', { input: stop })
-            }, slot(this, 'default'))
-          )
+          var content = h('div', {
+            staticClass: 'q-stepper__content',
+            // stop propagation of content emitted @input
+            // which would tamper with Panel's model
+            on: cache(this, 'stop', { input: stop })
+          }, slot(this, 'default'));
+
+          return top === void 0
+            ? [ content ]
+            : top.concat(content)
         }
 
         return [
-          h('div', { class: this.headerClasses }, this.__getAllPanels().map(function (panel) {
+          h('div', { class: this.headerClasses }, this.panels.map(function (panel) {
             var step = panel.componentOptions.propsData;
 
             return h(StepHeader, {
@@ -27740,14 +29273,16 @@
 
   var Top = {
     computed: {
-      marginalsProps: function marginalsProps () {
+      marginalsScope: function marginalsScope () {
         return {
           pagination: this.computedPagination,
           pagesNumber: this.pagesNumber,
           isFirstPage: this.isFirstPage,
           isLastPage: this.isLastPage,
+          firstPage: this.firstPage,
           prevPage: this.prevPage,
           nextPage: this.nextPage,
+          lastPage: this.lastPage,
 
           inFullscreen: this.inFullscreen,
           toggleFullscreen: this.toggleFullscreen
@@ -27756,7 +29291,7 @@
     },
 
     methods: {
-      getTop: function getTop (h) {
+      __getTopDiv: function __getTopDiv (h) {
         var
           top = this.$scopedSlots.top,
           topLeft = this.$scopedSlots['top-left'],
@@ -27768,13 +29303,13 @@
           staticClass = 'q-table__top relative-position row items-center';
 
         if (top !== void 0) {
-          return h('div', { staticClass: staticClass }, [ top(this.marginalsProps) ])
+          return h('div', { staticClass: staticClass }, [ top(this.marginalsScope) ])
         }
 
         var child;
 
         if (hasSelection === true) {
-          child = topSelection(this.marginalsProps).slice();
+          child = topSelection(this.marginalsScope).slice();
         }
         else {
           child = [];
@@ -27782,14 +29317,14 @@
           if (topLeft !== void 0) {
             child.push(
               h('div', { staticClass: 'q-table-control' }, [
-                topLeft(this.marginalsProps)
+                topLeft(this.marginalsScope)
               ])
             );
           }
           else if (this.title) {
             child.push(
               h('div', { staticClass: 'q-table__control' }, [
-                h('div', { staticClass: 'q-table__title' }, this.title)
+                h('div', { staticClass: 'q-table__title', class: this.titleClass }, this.title)
               ])
             );
           }
@@ -27799,7 +29334,7 @@
           child.push(h('div', { staticClass: 'q-table__separator col' }));
           child.push(
             h('div', { staticClass: 'q-table__control' }, [
-              topRight(this.marginalsProps)
+              topRight(this.marginalsScope)
             ])
           );
         }
@@ -27874,7 +29409,7 @@
 
       return h('th', {
         on: Object.assign({}, on, evt),
-        style: col.__thStyle,
+        style: col.headerStyle,
         class: col.__thClass +
           (this.autoWidth === true ? ' q-table--col-auto-width' : '')
       }, child)
@@ -27882,16 +29417,24 @@
   });
 
   var TableHeader = {
+    computed: {
+      headerSelectedValue: function headerSelectedValue () {
+        return this.someRowsSelected === true
+          ? null
+          : this.allRowsSelected
+      }
+    },
+
     methods: {
-      getTableHeader: function getTableHeader (h) {
-        var child = this.getTableHeaderRow(h);
+      __getTHead: function __getTHead (h) {
+        var child = this.__getTHeadTR(h);
 
         if (this.loading === true && this.$scopedSlots.loading === void 0) {
           child.push(
             h('tr', { staticClass: 'q-table__progress' }, [
               h('th', {
                 staticClass: 'relative-position',
-                attrs: { colspan: '100%' }
+                attrs: { colspan: this.computedColspan }
               }, this.__getProgress(h))
             ])
           );
@@ -27900,7 +29443,7 @@
         return h('thead', child)
       },
 
-      getTableHeaderRow: function getTableHeaderRow (h) {
+      __getTHeadTR: function __getTHeadTR (h) {
         var this$1 = this;
 
         var
@@ -27908,66 +29451,51 @@
           headerCell = this.$scopedSlots['header-cell'];
 
         if (header !== void 0) {
-          return header(this.addTableHeaderRowMeta({
-            header: true, cols: this.computedCols, sort: this.sort, colsMap: this.computedColsMap
-          })).slice()
+          return header(
+            this.__getHeaderScope({ header: true })
+          ).slice()
         }
 
-        var mapFn;
+        var child = this.computedCols.map(function (col) {
+          var
+            headerCellCol = this$1.$scopedSlots[("header-cell-" + (col.name))],
+            slot = headerCellCol !== void 0 ? headerCellCol : headerCell,
+            props = this$1.__getHeaderScope({ col: col });
 
-        if (headerCell !== void 0) {
-          mapFn = function (col) { return headerCell({
-            col: col, cols: this$1.computedCols, sort: this$1.sort, colsMap: this$1.computedColsMap
-          }); };
-        }
-        else {
-          mapFn = function (col) {
-            var props = {
-              col: col, cols: this$1.computedCols, sort: this$1.sort, colsMap: this$1.computedColsMap
-            };
-            var slot = this$1.$scopedSlots[("header-cell-" + (col.name))];
-
-            return slot !== void 0
-              ? slot(props)
-              : h(QTh, {
-                key: col.name,
-                props: { props: props },
-                style: col.headerStyle,
-                class: col.headerClasses
-              }, col.label)
-          };
-        }
-
-        var child = this.computedCols.map(mapFn);
+          return slot !== void 0
+            ? slot(props)
+            : h(QTh, {
+              key: col.name,
+              props: { props: props },
+              style: col.headerStyle,
+              class: col.headerClasses
+            }, col.label)
+        });
 
         if (this.singleSelection === true && this.grid !== true) {
           child.unshift(h('th', { staticClass: 'q-table--col-auto-width' }, [' ']));
         }
         else if (this.multipleSelection === true) {
-          child.unshift(h('th', { staticClass: 'q-table--col-auto-width' }, [
-            h(QCheckbox, {
-              props: {
-                color: this.color,
-                value: this.someRowsSelected === true
-                  ? null
-                  : this.allRowsSelected,
-                dark: this.isDark,
-                dense: this.dense
-              },
-              on: cache(this, 'inp', {
-                input: function (val) {
-                  if (this$1.someRowsSelected === true) {
-                    val = false;
-                  }
-                  this$1.__updateSelection(
-                    this$1.computedRows.map(this$1.getRowKey),
-                    this$1.computedRows,
-                    val
-                  );
-                }
+          var slot = this.$scopedSlots['header-selection'];
+          var content = slot !== void 0
+            ? slot(this.__getHeaderScope({}))
+            : [
+              h(QCheckbox, {
+                props: {
+                  color: this.color,
+                  value: this.headerSelectedValue,
+                  dark: this.isDark,
+                  dense: this.dense
+                },
+                on: cache(this, 'inp', {
+                  input: this.__onMultipleSelectionSet
+                })
               })
-            })
-          ]));
+            ];
+
+          child.unshift(
+            h('th', { staticClass: 'q-table--col-auto-width' }, content)
+          );
         }
 
         return [
@@ -27978,121 +29506,137 @@
         ]
       },
 
-      addTableHeaderRowMeta: function addTableHeaderRowMeta (data) {
+      __getHeaderScope: function __getHeaderScope (data) {
         var this$1 = this;
+
+        Object.assign(data, {
+          cols: this.computedCols,
+          sort: this.sort,
+          colsMap: this.computedColsMap,
+          color: this.color,
+          dark: this.isDark,
+          dense: this.dense
+        });
 
         if (this.multipleSelection === true) {
           Object.defineProperty(data, 'selected', {
-            get: function () { return this$1.someRowsSelected === true
-              ? 'some'
-              : this$1.allRowsSelected; },
-            set: function (val) {
-              if (this$1.someRowsSelected === true) {
-                val = false;
-              }
-              this$1.__updateSelection(
-                this$1.computedRows.map(this$1.getRowKey),
-                this$1.computedRows,
-                val
-              );
-            },
+            get: function () { return this$1.headerSelectedValue; },
+            set: this.__onMultipleSelectionSet,
             configurable: true,
             enumerable: true
           });
+
+          // TODO: remove in v2
           data.partialSelected = this.someRowsSelected;
           data.multipleSelect = true;
         }
 
         return data
+      },
+
+      __onMultipleSelectionSet: function __onMultipleSelectionSet (val) {
+        if (this.someRowsSelected === true) {
+          val = false;
+        }
+        this.__updateSelection(
+          this.computedRows.map(this.getRowKey),
+          this.computedRows,
+          val
+        );
       }
     }
   };
 
   var TableBody = {
     methods: {
-      getTableRowBody: function getTableRowBody (row, body, pageIndex) {
+      __getTBodyTR: function __getTBodyTR (h, row, bodySlot, pageIndex) {
+        var this$1 = this;
+
         var
           key = this.getRowKey(row),
           selected = this.isRowSelected(key);
 
-        return body(this.addBodyRowMeta({
-          key: key,
-          row: row,
-          pageIndex: pageIndex,
-          cols: this.computedCols,
-          colsMap: this.computedColsMap,
-          __trClass: selected ? 'selected' : ''
-        }))
-      },
-
-      getTableRow: function getTableRow (h, row, pageIndex) {
-        var this$1 = this;
+        if (bodySlot !== void 0) {
+          return bodySlot(
+            this.__getBodyScope({
+              key: key,
+              row: row,
+              pageIndex: pageIndex,
+              __trClass: selected ? 'selected' : ''
+            })
+          )
+        }
 
         var
           bodyCell = this.$scopedSlots['body-cell'],
-          key = this.getRowKey(row),
-          selected = this.isRowSelected(key),
-          child = bodyCell
-            ? this.computedCols.map(function (col) { return bodyCell(this$1.addBodyCellMetaData({ row: row, pageIndex: pageIndex, col: col })); })
-            : this.computedCols.map(function (col) {
-              var slot = this$1.$scopedSlots[("body-cell-" + (col.name))];
-              return slot !== void 0
-                ? slot(this$1.addBodyCellMetaData({ row: row, pageIndex: pageIndex, col: col }))
-                : h('td', {
-                  class: col.__tdClass,
-                  style: col.__tdStyle
-                }, this$1.getCellValue(col, row))
-            });
+          child = this.computedCols.map(function (col) {
+            var
+              bodyCellCol = this$1.$scopedSlots[("body-cell-" + (col.name))],
+              slot = bodyCellCol !== void 0 ? bodyCellCol : bodyCell;
 
-        this.hasSelectionMode === true && child.unshift(
-          h('td', { staticClass: 'q-table--col-auto-width' }, [
-            h(QCheckbox, {
-              props: {
-                value: selected,
-                color: this.color,
-                dark: this.isDark,
-                dense: this.dense
-              },
-              on: {
-                input: function (adding) {
-                  this$1.__updateSelection([ key ], [ row ], adding);
+            return slot !== void 0
+              ? slot(this$1.__getBodyCellScope({ key: key, row: row, pageIndex: pageIndex, col: col }))
+              : h('td', {
+                class: col.__tdClass,
+                style: col.style
+              }, this$1.getCellValue(col, row))
+          });
+
+        if (this.hasSelectionMode === true) {
+          var slot = this.$scopedSlots['body-selection'];
+          var content = slot !== void 0
+            ? slot(this.__getBodySelectionScope({ key: key, row: row, pageIndex: pageIndex }))
+            : [
+              h(QCheckbox, {
+                props: {
+                  value: selected,
+                  color: this.color,
+                  dark: this.isDark,
+                  dense: this.dense
+                },
+                on: {
+                  input: function (adding, evt) {
+                    this$1.__updateSelection([ key ], [ row ], adding, evt);
+                  }
                 }
-              }
-            })
-          ])
-        );
+              })
+            ];
+
+          child.unshift(
+            h('td', { staticClass: 'q-table--col-auto-width' }, content)
+          );
+        }
 
         var data = { key: key, class: { selected: selected }, on: {} };
 
         if (this.qListeners['row-click'] !== void 0) {
           data.class['cursor-pointer'] = true;
           data.on.click = function (evt) {
-            this$1.$emit('row-click', evt, row);
+            this$1.$emit('row-click', evt, row, pageIndex);
           };
         }
 
         if (this.qListeners['row-dblclick'] !== void 0) {
           data.class['cursor-pointer'] = true;
           data.on.dblclick = function (evt) {
-            this$1.$emit('row-dblclick', evt, row);
+            this$1.$emit('row-dblclick', evt, row, pageIndex);
           };
         }
 
         return h('tr', data, child)
       },
 
-      getTableBody: function getTableBody (h) {
+      __getTBody: function __getTBody (h) {
         var this$1 = this;
 
         var
           body = this.$scopedSlots.body,
           topRow = this.$scopedSlots['top-row'],
-          bottomRow = this.$scopedSlots['bottom-row'],
-          mapFn = body !== void 0
-            ? function (row, pageIndex) { return this$1.getTableRowBody(row, body, pageIndex); }
-            : function (row, pageIndex) { return this$1.getTableRow(h, row, pageIndex); };
+          bottomRow = this.$scopedSlots['bottom-row'];
 
-        var child = this.computedRows.map(mapFn);
+        var child = this.computedRows.map(
+          function (row, pageIndex) { return this$1.__getTBodyTR(h, row, body, pageIndex); }
+        );
 
         if (topRow !== void 0) {
           child = topRow({ cols: this.computedCols }).concat(child);
@@ -28104,38 +29648,17 @@
         return h('tbody', child)
       },
 
-      getTableRowVirtual: function getTableRowVirtual (h) {
+      __getVirtualTBodyTR: function __getVirtualTBodyTR (h) {
         var this$1 = this;
 
         var body = this.$scopedSlots.body;
-
-        return body !== void 0
-          ? function (props, pageIndex) { return this$1.getTableRowBody(props.item, body, pageIndex); }
-          : function (props, pageIndex) { return this$1.getTableRow(h, props.item, pageIndex); }
+        return function (props) { return this$1.__getTBodyTR(h, props.item, body, props.index); }
       },
 
-      addBodyRowMeta: function addBodyRowMeta (data) {
+      __getBodyScope: function __getBodyScope (data) {
         var this$1 = this;
 
-        data.rowIndex = this.firstRowIndex + data.pageIndex;
-
-        this.hasSelectionMode === true && Object.defineProperty(data, 'selected', {
-          get: function () { return this$1.isRowSelected(data.key); },
-          set: function (adding) {
-            this$1.__updateSelection([ data.key ], [ data.row ], adding);
-          },
-          configurable: true,
-          enumerable: true
-        });
-
-        Object.defineProperty(data, 'expand', {
-          get: function () { return this$1.isRowExpanded(data.key); },
-          set: function (adding) {
-            this$1.__updateExpanded(data.key, adding);
-          },
-          configurable: true,
-          enumerable: true
-        });
+        this.__injectBodyCommonScope(data);
 
         data.cols = data.cols.map(function (col) {
           var c = Object.assign({}, col);
@@ -28150,17 +29673,55 @@
         return data
       },
 
-      addBodyCellMetaData: function addBodyCellMetaData (data) {
+      __getBodyCellScope: function __getBodyCellScope (data) {
         var this$1 = this;
 
-        data.rowIndex = this.firstRowIndex + data.pageIndex;
+        this.__injectBodyCommonScope(data);
 
         Object.defineProperty(data, 'value', {
           get: function () { return this$1.getCellValue(data.col, data.row); },
           configurable: true,
           enumerable: true
         });
+
         return data
+      },
+
+      __getBodySelectionScope: function __getBodySelectionScope (data) {
+        this.__injectBodyCommonScope(data);
+        return data
+      },
+
+      __injectBodyCommonScope: function __injectBodyCommonScope (data) {
+        var this$1 = this;
+
+        Object.assign(data, {
+          cols: this.computedCols,
+          colsMap: this.computedColsMap,
+          sort: this.sort,
+          rowIndex: this.firstRowIndex + data.pageIndex,
+          color: this.color,
+          dark: this.isDark,
+          dense: this.dense
+        });
+
+        this.hasSelectionMode === true && Object.defineProperty(data, 'selected', {
+          get: function () { return this$1.isRowSelected(data.key); },
+          set: function (adding, evt) {
+            this$1.__updateSelection([ data.key ], [ data.row ], adding, evt);
+          },
+          configurable: true,
+          enumerable: true
+        });
+
+        Object.defineProperty(data, 'expand', {
+          get: function () { return this$1.isRowExpanded(data.key); },
+          set: function (adding) {
+            this$1.__updateExpanded(data.key, adding);
+          },
+          configurable: true,
+          enumerable: true
+        });
       },
 
       getCellValue: function getCellValue (col, row) {
@@ -28170,21 +29731,39 @@
     }
   };
 
+  var staticClass = 'q-table__bottom row items-center';
+
   var Bottom = {
+    props: {
+      hideBottom: Boolean,
+      hideSelectedBanner: Boolean,
+      hideNoData: Boolean,
+      hidePagination: Boolean
+    },
+
     computed: {
       navIcon: function navIcon () {
-        var ico = [ this.$q.iconSet.table.prevPage, this.$q.iconSet.table.nextPage ];
+        var ico = [
+          this.iconFirstPage || this.$q.iconSet.table.firstPage,
+          this.iconPrevPage || this.$q.iconSet.table.prevPage,
+          this.iconNextPage || this.$q.iconSet.table.nextPage,
+          this.iconLastPage || this.$q.iconSet.table.lastPage
+        ];
         return this.$q.lang.rtl === true ? ico.reverse() : ico
       }
     },
 
     methods: {
-      getBottom: function getBottom (h) {
+      __getBottomDiv: function __getBottomDiv (h) {
         if (this.hideBottom === true) {
           return
         }
 
         if (this.nothingToDisplay === true) {
+          if (this.hideNoData === true) {
+            return
+          }
+
           var message = this.loading === true
             ? this.loadingLabel || this.$q.lang.table.loading
             : (this.filter ? this.noResultsLabel || this.$q.lang.table.noResults : this.noDataLabel || this.$q.lang.table.noData);
@@ -28201,19 +29780,38 @@
             ];
 
           return h('div', {
-            staticClass: 'q-table__bottom row items-center q-table__bottom--nodata'
+            staticClass: staticClass + ' q-table__bottom--nodata'
           }, children)
         }
 
         var bottom = this.$scopedSlots.bottom;
 
-        return h('div', {
-          staticClass: 'q-table__bottom row items-center',
-          class: bottom !== void 0 ? null : 'justify-end'
-        }, bottom !== void 0 ? [ bottom(this.marginalsProps) ] : this.getPaginationRow(h))
+        if (bottom !== void 0) {
+          return h('div', { staticClass: staticClass }, [ bottom(this.marginalsScope) ])
+        }
+
+        var child = this.hideSelectedBanner !== true && this.hasSelectionMode === true && this.rowsSelectedNumber > 0
+          ? [
+            h('div', { staticClass: 'q-table__control' }, [
+              h('div', [
+                (this.selectedRowsLabel || this.$q.lang.table.selectedRecords)(this.rowsSelectedNumber)
+              ])
+            ])
+          ]
+          : [];
+
+        if (this.hidePagination !== true) {
+          return h('div', {
+            staticClass: staticClass + ' justify-end'
+          }, this.__getPaginationDiv(h, child))
+        }
+
+        if (child.length > 0) {
+          return h('div', { staticClass: staticClass }, child)
+        }
       },
 
-      getPaginationRow: function getPaginationRow (h) {
+      __getPaginationDiv: function __getPaginationDiv (h, child) {
         var this$1 = this;
 
         var control;
@@ -28223,17 +29821,9 @@
           paginationSlot = this.$scopedSlots.pagination,
           hasOpts = this.rowsPerPageOptions.length > 1;
 
-        var child = [
-          h('div', { staticClass: 'q-table__control' }, [
-            h('div', [
-              this.hasSelectionMode === true && this.rowsSelectedNumber > 0
-                ? (this.selectedRowsLabel || this.$q.lang.table.selectedRecords)(this.rowsSelectedNumber)
-                : ''
-            ])
-          ]),
-
+        child.push(
           h('div', { staticClass: 'q-table__separator col' })
-        ];
+        );
 
         if (hasOpts === true) {
           child.push(
@@ -28270,7 +29860,7 @@
         }
 
         if (paginationSlot !== void 0) {
-          control = paginationSlot(this.marginalsProps);
+          control = paginationSlot(this.marginalsScope);
         }
         else {
           control = [
@@ -28281,34 +29871,53 @@
             ])
           ];
 
-          if (rowsPerPage !== 0) {
-            var size = this.dense === true ? 'sm' : void 0;
+          if (rowsPerPage !== 0 && this.pagesNumber > 1) {
+            var btnProps = {
+              color: this.color,
+              round: true,
+              dense: true,
+              flat: true
+            };
+
+            if (this.dense === true) {
+              btnProps.size = 'sm';
+            }
+
+            this.pagesNumber > 2 && control.push(
+              h(QBtn, {
+                key: 'pgFirst',
+                props: Object.assign({}, btnProps,
+                  {icon: this.navIcon[0],
+                  disable: this.isFirstPage}),
+                on: cache(this, 'pgFirst', { click: this.firstPage })
+              })
+            );
 
             control.push(
               h(QBtn, {
-                props: {
-                  color: this.color,
-                  round: true,
-                  icon: this.navIcon[0],
-                  dense: true,
-                  flat: true,
-                  size: size,
-                  disable: this.isFirstPage
-                },
+                key: 'pgPrev',
+                props: Object.assign({}, btnProps,
+                  {icon: this.navIcon[1],
+                  disable: this.isFirstPage}),
                 on: cache(this, 'pgPrev', { click: this.prevPage })
               }),
 
               h(QBtn, {
-                props: {
-                  color: this.color,
-                  round: true,
-                  icon: this.navIcon[1],
-                  dense: true,
-                  size: size,
-                  flat: true,
-                  disable: this.isLastPage
-                },
+                key: 'pgNext',
+                props: Object.assign({}, btnProps,
+                  {icon: this.navIcon[2],
+                  disable: this.isLastPage}),
                 on: cache(this, 'pgNext', { click: this.nextPage })
+              })
+            );
+
+            this.pagesNumber > 2 && control.push(
+              h(QBtn, {
+                key: 'pgLast',
+                props: Object.assign({}, btnProps,
+                  {icon: this.navIcon[3],
+                  disable: this.isLastPage}),
+                on: cache(this, 'pgLast', { click: this.lastPage })
               })
             );
           }
@@ -28325,7 +29934,23 @@
 
   var TableGrid = {
     methods: {
-      getGridBody: function getGridBody (h) {
+      __getGridHeader: function __getGridHeader (h) {
+        var child = this.gridHeader === true
+          ? [
+            h('table', { staticClass: 'q-table' }, [
+              this.__getTHead(h)
+            ])
+          ]
+          : (
+            this.loading === true && this.$scopedSlots.loading === void 0
+              ? this.__getProgress(h)
+              : void 0
+          );
+
+        return h('div', { staticClass: 'q-table__middle' }, child)
+      },
+
+      __getGridBody: function __getGridBody (h) {
         var this$1 = this;
 
         var item = this.$scopedSlots.item !== void 0
@@ -28338,25 +29963,31 @@
               ]); }
             );
 
-            this$1.hasSelectionMode === true && child.unshift(
-              h('div', { staticClass: 'q-table__grid-item-row' }, [
-                h(QCheckbox, {
-                  props: {
-                    value: scope.selected,
-                    color: this$1.color,
-                    dark: this$1.isDark,
-                    dense: true
-                  },
-                  on: {
-                    input: function (val) {
-                      scope.selected = val;
+            if (this$1.hasSelectionMode === true) {
+              var slot = this$1.$scopedSlots['body-selection'];
+              var content = slot !== void 0
+                ? slot(scope)
+                : [
+                  h(QCheckbox, {
+                    props: {
+                      value: scope.selected,
+                      color: this$1.color,
+                      dark: this$1.isDark,
+                      dense: this$1.dense
+                    },
+                    on: {
+                      input: function (adding, evt) {
+                        this$1.__updateSelection([ scope.key ], [ scope.row ], adding, evt);
+                      }
                     }
-                  }
-                })
-              ]),
+                  })
+                ];
 
-              h(QSeparator, { props: { dark: this$1.isDark } })
-            );
+              child.unshift(
+                h('div', { staticClass: 'q-table__grid-item-row' }, content),
+                h(QSeparator, { props: { dark: this$1.isDark } })
+              );
+            }
 
             var data = {
               staticClass: 'q-table__grid-item-card' + this$1.cardDefaultClass,
@@ -28371,13 +30002,13 @@
 
             if (this$1.qListeners['row-click'] !== void 0) {
               data.on.click = function (evt) {
-                this$1.$emit('row-click', evt, scope.row);
+                this$1.$emit('row-click', evt, scope.row, scope.pageIndex);
               };
             }
 
             if (this$1.qListeners['row-dblclick'] !== void 0) {
               data.on.dblclick = function (evt) {
-                this$1.$emit('row-dblclick', evt, scope.row);
+                this$1.$emit('row-dblclick', evt, scope.row, scope.pageIndex);
               };
             }
 
@@ -28394,35 +30025,12 @@
           class: this.cardContainerClass,
           style: this.cardContainerStyle
         }, this.computedRows.map(function (row, pageIndex) {
-          var
-            key = this$1.getRowKey(row),
-            selected = this$1.isRowSelected(key);
-
-          return item(this$1.addBodyRowMeta({
-            key: key,
+          return item(this$1.__getBodyScope({
+            key: this$1.getRowKey(row),
             row: row,
-            pageIndex: pageIndex,
-            cols: this$1.computedCols,
-            colsMap: this$1.computedColsMap,
-            __trClass: selected ? 'selected' : ''
+            pageIndex: pageIndex
           }))
         }))
-      },
-
-      getGridHeader: function getGridHeader (h) {
-        var child = this.gridHeader === true
-          ? [
-            h('table', { staticClass: 'q-table' }, [
-              this.getTableHeader(h)
-            ])
-          ]
-          : (
-            this.loading === true && this.$scopedSlots.loading === void 0
-              ? this.__getProgress(h)
-              : void 0
-          );
-
-        return h('div', { staticClass: 'q-table__middle' }, child)
       }
     }
   };
@@ -28583,7 +30191,7 @@
       sortMethod: {
         type: Function,
         default: function default$1 (data, sortBy, descending) {
-          var col = this.columns.find(function (def) { return def.name === sortBy; });
+          var col = this.colList.find(function (def) { return def.name === sortBy; });
           if (col === void 0 || col.field === void 0) {
             return data
           }
@@ -28636,7 +30244,7 @@
         var sortBy = ref.sortBy;
 
         if (sortBy) {
-          return this.columns.find(function (def) { return def.name === sortBy; }) || null
+          return this.colList.find(function (def) { return def.name === sortBy; }) || null
         }
       }
     },
@@ -28681,7 +30289,11 @@
 
           var lowerTerms = terms ? terms.toLowerCase() : '';
           return rows.filter(
-            function (row) { return cols.some(function (col) { return (cellValue(col, row) + '').toLowerCase().indexOf(lowerTerms) !== -1; }); }
+            function (row) { return cols.some(function (col) {
+              var val = cellValue(col, row) + '';
+              var haystack = (val === 'undefined' || val === 'null') ? '' : val.toLowerCase();
+              return haystack.indexOf(lowerTerms) !== -1
+            }); }
           )
         }
       }
@@ -28725,14 +30337,17 @@
       pagination: Object,
       rowsPerPageOptions: {
         type: Array,
-        default: function () { return [3, 5, 7, 10, 15, 20, 25, 50, 0]; }
+        default: function () { return [ 5, 7, 10, 15, 20, 25, 50, 0 ]; }
       }
     },
 
     computed: {
       computedPagination: function computedPagination () {
-        return fixPagination(Object.assign({}, this.innerPagination,
-          this.pagination))
+        var pag = this.qListeners['update:pagination'] !== void 0
+          ? Object.assign({}, this.innerPagination, this.pagination)
+          : this.innerPagination;
+
+        return fixPagination(pag)
       },
 
       firstRowIndex: function firstRowIndex () {
@@ -28771,7 +30386,11 @@
       computedRowsPerPageOptions: function computedRowsPerPageOptions () {
         var this$1 = this;
 
-        return this.rowsPerPageOptions.map(function (count) { return ({
+        var opts = this.rowsPerPageOptions.includes(this.innerPagination.rowsPerPage)
+          ? this.rowsPerPageOptions
+          : [ this.innerPagination.rowsPerPage ].concat(this.rowsPerPageOptions);
+
+        return opts.map(function (count) { return ({
           label: count === 0 ? this$1.$q.lang.table.allRows : '' + count,
           value: count
         }); })
@@ -28807,23 +30426,27 @@
           val));
 
         if (samePagination(this.computedPagination, newPagination)) {
-          if (this.isServerSide && forceServerRequest) {
+          if (this.isServerSide === true && forceServerRequest === true) {
             this.__sendServerRequest(newPagination);
           }
           return
         }
 
-        if (this.isServerSide) {
+        if (this.isServerSide === true) {
           this.__sendServerRequest(newPagination);
           return
         }
 
-        if (this.pagination) {
+        if (this.pagination !== void 0 && this.qListeners['update:pagination'] !== void 0) {
           this.$emit('update:pagination', newPagination);
         }
         else {
           this.innerPagination = newPagination;
         }
+      },
+
+      firstPage: function firstPage () {
+        this.setPagination({ page: 1 });
       },
 
       prevPage: function prevPage () {
@@ -28841,11 +30464,17 @@
         if (this.lastRowIndex > 0 && page * rowsPerPage < this.computedRowsNumber) {
           this.setPagination({ page: page + 1 });
         }
+      },
+
+      lastPage: function lastPage () {
+        this.setPagination({ page: this.pagesNumber });
       }
     },
 
     created: function created () {
-      this.$emit('update:pagination', Object.assign({}, this.computedPagination));
+      if (this.qListeners['update:pagination'] !== void 0) {
+        this.$emit('update:pagination', Object.assign({}, this.computedPagination));
+      }
     }
   };
 
@@ -28912,10 +30541,10 @@
         this.$emit('update:selected', []);
       },
 
-      __updateSelection: function __updateSelection (keys, rows, added) {
+      __updateSelection: function __updateSelection (keys, rows, added, evt) {
         var this$1 = this;
 
-        this.$emit('selection', { rows: rows, added: added, keys: keys });
+        this.$emit('selection', { rows: rows, added: added, keys: keys, evt: evt });
 
         var payload = this.singleSelection === true
           ? (added === true ? rows : [])
@@ -28993,6 +30622,25 @@
     },
 
     computed: {
+      colList: function colList () {
+        if (this.columns !== void 0) {
+          return this.columns
+        }
+
+        // we infer columns from first row
+        var row = this.data[0];
+
+        return row !== void 0
+          ? Object.keys(row).map(function (name) { return ({
+            name: name,
+            label: name.toUpperCase(),
+            field: name,
+            align: isNumber(row[name]) ? 'right' : 'left',
+            sortable: true
+          }); })
+          : []
+      },
+
       computedCols: function computedCols () {
         var this$1 = this;
 
@@ -29001,17 +30649,20 @@
         var descending = ref.descending;
 
         var cols = this.visibleColumns !== void 0
-          ? this.columns.filter(function (col) { return col.required === true || this$1.visibleColumns.includes(col.name) === true; })
-          : this.columns;
+          ? this.colList.filter(function (col) { return col.required === true || this$1.visibleColumns.includes(col.name) === true; })
+          : this.colList;
 
         return cols.map(function (col) {
-          col.align = col.align || 'right';
-          col.__iconClass = "q-table__sort-icon q-table__sort-icon--" + (col.align);
-          col.__thClass = "text-" + (col.align) + (col.headerClasses !== void 0 ? ' ' + col.headerClasses : '') + (col.sortable === true ? ' sortable' : '') + (col.name === sortBy ? (" sorted " + (descending === true ? 'sort-desc' : '')) : '');
-          col.__tdClass = "text-" + (col.align) + (col.classes !== void 0 ? ' ' + col.classes : '');
-          col.__thStyle = col.headerStyle !== void 0 ? col.headerStyle : null;
-          col.__tdStyle = col.style !== void 0 ? col.style : null;
-          return col
+          var align = col.align || 'right';
+
+          return Object.assign({}, col,
+            {align: align,
+            __iconClass: ("q-table__sort-icon q-table__sort-icon--" + align),
+            __thClass: "text-" + align +
+              (col.headerClasses !== void 0 ? ' ' + col.headerClasses : '') +
+              (col.sortable === true ? ' sortable' : '') +
+              (col.name === sortBy ? (" sorted " + (descending === true ? 'sort-desc' : '')) : ''),
+            __tdClass: ("text-" + align + (col.classes !== void 0 ? ' ' + col.classes : ''))})
         })
       },
 
@@ -29021,6 +30672,12 @@
           names[col.name] = col;
         });
         return names
+      },
+
+      computedColspan: function computedColspan () {
+        return this.tableColspan !== void 0
+          ? this.tableColspan
+          : this.computedCols.length + (this.hasSelectionMode === true ? 1 : 0)
       }
     }
   };
@@ -29062,10 +30719,14 @@
       loading: Boolean,
       binaryStateSort: Boolean,
 
+      iconFirstPage: String,
+      iconPrevPage: String,
+      iconNextPage: String,
+      iconLastPage: String,
+
       title: String,
 
       hideHeader: Boolean,
-      hideBottom: Boolean,
 
       grid: Boolean,
       gridHeader: Boolean,
@@ -29096,6 +30757,7 @@
         default: 'grey-8'
       },
 
+      titleClass: [String, Array, Object],
       tableStyle: [String, Array, Object],
       tableClass: [String, Array, Object],
       tableHeaderStyle: [String, Array, Object],
@@ -29107,12 +30769,14 @@
 
     data: function data () {
       return {
-        innerPagination: {
+        innerPagination: Object.assign({
           sortBy: null,
           descending: false,
           page: 1,
-          rowsPerPage: 5
-        }
+          rowsPerPage: this.rowsPerPageOptions.length > 0
+            ? this.rowsPerPageOptions[0]
+            : 5
+        }, this.pagination)
       }
     },
 
@@ -29185,7 +30849,7 @@
         if (rowsPerPage !== 0) {
           if (this.firstRowIndex === 0 && this.data !== rows) {
             if (rows.length > this.lastRowIndex) {
-              rows.length = this.lastRowIndex;
+              rows = rows.slice(0, this.lastRowIndex);
             }
           }
           else {
@@ -29245,11 +30909,11 @@
     },
 
     render: function render (h) {
-      var child = [ this.getTop(h) ];
+      var child = [ this.__getTopDiv(h) ];
       var data = { staticClass: this.containerClass };
 
       if (this.grid === true) {
-        child.push(this.getGridHeader(h));
+        child.push(this.__getGridHeader(h));
       }
       else {
         Object.assign(data, {
@@ -29259,8 +30923,8 @@
       }
 
       child.push(
-        this.getBody(h),
-        this.getBottom(h)
+        this.__getBody(h),
+        this.__getBottomDiv(h)
       );
 
       if (this.loading === true && this.$scopedSlots.loading !== void 0) {
@@ -29290,19 +30954,20 @@
         this.hasVirtScroll === true && this.$refs.virtScroll.reset();
       },
 
-      getBody: function getBody (h) {
+      __getBody: function __getBody (h) {
         if (this.grid === true) {
-          return this.getGridBody(h)
+          return this.__getGridBody(h)
         }
 
-        var header = this.hideHeader !== true ? this.getTableHeader(h) : null;
+        var header = this.hideHeader !== true ? this.__getTHead(h) : null;
 
         return this.hasVirtScroll === true
           ? h(QVirtualScroll, {
             ref: 'virtScroll',
             props: Object.assign({}, this.virtProps,
               {items: this.computedRows,
-              type: '__qtable'}),
+              type: '__qtable',
+              tableColspan: this.computedColspan}),
             on: cache(this, 'vs', {
               'virtual-scroll': this.__onVScroll
             }),
@@ -29312,7 +30977,7 @@
               before: header === null
                 ? void 0
                 : function () { return header; },
-              default: this.getTableRowVirtual(h)
+              default: this.__getVirtualTBodyTR(h)
             }
           })
           : getTableMiddle(h, {
@@ -29321,7 +30986,7 @@
             style: this.tableStyle
           }, [
             header,
-            this.getTableBody(h)
+            this.__getTBody(h)
           ])
       },
 
@@ -29433,7 +31098,7 @@
 
       return h('td', {
         on: on,
-        style: col.__tdStyle,
+        style: col.style,
         class: this.classes + ' ' + col.__tdClass
       }, slot(this, 'default'))
     }
@@ -29441,7 +31106,21 @@
 
   var trailingSlashRE = /\/?$/;
 
-  function queryIncludes (current, target) {
+  function equals (current, target) {
+    if (Object.keys(current).length !== Object.keys(target).length) {
+      return false
+    }
+
+    // route query and params are strings when read from URL
+    for (var key in target) {
+      if (!(key in current) || String(current[key]) !== String(target[key])) {
+        return false
+      }
+    }
+    return true
+  }
+
+  function includes (current, target) {
     for (var key in target) {
       if (!(key in current)) {
         return false
@@ -29458,26 +31137,24 @@
       return (
         current.path.replace(trailingSlashRE, '') === target.path.replace(trailingSlashRE, '') &&
         current.hash === target.hash &&
-        isDeepEqual(current.query, target.query)
+        equals(current.query, target.query)
       )
     }
     if (current.name && target.name) {
       return (
         current.name === target.name &&
         current.hash === target.hash &&
-        isDeepEqual(current.query, target.query) &&
-        isDeepEqual(current.params, target.params)
+        equals(current.query, target.query) &&
+        equals(current.params, target.params)
       )
     }
     return false
   }
 
   function isIncludedRoute (current, target) {
-    return (
-      current.path.replace(trailingSlashRE, '/').indexOf(target.path.replace(trailingSlashRE, '/')) === 0 &&
+    return current.path.indexOf(target.path.replace(trailingSlashRE, '/')) === 0 &&
       (!target.hash || current.hash === target.hash) &&
-      queryIncludes(current.query, target.query)
-    )
+      includes(current.query, target.query)
   }
 
   var QRouteTab = Vue.extend({
@@ -29500,10 +31177,65 @@
       }
     },
 
+    computed: {
+      routerTabLinkProps: function routerTabLinkProps () {
+        return Object.assign({}, this.routerLinkProps,
+          {event: []})
+      }
+    },
+
     methods: {
       __activate: function __activate (e, keyboard) {
+        var this$1 = this;
+
         if (this.disable !== true) {
-          this.__checkActivation(true);
+          if (
+            e !== void 0 && (
+              e.ctrlKey === true ||
+              e.shiftKey === true ||
+              e.altKey === true ||
+              e.metaKey === true
+            )
+          ) {
+            // if it has meta keys, let vue-router link
+            // handle this by its own
+            this.__checkActivation(true);
+          }
+          else {
+            // we use programatic navigation instead of letting vue-router handle it
+            // so we can check for activation when the navigation is complete
+            e !== void 0 && stopAndPrevent(e);
+
+            var go = function (to, append, replace) {
+              if ( to === void 0 ) to = this$1.to;
+              if ( append === void 0 ) append = this$1.append;
+              if ( replace === void 0 ) replace = this$1.replace;
+
+              var ref = this$1.$router.resolve(to, this$1.$route, append);
+              var route = ref.route;
+              var checkFn = to === this$1.to && append === this$1.append && replace === this$1.replace
+                ? this$1.__checkActivation
+                : noop;
+
+              // vue-router now throwing error if navigating
+              // to the same route that the user is currently at
+              // https://github.com/vuejs/vue-router/issues/2872
+              this$1.$router[replace === true ? 'replace' : 'push'](
+                route,
+                function () { checkFn(true); },
+                function (err) {
+                  if (err && err.name === 'NavigationDuplicated') {
+                    checkFn(true);
+                  }
+                }
+              );
+            };
+
+            this.qListeners.click !== void 0 && this.$emit('click', e, go);
+            if (e === void 0 || e.navigate !== false) {
+              go();
+            }
+          }
         }
 
         if (keyboard === true) {
@@ -29524,6 +31256,7 @@
         var location = ref.location;
         var route = ref.route;
         var redirected = route.redirectedFrom !== void 0,
+          isSameRouteCheck = isSameRoute(current, route),
           checkFunction = this.exact === true ? isSameRoute : isIncludedRoute,
           params = {
             name: this.name,
@@ -29533,10 +31266,23 @@
             priorityHref: href.length
           };
 
-        checkFunction(current, route) && this.__activateRoute(Object.assign({}, params, {redirected: redirected}));
-        redirected === true && checkFunction(current, Object.assign({}, {path: route.redirectedFrom},
-          location)) && this.__activateRoute(params);
-        this.isActive && this.__activateRoute();
+        if (isSameRouteCheck === true || (this.exact !== true && isIncludedRoute(current, route) === true)) {
+          this.__activateRoute(Object.assign({}, params,
+            {redirected: redirected,
+            // if it's an exact match give higher priority
+            // even if the tab is not marked as exact
+            exact: this.exact === true || isSameRouteCheck === true}));
+        }
+
+        if (
+          redirected === true &&
+          checkFunction(current, Object.assign({}, {path: route.redirectedFrom},
+            location)) === true
+        ) {
+          this.__activateRoute(params);
+        }
+
+        this.isActive === true && this.__activateRoute();
       }
     },
 
@@ -29551,7 +31297,7 @@
     },
 
     render: function render (h) {
-      return this.__renderTab(h, 'router-link', this.routerLinkProps)
+      return this.__renderTab(h, 'router-link', this.routerTabLinkProps)
     }
   });
 
@@ -29591,10 +31337,9 @@
     data: function data () {
       var model = __splitDate(
         this.value,
-        this.__getComputedMask(),
-        this.__getComputedLocale(),
-        this.calendar,
-        this.__getDefaultDateModel()
+        this.__getMask(),
+        this.__getLocale(),
+        this.calendar
       );
 
       var view = 'Hour';
@@ -29621,8 +31366,7 @@
           v,
           this.computedMask,
           this.computedLocale,
-          this.calendar,
-          this.defaultDateModel
+          this.calendar
         );
 
         if (
@@ -29638,6 +31382,22 @@
             this.isAM = model.hour < 12;
           }
         }
+      },
+
+      computedMask: function computedMask () {
+        var this$1 = this;
+
+        this.$nextTick(function () {
+          this$1.__updateValue();
+        });
+      },
+
+      computedLocale: function computedLocale () {
+        var this$1 = this;
+
+        this.$nextTick(function () {
+          this$1.__updateValue();
+        });
       }
     },
 
@@ -29649,10 +31409,6 @@
           (this.bordered === true ? " q-time--bordered" : '') +
           (this.square === true ? " q-time--square no-border-radius" : '') +
           (this.flat === true ? " q-time--flat no-shadow" : '')
-      },
-
-      computedMask: function computedMask () {
-        return this.__getComputedMask()
       },
 
       stringModel: function stringModel () {
@@ -29677,10 +31433,6 @@
             ? '--'
             : pad(time.second)
         }
-      },
-
-      defaultDateModel: function defaultDateModel () {
-        return this.__getDefaultDateModel()
       },
 
       computedFormat24h: function computedFormat24h () {
@@ -29753,12 +31505,44 @@
           )
       },
 
+      validHours: function validHours () {
+        if (this.hourInSelection !== void 0) {
+          var am = this.__getValidValues(0, 11, this.hourInSelection);
+          var pm = this.__getValidValues(12, 11, this.hourInSelection);
+          return { am: am, pm: pm, values: am.values.concat(pm.values) }
+        }
+      },
+
+      validMinutes: function validMinutes () {
+        if (this.minuteInSelection !== void 0) {
+          return this.__getValidValues(0, 59, this.minuteInSelection)
+        }
+      },
+
+      validSeconds: function validSeconds () {
+        if (this.secondInSelection !== void 0) {
+          return this.__getValidValues(0, 59, this.secondInSelection)
+        }
+      },
+
+      viewValidOptions: function viewValidOptions () {
+        switch (this.view) {
+          case 'Hour':
+            return this.validHours
+          case 'Minute':
+            return this.validMinutes
+          case 'Second':
+            return this.validSeconds
+        }
+      },
+
       positions: function positions () {
-        var start, end, offset = 0, step = 1, inSel;
+        var start, end, offset = 0, step = 1;
+        var values = this.viewValidOptions !== void 0
+          ? this.viewValidOptions.values
+          : void 0;
 
         if (this.view === 'Hour') {
-          inSel = this.hourInSelection;
-
           if (this.computedFormat24h === true) {
             start = 0;
             end = 23;
@@ -29776,13 +31560,6 @@
           start = 0;
           end = 55;
           step = 5;
-
-          if (this.view === 'Minute') {
-            inSel = this.minuteInSelection;
-          }
-          else {
-            inSel = this.secondInSelection;
-          }
         }
 
         var pos = [];
@@ -29790,9 +31567,9 @@
         for (var val = start, index = start; val <= end; val += step, index++) {
           var
             actualVal = val + offset,
-            disable = inSel !== void 0 && inSel(actualVal) === false,
+            disable = values !== void 0 && values.includes(actualVal) === false,
             label = this.view === 'Hour' && val === 0
-              ? (this.format24h === true ? '00' : '12')
+              ? (this.computedFormat24h === true ? '00' : '12')
               : val;
 
           pos.push({ val: actualVal, index: index, disable: disable, label: label });
@@ -29809,29 +31586,95 @@
         this.view = 'Hour';
       },
 
-      __getDefaultDateModel: function __getDefaultDateModel () {
-        if (typeof this.defaultDate !== 'string') {
-          var date = this.__getCurrentDate();
-          date.dateHash = date.year + '/' + pad(date.month) + '/' + pad(date.day);
+      __getValidValues: function __getValidValues (start, count, testFn) {
+        var values = Array.apply(null, { length: count + 1 })
+          .map(function (_, index) {
+            var i = index + start;
+            return {
+              index: i,
+              val: testFn(i) === true // force boolean
+            }
+          })
+          .filter(function (v) { return v.val === true; })
+          .map(function (v) { return v.index; });
 
-          return date
+        return {
+          min: values[0],
+          max: values[values.length - 1],
+          values: values,
+          threshold: count + 1
+        }
+      },
+
+      __getWheelDist: function __getWheelDist (a, b, threshold) {
+        var diff = Math.abs(a - b);
+        return Math.min(diff, threshold - diff)
+      },
+
+      __getNormalizedClockValue: function __getNormalizedClockValue (val, ref) {
+        var min = ref.min;
+        var max = ref.max;
+        var values = ref.values;
+        var threshold = ref.threshold;
+
+        if (val === min) {
+          return min
         }
 
-        return __splitDate(this.defaultDate, 'YYYY/MM/DD', void 0, this.calendar)
+        if (val < min || val > max) {
+          return this.__getWheelDist(val, min, threshold) <= this.__getWheelDist(val, max, threshold)
+            ? min
+            : max
+        }
+
+        var
+          index = values.findIndex(function (v) { return val <= v; }),
+          before = values[index - 1],
+          after = values[index];
+
+        return val - before <= after - val
+          ? before
+          : after
+      },
+
+      __getMask: function __getMask () {
+        return this.calendar !== 'persian' && this.mask !== null
+          ? this.mask
+          : ("HH:mm" + (this.withSeconds === true ? ':ss' : ''))
       },
 
       __click: function __click (evt) {
-        // __activate() has already updated the offset
-        // (on desktop only, through mousedown event)
-        if (this.$q.platform.is.desktop !== true) {
-          this.__updateClock(evt, this.__getClockRect());
-        }
+        if (this.__shouldAbortInteraction() !== true) {
+          // __activate() has already updated the offset
+          // (on desktop only, through mousedown event)
+          if (this.$q.platform.is.desktop !== true) {
+            this.__updateClock(evt, this.__getClockRect());
+          }
 
-        this.__goToNextView();
+          this.__goToNextView();
+        }
       },
 
       __activate: function __activate (evt) {
-        this.__updateClock(evt, this.__getClockRect());
+        if (this.__shouldAbortInteraction() !== true) {
+          this.__updateClock(evt, this.__getClockRect());
+        }
+      },
+
+      __shouldAbortInteraction: function __shouldAbortInteraction () {
+        return this._isBeingDestroyed === true ||
+          this._isDestroyed === true ||
+          // if we have limited options, can we actually set any?
+          (
+            this.viewValidOptions !== void 0 &&
+            (
+              this.viewValidOptions.values.length === 0 ||
+              (
+                this.view === 'Hour' && this.computedFormat24h !== true &&
+                this.validHours[this.isAM === true ? 'am' : 'pm'].values.length === 0
+              )
+            )
+          )
       },
 
       __getClockRect: function __getClockRect () {
@@ -29860,9 +31703,7 @@
       },
 
       __drag: function __drag (event) {
-        // cases when on a popup getting closed
-        // on previously emitted value
-        if (this._isBeingDestroyed === true || this._isDestroyed === true) {
+        if (this.__shouldAbortInteraction() === true) {
           return
         }
 
@@ -29883,13 +31724,15 @@
 
       __updateClock: function __updateClock (evt, clockRect, cacheVal) {
         var
-          val,
           pos = position(evt),
           height = Math.abs(pos.top - clockRect.top),
           distance = Math.sqrt(
             Math.pow(Math.abs(pos.top - clockRect.top), 2) +
             Math.pow(Math.abs(pos.left - clockRect.left), 2)
-          ),
+          );
+
+        var
+          val,
           angle = Math.asin(height / distance) * (180 / Math.PI);
 
         if (pos.top < clockRect.top) {
@@ -29900,45 +31743,62 @@
         }
 
         if (this.view === 'Hour') {
-          val = Math.round(angle / 30);
+          val = angle / 30;
 
-          if (this.computedFormat24h === true) {
-            if (distance < clockRect.dist) {
-              if (val < 12) {
-                val += 12;
+          if (this.validHours !== void 0) {
+            var am = this.computedFormat24h !== true
+              ? this.isAM === true
+              : (
+                this.validHours.am.values.length > 0 && this.validHours.pm.values.length > 0
+                  ? distance >= clockRect.dist
+                  : this.validHours.am.values.length > 0
+              );
+
+            val = this.__getNormalizedClockValue(
+              val + (am === true ? 0 : 12),
+              this.validHours[am === true ? 'am' : 'pm']
+            );
+          }
+          else {
+            val = Math.round(val);
+
+            if (this.computedFormat24h === true) {
+              if (distance < clockRect.dist) {
+                if (val < 12) {
+                  val += 12;
+                }
+              }
+              else if (val === 12) {
+                val = 0;
               }
             }
-            else if (val === 12) {
+            else if (this.isAM === true && val === 12) {
               val = 0;
             }
+            else if (this.isAM === false && val !== 12) {
+              val += 12;
+            }
+          }
+
+          if (this.computedFormat24h === true) {
             this.isAM = val < 12;
-          }
-          else if (this.isAM === true && val === 12) {
-            val = 0;
-          }
-          else if (this.isAM === false && val !== 12) {
-            val += 12;
           }
         }
         else {
-          val = Math.round(angle / 6);
+          val = Math.round(angle / 6) % 60;
 
-          if (val === 60) {
-            val = 0;
+          if (this.view === 'Minute' && this.validMinutes !== void 0) {
+            val = this.__getNormalizedClockValue(val, this.validMinutes);
+          }
+          else if (this.view === 'Second' && this.validSeconds !== void 0) {
+            val = this.__getNormalizedClockValue(val, this.validSeconds);
           }
         }
 
-        if (cacheVal === val) {
-          return val
+        if (cacheVal !== val) {
+          this[("__set" + (this.view))](val);
         }
 
-        var opt = this[((this.view.toLowerCase()) + "InSelection")];
-
-        if (opt !== void 0 && opt(val) !== true) {
-          return
-        }
-
-        this[("__set" + (this.view))](val);
         return val
       },
 
@@ -29946,16 +31806,36 @@
         if (e.keyCode === 13) { // ENTER
           this.view = 'Hour';
         }
-        else {
-          var
-            wrap = this.computedFormat24h === true ? 24 : 12,
-            offset = this.computedFormat24h !== true && this.isAM === false ? 12 : 0;
+        else if ([ 37, 39 ].includes(e.keyCode)) {
+          var payload = e.keyCode === 37 ? -1 : 1;
 
-          if (e.keyCode === 37) { // ARROW LEFT
-            this.__setHour(offset + (24 + this.innerModel.hour - 1) % wrap);
+          if (this.validHours !== void 0) {
+            var values = this.computedFormat24h === true
+              ? this.validHours.values
+              : this.validHours[this.isAM === true ? 'am' : 'pm'].values;
+
+            if (values.length === 0) { return }
+
+            if (this.innerModel.hour === null) {
+              this.__setHour(values[0]);
+            }
+            else {
+              var index = (
+                values.length +
+                values.indexOf(this.innerModel.hour) +
+                payload
+              ) % values.length;
+
+              this.__setHour(values[index]);
+            }
           }
-          else if (e.keyCode === 39) { // ARROW RIGHT
-            this.__setHour(offset + (24 + this.innerModel.hour + 1) % wrap);
+          else {
+            var
+              wrap = this.computedFormat24h === true ? 24 : 12,
+              offset = this.computedFormat24h !== true && this.isAM === false ? 12 : 0,
+              val = this.innerModel.hour === null ? -payload : this.innerModel.hour;
+
+            this.__setHour(offset + (24 + val + payload) % wrap);
           }
         }
       },
@@ -29964,11 +31844,31 @@
         if (e.keyCode === 13) { // ENTER
           this.view = 'Minute';
         }
-        else if (e.keyCode === 37) { // ARROW LEFT
-          this.__setMinute((60 + this.innerModel.minute - 1) % 60);
-        }
-        else if (e.keyCode === 39) { // ARROW RIGHT
-          this.__setMinute((60 + this.innerModel.minute + 1) % 60);
+        else if ([ 37, 39 ].includes(e.keyCode)) {
+          var payload = e.keyCode === 37 ? -1 : 1;
+
+          if (this.validMinutes !== void 0) {
+            var values = this.validMinutes.values;
+
+            if (values.length === 0) { return }
+
+            if (this.innerModel.minute === null) {
+              this.__setMinute(values[0]);
+            }
+            else {
+              var index = (
+                values.length +
+                values.indexOf(this.innerModel.minute) +
+                payload
+              ) % values.length;
+
+              this.__setMinute(values[index]);
+            }
+          }
+          else {
+            var val = this.innerModel.minute === null ? -payload : this.innerModel.minute;
+            this.__setMinute((60 + val + payload) % 60);
+          }
         }
       },
 
@@ -29976,11 +31876,31 @@
         if (e.keyCode === 13) { // ENTER
           this.view = 'Second';
         }
-        else if (e.keyCode === 37) { // ARROW LEFT
-          this.__setSecond((60 + this.innerModel.second - 1) % 60);
-        }
-        else if (e.keyCode === 39) { // ARROW RIGHT
-          this.__setSecond((60 + this.innerModel.second + 1) % 60);
+        else if ([ 37, 39 ].includes(e.keyCode)) {
+          var payload = e.keyCode === 37 ? -1 : 1;
+
+          if (this.validSeconds !== void 0) {
+            var values = this.validSeconds.values;
+
+            if (values.length === 0) { return }
+
+            if (this.innerModel.seconds === null) {
+              this.__setSecond(values[0]);
+            }
+            else {
+              var index = (
+                values.length +
+                values.indexOf(this.innerModel.second) +
+                payload
+              ) % values.length;
+
+              this.__setSecond(values[index]);
+            }
+          }
+          else {
+            var val = this.innerModel.second === null ? -payload : this.innerModel.second;
+            this.__setSecond((60 + val + payload) % 60);
+          }
         }
       },
 
@@ -30169,29 +32089,30 @@
       },
 
       __setAm: function __setAm () {
-        if (this.isAM) { return }
+        if (this.isAM === false) {
+          this.isAM = true;
 
-        this.isAM = true;
-
-        if (this.innerModel.hour === null) { return }
-        this.innerModel.hour -= 12;
-        this.__verifyAndUpdate();
+          if (this.innerModel.hour !== null) {
+            this.innerModel.hour -= 12;
+            this.__verifyAndUpdate();
+          }
+        }
       },
 
       __setPm: function __setPm () {
-        if (!this.isAM) { return }
+        if (this.isAM === true) {
+          this.isAM = false;
 
-        this.isAM = false;
-
-        if (this.innerModel.hour === null) { return }
-        this.innerModel.hour += 12;
-        this.__verifyAndUpdate();
+          if (this.innerModel.hour !== null) {
+            this.innerModel.hour += 12;
+            this.__verifyAndUpdate();
+          }
+        }
       },
 
       __verifyAndUpdate: function __verifyAndUpdate () {
         if (this.hourInSelection !== void 0 && this.hourInSelection(this.innerModel.hour) !== true) {
           this.innerModel = __splitDate();
-          this.isAM = true;
           this.view = 'Hour';
           return
         }
@@ -30213,18 +32134,11 @@
           return
         }
 
-        this.__updateValue({});
-      },
-
-      __getComputedMask: function __getComputedMask () {
-        return this.calendar !== 'persian' && this.mask !== null
-          ? this.mask
-          : ("HH:mm" + (this.withSeconds === true ? ':ss' : ''))
+        this.__updateValue();
       },
 
       __updateValue: function __updateValue (obj) {
-        var date = Object.assign({}, this.innerModel,
-          obj);
+        var date = Object.assign(Object.assign({}, this.innerModel), obj);
 
         var val = this.calendar === 'persian'
           ? pad(date.hour) + ':' +
@@ -30496,6 +32410,10 @@
         type: String,
         default: 'label'
       },
+      childrenKey: {
+        type: String,
+        default: 'children'
+      },
 
       color: String,
       controlColor: String,
@@ -30575,7 +32493,7 @@
           var tickStrategy = node.tickStrategy || (parent ? parent.tickStrategy : this$1.tickStrategy);
           var
             key = node[this$1.nodeKey],
-            isParent = node.children && node.children.length > 0,
+            isParent = node[this$1.childrenKey] && node[this$1.childrenKey].length > 0,
             isLeaf = isParent !== true,
             selectable = node.disabled !== true && this$1.hasSelection === true && node.selectable !== false,
             expandable = node.disabled !== true && node.expandable !== false,
@@ -30624,7 +32542,7 @@
           meta[key] = m;
 
           if (isParent === true) {
-            m.children = node.children.map(function (n) { return travel(n, m); });
+            m.children = node[this$1.childrenKey].map(function (n) { return travel(n, m); });
 
             if (this$1.filter) {
               if (m.matchesFilter !== true) {
@@ -30713,8 +32631,8 @@
           if (node[this$1.nodeKey] === key) {
             return node
           }
-          if (node.children) {
-            return find(null, node.children)
+          if (node[this$1.childrenKey]) {
+            return find(null, node[this$1.childrenKey])
           }
         };
 
@@ -30754,10 +32672,10 @@
         var
           expanded = this.innerExpanded,
           travel = function (node) {
-            if (node.children && node.children.length > 0) {
+            if (node[this$1.childrenKey] && node[this$1.childrenKey].length > 0) {
               if (node.expandable !== false && node.disabled !== true) {
                 expanded.push(node[this$1.nodeKey]);
-                node.children.forEach(travel);
+                node[this$1.childrenKey].forEach(travel);
               }
             }
           };
@@ -30789,7 +32707,7 @@
             done: function (children) {
               this$1.lazy[key] = 'loaded';
               if (children) {
-                this$1.$set(node, 'children', children);
+                this$1.$set(node, this$1.childrenKey, children);
               }
               this$1.$nextTick(function () {
                 var m = this$1.meta[key];
@@ -30943,18 +32861,17 @@
             : this.$scopedSlots['default-header'];
 
         var children = meta.isParent === true
-          ? this.__getChildren(h, node.children)
+          ? this.__getChildren(h, node[this.childrenKey])
           : [];
 
         var isParent = children.length > 0 || (meta.lazy && meta.lazy !== 'loaded');
 
-        var
-          body = node.body
-            ? this.$scopedSlots[("body-" + (node.body))] || this.$scopedSlots['default-body']
-            : this.$scopedSlots['default-body'],
-          slotScope = header !== void 0 || body !== void 0
-            ? this.__getSlotScope(node, meta, key)
-            : null;
+        var body = node.body
+          ? this.$scopedSlots[("body-" + (node.body))] || this.$scopedSlots['default-body']
+          : this.$scopedSlots['default-body'];
+        var slotScope = header !== void 0 || body !== void 0
+          ? this.__getSlotScope(node, meta, key)
+          : null;
 
         if (body !== void 0) {
           body = h('div', { staticClass: 'q-tree__node-body relative-position' }, [
@@ -31221,22 +33138,16 @@
       },
 
       canAddFiles: function canAddFiles () {
-        return this.editable &&
+        return (
+          this.editable === true &&
           this.isUploading !== true &&
-          (this.multiple === true || this.queuedFiles.length === 0)
-      },
-
-      extensions: function extensions () {
-        if (this.accept !== void 0) {
-          return this.accept.split(',').map(function (ext) {
-            ext = ext.trim();
-            // support "image/*"
-            if (ext.endsWith('/*')) {
-              ext = ext.slice(0, ext.length - 1);
-            }
-            return ext
-          })
-        }
+          // if single selection and no files are queued:
+          (this.multiple === true || this.queuedFiles.length === 0) &&
+          // if max-files is set and current number of files does not exceeds it:
+          (this.maxFiles === void 0 || this.files.length < this.maxFilesNumber) &&
+          // if max-total-size is set and current upload size does not exceeds it:
+          (this.maxTotalSize === void 0 || this.uploadSize < this.maxTotalSizeNumber)
+        )
       },
 
       uploadProgress: function uploadProgress () {
@@ -31395,7 +33306,7 @@
       __addFiles: function __addFiles (e, fileList) {
         var this$1 = this;
 
-        var processedFiles = this.__processFiles(e, fileList);
+        var processedFiles = this.__processFiles(e, fileList, this.files, true);
 
         if (processedFiles === void 0) { return }
 
@@ -31445,7 +33356,8 @@
             attrs: Object.assign({}, {tabindex: -1,
               type: 'file',
               title: '', // try to remove default tooltip
-              accept: this.accept},
+              accept: this.accept,
+              capture: this.capture},
               (this.multiple === true ? { multiple: true } : {})),
             on: cache(this, 'input', {
               mousedown: stop, // need to stop refocus from QBtn
@@ -31603,21 +33515,21 @@
 
   var UploaderXHRMixin = {
     props: {
-      url: [Function, String],
+      url: [ Function, String ],
       method: {
-        type: [Function, String],
+        type: [ Function, String ],
         default: 'POST'
       },
       fieldName: {
-        type: [Function, String],
+        type: [ Function, String ],
         default: function (file) { return file.name; }
       },
-      headers: [Function, Array],
-      formFields: [Function, Array],
-      withCredentials: [Function, Boolean],
-      sendRaw: [Function, Boolean],
+      headers: [ Function, Array ],
+      formFields: [ Function, Array ],
+      withCredentials: [ Function, Boolean ],
+      sendRaw: [ Function, Boolean ],
 
-      batch: [Function, Boolean],
+      batch: [ Function, Boolean ],
       factory: Function
     },
 
@@ -32062,11 +33974,25 @@
     return isNaN(depth) ? 0 : depth
   }
 
+  function destroy$4 (el) {
+    var ctx = el.__qclosepopup;
+    if (ctx !== void 0) {
+      el.removeEventListener('click', ctx.handler);
+      el.removeEventListener('keyup', ctx.handlerKey);
+      delete el.__qclosepopup;
+    }
+  }
+
   var ClosePopup = {
     name: 'close-popup',
 
     bind: function bind (el, ref, vnode) {
       var value = ref.value;
+
+      if (el.__qclosepopup !== void 0) {
+        destroy$4(el);
+        el.__qclosepopup_destroyed = true;
+      }
 
       var ctx = {
         depth: getDepth(value),
@@ -32082,10 +34008,6 @@
           isKeyCode(evt, 13) === true && ctx.handler(evt);
         }
       };
-
-      if (el.__qclosepopup !== void 0) {
-        el.__qclosepopup_old = el.__qclosepopup;
-      }
 
       el.__qclosepopup = ctx;
 
@@ -32103,14 +34025,23 @@
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qclosepopup_old || el.__qclosepopup;
-      if (ctx !== void 0) {
-        el.removeEventListener('click', ctx.handler);
-        el.removeEventListener('keyup', ctx.handlerKey);
-        delete el[el.__qclosepopup_old ? '__qclosepopup_old' : '__qclosepopup'];
+      if (el.__qclosepopup_destroyed === void 0) {
+        destroy$4(el);
+      }
+      else {
+        delete el.__qclosepopup_destroyed;
       }
     }
   };
+
+  function destroy$5 (el) {
+    var ctx = el.__qgoback;
+    if (ctx !== void 0) {
+      el.removeEventListener('click', ctx.goBack);
+      el.removeEventListener('keyup', ctx.goBackKey);
+      delete el.__qgoback;
+    }
+  }
 
   var GoBack = {
     name: 'go-back',
@@ -32118,6 +34049,11 @@
     bind: function bind (el, ref, vnode) {
       var value = ref.value;
       var modifiers = ref.modifiers;
+
+      if (el.__qgoback !== void 0) {
+        destroy$5(el);
+        el.__qgoback_destroyed = true;
+      }
 
       var ctx = {
         value: value,
@@ -32145,11 +34081,8 @@
         }
       };
 
-      if (el.__qgoback) {
-        el.__qgoback_old = el.__qgoback;
-      }
-
       el.__qgoback = ctx;
+
       el.addEventListener('click', ctx.goBack);
       el.addEventListener('keyup', ctx.goBackKey);
     },
@@ -32157,33 +34090,1073 @@
     update: function update (el, ref) {
       var value = ref.value;
       var oldValue = ref.oldValue;
-      var modifiers = ref.modifiers;
 
       var ctx = el.__qgoback;
 
-      if (ctx !== void 0) {
-        if (value !== oldValue) {
-          ctx.value = value;
-        }
-
-        if (ctx.single !== modifiers.single) {
-          ctx.single = modifiers.single;
-        }
+      if (ctx !== void 0 && value !== oldValue) {
+        ctx.value = value;
       }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qgoback_old || el.__qgoback;
-      if (ctx !== void 0) {
-        el.removeEventListener('click', ctx.goBack);
-        el.removeEventListener('keyup', ctx.goBackKey);
-        delete el[el.__qgoback_old ? '__qgoback_old' : '__qgoback'];
+      if (el.__qgoback_destroyed === void 0) {
+        destroy$5(el);
+      }
+      else {
+        delete el.__qgoback_destroyed;
+      }
+    }
+  };
+
+  var id = 0;
+  var offsetBase = void 0;
+
+  function getAbsolutePosition (el, resize) {
+    if (offsetBase === void 0) {
+      offsetBase = document.createElement('div');
+      offsetBase.style.cssText = 'position: absolute; left: 0; top: 0';
+      document.body.appendChild(offsetBase);
+    }
+
+    var boundingRect = el.getBoundingClientRect();
+    var baseRect = offsetBase.getBoundingClientRect();
+    var ref = window.getComputedStyle(el);
+    var marginLeft = ref.marginLeft;
+    var marginRight = ref.marginRight;
+    var marginTop = ref.marginTop;
+    var marginBottom = ref.marginBottom;
+    var marginH = parseInt(marginLeft, 10) + parseInt(marginRight, 10);
+    var marginV = parseInt(marginTop, 10) + parseInt(marginBottom, 10);
+
+    return {
+      left: boundingRect.left - baseRect.left,
+      top: boundingRect.top - baseRect.top,
+      width: boundingRect.right - boundingRect.left,
+      height: boundingRect.bottom - boundingRect.top,
+      widthM: boundingRect.right - boundingRect.left + (resize === true ? 0 : marginH),
+      heightM: boundingRect.bottom - boundingRect.top + (resize === true ? 0 : marginV),
+      marginH: resize === true ? marginH : 0,
+      marginV: resize === true ? marginV : 0
+    }
+  }
+
+  function getAbsoluteSize (el) {
+    return {
+      width: el.scrollWidth,
+      height: el.scrollHeight
+    }
+  }
+
+  // firefox rulez
+  var styleEdges = [ 'Top', 'Right', 'Bottom', 'Left' ];
+  var styleBorderRadiuses = [ 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius' ];
+
+  function getComputedStyle$1 (el, props) {
+    var style = window.getComputedStyle(el);
+    var fixed = {};
+    for (var i = 0; i < props.length; i++) {
+      var prop = props[i];
+
+      if (style[prop] === '') {
+        if (prop === 'cssText') {
+          var styleLen = style.length;
+          var val = '';
+
+          for (var i$1 = 0; i$1 < styleLen; i$1++) {
+            val += style[i$1] + ': ' + style[style[i$1]] + '; ';
+          }
+
+          fixed[prop] = val;
+        }
+        else if ([ 'borderWidth', 'borderStyle', 'borderColor' ].indexOf(prop) > -1) {
+          var suffix = prop.replace('border', '');
+          var val$1 = '';
+          for (var j = 0; j < styleEdges.length; j++) {
+            var subProp = 'border' + styleEdges[j] + suffix;
+            val$1 += style[subProp] + ' ';
+          }
+          fixed[prop] = val$1;
+        }
+        else if (prop === 'borderRadius') {
+          var val1 = '';
+          var val2 = '';
+          for (var j$1 = 0; j$1 < styleBorderRadiuses.length; j$1++) {
+            var val$2 = style[styleBorderRadiuses[j$1]].split(' ');
+            val1 += val$2[0] + ' ';
+            val2 += (val$2[1] === void 0 ? val$2[0] : val$2[1]) + ' ';
+          }
+          fixed[prop] = val1 + '/ ' + val2;
+        }
+        else {
+          fixed[prop] = style[prop];
+        }
+      }
+      else {
+        fixed[prop] = style[prop];
+      }
+    }
+
+    return fixed
+  }
+
+  function normalizeElements (opts) {
+    return {
+      from: opts.from,
+      to: opts.to !== void 0
+        ? opts.to
+        : opts.from
+    }
+  }
+
+  function normalizeOptions (options) {
+    if (typeof options === 'number') {
+      options = {
+        duration: options
+      };
+    }
+    else if (typeof options === 'function') {
+      options = {
+        onEnd: options
+      };
+    }
+
+    return Object.assign({}, options,
+
+      {waitFor: options.waitFor === void 0 ? 0 : options.waitFor,
+
+      duration: isNaN(options.duration) === true ? 300 : parseInt(options.duration, 10),
+      easing: typeof options.easing === 'string' && options.easing.length > 0 ? options.easing : 'ease-in-out',
+      delay: isNaN(options.delay) === true ? 0 : parseInt(options.delay, 10),
+      fill: typeof options.fill === 'string' && options.fill.length > 0 ? options.fill : 'none',
+
+      resize: options.resize === true,
+      useCSS: options.useCSS === true,
+      hideFromClone: options.hideFromClone === true,
+      keepToClone: options.keepToClone === true,
+
+      tween: options.tween === true,
+      tweenFromOpacity: isNaN(options.tweenFromOpacity) === true ? 0.6 : parseFloat(options.tweenFromOpacity),
+      tweenToOpacity: isNaN(options.tweenToOpacity) === true ? 0.5 : parseFloat(options.tweenToOpacity)})
+  }
+
+  function getElement (element) {
+    var type = typeof element;
+
+    return type === 'function'
+      ? element()
+      : (
+        type === 'string'
+          ? document.querySelector(element)
+          : element
+      )
+  }
+
+  function isValidElement (element) {
+    return element &&
+      element.ownerDocument === document &&
+      element.parentNode !== null
+  }
+
+  function morph (_options) {
+    var cancel = function () { return false; };
+    var cancelStatus = false;
+    var endElementTo = true;
+
+    var elements = normalizeElements(_options);
+    var options = normalizeOptions(_options);
+
+    var elFrom = getElement(elements.from);
+    if (isValidElement(elFrom) !== true) {
+      // we return a cancel function that return false, meaning the cancel function failed
+      return cancel
+    }
+    // we clean other morphs running on this element
+    typeof elFrom.qMorphCancel === 'function' && elFrom.qMorphCancel();
+
+    var animationFromClone = void 0;
+    var animationFromTween = void 0;
+    var animationToClone = void 0;
+    var animationTo = void 0;
+
+    var elFromParent = elFrom.parentNode;
+    var elFromNext = elFrom.nextElementSibling;
+
+    // we get the dimensions and characteristics
+    // of the parent of the initial element before changes
+    var elFromPosition = getAbsolutePosition(elFrom, options.resize);
+    var ref = getAbsoluteSize(elFromParent);
+    var elFromParentWidthBefore = ref.width;
+    var elFromParentHeightBefore = ref.height;
+    var ref$1 = getComputedStyle$1(elFrom, [ 'borderWidth', 'borderStyle', 'borderColor', 'borderRadius', 'backgroundColor', 'transform', 'position', 'cssText' ]);
+    var elFromBorderWidth = ref$1.borderWidth;
+    var elFromBorderStyle = ref$1.borderStyle;
+    var elFromBorderColor = ref$1.borderColor;
+    var elFromBorderRadius = ref$1.borderRadius;
+    var elFromBackground = ref$1.backgroundColor;
+    var elFromTransform = ref$1.transform;
+    var elFromPositioningType = ref$1.position;
+    var elFromCssText = ref$1.cssText;
+    var elFromClassSaved = elFrom.classList.toString();
+    var elFromStyleSaved = elFrom.style.cssText;
+
+    // we make a clone of the initial element and
+    // use it to display until the final element is ready
+    // and to change the occupied space during animation
+    var elFromClone = elFrom.cloneNode(true);
+    var elFromTween = options.tween === true ? elFrom.cloneNode(true) : void 0;
+
+    if (elFromTween !== void 0) {
+      elFromTween.className = elFromTween.classList.toString().split(' ').filter(function (c) { return /^bg-/.test(c) === false; }).join(' ');
+    }
+
+    // if the initial element is not going to be removed do not show the placeholder
+    options.hideFromClone === true && elFromClone.classList.add('q-morph--internal');
+
+    // prevent interaction with placeholder
+    elFromClone.setAttribute('aria-hidden', 'true');
+    elFromClone.style.transition = 'none';
+    elFromClone.style.animation = 'none';
+    elFromClone.style.pointerEvents = 'none';
+    elFromParent.insertBefore(elFromClone, elFromNext);
+
+    // we mark the element with its cleanup function
+    elFrom.qMorphCancel = function () {
+      cancelStatus = true;
+
+      // we clean the clone of the initial element
+      elFromClone.remove();
+      elFromTween !== void 0 && elFromTween.remove();
+
+      options.hideFromClone === true && elFromClone.classList.remove('q-morph--internal');
+
+      // we remove the cleanup function from the element
+      elFrom.qMorphCancel = void 0;
+    };
+
+    // will be called after Vue catches up with the changes done by _options.onToggle() function
+    var calculateFinalState = function () {
+      var elTo = getElement(elements.to);
+      if (cancelStatus === true || isValidElement(elTo) !== true) {
+        typeof elFrom.qMorphCancel === 'function' && elFrom.qMorphCancel();
+
+        return
+      }
+      // we clean other morphs running on this element
+      elFrom !== elTo && typeof elTo.qMorphCancel === 'function' && elTo.qMorphCancel();
+
+      // we hide the final element and the clone of the initial element
+      // we don't hide the final element if we want both it and the animated one visible
+      options.keepToClone !== true && elTo.classList.add('q-morph--internal');
+      elFromClone.classList.add('q-morph--internal');
+
+      // we get the dimensions of the parent of the initial element after changes
+      // the difference is how much we should animate the clone
+      var ref = getAbsoluteSize(elFromParent);
+      var elFromParentWidthAfter = ref.width;
+      var elFromParentHeightAfter = ref.height;
+
+      // we get the dimensions of the parent of the final element before changes
+      var ref$1 = getAbsoluteSize(elTo.parentNode);
+      var elToParentWidthBefore = ref$1.width;
+      var elToParentHeightBefore = ref$1.height;
+
+      // then we show the clone of the initial element if we don't want it hidden
+      options.hideFromClone !== true && elFromClone.classList.remove('q-morph--internal');
+
+      // we mark the element with its cleanup function
+      elTo.qMorphCancel = function () {
+        cancelStatus = true;
+
+        // we clean the clone of the initial element
+        elFromClone.remove();
+        elFromTween !== void 0 && elFromTween.remove();
+
+        options.hideFromClone === true && elFromClone.classList.remove('q-morph--internal');
+
+        // we show the final element
+        options.keepToClone !== true && elTo.classList.remove('q-morph--internal');
+
+        // we remove the cleanup function from the elements
+        elFrom.qMorphCancel = void 0;
+        elTo.qMorphCancel = void 0;
+      };
+
+      // will be called after waitFor (give time to render the final element)
+      var animate = function () {
+        if (cancelStatus === true) {
+          typeof elTo.qMorphCancel === 'function' && elTo.qMorphCancel();
+
+          return
+        }
+
+        // now the animation starts, so we only need the clone
+        // of the initial element as a spacer
+        // we also hide it to calculate the dimensions of the
+        // parent of the final element after the changes
+        if (options.hideFromClone !== true) {
+          elFromClone.classList.add('q-morph--internal');
+          elFromClone.innerHTML = '';
+          elFromClone.style.left = 0;
+          elFromClone.style.right = 'unset';
+          elFromClone.style.top = 0;
+          elFromClone.style.bottom = 'unset';
+          elFromClone.style.transform = 'none';
+        }
+
+        // we show the final element
+        if (options.keepToClone !== true) {
+          elTo.classList.remove('q-morph--internal');
+        }
+
+        // we get the dimensions of the parent of the final element after changes
+        // the difference is how much we should animate the clone
+        var elToParent = elTo.parentNode;
+        var ref = getAbsoluteSize(elToParent);
+        var elToParentWidthAfter = ref.width;
+        var elToParentHeightAfter = ref.height;
+
+        var elToClone = elTo.cloneNode(options.keepToClone);
+        elToClone.setAttribute('aria-hidden', 'true');
+        if (options.keepToClone !== true) {
+          elToClone.style.left = 0;
+          elToClone.style.right = 'unset';
+          elToClone.style.top = 0;
+          elToClone.style.bottom = 'unset';
+          elToClone.style.transform = 'none';
+          elToClone.style.pointerEvents = 'none';
+        }
+        elToClone.classList.add('q-morph--internal');
+
+        // if elFrom is the same as elTo the next element is elFromClone
+        var elToNext = elTo === elFrom && elFromParent === elToParent ? elFromClone : elTo.nextElementSibling;
+        elToParent.insertBefore(elToClone, elToNext);
+
+        var ref$1 = getComputedStyle$1(elTo, [ 'borderWidth', 'borderStyle', 'borderColor', 'borderRadius', 'backgroundColor', 'transform', 'position', 'cssText' ]);
+        var elToBorderWidth = ref$1.borderWidth;
+        var elToBorderStyle = ref$1.borderStyle;
+        var elToBorderColor = ref$1.borderColor;
+        var elToBorderRadius = ref$1.borderRadius;
+        var elToBackground = ref$1.backgroundColor;
+        var elToTransform = ref$1.transform;
+        var elToPositioningType = ref$1.position;
+        var elToCssText = ref$1.cssText;
+        var elToClassSaved = elTo.classList.toString();
+        var elToStyleSaved = elTo.style.cssText;
+
+        // we set the computed styles on the element (to be able to remove classes)
+        elTo.style.cssText = elToCssText;
+        elTo.style.transform = 'none';
+        elTo.style.animation = 'none';
+        elTo.style.transition = 'none';
+        // we strip the background classes (background color can no longer be animated if !important is used)
+        elTo.className = elToClassSaved.split(' ').filter(function (c) { return /^bg-/.test(c) === false; }).join(' ');
+
+        var elToPosition = getAbsolutePosition(elTo, options.resize);
+
+        var deltaX = elFromPosition.left - elToPosition.left;
+        var deltaY = elFromPosition.top - elToPosition.top;
+        var scaleX = elFromPosition.width / (elToPosition.width > 0 ? elToPosition.width : 10);
+        var scaleY = elFromPosition.height / (elToPosition.height > 0 ? elToPosition.height : 100);
+
+        var elFromParentWidthDiff = elFromParentWidthBefore - elFromParentWidthAfter;
+        var elFromParentHeightDiff = elFromParentHeightBefore - elFromParentHeightAfter;
+        var elToParentWidthDiff = elToParentWidthAfter - elToParentWidthBefore;
+        var elToParentHeightDiff = elToParentHeightAfter - elToParentHeightBefore;
+
+        var elFromCloneWidth = Math.max(elFromPosition.widthM, elFromParentWidthDiff);
+        var elFromCloneHeight = Math.max(elFromPosition.heightM, elFromParentHeightDiff);
+        var elToCloneWidth = Math.max(elToPosition.widthM, elToParentWidthDiff);
+        var elToCloneHeight = Math.max(elToPosition.heightM, elToParentHeightDiff);
+
+        var elSharedSize = elFrom === elTo &&
+          [ 'absolute', 'fixed' ].includes(elToPositioningType) === false &&
+          [ 'absolute', 'fixed' ].includes(elFromPositioningType) === false;
+
+        // if the final element has fixed position or if a parent
+        // has fixed position we need to animate it as fixed
+        var elToNeedsFixedPosition = elToPositioningType === 'fixed';
+        var parent = elToParent;
+        while (elToNeedsFixedPosition !== true && parent !== document) {
+          elToNeedsFixedPosition = window.getComputedStyle(parent).position === 'fixed';
+          parent = parent.parentNode;
+        }
+
+        // we show the spacer for the initial element
+        if (options.hideFromClone !== true) {
+          elFromClone.style.display = 'block';
+          elFromClone.style.flex = '0 0 auto';
+          elFromClone.style.opacity = 0;
+          elFromClone.style.minWidth = 'unset';
+          elFromClone.style.maxWidth = 'unset';
+          elFromClone.style.minHeight = 'unset';
+          elFromClone.style.maxHeight = 'unset';
+          elFromClone.classList.remove('q-morph--internal');
+        }
+
+        // we show the spacer for the final element
+        if (options.keepToClone !== true) {
+          elToClone.style.display = 'block';
+          elToClone.style.flex = '0 0 auto';
+          elToClone.style.opacity = 0;
+          elToClone.style.minWidth = 'unset';
+          elToClone.style.maxWidth = 'unset';
+          elToClone.style.minHeight = 'unset';
+          elToClone.style.maxHeight = 'unset';
+        }
+        elToClone.classList.remove('q-morph--internal');
+
+        // we apply classes specified by user
+        if (typeof options.classes === 'string') {
+          elTo.className += ' ' + options.classes;
+        }
+
+        // we apply styles specified by user
+        if (typeof options.style === 'string') {
+          elTo.style.cssText += ' ' + options.style;
+        }
+        else if (options.style === Object(options.style)) {
+          for (var prop in options.style) {
+            elTo.style[prop] = options.style[prop];
+          }
+        }
+
+        // we position the morphing element
+        // if we use fixed position for the final element we need to adjust for scroll
+        var documentScroll = elToNeedsFixedPosition === true
+          ? document.documentElement
+          : { scrollLeft: 0, scrollTop: 0 };
+        elTo.style.position = elToNeedsFixedPosition === true ? 'fixed' : 'absolute';
+        elTo.style.left = (elToPosition.left - documentScroll.scrollLeft) + "px";
+        elTo.style.right = 'unset';
+        elTo.style.top = (elToPosition.top - documentScroll.scrollTop) + "px";
+        elTo.style.margin = 0;
+
+        if (options.resize === true) {
+          elTo.style.minWidth = 'unset';
+          elTo.style.maxWidth = 'unset';
+          elTo.style.minHeight = 'unset';
+          elTo.style.maxHeight = 'unset';
+          elTo.style.overflow = 'hidden';
+          elTo.style.overflowX = 'hidden';
+          elTo.style.overflowY = 'hidden';
+        }
+
+        document.body.appendChild(elTo);
+
+        if (elFromTween !== void 0) {
+          elFromTween.style.cssText = elFromCssText;
+          elFromTween.style.transform = 'none';
+          elFromTween.style.animation = 'none';
+          elFromTween.style.transition = 'none';
+
+          elFromTween.style.position = elTo.style.position;
+          elFromTween.style.left = (elFromPosition.left - documentScroll.scrollLeft) + "px";
+          elFromTween.style.right = 'unset';
+          elFromTween.style.top = (elFromPosition.top - documentScroll.scrollTop) + "px";
+          elFromTween.style.margin = 0;
+          elFromTween.style.pointerEvents = 'none';
+
+          if (options.resize === true) {
+            elFromTween.style.minWidth = 'unset';
+            elFromTween.style.maxWidth = 'unset';
+            elFromTween.style.minHeight = 'unset';
+            elFromTween.style.maxHeight = 'unset';
+            elFromTween.style.overflow = 'hidden';
+            elFromTween.style.overflowX = 'hidden';
+            elFromTween.style.overflowY = 'hidden';
+          }
+
+          document.body.appendChild(elFromTween);
+        }
+
+        var commonCleanup = function (aborted) {
+          // we put the element back in it's place
+          // and restore the styles and classes
+          if (elFrom === elTo && endElementTo !== true) {
+            elTo.style.cssText = elFromStyleSaved;
+            elTo.className = elFromClassSaved;
+          }
+          else {
+            elTo.style.cssText = elToStyleSaved;
+            elTo.className = elToClassSaved;
+          }
+          elToClone.parentNode === elToParent && elToParent.insertBefore(elTo, elToClone);
+
+          // we clean the spacers
+          elFromClone.remove();
+          elToClone.remove();
+          elFromTween !== void 0 && elFromTween.remove();
+
+          // cancel will be no longer available
+          cancel = function () { return false; };
+
+          elFrom.qMorphCancel = void 0;
+          elTo.qMorphCancel = void 0;
+
+          // we are ready
+          if (typeof options.onEnd === 'function') {
+            options.onEnd(endElementTo === true ? 'to' : 'from', aborted === true);
+          }
+        };
+
+        if (options.useCSS !== true && typeof elTo.animate === 'function') {
+          var resizeFrom = options.resize === true
+            ? {
+              transform: ("translate(" + deltaX + "px, " + deltaY + "px)"),
+              width: (elFromCloneWidth + "px"),
+              height: (elFromCloneHeight + "px")
+            }
+            : {
+              transform: ("translate(" + deltaX + "px, " + deltaY + "px) scale(" + scaleX + ", " + scaleY + ")")
+            };
+          var resizeTo = options.resize === true
+            ? {
+              width: (elToCloneWidth + "px"),
+              height: (elToCloneHeight + "px")
+            }
+            : {};
+          var resizeFromTween = options.resize === true
+            ? {
+              width: (elFromCloneWidth + "px"),
+              height: (elFromCloneHeight + "px")
+            }
+            : {};
+          var resizeToTween = options.resize === true
+            ? {
+              transform: ("translate(" + (-1 * deltaX) + "px, " + (-1 * deltaY) + "px)"),
+              width: (elToCloneWidth + "px"),
+              height: (elToCloneHeight + "px")
+            }
+            : {
+              transform: ("translate(" + (-1 * deltaX) + "px, " + (-1 * deltaY) + "px) scale(" + (1 / scaleX) + ", " + (1 / scaleY) + ")")
+            };
+          var tweenFrom = elFromTween !== void 0
+            ? { opacity: options.tweenToOpacity }
+            : { backgroundColor: elFromBackground };
+          var tweenTo = elFromTween !== void 0
+            ? { opacity: 1 }
+            : { backgroundColor: elToBackground };
+          animationTo = elTo.animate([
+            Object.assign({}, {margin: 0,
+              borderWidth: elFromBorderWidth,
+              borderStyle: elFromBorderStyle,
+              borderColor: elFromBorderColor,
+              borderRadius: elFromBorderRadius,
+              transformOrigin: '0 0'},
+              resizeFrom,
+              tweenFrom),
+            Object.assign({}, {margin: 0,
+              borderWidth: elToBorderWidth,
+              borderStyle: elToBorderStyle,
+              borderColor: elToBorderColor,
+              borderRadius: elToBorderRadius,
+              transformOrigin: '0 0',
+              transform: elToTransform},
+              resizeTo,
+              tweenTo)
+          ], {
+            duration: options.duration,
+            easing: options.easing,
+            fill: options.fill,
+            delay: options.delay
+          });
+
+          animationFromTween = elFromTween === void 0 ? void 0 : elFromTween.animate([
+            Object.assign({}, {opacity: options.tweenFromOpacity,
+              margin: 0,
+              borderWidth: elFromBorderWidth,
+              borderStyle: elFromBorderStyle,
+              borderColor: elFromBorderColor,
+              borderRadius: elFromBorderRadius,
+              transformOrigin: '0 0',
+              transform: elFromTransform},
+              resizeFromTween),
+            Object.assign({}, {opacity: 0,
+              margin: 0,
+              borderWidth: elToBorderWidth,
+              borderStyle: elToBorderStyle,
+              borderColor: elToBorderColor,
+              borderRadius: elToBorderRadius,
+              transformOrigin: '0 0'},
+              resizeToTween)
+          ], {
+            duration: options.duration,
+            easing: options.easing,
+            fill: options.fill,
+            delay: options.delay
+          });
+
+          animationFromClone = options.hideFromClone === true || elSharedSize === true ? void 0 : elFromClone.animate([
+            {
+              margin: ((elFromParentHeightDiff < 0 ? elFromParentHeightDiff / 2 : 0) + "px " + (elFromParentWidthDiff < 0 ? elFromParentWidthDiff / 2 : 0) + "px"),
+              width: ((elFromCloneWidth + elFromPosition.marginH) + "px"),
+              height: ((elFromCloneHeight + elFromPosition.marginV) + "px")
+            },
+            {
+              margin: 0,
+              width: 0,
+              height: 0
+            }
+          ], {
+            duration: options.duration,
+            easing: options.easing,
+            fill: options.fill,
+            delay: options.delay
+          });
+
+          animationToClone = options.keepToClone === true ? void 0 : elToClone.animate([
+            elSharedSize === true
+              ? {
+                margin: ((elFromParentHeightDiff < 0 ? elFromParentHeightDiff / 2 : 0) + "px " + (elFromParentWidthDiff < 0 ? elFromParentWidthDiff / 2 : 0) + "px"),
+                width: ((elFromCloneWidth + elFromPosition.marginH) + "px"),
+                height: ((elFromCloneHeight + elFromPosition.marginV) + "px")
+              }
+              : {
+                margin: 0,
+                width: 0,
+                height: 0
+              },
+            {
+              margin: ((elToParentHeightDiff < 0 ? elToParentHeightDiff / 2 : 0) + "px " + (elToParentWidthDiff < 0 ? elToParentWidthDiff / 2 : 0) + "px"),
+              width: ((elToCloneWidth + elToPosition.marginH) + "px"),
+              height: ((elToCloneHeight + elToPosition.marginV) + "px")
+            }
+          ], {
+            duration: options.duration,
+            easing: options.easing,
+            fill: options.fill,
+            delay: options.delay
+          });
+
+          var cleanup = function (abort) {
+            animationFromClone !== void 0 && animationFromClone.cancel();
+            animationFromTween !== void 0 && animationFromTween.cancel();
+            animationToClone !== void 0 && animationToClone.cancel();
+            animationTo.cancel();
+
+            animationTo.removeEventListener('finish', cleanup);
+            animationTo.removeEventListener('cancel', cleanup);
+
+            commonCleanup(abort);
+
+            // we clean the animations
+            animationFromClone = void 0;
+            animationFromTween = void 0;
+            animationToClone = void 0;
+            animationTo = void 0;
+          };
+
+          elFrom.qMorphCancel = function () {
+            elFrom.qMorphCancel = void 0;
+            cancelStatus = true;
+            cleanup();
+          };
+          elTo.qMorphCancel = function () {
+            elTo.qMorphCancel = void 0;
+            cancelStatus = true;
+            cleanup();
+          };
+
+          animationTo.addEventListener('finish', cleanup);
+          animationTo.addEventListener('cancel', cleanup);
+
+          cancel = function (abort) {
+            // we are not in a morph that we can cancel
+            if (cancelStatus === true || animationTo === void 0) {
+              return false
+            }
+
+            if (abort === true) {
+              cleanup(true);
+              return true
+            }
+
+            endElementTo = endElementTo !== true;
+
+            animationFromClone !== void 0 && animationFromClone.reverse();
+            animationFromTween !== void 0 && animationFromTween.reverse();
+            animationToClone !== void 0 && animationToClone.reverse();
+            animationTo.reverse();
+
+            return true
+          };
+        }
+        else {
+          var qAnimId = "q-morph-anim-" + (++id);
+          var style = document.createElement('style');
+          var resizeFrom$1 = options.resize === true
+            ? ("\n            transform: translate(" + deltaX + "px, " + deltaY + "px);\n            width: " + elFromCloneWidth + "px;\n            height: " + elFromCloneHeight + "px;\n          ")
+            : ("transform: translate(" + deltaX + "px, " + deltaY + "px) scale(" + scaleX + ", " + scaleY + ");");
+          var resizeTo$1 = options.resize === true
+            ? ("\n            width: " + elToCloneWidth + "px;\n            height: " + elToCloneHeight + "px;\n          ")
+            : '';
+          var resizeFromTween$1 = options.resize === true
+            ? ("\n            width: " + elFromCloneWidth + "px;\n            height: " + elFromCloneHeight + "px;\n          ")
+            : '';
+          var resizeToTween$1 = options.resize === true
+            ? ("\n            transform: translate(" + (-1 * deltaX) + "px, " + (-1 * deltaY) + "px);\n            width: " + elToCloneWidth + "px;\n            height: " + elToCloneHeight + "px;\n          ")
+            : ("transform: translate(" + (-1 * deltaX) + "px, " + (-1 * deltaY) + "px) scale(" + (1 / scaleX) + ", " + (1 / scaleY) + ");");
+          var tweenFrom$1 = elFromTween !== void 0
+            ? ("opacity: " + (options.tweenToOpacity) + ";")
+            : ("background-color: " + elFromBackground + ";");
+          var tweenTo$1 = elFromTween !== void 0
+            ? 'opacity: 1;'
+            : ("background-color: " + elToBackground + ";");
+          var keyframesFromTween = elFromTween === void 0
+            ? ''
+            : ("\n            @keyframes " + qAnimId + "-from-tween {\n              0% {\n                opacity: " + (options.tweenFromOpacity) + ";\n                margin: 0;\n                border-width: " + elFromBorderWidth + ";\n                border-style: " + elFromBorderStyle + ";\n                border-color: " + elFromBorderColor + ";\n                border-radius: " + elFromBorderRadius + ";\n                transform-origin: 0 0;\n                transform: " + elFromTransform + ";\n                " + resizeFromTween$1 + "\n              }\n\n              100% {\n                opacity: 0;\n                margin: 0;\n                border-width: " + elToBorderWidth + ";\n                border-style: " + elToBorderStyle + ";\n                border-color: " + elToBorderColor + ";\n                border-radius: " + elToBorderRadius + ";\n                transform-origin: 0 0;\n                " + resizeToTween$1 + "\n              }\n            }\n          ");
+          var keyframesFrom = options.hideFromClone === true || elSharedSize === true
+            ? ''
+            : ("\n            @keyframes " + qAnimId + "-from {\n              0% {\n                margin: " + (elFromParentHeightDiff < 0 ? elFromParentHeightDiff / 2 : 0) + "px " + (elFromParentWidthDiff < 0 ? elFromParentWidthDiff / 2 : 0) + "px;\n                width: " + (elFromCloneWidth + elFromPosition.marginH) + "px;\n                height: " + (elFromCloneHeight + elFromPosition.marginV) + "px;\n              }\n\n              100% {\n                margin: 0;\n                width: 0;\n                height: 0;\n              }\n            }\n          ");
+          var keyframeToStart = elSharedSize === true
+            ? ("\n            margin: " + (elFromParentHeightDiff < 0 ? elFromParentHeightDiff / 2 : 0) + "px " + (elFromParentWidthDiff < 0 ? elFromParentWidthDiff / 2 : 0) + "px;\n            width: " + (elFromCloneWidth + elFromPosition.marginH) + "px;\n            height: " + (elFromCloneHeight + elFromPosition.marginV) + "px;\n          ")
+            : "\n            margin: 0;\n            width: 0;\n            height: 0;\n          ";
+          var keyframesTo = options.keepToClone === true
+            ? ''
+            : ("\n            @keyframes " + qAnimId + "-to {\n              0% {\n                " + keyframeToStart + "\n              }\n\n              100% {\n                margin: " + (elToParentHeightDiff < 0 ? elToParentHeightDiff / 2 : 0) + "px " + (elToParentWidthDiff < 0 ? elToParentWidthDiff / 2 : 0) + "px;\n                width: " + (elToCloneWidth + elToPosition.marginH) + "px;\n                height: " + (elToCloneHeight + elToPosition.marginV) + "px;\n              }\n            }\n          ");
+          style.innerHTML = "\n          @keyframes " + qAnimId + " {\n            0% {\n              margin: 0;\n              border-width: " + elFromBorderWidth + ";\n              border-style: " + elFromBorderStyle + ";\n              border-color: " + elFromBorderColor + ";\n              border-radius: " + elFromBorderRadius + ";\n              background-color: " + elFromBackground + ";\n              transform-origin: 0 0;\n              " + resizeFrom$1 + "\n              " + tweenFrom$1 + "\n            }\n\n            100% {\n              margin: 0;\n              border-width: " + elToBorderWidth + ";\n              border-style: " + elToBorderStyle + ";\n              border-color: " + elToBorderColor + ";\n              border-radius: " + elToBorderRadius + ";\n              background-color: " + elToBackground + ";\n              transform-origin: 0 0;\n              transform: " + elToTransform + ";\n              " + resizeTo$1 + "\n              " + tweenTo$1 + "\n            }\n          }\n\n          " + keyframesFrom + "\n\n          " + keyframesFromTween + "\n\n          " + keyframesTo + "\n        ";
+          document.head.appendChild(style);
+
+          var animationDirection = 'normal';
+
+          elFromClone.style.animation = (options.duration) + "ms " + (options.easing) + " " + (options.delay) + "ms " + animationDirection + " " + (options.fill) + " " + qAnimId + "-from";
+          if (elFromTween !== void 0) {
+            elFromTween.style.animation = (options.duration) + "ms " + (options.easing) + " " + (options.delay) + "ms " + animationDirection + " " + (options.fill) + " " + qAnimId + "-from-tween";
+          }
+          elToClone.style.animation = (options.duration) + "ms " + (options.easing) + " " + (options.delay) + "ms " + animationDirection + " " + (options.fill) + " " + qAnimId + "-to";
+          elTo.style.animation = (options.duration) + "ms " + (options.easing) + " " + (options.delay) + "ms " + animationDirection + " " + (options.fill) + " " + qAnimId;
+
+          var cleanup$1 = function (ev) {
+            if (ev === Object(ev) && ev.animationName !== qAnimId) {
+              return
+            }
+
+            elTo.removeEventListener('animationend', cleanup$1);
+            elTo.removeEventListener('animationcancel', cleanup$1);
+
+            commonCleanup();
+
+            // we clean the animations
+            style.remove();
+          };
+
+          elFrom.qMorphCancel = function () {
+            elFrom.qMorphCancel = void 0;
+            cancelStatus = true;
+            cleanup$1();
+          };
+          elTo.qMorphCancel = function () {
+            elTo.qMorphCancel = void 0;
+            cancelStatus = true;
+            cleanup$1();
+          };
+
+          elTo.addEventListener('animationend', cleanup$1);
+          elTo.addEventListener('animationcancel', cleanup$1);
+
+          cancel = function (abort) {
+            // we are not in a morph that we can cancel
+            if (cancelStatus === true || !elTo || !elFromClone || !elToClone) {
+              return false
+            }
+
+            if (abort === true) {
+              cleanup$1();
+
+              return true
+            }
+
+            endElementTo = endElementTo !== true;
+
+            animationDirection = animationDirection === 'normal' ? 'reverse' : 'normal';
+
+            elFromClone.style.animationDirection = animationDirection;
+            elFromTween.style.animationDirection = animationDirection;
+            elToClone.style.animationDirection = animationDirection;
+            elTo.style.animationDirection = animationDirection;
+
+            return true
+          };
+        }
+      };
+
+      if (
+        options.waitFor > 0 ||
+        options.waitFor === 'transitionend' ||
+        (options.waitFor === Object(options.waitFor) && typeof options.waitFor.then === 'function')
+      ) {
+        var delayPromise = options.waitFor > 0
+          ? new Promise(function (resolve) { return setTimeout(resolve, options.waitFor); })
+          : (
+            options.waitFor === 'transitionend'
+              ? new Promise(function (resolve) {
+                var timer = setTimeout(function () {
+                  endFn();
+                }, 400);
+
+                var endFn = function (ev) {
+                  clearTimeout(timer);
+
+                  if (elTo) {
+                    elTo.removeEventListener('transitionend', endFn);
+                    elTo.removeEventListener('transitioncancel', endFn);
+                  }
+
+                  resolve();
+                };
+
+                elTo.addEventListener('transitionend', endFn);
+                elTo.addEventListener('transitioncancel', endFn);
+              })
+              : options.waitFor
+          );
+
+        delayPromise
+          .then(animate)
+          .catch(function () {
+            typeof elTo.qMorphCancel === 'function' && elTo.qMorphCancel();
+          });
+      }
+      else {
+        animate();
+      }
+    };
+
+    typeof _options.onToggle === 'function' && _options.onToggle();
+    requestAnimationFrame(calculateFinalState);
+
+    // we return the cancel function
+    // returns:
+    //   false if the cancel cannot be performed (the morph ended already or has not started)
+    //   true else
+    return function (abort) { return cancel(abort); }
+  }
+
+  var morphGroups = {};
+  var props = [
+    'duration', 'delay', 'easing', 'fill',
+    'classes', 'style', 'duration', 'resize',
+    'useCSS', 'hideFromClone', 'keepToClone', 'tween',
+    'tweenFromOpacity', 'tweenToOpacity',
+    'waitFor', 'onEnd'
+  ];
+  var mods = [
+    'resize', 'useCSS', 'hideFromClone', 'keepToClone', 'tween'
+  ];
+
+  function changeClass (ctx, action) {
+    if (ctx.clsAction !== action) {
+      ctx.clsAction = action;
+      ctx.el.classList[action]('q-morph--invisible');
+    }
+  }
+
+  function trigger (group) {
+    if (group.animating === true || group.queue.length < 2) {
+      return
+    }
+
+    var ref = group.queue;
+    var from = ref[0];
+    var to = ref[1];
+
+    group.animating = true;
+    from.animating = true;
+    to.animating = true;
+
+    changeClass(from, 'remove');
+    changeClass(to, 'remove');
+
+    var cancelFn = morph(Object.assign({}, {from: from.el,
+      to: to.el,
+      onToggle: function onToggle () {
+        changeClass(from, 'add');
+        changeClass(to, 'remove');
+      }},
+      to.opts,
+      {onEnd: function onEnd (dir, aborted) {
+        to.opts.onEnd !== void 0 && to.opts.onEnd(dir, aborted);
+
+        if (aborted === true) {
+          return
+        }
+
+        from.animating = false;
+        to.animating = false;
+
+        group.animating = false;
+        group.cancel = void 0;
+        group.queue.shift();
+
+        trigger(group);
+      }}));
+
+    group.cancel = function () {
+      cancelFn(true); // abort
+      group.cancel = void 0;
+    };
+  }
+
+  function updateModifiers$1 (mod, ctx) {
+    var opts = ctx.opts;
+
+    mods.forEach(function (name) {
+      opts[name] = mod[name] === true;
+    });
+  }
+
+  function insertArgs (arg, ctx) {
+    var opts = typeof arg === 'string' && arg.length > 0
+      ? arg.split(':') : [];
+
+    ctx.name = opts[0];
+    ctx.group = opts[1];
+
+    Object.assign(ctx.opts, {
+      duration: isNaN(opts[2]) === true
+        ? 300
+        : parseFloat(opts[2]),
+      waitFor: opts[3]
+    });
+  }
+
+  function updateArgs (arg, ctx) {
+    if (arg.group !== void 0) {
+      ctx.group = arg.group;
+    }
+    if (arg.name !== void 0) {
+      ctx.name = arg.name;
+    }
+
+    var opts = ctx.opts;
+
+    props.forEach(function (name) {
+      if (arg[name] !== void 0) {
+        opts[name] = arg[name];
+      }
+    });
+  }
+
+  function updateModel (name, ctx) {
+    if (ctx.name === name) {
+      var group = morphGroups[ctx.group];
+
+      // if group is not registered
+      if (group === void 0) {
+        morphGroups[ctx.group] = {
+          name: ctx.group,
+          model: name,
+          queue: [ ctx ],
+          animating: false
+        };
+
+        changeClass(ctx, 'remove');
+      }
+      // if model changed
+      else if (group.model !== name) {
+        group.model = name;
+        group.queue.push(ctx);
+
+        if (group.animating === false && group.queue.length === 2) {
+          trigger(group);
+        }
+      }
+
+      return
+    }
+
+    if (ctx.animating === false) {
+      changeClass(ctx, 'add');
+    }
+  }
+
+  function updateValue (ctx, value) {
+    var model;
+
+    if (Object(value) === value) {
+      model = '' + value.model;
+      updateArgs(value, ctx);
+      updateModifiers$1(value, ctx);
+    }
+    else {
+      model = '' + value;
+    }
+
+    if (model !== ctx.model) {
+      ctx.model = model;
+      updateModel(model, ctx);
+    }
+    else if (ctx.animating === false && ctx.clsAction !== void 0) {
+      // ensure HMR
+      ctx.el.classList[ctx.clsAction]('q-morph--invisible');
+    }
+  }
+
+  function destroy$6 (el) {
+    var ctx = el.__qmorph;
+
+    if (ctx !== void 0) {
+      var group = morphGroups[ctx.group];
+
+      if (group !== void 0) {
+        var index = group.queue.indexOf(ctx);
+
+        if (index !== -1) {
+          group.queue = group.queue.filter(function (item) { return item !== ctx; });
+
+          if (group.queue.length === 0) {
+            group.cancel !== void 0 && group.cancel();
+            delete morphGroups[ctx.group];
+          }
+        }
+      }
+
+      if (ctx.clsAction === 'add') {
+        el.classList.remove('q-morph--invisible');
+      }
+
+      delete el.__qmorph;
+    }
+  }
+
+  var Morph = {
+    name: 'morph',
+
+    inserted: function inserted (el, binding) {
+      if (el.__qmorph !== void 0) {
+        destroy$6(el);
+        el.__qmorph_destroyed = true;
+      }
+
+      var ctx = {
+        el: el,
+        animating: false,
+        opts: {}
+      };
+
+      updateModifiers$1(binding.modifiers, ctx);
+      insertArgs(binding.arg, ctx);
+      updateValue(ctx, binding.value);
+
+      el.__qmorph = ctx;
+    },
+
+    update: function update (el, binding) {
+      var ctx = el.__qmorph;
+      ctx !== void 0 && updateValue(ctx, binding.value);
+    },
+
+    unbind: function unbind (el) {
+      if (el.__qmorph_destroyed === void 0) {
+        destroy$6(el);
+      }
+      else {
+        delete el.__qmorph_destroyed;
       }
     }
   };
 
   function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-
   var defaultCfg$1 = {
     childList: true,
     subtree: true,
@@ -32193,47 +35166,23 @@
     characterDataOldValue: true
   };
 
-  function update$1 (el, ctx, ref) {
-    var ref_modifiers = ref.modifiers;
-    var once = ref_modifiers.once;
-    var rest = objectWithoutProperties( ref_modifiers, ["once"] );
-    var mod = rest;
-    var value = ref.value;
+  function update$1 (el, ctx, value) {
+    ctx.handler = value;
+    ctx.observer !== void 0 && ctx.observer.disconnect();
 
-    var changed;
-
-    ctx.once = once;
-
-    if (ctx.handler !== value) {
-      changed = true;
-      ctx.handler = value;
-    }
-
-    if (ctx.opts === void 0 || isDeepEqual(mod, ctx.mod) === false) {
-      changed = true;
-      ctx.mod = mod;
-      ctx.opts = Object.keys(mod).length === 0
-        ? defaultCfg$1
-        : mod;
-    }
-
-    if (changed === true) {
-      ctx.observer !== void 0 && ctx.observer.disconnect();
-
-      ctx.observer = new MutationObserver(function (list) {
-        if (typeof ctx.handler === 'function') {
-          var res = ctx.handler(list);
-          if (res === false || ctx.once === true) {
-            destroy$1(el);
-          }
+    ctx.observer = new MutationObserver(function (list) {
+      if (typeof ctx.handler === 'function') {
+        var res = ctx.handler(list);
+        if (res === false || ctx.once === true) {
+          destroy$7(el);
         }
-      });
+      }
+    });
 
-      ctx.observer.observe(el, ctx.opts);
-    }
+    ctx.observer.observe(el, ctx.opts);
   }
 
-  function destroy$1 (el) {
+  function destroy$7 (el) {
     var ctx = el.__qmutation;
 
     if (ctx !== void 0) {
@@ -32245,21 +35194,51 @@
   var Mutation = {
     name: 'mutation',
 
-    inserted: function inserted (el, binding) {
-      var ctx = {};
-      update$1(el, ctx, binding);
+    inserted: function inserted (el, ref) {
+      var ref_modifiers = ref.modifiers;
+      var once = ref_modifiers.once;
+      var rest = objectWithoutProperties( ref_modifiers, ["once"] );
+      var mod = rest;
+      var value = ref.value;
+
+      if (el.__qmutation !== void 0) {
+        destroy$7(el);
+        el.__qmutation_destroyed = true;
+      }
+
+      var ctx = {
+        once: once,
+        opts: Object.keys(mod).length === 0
+          ? defaultCfg$1
+          : mod
+      };
+
+      update$1(el, ctx, value);
+
       el.__qmutation = ctx;
     },
 
-    update: function update$1$1 (el, binding) {
+    update: function update$1$1 (el, ref) {
+      var oldValue = ref.oldValue;
+      var value = ref.value;
+
       var ctx = el.__qmutation;
-      ctx !== void 0 && update$1(el, ctx, binding);
+      if (ctx !== void 0 && oldValue !== value) {
+        update$1(el, ctx, value);
+      }
     },
 
-    unbind: destroy$1
+    unbind: function unbind (el) {
+      if (el.__qmutation_destroyed === void 0) {
+        destroy$7(el);
+      }
+      else {
+        delete el.__qmutation_destroyed;
+      }
+    }
   };
 
-  function updateBinding (ctx, ref) {
+  function update$2 (ctx, ref) {
     var value = ref.value;
     var oldValue = ref.oldValue;
 
@@ -32275,11 +35254,25 @@
     }
   }
 
+  function destroy$8 (el) {
+    var ctx = el.__qscrollfire;
+    if (ctx !== void 0) {
+      ctx.scrollTarget.removeEventListener('scroll', ctx.scroll, listenOpts.passive);
+      delete el.__qscrollfire;
+    }
+  }
+
   var ScrollFire = {
     name: 'scroll-fire',
 
-    bind: function bind (el) {
+    inserted: function inserted (el, binding) {
+      if (el.__qscrollfire !== void 0) {
+        destroy$8(el);
+        el.__qscrollfire_destroyed = true;
+      }
+
       var ctx = {
+        scrollTarget: getScrollTarget(el),
         scroll: debounce(function () {
           var containerBottom, elBottom;
 
@@ -32299,35 +35292,28 @@
         }, 25)
       };
 
-      if (el.__qscrollfire) {
-        el.__qscrollfire_old = el.__qscrollfire;
-      }
+      update$2(ctx, binding);
 
       el.__qscrollfire = ctx;
     },
 
-    inserted: function inserted (el, binding) {
-      var ctx = el.__qscrollfire;
-      ctx.scrollTarget = getScrollTarget(el);
-      updateBinding(ctx, binding);
-    },
-
-    update: function update (el, binding) {
+    update: function update$1 (el, binding) {
       if (el.__qscrollfire !== void 0 && binding.value !== binding.oldValue) {
-        updateBinding(el.__qscrollfire, binding);
+        update$2(el.__qscrollfire, binding);
       }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qscrollfire_old || el.__qscrollfire;
-      if (ctx !== void 0) {
-        ctx.scrollTarget.removeEventListener('scroll', ctx.scroll, listenOpts.passive);
-        delete el[el.__qscrollfire_old ? '__qscrollfire_old' : '__qscrollfire'];
+      if (el.__qscrollfire_destroyed === void 0) {
+        destroy$8(el);
+      }
+      else {
+        delete el.__qscrollfire_destroyed;
       }
     }
   };
 
-  function updateBinding$1 (ctx, ref) {
+  function update$3 (ctx, ref) {
     var value = ref.value;
     var oldValue = ref.oldValue;
 
@@ -32342,11 +35328,25 @@
     }
   }
 
+  function destroy$9 (el) {
+    var ctx = el.__qscroll;
+    if (ctx !== void 0) {
+      ctx.scrollTarget.removeEventListener('scroll', ctx.scroll, listenOpts.passive);
+      delete el.__qscroll;
+    }
+  }
+
   var Scroll = {
     name: 'scroll',
 
-    bind: function bind (el) {
+    inserted: function inserted (el, binding) {
+      if (el.__qscroll !== void 0) {
+        destroy$9(el);
+        el.__qscroll_destroyed = true;
+      }
+
       var ctx = {
+        scrollTarget: getScrollTarget(el),
         scroll: function scroll () {
           ctx.handler(
             getScrollPosition(ctx.scrollTarget),
@@ -32355,56 +35355,37 @@
         }
       };
 
-      if (el.__qscroll) {
-        el.__qscroll_old = el.__qscroll;
-      }
+      update$3(ctx, binding);
 
       el.__qscroll = ctx;
     },
 
-    inserted: function inserted (el, binding) {
-      var ctx = el.__qscroll;
-      ctx.scrollTarget = getScrollTarget(el);
-      updateBinding$1(ctx, binding);
-    },
-
-    update: function update (el, binding) {
+    update: function update$1 (el, binding) {
       if (el.__qscroll !== void 0 && binding.oldValue !== binding.value) {
-        updateBinding$1(el.__qscroll, binding);
+        update$3(el.__qscroll, binding);
       }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qscroll_old || el.__qscroll;
-      if (ctx !== void 0) {
-        ctx.scrollTarget.removeEventListener('scroll', ctx.scroll, listenOpts.passive);
-        delete el[el.__qscroll_old ? '__qscroll_old' : '__qscroll'];
+      if (el.__qscroll_destroyed === void 0) {
+        destroy$9(el);
+      }
+      else {
+        delete el.__qscroll_destroyed;
       }
     }
   };
 
-  function update$2 (el, binding) {
-    var assign;
-
+  function destroy$a (el) {
     var ctx = el.__qtouchhold;
-
     if (ctx !== void 0) {
-      if (binding.oldValue !== binding.value) {
-        typeof binding.value !== 'function' && ctx.end();
-        ctx.handler = binding.value;
-      }
+      cleanEvt(ctx, 'main');
+      cleanEvt(ctx, 'temp');
 
-      // duration in ms, touch in pixels, mouse in pixels
-      var data = [600, 5, 7];
+      clearTimeout(ctx.timer);
+      ctx.styleCleanup !== void 0 && ctx.styleCleanup();
 
-      if (typeof binding.arg === 'string' && binding.arg.length) {
-        binding.arg.split(':').forEach(function (val, index) {
-          var v = parseInt(val, 10);
-          v && (data[index] = v);
-        });
-      }
-
-      (assign = data, ctx.duration = assign[0], ctx.touchSensitivity = assign[1], ctx.mouseSensitivity = assign[2]);
+      delete el.__qtouchhold;
     }
   }
 
@@ -32412,6 +35393,13 @@
     name: 'touch-hold',
 
     bind: function bind (el, binding) {
+      var assign;
+
+      if (el.__qtouchhold !== void 0) {
+        destroy$a(el);
+        el.__qtouchhold_destroyed = true;
+      }
+
       var modifiers = binding.modifiers;
 
       // early return, we don't need to do anything
@@ -32420,6 +35408,7 @@
       }
 
       var ctx = {
+        handler: binding.value,
         noop: noop,
 
         mouseStart: function mouseStart (evt) {
@@ -32514,13 +35503,19 @@
         }
       };
 
-      if (el.__qtouchhold) {
-        el.__qtouchhold_old = el.__qtouchhold;
+      // duration in ms, touch in pixels, mouse in pixels
+      var data = [600, 5, 7];
+
+      if (typeof binding.arg === 'string' && binding.arg.length > 0) {
+        binding.arg.split(':').forEach(function (val, index) {
+          var v = parseInt(val, 10);
+          v && (data[index] = v);
+        });
       }
 
-      el.__qtouchhold = ctx;
+      (assign = data, ctx.duration = assign[0], ctx.touchSensitivity = assign[1], ctx.mouseSensitivity = assign[2]);
 
-      update$2(el, binding);
+      el.__qtouchhold = ctx;
 
       modifiers.mouse === true && addEvt(ctx, 'main', [
         [ el, 'mousedown', 'mouseStart', ("passive" + (modifiers.mouseCapture === true ? 'Capture' : '')) ]
@@ -32532,18 +35527,20 @@
       ]);
     },
 
-    update: update$2,
+    update: function update (el, binding) {
+      var ctx = el.__qtouchhold;
+      if (ctx !== void 0 && binding.oldValue !== binding.value) {
+        typeof binding.value !== 'function' && ctx.end();
+        ctx.handler = binding.value;
+      }
+    },
 
     unbind: function unbind (el) {
-      var ctx = el.__qtouchhold_old || el.__qtouchhold;
-      if (ctx !== void 0) {
-        cleanEvt(ctx, 'main');
-        cleanEvt(ctx, 'temp');
-
-        clearTimeout(ctx.timer);
-        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
-
-        delete el[el.__qtouchhold_old ? '__qtouchhold_old' : '__qtouchhold'];
+      if (el.__qtouchhold_destroyed === void 0) {
+        destroy$a(el);
+      }
+      else {
+        delete el.__qtouchhold_destroyed;
       }
     }
   };
@@ -32571,6 +35568,20 @@
       Math.abs(top - origin.top) >= 7
   }
 
+  function destroy$b (el) {
+    var ctx = el.__qtouchrepeat;
+    if (ctx !== void 0) {
+      clearTimeout(ctx.timer);
+
+      cleanEvt(ctx, 'main');
+      cleanEvt(ctx, 'temp');
+
+      ctx.styleCleanup !== void 0 && ctx.styleCleanup();
+
+      delete el.__qtouchrepeat;
+    }
+  }
+
   var TouchRepeat = {
     name: 'touch-repeat',
 
@@ -32578,6 +35589,11 @@
       var modifiers = ref.modifiers;
       var value = ref.value;
       var arg = ref.arg;
+
+      if (el.__qtouchrepeat !== void 0) {
+        destroy$b(el);
+        el.__qtouchrepeat_destroyed = true;
+      }
 
       var keyboard = Object.keys(modifiers).reduce(function (acc, key) {
         if (keyRegex.test(key) === true) {
@@ -32747,10 +35763,6 @@
         }
       };
 
-      if (el.__qtouchrepeat !== void 0) {
-        el.__qtouchrepeat_old = el.__qtouchrepeat;
-      }
-
       el.__qtouchrepeat = ctx;
 
       modifiers.mouse === true && addEvt(ctx, 'main', [
@@ -32767,27 +35779,23 @@
       ]);
     },
 
-    update: function update (el, binding) {
-      var ctx = el.__qtouchrepeat;
+    update: function update (el, ref) {
+      var oldValue = ref.oldValue;
+      var value = ref.value;
 
-      if (ctx !== void 0 && binding.oldValue !== binding.value) {
-        typeof binding.value !== 'function' && ctx.end();
-        ctx.handler = binding.value;
+      var ctx = el.__qtouchrepeat;
+      if (ctx !== void 0 && oldValue !== value) {
+        typeof value !== 'function' && ctx.end();
+        ctx.handler = value;
       }
     },
 
     unbind: function unbind (el) {
-      var ctx = el.__qtouchrepeat_old || el.__qtouchrepeat;
-
-      if (ctx !== void 0) {
-        clearTimeout(ctx.timer);
-
-        cleanEvt(ctx, 'main');
-        cleanEvt(ctx, 'temp');
-
-        ctx.styleCleanup !== void 0 && ctx.styleCleanup();
-
-        delete el[el.__qtouchrepeat_old ? '__qtouchrepeat_old' : '__qtouchrepeat'];
+      if (el.__qtouchrepeat_destroyed === void 0) {
+        destroy$b(el);
+      }
+      else {
+        delete el.__qtouchrepeat_destroyed;
       }
     }
   };
@@ -32799,6 +35807,7 @@
     ClosePopup: ClosePopup,
     GoBack: GoBack,
     Intersection: Intersection,
+    Morph: Morph,
     Mutation: Mutation,
     Ripple: Ripple,
     ScrollFire: ScrollFire,
@@ -32899,21 +35908,33 @@
   var AppFullscreen = {
     isCapable: false,
     isActive: false,
+    activeEl: null,
 
     request: function request (target) {
-      return this.isCapable && !this.isActive
-        ? promisify(target || document.documentElement, prefixes.request)
-        : this.__getErr()
+      var this$1 = this;
+
+      if (this.isCapable === true && this.isActive === false) {
+        var el = target || document.documentElement;
+        return promisify(el, prefixes.request).then(function () {
+          this$1.activeEl = el;
+        })
+      }
+
+      return this.__getErr()
     },
 
     exit: function exit () {
-      return this.isCapable && this.isActive
-        ? promisify(document, prefixes.exit)
+      var this$1 = this;
+
+      return this.isCapable === true && this.isActive === true
+        ? promisify(document, prefixes.exit).then(function () {
+          this$1.activeEl = null;
+        })
         : this.__getErr()
     },
 
     toggle: function toggle (target) {
-      return this.isActive
+      return this.isActive === true
         ? this.exit()
         : this.request(target)
     },
@@ -32929,7 +35950,7 @@
       prefixes.request = [
         'requestFullscreen',
         'msRequestFullscreen', 'mozRequestFullScreen', 'webkitRequestFullscreen'
-      ].find(function (request) { return document.documentElement[request]; });
+      ].find(function (request) { return document.documentElement[request] !== void 0; });
 
       this.isCapable = prefixes.request !== void 0;
 
@@ -32956,11 +35977,12 @@
         'onmsfullscreenchange', 'onwebkitfullscreenchange'
       ].forEach(function (evt) {
         document[evt] = function () {
-          this$1.isActive = !this$1.isActive;
+          this$1.isActive = this$1.isActive === false;
         };
       });
 
       Vue.util.defineReactive(this, 'isActive', this.isActive);
+      Vue.util.defineReactive(this, 'activeEl', this.activeEl);
     }
   };
 
@@ -33129,35 +36151,29 @@
 
       var child = [];
 
-      if (this.title) {
-        child.push(
-          h(QCardSection, {
-            staticClass: 'q-dialog__title'
-          }, [ this.title ])
-        );
-      }
+      this.title && child.push(
+        h(QCardSection, {
+          staticClass: 'q-dialog__title'
+        }, [ this.title ])
+      );
 
-      if (this.message) {
-        child.push(
-          h(QCardSection, {
-            staticClass: 'q-dialog__message scroll'
-          }, [ this.message ])
-        );
-      }
+      this.message && child.push(
+        h(QCardSection, {
+          staticClass: 'q-dialog__message'
+        }, [ this.message ])
+      );
 
       child.push(
         this.grid === true
           ? h('div', {
-            staticClass: 'scroll row items-stretch justify-start'
+            staticClass: 'row items-stretch justify-start'
           }, this.__getGrid(h))
-          : h('div', { staticClass: 'scroll' }, this.__getList(h))
+          : h('div', this.__getList(h))
       );
 
       return h(QDialog, {
         ref: 'dialog',
-
         props: this.dialogProps,
-
         on: cache(this, 'hide', {
           hide: function () {
             this$1.$emit('hide');
@@ -33179,8 +36195,24 @@
   var ssrAPI = {
     onOk: function () { return ssrAPI; },
     okCancel: function () { return ssrAPI; },
-    hide: function () { return ssrAPI; }
+    hide: function () { return ssrAPI; },
+    update: function () { return ssrAPI; }
   };
+
+  function merge (target, source) {
+    for (var key in source) {
+      if (key !== 'spinner' && Object(source[key]) === source[key]) {
+        target[key] = Object(target[key]) !== target[key]
+          ? {}
+          : Object.assign({}, target[key]);
+
+        merge(target[key], source[key]);
+      }
+      else {
+        target[key] = source[key];
+      }
+    }
+  }
 
   function globalDialog (DefaultComponent) {
     return function (ref) {
@@ -33197,6 +36229,17 @@
 
       klass !== void 0 && (props.cardClass = klass);
       style !== void 0 && (props.cardStyle = style);
+
+      var isCustom = component !== void 0;
+      var DialogComponent, attrs;
+
+      if (isCustom === true) {
+        DialogComponent = component;
+      }
+      else {
+        DialogComponent = DefaultComponent;
+        attrs = props;
+      }
 
       var
         okFns = [],
@@ -33217,6 +36260,37 @@
           },
           hide: function hide () {
             vm.$refs.dialog.hide();
+            return API
+          },
+          update: function update (ref) {
+            var className = ref.className;
+            var klass = ref.class;
+            var style = ref.style;
+            var component = ref.component;
+            var root = ref.root;
+            var parent = ref.parent;
+            var rest = objectWithoutProperties$1( ref, ["className", "class", "style", "component", "root", "parent"] );
+            var cfg = rest;
+
+            if (vm !== null) {
+              klass !== void 0 && (cfg.cardClass = klass);
+              style !== void 0 && (cfg.cardStyle = style);
+
+              if (isCustom === true) {
+                Object.assign(props, cfg);
+              }
+              else {
+                merge(props, cfg);
+
+                // need to change "attrs" reference to
+                // actually reflect it in underlying component
+                // when we force update it
+                attrs = Object.assign({}, props);
+              }
+
+              vm.$forceUpdate();
+            }
+
             return API
           }
         };
@@ -33242,16 +36316,6 @@
           }
         }
       };
-
-      Vue.observable(props);
-
-      var DialogComponent = component !== void 0
-        ? component
-        : DefaultComponent;
-
-      var attrs = component === void 0
-        ? props
-        : void 0;
 
       var vm = new Vue({
         name: 'QGlobalDialog',
@@ -33420,11 +36484,12 @@
 
   function get (key, ssr) {
     var
-      result = key ? null : {},
       cookieSource = ssr ? ssr.req.headers : document,
       cookies = cookieSource.cookie ? cookieSource.cookie.split('; ') : [],
+      l = cookies.length;
+    var
+      result = key ? null : {},
       i = 0,
-      l = cookies.length,
       parts,
       name,
       cookie;
@@ -33504,14 +36569,15 @@
       message: String,
       prompt: Object,
       options: Object,
+      progress: [ Boolean, Object ],
 
       html: Boolean,
 
       ok: {
-        type: [String, Object, Boolean],
+        type: [ String, Object, Boolean ],
         default: true
       },
-      cancel: [String, Object, Boolean],
+      cancel: [ String, Object, Boolean ],
       focus: {
         type: String,
         default: 'ok',
@@ -33521,11 +36587,31 @@
       stackButtons: Boolean,
       color: String,
 
-      cardClass: [String, Array, Object],
-      cardStyle: [String, Array, Object]
+      cardClass: [ String, Array, Object ],
+      cardStyle: [ String, Array, Object ]
     },
 
     computed: {
+      classes: function classes () {
+        return 'q-dialog-plugin' +
+          (this.isDark === true ? ' q-dialog-plugin--dark q-dark' : '') +
+          (this.progress !== false ? ' q-dialog-plugin--progress' : '')
+      },
+
+      spinner: function spinner () {
+        if (this.progress !== false) {
+          return Object(this.progress) === this.progress
+            ? {
+              component: this.progress.spinner || QSpinner,
+              props: { color: this.progress.color || this.vmColor }
+            }
+            : {
+              component: QSpinner,
+              props: { color: this.vmColor }
+            }
+        }
+      },
+
       hasForm: function hasForm () {
         return this.prompt !== void 0 || this.options !== void 0
       },
@@ -33566,30 +36652,18 @@
       },
 
       okProps: function okProps () {
-        return Object.assign(
-          {
-            color: this.vmColor,
-            label: this.okLabel,
-            ripple: false
-          },
-          Object(this.ok) === this.ok
-            ? this.ok
-            : { flat: true },
-          { disable: this.okDisabled }
-        )
+        return Object.assign({}, {color: this.vmColor,
+          label: this.okLabel,
+          ripple: false},
+          (Object(this.ok) === this.ok ? this.ok : { flat: true }),
+          {disable: this.okDisabled})
       },
 
       cancelProps: function cancelProps () {
-        return Object.assign(
-          {
-            color: this.vmColor,
-            label: this.cancelLabel,
-            ripple: false
-          },
-          Object(this.cancel) === this.cancel
-            ? this.cancel
-            : { flat: true }
-        )
+        return Object.assign({}, {color: this.vmColor,
+          label: this.cancelLabel,
+          ripple: false},
+          (Object(this.cancel) === this.cancel ? this.cancel : { flat: true }))
       }
     },
 
@@ -33610,11 +36684,21 @@
             props: {
               value: this.prompt.model,
               type: this.prompt.type,
+
               label: this.prompt.label,
               stackLabel: this.prompt.stackLabel,
+
               outlined: this.prompt.outlined,
               filled: this.prompt.filled,
               standout: this.prompt.standout,
+              rounded: this.prompt.rounded,
+              square: this.prompt.square,
+
+              counter: this.prompt.counter,
+              maxlength: this.prompt.maxlength,
+              prefix: this.prompt.prefix,
+              suffix: this.prompt.suffix,
+
               color: this.vmColor,
               dense: true,
               autofocus: true,
@@ -33718,19 +36802,38 @@
         this.getSection(h, 'q-dialog__title', this.title)
       );
 
-      this.message && child.push(
-        this.getSection(h, 'q-dialog__message scroll', this.message)
+      this.progress !== false && child.push(
+        h(QCardSection, { staticClass: 'q-dialog__progress' }, [
+          h(this.spinner.component, {
+            props: this.spinner.props
+          })
+        ])
       );
 
-      this.hasForm === true && child.push(
-        h(
-          QCardSection,
-          { staticClass: 'scroll' },
-          this.prompt !== void 0
-            ? this.getPrompt(h)
-            : this.getOptions(h)
-        )
+      this.message && child.push(
+        this.getSection(h, 'q-dialog__message', this.message)
       );
+
+      if (this.prompt !== void 0) {
+        child.push(
+          h(
+            QCardSection,
+            { staticClass: 'scroll q-dialog-plugin__form' },
+            this.getPrompt(h)
+          )
+        );
+      }
+      else if (this.options !== void 0) {
+        child.push(
+          h(QSeparator, { props: { dark: this.isDark } }),
+          h(
+            QCardSection,
+            { staticClass: 'scroll q-dialog-plugin__form' },
+            this.getOptions(h)
+          ),
+          h(QSeparator, { props: { dark: this.isDark } })
+        );
+      }
 
       if (this.ok || this.cancel) {
         child.push(this.getButtons(h));
@@ -33749,8 +36852,7 @@
         })
       }, [
         h(QCard, {
-          staticClass: 'q-dialog-plugin' +
-            (this.isDark === true ? ' q-dialog-plugin--dark q-dark' : ''),
+          staticClass: this.classes,
           style: this.cardStyle,
           class: this.cardClass,
           props: { dark: this.isDark }
@@ -33824,7 +36926,8 @@
     vm,
     uid$3 = 0,
     timeout,
-    props = {},
+    props$1 = {};
+  var
     originalDefaults = {
       delay: 0,
       message: false,
@@ -33845,12 +36948,12 @@
 
       if (isSSR === true) { return }
 
-      props = opts === Object(opts) && opts.ignoreDefaults === true
+      props$1 = opts === Object(opts) && opts.ignoreDefaults === true
         ? Object.assign({}, originalDefaults, opts)
         : Object.assign({}, defaults, opts);
 
-      props.customClass += " text-" + (props.backgroundColor);
-      props.uid = "l_" + (uid$3++);
+      props$1.customClass += " text-" + (props$1.backgroundColor);
+      props$1.uid = "l_" + (uid$3++);
 
       this.isActive = true;
 
@@ -33898,24 +37001,24 @@
             }, [
               this$1.isActive === true ? h('div', {
                 staticClass: 'q-loading fullscreen column flex-center z-max',
-                key: props.uid,
-                class: props.customClass.trim()
+                key: props$1.uid,
+                class: props$1.customClass.trim()
               }, [
-                h(props.spinner, {
+                h(props$1.spinner, {
                   props: {
-                    color: props.spinnerColor,
-                    size: props.spinnerSize
+                    color: props$1.spinnerColor,
+                    size: props$1.spinnerSize
                   }
                 }),
-                (props.message && h('div', {
-                  class: ("text-" + (props.messageColor)),
-                  domProps: ( obj = {}, obj[props.sanitize === true ? 'textContent' : 'innerHTML'] = props.message, obj )
+                (props$1.message && h('div', {
+                  class: ("text-" + (props$1.messageColor)),
+                  domProps: ( obj = {}, obj[props$1.sanitize === true ? 'textContent' : 'innerHTML'] = props$1.message, obj )
                 })) || void 0
               ]) : null
             ])
           }
         });
-      }, props.delay);
+      }, props$1.delay);
     },
 
     hide: function hide () {
@@ -34267,8 +37370,6 @@
   var uid$4 = 0;
   var defaults$1 = {};
 
-  var attrs$2 = { role: 'alert' };
-
   var positionList = [
     'top-left', 'top-right',
     'bottom-left', 'bottom-right',
@@ -34300,11 +37401,23 @@
     info: {
       icon: function icon () { return this.$q.iconSet.type.info },
       color: 'info'
+    },
+
+    ongoing: {
+      group: false,
+      timeout: 0,
+      spinner: true,
+      color: 'grey-8'
     }
   };
 
   var groups = {};
   var positionClass$1 = {};
+
+  function logError (error, config) {
+    console.error(("Notify: " + error), config);
+    return false
+  }
 
   var Notifications = {
     name: 'QNotifications',
@@ -34318,7 +37431,7 @@
         this$1.notifs[pos] = [];
 
         var
-          vert = ['left', 'center', 'right'].includes(pos) ? 'center' : (pos.indexOf('top') > -1 ? 'top' : 'bottom'),
+          vert = ['left', 'center', 'right'].includes(pos) === true ? 'center' : (pos.indexOf('top') > -1 ? 'top' : 'bottom'),
           align = pos.indexOf('left') > -1 ? 'start' : (pos.indexOf('right') > -1 ? 'end' : 'center'),
           classes = ['left', 'right'].includes(pos) ? ("items-" + (pos === 'left' ? 'start' : 'end') + " justify-center") : (pos === 'center' ? 'flex-center' : ("items-" + align));
 
@@ -34327,39 +37440,48 @@
     },
 
     methods: {
-      add: function add (config) {
+      add: function add (config, originalApi) {
         var this$1 = this;
 
         if (!config) {
-          console.error('Notify: parameter required');
-          return false
+          return logError('parameter required')
         }
 
+        var Api;
         var notif = { textColor: 'white' };
 
-        if (typeof config === 'string' || config.ignoreDefaults !== true) {
+        if (config.ignoreDefaults !== true) {
           Object.assign(notif, defaults$1);
         }
 
-        if (Object(config) === config) {
-          Object.assign(notif, notifTypes[config.type], config);
-
-          if (typeof notif.icon === 'function') {
-            notif.icon = notif.icon.call(this);
+        if (Object(config) !== config) {
+          if (notif.type) {
+            Object.assign(notif, notifTypes[notif.type]);
           }
+
+          config = { message: config };
         }
-        else {
-          Object.assign(notif, { message: config });
+
+        Object.assign(notif, notifTypes[config.type || notif.type], config);
+
+        if (typeof notif.icon === 'function') {
+          notif.icon = notif.icon.call(this);
+        }
+
+        if (notif.spinner === void 0) {
+          notif.spinner = false;
+        }
+        else if (notif.spinner === true) {
+          notif.spinner = QSpinner;
         }
 
         notif.meta = {
-          hasMedia: Boolean(notif.icon || notif.avatar)
+          hasMedia: Boolean(notif.spinner !== false || notif.icon || notif.avatar)
         };
 
         if (notif.position) {
           if (positionList.includes(notif.position) === false) {
-            console.error(("Notify: wrong position: " + (notif.position)));
-            return false
+            return logError('wrong position', config)
           }
         }
         else {
@@ -34372,8 +37494,7 @@
         else {
           var t = parseInt(notif.timeout, 10);
           if (isNaN(t) || t < 0) {
-            console.error(("Notify: wrong timeout: " + (notif.timeout)));
-            return false
+            return logError('wrong timeout', config)
           }
           notif.timeout = t;
         }
@@ -34410,20 +37531,20 @@
         notif.actions = actions.map(function (ref) {
           var handler = ref.handler;
           var noDismiss = ref.noDismiss;
-          var rest = objectWithoutProperties$2( ref, ["handler", "noDismiss"] );
+          var attrs = ref.attrs;
+          var rest = objectWithoutProperties$2( ref, ["handler", "noDismiss", "attrs"] );
           var item = rest;
 
           return ({
           props: Object.assign({}, {flat: true}, item),
+          attrs: attrs,
           on: {
             click: typeof handler === 'function'
               ? function () {
                 handler();
-                noDismiss !== true && notif.meta.close();
+                noDismiss !== true && dismiss();
               }
-              : function () {
-                notif.meta.close();
-              }
+              : function () { dismiss(); }
           }
         });
         });
@@ -34443,11 +37564,15 @@
             (notif.multiLine === true ? 'column no-wrap justify-center' : 'row items-center'),
 
           contentClass: 'q-notification__content row items-center' +
-            (notif.multiLine === true ? '' : ' col')
+            (notif.multiLine === true ? '' : ' col'),
+
+          attrs: Object.assign({}, {role: 'alert'},
+            notif.attrs)
         });
 
         if (notif.group === false) {
           notif.group = void 0;
+          notif.meta.group = void 0;
         }
         else {
           if (notif.group === void 0 || notif.group === true) {
@@ -34461,7 +37586,7 @@
             ).join('|');
           }
 
-          notif.group += '|' + notif.position;
+          notif.meta.group = notif.group + '|' + notif.position;
         }
 
         if (notif.actions.length === 0) {
@@ -34473,71 +37598,120 @@
             (notif.meta.hasMedia === true ? ' q-notification__actions--with-media' : '');
         }
 
-        var groupNotif = groups[notif.group];
-
-        // wohoo, new notification
-        if (groupNotif === void 0) {
-          notif.meta.uid = uid$4++;
-          notif.meta.badge = 1;
-
-          if (['left', 'right', 'center'].indexOf(notif.position) !== -1) {
-            this.notifs[notif.position].splice(
-              Math.floor(this.notifs[notif.position].length / 2),
-              0,
-              notif
-            );
-          }
-          else {
-            var action = notif.position.indexOf('top') > -1 ? 'unshift' : 'push';
-            this.notifs[notif.position][action](notif);
-          }
-
-          if (notif.group !== void 0) {
-            groups[notif.group] = notif;
-          }
-        }
-        // ok, so it's NOT a new one
-        else {
+        if (originalApi !== void 0) {
           // reset timeout if any
-          if (groupNotif.meta.timer !== void 0) {
-            clearTimeout(groupNotif.meta.timer);
-          }
+          clearTimeout(originalApi.notif.meta.timer);
 
-          var original = groups[notif.group];
+          // retain uid
+          notif.meta.uid = originalApi.notif.meta.uid;
 
-          if (notif.badgePosition !== void 0) {
-            if (badgePositions.includes(notif.badgePosition) === false) {
-              console.error(("Notify - wrong badgePosition specified: " + (notif.badgePosition)));
-              return false
+          // replace notif
+          var index = this.notifs[notif.position].indexOf(originalApi.notif);
+          this.notifs[notif.position][index] = notif;
+        }
+        else {
+          var original = groups[notif.meta.group];
+
+          // woohoo, it's a new notification
+          if (original === void 0) {
+            notif.meta.uid = uid$4++;
+            notif.meta.badge = 1;
+
+            if (['left', 'right', 'center'].indexOf(notif.position) !== -1) {
+              this.notifs[notif.position].splice(
+                Math.floor(this.notifs[notif.position].length / 2),
+                0,
+                notif
+              );
+            }
+            else {
+              var action = notif.position.indexOf('top') > -1 ? 'unshift' : 'push';
+              this.notifs[notif.position][action](notif);
+            }
+
+            if (notif.group !== void 0) {
+              groups[notif.meta.group] = notif;
             }
           }
+          // ok, so it's NOT a new one
           else {
-            notif.badgePosition = "top-" + (notif.position.indexOf('left') > -1 ? 'right' : 'left');
+            // reset timeout if any
+            clearTimeout(original.meta.timer);
+
+            if (notif.badgePosition !== void 0) {
+              if (badgePositions.includes(notif.badgePosition) === false) {
+                return logError('wrong badgePosition', config)
+              }
+            }
+            else {
+              notif.badgePosition = "top-" + (notif.position.indexOf('left') > -1 ? 'right' : 'left');
+            }
+
+            notif.meta.uid = original.meta.uid;
+            notif.meta.badge = original.meta.badge + 1;
+            notif.meta.badgeStaticClass = "q-notification__badge q-notification__badge--" + (notif.badgePosition) +
+              (notif.badgeColor !== void 0 ? (" bg-" + (notif.badgeColor)) : '') +
+              (notif.badgeTextColor !== void 0 ? (" text-" + (notif.badgeTextColor)) : '');
+
+            var index$1 = this.notifs[notif.position].indexOf(original);
+            this.notifs[notif.position][index$1] = groups[notif.meta.group] = notif;
           }
-
-          notif.meta.uid = original.meta.uid;
-          notif.meta.badge = original.meta.badge + 1;
-          notif.meta.badgeStaticClass = "q-notification__badge q-notification__badge--" + (notif.badgePosition) +
-            (notif.badgeColor !== void 0 ? (" bg-" + (notif.badgeColor)) : '') +
-            (notif.badgeTextColor !== void 0 ? (" text-" + (notif.badgeTextColor)) : '');
-
-          var index = this.notifs[notif.position].indexOf(original);
-          this.notifs[notif.position][index] = groups[notif.group] = notif;
         }
 
-        notif.meta.close = function () {
+        var dismiss = function () {
           this$1.remove(notif);
+          Api = void 0;
         };
 
         this.$forceUpdate();
 
         if (notif.timeout > 0) {
           notif.meta.timer = setTimeout(function () {
-            notif.meta.close();
+            dismiss();
           }, notif.timeout + /* show duration */ 1000);
         }
 
-        return notif.meta.close
+        // only non-groupable can be updated
+        if (notif.group !== void 0) {
+          return function (props) {
+            if (props !== void 0) {
+              logError('trying to update a grouped one which is forbidden', config);
+            }
+            else {
+              dismiss();
+            }
+          }
+        }
+
+        Api = {
+          dismiss: dismiss,
+          config: config,
+          notif: notif
+        };
+
+        if (originalApi !== void 0) {
+          Object.assign(originalApi, Api);
+          return
+        }
+
+        return function (props) {
+          // if notification wasn't previously dismissed
+          if (Api !== void 0) {
+            // if no params, then we must dismiss the notification
+            if (props === void 0) {
+              Api.dismiss();
+            }
+            // otherwise we're updating it
+            else {
+              var newNotif = Object.assign({}, Api.config, props, {
+                group: false,
+                position: notif.position
+              });
+
+              this$1.add(newNotif, Api);
+            }
+          }
+        }
       },
 
       remove: function remove (notif) {
@@ -34546,7 +37720,7 @@
         var index = this.notifs[notif.position].indexOf(notif);
         if (index !== -1) {
           if (notif.group !== void 0) {
-            delete groups[notif.group];
+            delete groups[notif.meta.group];
           }
 
           var el = this.$refs[("notif_" + (notif.meta.uid))];
@@ -34610,10 +37784,17 @@
           var mainChild = [];
 
           if (meta.hasMedia === true) {
-            if (notif.icon) {
+            if (notif.spinner !== false) {
+              mainChild.push(
+                h(notif.spinner, {
+                  staticClass: 'q-notification__spinner'
+                })
+              );
+            }
+            else if (notif.icon) {
               mainChild.push(
                 h(QIcon, {
-                  staticClass: 'q-notification__icon col-auto',
+                  staticClass: 'q-notification__icon',
                   attrs: { role: 'img' },
                   props: { name: notif.icon }
                 })
@@ -34621,7 +37802,7 @@
             }
             else if (notif.avatar) {
               mainChild.push(
-                h(QAvatar, { staticClass: 'q-notification__avatar col-auto' }, [
+                h(QAvatar, { staticClass: 'q-notification__avatar' }, [
                   h('img', { attrs: { src: notif.avatar, 'aria-hidden': 'true' } })
                 ])
               );
@@ -34648,7 +37829,7 @@
           notif.actions !== void 0 && child.push(
             h('div', {
               staticClass: meta.actionsClass
-            }, notif.actions.map(function (a) { return h(QBtn, { props: a.props, on: a.on }); }))
+            }, notif.actions.map(function (a) { return h(QBtn, { props: a.props, attrs: a.attrs, on: a.on }); }))
           );
 
           meta.badge > 1 && child.push(
@@ -34664,12 +37845,39 @@
             ref: ("notif_" + (meta.uid)),
             key: meta.uid,
             staticClass: meta.staticClass,
-            attrs: attrs$2
+            attrs: meta.attrs
           }, [
             h('div', { staticClass: meta.wrapperClass }, child)
           ])
         }))
       }))
+    },
+
+    mounted: function mounted () {
+      var this$1 = this;
+
+      if (this.$q.fullscreen !== void 0 && this.$q.fullscreen.isCapable === true) {
+        var append = function (isFullscreen) {
+          var newParent = getBodyFullscreenElement(
+            isFullscreen,
+            this$1.$q.fullscreen.activeEl
+          );
+
+          if (this$1.$el.parentElement !== newParent) {
+            newParent.appendChild(this$1.$el);
+          }
+        };
+
+        this.unwatchFullscreen = this.$watch('$q.fullscreen.isActive', append);
+
+        if (this.$q.fullscreen.isActive === true) {
+          append(true);
+        }
+      }
+    },
+
+    beforeDestroy: function beforeDestroy () {
+      this.unwatchFullscreen !== void 0 && this.unwatchFullscreen();
     }
   };
 
@@ -34740,16 +37948,14 @@
   }
 
   function decode$1 (value) {
-    var type, length, source;
-
-    length = value.length;
+    var length = value.length;
     if (length < 9) {
       // then it wasn't encoded by us
       return value
     }
 
-    type = value.substr(0, 8);
-    source = value.substring(9);
+    var type = value.substr(0, 8);
+    var source = value.substring(9);
 
     switch (type) {
       case '__q_date':
@@ -34956,7 +38162,18 @@
     }
   }
 
-  function openWindow (url, reject) {
+  function parseFeatures (winFeatures) {
+    var cfg = Object.assign({ noopener: true }, winFeatures);
+    var feat = [];
+    Object.keys(cfg).forEach(function (key) {
+      if (cfg[key] === true) {
+        feat.push(key);
+      }
+    });
+    return feat.join(',')
+  }
+
+  function openWindow (url, reject, windowFeatures) {
     var open = window.open;
 
     if (Platform.is.cordova === true) {
@@ -34973,7 +38190,7 @@
       return Vue.prototype.$q.electron.shell.openExternal(url)
     }
 
-    var win = open(url, '_blank');
+    var win = open(url, '_blank', parseFeatures(windowFeatures));
 
     if (win) {
       Platform.is.desktop && win.focus();
@@ -34984,7 +38201,7 @@
     }
   }
 
-  function openUrl (url, reject) {
+  function openUrl (url, reject, windowFeatures) {
     if (
       Platform.is.ios === true &&
       window.SafariViewController !== void 0
@@ -34998,13 +38215,13 @@
           );
         }
         else {
-          openWindow(url, reject);
+          openWindow(url, reject, windowFeatures);
         }
       });
       return
     }
 
-    return openWindow(url, reject)
+    return openWindow(url, reject, windowFeatures)
   }
 
 
@@ -35024,6 +38241,7 @@
     frameDebounce: frameDebounce,
     noop: noop,
     openURL: openUrl,
+    morph: morph,
     patterns: patterns,
     scroll: scroll,
     throttle: throttle,

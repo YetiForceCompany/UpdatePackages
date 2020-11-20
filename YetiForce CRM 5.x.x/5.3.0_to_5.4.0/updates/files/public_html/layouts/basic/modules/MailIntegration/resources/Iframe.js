@@ -97,10 +97,7 @@ window.MailIntegration_Iframe = {
 			record: recordData.id,
 			recordModule: recordData.module
 		}).done((response) => {
-			this.showResponseMessage(
-				response['success'],
-				app.vtranslate('JS_REMOVED_RELATION_SUCCESSFULLY')
-			);
+			this.showResponseMessage(response['success'], app.vtranslate('JS_REMOVED_RELATION_SUCCESSFULLY'));
 			this.reloadView(response['success']);
 		});
 	},
@@ -211,10 +208,7 @@ window.MailIntegration_Iframe = {
 			record: recordId,
 			recordModule: moduleName
 		}).done((response) => {
-			this.showResponseMessage(
-				response['success'],
-				app.vtranslate('JS_ADDED_RELATION_SUCCESSFULLY')
-			);
+			this.showResponseMessage(response['success'], app.vtranslate('JS_ADDED_RELATION_SUCCESSFULLY'));
 			this.reloadView(response['success']);
 		});
 	},
@@ -253,14 +247,14 @@ window.MailIntegration_Iframe = {
 	registerImportClick() {
 		this.container.on('click', '.js-import-mail', (e) => {
 			this.showIframeLoader();
-			this.getMailDetails().then((mails) => {
+			this.getMailDetails().then(() => {
 				this.connector(
 					Object.assign(
 						{
 							module: 'MailIntegration',
 							action: 'Import'
 						},
-						mails,
+						this.mailDetails,
 						window.PanelParams
 					)
 				).done((response) => {
@@ -291,7 +285,7 @@ window.MailIntegration_Iframe = {
 				outputString += '<BR>isInline: ' + attachment.isInline;
 			}
 		}
-		const mailDetails = {
+		this.mailDetails = {
 			mailFrom: this.parseEmailAddressDetails(mailItem.from),
 			mailSender: mailItem.sender.emailAddress,
 			mailTo: this.parseEmailAddressDetails(mailItem.to),
@@ -301,11 +295,7 @@ window.MailIntegration_Iframe = {
 			mailNormalizedSubject: mailItem.normalizedSubject,
 			mailDateTimeCreated: mailItem.dateTimeCreated.toISOString()
 		};
-		const mailBodyCallback = (body) => {
-			mailDetails.mailBody = body;
-			return mailDetails;
-		};
-		return this.asyncGetMailBody(mailBodyCallback);
+		return this.asyncGetMailBody();
 	},
 	/**
 	 * Get mail body async function
@@ -314,16 +304,29 @@ window.MailIntegration_Iframe = {
 	 *
 	 * @return  {object}            Promise
 	 */
-	asyncGetMailBody(callback) {
-		return new Promise((resolve, reject) => {
-			this.mailItem.body.getAsync(Office.CoercionType.Html, (body) => {
-				if (body.status === 'succeeded') {
-					resolve(callback(body.value));
-				} else {
-					reject(body);
-				}
-			});
-		});
+	asyncGetMailBody() {
+		return Promise.all([
+			new Promise((resolve, reject) => {
+				this.mailItem.body.getAsync(Office.CoercionType.Html, (body) => {
+					if (body.status === 'succeeded') {
+						this.mailDetails.mailBody = body.value;
+						resolve(body);
+					} else {
+						reject(body);
+					}
+				});
+			}),
+			new Promise((resolve, reject) => {
+				this.mailItem.getAllInternetHeadersAsync((body) => {
+					if (body.status === 'succeeded') {
+						this.mailDetails.mailHeaders = body.value;
+						resolve(body);
+					} else {
+						reject(body);
+					}
+				});
+			})
+		]);
 	},
 	/**
 	 * Parse email address details
@@ -374,9 +377,7 @@ window.MailIntegration_Iframe = {
 	 * Register modules select
 	 */
 	registerModulesSelect() {
-		this.moduleSelect = App.Fields.Picklist.showSelect2ElementView(
-			this.container.find('.js-modules')
-		);
+		this.moduleSelect = App.Fields.Picklist.showSelect2ElementView(this.container.find('.js-modules'));
 		this.moduleSelect.on('change', this.registerModulesSelectChange.bind(this));
 		this.container.find('.js-select-record').on('click', (e) => {
 			let params = {

@@ -354,7 +354,7 @@ class Functions
 	public static function throwNewException($e, $die = true, $messageHeader = 'LBL_ERROR')
 	{
 		if (!headers_sent() && \App\Config::security('cspHeaderActive')) {
-			header("content-security-policy: default-src 'self' 'nonce-" . \App\Session::get('CSP_TOKEN') . "'; object-src 'none';base-uri 'self'; frame-ancestor 'self';");
+			header("content-security-policy: default-src 'self' 'nonce-" . \App\Session::get('CSP_TOKEN') . "'; object-src 'none';base-uri 'self'; frame-ancestors 'self';");
 		}
 		$message = \is_object($e) ? $e->getMessage() : $e;
 		$code = 500;
@@ -374,14 +374,14 @@ class Functions
 		if (\App\Request::_isAjax() && \App\Request::_isJSON()) {
 			$response = new \Vtiger_Response();
 			$response->setEmitType(\Vtiger_Response::$EMIT_JSON);
-			$trace = '';
-			if (\App\Config::debug('DISPLAY_EXCEPTION_BACKTRACE') && \is_object($e)) {
-				$trace = str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "{$e->getFile()}({$e->getLine()})\n{$e->getTraceAsString()}");
-			}
+
 			if (\is_object($e)) {
-				$response->setHeader(\App\Request::_getServer('SERVER_PROTOCOL') . ' ' . $e->getCode() . ' ' . str_ireplace(["\r\n", "\r", "\n"], ' ', $e->getMessage()));
-				$response->setError($e->getCode(), $e->getMessage(), $trace);
+				$response->setException($e);
 			} else {
+				$trace = '';
+				if (\App\Config::debug('DISPLAY_EXCEPTION_BACKTRACE') && \is_object($e)) {
+					$trace = str_replace(ROOT_DIRECTORY . \DIRECTORY_SEPARATOR, '', "{$e->getFile()}({$e->getLine()})\n{$e->getTraceAsString()}");
+				}
 				$response->setError($code, $message, $trace);
 			}
 			$response->emit();
@@ -439,16 +439,18 @@ class Functions
 	 * @param string $src
 	 * @param bool   $outsideRoot
 	 */
-	public static function recurseDelete($src, $outsideRoot = false)
+	public static function recurseDelete($src, $outsideRoot = false): int
 	{
 		$rootDir = ($outsideRoot || 0 === strpos($src, ROOT_DIRECTORY)) ? '' : ROOT_DIRECTORY . \DIRECTORY_SEPARATOR;
 		if (!file_exists($rootDir . $src)) {
-			return;
+			return 0;
 		}
+		$i = 0;
 		if (is_dir($rootDir . $src)) {
 			foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($rootDir . $src, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST) as $filename => $file) {
 				if ($file->isFile()) {
 					unlink($filename);
+					++$i;
 				} else {
 					rmdir($filename);
 				}
@@ -456,7 +458,9 @@ class Functions
 			rmdir($rootDir . $src);
 		} else {
 			unlink($rootDir . $src);
+			++$i;
 		}
+		return $i;
 	}
 
 	/**

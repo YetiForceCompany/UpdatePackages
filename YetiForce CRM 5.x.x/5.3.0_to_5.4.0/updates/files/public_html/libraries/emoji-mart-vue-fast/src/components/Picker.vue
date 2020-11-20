@@ -207,7 +207,17 @@ export default {
       return Object.freeze(deepMerge(I18N, this.i18n))
     },
     idleEmoji() {
-      return this.data.emoji(this.emoji)
+      try {
+        return this.data.emoji(this.emoji)
+      } catch (e) {
+        console.error(
+          'Default preview emoji `' +
+            this.emoji +
+            '` is not available, check the Picker `emoji` property',
+        )
+        console.error(e)
+        return this.data.firstEmoji()
+      }
     },
   },
   created() {
@@ -227,7 +237,11 @@ export default {
       if (this.skipScrollUpdate) {
         this.skipScrollUpdate = false
       } else {
-        this.activeCategory = this.categories[endIndex - 1]
+        // The `endIndex-2` seems to work, but this depends on the internals
+        // of the virtual scroller, I didn't observe it to be less than 0,
+        // but just for the case, we aslo have a fallback to `0` here.
+        let activeIndex = endIndex - 2 > 0 ? endIndex - 2 : 0
+        this.activeCategory = this.categories[activeIndex]
       }
     },
     onAnchorClick(category) {

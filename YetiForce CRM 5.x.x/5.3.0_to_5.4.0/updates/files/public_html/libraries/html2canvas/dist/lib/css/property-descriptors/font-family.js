@@ -8,10 +8,27 @@ exports.fontFamily = {
     prefix: false,
     type: IPropertyDescriptor_1.PropertyDescriptorParsingType.LIST,
     parse: function (tokens) {
-        return tokens.filter(isStringToken).map(function (token) { return token.value; });
+        var accumulator = [];
+        var results = [];
+        tokens.forEach(function (token) {
+            switch (token.type) {
+                case tokenizer_1.TokenType.IDENT_TOKEN:
+                case tokenizer_1.TokenType.STRING_TOKEN:
+                    accumulator.push(token.value);
+                    break;
+                case tokenizer_1.TokenType.NUMBER_TOKEN:
+                    accumulator.push(token.number.toString());
+                    break;
+                case tokenizer_1.TokenType.COMMA_TOKEN:
+                    results.push(accumulator.join(' '));
+                    accumulator.length = 0;
+                    break;
+            }
+        });
+        if (accumulator.length) {
+            results.push(accumulator.join(' '));
+        }
+        return results.map(function (result) { return (result.indexOf(' ') === -1 ? result : "'" + result + "'"); });
     }
-};
-var isStringToken = function (token) {
-    return token.type === tokenizer_1.TokenType.STRING_TOKEN || token.type === tokenizer_1.TokenType.IDENT_TOKEN;
 };
 //# sourceMappingURL=font-family.js.map

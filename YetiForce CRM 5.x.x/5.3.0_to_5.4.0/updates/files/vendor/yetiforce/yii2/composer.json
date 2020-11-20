@@ -71,13 +71,5 @@
     "psr-4": {
       "yii\\": ""
     }
-  },
-  "bin": [
-    "yii"
-  ],
-  "extra": {
-    "branch-alias": {
-      "dev-master": "2.0.x-dev"
-    }
   }
 }

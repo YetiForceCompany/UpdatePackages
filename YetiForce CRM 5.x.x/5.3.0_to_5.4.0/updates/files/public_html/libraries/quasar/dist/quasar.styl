@@ -1,5 +1,5 @@
 /*!
- * Quasar Framework v1.11.1
+ * Quasar Framework v1.14.5
  * (c) 2015-present Razvan Stoenescu
  * Released under the MIT License.
  */
@@ -20,6 +20,9 @@ $spaces ?= {
   lg: $space-lg,
   xl: $space-xl
 }
+$animate-duration ?= .3s
+$animate-delay    ?= .3s
+$animate-repeat   ?= 1
 $breakpoint-xs ?= 599px
 $breakpoint-sm ?= 1023px
 $breakpoint-md ?= 1439px
@@ -701,6 +704,7 @@ input[type='search']::-webkit-search-decoration
   direction: ltr
   text-align: center
   position: relative
+  box-sizing: content-box
   fill: currentColor 
   &:before, &:after
     width: 100%
@@ -772,8 +776,8 @@ input[type='search']::-webkit-search-decoration
     border-radius: inherit
     height: inherit
     width: inherit
-.q-avatar__content--square
-  border-radius: 0
+  &--square
+    border-radius: 0
 .q-badge
   background-color: $primary
   background-color: var(--q-color-primary)
@@ -1001,14 +1005,17 @@ input[type='search']::-webkit-search-decoration
     .q-btn__progress-indicator
       opacity: 0.2
       background: currentColor
-.q-btn-dropdown--split .q-btn-dropdown__arrow-container
-  border-left: 1px solid rgba(255,255,255,.3)
-  .q-btn__wrapper
-    padding: 0 4px
-.q-btn-dropdown--simple .q-btn-dropdown__arrow
-  margin-left: 8px
-.q-btn-dropdown__arrow
-  transition: transform .28s
+.q-btn-dropdown
+  &--split .q-btn-dropdown__arrow-container
+    border-left: 1px solid rgba(255,255,255,.3)
+    .q-btn__wrapper
+      padding: 0 4px
+  &--simple .q-btn-dropdown__arrow
+    margin-left: 8px
+  &__arrow
+    transition: transform .28s
+  &--current
+    flex-grow: 1
 .q-btn-group
   border-radius: $button-border-radius
   box-shadow: $button-shadow
@@ -1046,6 +1053,7 @@ input[type='search']::-webkit-search-decoration
     .q-btn__wrapper:before
       z-index: -1
   &--push
+    border-radius: $button-push-border-radius
     > .q-btn--push
       &.q-btn--actionable
         transform: none
@@ -1083,6 +1091,8 @@ input[type='search']::-webkit-search-decoration
       min-width: 0
       max-width: 100%
       flex: 10000 1 0%
+.q-btn-toggle
+  position: relative
 .q-card
   box-shadow: $shadow-2
   border-radius: $generic-border-radius
@@ -1698,7 +1708,6 @@ body.desktop .q-chip--clickable:focus
     &--active, &:hover, &:focus
       opacity: 1
   &__header-subtitle
-    height: 24px
     font-size: 14px
     line-height: 1.75
     letter-spacing: .00938em
@@ -1734,17 +1743,80 @@ body.desktop .q-chip--clickable:focus
     width: 14.285% !important
     height: 12.5% !important
     position: relative
+    padding: 1px
+    &:after
+      content: ''
+      position: absolute
+      pointer-events: none
+      top: 1px
+      right: 0
+      bottom: 1px
+      left: 0
+      border-style: dashed
+      border-color: transparent
+      border-width: 1px
     > div, button
-      width: 32px
-      height: 32px
+      width: 30px
+      height: 30px
       border-radius: 50%
     > div
-      line-height: 32px
+      line-height: 30px
       text-align: center
     &--out
       opacity: .18
     &--fill
       visibility: hidden
+  &__range, &__range-from, &__range-to
+    &:before
+      content: ''
+      background-color: currentColor
+      position: absolute
+      top: 1px
+      bottom: 1px
+      left: 0
+      right: 0
+      opacity: .3
+    &:nth-child(7n-6)
+      &:before
+        border-top-left-radius: 0
+        border-bottom-left-radius: 0
+    &:nth-child(7n)
+      &:before
+        border-top-right-radius: 0
+        border-bottom-right-radius: 0
+  &__range-from
+    &:before
+      left: 50%
+  &__range-to
+    &:before
+      right: 50%
+  &__edit-range
+    &:after
+      border-color: currentColor transparent
+    &:nth-child(7n-6)
+      &:after
+        border-top-left-radius: 0
+        border-bottom-left-radius: 0
+    &:nth-child(7n)
+      &:after
+        border-top-right-radius: 0
+        border-bottom-right-radius: 0
+    &-from, &-from-to
+      &:after
+        left: 4px
+        border-left-color: currentColor
+        border-top-color: currentColor
+        border-bottom-color: currentColor
+        border-top-left-radius: $button-rounded-border-radius
+        border-bottom-left-radius: $button-rounded-border-radius
+    &-to, &-from-to
+      &:after
+        right: 4px
+        border-right-color: currentColor
+        border-top-color: currentColor
+        border-bottom-color: currentColor
+        border-top-right-radius: $button-rounded-border-radius
+        border-bottom-right-radius: $button-rounded-border-radius
   &__calendar-days-container
     height: 75%
     min-height: 192px
@@ -1815,6 +1887,8 @@ body.desktop .q-chip--clickable:focus
     font-weight: 500
     line-height: 2rem
     letter-spacing: .0125em
+  &__progress
+    font-size: 4rem
   &__inner
     outline: 0
     > div
@@ -1922,8 +1996,12 @@ body.q-ios-padding .q-dialog__inner
     flex: 0 0 25%
 .q-dialog-plugin
   width: 400px
+  &__form
+    max-height: 50vh
   .q-card__section + .q-card__section
     padding-top: 0
+  &--progress
+    text-align: center
 .q-editor
   border: 1px solid $editor-border-color
   border-radius: $generic-border-radius
@@ -1968,8 +2046,14 @@ body.q-ios-padding .q-dialog__inner
         bottom: $editor-button-gutter
         width: 1px
         background: $editor-border-color
-  &_input input
+  &__link-input
     color: inherit
+    text-decoration: none
+    text-transform: none
+    border: none
+    border-radius: 0
+    background: none
+    outline: 0
   &--flat
     &, .q-editor__toolbar
       border: 0
@@ -2172,12 +2256,11 @@ body.q-ios-padding .q-dialog__inner
 $field-transition = .36s cubic-bezier(.4,0,.2,1)
 $field-transition-label-right-down = .396s cubic-bezier(.4,0,.2,1)
 $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
-@keyframes q-autofill
-  to
-    background: transparent
-    color: $input-autofill-color
 .q-field
   font-size: $input-font-size
+  ::-ms-clear,
+  ::-ms-reveal
+    display: none
   &--with-bottom
     padding-bottom: 20px
   &__marginal
@@ -2264,6 +2347,15 @@ $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
     width: 100%
     min-width: 0 
     outline: 0 !important 
+    &:-webkit-autofill
+      -webkit-animation-name: q-autofill
+      -webkit-animation-fill-mode: both
+    &:-webkit-autofill + .q-field__label
+      transform: translateY(-40%) scale(.75)
+    &[type="number"]:invalid + .q-field__label
+      transform: translateY(-40%) scale(.75)
+    &:invalid
+      box-shadow: none
   &__native[type="file"]
     line-height: 1em 
   &__input
@@ -2314,16 +2406,6 @@ $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
     transform: translateY(-40%) scale(.75)
     right: calc(-100% / 3)
     transition: transform $field-transition, right $field-transition-label-right-down
-  .q-field__native, .q-field__input
-    &:-webkit-autofill
-      -webkit-animation-name: q-autofill
-      -webkit-animation-fill-mode: both
-    &:-webkit-autofill + .q-field__label
-      transform: translateY(-40%) scale(.75)
-    &[type="number"]:invalid + .q-field__label
-      transform: translateY(-40%) scale(.75)
-    &:invalid
-      box-shadow: none
   &--focused
     .q-field__label
       color: currentColor
@@ -2381,9 +2463,17 @@ $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
         border-radius: inherit
         border: 2px solid transparent
         transition: border-color $field-transition
+    .q-field__native,
+    .q-field__input
+      &:-webkit-autofill
+        margin-top: 1px
+        margin-bottom: 1px
     &.q-field--rounded .q-field__control
       border-radius: 28px
     &.q-field--focused
+      
+      .q-field__control:hover:before
+        border-color: transparent
       .q-field__control:after
         border-color: currentColor
         border-width: 2px
@@ -2497,8 +2587,9 @@ $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
       padding-left: 6px
     .q-field__append + .q-field__append
       padding-left: 2px
-    .q-avatar
-      font-size: 24px
+    .q-field__marginal
+      .q-avatar
+        font-size: 24px
     &.q-field--float .q-field__label
       transform: translateY(-30%) scale(.75)
     .q-field__native, .q-field__input
@@ -2576,6 +2667,10 @@ $field-transition-label-right-up = .324s cubic-bezier(.4,0,.2,1)
     margin-left: -2px
   70%, 90%
     margin-left: 2px
+@keyframes q-autofill
+  to
+    background: transparent
+    color: $input-autofill-color
 .q-file
   width: 100%
   .q-field__native
@@ -2946,11 +3041,14 @@ body.platform-ios
   height: 1em
   color: $primary
   color: var(--q-color-primary)
-  &--reverse
-    transform: scale3d(-1, 1, 1)
   &__model, &__track
     transform-origin: 0 0
-    transition: transform .3s
+    &--with-transition
+      transition: transform .3s
+  &--reverse
+    .q-linear-progress
+      &__model, &__track
+        transform-origin: 0 100%
   &__model
     &--determinate
       background: currentColor
@@ -2979,7 +3077,7 @@ body.platform-ios
       background: rgba(255,255,255,.6)
   &__stripe
     transition: width .3s
-    background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent) !important
+    background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, rgba(255,255,255,0) 75%, rgba(255,255,255,0)) !important
     background-size: 40px 40px !important
 @keyframes q-linear-progress--indeterminate
   0%
@@ -3036,6 +3134,7 @@ body.platform-ios
     min-width: 100%
     min-height: 100%
     will-change: transform
+    display: none
 .q-popup-edit
   padding: 8px 16px
   &__buttons
@@ -3203,6 +3302,8 @@ body.desktop
   &--with-input
     .q-field__control
       cursor: text
+  .q-field__native > span:first-child:empty:before
+    content: '\a0'
   .q-field__input
     min-width: 50px !important
     &--padding
@@ -3215,6 +3316,7 @@ body.desktop
     opacity: 0
   &__dropdown-icon
     cursor: pointer
+    transition: transform .28s
   &.q-field--readonly
     .q-field__control, .q-select__dropdown-icon
       cursor: default
@@ -3253,31 +3355,24 @@ body.platform-ios
   &--horizontal
     display: block
     height: 1px
-    min-height: 1px
     width: 100%
-    &.q-separator--spaced
-      margin-top: 8px
-      margin-bottom: 8px
-    &.q-separator--inset
+    &-inset
       margin-left: 16px
       margin-right: 16px
       width: calc(100% - 32px)
-    &.q-separator--item-inset
+    &-item-inset
       margin-left: 72px
       margin-right: 0
       width: calc(100% - 72px)
-    &.q-separator--item-thumbnail-inset
+    &-item-thumbnail-inset
       margin-left: 116px
       margin-right: 0
       width: calc(100% - 116px)
   &--vertical
     width: 1px
-    min-width: 1px
     height: inherit
-    &.q-separator--spaced
-      margin-left: 8px
-      margin-right: 8px
-    &.q-separator--inset
+    align-self: stretch
+    &-inset
       margin-top: 8px
       margin-bottom: 8px
 .q-skeleton
@@ -3353,14 +3448,14 @@ body.platform-ios
     background: rgba(255,255,255,.7)
     animation: q-skeleton--fade 1.5s linear .5s infinite
   &--anim-wave:after
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent)
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0))
     animation: q-skeleton--wave 1.5s linear .5s infinite
   &--dark
     background: rgba(255, 255, 255, 0.05)
     &.q-skeleton--bordered
       border: 1px solid rgba(255,255,255,.25)
     &.q-skeleton--anim-wave:after
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent)
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.1), rgba(255,255,255,0))
     &.q-skeleton--anim-blink:after
       background: rgba(255,255,255,.2)
 @keyframes q-skeleton--fade
@@ -3466,9 +3561,9 @@ body.platform-ios
   &__track-markers
     color: #000
     &--h
-      background-image: repeating-linear-gradient(to right, currentColor, currentColor 2px, transparent 0, transparent)
+      background-image: repeating-linear-gradient(to right, currentColor, currentColor 2px, rgba(255,255,255,0) 0, rgba(255,255,255,0))
     &--v
-      background-image: repeating-linear-gradient(to top, currentColor, currentColor 2px, transparent 0, transparent)
+      background-image: repeating-linear-gradient(to top, currentColor, currentColor 2px, rgba(255,255,255,0) 0, rgba(255,255,255,0))
     &:after
       content: ''
       position: absolute
@@ -3591,7 +3686,7 @@ body.platform-ios
       transform: scale(1.5)
     .q-slider__focus-ring, &.q-slider--label .q-slider__thumb
       transform: scale(0) !important
-  body.desktop &.q-slider--editable:hover
+  body.desktop &.q-slider--enabled:hover
     .q-slider__pin,
     .q-slider__arrow
       &--h
@@ -3961,7 +4056,7 @@ body.platform-ios
   &__middle
     max-width: 100%
   &__bottom
-    min-height: 48px
+    min-height: 50px
     padding: 4px 14px 4px 16px
     font-size: 12px
     .q-table__control
@@ -4159,12 +4254,26 @@ body.desktop .q-table > tbody > tr:not(.q-tr--no-hover):hover > td:not(.q-td--no
     background: currentColor
   &--active .q-tab__indicator
     opacity: 1
-    transform-origin: left
+    transform-origin: left /* rtl:ignore */
   &--inactive
     opacity: .85
 .q-tabs
   position: relative
   transition: color .3s, background-color .3s
+  &--scrollable
+    &.q-tabs__arrows--outside
+      &.q-tabs--horizontal
+        padding-left: 36px
+        padding-right: 36px
+      &.q-tabs--vertical
+        padding-top: 36px
+        padding-bottom: 36px
+      .q-tabs__arrow--faded
+        opacity: 0.3
+        pointer-events: none
+    &.q-tabs__arrows--inside
+      .q-tabs__arrow--faded
+        display: none
   &--not-scrollable
     .q-tabs__arrow
       display: none
@@ -4175,8 +4284,7 @@ body.desktop .q-table > tbody > tr:not(.q-tr--no-hover):hover > td:not(.q-td--no
     font-size: 32px
     min-width: 36px
     text-shadow: 0 0 3px #fff, 0 0 1px #fff, 0 0 1px #000
-    &--faded
-      display: none
+    transition: opacity .3s
   &__content
     overflow: hidden
     flex: 1 1 auto
@@ -4193,11 +4301,11 @@ body.desktop .q-table > tbody > tr:not(.q-tr--no-hover):hover > td:not(.q-td--no
     height: 100%
     &--left
       top: 0
-      left: 0
+      left: 0 /* rtl:ignore */
       bottom: 0
     &--right
       top: 0
-      right: 0
+      right: 0 /* rtl:ignore */
       bottom: 0
   &--vertical
     display: block !important
@@ -4233,12 +4341,9 @@ body.desktop .q-table > tbody > tr:not(.q-tr--no-hover):hover > td:not(.q-td--no
       min-height: 36px
       &--full
         min-height: 52px
-body.mobile
-  .q-tabs
-    &__content
-      overflow: auto
-    &__arrow
-      display: none
+body.mobile .q-tabs
+  &__content
+    overflow: auto
 @media (min-width: $breakpoint-lg-min)
   .q-header, .q-footer
     .q-tab__content
@@ -4925,7 +5030,7 @@ body.desktop
         color: #fff
       .q-uploader__file-header
         padding-bottom: 24px
-        background: linear-gradient(to bottom, rgba(0,0,0,.7) 20%, transparent)
+        background: linear-gradient(to bottom, rgba(0,0,0,.7) 20%, rgba(255,255,255,0))
     & + &
       margin-top: 8px
   &__file-header
@@ -4978,8 +5083,8 @@ body.desktop
   &:focus
     outline: 0
   &__padding
-    background: linear-gradient(transparent, transparent 20%, rgba(128, 128, 128, .03) 20%, rgba(128, 128, 128, .08) 50%, rgba(128, 128, 128, .03) 80%, transparent 80%, transparent)
-    background-size: 100% 50px
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0) 20%, rgba(128, 128, 128, .03) 20%, rgba(128, 128, 128, .08) 50%, rgba(128, 128, 128, .03) 80%, rgba(255,255,255,0) 80%, rgba(255,255,255,0)) /* rtl:ignore */
+    background-size: 100% 50px /* rtl:ignore */
     .q-table &
       tr
         height: 0 !important
@@ -5000,8 +5105,8 @@ body.desktop
       &__content > *
         flex: 0 0 auto
       &__padding
-        background: linear-gradient(to left, transparent, transparent 20%, rgba(128, 128, 128, .03) 20%, rgba(128, 128, 128, .08) 50%, rgba(128, 128, 128, .03) 80%, transparent 80%, transparent)
-        background-size: 50px 100%
+        background: linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,0) 20%, rgba(128, 128, 128, .03) 20%, rgba(128, 128, 128, .08) 50%, rgba(128, 128, 128, .03) 80%, rgba(255,255,255,0) 80%, rgba(255,255,255,0)) /* rtl:ignore */
+        background-size: 50px 100% /* rtl:ignore */
 .q-ripple
   position absolute
   top 0
@@ -5028,6 +5133,13 @@ body.desktop
       transition transform .225s cubic-bezier(.4, 0, .2, 1), opacity .1s cubic-bezier(.4, 0, .2, 1)
     &--leave
       transition opacity .25s cubic-bezier(.4, 0, .2, 1)
+.q-morph--invisible,
+.q-morph--internal
+  opacity: 0 !important
+  pointer-events: none !important
+  position: fixed !important
+  right: 200vw !important
+  bottom: 200vh !important
 .q-loading
   color: #000
   
@@ -5081,10 +5193,14 @@ body.q-ios-padding .q-notifications__list
   font-size: 14px
   &__icon
     font-size: 24px
-    padding-right: 16px
+    margin-right: 16px
+    flex: 0 0 1em
   &__avatar
     font-size: 32px
-    padding-right: 8px
+    margin-right: 8px
+  &__spinner
+    font-size: 32px
+    margin-right: 8px
   &__message
     padding: 8px 0
   &__caption
@@ -5209,18 +5325,53 @@ body.q-ios-padding .q-notifications__list
     transform: scaleX(1)
   100%
     transform: scaleX(0)
+/*
+ * Animate.css additions
+ * Adapted from: https:
+ */
+:root
+  --animate-duration: $animate-duration
+  --animate-delay: $animate-delay
+  --animate-repeat: $animate-repeat
 .animated
-  animation-duration: .3s
+  animation-duration: var(--animate-duration)
   animation-fill-mode: both
-.animated.infinite
-  animation-iteration-count: infinite
-.animated.hinge
-  animation-duration: 2s
-.animated.flipOutX,
-.animated.flipOutY,
-.animated.bounceIn,
-.animated.bounceOut
-  animation-duration: .3s
+  &.infinite
+    animation-iteration-count: infinite
+  
+  &.hinge
+    animation-duration: 2s
+  &.repeat-1
+    animation-iteration-count: var(--animate-repeat)
+  &.repeat-2
+    animation-iteration-count: calc(var(--animate-repeat) * 2)
+  &.repeat-3
+    animation-iteration-count: calc(var(--animate-repeat) * 3)
+  &.delay-1s
+    animation-delay: var(--animate-delay)
+  &.delay-2s
+    animation-delay: calc(var(--animate-delay) * 2)
+  &.delay-3s
+    animation-delay: calc(var(--animate-delay) * 3)
+  &.delay-4s
+    animation-delay: calc(var(--animate-delay) * 4)
+  &.delay-5s
+    animation-delay: calc(var(--animate-delay) * 5)
+  &.faster
+    animation-duration: calc(var(--animate-duration) / 2)
+  &.fast
+    animation-duration: calc(var(--animate-duration) * 0.8)
+  &.slow
+    animation-duration: calc(var(--animate-duration) * 2)
+  &.slower
+    animation-duration: calc(var(--animate-duration) * 3)
+@media print, (prefers-reduced-motion: reduce)
+  .animated
+    animation-duration: 1ms !important
+    transition-duration: 1ms !important
+    animation-iteration-count: 1 !important
+  .animated[class*='Out']
+    opacity: 0
 .q-animate--scale
   animation: q-scale .15s
   animation-timing-function: cubic-bezier(.25,.8,.25,1)
@@ -6712,8 +6863,11 @@ img.responsive
   transform: rotate(135deg) /* rtl:ignore */
 .rotate-180
   transform: rotate(180deg) /* rtl:ignore */
+/* deprecated: to be removed */
 .rotate-205
   transform: rotate(205deg) /* rtl:ignore */
+.rotate-225
+  transform: rotate(225deg) /* rtl:ignore */
 .rotate-270
   transform: rotate(270deg) /* rtl:ignore */
 .rotate-315
@@ -7344,8 +7498,6 @@ ie_style = @block
   .q-field
     &__prefix, &__suffix
       flex: 1 0 auto
-    ::-ms-clear
-      display: none
     &__bottom--stale
       .q-field__messages
         left: 12px

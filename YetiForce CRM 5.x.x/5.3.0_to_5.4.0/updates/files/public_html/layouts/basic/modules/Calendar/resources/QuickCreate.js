@@ -125,13 +125,7 @@ window.Calendar_CalendarModal_Js = class Calendar_CalendarModal_Js extends Calen
 				switchContainer = $(`<div class="js-calendar-switch-container"></div>`).insertAfter(
 					calendarview.find('.fc-center')
 				);
-			$(
-				this.switchTpl(
-					app.vtranslate('JS_WORK_DAYS'),
-					app.vtranslate('JS_ALL'),
-					this.isSwitchAllDays
-				)
-			)
+			$(this.switchTpl(app.vtranslate('JS_WORK_DAYS'), app.vtranslate('JS_ALL'), this.isSwitchAllDays))
 				.prependTo(switchContainer)
 				.on('change', 'input', (e) => {
 					const currentTarget = $(e.currentTarget);
@@ -203,9 +197,7 @@ window.Calendar_CalendarModal_Js = class Calendar_CalendarModal_Js extends Calen
 			endDate = endDate + 'T' + endHour + ':00';
 			if (startDate == endDate) {
 				let activityType = this.container.find('[name="activitytype"]').val();
-				let activityDurations = JSON.parse(
-					this.container.find('[name="defaultOtherEventDuration"]').val()
-				);
+				let activityDurations = JSON.parse(this.container.find('[name="defaultOtherEventDuration"]').val());
 				let minutes = 0;
 				for (let i in activityDurations) {
 					if (activityDurations[i].activitytype === activityType) {
@@ -237,21 +229,18 @@ window.Calendar_CalendarModal_Js = class Calendar_CalendarModal_Js extends Calen
 
 	/** @inheritdoc */
 	registerEditForm(sideBar) {
-		let editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(
-				sideBar.find('[name="module"]').val()
-			),
+		let editViewInstance = Vtiger_Edit_Js.getInstanceByModuleName(sideBar.find('[name="module"]').val()),
 			headerInstance = new Vtiger_Header_Js(),
 			params = [];
 		let rightFormCreate = sideBar.find('form[name="QuickCreate"]');
 		editViewInstance.registerBasicEvents(rightFormCreate);
 		rightFormCreate.validationEngine(app.validationEngineOptions);
-		headerInstance.registerHelpInfo(rightFormCreate);
 		App.Fields.Picklist.showSelect2ElementView(sideBar.find('select'));
 		sideBar.find('.js-summary-close-edit').on('click', () => {
 			this.getCalendarCreateView();
 		});
 		headerInstance.registerQuickCreatePostLoadEvents(rightFormCreate, params);
-		new App.Fields.Text.Editor(sideBar.find('.js-editor'), { height: '5em', toolbar: 'Min' });
+		App.Fields.Text.Editor.register(sideBar.find('.js-editor'), { height: '5em', toolbar: 'Min' });
 	}
 
 	/** @inheritdoc */
@@ -291,17 +280,13 @@ jQuery.Class(
 				let form = container.find('form');
 				let currentTarget = $(e.currentTarget);
 				if (1 === currentTarget.data('type')) {
-					form.append(
-						'<input type=hidden name="activitystatus" value="' + currentTarget.data('state') + '">'
-					);
+					form.append('<input type=hidden name="activitystatus" value="' + currentTarget.data('state') + '">');
 					form.submit();
 				} else {
 					container.find('.js-activity-buttons').remove();
 					form.find('[name="record"]').val('');
 					form.append('<input type=hidden name="postponed" value="true">');
-					form.append(
-						'<input type=hidden name="followup" value="' + currentTarget.data('id') + '">'
-					);
+					form.append('<input type=hidden name="followup" value="' + currentTarget.data('id') + '">');
 				}
 			});
 		},
@@ -332,9 +317,9 @@ jQuery.Class(
 				var dateStartEl = data.find('[name="date_start"]');
 				var startDay = dateStartEl.val();
 				var dateStartFormat = dateStartEl.data('date-format');
-				startDay = moment(
-					Vtiger_Helper_Js.convertToDateString(startDay, dateStartFormat, '+7', ' ')
-				).format(dateStartFormat.toUpperCase());
+				startDay = moment(Vtiger_Helper_Js.convertToDateString(startDay, dateStartFormat, '+7', ' ')).format(
+					dateStartFormat.toUpperCase()
+				);
 				dateStartEl.val(startDay);
 				dateEnd.val(startDay);
 				thisInstance.getNearCalendarEvent(data);
@@ -343,9 +328,9 @@ jQuery.Class(
 				var dateStartEl = data.find('[name="date_start"]');
 				var startDay = dateStartEl.val();
 				var dateStartFormat = dateStartEl.data('date-format');
-				startDay = moment(
-					Vtiger_Helper_Js.convertToDateString(startDay, dateStartFormat, '-7', ' ')
-				).format(dateStartFormat.toUpperCase());
+				startDay = moment(Vtiger_Helper_Js.convertToDateString(startDay, dateStartFormat, '-7', ' ')).format(
+					dateStartFormat.toUpperCase()
+				);
 				dateStartEl.val(startDay);
 				dateEnd.val(startDay);
 				thisInstance.getNearCalendarEvent(data);
@@ -380,7 +365,7 @@ jQuery.Class(
 				progressIndicatorElement.progressIndicator({ mode: 'hide' });
 				container.find('.eventsTable').remove();
 				container.append(events);
-				Vtiger_Header_Js.getInstance().registerHelpInfo(container);
+				app.showPopoverElementView(container.find('.js-help-info'));
 			});
 		},
 		registerEvents: function (container) {

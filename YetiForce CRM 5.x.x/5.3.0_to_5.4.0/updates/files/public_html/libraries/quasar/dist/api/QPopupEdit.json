@@ -288,27 +288,13 @@
       }
     },
     "before-show": {
-      "desc": "Emitted right before Popup gets shown",
-      "params": {
-        "evt": {
-          "type": "Object",
-          "desc": "JS event object",
-          "required": true
-        }
-      }
+      "desc": "Emitted right before Popup gets shown"
     },
     "show": {
       "desc": "Emitted right after Popup gets shown"
     },
     "before-hide": {
-      "desc": "Emitted right before Popup gets dismissed",
-      "params": {
-        "evt": {
-          "type": "Object",
-          "desc": "JS event object",
-          "required": true
-        }
-      }
+      "desc": "Emitted right before Popup gets dismissed"
     },
     "hide": {
       "desc": "Emitted right after Popup gets dismissed"
@@ -346,6 +332,28 @@
     },
     "cancel": {
       "desc": "Triggers a model reset to its initial value ('cancel' event is emitted) then closes Popup"
+    },
+    "show": {
+      "desc": "Triggers component to show",
+      "params": {
+        "evt": {
+          "type": "Object",
+          "required": false,
+          "desc": "JS event object"
+        }
+      },
+      "addedIn": "v1.12.0"
+    },
+    "hide": {
+      "desc": "Triggers component to hide",
+      "params": {
+        "evt": {
+          "type": "Object",
+          "required": false,
+          "desc": "JS event object"
+        }
+      },
+      "addedIn": "v1.12.0"
     }
   }
 }

@@ -37,10 +37,10 @@ export default Vue.extend({
     computedRipple () {
       return this.ripple === false
         ? false
-        : Object.assign(
-          { keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ] },
-          this.ripple === true ? {} : this.ripple
-        )
+        : {
+          keyCodes: this.isLink === true ? [ 13, 32 ] : [ 13 ],
+          ...(this.ripple === true ? {} : this.ripple)
+        }
     },
 
     percentageStyle () {
@@ -141,14 +141,10 @@ export default Vue.extend({
       }
 
       const go = () => {
-        const res = this.$router[this.replace === true ? 'replace' : 'push'](this.to)
-
         // vue-router now throwing error if navigating
         // to the same route that the user is currently at
         // https://github.com/vuejs/vue-router/issues/2872
-        if (res !== void 0 && typeof res.catch === 'function') {
-          res.catch(noop)
-        }
+        this.$router[this.replace === true ? 'replace' : 'push'](this.currentLocation.route, void 0, noop)
       }
 
       this.$emit('click', e, go)
@@ -245,7 +241,6 @@ export default Vue.extend({
       ) {
         blurTarget.setAttribute('tabindex', -1)
         blurTarget.focus()
-        blurTarget.removeAttribute('tabindex')
       }
 
       if (touchTarget === this.$el) {

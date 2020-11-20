@@ -9,7 +9,7 @@ import AttrsMixin from '../../mixins/attrs.js'
 
 import ClickOutside from './ClickOutside.js'
 import { getScrollTarget } from '../../utils/scroll.js'
-import { create, stop, position, stopAndPrevent } from '../../utils/event.js'
+import { create, stop, position, stopAndPreventClick } from '../../utils/event.js'
 import EscapeKey from '../../utils/escape-key.js'
 
 import { slot } from '../../utils/slot.js'
@@ -39,6 +39,7 @@ export default Vue.extend({
     autoClose: Boolean,
     separateClosePopup: Boolean,
 
+    noRouteDismiss: Boolean,
     noRefocus: Boolean,
     noFocus: Boolean,
 
@@ -101,7 +102,8 @@ export default Vue.extend({
     },
 
     hideOnRouteChange () {
-      return this.persistent !== true
+      return this.persistent !== true &&
+        this.noRouteDismiss !== true
     },
 
     onEvents () {
@@ -168,7 +170,10 @@ export default Vue.extend({
       }
 
       if (this.unwatch === void 0) {
-        this.unwatch = this.$watch(() => this.$q.screen.width + '|' + this.$q.screen.height, this.updatePosition)
+        this.unwatch = this.$watch(
+          () => this.$q.screen.width + '|' + this.$q.screen.height + '|' + this.self + '|' + this.anchor,
+          this.updatePosition
+        )
       }
 
       this.$el.dispatchEvent(create('popup-show', { bubbles: true }))
@@ -299,7 +304,7 @@ export default Vue.extend({
           // prevent click if it's on a dialog backdrop
           targetClassList.contains('q-dialog__backdrop')
         ) {
-          stopAndPrevent(e)
+          stopAndPreventClick(e)
         }
         return true
       }

@@ -1,18 +1,17 @@
-/** gridstack.js 1.1.1 - JQuery UI Drag&Drop plugin @preserve */
+/** gridstack.js 1.2.1 - JQuery UI Drag&Drop plugin @preserve */
 /**
  * https://gridstackjs.com/
  * (c) 2014-2020 Alain Dumesny, Dylan Weiss, Pavel Reznikov
  * gridstack.js may be freely distributed under the MIT license.
 */
 (function(factory) {
-  /* we compile this in so no need for required loading
   if (typeof define === 'function' && define.amd) {
     define(['jquery', 'gridstack', 'exports'], factory);
   } else if (typeof exports !== 'undefined') {
     try { jQuery = require('jquery'); } catch (e) {}
     try { gridstack = require('gridstack'); } catch (e) {}
     factory(jQuery, gridstack.GridStack, exports);
-  } else */{
+  } else {
     factory(jQuery, GridStack, window);
   }
 })(function($, GridStack, scope) {

@@ -170,7 +170,11 @@
     try {
       var URLSearchParams = global.URLSearchParams;
 
-      return (new URLSearchParams('?a=1').toString() === 'a=1') && (typeof URLSearchParams.prototype.set === 'function');
+      return (
+        (new URLSearchParams('?a=1').toString() === 'a=1') &&
+        (typeof URLSearchParams.prototype.set === 'function') &&
+        (typeof URLSearchParams.prototype.entries === 'function')
+      );
     } catch (e) {
       return false;
     }
@@ -273,10 +277,12 @@
 
     var URL = function(url, base) {
       if (typeof url !== 'string') url = String(url);
+      if (base && typeof base !== 'string') base = String(base);
 
       // Only create another document if the base is different from current location.
       var doc = document, baseElement;
       if (base && (global.location === void 0 || base !== global.location.href)) {
+        base = base.toLowerCase();
         doc = document.implementation.createHTMLDocument('');
         baseElement = doc.createElement('base');
         baseElement.href = base;

@@ -18,16 +18,52 @@ class Log extends Logger
 	public static $logToProfile;
 	public $logToLevels = 0;
 	/**
-	 * Column mapping by table.
+	 * Column mapping by table for logs owasp.
 	 *
 	 * @var array
 	 */
-	public static $tableColumnMapping = [
+	public static $owaspColumnMapping = [
 		'access_for_admin' => ['date', 'username', 'ip', 'module', 'url', 'agent', 'request', 'referer'],
 		'access_for_api' => ['date', 'username', 'ip', 'url', 'agent', 'request'],
 		'access_for_user' => ['date', 'username', 'ip', 'module', 'url', 'agent', 'request', 'referer'],
 		'access_to_record' => ['date', 'username', 'ip', 'module', 'record', 'url', 'agent', 'request', 'referer'],
 		'csrf' => ['date', 'username', 'ip', 'referer', 'url', 'agent'],
+	];
+	/**
+	 * Column mapping by table for logs viewer.
+	 *
+	 * @var array
+	 */
+	public static $logsViewerColumnMapping = [
+		'magento' => [
+			'table' => 'l_#__magento',
+			'columns' => [
+				'time' => ['type' => 'date', 'label' => 'LBL_TIME'],
+				'category' => ['type' => 'text', 'label' => 'LBL_CATEGORY'],
+				'message' => ['type' => 'text', 'label' => 'LBL_MESSAGE'],
+				'code' => ['type' => 'text', 'label' => 'LBL_CODE'],
+				'trace' => ['type' => 'text', 'label' => 'LBL_TRACE'],
+			],
+			'filter' => [
+				'time' => 'DateTimeRange',
+			],
+			'label' => 'LBL_MAGENTO'
+		],
+		'switch_users' => [
+			'table' => 'l_#__switch_users',
+			'columns' => [
+				'date' => ['type' => 'date', 'label' => 'LBL_TIME'],
+				'status' => ['type' => 'text', 'label' => 'LBL_STATUS'],
+				'busername' => ['type' => 'text', 'label' => 'LBL_BASE_USER'],
+				'dusername' => ['type' => 'text', 'label' => 'LBL_DEST_USER'],
+				'ip' => ['type' => 'text', 'label' => 'LBL_IP_ADDRESS'],
+				'agent' => ['type' => 'text', 'label' => 'LBL_USER_AGENT'],
+			],
+			'filter' => [
+				'date' => 'DateTimeRange'
+			],
+			'label' => 'LBL_SWITCH_USERS'
+		]
 	];
 	public static $levelMap = [
 		'error' => Logger::LEVEL_ERROR,
