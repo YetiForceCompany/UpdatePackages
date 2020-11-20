@@ -80,9 +80,62 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'roundcube_filestore' => [
+				'columns' => [
+					'file_id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'user_id' => $this->integer(10)->unsigned()->notNull(),
+					'context' => $this->stringType(32)->notNull(),
+					'filename' => $this->stringType(128)->notNull(),
+					'mtime' => $this->integer(10)->notNull(),
+					'data' => $this->text()->notNull(),
+				],
+				'index' => [
+					['uniqueness', ['user_id', 'context', 'filename']],
+				],
+				'primaryKeys' => [
+					['roundcube_filestore_pk', 'file_id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'roundcube_users' => [
 				'columns' => [
 					'password' => $this->stringType(500),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_crm' => [
+				'columns' => [
+					'messages' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_global' => [
+				'columns' => [
+					'messages' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_group' => [
+				'columns' => [
+					'messages' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_private' => [
+				'columns' => [
+					'messages' => $this->text()->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__chat_messages_user' => [
+				'columns' => [
+					'messages' => $this->text()->notNull(),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -122,6 +175,7 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'finvoice_formpayment' => $this->stringType(),
 					'finvoice_status' => $this->stringType(),
+					'payment_sum' => $this->decimal('28,8'),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -140,17 +194,53 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__finvoiceproforma_address' => [
+			'u_#__interests_conflict_conf' => [
 				'columns' => [
-					'localnumberc' => $this->stringType(50),
-					'poboxc' => $this->stringType(50),
+					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'date_time' => $this->dateTime()->notNull(),
+					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
+					'user_id' => $this->smallInteger(5)->unsigned()->notNull(),
+					'related_id' => $this->integer(10)->unsigned()->notNull(),
+					'related_label' => $this->stringType()->notNull(),
+					'source_id' => $this->integer(10)->notNull()->defaultValue(0),
+					'modify_user_id' => $this->smallInteger(5)->unsigned()->notNull()->defaultValue(0),
+					'modify_date_time' => $this->dateTime(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(0),
+				],
+				'index' => [
+					['related_id', 'related_id'],
+					['user_id', 'user_id'],
+				],
+				'primaryKeys' => [
+					['interests_conflict_conf_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__github' => [
+			'u_#__interests_conflict_unlock' => [
 				'columns' => [
-					'token' => $this->stringType(500),
+					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'date_time' => $this->dateTime()->notNull(),
+					'status' => $this->smallInteger(1)->unsigned()->notNull(),
+					'user_id' => $this->smallInteger(5)->notNull(),
+					'related_id' => $this->integer(10)->unsigned()->notNull(),
+					'source_id' => $this->integer(10)->unsigned()->notNull(),
+					'comment' => $this->stringType()->notNull(),
+					'modify_user_id' => $this->smallInteger(5)->unsigned()->notNull()->defaultValue(0),
+					'modify_date_time' => $this->dateTime(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->unsigned()->notNull(),
+				],
+				'index' => [
+					['date_time', 'date_time'],
+					['related_id', 'related_id'],
+					['user_id', 'user_id'],
+				],
+				'primaryKeys' => [
+					['interests_conflict_unlock_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -159,6 +249,17 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'buildingnumbera' => $this->stringType(),
 					'localnumbera' => $this->stringType(50),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__locations_address' => [
+				'columns' => [
+					'localnumbera' => $this->stringType(50),
+					'poboxa' => $this->stringType(50),
+				],
+				'primaryKeys' => [
+					['locations_address_pk', 'locationaddressid']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -260,6 +361,17 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'u_#__users_labels' => [
+				'columns' => [
+					'id' => $this->integer(10)->unsigned()->notNull(),
+					'label' => $this->stringType()->notNull(),
+				],
+				'primaryKeys' => [
+					['users_labels_pk', 'id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'vtiger_account' => [
 				'columns' => [
 					'vat_id' => $this->stringType(50),
@@ -305,13 +417,21 @@ class Base extends \App\Db\Importers\Base
 			],
 			'vtiger_cron_task' => [
 				'columns' => [
-					'frequency' => $this->schema->createColumnSchemaBuilder('MEDIUMINT', 10),
+					'frequency' => $this->integer(10)->unsigned(),
 					'status' => $this->smallInteger(1),
 					'module' => $this->stringType(25),
 					'lase_error' => $this->text(),
+					'max_exe_time' => $this->smallInteger(5),
 				],
 				'columns_mysql' => [
 					'status' => $this->tinyInteger(1),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'vtiger_entityname' => [
+				'columns' => [
+					'separator' => $this->stringType(5),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -338,7 +458,15 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'vtiger_payment_methods' => [
+			'vtiger_modentity_num' => [
+				'columns' => [
+					'prefix' => $this->stringType()->notNull()->defaultValue(''),
+					'postfix' => $this->stringType()->notNull()->defaultValue('')
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+		/*	'vtiger_payment_methods' => [
 				'columns' => [
 					'payment_methodsid' => $this->primaryKey(),
 					'payment_methods' => $this->stringType(),
@@ -350,7 +478,7 @@ class Base extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
-			],
+			],*/
 			'vtiger_products' => [
 				'columns' => [
 					'ean' => $this->stringType(64),
@@ -390,13 +518,30 @@ class Base extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
-			]
+			],
+			'vtiger_relatedlists_fields' => [
+				'columns' => [
+					'relation_id' => $this->smallInteger(5)->unsigned()->notNull(),
+					'fieldid' => $this->integer(10)->notNull(),
+					'sequence' => $this->smallInteger(3),
+				],
+				'index' => [
+					['fk_1_relatedlists_fields_fieldid', 'fieldid'],
+					['relation_id', 'relation_id'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->dropTables = [
 			'i_#__magento_record'
 		];
 		$this->foreignKey = [
 			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', null],
+			['user_id_fk_filestore', 'roundcube_filestore', 'user_id', 'roundcube_users', 'user_id', 'CASCADE', 'CASCADE'],
+			['vtiger_modcomments_modcommentsid_fk', 'vtiger_modcomments', 'modcommentsid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
+			['vtiger_relatedlists_fields_ibfk_1', 'vtiger_relatedlists_fields', 'relation_id', 'vtiger_relatedlists', 'relation_id', 'CASCADE', ''],
+			
 		];
 	}
 }
