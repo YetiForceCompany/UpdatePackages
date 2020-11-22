@@ -34,9 +34,9 @@ class Admin extends \App\Db\Importers\Base
 				'columns' => [
 					'password' => $this->stringType(500),
 					'smtp_password' => $this->stringType(500),
-			],
-			'engine' => 'InnoDB',
-			'charset' => 'utf8'
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
 			],
 			's_#__meeting_services' => [
 				'columns' => [
@@ -55,7 +55,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__record_quick_changer' => [
 				'columns' => [
-					'id' => $this->primaryKey(10)->unsigned(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'tabid' => $this->smallInteger(5)->notNull(),
 					'conditions' => $this->text()->notNull(),
 					'values' => $this->text()->notNull(),
@@ -69,9 +69,16 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			'a_#__relatedlists_inv_fields' => [
+				'columns' => [
+					'relation_id' => $this->smallInteger(5)->unsigned()->notNull()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 			'a_#__relatedlists_widgets' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'relation_id' => $this->smallInteger(5)->unsigned()->notNull(),
 					'type' => $this->stringType(30),
 					'label' => $this->stringType(100),
@@ -86,9 +93,6 @@ class Admin extends \App\Db\Importers\Base
 				'index' => [
 					['relation_id', 'relation_id'],
 				],
-				'primaryKeys' => [
-					['relatedlists_widgets_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
@@ -98,7 +102,7 @@ class Admin extends \App\Db\Importers\Base
 					'user' => $this->integer(10)->notNull(),
 				],
 				'index' => [
-					['a_yf_settings_access_module_id_user_idx', ['module_id', 'user']],
+					['a_yf_settings_access_module_id_user_idx', ['module_id', 'user'], true],
 					['a_yf_settings_access_user_fk', 'user'],
 				],
 				'engine' => 'InnoDB',
@@ -106,7 +110,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			'a_#__settings_modules' => [
 				'columns' => [
-					'id' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
+					'id' => 'smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'name' => $this->stringType()->notNull(),
 					'status' => $this->smallInteger(1)->notNull(),
 					'created_time' => $this->dateTime()->notNull(),
@@ -115,17 +119,14 @@ class Admin extends \App\Db\Importers\Base
 					'status' => $this->tinyInteger(1)->notNull(),
 				],
 				'index' => [
-					['a_yf_settings_modules_name_status_idx', ['name', 'status']],
-				],
-				'primaryKeys' => [
-					['settings_modules_pk', 'id']
+					['a_yf_settings_modules_name_status_idx', ['name', 'status'], true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
 			'b_#__interests_conflict_conf' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'user_id' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -142,15 +143,12 @@ class Admin extends \App\Db\Importers\Base
 					['related_id', 'related_id'],
 					['user_id', 'user_id'],
 				],
-				'primaryKeys' => [
-					['b_#__interests_conflict_conf_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
 			's_#__fields_dependency' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'tabid' => $this->smallInteger(5)->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'name' => $this->stringType(100),
@@ -170,9 +168,6 @@ class Admin extends \App\Db\Importers\Base
 					['status', 'status'],
 					['tabid', 'tabid'],
 				],
-				'primaryKeys' => [
-					['fields_dependency_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
@@ -185,7 +180,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__mail_rbl_list' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'ip' => $this->stringType(40)->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
@@ -201,15 +196,12 @@ class Admin extends \App\Db\Importers\Base
 					['status', 'status'],
 					['type', 'type'],
 				],
-				'primaryKeys' => [
-					['mail_rbl_list_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
 			's_#__mail_rbl_request' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'datetime' => $this->dateTime()->notNull(),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
@@ -225,9 +217,6 @@ class Admin extends \App\Db\Importers\Base
 					['datetime', 'datetime'],
 					['status', 'status'],
 					['type', 'type'],
-				],
-				'primaryKeys' => [
-					['mail_rbl_request_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

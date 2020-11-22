@@ -82,18 +82,15 @@ class Base extends \App\Db\Importers\Base
 			],
 			'roundcube_filestore' => [
 				'columns' => [
-					'file_id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'file_id' => $this->primaryKeyUnsigned(10),
 					'user_id' => $this->integer(10)->unsigned()->notNull(),
 					'context' => $this->stringType(32)->notNull(),
 					'filename' => $this->stringType(128)->notNull(),
 					'mtime' => $this->integer(10)->notNull(),
-					'data' => $this->text()->notNull(),
+					'data' => 'longtext NOT NULL',
 				],
 				'index' => [
-					['uniqueness', ['user_id', 'context', 'filename']],
-				],
-				'primaryKeys' => [
-					['roundcube_filestore_pk', 'file_id']
+					['uniqueness', ['user_id', 'context', 'filename'], true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -196,7 +193,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__interests_conflict_conf' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'user_id' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -213,15 +210,12 @@ class Base extends \App\Db\Importers\Base
 					['related_id', 'related_id'],
 					['user_id', 'user_id'],
 				],
-				'primaryKeys' => [
-					['interests_conflict_conf_pk', 'id']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
 			'u_#__interests_conflict_unlock' => [
 				'columns' => [
-					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(10),
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull(),
 					'user_id' => $this->smallInteger(5)->notNull(),
@@ -238,9 +232,6 @@ class Base extends \App\Db\Importers\Base
 					['date_time', 'date_time'],
 					['related_id', 'related_id'],
 					['user_id', 'user_id'],
-				],
-				'primaryKeys' => [
-					['interests_conflict_unlock_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -540,8 +531,7 @@ class Base extends \App\Db\Importers\Base
 			['i_#__magento_config_ibfk_1', 'i_#__magento_config', 'server_id', 'i_#__magento_servers', 'id', 'CASCADE', null],
 			['user_id_fk_filestore', 'roundcube_filestore', 'user_id', 'roundcube_users', 'user_id', 'CASCADE', 'CASCADE'],
 			['vtiger_modcomments_modcommentsid_fk', 'vtiger_modcomments', 'modcommentsid', 'vtiger_crmentity', 'crmid', 'CASCADE', null],
-			['vtiger_relatedlists_fields_ibfk_1', 'vtiger_relatedlists_fields', 'relation_id', 'vtiger_relatedlists', 'relation_id', 'CASCADE', ''],
-			
+			['vtiger_relatedlists_fields_ibfk_1', 'vtiger_relatedlists_fields', 'relation_id', 'vtiger_relatedlists', 'relation_id', 'CASCADE', null],
 		];
 	}
 }
