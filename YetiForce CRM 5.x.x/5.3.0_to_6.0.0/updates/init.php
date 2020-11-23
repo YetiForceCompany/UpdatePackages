@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: b7028433b6aa904eaad95452bd8294ba4f6179b3
+// last check: 5b1375459c6e769e68dfc221fb9e12f12d939881
 /**
  * YetiForceUpdate Class.
  */
@@ -1480,10 +1480,13 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
 
 		$newFieldName = 'payment_methods';
 		$fieldModel = Vtiger_Field_Model::init('Vtiger', ['uitype' => 16], $newFieldName);
-		$fieldModel->setPicklistValues(['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK']);
+		if (!$db->isTableExists("vtiger_{$newFieldName}")) {
+			$fieldModel->setPicklistValues(['PLL_TRANSFER', 'PLL_CASH', 'PLL_CASH_ON_DELIVERY', 'PLL_WIRE_TRANSFER', 'PLL_REDSYS', 'PLL_DOTPAY', 'PLL_PAYPAL', 'PLL_PAYPAL_EXPRESS', 'PLL_CHECK']);
+		}
 		$picklistWithAutomation = (new \App\Db\Query())->select(['vtiger_tab.name', 'vtiger_field.fieldname'])
 			->from('vtiger_field')
 			->innerJoin('vtiger_tab', 'vtiger_field.tabid=vtiger_tab.tabid')
