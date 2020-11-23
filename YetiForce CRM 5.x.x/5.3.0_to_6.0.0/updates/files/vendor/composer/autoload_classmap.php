@@ -77,7 +77,6 @@ return array(
     'App\\Chat' => $baseDir . '/app/Chat.php',
     'App\\Colors' => $baseDir . '/app/Colors.php',
     'App\\Company' => $baseDir . '/app/Company.php',
-    'App\\Components\\InterestsConflict' => $baseDir . '/app/Components/InterestsConflict.php',
     'App\\Condition' => $baseDir . '/app/Condition.php',
     'App\\Conditions\\QueryFields\\AccountNameField' => $baseDir . '/app/Conditions/QueryFields/AccountNameField.php',
     'App\\Conditions\\QueryFields\\AdvPercentageField' => $baseDir . '/app/Conditions/QueryFields/AdvPercentageField.php',

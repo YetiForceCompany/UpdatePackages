@@ -562,7 +562,6 @@ class ComposerStaticInitYT
         'App\\Chat' => __DIR__ . '/../..' . '/app/Chat.php',
         'App\\Colors' => __DIR__ . '/../..' . '/app/Colors.php',
         'App\\Company' => __DIR__ . '/../..' . '/app/Company.php',
-        'App\\Components\\InterestsConflict' => __DIR__ . '/../..' . '/app/Components/InterestsConflict.php',
         'App\\Condition' => __DIR__ . '/../..' . '/app/Condition.php',
         'App\\Conditions\\QueryFields\\AccountNameField' => __DIR__ . '/../..' . '/app/Conditions/QueryFields/AccountNameField.php',
         'App\\Conditions\\QueryFields\\AdvPercentageField' => __DIR__ . '/../..' . '/app/Conditions/QueryFields/AdvPercentageField.php',

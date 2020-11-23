@@ -25,7 +25,7 @@ class Log extends \App\Db\Importers\Base
 			],
 			'l_#__magento' => [
 				'columns' => [
-					'id' => $this->primaryKey(10)->unsigned(),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'time' => $this->dateTime()->notNull(),
 					'category' => $this->stringType(100),
 					'message' => $this->stringType(500),
@@ -37,7 +37,7 @@ class Log extends \App\Db\Importers\Base
 			],
 			'l_#__users_login_purpose' => [
 				'columns' => [
-					'id' => $this->primaryKey(10)->unsigned()->notNull(),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'userid' => $this->integer(10)->notNull(),
 					'datetime' => $this->dateTime()->notNull(),
 					'purpose' => $this->stringType(500)->notNull(),
@@ -45,9 +45,6 @@ class Log extends \App\Db\Importers\Base
 				],
 				'index' => [
 					['l_yf_users_login_purpose_userid_idx', 'userid'],
-				],
-				'primaryKeys' => [
-					['users_login_purpose_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 5b1375459c6e769e68dfc221fb9e12f12d939881
+// last check: c35a5ed40f8273c52e57b41f54caffd467d25076
 /**
  * YetiForceUpdate Class.
  */
@@ -104,6 +104,7 @@ class YetiForceUpdate
 		}
 		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
+		copy(__DIR__ . '/files/app/Db/Drivers/ColumnSchemaBuilderTrait.php', ROOT_DIRECTORY . '/app/Db/Drivers/ColumnSchemaBuilderTrait.php');
 		copy(__DIR__ . '/files/modules/Vtiger/models/Field.php', ROOT_DIRECTORY . '/modules/Vtiger/models/Field.php');
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 		return true;
@@ -683,16 +684,16 @@ class YetiForceUpdate
 				$this->log("[info] Removed incorrect entries in vtiger_seattachmentsrel: {$count}");
 			}
 			$importerBase->tables = [
-				'vtiger_attachments' => [
-					'columns' => [
-						'attachmentsid' => $importerBase->primaryKey(10)->unsigned()->notNull(),
-					],
-					'primaryKeys' => [
-						['attachments_pk', 'attachmentsid']
-					],
-					'engine' => 'InnoDB',
-					'charset' => 'utf8'
-				],
+				// 'vtiger_attachments' => [
+				// 	'columns' => [
+				// 		'attachmentsid' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
+				// 	],
+				// 	// 'primaryKeys' => [
+				// 	// 	['attachments_pk', 'attachmentsid']
+				// 	// ],
+				// 	'engine' => 'InnoDB',
+				// 	'charset' => 'utf8'
+				// ],
 				'vtiger_seattachmentsrel' => [
 					'columns' => [
 						'attachmentsid' => $importerBase->integer(10)->unsigned()->notNull()->defaultValue(0),
@@ -706,6 +707,7 @@ class YetiForceUpdate
 			];
 			try {
 				$this->importer->dropForeignKeys(['fk_1_vtiger_attachments' => 'vtiger_attachments', 'vtiger_seattachmentsrel_attachmentsid_fk' => 'vtiger_seattachmentsrel']);
+				$db->createCommand("ALTER TABLE `vtiger_attachments` CHANGE `attachmentsid` `attachmentsid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;")->execute();
 				$this->importer->updateTables($importerBase);
 				$this->importer->addForeignKey($importerBase);
 				$this->importer->refreshSchema();

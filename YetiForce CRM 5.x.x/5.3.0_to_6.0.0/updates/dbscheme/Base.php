@@ -38,7 +38,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'i_#__magento_servers' => [
 				'columns' => [
-					'id' => $this->primaryKey(10)->unsigned(),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'name' => $this->stringType(50)->notNull(),
 					'url' => $this->stringType()->notNull(),
@@ -82,7 +82,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'roundcube_filestore' => [
 				'columns' => [
-					'file_id' => $this->primaryKeyUnsigned(10),
+					'file_id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'user_id' => $this->integer(10)->unsigned()->notNull(),
 					'context' => $this->stringType(32)->notNull(),
 					'filename' => $this->stringType(128)->notNull(),
@@ -141,15 +141,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'vat_id' => $this->stringType(50),
 				],
-				'columns_mysql' => [
-					'active' => $this->tinyInteger(1)->defaultValue(0),
-				],
-				'index' => [
-					['u_yf_competition_parent_id_idx', 'parent_id'],
-				],
-				'primaryKeys' => [
-					['competition_pk', 'competitionid']
-				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
@@ -193,7 +184,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__interests_conflict_conf' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'user_id' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -215,7 +206,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__interests_conflict_unlock' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull(),
 					'user_id' => $this->smallInteger(5)->notNull(),
@@ -246,11 +237,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'u_#__locations_address' => [
 				'columns' => [
-					'localnumbera' => $this->stringType(50),
-					'poboxa' => $this->stringType(50),
-				],
-				'primaryKeys' => [
-					['locations_address_pk', 'locationaddressid']
+					'localnumbera' => $this->stringType(50)
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -316,9 +303,6 @@ class Base extends \App\Db\Importers\Base
 				'columns' => [
 					'buildingnumbera' => $this->stringType(),
 					'localnumbera' => $this->stringType(50),
-				],
-				'primaryKeys' => [
-					['srecurringorders_address_pk', 'srecurringordersaddressid']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -457,19 +441,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-		/*	'vtiger_payment_methods' => [
-				'columns' => [
-					'payment_methodsid' => $this->primaryKey(),
-					'payment_methods' => $this->stringType(),
-					'presence' => $this->smallInteger(1)->defaultValue(1),
-					'sortorderid' => $this->smallInteger()->defaultValue(0),
-				],
-				'columns_mysql' => [
-					'presence' => $this->tinyInteger(1)->defaultValue(1),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],*/
 			'vtiger_products' => [
 				'columns' => [
 					'ean' => $this->stringType(64),

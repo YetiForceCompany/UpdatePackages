@@ -666,14 +666,11 @@ class Importer
 							$dbCommand->addColumn($tableName, $columnName, $column)->execute();
 							$time = round((microtime(true) - $start), 1);
 							$this->logs .= "done    ({$time}s)\n";
-						} elseif ($column instanceof \yii\db\ColumnSchemaBuilder && $this->comperColumns($queryBuilder, $tableSchema->columns[$columnName], $column)) {
+						} elseif ($column instanceof \yii\db\ColumnSchemaBuilder && $this->compareColumns($queryBuilder, $tableSchema->columns[$columnName], $column)) {
 							$primaryKey = false;
-							if ($column instanceof \yii\db\ColumnSchemaBuilder && (\in_array($column->get('type'), ['upk', 'pk']))) {
-								if ('upk' == $column->get('type')) {
-									$column->unsigned();
-								}
-								$column->set('type', 'integer')->set('autoIncrement', true)->notNull();
+							if ($column instanceof \yii\db\ColumnSchemaBuilder && (\in_array($column->get('type'), ['upk', 'pk', 'ubigpk', 'bigpk']))) {
 								$primaryKey = true;
+								$column->set('type', \in_array($column->get('type'), ['ubigpk', 'bigpk']) ? \yii\db\Schema::TYPE_BIGINT : \yii\db\Schema::TYPE_INTEGER);
 							}
 							if ($tableSchema->foreignKeys) {
 								foreach ($tableSchema->foreignKeys as $keyName => $value) {
@@ -691,7 +688,6 @@ class Importer
 									$dbCommand->dropForeignKey($keyName, $sourceTableName)->execute();
 								}
 							}
-
 							$this->logs .= "  > alter column: $tableName:$columnName ... ";
 							$start = microtime(true);
 							$dbCommand->alterColumn($tableName, $columnName, $column)->execute();
@@ -797,12 +793,13 @@ class Importer
 	 *
 	 * @return bool
 	 */
-	protected function comperColumns(\yii\db\QueryBuilder $queryBuilder, \yii\db\ColumnSchema $baseColumn, \yii\db\ColumnSchemaBuilder $targetColumn)
+	protected function compareColumns(\yii\db\QueryBuilder $queryBuilder, \yii\db\ColumnSchema $baseColumn, \yii\db\ColumnSchemaBuilder $targetColumn)
 	{
 		return rtrim($baseColumn->dbType, ' unsigned') !== strtok($queryBuilder->getColumnType($targetColumn), ' ') ||
 		($baseColumn->allowNull !== (null === $targetColumn->isNotNull)) ||
 		($baseColumn->defaultValue !== $targetColumn->default) ||
-		($baseColumn->unsigned !== $targetColumn->isUnsigned);
+		($baseColumn->unsigned !== $targetColumn->isUnsigned) ||
+		($baseColumn->autoIncrement !== $targetColumn->autoIncrement);
 	}
 
 	/**

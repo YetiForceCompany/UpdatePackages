@@ -40,7 +40,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__meeting_services' => [
 				'columns' => [
-					'id' => $this->primaryKey(10),
+					'id' => 'int(10) NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'url' => $this->stringType(),
 					'key' => $this->stringType(64),
 					'secret' => $this->stringType(500),
@@ -55,7 +55,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__record_quick_changer' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'tabid' => $this->smallInteger(5)->notNull(),
 					'conditions' => $this->text()->notNull(),
 					'values' => $this->text()->notNull(),
@@ -78,7 +78,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			'a_#__relatedlists_widgets' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'relation_id' => $this->smallInteger(5)->unsigned()->notNull(),
 					'type' => $this->stringType(30),
 					'label' => $this->stringType(100),
@@ -126,7 +126,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			'b_#__interests_conflict_conf' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'date_time' => $this->dateTime()->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'user_id' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -148,7 +148,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__fields_dependency' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'tabid' => $this->smallInteger(5)->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'name' => $this->stringType(100),
@@ -180,7 +180,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__mail_rbl_list' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'ip' => $this->stringType(40)->notNull(),
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
@@ -201,7 +201,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__mail_rbl_request' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => 'int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY',
 					'status' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
 					'datetime' => $this->dateTime()->notNull(),
 					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(0),
