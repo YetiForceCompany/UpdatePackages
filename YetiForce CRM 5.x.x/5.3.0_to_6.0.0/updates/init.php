@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
-// last check: 07532cc45b3e1c7aeb853e6eb18612be1c7b928e
+// last check: b7028433b6aa904eaad95452bd8294ba4f6179b3
 /**
  * YetiForceUpdate Class.
  */
