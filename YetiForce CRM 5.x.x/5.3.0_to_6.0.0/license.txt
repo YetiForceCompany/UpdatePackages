@@ -1,0 +1,14 @@
+License: YetiForce Public License 3.0 licenses/License.html
+
+Required PHP version for the update package is PHP 7.2.x., 7.3.x. The update is not possible in case of any other version.
+The update time might be longer depending on the server speed and amount of data in the system.
+Before the update you should disable all cron actions so that none of them are triggered while the system is being updated.
+Log files should be checked after update.
+
+Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation
+
+Warning:
+All global search engine and quick suggest data in reference fields will be removed during the update.
+Search engines may not work properly until the missing data is added, which is what one of cron's tasks is responsible for.
+
+After the update process finishes, please also update all the languages in your system.
