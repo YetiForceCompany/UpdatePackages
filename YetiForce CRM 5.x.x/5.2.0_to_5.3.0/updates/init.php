@@ -166,7 +166,7 @@ class YetiForceUpdate
 		foreach($baseTableNames as $baseTableName){
 			$data = explode('vtiger_', $baseTableName);
 			if(isset($data[1]) && !(new \App\Db\Query())->from('vtiger_field')->where(['fieldname' => $data[1]])->andWhere(['in', 'uitype', [15, 16, 33]])->exists()){
-				$this->importer->dropTable([$tableName]);
+				$this->importer->dropTable([$baseTableName]);
 			}
 		}
 	}
