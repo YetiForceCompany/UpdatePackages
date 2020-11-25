@@ -123,7 +123,8 @@ class YetiForceUpdate
 			$configFile = 'app/ConfigFile.php';
 			copy(__DIR__ . '/files/' . $configFile, ROOT_DIRECTORY . '/' . $configFile);
 			\App\Cache::resetFileCache(ROOT_DIRECTORY . '/' . $configFile);
-
+			$db->createCommand('DELETE FROM  `vtiger_relatedlists_fields` WHERE relation_id NOT IN ( SELECT relation_id FROM vtiger_relatedlists );')->execute();
+			
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->importer->updateScheme();
@@ -329,7 +330,7 @@ class YetiForceUpdate
 				['name' => 'Legal form']
 			],
 			['vtiger_cron_task',
-				['name' => 'LBL_MAIL_RBL', 'handler_class' => 'Vtiger_MailRbl_Cron', 'frequency' => 86400, 'status' => 0, 'module' => 'Vtiger', 'sequence' => 35],
+				['name' => 'LBL_MAIL_RBL', 'handler_class' => 'Vtiger_MailRbl_Cron', 'frequency' => 86400, 'status' => 1, 'module' => 'Vtiger', 'sequence' => 35],
 				['handler_class' => 'Vtiger_MailRbl_Cron']
 			]
 		]);
