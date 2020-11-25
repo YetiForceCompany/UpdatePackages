@@ -132,7 +132,7 @@ class YetiForceUpdate
 			$this->updateCountry();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
-			$this->importer->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
+			$this->dropTable(['vtiger_durationhrs', 'vtiger_durationmins', 'vtiger_leadstage', 'vtiger_mail_accounts', 'vtiger_opportunitystage', 'vtiger_priority']);
 			$this->importer->logs(false);
 		} catch (\Throwable $ex) {
 			$this->log($ex->getMessage() . '|' . $ex->getTraceAsString());
@@ -159,6 +159,16 @@ class YetiForceUpdate
 		$this->createConfigFiles();
 		$this->postExecuted();
 		$this->log(__METHOD__ . ' - ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	public function dropTable(array $baseTableNames)
+	{
+		foreach($baseTableNames as $baseTableName){
+			$data = explode('vtiger_', $baseTableName);
+			if(isset($data[1]) && !(new \App\Db\Query())->from('vtiger_field')->where(['fieldname' => $data[1]])->andWhere(['in', 'uitype', [15, 16, 33]])->exists()){
+				$this->importer->dropTable([$baseTableName]);
+			}
+		}
 	}
 
 	public function postExecuted()
