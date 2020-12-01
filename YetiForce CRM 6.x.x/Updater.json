@@ -1,0 +1,11 @@
+{
+    "6.0": [
+        {
+            "label": "YetiForce CRM 6.1.0",
+            "version": "1",
+            "fromVersion": "6.0.0",
+            "toVersion": "6.1.0",
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.0.0_to_6.1.0\/zip\/6.0.0_to_6.1.0_v1.zip"
+        }
+    ]
+}

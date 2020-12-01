@@ -1,0 +1,25 @@
+{
+  "name": "ckeditor-image-to-base",
+  "version": "0.0.3",
+  "license": "MIT",
+  "author": "YetiForceCompany <info@yetiforce.com> (https://yetiforce.com)",
+  "keywords": [
+    "js",
+    "CKEditor",
+    "base64",
+    "yetiforce",
+    "image-processing",
+    "base64image",
+    "ckeditor4",
+    "images"
+  ],
+  "description": "ckeditor-image-to-base64 plugin for CKEditor 4 - Adds images from local as base64 string into the source without server side processing.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YetiForceCompany/ckeditor-image-to-base64"
+  },
+  "bugs": {
+    "url": "https://github.com/YetiForceCompany/ckeditor-image-to-base64/issues"
+  },
+  "homepage": "https://github.com/YetiForceCompany/ckeditor-image-to-base64#readme"
+}
