@@ -1,0 +1,21 @@
+{
+ "name": "jquery.class.js",
+ "keywords": [
+  "js",
+  "jquery",
+  "class",
+  "oop"
+ ],
+ "description": "Simple, Lightweight Class for jQuery",
+ "repository": {
+  "type": "git",
+  "url": "git+https://github.com/YetiForceCompany/jquery.class.js"
+ },
+ "author": "YetiForceCompany <info@yetiforce.com> (https://yetiforce.com)",
+ "license": "MIT",
+ "bugs": {
+  "url": "https://github.com/YetiForceCompany/YetiForceCRM/issues"
+ },
+ "homepage": "https://github.com/YetiForceCompany/YetiForceCRM#readme",
+ "version": "1.0.0"
+}

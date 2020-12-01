@@ -1,0 +1,13 @@
+License: YetiForce Public License 3.0 licenses/License.html
+The update time might be longer depending on the server speed and amount of data in the system.
+Before launching the update package we recommend disabling all cron actions.
+Log files should be checked after update.
+
+After the update process finishes, please also update all the languages in your system.
+
+Attention !!! There might be problems when logging in for the first time after the update, you need to clear the browser cache and all cookies.
+https://public.yetiforce.com/clear.png
+
+Before you begin the update please check the latest server configuration requirements.
+https://github.com/YetiForceCompany/YetiForceCRM/tree/6.1.0/tests/setup
+https://gitdeveloper.yetiforce.com/index.php?parent=Settings&module=ConfReport&view=Index&block=14&fieldid=65
