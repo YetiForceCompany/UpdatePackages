@@ -90,10 +90,10 @@ class YetiForceUpdate
 		if (version_compare(PHP_VERSION, '7.2', '<')) {
 			$error = 'Wrong PHP version, recommended version >= 7.2';
 		}
-		if (ini_get('max_execution_time') < $minTime) {
+		if (0 != ini_get('max_execution_time') && ini_get('max_execution_time') < $minTime) {
 			$error .= PHP_EOL . 'max_execution_time = ' . ini_get('max_execution_time') . ' < ' . $minTime;
 		}
-		if (ini_get('max_input_time') < $minTime) {
+		if ('-1' != ini_get('max_input_time') && ini_get('max_input_time') < $minTime) {
 			$error .= PHP_EOL . 'max_input_time = ' . ini_get('max_input_time') . ' < ' . $minTime;
 		}
 		if ($error) {

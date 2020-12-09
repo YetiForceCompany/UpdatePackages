@@ -89,10 +89,10 @@ class YetiForceUpdate
 		if (version_compare(PHP_VERSION, '7.2', '<')) {
 			$error = 'Wrong PHP version, recommended version >= 7.2';
 		}
-		if (ini_get('max_execution_time') < $minTime) {
+		if (0 != ini_get('max_execution_time') && ini_get('max_execution_time') < $minTime) {
 			$error .= PHP_EOL . 'max_execution_time = ' . ini_get('max_execution_time') . ' < ' . $minTime;
 		}
-		if (ini_get('max_input_time') < $minTime) {
+		if ('-1' != ini_get('max_input_time') && ini_get('max_input_time') < $minTime) {
 			$error .= PHP_EOL . 'max_input_time = ' . ini_get('max_input_time') . ' < ' . $minTime;
 		}
 		if ($error) {
@@ -163,9 +163,9 @@ class YetiForceUpdate
 
 	public function dropTable(array $baseTableNames)
 	{
-		foreach($baseTableNames as $baseTableName){
+		foreach ($baseTableNames as $baseTableName) {
 			$data = explode('vtiger_', $baseTableName);
-			if(isset($data[1]) && !(new \App\Db\Query())->from('vtiger_field')->where(['fieldname' => $data[1]])->andWhere(['in', 'uitype', [15, 16, 33]])->exists()){
+			if (isset($data[1]) && !(new \App\Db\Query())->from('vtiger_field')->where(['fieldname' => $data[1]])->andWhere(['in', 'uitype', [15, 16, 33]])->exists()) {
 				$this->importer->dropTable([$baseTableName]);
 			}
 		}
