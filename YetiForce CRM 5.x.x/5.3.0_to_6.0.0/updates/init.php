@@ -707,7 +707,7 @@ class YetiForceUpdate
 			];
 			try {
 				$this->importer->dropForeignKeys(['fk_1_vtiger_attachments' => 'vtiger_attachments', 'vtiger_seattachmentsrel_attachmentsid_fk' => 'vtiger_seattachmentsrel']);
-				$db->createCommand("ALTER TABLE `vtiger_attachments` CHANGE `attachmentsid` `attachmentsid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;")->execute();
+				$db->createCommand('ALTER TABLE `vtiger_attachments` CHANGE `attachmentsid` `attachmentsid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;')->execute();
 				$this->importer->updateTables($importerBase);
 				$this->importer->addForeignKey($importerBase);
 				$this->importer->refreshSchema();
@@ -1912,7 +1912,9 @@ class YetiForceUpdate
 		(new \App\BatchMethod(['method' => '\App\Fixer::profileField', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => 'Settings_SharingAccess_Module_Model::recalculateSharingRules', 'params' => []]))->save();
-
+		foreach (['roundcube_cache', 'roundcube_cache_index', 'roundcube_cache_messages', 'roundcube_cache_shared', 'roundcube_cache_thread'] as $table) {
+			$db->createCommand()->truncateTable($table)->execute();
+		}
 		$db->createCommand()->insert('yetiforce_updates', [
 			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
 			'name' => (string) $this->modulenode->label,
