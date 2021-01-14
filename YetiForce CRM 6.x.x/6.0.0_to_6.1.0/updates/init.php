@@ -71,14 +71,16 @@ class YetiForceUpdate
 	public function preupdate()
 	{
 		$minTime = 600;
-		if (ini_get('max_execution_time') < $minTime || ini_get('max_input_time') < $minTime) {
+		$maxExecutionTime = ini_get('max_execution_time');
+		$maxInputTime = ini_get('max_input_time');
+		if ((0 != $maxExecutionTime && $maxExecutionTime < $minTime) || ($maxInputTime > 0 && $maxInputTime < $minTime)) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:';
-			if (ini_get('max_execution_time') < $minTime) {
-				$this->package->_errorText .= PHP_EOL . 'max_execution_time = ' . ini_get('max_execution_time') . ' < ' . $minTime;
+			if (0 != $maxExecutionTime && $maxExecutionTime < $minTime) {
+				$this->package->_errorText .= PHP_EOL . 'max_execution_time = ' . $maxExecutionTime . ' < ' . $minTime;
 			}
-			if (ini_get('max_input_time') < $minTime) {
-				$this->package->_errorText .= PHP_EOL . 'max_input_time = ' . ini_get('max_input_time') . ' < ' . $minTime;
+			if ($maxInputTime > 0 && $maxInputTime < $minTime) {
+				$this->package->_errorText .= PHP_EOL . 'max_input_time = ' . $maxInputTime . ' < ' . $minTime;
 			}
 			return false;
 		}
