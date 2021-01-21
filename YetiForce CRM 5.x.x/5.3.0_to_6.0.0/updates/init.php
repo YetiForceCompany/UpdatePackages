@@ -1165,7 +1165,7 @@ class YetiForceUpdate
 			$tabId = $fieldModel->getModuleId();
 
 			$updateData['fieldname'] = $newName;
-			if (isset($updateData['columnname']) && !$updateData['tablename']) {
+			if (isset($updateData['columnname']) && !$updateData['columnname']) {
 				$type = $queryBuilder->getColumnType($fieldModel->getDBColumnType());
 				$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$updateData['columnname']} {$type};")->execute();
 			}
