@@ -1,9 +1,9 @@
 <?xml version='1.0'?>
 <module>
 	<name>YetiForce CRM 6.1.0</name>
-	<label>YetiForce CRM 6.1.0 v2</label>
+	<label>YetiForce CRM 6.1.0 v3</label>
 	<type>update</type>
-	<version>2</version>
+	<version>3</version>
 	<from_version>6.0.0</from_version>
 	<to_version>6.1.0</to_version>
 	<dependencies>

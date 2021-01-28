@@ -56,11 +56,11 @@
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 5.x.x\/5.3.0_ServicePack\/zip\/5.3.0_ServicePack_v4.zip"
         },
         {
-            "label": "YetiForce CRM 6.0.0 v7",
-            "version": "7",
+            "label": "YetiForce CRM 6.0.0 v8",
+            "version": "8",
             "fromVersion": "5.3.0",
             "toVersion": "6.0.0",
-            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 5.x.x\/5.3.0_to_6.0.0\/zip\/5.3.0_to_6.0.0_v7.zip"
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 5.x.x\/5.3.0_to_6.0.0\/zip\/5.3.0_to_6.0.0_v8.zip"
         }
     ]
 }

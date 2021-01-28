@@ -102,6 +102,7 @@ class YetiForceUpdate
 			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 			return false;
 		}
+		copy(__DIR__ . '/53Field.php', ROOT_DIRECTORY . '/modules/Settings/LayoutEditor/models/Field.php');
 		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
 		copy(__DIR__ . '/files/app/Db/Drivers/ColumnSchemaBuilderTrait.php', ROOT_DIRECTORY . '/app/Db/Drivers/ColumnSchemaBuilderTrait.php');
