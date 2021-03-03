@@ -1,0 +1,55 @@
+<?php
+/**
+ * @package   YetiForce.UpdatePackages
+ *
+ * @copyright YetiForce Sp. z o.o
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ */
+return [
+	'.github/ISSUE_TEMPLATE/2-feature-request.md',
+	'.github/ISSUE_TEMPLATE/3-questions-or-docs-request.md',
+	'languages/en-US/Settings/HideBlocks.json',
+	'layouts/basic/modules/Accounts/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/Calendar/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/Competition/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/Documents/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/IStorages/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/MultiCompany/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/Project/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/SSalesProcesses/DetailViewHeaderTitle.tpl',
+	'layouts/basic/modules/Settings/HideBlocks/Conditions.tpl',
+	'layouts/basic/modules/Settings/HideBlocks/EditView.tpl',
+	'layouts/basic/modules/Settings/HideBlocks/ListViewHeader.tpl',
+	'layouts/basic/modules/Settings/Vtiger/EditTax.tpl',
+	'layouts/basic/modules/Vtiger/Detail/HeaderFields.tpl',
+	'modules/OSSPasswords/views/RecordsList.php',
+	'modules/OSSTimeControl/uitypes/Double.php',
+	'modules/Project/summary_blocks/HighTasks.php',
+	'modules/Project/summary_blocks/LowTasks.php',
+	'modules/Project/summary_blocks/NormalTasks.php',
+	'modules/Project/summary_blocks/OtherTasks.php',
+	'modules/Project/summary_blocks/Progress.php',
+	'modules/Project/summary_blocks/TaskCompleted.php',
+	'modules/Project/summary_blocks/TaskDue.php',
+	'modules/Project/summary_blocks/TasksOpen.php',
+	'modules/Settings/HideBlocks/actions/DeleteAjax.php',
+	'modules/Settings/HideBlocks/actions/Save.php',
+	'modules/Settings/HideBlocks/models/ListView.php',
+	'modules/Settings/HideBlocks/models/Module.php',
+	'modules/Settings/HideBlocks/models/Record.php',
+	'modules/Settings/HideBlocks/views/Conditions.php',
+	'modules/Settings/HideBlocks/views/Edit.php',
+	'modules/Settings/HideBlocks/views/List.php',
+	'public_html/layouts/basic/modules/Occurrences/resources/RelatedList.js',
+	'public_html/layouts/basic/modules/Occurrences/resources/RelatedList.min.js',
+	'public_html/layouts/basic/modules/Occurrences/resources/RelatedList.min.js.map',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/AdvanceFilter.js',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/AdvanceFilter.min.js',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/AdvanceFilter.min.js.map',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/Conditions.js',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/Conditions.min.js',
+	'public_html/layouts/basic/modules/Settings/HideBlocks/resources/Conditions.min.js.map',
+	'public_html/layouts/resources/libraries/jstree.category.min.js',
+	'public_html/layouts/resources/libraries/jstree.checkbox.min.js',
+	'public_html/layouts/resources/libraries/jstree.edit.min.js'
+];
