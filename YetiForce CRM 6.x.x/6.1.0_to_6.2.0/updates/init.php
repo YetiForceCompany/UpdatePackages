@@ -144,17 +144,19 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
-		\App\Db\Updater::batchInsert([
+		$batchInsert = \App\Db\Updater::batchInsert([
 			['a_yf_settings_modules',	['name' => 'Proxy', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'Proxy']],
-			['vtiger_settings_field',	['blockid' => vtlib\Deprecated::getSettingsBlockId('LBL_MAIL_TOOLS'), 'name' => 'LBL_CONFIG_PROXY', 'iconpath' => 'yfi yfi-server-configuration', 'description' => 'LBL_CONFIG_PROXY_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Proxy&view=Index', 'sequence', 'active' => 0, 'pinned' => 0, 'admin_access' => null], ['name' => 'LBL_CONFIG_PROXY']],
+			['vtiger_settings_field',	['blockid' => vtlib\Deprecated::getSettingsBlockId('LBL_MAIL_TOOLS'), 'name' => 'LBL_CONFIG_PROXY', 'iconpath' => 'yfi yfi-server-configuration', 'description' => 'LBL_CONFIG_PROXY_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Proxy&view=Index', 'sequence' => 8, 'active' => 0, 'pinned' => 0, 'admin_access' => null], ['name' => 'LBL_CONFIG_PROXY']],
 		]);
+		$this->log('[info] batchInsert: ' . \App\Utils::varExport($batchInsert));
 
-		\App\Db\Updater::batchDelete([
+		$batchDelete = \App\Db\Updater::batchDelete([
 			['a_yf_settings_modules', ['name' => 'HideBlocks']],
 			['vtiger_settings_field', ['name' => 'LBL_HIDEBLOCKS']],
 		]);
+		$this->log('[info] batchDelete: ' . \App\Utils::varExport($batchDelete));
 
-		\App\Db\Updater::batchUpdate([
+		$batchUpdate = \App\Db\Updater::batchUpdate([
 			['vtiger_blocks', ['icon' => 'fas fa-money-check-alt'], ['blocklabel' => 'LBL_CURRENCY_CONFIGURATION', 'tabid' => \App\Module::getModuleId('Users')]],
 			['vtiger_blocks', ['icon' => 'fas fa-info-circle'], ['blocklabel' => 'LBL_MORE_INFORMATION', 'tabid' => \App\Module::getModuleId('Users')]],
 			['vtiger_blocks', ['icon' => 'fas fa-address-book'], ['blocklabel' => 'LBL_USER_CONTACT_INFORMATION', 'tabid' => \App\Module::getModuleId('Users')]],
@@ -166,7 +168,8 @@ class YetiForceUpdate
 			['vtiger_field', ['fieldparams' => '{"editWidth":"col-sm-9"}'], ['columnname' => 'recurrence', 'tablename' => 'vtiger_activity', 'fieldparams' => [null, '']]],
 			['vtiger_field', ['header_field' => '{"type":"value"}'],
 				[
-					'header_field' => [null, ''],
+					'and',
+					['header_field' => [null, '']],
 					['or',
 						['columnname' => 'parentid', 'tablename' => 'vtiger_contactdetails'],
 						['columnname' => ['process', 'link'], 'tablename' => 'vtiger_activity'],
@@ -181,12 +184,11 @@ class YetiForceUpdate
 				\App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Calendar'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('SSalesProcesses'), \App\Module::getModuleId('MultiCompany')
 			]]],
 			['vtiger_field', ['fieldparams' => '{"mask":"9999999999999"}'], ['columnname' => 'ean', 'tablename' => 'vtiger_products', 'fieldparams' => '9999999999999']],
-			['vtiger_field', ['record_state' => 2], ['ssalesprocesses_status' => ['PLL_SALE_COMPLETED', 'PLL_SALE_FAILED', 'PLL_SALE_CANCELLED']]],
 			['vtiger_field', ['displaytype' => 2], ['fieldlabel' => ['FL_MAGENTO_SERVER', 'FL_MAGENTO_ID', 'FL_MAGENTO_STATUS']]],
 			['vtiger_ssalesprocesses_status', ['record_state' => 2], ['ssalesprocesses_status' => ['PLL_SALE_COMPLETED', 'PLL_SALE_FAILED', 'PLL_SALE_CANCELLED']]],
 			['vtiger_crmentity', ['private' => 0], ['private' => null]],
 		]);
-
+		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -226,7 +228,6 @@ class YetiForceUpdate
 				$dbCommand->insert('s_yf_fields_anonymization', ['field_id' => $fileId, 'anonymization_target' => $field[2]])->execute();
 			}
 		}
-
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -254,7 +255,6 @@ class YetiForceUpdate
 			}
 			$log .= "{$field}: $i  ";
 		}
-
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . " | $log | " . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -265,6 +265,7 @@ class YetiForceUpdate
 
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$columns = ['header_content', 'body_content', 'footer_content'];
+		$i = 0;
 		foreach ($columns as $column) {
 			$query = (new \App\Db\Query())
 				->select(['pdfid', $column])
@@ -275,10 +276,10 @@ class YetiForceUpdate
 				$content = $row[$column];
 				$content = str_replace('$(custom : RelatedAttachments', '$(custom : RelatedAttachments|', $content);
 				$dbCommand->update('a_#__pdf', [$column => $content], ['pdfid' => $row['pdfid']])->execute();
+				++$i;
 			}
 		}
-
-		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . " | Updated: $i |" . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function addRecordListFilterValues(): void
