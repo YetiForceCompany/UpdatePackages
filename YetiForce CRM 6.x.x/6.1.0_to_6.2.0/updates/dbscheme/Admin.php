@@ -45,7 +45,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			'a_#__record_list_filter' => [
 				'columns' => [
-					'id' => $this->primaryKey(5)->unsigned(),
+					'id' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
 					'relationid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'rel_relationid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'dest_relationid' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -54,6 +54,9 @@ class Admin extends \App\Db\Importers\Base
 					['a_yf_record_list_filter_relationid_idx', 'relationid'],
 					['a_yf_record_list_filter_rel_relationid_idx', 'rel_relationid'],
 					['a_yf_record_list_filter_dest_relationid_idx', 'dest_relationid'],
+				],
+				'primaryKeys' => [
+					['record_list_filter_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -78,13 +81,13 @@ class Admin extends \App\Db\Importers\Base
 			],
 		];
 		$this->foreignKey = [
-			['a_#__record_converter_mapping_fk1', 'a_#__record_converter_mapping', 'id', 'a_#__record_converter', 'id', 'CASCADE', ''],
-			['a_#__record_converter_mapping_fk2', 'a_#__record_converter_mapping', 'source_field', 'vtiger_field', 'fieldid', 'CASCADE', ''],
-			['a_#__record_converter_mapping_fk3', 'a_#__record_converter_mapping', 'dest_field', 'vtiger_field', 'fieldid', 'CASCADE', ''],
-			['a_#__record_list_filter_dest_relationid_idx', 'a_#__record_list_filter', 'dest_relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', ''],
-			['a_#__record_list_filter_rel_relationid_idx', 'a_#__record_list_filter', 'rel_relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', ''],
-			['a_#__record_list_filter_relationid_idx', 'a_#__record_list_filter', 'relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', ''],
-			['s_#__fields_anonymization_fieldid_fk', 's_#__fields_anonymization', 'field_id', 'vtiger_field', 'fieldid', 'CASCADE', ''],
+			['a_#__record_converter_mapping_fk1', 'a_#__record_converter_mapping', 'id', 'a_#__record_converter', 'id', 'CASCADE', null],
+			['a_#__record_converter_mapping_fk2', 'a_#__record_converter_mapping', 'source_field', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['a_#__record_converter_mapping_fk3', 'a_#__record_converter_mapping', 'dest_field', 'vtiger_field', 'fieldid', 'CASCADE', null],
+			['a_#__record_list_filter_dest_relationid_idx', 'a_#__record_list_filter', 'dest_relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', null],
+			['a_#__record_list_filter_rel_relationid_idx', 'a_#__record_list_filter', 'rel_relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', null],
+			['a_#__record_list_filter_relationid_idx', 'a_#__record_list_filter', 'relationid', 'vtiger_relatedlists', 'relation_id', 'CASCADE', null],
+			['s_#__fields_anonymization_fieldid_fk', 's_#__fields_anonymization', 'field_id', 'vtiger_field', 'fieldid', 'CASCADE', null],
 		];
 	}
 }

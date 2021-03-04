@@ -24,5 +24,7 @@ class Log extends \App\Db\Importers\Base
 				'charset' => 'utf8'
 			],
 		];
+		$this->foreignKey = [
+		];
 	}
 }

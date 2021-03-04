@@ -31,8 +31,8 @@ class Base extends \App\Db\Importers\Base
 			'roundcube_system', 'vtiger_blocks_hide'
 		];
 		$this->foreignKey = [
-			['u_#__finvoiceproforma_address_fk1', 'u_#__finvoiceproforma_address', 'finvoiceproformaaddressid', 'u_#__finvoiceproforma', 'finvoiceproformaid', 'CASCADE', ''],
-			['u_#__recurring_info_fk1', 'u_#__recurring_info', 'srecurringordersid', 'u_#__srecurringorders', 'srecurringordersid', 'CASCADE', ''],
+			['u_#__finvoiceproforma_address_fk1', 'u_#__finvoiceproforma_address', 'finvoiceproformaaddressid', 'u_#__finvoiceproforma', 'finvoiceproformaid', 'CASCADE', null],
+			['u_#__recurring_info_fk1', 'u_#__recurring_info', 'srecurringordersid', 'u_#__srecurringorders', 'srecurringordersid', 'CASCADE', null],
 		];
 	}
 }
