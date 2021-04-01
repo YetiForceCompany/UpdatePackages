@@ -444,6 +444,10 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$dbCommand->delete('u_#__crmentity_label', ['label' => ''])->execute();
+		$dbCommand->delete('u_#__crmentity_search_label', ['searchlabel' => ''])->execute();
+
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
