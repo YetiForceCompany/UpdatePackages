@@ -1,9 +1,9 @@
 <?xml version='1.0'?>
 <module>
 	<name>YetiForce CRM 6.1 Service Pack</name>
-	<label>YetiForce CRM 6.1 Service Pack v7</label>
+	<label>YetiForce CRM 6.1 Service Pack v8</label>
 	<type>update</type>
-	<version>7</version>
+	<version>8</version>
 	<from_version>6.1.0</from_version>
 	<to_version>6.1.0</to_version>
 	<dependencies>
