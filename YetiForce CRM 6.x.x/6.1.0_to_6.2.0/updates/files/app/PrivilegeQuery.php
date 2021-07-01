@@ -5,6 +5,8 @@ namespace App;
 /**
  * Privilege File basic class.
  *
+ * @package App
+ *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
@@ -68,13 +70,14 @@ class PrivilegeQuery
 		}
 		$userModel = \Users_Privileges_Model::getInstanceById($userId);
 		if (!$userModel->isAdminUser() && \App\Config::security('PERMITTED_BY_PRIVATE_FIELD') && ($fieldInfo = \App\Field::getFieldInfo('private', $moduleName)) && \in_array($fieldInfo['presence'], [0, 2])) {
+			$owners = array_merge([$userId], $userModel->groups);
 			$conditions = ['or'];
 			$conditions[] = ['vtiger_crmentity.private' => 0];
-			$subConditions = ['or', ['vtiger_crmentity.smownerid' => $userId]];
+			$subConditions = ['or', ['vtiger_crmentity.smownerid' => $owners]];
 			if (\App\Config::security('PERMITTED_BY_SHARED_OWNERS')) {
 				$subQuery = (new \App\Db\Query())->select(['crmid'])->distinct()
 					->from('u_yf_crmentity_showners')
-					->where(['userid' => array_merge([$userId], $userModel->groups)]);
+					->where(['userid' => $owners]);
 				$subConditions[] = ['vtiger_crmentity.crmid' => $subQuery];
 			}
 			$conditions[] = ['and', ['vtiger_crmentity.private' => 1], $subConditions];

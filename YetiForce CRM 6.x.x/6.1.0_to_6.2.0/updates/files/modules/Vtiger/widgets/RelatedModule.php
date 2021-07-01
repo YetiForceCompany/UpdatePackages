@@ -3,6 +3,8 @@
 /**
  * Vtiger RelatedModule widget class.
  *
+ * @package Widget
+ *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  */
@@ -14,6 +16,10 @@ class Vtiger_RelatedModule_Widget extends Vtiger_Basic_Widget
 		$url = 'module=' . $this->Module . '&view=Detail&record=' . $this->Record . '&mode=showRelatedRecords&relatedModule=' . $moduleName . '&page=1&limit=' . $this->Data['limit'] . '&viewType=' . $this->Data['viewtype'] . '&relationId=' . $this->Data['relation_id'];
 		if (isset($this->Data['no_result_text'])) {
 			$url .= '&no_result_text=' . $this->Data['no_result_text'];
+		}
+		if (!empty($this->Data['customView'])) {
+			$cvId = reset($this->Data['customView']);
+			$url .= '&cvId=' . $cvId;
 		}
 		if (!empty($this->Data['orderby'])) {
 			$url .= '&orderby=' . \App\Json::encode($this->Data['orderby']);
@@ -84,10 +90,21 @@ class Vtiger_RelatedModule_Widget extends Vtiger_Basic_Widget
 			if (!empty($whereCondition)) {
 				$this->Config['url'] .= '&search_params=' . \App\Json::encode($whereCondition);
 			}
+			$this->Config['buttonHeader'] = $this->getHeaderButtons();
 			$widget = $this->Config;
 			$widget['instance'] = $this;
 		}
 		return $widget;
+	}
+
+	/**
+	 * Gets buttons.
+	 *
+	 * @return array
+	 */
+	public function getHeaderButtons()
+	{
+		return [];
 	}
 
 	public function getCheckboxLables($model, $type, $prefix)
@@ -109,5 +126,22 @@ class Vtiger_RelatedModule_Widget extends Vtiger_Basic_Widget
 	public function getConfigTplName()
 	{
 		return 'RelatedModuleConfig';
+	}
+
+	/** {@inheritdoc} */
+	public function getApiData(array $row): array
+	{
+		$data = $this->Data;
+		$relModuleName = is_numeric($this->Data['relatedmodule']) ? App\Module::getModuleName($this->Data['relatedmodule']) : $this->Data['relatedmodule'];
+		$data['relatedModuleName'] = $relModuleName;
+		foreach ($data['relatedfields'] as &$fieldName) {
+			$fieldName = explode('::', $fieldName)[1];
+		}
+		$row['name'] = \App\Language::translate($row['label'] ?: $relModuleName, $relModuleName, false, false);
+		$row['data'] = $data;
+		if (!\App\Privilege::isPermitted($row['data']['relatedModuleName'])) {
+			$row = [];
+		}
+		return $row;
 	}
 }

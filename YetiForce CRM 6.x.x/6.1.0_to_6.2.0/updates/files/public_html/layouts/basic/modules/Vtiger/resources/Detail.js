@@ -412,6 +412,36 @@ jQuery.Class(
 				});
 			return aDeferred.promise();
 		},
+
+		/**
+		 * Adding relationships in the products and services widget.
+		 */
+		registerWidgetProductAndServices: function () {
+			let thisInstance = this;
+			this.getForm().on('click', '.js-widget-products-services', (e) => {
+				let currentTarget = $(e.currentTarget);
+				let params = {
+					module: app.getModuleName(),
+					action: 'RelationAjax',
+					mode: 'updateRelation',
+					recordsToAdd: [],
+					src_record: app.getRecordId(),
+					related_module: currentTarget.closest('.js-detail-widget-header').find('[name="relatedModule"]').val()
+				};
+				let url = currentTarget.data('url');
+				app.showRecordsList(url, (_, instance) => {
+					instance.setSelectEvent((data) => {
+						for (let i in data) {
+							params.recordsToAdd.push(i);
+						}
+						AppConnector.request(params).done(function (res) {
+							thisInstance.reloadTabContent();
+						});
+					});
+				});
+			});
+		},
+
 		widgetRelatedRecordView: function (container, load) {
 			let cacheKey = this.getRecordId() + '_' + container.data('id');
 			let relatedRecordCacheID = app.moduleCacheGet(cacheKey);
@@ -486,7 +516,6 @@ jQuery.Class(
 			AppConnector.requestPjax(params).done(function (responseData) {
 				detailContentsHolder.html(responseData);
 				responseData = detailContentsHolder.html();
-				//thisInstance.triggerDisplayTypeEvent();
 				thisInstance.registerBlockStatusCheckOnLoad();
 				//Make select box more usability
 				App.Fields.Picklist.changeSelectElementView(detailContentsHolder);
@@ -683,25 +712,12 @@ jQuery.Class(
 		getRelatedListCurrentPageNum: function () {
 			return jQuery('input[name="currentPageNum"]', this.getContentHolder()).val();
 		},
-		/**
-		 * function to hide comment block.
-		 */
-		removeCommentBlock: function () {
-			$('.js-add-comment-block', $('.js-comments-body', this.getContentHolder())).remove();
-		},
 
 		/**
 		 * function to hide button action.
 		 */
 		hideButtonAction: function () {
 			$('.js-hb__container').removeClass('u-hidden-block__opened');
-		},
-
-		/**
-		 * function to show comment block.
-		 */
-		showCommentBlock: function () {
-			$('.js-add-comment-block', $('.js-comments-body', this.getContentHolder())).show();
 		},
 
 		/**
@@ -1052,6 +1068,7 @@ jQuery.Class(
 			detailContentsHolder.find('.detailViewBlockLink').each(function (n, block) {
 				block = $(block);
 				let blockContent = block.find('.blockContent');
+
 				if (blockContent.is(':visible')) {
 					AppConnector.request({
 						type: 'GET',
@@ -1084,7 +1101,7 @@ jQuery.Class(
 				const blockContent = block.find('.blockContent');
 				const isEmpty = blockContent.is(':empty');
 				let url = block.data('url');
-				if (!blockContent.is(':visible') && url) {
+				if (blockContent.is(':visible') && url) {
 					blockContent.progressIndicator();
 					AppConnector.request(url).done(function (response) {
 						blockContent.html(response);
@@ -1360,13 +1377,6 @@ jQuery.Class(
 				};
 				editElement.on('clickoutside', saveHandler);
 			});
-		},
-		triggerDisplayTypeEvent: function () {
-			let widthType = app.cacheGet('widthType', 'narrowWidthType');
-			if (widthType) {
-				let elements = jQuery('#detailView').find('td');
-				elements.addClass(widthType);
-			}
 		},
 		/**
 		 * Function updates the hidden elements which is used for creating relations
@@ -2341,20 +2351,20 @@ jQuery.Class(
 				let commentInfoBlock = $(e.currentTarget.closest('.js-comment-single'));
 				commentInfoBlock.find('.js-comment-container').show();
 				commentInfoBlock.find('.js-comment-info').show();
-				self.removeCommentBlock();
+				commentInfoBlock.find('.js-add-comment-block').remove();
 			});
 			detailContentsHolder.on('click', '.js-reply-comment', function (e) {
-				self.removeCommentBlock();
-				self.hideButtonAction();
 				let commentInfoBlock = $(e.currentTarget).closest('.js-comment-single');
-				commentInfoBlock.find('.js-comment-container').hide();
+				commentInfoBlock.find('.js-add-comment-block').remove();
+				self.hideButtonAction();
+				commentInfoBlock.find('.js-comment-info').show();
 				self.getCommentBlock().appendTo(commentInfoBlock).show();
 			});
 			detailContentsHolder.on('click', '.js-edit-comment', function (e) {
-				self.removeCommentBlock();
+				let commentInfoBlock = $(e.currentTarget).closest('.js-comment-single');
+				commentInfoBlock.find('.js-add-comment-block').remove();
 				self.hideButtonAction();
-				let commentInfoBlock = $(e.currentTarget).closest('.js-comment-single'),
-					commentInfoContent = commentInfoBlock.find('.js-comment-info'),
+				let commentInfoContent = commentInfoBlock.find('.js-comment-info'),
 					editCommentBlock = self.getEditCommentBlock();
 				editCommentBlock.find('.js-comment-content').html(commentInfoContent.html());
 				editCommentBlock.find('.js-reason-to-edit').html(commentInfoBlock.find('.js-edit-reason-span').text());
@@ -2393,7 +2403,6 @@ jQuery.Class(
 							element.removeAttr('disabled');
 							app.errorLog(error, err);
 						});
-					self.showCommentBlock();
 				}
 			});
 			detailContentsHolder.on('click', '.js-more-recent-comments ', function () {
@@ -3124,8 +3133,16 @@ jQuery.Class(
 			panelsStorage[id] = type;
 			Quasar.plugins.LocalStorage.set(storageName, panelsStorage);
 		},
+		registerSendPdfFromPdfViewer: function (container) {
+			container.find('.js-email-pdf').on('click', function (e) {
+				let selectedPdfTemplate = $(e.currentTarget).closest('.js-detail-widget').find('.js-pdf-viewer-template').val();
+				let url = $(this).attr('data-url');
+				if (url && selectedPdfTemplate && selectedPdfTemplate > 0) {
+					window.open(url + selectedPdfTemplate, '_blank');
+				}
+			});
+		},
 		registerEvents: function () {
-			//this.triggerDisplayTypeEvent();
 			this.registerSendSmsSubmitEvent();
 			this.registerAjaxEditEvent();
 			this.registerRelatedRowClickEvent();
@@ -3140,6 +3157,7 @@ jQuery.Class(
 				// Not detail view page
 				return;
 			}
+			this.registerWidgetProductAndServices();
 			this.registerSetReadRecord(detailViewContainer);
 			this.registerEventForPicklistDependencySetup(this.getForm());
 			this.getForm().validationEngine(app.validationEngineOptionsForRecord);
@@ -3149,6 +3167,7 @@ jQuery.Class(
 			this.registerEventForTotalRecordsCount();
 			this.registerProgress();
 			this.registerChat(detailViewContainer);
+			this.registerSendPdfFromPdfViewer(detailViewContainer);
 		}
 	}
 );

@@ -76,6 +76,7 @@ class YetiForceUpdate
 			return false;
 		}
 		copy(__DIR__ . '/files/app/Db/Updater.php', ROOT_DIRECTORY . '/app/Db/Updater.php');
+		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
 		return true;
 	}
 
@@ -92,10 +93,11 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->importer->updateScheme();
+			$this->searchTable();
 
 			$this->importer->importData();
 			$this->updateDataImporter();
-			// $this->addModules(['x', 'x']);
+			$this->addModules(['Queue']);
 
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -105,6 +107,7 @@ class YetiForceUpdate
 			$this->importer->logs(false);
 			throw $ex;
 		}
+
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->updateData();
@@ -114,6 +117,11 @@ class YetiForceUpdate
 		$this->addAnonymizationFields();
 		$this->recalculateWorkingTime();
 		$this->relatedAttachmentsInPdf();
+		$this->updateMask();
+		$this->removeWorkflow();
+		$this->importer->dropTable(['u_yf_crmentity_last_changes', 'vtiger_shorturls']);
+		$this->importer->dropColumns([['w_yf_portal_user', 'logout_time'], ['w_yf_portal_user', 'language']]);
+		$this->addKeysToPicklist();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -144,15 +152,32 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
+		$db = \App\Db::getInstance();
+		$tableSchema = $db->getTableSchema('w_yf_portal_user', true);
+		$column = $tableSchema->getColumn('password_t');
+		if ($column) {
+			$db->createCommand('ALTER TABLE `w_yf_portal_user` CHANGE `password_t` `password` VARCHAR(500) NULL;')->execute();
+		}
+		$tableSchema = $db->getTableSchema('w_yf_servers', true);
+		$column = $tableSchema->getColumn('acceptable_url');
+		if ($column) {
+			$db->createCommand('ALTER TABLE `w_yf_servers` CHANGE `acceptable_url` `ips` VARCHAR(255) NULL;')->execute();
+		}
+
 		$batchInsert = \App\Db\Updater::batchInsert([
 			['a_yf_settings_modules',	['name' => 'Proxy', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'Proxy']],
 			['vtiger_settings_field',	['blockid' => vtlib\Deprecated::getSettingsBlockId('LBL_MAIL_TOOLS'), 'name' => 'LBL_CONFIG_PROXY', 'iconpath' => 'yfi yfi-server-configuration', 'description' => 'LBL_CONFIG_PROXY_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Proxy&view=Index', 'sequence' => 8, 'active' => 0, 'pinned' => 0, 'admin_access' => null], ['name' => 'LBL_CONFIG_PROXY']],
+			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'Webhook', 'label' => 'Webhook', 'classname' => 'Webhook', 'classpath' => 'modules/com_vtiger_workflow/tasks/Webhook.php', 'templatepath' => 'com_vtiger_workflow/taskforms/Webhook.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'Webhook']],
+			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'Upcoming events', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents'], ['linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityBeforeSave', 'handler_class' => 'Vtiger_AutoFillIban_Handler'], ['handler_class' => 'Vtiger_AutoFillIban_Handler']],
 		]);
 		$this->log('[info] batchInsert: ' . \App\Utils::varExport($batchInsert));
 
 		$batchDelete = \App\Db\Updater::batchDelete([
 			['a_yf_settings_modules', ['name' => 'HideBlocks']],
 			['vtiger_settings_field', ['name' => 'LBL_HIDEBLOCKS']],
+			['vtiger_eventhandlers', ['event_name' => ['Vtiger_RecordLabelUpdater_Handler', 'Accounts_SaveChanges_Handler', 'Vtiger_SharingPrivileges_Handler']]],
+			['vtiger_ws_fieldtype', ['fieldtype' => ['companySelect']]],
 		]);
 		$this->log('[info] batchDelete: ' . \App\Utils::varExport($batchDelete));
 
@@ -187,8 +212,375 @@ class YetiForceUpdate
 			['vtiger_field', ['displaytype' => 2], ['fieldlabel' => ['FL_MAGENTO_SERVER', 'FL_MAGENTO_ID', 'FL_MAGENTO_STATUS']]],
 			['vtiger_ssalesprocesses_status', ['record_state' => 2], ['ssalesprocesses_status' => ['PLL_SALE_COMPLETED', 'PLL_SALE_FAILED', 'PLL_SALE_CANCELLED']]],
 			['vtiger_crmentity', ['private' => 0], ['private' => null]],
+			['vtiger_relatedlists', ['label' => 'Occurrences'], ['tabid' => \App\Module::getModuleId('Contacts'), 'name' => 'getRelatedMembers', '' => 'LBL_PARTICIPANT']],
+			['vtiger_settings_field', ['premium' => 1], ['name' => ['LBL_MAIL_INTEGRATION', 'LBL_MAIL_RBL', 'LBL_MAGENTO', 'LBL_VULNERABILITIES', 'LBL_DAV_KEYS']]],
+			['vtiger_eventhandlers', ['privileges' => 0], ['not', ['privileges' => 0]]],
+			['vtiger_eventhandlers', ['privileges' => 1], [['or', ['event_name' => 'EditViewPreSave'], 'handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'OSSTimeControl_TimeControl_Handler', 'App\Extension\PwnedPassword']]]],
+			['vtiger_cron_task', ['max_exe_time' => 5], ['handler_class' => 'Calendar_SetCrmActivity_Cron', 'max_exe_time' => [null, '', 0]]],
+			['vtiger_field', ['defaultvalue' => null], ['fieldlabel' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 		]);
 		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
+		$this->emailTemplates();
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function emailTemplates()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$data['YetiPortalRegister'] = <<<'STR'
+		<table align="center" bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" class="table_full editable-bg-color bg_color_ffffff editable-bg-image" style="max-width:1024px;min-width:320px;">
+		<tbody>
+			<tr>
+				<td height="20">&nbsp;</td>
+			</tr>
+			<tr>
+				<td>
+				<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+					<tbody>
+						<tr>
+							<td bgcolor="#fcfcfc" style="border:1px solid #f2f2f2;border-radius:5px;padding:10px;">
+							<table align="center" border="0" cellpadding="0" cellspacing="0" class="no_float">
+								<tbody>
+									<tr>
+										<td align="center" class="editable-img">$(organization : logo)$</td>
+									</tr>
+								</tbody>
+							</table>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr>
+				<td height="25">&nbsp;</td>
+			</tr>
+			<tr>
+				<td>
+				<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+					<tbody>
+						<tr style="text-align:left;">
+							<td bgcolor="#fcfcfc" style="padding:30px 20px 30px 20px;border:1px solid #f2f2f2;border-radius:5px;">
+								<h1>Welcome to the YetiForce Client Portal!</h1>
+								<p>
+									Dear $(params : login)$,<br />
+									Your account has been created successfully. Below are your username and password:<br /><br />
+									Portal address: $(params : acceptable_url)$<br />
+									Your username: $(params : login)$<br />
+									Your password: $(params : password)$<br /><br />
+
+									Please log in to access all of the Portal features.<br /><br />
+									If you have any questions or need any assistance, please send us an email to help@yetiforce.com.
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr>
+				<td height="40">&nbsp;</td>
+			</tr>
+			<tr>
+				<td>
+				<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+					<tbody>
+						<tr>
+							<td align="center" class="text_color_c6c6c6" style="line-height:1;font-size:14px;font-weight:400;font-family:'Open Sans', Helvetica, sans-serif;">
+							<div class="editable-text"><span class="text_container">&copy; 2021 YetiForce Sp. z o.o. All Rights Reserved.</span></div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr>
+				<td height="20">&nbsp;</td>
+			</tr>
+		</tbody>
+	</table>
+STR;
+
+		$data['UsersResetPassword'] = <<<'STR'
+		<table align="center" bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" class="table_full editable-bg-color bg_color_ffffff editable-bg-image" style="max-width:1024px;min-width:320px;">
+	<tbody>
+		<tr>
+			<td height="20">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr>
+						<td bgcolor="#fcfcfc" style="border:1px solid #f2f2f2;border-radius:5px;padding:10px;">
+						<table align="center" border="0" cellpadding="0" cellspacing="0" class="no_float">
+							<tbody>
+								<tr>
+									<td align="center" class="editable-img">$(organization : logo)$</td>
+								</tr>
+							</tbody>
+						</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="25">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr style="text-align:left;">
+						<td bgcolor="#fcfcfc" style="padding:30px 20px 30px 20px;border:1px solid #f2f2f2;border-radius:5px;">
+							<p>Dear user,<br />
+								We received a password change request from you regarding your account in $(params : siteUrl)$<br />
+								In order to change your password click the following link (valid until $(params : expirationDate)$):<br /><br />
+								<a href="$(params : url)$">$(params : url)$</a><br />
+								$(params : token)$
+								<br /><br />
+								If you didn't request the passwords change please report it to the administrator; your password won't be changed.
+							</p>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="40">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr>
+						<td align="center" class="text_color_c6c6c6" style="line-height:1;font-size:14px;font-weight:400;font-family:'Open Sans', Helvetica, sans-serif;">
+						<div class="editable-text"><span class="text_container">&copy; 2021 YetiForce Sp. z o.o. All Rights Reserved.</span></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="20">&nbsp;</td>
+		</tr>
+	</tbody>
+</table>
+STR;
+		foreach ($data as $sysName => $content) {
+			$dbCommand->update('u_yf_emailtemplates', ['content' => $content], ['sys_name' => $sysName])->execute();
+		}
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Drop column.
+	 */
+	public function dropColumns()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$modules = [
+			'vtiger_customerdetails' => ['fields' => ['support_start_date', 'support_end_date'], 'moduleName' => 'Contacts'],
+		];
+		foreach ($modules as $value) {
+			$moduleName = $value['moduleName'];
+			$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+			$fields = $value['fields'];
+			if (!\is_array($fields)) {
+				$fields = [$fields];
+			}
+			foreach ($fields as $fieldName) {
+				if ($fieldModel = $moduleModel->getFieldByName($fieldName)) {
+					if (!$fieldModel->isActiveField() || !$this->isExistsValueForField($moduleName, $fieldName)) {
+						$this->removeField($fieldModel);
+					} else {
+						$dbCommand->update('vtiger_field', ['presence' => 1], ['fieldid' => $fieldModel->getId()])->execute();
+						$this->log('    [Warning] Field exists and is in use, deactivated: ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
+					}
+				} else {
+					$this->log("    [Info] Skip removing {$moduleName}:{$fieldName}, field not exists");
+				}
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function removeField($fieldModel)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " | {$fieldModel->getName()},{$fieldModel->getModuleName()} | " . date('Y-m-d H:i:s'));
+		try {
+			$fieldInstance = Settings_LayoutEditor_Field_Model::getInstance($fieldModel->getId());
+			$fieldInstance->delete();
+		} catch (\Throwable $e) {
+			$message = '    [ERROR] ' . __METHOD__ . ': ' . $e->__toString();
+			$this->log($message);
+			\App\Log::error($message);
+		}
+		\App\Cache::delete('ModuleFields', $fieldModel->getModuleId());
+		\App\Cache::staticDelete('ModuleFields', $fieldModel->getModuleId());
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function searchTable()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$tableSchema = $db->getTableSchema('u_yf_crmentity_search_label', true);
+		$column = $tableSchema->getColumn('tabid');
+		if (!$column) {
+			$db->createCommand()->truncateTable('u_yf_crmentity_search_label')->execute();
+			$db->createCommand('ALTER TABLE `u_yf_crmentity_search_label` ADD COLUMN `tabid` SMALLINT(5) NOT NULL AFTER `searchlabel`;')->execute();
+			$db->createCommand('ALTER TABLE `u_yf_crmentity_search_label` DROP INDEX `crmentity_searchlabel_setype`, ADD  KEY `crmentity_tabid_searchlabel` (`tabid`, `searchlabel`);')->execute();
+			$db->createCommand('ALTER TABLE `u_yf_crmentity_search_label` DROP COLUMN `setype`;')->execute();
+			$db->createCommand('ALTER TABLE `vtiger_entityname` CHANGE `turn_off` `turn_off` TINYINT(1) UNSIGNED DEFAULT 0 NOT NULL;')->execute();
+			$db->createCommand('ALTER TABLE `u_yf_crmentity_search_label` CHANGE `crmid` `crmid` INT (10) NOT NULL, ADD CONSTRAINT `fk_u_yf_crmentity_search_label` FOREIGN KEY (`crmid`) REFERENCES `vtiger_crmentity` (`crmid`) ON DELETE CASCADE;')->execute();
+		}
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	/**
+	 * Add modules.
+	 *
+	 * @param string[] $modules
+	 */
+	private function addModules(array $modules)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$command = \App\Db::getInstance()->createCommand();
+		foreach ($modules as $moduleName) {
+			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
+				$importInstance = new \vtlib\PackageImport();
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
+				$importInstance->importModule();
+				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				if ('Queue' === $moduleName && ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar())) {
+					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
+				}
+			} else {
+				$this->log('    [INFO] Module exist: ' . $moduleName);
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	public function addPicklistValue()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$fields = ['legal_form' => ['PLL_COMPANY'], 'login_method' => ['PLL_LDAP_2FA']];
+		foreach ($fields as $fieldName => $values) {
+			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['fieldname' => $fieldName, 'uitype' => [16, 33]])->scalar();
+			if ($fieldId && ($diffVal = array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)))) {
+				$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
+				$fieldModel->setPicklistValues($diffVal);
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function addKeysToPicklist()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
+		$dataReader = (new \App\Db\Query())->select(['fieldname'])->from('vtiger_field')->where(['uitype' => [15, 33]])->distinct()->createCommand()->query();
+		while ($name = $dataReader->readColumn(0)) {
+			$tableName = "vtiger_{$name}";
+			if (!$db->isTableExists($tableName)) {
+				$this->log('    [Warninig] Table not exists: ' . $tableName);
+				continue;
+			}
+			$tableSchema = $db->getTableSchema($tableName, true);
+			$column = $tableSchema->getColumn('picklist_valueid');
+			if (!$column) {
+				$this->log('    [Warninig] NO column picklist_valueid: ' . $tableName);
+				continue;
+			}
+			$keyExists = false;
+			$indexes = $db->getTableKeys($tableName);
+			foreach ($indexes as $index) {
+				if (isset($index['picklist_valueid'])) {
+					$keyExists = true;
+				}
+			}
+			if (!$keyExists) {
+				try {
+					$db->createCommand()->createIndex($name . '_valueid_idx', $tableName, 'picklist_valueid', true)->execute();
+				} catch (\Throwable $e) {
+					$this->log("    [ERROR] {$tableName} - " . $e->__toString());
+				}
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function removeWorkflow()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$workflows = ['HelpDesk' => [
+			'Ticket change: Send Email to Record Owner',
+			'Ticket change: Send Email to Record Account',
+			'Ticket Closed: Send Email to Record Owner',
+			'Ticket Closed: Send Email to Record Account',
+			'Ticket Creation: Send Email to Record Account'
+		]
+		];
+		foreach ($workflows as $moduleName => $names) {
+			$dataReader = (new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['module_name' => $moduleName, 'summary' => $names])->createCommand()->query();
+			while ($workflowId = $dataReader->readColumn(0)) {
+				$workflowModel = \Settings_Workflows_Record_Model::getInstance($workflowId);
+				if ($workflowModel->isDefault()) {
+					continue;
+				}
+				$active = false;
+				foreach ($workflowModel->getTasks() as $task) {
+					if ($task->active) {
+						$active = true;
+						break;
+					}
+				}
+				if (!$active) {
+					$workflowModel->delete();
+				}
+			}
+		}
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateMask()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$db = \App\Db::getInstance();
+		$dataReader = (new \App\Db\Query())->from('vtiger_field')->where(['not', ['fieldparams' => [null, '']]])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$params = $row['fieldparams'];
+			if (!\App\Json::isEmpty($params) && '{' !== $params[0] && '[' !== $params[0]) {
+				$fieldModel = new \Vtiger_Field_Model();
+				$fieldModel->initialize($row);
+				if (\in_array($fieldModel->getFieldDataType(), ['string', 'currency', 'url', 'integer', 'double'])) {
+					$fieldParams['mask'] = $params;
+					$db->createCommand()->update('vtiger_field', ['fieldparams' => \App\Json::encode($fieldParams)], ['fieldid' => $fieldModel->getId()])->execute();
+					echo 'update: ' . \App\Module::getModuleName($row['tabid']) . " - {$row['fieldname']}<br>";
+				}
+			}
+		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -204,7 +596,8 @@ class YetiForceUpdate
 				$dbCommand->dropTable('u_#__squoteenquiries_inventory')->execute();
 				$dbCommand->dropTable('u_#__squoteenquiries_invfield')->execute();
 				$dbCommand->dropTable('u_#__squoteenquiries_invmap')->execute();
-				$dbCommand->update('vtiger_tab', ['type' => 0], ['name' => 'SQuoteEnquiries'])->execute();
+				// $dbCommand->update('vtiger_tab', ['type' => 0], ['name' => 'SQuoteEnquiries'])->execute();
+				(new \App\BatchMethod(['method' => '\App\Module::changeType', 'params' => ['module' => 'SQuoteEnquiries', 'type' => \Vtiger_Module_Model::STANDARD_TYPE]]))->save();
 			}
 		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -363,10 +756,8 @@ class YetiForceUpdate
 		$importerType = new \App\Db\Importers\Base();
 		if (empty($fields)) {
 			$fields = [
-				[
-					112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '',
-					'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'moduleName' => 'FInvoiceProforma'
-				],
+				[112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => ['label' => 'LBL_CUSTOM_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 0, 'iscustom' => 0, 'icon' => null], 'moduleName' => 'EmailTemplates'],
+				[60, 3079, 'multicompanyid', 'vtiger_osspasswords', 1, 10, 'multicompanyid', 'FL_MULTICOMPANY', 0, 2, '', '4294967295', 16, 147, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_OSSPASSWORD_INFORMATION', 'blockData' => ['label' => 'LBL_OSSPASSWORD_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['MultiCompany'], 'moduleName' => 'OSSPasswords']
 			];
 		}
 
@@ -444,9 +835,27 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
+		$this->log('Fixer::baseModuleTools: ' . App\Db\Fixer::baseModuleTools());
+		$this->log('Fixer::baseModuleActions: ' . App\Db\Fixer::baseModuleActions());
+		$this->log('Fixer::profileField: ' . App\Db\Fixer::profileField());
+		\App\Module::createModuleMetaFile();
+
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$dbCommand->delete('u_#__crmentity_label', ['label' => ''])->execute();
 		$dbCommand->delete('u_#__crmentity_search_label', ['searchlabel' => ''])->execute();
+
+		$changeConfiguration = [
+			'debug' => [
+				'apiShowExceptionMessages' => \App\Config::debug('WEBSERVICE_SHOW_ERROR', \App\Config::debug('apiShowExceptionMessages')),
+				'apiShowExceptionReasonPhrase' => \App\Config::debug('WEBSERVICE_SHOW_ERROR', \App\Config::debug('apiShowExceptionReasonPhrase')),
+				'apiShowExceptionBacktrace' => \App\Config::debug('WEBSERVICE_SHOW_EXCEPTION_BACKTRACE', \App\Config::debug('apiShowExceptionBacktrace')),
+				'apiLogException' => \App\Config::debug('WEBSERVICE_LOG_ERRORS', \App\Config::debug('apiLogException')),
+				'apiLogAllRequests' => \App\Config::debug('WEBSERVICE_LOG_REQUESTS', \App\Config::debug('apiLogAllRequests')),
+			],
+			'performance' => [
+				'CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER' => 1000 == \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER') ? 10000 : \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER'),
+			]
+		];
 
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
@@ -469,6 +878,15 @@ class YetiForceUpdate
 			(new \App\ConfigFile('component', $component))->create();
 		}
 
+		foreach ($changeConfiguration as $type => $data) {
+			$configFile = (new \App\ConfigFile($type));
+			foreach ($data as $key => $value) {
+				$configFile->set($key, $value);
+			}
+			$configFile->create();
+		}
+
+		// (new \App\YetiForce\Register())->register();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}

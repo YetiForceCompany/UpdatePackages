@@ -3,7 +3,7 @@
 /**
  * YetiForce shop AbstractBaseProduct file.
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
@@ -105,11 +105,11 @@ abstract class AbstractBaseProduct
 	/**
 	 * Verify the product.
 	 *
-	 * @return bool
+	 * @return array
 	 */
-	public function verify(): bool
+	public function verify(): array
 	{
-		return true;
+		return ['status' => true];
 	}
 
 	/**
@@ -301,6 +301,11 @@ abstract class AbstractBaseProduct
 				$return = ['status' => true, 'type' => 'LBL_SHOP_RENEW', 'message' => 'LBL_SIZE_OF_YOUR_COMPANY_HAS_CHANGED'];
 			} elseif ($analyze = $this->analyzeConfiguration()) {
 				$return = array_merge(['status' => true], $analyze);
+			}
+		} else {
+			$check = $this->verify();
+			if (!$check['status']) {
+				$return = ['status' => true, 'type' => 'LBL_SHOP_RENEW', 'message' => $check['message']];
 			}
 		}
 		return $return;

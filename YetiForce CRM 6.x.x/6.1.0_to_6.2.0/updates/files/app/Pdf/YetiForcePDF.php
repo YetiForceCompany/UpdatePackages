@@ -3,7 +3,7 @@
 /**
  * Class using YetiForcePDF as a PDF creator.
  *
- * @package   App\Pdf
+ * @package App\Pdf
  *
  * @copyright YetiForce Sp. z o.o
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
@@ -532,17 +532,18 @@ class YetiForcePDF extends PDF
 			$fileName = ($this->getFileName() ?: time()) . '.pdf';
 		}
 		if (!$dest) {
-			$dest = 'I';
+			$dest = 'D';
 		}
 		$this->writeHTML();
 		$output = $this->pdf->render();
-		if ('I' !== $dest) {
+		if ('I' !== $dest && 'D' !== $dest) {
 			return file_put_contents($fileName, $output);
 		}
+		$destination = 'I' === $dest ? 'inline' : 'attachment';
 		header('accept-charset: utf-8');
 		header('content-type: application/pdf; charset=utf-8');
 		$basename = \App\Fields\File::sanitizeUploadFileName($fileName);
-		header("content-disposition: attachment; filename=\"{$basename}\"");
+		header("content-disposition: {$destination}; filename=\"{$basename}\"");
 		echo $output;
 	}
 

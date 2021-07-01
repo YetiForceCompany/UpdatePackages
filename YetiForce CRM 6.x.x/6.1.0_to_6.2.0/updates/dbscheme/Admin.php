@@ -79,6 +79,122 @@ class Admin extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
+			's_#__pauser' => [
+				'columns' => [
+					'key' => $this->stringType(50)->notNull(),
+					'value' => $this->stringType(100)->notNull(),
+				],
+				'index' => [
+					['key', 'key'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__api_session' => [
+				'columns' => [
+					'id' => $this->char(64)->notNull(),
+					'user_id' => $this->integer(10)->unsigned()->notNull(),
+					'language' => $this->stringType(10),
+					'created' => $this->dateTime()->notNull(),
+					'changed' => $this->dateTime(),
+					'params' => $this->text(),
+					'ip' => $this->stringType(100)->notNull(),
+					'last_method' => $this->stringType(100),
+					'agent' => $this->stringType(100)->notNull(),
+				],
+				'index' => [
+					['user_id', 'user_id'],
+				],
+				'primaryKeys' => [
+					['api_session_pk', 'id']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__api_user' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+					'server_id' => $this->integer(10)->unsigned()->notNull(),
+					'status' => $this->smallInteger(1)->notNull()->defaultValue(0),
+					'user_name' => $this->stringType(100)->notNull(),
+					'password' => $this->stringType(500),
+					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(1),
+					'login_time' => $this->dateTime(),
+					'crmid' => $this->integer(10),
+					'user_id' => $this->integer(10),
+					'login_method' => $this->stringType(30)->notNull()->defaultValue('PLL_PASSWORD'),
+					'auth' => $this->stringType(500),
+					'custom_params' => $this->text(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'index' => [
+					['server_id', 'server_id'],
+					['user_name', 'user_name'],
+					['user_name_status', ['user_name', 'status']],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__portal_session' => [
+				'columns' => [
+					'id' => $this->char(64)->notNull(),
+					'created' => $this->dateTime()->notNull(),
+					'changed' => $this->dateTime(),
+					'params' => $this->text(),
+					'ip' => $this->stringType(100)->notNull(),
+					'last_method' => $this->stringType(100),
+					'agent' => $this->stringType(100)->notNull(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__portal_user' => [
+				'columns' => [
+					'user_name' => $this->stringType(100)->notNull(),
+					'login_time' => $this->dateTime(),
+					'login_method' => $this->stringType(30)->notNull()->defaultValue('PLL_PASSWORD'),
+					'auth' => $this->stringType(500),
+					'custom_params' => $this->text(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			's_#__tokens' => [
+				'columns' => [
+					'uid' => $this->char(64)->notNull(),
+					'method' => $this->stringType()->notNull(),
+					'params' => $this->text()->notNull(),
+					'created_by_user' => $this->integer(10)->notNull(),
+					'created_date' => $this->dateTime()->notNull(),
+					'expiration_date' => $this->dateTime(),
+				],
+				'primaryKeys' => [
+					['tokens_pk', 'uid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__servers' => [
+				'columns' => [
+					'type' => $this->stringType(40)->notNull(),
+					'name' => $this->stringType(100)->notNull(),
+					'pass' => $this->stringType(500)->notNull(),
+					'api_key' => $this->stringType(500)->notNull(),
+					'url' => $this->stringType(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__manage_consents_user' => [
+				'columns' => [
+					'custom_params' => $this->text(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
 		];
 		$this->foreignKey = [
 			['a_#__record_converter_mapping_fk1', 'a_#__record_converter_mapping', 'id', 'a_#__record_converter', 'id', 'CASCADE', null],
