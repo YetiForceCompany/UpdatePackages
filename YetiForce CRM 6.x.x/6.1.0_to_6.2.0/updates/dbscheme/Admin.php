@@ -82,7 +82,7 @@ class Admin extends \App\Db\Importers\Base
 					'value' => $this->stringType(100)->notNull(),
 				],
 				'index' => [
-					['key', 'key'],
+					['key', 'key', true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -129,7 +129,7 @@ class Admin extends \App\Db\Importers\Base
 				],
 				'index' => [
 					['server_id', 'server_id'],
-					['user_name', 'user_name'],
+					['user_name', 'user_name', true],
 					['user_name_status', ['user_name', 'status']],
 				],
 				'engine' => 'InnoDB',
@@ -194,6 +194,8 @@ class Admin extends \App\Db\Importers\Base
 			],
 		];
 		$this->foreignKey = [
+			['w_#__api_session_ibfk_1', 'w_#__api_session', 'user_id', 'w_#__api_user', 'id', 'CASCADE', null],
+			['w_#__api_user_ibfk_1', 'w_#__api_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', null],
 			['a_#__record_converter_mapping_fk1', 'a_#__record_converter_mapping', 'id', 'a_#__record_converter', 'id', 'CASCADE', null],
 			['a_#__record_converter_mapping_fk2', 'a_#__record_converter_mapping', 'source_field', 'vtiger_field', 'fieldid', 'CASCADE', null],
 			['a_#__record_converter_mapping_fk3', 'a_#__record_converter_mapping', 'dest_field', 'vtiger_field', 'fieldid', 'CASCADE', null],

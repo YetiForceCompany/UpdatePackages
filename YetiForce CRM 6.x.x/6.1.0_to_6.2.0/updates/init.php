@@ -124,6 +124,8 @@ class YetiForceUpdate
 		$this->importer->dropTable(['u_yf_crmentity_last_changes', 'vtiger_shorturls']);
 		$this->importer->dropColumns([['w_yf_portal_user', 'logout_time'], ['w_yf_portal_user', 'language']]);
 		$this->addKeysToPicklist();
+		$this->dropColumns();
+		$this->createConfigFiles();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -225,6 +227,8 @@ class YetiForceUpdate
 				['or', ['max_exe_time' => null], ['max_exe_time' => 0]]
 			]],
 			['vtiger_field', ['defaultvalue' => null], ['fieldlabel' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-map'], ['name' => ['LBL_MAP']]],
+			['vtiger_settings_field', ['iconpath' => 'yfi yfi-twitter'], ['name' => ['LBL_SOCIAL_MEDIA']]],
 		]);
 		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		$this->emailTemplates();
@@ -421,6 +425,25 @@ STR;
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
+	/**
+	 * Checks if exists value for field.
+	 *
+	 * @param string $moduleName
+	 * @param string $fieldName
+	 */
+	private function isExistsValueForField($moduleName, $fieldName)
+	{
+		if ('Users' === $moduleName) {
+			return false;
+		}
+		$queryGenerator = new \App\QueryGenerator($moduleName);
+		$queryGenerator->permission = false;
+		$queryGenerator->setStateCondition('All');
+		$queryGenerator->addNativeCondition(['<>', 'vtiger_crmentity.deleted', [0]]);
+		$queryGenerator->addCondition($fieldName, '', 'ny');
+		return $queryGenerator->createQuery()->exists();
+	}
+
 	private function removeField($fieldModel)
 	{
 		$start = microtime(true);
@@ -567,7 +590,7 @@ STR;
 				}
 				$active = false;
 				foreach ($workflowModel->getTasks() as $task) {
-					if ($task->active) {
+					if ($task->getTaskObject()->active) {
 						$active = true;
 						break;
 					}
@@ -848,15 +871,16 @@ STR;
 	/**
 	 * Post update.
 	 */
-	public function postupdate(): bool
+	public function createConfigFiles(): bool
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
-
-		$this->log('Fixer::baseModuleTools: ' . App\Db\Fixer::baseModuleTools());
-		$this->log('Fixer::baseModuleActions: ' . App\Db\Fixer::baseModuleActions());
-		$this->log('Fixer::profileField: ' . App\Db\Fixer::profileField());
-		\App\Module::createModuleMetaFile();
+		$configTemplates = 'config/ConfigTemplates.php';
+		copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
+		$configTemplates = 'config/Components/ConfigTemplates.php';
+		copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
+		\App\Cache::resetOpcache();
+		clearstatcache();
 
 		$dbCommand = \App\Db::getInstance()->createCommand();
 		$dbCommand->delete('u_#__crmentity_label', ['label' => ''])->execute();
@@ -874,8 +898,6 @@ STR;
 				'CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER' => 1000 == \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER') ? 10000 : \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER'),
 			]
 		];
-		\App\Cache::resetOpcache();
-		clearstatcache();
 
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
@@ -906,10 +928,121 @@ STR;
 			$configFile->create();
 		}
 
-		// (new \App\YetiForce\Register())->register();
 		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
+	}
+
+	/**
+	 * Stop process.
+	 */
+	public function stopProcess()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		try {
+			$dbCommand = \App\Db::getInstance()->createCommand();
+			$dbCommand->insert('yetiforce_updates', [
+				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+				'name' => (string) $this->modulenode->label,
+				'from_version' => (string) $this->modulenode->from_version,
+				'to_version' => (string) $this->modulenode->to_version,
+				'result' => false,
+				'time' => date('Y-m-d H:i:s')
+			])->execute();
+			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+			\vtlib\Functions::recurseDelete('cache/updates');
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+
+			\App\Cache::clear();
+			\App\Cache::clearOpcache();
+			clearstatcache();
+		} catch (\Throwable $ex) {
+			file_put_contents('cache/logs/update.log', $ex->__toString(), FILE_APPEND);
+		}
+		$logs = '';
+		if ($this->error) {
+			$logs = '<blockquote style="font-size: 14px;background: #EDEDED;padding: 10px;white-space: pre-line;margin-top: 10px;">' . implode(PHP_EOL, $this->error) . '</blockquote>';
+		}
+
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
+		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
+    -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
+		<h1 class="modal-title"><span class="fas fa-skull-crossbones mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
+		</div><div class="modal-body" style="font-size: 27px;">Some errors appeared during the update.
+		We recommend verifying logs and updating the system once again.' . $logs . '<blockquote style="font-size: 14px;background: #EDEDED;padding: 10px;white-space: pre-line;">' . $this->importer->logs . '</blockquote></div><div class="modal-footer">
+		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . '"><span class="fas fa-home mr-2"></span>' . \App\Language::translate('LBL_HOME') . '<a>
+		</div></div></div></div>';
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		exit;
+	}
+
+	/**
+	 * Postupdate.
+	 */
+	public function postupdate()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		\App\Module::createModuleMetaFile();
+		\App\Cache::clear();
+		\App\Cache::resetOpcache();
+		if ($this->error || false !== strpos($this->importer->logs, 'Error')) {
+			$this->stopProcess();
+		} else {
+			$this->finishUpdate();
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+		exit;
+	}
+
+	public function finishUpdate()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+
+		(new \App\BatchMethod(['method' => '\App\Fixer::baseModuleTools', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Fixer::baseModuleActions', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Fixer::profileField', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => 'Settings_SharingAccess_Module_Model::recalculateSharingRules', 'params' => []]))->save();
+
+		$db->createCommand()->insert('yetiforce_updates', [
+			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+			'name' => (string) $this->modulenode->label,
+			'from_version' => (string) $this->modulenode->from_version,
+			'to_version' => (string) $this->modulenode->to_version,
+			'result' => 1,
+			'time' => date('Y-m-d H:i:s'),
+		])->execute();
+		$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+		\vtlib\Functions::recurseDelete('cache/updates/updates');
+		register_shutdown_function(function () {
+			$viewer = \Vtiger_Viewer::getInstance();
+			$viewer->clearAllCache();
+			\vtlib\Functions::recurseDelete('cache/templates_c');
+		});
+		\App\Cache::clear();
+		\App\Cache::clearOpcache();
+		\vtlib\Functions::recurseDelete('app_data/LanguagesUpdater.json');
+		\vtlib\Functions::recurseDelete('app_data/SystemUpdater.json');
+		\vtlib\Functions::recurseDelete('app_data/cron.php');
+		\vtlib\Functions::recurseDelete('app_data/ConfReport_AllErrors.php');
+		\vtlib\Functions::recurseDelete('app_data/shop.php');
+		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
+		ob_end_clean();
+		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
+    -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
+		<h1 class="modal-title"><span class="fas fa-thumbs-up mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
+		</div><div class="modal-body" style="font-size: 27px;">Successfully updated</div><div class="modal-footer">
+		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . 'index.php?module=Companies&parent=Settings&view=List&displayModal=online"><span class="fas fa-home mr-2"></span>Re-register your system<a>
+		</div></div></div></div>';
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 }

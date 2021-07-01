@@ -59,5 +59,8 @@ return [
 	'public_html/layouts/resources/libraries/jstree.checkbox.min.js',
 	'public_html/layouts/resources/libraries/jstree.edit.min.js',
 	'public_html/shorturl.php',
-	'shorturl.php'
+	'shorturl.php',
+	'vendor',
+	'public_html/vendor',
+	'public_html/libraries'
 ];
