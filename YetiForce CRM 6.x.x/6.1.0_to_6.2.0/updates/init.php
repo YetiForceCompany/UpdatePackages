@@ -9,6 +9,8 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
+ // SHA: c1a441071afc45ed512ee7eac596dfa1f694521f
+
 /**
  * YetiForceUpdate Class.
  */
@@ -163,6 +165,8 @@ class YetiForceUpdate
 		if ($column) {
 			$db->createCommand('ALTER TABLE `w_yf_servers` CHANGE `acceptable_url` `ips` VARCHAR(255) NULL;')->execute();
 		}
+		$importerType = new \App\Db\Importers\Base();
+		$db->createCommand()->alterColumn('a_yf_record_list_filter', 'id', $importerType->smallInteger(5)->unsigned()->autoIncrement()->notNull())->execute();
 
 		$batchInsert = \App\Db\Updater::batchInsert([
 			['a_yf_settings_modules',	['name' => 'Proxy', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'Proxy']],
@@ -212,11 +216,14 @@ class YetiForceUpdate
 			['vtiger_field', ['displaytype' => 2], ['fieldlabel' => ['FL_MAGENTO_SERVER', 'FL_MAGENTO_ID', 'FL_MAGENTO_STATUS']]],
 			['vtiger_ssalesprocesses_status', ['record_state' => 2], ['ssalesprocesses_status' => ['PLL_SALE_COMPLETED', 'PLL_SALE_FAILED', 'PLL_SALE_CANCELLED']]],
 			['vtiger_crmentity', ['private' => 0], ['private' => null]],
-			['vtiger_relatedlists', ['label' => 'Occurrences'], ['tabid' => \App\Module::getModuleId('Contacts'), 'name' => 'getRelatedMembers', '' => 'LBL_PARTICIPANT']],
+			['vtiger_relatedlists', ['label' => 'Occurrences'], ['tabid' => \App\Module::getModuleId('Contacts'), 'name' => 'getRelatedMembers', 'label' => 'LBL_PARTICIPANT']],
 			['vtiger_settings_field', ['premium' => 1], ['name' => ['LBL_MAIL_INTEGRATION', 'LBL_MAIL_RBL', 'LBL_MAGENTO', 'LBL_VULNERABILITIES', 'LBL_DAV_KEYS']]],
 			['vtiger_eventhandlers', ['privileges' => 0], ['not', ['privileges' => 0]]],
-			['vtiger_eventhandlers', ['privileges' => 1], [['or', ['event_name' => 'EditViewPreSave'], 'handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'OSSTimeControl_TimeControl_Handler', 'App\Extension\PwnedPassword']]]],
-			['vtiger_cron_task', ['max_exe_time' => 5], ['handler_class' => 'Calendar_SetCrmActivity_Cron', 'max_exe_time' => [null, '', 0]]],
+			['vtiger_eventhandlers', ['privileges' => 1], ['or', ['event_name' => 'EditViewPreSave'], ['handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'OSSTimeControl_TimeControl_Handler', 'App\Extension\PwnedPassword']]]],
+			['vtiger_cron_task', ['max_exe_time' => 5], ['and',
+				['handler_class' => 'Calendar_SetCrmActivity_Cron'],
+				['or', ['max_exe_time' => null], ['max_exe_time' => 0]]
+			]],
 			['vtiger_field', ['defaultvalue' => null], ['fieldlabel' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 		]);
 		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
@@ -483,6 +490,17 @@ STR;
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$fields = ['legal_form' => ['PLL_COMPANY'], 'login_method' => ['PLL_LDAP_2FA']];
 		foreach ($fields as $fieldName => $values) {
+			if ('legal_form' === $fieldName) {
+				$langues = \App\Language::getAll();
+				foreach (\App\Fields\Picklist::getValuesName($fieldName) as $value) {
+					if (false !== strpos($value, 'PLL_')) {
+						foreach ($langues as $langKey => $langLabel) {
+							\App\Language::translationModify($langKey, 'Accounts', 'php', $value, \App\Language::translate($value, 'Accounts', $langKey, false));
+							\App\Language::translationModify($langKey, 'Leads', 'php', $value, \App\Language::translate($value, 'Leads', $langKey, false));
+						}
+					}
+				}
+			}
 			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['fieldname' => $fieldName, 'uitype' => [16, 33]])->scalar();
 			if ($fieldId && ($diffVal = array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)))) {
 				$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
@@ -856,6 +874,8 @@ STR;
 				'CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER' => 1000 == \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER') ? 10000 : \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER'),
 			]
 		];
+		\App\Cache::resetOpcache();
+		clearstatcache();
 
 		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
@@ -887,6 +907,8 @@ STR;
 		}
 
 		// (new \App\YetiForce\Register())->register();
+		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}

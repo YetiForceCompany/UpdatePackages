@@ -45,7 +45,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			'a_#__record_list_filter' => [
 				'columns' => [
-					'id' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
+					'id' => $this->primaryKeyUnsigned(5),
 					'relationid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'rel_relationid' => $this->smallInteger(5)->unsigned()->notNull(),
 					'dest_relationid' => $this->smallInteger(5)->unsigned()->notNull(),
@@ -54,9 +54,6 @@ class Admin extends \App\Db\Importers\Base
 					['a_yf_record_list_filter_relationid_idx', 'relationid'],
 					['a_yf_record_list_filter_rel_relationid_idx', 'rel_relationid'],
 					['a_yf_record_list_filter_dest_relationid_idx', 'dest_relationid'],
-				],
-				'primaryKeys' => [
-					['record_list_filter_pk', 'id']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
