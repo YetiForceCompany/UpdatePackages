@@ -4,6 +4,8 @@ Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 
 Notes:
+- You will be redirected to the registration view once the update is completed.
+- Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
 - After the update process finishes, please also update all the languages in your system.
 - Registration verification mechanism has been modified so re-registration is required.
   In order to re-register your system go to "Software configuration > Company > Company details" select "Registration - OnLine" and click "Send" (https://yetiforce.com/en/marketplace/system-registration).

@@ -10,8 +10,6 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
- // SHA: 2685c436c3f6b0583de92ccee94003e34f7a1c4f
-
 /**
  * YetiForceUpdate Class.
  */
@@ -85,7 +83,9 @@ class YetiForceUpdate
 		}
 		copy(__DIR__ . '/files/app/Db/Updater.php', ROOT_DIRECTORY . '/app/Db/Updater.php');
 		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
+		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
 		copy(__DIR__ . '/files/app/ConfigFile.php', ROOT_DIRECTORY . '/app/ConfigFile.php');
+		copy(__DIR__ . '/files/app/YetiForce/Shop/AbstractBaseProduct.php', ROOT_DIRECTORY . '/app/YetiForce/Shop/AbstractBaseProduct.php');
 		return true;
 	}
 
@@ -184,7 +184,7 @@ class YetiForceUpdate
 			['vtiger_settings_field',	['blockid' => vtlib\Deprecated::getSettingsBlockId('LBL_MAIL_TOOLS'), 'name' => 'LBL_CONFIG_PROXY', 'iconpath' => 'yfi yfi-server-configuration', 'description' => 'LBL_CONFIG_PROXY_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Proxy&view=Index', 'sequence' => 8, 'active' => 0, 'pinned' => 0, 'admin_access' => null], ['name' => 'LBL_CONFIG_PROXY']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'Webhook', 'label' => 'Webhook', 'classname' => 'Webhook', 'classpath' => 'modules/com_vtiger_workflow/tasks/Webhook.php', 'templatepath' => 'com_vtiger_workflow/taskforms/Webhook.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'Webhook']],
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'Upcoming events', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents'], ['linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents']],
-			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Queue_Queue_Handler', 'include_modules'], ['handler_class' => 'Queue_Queue_Handler']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Queue_Queue_Handler', 'include_modules' => 'Queue'], ['handler_class' => 'Queue_Queue_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityBeforeSave', 'handler_class' => 'Vtiger_AutoFillIban_Handler'], ['handler_class' => 'Vtiger_AutoFillIban_Handler']],
 		]);
 		$this->log('[INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
@@ -244,6 +244,7 @@ class YetiForceUpdate
 		]);
 		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		$this->emailTemplates();
+		$this->addPicklistValue();
 
 		include_once 'modules/ModComments/ModComments.php';
 		if (class_exists('ModComments')) {
@@ -1032,6 +1033,11 @@ STR;
 		copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
 		$configTemplates = 'config/Components/ConfigTemplates.php';
 		copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
+		foreach (['OSSMail', 'OSSMailScanner', 'Calendar', 'IStorages', 'Notification'] as $module) {
+			$configTemplates = "modules/{$module}/ConfigTemplate.php";
+			copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
+		}
+
 		\App\Cache::resetOpcache();
 		clearstatcache();
 
@@ -1185,13 +1191,7 @@ STR;
 		\vtlib\Functions::recurseDelete('app_data/shop.php');
 		file_put_contents('cache/logs/update.log', ob_get_contents(), FILE_APPEND);
 		ob_end_clean();
-		echo '<div class="modal in" style="display: block;overflow-y: auto;top: 30px;"><div class="modal-dialog" style="max-width: 80%;"><div class="modal-content" style="-webkit-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-moz-box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: inset 2px 2px 14px 1px rgba(0,0,0,0.75);-webkit-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);
-    -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
-		<h1 class="modal-title"><span class="fas fa-thumbs-up mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
-		</div><div class="modal-body" style="font-size: 27px;">Successfully updated</div><div class="modal-footer">
-		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . 'index.php?module=Companies&parent=Settings&view=List&displayModal=online"><span class="fas fa-globe mr-2"></span>Re-register your system<a>
-		</div></div></div></div>';
-
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		header('location: ' . \App\Config::main('site_URL') . 'index.php?module=Companies&parent=Settings&view=List&displayModal=online');
 	}
 }
