@@ -640,16 +640,16 @@
         },
         {
             "name": "globalcitizen/php-iban",
-            "version": "v4.0.0",
+            "version": "v4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/globalcitizen/php-iban.git",
-                "reference": "a8b0a1bbf42f25d977a28270787212542ba7e71d"
+                "reference": "5bf5d7df0bd0158460897f2b9c26eda91bbf9b7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/globalcitizen/php-iban/zipball/a8b0a1bbf42f25d977a28270787212542ba7e71d",
-                "reference": "a8b0a1bbf42f25d977a28270787212542ba7e71d",
+                "url": "https://api.github.com/repos/globalcitizen/php-iban/zipball/5bf5d7df0bd0158460897f2b9c26eda91bbf9b7d",
+                "reference": "5bf5d7df0bd0158460897f2b9c26eda91bbf9b7d",
                 "shasum": ""
             },
             "type": "library",
@@ -666,9 +666,9 @@
             "description": "php-iban is a library for parsing and validating IBAN (and IIBAN) bank account information.",
             "support": {
                 "issues": "https://github.com/globalcitizen/php-iban/issues",
-                "source": "https://github.com/globalcitizen/php-iban/tree/v4.0.0"
+                "source": "https://github.com/globalcitizen/php-iban/tree/v4.1.0"
             },
-            "time": "2020-08-24T08:27:30+00:00"
+            "time": "2021-07-01T23:55:02+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

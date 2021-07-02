@@ -10,7 +10,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
- // SHA: c1a441071afc45ed512ee7eac596dfa1f694521f
+ // SHA: 2685c436c3f6b0583de92ccee94003e34f7a1c4f
 
 /**
  * YetiForceUpdate Class.
@@ -85,6 +85,7 @@ class YetiForceUpdate
 		}
 		copy(__DIR__ . '/files/app/Db/Updater.php', ROOT_DIRECTORY . '/app/Db/Updater.php');
 		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
+		copy(__DIR__ . '/files/app/ConfigFile.php', ROOT_DIRECTORY . '/app/ConfigFile.php');
 		return true;
 	}
 
@@ -183,9 +184,10 @@ class YetiForceUpdate
 			['vtiger_settings_field',	['blockid' => vtlib\Deprecated::getSettingsBlockId('LBL_MAIL_TOOLS'), 'name' => 'LBL_CONFIG_PROXY', 'iconpath' => 'yfi yfi-server-configuration', 'description' => 'LBL_CONFIG_PROXY_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Proxy&view=Index', 'sequence' => 8, 'active' => 0, 'pinned' => 0, 'admin_access' => null], ['name' => 'LBL_CONFIG_PROXY']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'Webhook', 'label' => 'Webhook', 'classname' => 'Webhook', 'classpath' => 'modules/com_vtiger_workflow/tasks/Webhook.php', 'templatepath' => 'com_vtiger_workflow/taskforms/Webhook.tpl', 'modules' => '{"include":[],"exclude":[]}'], ['tasktypename' => 'Webhook']],
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'Upcoming events', 'linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents'], ['linkurl' => 'index.php?module=Home&view=ShowWidget&name=UpcomingEvents']],
+			['vtiger_eventhandlers', ['event_name' => 'EntityAfterSave', 'handler_class' => 'Queue_Queue_Handler', 'include_modules'], ['handler_class' => 'Queue_Queue_Handler']],
 			['vtiger_eventhandlers', ['event_name' => 'EntityBeforeSave', 'handler_class' => 'Vtiger_AutoFillIban_Handler'], ['handler_class' => 'Vtiger_AutoFillIban_Handler']],
 		]);
-		$this->log('[info] batchInsert: ' . \App\Utils::varExport($batchInsert));
+		$this->log('[INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 
 		$batchDelete = \App\Db\Updater::batchDelete([
 			['a_yf_settings_modules', ['name' => 'HideBlocks']],
@@ -193,7 +195,7 @@ class YetiForceUpdate
 			['vtiger_eventhandlers', ['handler_class' => ['Vtiger_RecordLabelUpdater_Handler', 'Accounts_SaveChanges_Handler', 'Vtiger_SharingPrivileges_Handler']]],
 			['vtiger_ws_fieldtype', ['fieldtype' => ['companySelect']]],
 		]);
-		$this->log('[info] batchDelete: ' . \App\Utils::varExport($batchDelete));
+		$this->log('[INFO] batchDelete: ' . \App\Utils::varExport($batchDelete));
 
 		$batchUpdate = \App\Db\Updater::batchUpdate([
 			['vtiger_blocks', ['icon' => 'fas fa-money-check-alt'], ['blocklabel' => 'LBL_CURRENCY_CONFIGURATION', 'tabid' => \App\Module::getModuleId('Users')]],
@@ -240,13 +242,18 @@ class YetiForceUpdate
 			['vtiger_queue_status', ['presence' => 0], ['queue_status' => ['PLL_ACCEPTED', 'PLL_COMPLETED', 'PLL_CANCELLED']]],
 			['vtiger_relatedlists', ['presence' => 1], ['related_tabid' => (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => 'Queue'])->scalar()]],
 		]);
-		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
+		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		$this->emailTemplates();
 
 		include_once 'modules/ModComments/ModComments.php';
 		if (class_exists('ModComments')) {
 			\ModComments::addWidgetTo(['Queue']);
 		}
+
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$dbCommand->delete('u_#__crmentity_label', ['label' => ''])->execute();
+		$dbCommand->delete('u_#__crmentity_search_label', ['searchlabel' => ''])->execute();
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -532,7 +539,7 @@ STR;
 						$this->log('    [Warning] Field exists and is in use, deactivated: ' . $fieldModel->getName() . ' ' . $fieldModel->getModuleName());
 					}
 				} else {
-					$this->log("    [Info] Skip removing {$moduleName}:{$fieldName}, field not exists");
+					$this->log("    [INFO] Skip removing {$moduleName}:{$fieldName}, field not exists");
 				}
 			}
 		}
@@ -1027,10 +1034,6 @@ STR;
 		copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
 		\App\Cache::resetOpcache();
 		clearstatcache();
-
-		$dbCommand = \App\Db::getInstance()->createCommand();
-		$dbCommand->delete('u_#__crmentity_label', ['label' => ''])->execute();
-		$dbCommand->delete('u_#__crmentity_search_label', ['searchlabel' => ''])->execute();
 
 		$changeConfiguration = [
 			'debug' => [
