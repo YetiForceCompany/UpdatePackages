@@ -5,8 +5,9 @@
  * @package   YetiForce.UpdatePackages
  *
  * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
  // SHA: c1a441071afc45ed512ee7eac596dfa1f694521f
@@ -37,6 +38,8 @@ class YetiForceUpdate
 	 */
 	private $importer;
 
+	private $error = [];
+
 	/**
 	 * Constructor.
 	 *
@@ -56,6 +59,9 @@ class YetiForceUpdate
 		$fp = fopen($this->logFile, 'a+');
 		fwrite($fp, $message . PHP_EOL);
 		fclose($fp);
+		if (false !== stripos($message, '[ERROR]')) {
+			$this->error[] = $message;
+		}
 	}
 
 	/**
@@ -114,13 +120,15 @@ class YetiForceUpdate
 		$this->importer->checkIntegrity(true);
 		$this->updateData();
 		$this->addFields();
+		$this->setRelations();
+		$this->addMissingRelations();
 		$this->addRecordListFilterValues();
 		$this->dropInvTable();
 		$this->addAnonymizationFields();
 		$this->recalculateWorkingTime();
 		$this->relatedAttachmentsInPdf();
 		$this->updateMask();
-		$this->removeWorkflow();
+		$this->workflow();
 		$this->importer->dropTable(['u_yf_crmentity_last_changes', 'vtiger_shorturls']);
 		$this->importer->dropColumns([['w_yf_portal_user', 'logout_time'], ['w_yf_portal_user', 'language']]);
 		$this->addKeysToPicklist();
@@ -182,7 +190,7 @@ class YetiForceUpdate
 		$batchDelete = \App\Db\Updater::batchDelete([
 			['a_yf_settings_modules', ['name' => 'HideBlocks']],
 			['vtiger_settings_field', ['name' => 'LBL_HIDEBLOCKS']],
-			['vtiger_eventhandlers', ['event_name' => ['Vtiger_RecordLabelUpdater_Handler', 'Accounts_SaveChanges_Handler', 'Vtiger_SharingPrivileges_Handler']]],
+			['vtiger_eventhandlers', ['handler_class' => ['Vtiger_RecordLabelUpdater_Handler', 'Accounts_SaveChanges_Handler', 'Vtiger_SharingPrivileges_Handler']]],
 			['vtiger_ws_fieldtype', ['fieldtype' => ['companySelect']]],
 		]);
 		$this->log('[info] batchDelete: ' . \App\Utils::varExport($batchDelete));
@@ -221,18 +229,124 @@ class YetiForceUpdate
 			['vtiger_relatedlists', ['label' => 'Occurrences'], ['tabid' => \App\Module::getModuleId('Contacts'), 'name' => 'getRelatedMembers', 'label' => 'LBL_PARTICIPANT']],
 			['vtiger_settings_field', ['premium' => 1], ['name' => ['LBL_MAIL_INTEGRATION', 'LBL_MAIL_RBL', 'LBL_MAGENTO', 'LBL_VULNERABILITIES', 'LBL_DAV_KEYS']]],
 			['vtiger_eventhandlers', ['privileges' => 0], ['not', ['privileges' => 0]]],
-			['vtiger_eventhandlers', ['privileges' => 1], ['or', ['event_name' => 'EditViewPreSave'], ['handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'OSSTimeControl_TimeControl_Handler', 'App\Extension\PwnedPassword']]]],
+			['vtiger_eventhandlers', ['privileges' => 1], ['or', ['event_name' => 'EditViewPreSave'], ['handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'App\Extension\PwnedPassword', 'Vtiger_AutoFillIban_Handler']]]],
 			['vtiger_cron_task', ['max_exe_time' => 5], ['and',
 				['handler_class' => 'Calendar_SetCrmActivity_Cron'],
 				['or', ['max_exe_time' => null], ['max_exe_time' => 0]]
 			]],
-			['vtiger_field', ['defaultvalue' => null], ['fieldlabel' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
+			['vtiger_field', ['defaultvalue' => null], ['fieldname' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 			['vtiger_settings_field', ['iconpath' => 'yfi yfi-map'], ['name' => ['LBL_MAP']]],
 			['vtiger_settings_field', ['iconpath' => 'yfi yfi-twitter'], ['name' => ['LBL_SOCIAL_MEDIA']]],
+			['vtiger_queue_status', ['presence' => 0], ['queue_status' => ['PLL_ACCEPTED', 'PLL_COMPLETED', 'PLL_CANCELLED']]],
+			['vtiger_relatedlists', ['presence' => 1], ['related_tabid' => (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => 'Queue'])->scalar()]],
 		]);
 		$this->log('[info] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		$this->emailTemplates();
+
+		include_once 'modules/ModComments/ModComments.php';
+		if (class_exists('ModComments')) {
+			\ModComments::addWidgetTo(['Queue']);
+		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function setRelations()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+
+		$ralations = [
+			['type' => 'add', 'data' => [659, 'ServiceContracts', 'Contacts', 'getRelatedList', 1, 'Contacts', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null, null]],
+			['type' => 'add', 'data' => [660, 'Contacts', 'ServiceContracts', 'getRelatedList', 13, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null, null]],
+			// ['type' => 'add', 'data' => [661,'SSalesProcesses','SSalesProcesses','getDependentsList',25,'SSalesProcesses',1,'',0,0,0,'RelatedTab','parentid',null]],
+		];
+
+		foreach ($ralations as $relation) {
+			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName,$customView] = $relation['data'];
+			$tabid = \App\Module::getModuleId($moduleName);
+			$relTabid = \App\Module::getModuleId($relModuleName);
+			$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
+			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
+			if (!$isExists && 'add' === $relation['type']) {
+				$dbCommand->insert('vtiger_relatedlists', [
+					'tabid' => $tabid,
+					'related_tabid' => $relTabid,
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName
+				])->execute();
+			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
+				$where = $relation['where'] ?? $where;
+				$dbCommand->update('vtiger_relatedlists', [
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName
+				], $where)->execute();
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	public function addMissingRelations()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$query = (new \App\Db\Query())->select(['tabid', 'fieldname'])->from('vtiger_field')->where(['uitype' => 10])->andWhere(['not', ['tablename' => ['vtiger_modcomments']]]);
+		$dataReader = $query->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$moduleModel = Vtiger_Module_Model::getInstance($row['tabid']);
+			if ('ModComments' === $moduleModel->getName()) {
+				continue;
+			}
+			$fieldName = $row['fieldname'];
+			$fieldModel = $moduleModel->getFieldByName($fieldName);
+			foreach ($fieldModel->getReferenceList() as $relatedModule) {
+				if ('ModComments' === $relatedModule || ($relatedModule === $moduleModel->getName() && 'SSalesProcesses' !== $relatedModule)) {
+					continue;
+				}
+				$targetModule = vtlib\Module::getInstance($relatedModule);
+				$relation = \App\Relation::getAll($targetModule->id, ['related_tabid' => $row['tabid'], 'name' => 'getDependentsList']);
+				$relation = \is_array($relation) ? current($relation) : $relation;
+				if (!$relation || ($relation && empty($relation['field_name']))) {
+					if ($relation) {
+						$dbCommand->update('vtiger_relatedlists', ['field_name' => $fieldName], ['relation_id' => $relation['relation_id']])->execute();
+						$this->log("[INFO] Updated relation data: {$relation['relation_id']}:{$fieldName}({$targetModule->name}:{$moduleModel->getName()})");
+					} else {
+						$sequence = $targetModule->__getNextRelatedListSequence();
+						$dbCommand->insert('vtiger_relatedlists', [
+							'tabid' => $targetModule->id,
+							'related_tabid' => $moduleModel->id,
+							'name' => 'getDependentsList',
+							'sequence' => $sequence,
+							'label' => $moduleModel->getName(),
+							'presence' => 1,
+							'actions' => $relatedModule === $moduleModel->getName() ? '' : 'ADD',
+							'field_name' => $fieldName,
+						])->execute();
+						\App\Cache::delete('App\Relation::getAll', '');
+						$this->log("[INFO] Added missing relation: {$targetModule->name}:{$moduleModel->getName()}");
+					}
+				}
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	public function emailTemplates()
@@ -525,7 +639,9 @@ STR;
 				}
 			}
 			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['fieldname' => $fieldName, 'uitype' => [16, 33]])->scalar();
+			$this->log("[INFO] PICKLIST VALUES: {$fieldName} " . print_r($fieldName, array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)), $values, \App\Fields\Picklist::getValuesName($fieldName)));
 			if ($fieldId && ($diffVal = array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)))) {
+				$this->log("[INFO] PICKLIST VALUES SET IN: {$fieldName}");
 				$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
 				$fieldModel->setPicklistValues($diffVal);
 			}
@@ -569,10 +685,11 @@ STR;
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	public function removeWorkflow()
+	public function workflow()
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
 		$workflows = ['HelpDesk' => [
 			'Ticket change: Send Email to Record Owner',
 			'Ticket change: Send Email to Record Account',
@@ -597,6 +714,33 @@ STR;
 				}
 				if (!$active) {
 					$workflowModel->delete();
+				}
+			}
+		}
+
+		\Vtiger_Loader::includeOnce('~modules/com_vtiger_workflow/VTTask.php');
+		require_once 'modules/com_vtiger_workflow/tasks/SumFieldFromDependent.php';
+		$query = (new \App\Db\Query())->select(['task_id', 'task'])->from('com_vtiger_workflowtasks')->where(['summary' => 'It sums up all open sales orders']);
+		$dataReader = $query->createCommand()->query();
+		$fieldName = 'ssingleorders_status';
+		$singleOrderStatuses = \App\Fields\Picklist::getValuesName($fieldName);
+		while ($row = $dataReader->read()) {
+			$update = false;
+			$unserializeTask = unserialize($row['task']);
+			if (!empty($unserializeTask->conditions['rules'])) {
+				foreach ($unserializeTask->conditions['rules'] as &$value) {
+					$field = explode(':', $value['fieldname']);
+					$picklistValues = explode('##', $value['value']);
+					if ($fieldName === $field[0]
+						&& !array_diff($picklistValues, ['PLL_DRAFT', 'PLL_IN_REALIZATION', 'PLL_FOR_VERIFICATION', 'PLL_AWAITING_SIGNATURES']) && array_diff($picklistValues, $singleOrderStatuses)
+						&& !array_diff(['PLL_NEW', 'PLL_PAYMENT_REVIEW', 'PLL_PROCESSING'], $singleOrderStatuses)
+					) {
+						$value['value'] = implode('##', ['PLL_NEW', 'PLL_PAYMENT_REVIEW', 'PLL_PROCESSING']);
+						$update = true;
+					}
+				}
+				if ($update) {
+					$dbCommand->update('com_vtiger_workflowtasks', ['task' => serialize($unserializeTask)], ['task_id' => $row['task_id']])->execute();
 				}
 			}
 		}
@@ -722,61 +866,63 @@ STR;
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
 		$dbCommand = \App\Db::getInstance()->createCommand();
-		$tabRel = [
-			// The module from which we list the record in the modal window
-			'Contacts' => [
-				// source module [Edit, Detail] => ['fieldName' => name of the related field in the source module, 'moduleName' => module name of the related field in the source module]
-				'HelpDesk' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
-				'Project' => ['fieldName' => 'linktoaccountscontacts', 'moduleName' => 'Accounts'],
-				'SSalesProcesses' => ['fieldName' => 'related_to', 'moduleName' => 'Accounts'],
-				'SQuoteEnquiries' => ['fieldName' => 'accountid', 'moduleName' => 'Accounts'],
-			],
-			'ServiceContracts' => [
-				'Assets' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
-				'OSSSoldServices' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
-			],
-			'Assets' => [
-				'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
-			],
-			'OSSSoldServices' => [
-				'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
-			],
-			'SSalesProcesses' => [
-				'Project' => ['fieldName' => 'linktoaccountscontacts', 'moduleName' => 'Accounts']
-			]
-		];
-		foreach ($tabRel as $relModule => $relData) {
-			foreach ($relData as $sourceModule => $fieldsData) {
-				$sourceModuleModel = Vtiger_Module_Model::getInstance($sourceModule);
-				$sourceModuleId = \App\Module::getModuleId($sourceModule);
-				$relModuleId = \App\Module::getModuleId($relModule);
-				$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $sourceModuleId, 'related_tabid' => $relModuleId])->all();
-				if (!$query) {
-					$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $relModuleId, 'related_tabid' => $sourceModuleId])->all();
-				}
-				$count = \count($query);
-				if (1 === $count) {
-					$currentData = current($query);
-					$sourceRelationId = $currentData['relation_id'];
-					$relField = $sourceModuleModel->getFieldByName($fieldsData['fieldName']);
-					if (\in_array($fieldsData['moduleName'], $relField->getReferenceList())) {
-						$relModuleName = $fieldsData['moduleName'];
-						$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => \App\Module::getModuleId($relModuleName), 'related_tabid' => $sourceModuleId, 'field_name' => $relField->getName()])->one();
-						$relRelationId = $query['relation_id'];
+		if (!(new \App\Db\Query())->from('a_yf_record_list_filter')->exists()) {
+			$tabRel = [
+				// The module from which we list the record in the modal window
+				'Contacts' => [
+					// source module [Edit, Detail] => ['fieldName' => name of the related field in the source module, 'moduleName' => module name of the related field in the source module]
+					'HelpDesk' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
+					'Project' => ['fieldName' => 'linktoaccountscontacts', 'moduleName' => 'Accounts'],
+					'SSalesProcesses' => ['fieldName' => 'related_to', 'moduleName' => 'Accounts'],
+					'SQuoteEnquiries' => ['fieldName' => 'accountid', 'moduleName' => 'Accounts'],
+				],
+				'ServiceContracts' => [
+					'Assets' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
+					'OSSSoldServices' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
+				],
+				'Assets' => [
+					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
+				],
+				'OSSSoldServices' => [
+					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
+				],
+				'SSalesProcesses' => [
+					'SSalesProcesses' => ['fieldName' => 'related_to', 'moduleName' => 'Accounts']
+				]
+			];
+			foreach ($tabRel as $relModule => $relData) {
+				foreach ($relData as $sourceModule => $fieldsData) {
+					$sourceModuleModel = Vtiger_Module_Model::getInstance($sourceModule);
+					$sourceModuleId = \App\Module::getModuleId($sourceModule);
+					$relModuleId = \App\Module::getModuleId($relModule);
+					$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $sourceModuleId, 'related_tabid' => $relModuleId])->all();
+					if (!$query) {
+						$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $relModuleId, 'related_tabid' => $sourceModuleId])->all();
+					}
+					$count = \count($query);
+					if (1 === $count) {
+						$currentData = current($query);
+						$sourceRelationId = $currentData['relation_id'];
+						$relField = $sourceModuleModel->getFieldByName($fieldsData['fieldName']);
+						if ($relField && \in_array($fieldsData['moduleName'], $relField->getReferenceList())) {
+							$relModuleName = $fieldsData['moduleName'];
+							$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => \App\Module::getModuleId($relModuleName), 'related_tabid' => $sourceModuleId, 'field_name' => $relField->getName()])->one();
+							$relRelationId = $query['relation_id'];
 
-						$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => \App\Module::getModuleId($relModuleName), 'related_tabid' => \App\Module::getModuleId($relModule)])->one();
-						$desRelationId = $query['relation_id'];
+							$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => \App\Module::getModuleId($relModuleName), 'related_tabid' => \App\Module::getModuleId($relModule)])->one();
+							$desRelationId = $query['relation_id'];
 
-						if (!(new \App\Db\Query())->from('a_yf_record_list_filter')->where(['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId])->exists()) {
-							$dbCommand->insert('a_yf_record_list_filter',
-							['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId]
-							)->execute();
+							if (!(new \App\Db\Query())->from('a_yf_record_list_filter')->where(['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId])->exists()) {
+								$dbCommand->insert('a_yf_record_list_filter',
+								['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId]
+								)->execute();
+							}
+						} else {
+							$this->log("[WARNING] The module does not exist in the relationship field: {$relModule} >> {$sourceModule} | relationid: {$sourceRelationId} | " . PHP_EOL . print_r($fieldsData, true));
 						}
 					} else {
-						$this->log("[WARNING] The module does not exist in the relationship field: {$relModule} >> {$sourceModule} | relationid: {$sourceRelationId} | " . PHP_EOL . print_r($fieldsData, true));
+						$this->log("[INFO] No relationship was found ($count): {$relModule} >> {$sourceModule} | " . PHP_EOL . print_r($fieldsData, true));
 					}
-				} else {
-					$this->log("[INFO] No relationship was found ($count): {$relModule} >> {$sourceModule} | " . PHP_EOL . print_r($fieldsData, true));
 				}
 			}
 		}
@@ -945,13 +1091,13 @@ STR;
 			$dbCommand = \App\Db::getInstance()->createCommand();
 			$dbCommand->insert('yetiforce_updates', [
 				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
-				'name' => (string) $this->modulenode->label,
-				'from_version' => (string) $this->modulenode->from_version,
-				'to_version' => (string) $this->modulenode->to_version,
+				'name' => (string) $this->moduleNode->label,
+				'from_version' => (string) $this->moduleNode->from_version,
+				'to_version' => (string) $this->moduleNode->to_version,
 				'result' => false,
 				'time' => date('Y-m-d H:i:s')
 			])->execute();
-			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->moduleNode->to_version])->execute();
 			\vtlib\Functions::recurseDelete('cache/updates');
 			\vtlib\Functions::recurseDelete('cache/templates_c');
 
@@ -1006,21 +1152,21 @@ STR;
 
 		$db = \App\Db::getInstance();
 
-		(new \App\BatchMethod(['method' => '\App\Fixer::baseModuleTools', 'params' => []]))->save();
-		(new \App\BatchMethod(['method' => '\App\Fixer::baseModuleActions', 'params' => []]))->save();
-		(new \App\BatchMethod(['method' => '\App\Fixer::profileField', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleTools', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleActions', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::profileField', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => 'Settings_SharingAccess_Module_Model::recalculateSharingRules', 'params' => []]))->save();
 
 		$db->createCommand()->insert('yetiforce_updates', [
 			'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
-			'name' => (string) $this->modulenode->label,
-			'from_version' => (string) $this->modulenode->from_version,
-			'to_version' => (string) $this->modulenode->to_version,
+			'name' => (string) $this->moduleNode->label,
+			'from_version' => (string) $this->moduleNode->from_version,
+			'to_version' => (string) $this->moduleNode->to_version,
 			'result' => 1,
 			'time' => date('Y-m-d H:i:s'),
 		])->execute();
-		$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
+		$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->moduleNode->to_version])->execute();
 		\vtlib\Functions::recurseDelete('cache/updates/updates');
 		register_shutdown_function(function () {
 			$viewer = \Vtiger_Viewer::getInstance();
@@ -1040,7 +1186,7 @@ STR;
     -moz-box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);box-shadow: 2px 2px 14px 1px rgba(0,0,0,0.75);"><div class="modal-header">
 		<h1 class="modal-title"><span class="fas fa-thumbs-up mr-2"></span>' . \App\Language::translate('LBL__UPDATING_MODULE', 'Settings:ModuleManager') . '</h1>
 		</div><div class="modal-body" style="font-size: 27px;">Successfully updated</div><div class="modal-footer">
-		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . 'index.php?module=Companies&parent=Settings&view=List&displayModal=online"><span class="fas fa-home mr-2"></span>Re-register your system<a>
+		<a class="btn btn-success" href="' . \App\Config::main('site_URL') . 'index.php?module=Companies&parent=Settings&view=List&displayModal=online"><span class="fas fa-globe mr-2"></span>Re-register your system<a>
 		</div></div></div></div>';
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
