@@ -15,6 +15,13 @@
             "fromVersion": "6.1.0",
             "toVersion": "6.1.0",
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.1.0_ServicePack\/zip\/6.1.0_ServicePack_8.zip"
+        },
+        {
+            "label": "YetiForce CRM 6.2.0 v1",
+            "version": "1",
+            "fromVersion": "6.1.0",
+            "toVersion": "6.2.0",
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.1.0_to_6.2.0\/zip\/6.1.0_to_6.2.0_v1.zip"
         }
     ]
 }
