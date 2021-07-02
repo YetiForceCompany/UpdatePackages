@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '38f6b6072129e5ba98d203ef0499bcb45fcea63e',
+    'reference' => 'cddbc5518d75d6b008583732695c52e3ea8bd2f0',
     'name' => 'yetiforce/yetiforce-crm',
   ),
   'versions' => 
@@ -129,12 +129,12 @@ private static $installed = array (
     ),
     'globalcitizen/php-iban' => 
     array (
-      'pretty_version' => 'v4.0.0',
-      'version' => '4.0.0.0',
+      'pretty_version' => 'v4.1.0',
+      'version' => '4.1.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'a8b0a1bbf42f25d977a28270787212542ba7e71d',
+      'reference' => '5bf5d7df0bd0158460897f2b9c26eda91bbf9b7d',
     ),
     'guzzlehttp/guzzle' => 
     array (
@@ -650,7 +650,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '38f6b6072129e5ba98d203ef0499bcb45fcea63e',
+      'reference' => 'cddbc5518d75d6b008583732695c52e3ea8bd2f0',
     ),
     'yetiforce/yetiforcepdf' => 
     array (
