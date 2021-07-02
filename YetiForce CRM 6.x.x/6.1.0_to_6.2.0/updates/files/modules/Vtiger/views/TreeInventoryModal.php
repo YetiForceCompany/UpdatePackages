@@ -6,7 +6,7 @@
  * @package View
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Arkadiusz Sołek <a.solek@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -47,7 +47,7 @@ class Vtiger_TreeInventoryModal_View extends \App\Controller\Modal
 	 */
 	public function checkPermission(App\Request $request)
 	{
-		if (!\App\Privilege::isPermitted($request->getModule(), 'EditView') || !\App\Privilege::isPermitted($request->getByType('src_module', \App\Purifier::ALNUM))) {
+		if (!\App\Privilege::isPermitted($request->getModule()) || !\App\Privilege::isPermitted($request->getByType('src_module', \App\Purifier::ALNUM))) {
 			throw new \App\Exceptions\NoPermitted('ERR_NOT_ACCESSIBLE', 406);
 		}
 	}

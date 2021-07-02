@@ -5,10 +5,10 @@ namespace App;
 /**
  * Text parser class.
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -39,7 +39,7 @@ class TextParser
 		'LBL_RECORDS_LIST' => '$(recordsList : Contacts|firstname,lastname,email|[[["firstname","a","Tom"]]]||5)$',
 		'LBL_INVENTORY_TABLE' => '$(inventory : type=table columns=seq,name,qty,unit,price,total,net href=no)$',
 		'LBL_DYNAMIC_INVENTORY_TABLE' => '$(custom : dynamicInventoryColumnsTable)$',
-		'LBL_BARCODE' => '$(barcode : type=EAN13 class=DNS1D , value=12345678)$'
+		'LBL_BARCODE' => '$(barcode : type=EAN13 class=DNS1D , value=12345678)$',
 	];
 
 	/**
@@ -206,6 +206,13 @@ class TextParser
 	 * @var bool
 	 */
 	public $isHtml = true;
+
+	/**
+	 * Use extended parsing.
+	 *
+	 * @var bool
+	 */
+	public $useExtension = false;
 
 	/**
 	 * Variable parser regex.
@@ -440,6 +447,24 @@ class TextParser
 	 */
 	public function parseData(string $content)
 	{
+		if ($this->useExtension) {
+			$content = preg_replace_callback('/<!--[\s]+({% [\s\S]+? %})[\s]+-->/u', function ($matches) {
+				return $matches[1] ?? '';
+			}, $content);
+			$twig = new \Twig\Environment(new \Twig\Loader\ArrayLoader(['index' => $content]));
+			$sandbox = new \Twig\Extension\SandboxExtension(\App\Extension\Twig\SecurityPolicy::getPolicy(), true);
+			$twig->addExtension($sandbox);
+			$twig->addFunction(new \Twig\TwigFunction('YFParser', function ($text) {
+				$value = '';
+				preg_match(static::VARIABLE_REGEX, $text, $matches);
+				if ($matches) {
+					[, $function, $params] = array_pad($matches, 3, '');
+					$value = \in_array($function, static::$baseFunctions) ? $this->{$function}($params) : '';
+				}
+				return $value;
+			}));
+			$content = $twig->render('index');
+		}
 		return preg_replace_callback(static::VARIABLE_REGEX, function ($matches) {
 			[, $function, $params] = array_pad($matches, 3, '');
 			return \in_array($function, static::$baseFunctions) ? $this->{$function}($params) : '';
@@ -558,7 +583,7 @@ class TextParser
 			$employee = Cache::get('TextParserEmployeeDetailRows', $userId);
 		} else {
 			$employee = (new Db\Query())->select(['crmid'])->from('vtiger_crmentity')->where(['deleted' => 0, 'setype' => 'OSSEmployees', 'smownerid' => $userId])
-				->limit(1)->scalar();
+				->scalar();
 			Cache::save('TextParserEmployeeDetailRows', $userId, $employee, Cache::LONG);
 		}
 		$value = '';
@@ -736,7 +761,7 @@ class TextParser
 			$return = [];
 			foreach (explode(',', $relatedId) as $relatedValueId) {
 				if ('Users' === Fields\Owner::getType($relatedValueId)) {
-					$userRecordModel = \Users_Privileges_Model::getInstanceById($relatedValueId);
+					$userRecordModel = \Vtiger_Record_Model::getInstanceById($relatedValueId, $relatedModule);
 					if ('Active' === $userRecordModel->get('status')) {
 						$instance = static::getInstanceByModel($userRecordModel);
 						foreach (['withoutTranslations', 'language', 'emailoptout'] as $key) {
@@ -749,7 +774,7 @@ class TextParser
 					continue;
 				}
 				foreach (PrivilegeUtil::getUsersByGroup($relatedValueId) as $userId) {
-					$userRecordModel = \Users_Privileges_Model::getInstanceById($userId);
+					$userRecordModel = \Vtiger_Record_Model::getInstanceById($userId, $relatedModule);
 					if ('Active' === $userRecordModel->get('status')) {
 						$instance = static::getInstanceByModel($userRecordModel);
 						foreach (['withoutTranslations', 'language', 'emailoptout'] as $key) {
@@ -867,9 +892,7 @@ class TextParser
 			return '';
 		}
 		$pagingModel = new \Vtiger_Paging_Model();
-		if ((int) $limit) {
-			$pagingModel->set('limit', (int) $limit);
-		}
+		$pagingModel->set('limit', (int) $limit);
 		if ($viewIdOrName) {
 			if (!is_numeric($viewIdOrName)) {
 				$customView = CustomView::getInstance($relatedModuleName);
@@ -961,16 +984,14 @@ class TextParser
 			}
 		}
 		$listView = \Vtiger_ListView_Model::getInstance($moduleName, $cvId);
-		$pagingModel = new \Vtiger_Paging_Model();
-		if ((int) $limit) {
-			$pagingModel->set('limit', (int) $limit);
-		}
+		$limit = (int) $limit;
+		$listView->getQueryGenerator()->setLimit((int) ($limit ?: \App\Config::main('list_max_entries_per_page', 20)));
 		if ($columns) {
 			$headerFields = [];
 			foreach (explode(',', $columns) as $fieldName) {
 				$headerFields[] = [
 					'field_name' => $fieldName,
-					'module_name' => $moduleName
+					'module_name' => $moduleName,
 				];
 			}
 			$listView->set('header_fields', $headerFields);
@@ -991,11 +1012,11 @@ class TextParser
 			}
 		}
 		$counter = 0;
-		foreach ($listView->getListViewEntries($pagingModel) as $reletedRecordModel) {
+		foreach ($listView->getAllEntries() as $relatedRecordModel) {
 			++$counter;
 			$rows .= '<tr class="row-' . $counter . '">';
 			foreach ($fields as $fieldModel) {
-				$value = $this->getDisplayValueByField($fieldModel, $reletedRecordModel);
+				$value = $this->getDisplayValueByField($fieldModel, $relatedRecordModel);
 				if (false !== $value) {
 					if ((int) $maxLength) {
 						$value = $this->textTruncate($value, (int) $maxLength);
@@ -1728,7 +1749,7 @@ class TextParser
 	{
 		preg_match('/type=(\w+)/', $params, $matches);
 		$config = [
-			'type' => ($matches[1] ?? false)
+			'type' => ($matches[1] ?? false),
 		];
 		$params = ltrim($params, $matches[0] . ' ');
 		foreach (explode(' , ', $params) as $value) {
@@ -1898,9 +1919,11 @@ class TextParser
 	public static function parseFieldParam(string $param): array
 	{
 		$part = [];
-		foreach (explode('|', $param) as $type) {
-			[$name, $value] = array_pad(explode('=', $type, 2),2,'');
-			$part[$name] = $value;
+		if ($param) {
+			foreach (explode('|', $param) as $type) {
+				[$name, $value] = array_pad(explode('=', $type, 2), 2, '');
+				$part[$name] = $value;
+			}
 		}
 		return $part;
 	}

@@ -25,7 +25,26 @@ class Vtiger_Owner_UIType extends Vtiger_Base_UIType
 			$value = $value ? explode('##', $value) : [];
 		}
 		foreach ($value as $val) {
-			$values[] = parent::getDbConditionBuilderValue($val, $operator);
+			if (false !== strpos($val, ':') && \in_array($operator, ['e', 'n'])) {
+				[$type, $val] = explode(':', $val);
+				switch ($type) {
+					case \App\PrivilegeUtil::MEMBER_TYPE_GROUPS:
+						$val = parent::getDbConditionBuilderValue($val, $operator);
+						break;
+					case \App\PrivilegeUtil::MEMBER_TYPE_ROLES:
+					case \App\PrivilegeUtil::MEMBER_TYPE_ROLE_AND_SUBORDINATES:
+						if (!preg_match('/^H[1-9]+$/', $val)) {
+							throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . \App\Utils::varExport($value), 406);
+						}
+						break;
+					default:
+						throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getName() . '||' . $this->getFieldModel()->getModuleName() . '||' . \App\Utils::varExport($value), 406);
+						break;
+				}
+				$values[] = "{$type}:{$val}";
+			} else {
+				$values[] = parent::getDbConditionBuilderValue($val, $operator);
+			}
 		}
 		return implode('##', $values);
 	}
@@ -65,20 +84,20 @@ class Vtiger_Owner_UIType extends Vtiger_Base_UIType
 		switch (\App\Fields\Owner::getType($value)) {
 			case 'Users':
 				if (!\App\User::isExists($value, false)) {
-					$ownerName = '<span class="text-muted"><s>' . $ownerName ?: '---' . '</s></span>';
+					$ownerName = '<span class="text-muted"><s>' . ($ownerName ?: '---') . '</s></span>';
 				} else {
 					$userModel = Users_Privileges_Model::getInstanceById($value);
 					$userModel->setModule('Users');
 					if ('Inactive' === $userModel->get('status')) {
 						$ownerName = '<span class="redColor"><s>' . $ownerName . '</s></span>';
-					} elseif (\App\Privilege::isPermitted('Users', 'DetailView', $value)) {
+					} elseif (\App\User::getCurrentUserModel()->isAdmin()) {
 						$detailViewUrl = 'index.php?module=Users&view=Detail&record=' . $value;
 						$popoverRecordClass = 'class="js-popover-tooltip--record"';
 					}
 				}
 				break;
 			case 'Groups':
-				if (App\User::getCurrentUserModel()->isAdmin()) {
+				if (\App\User::getCurrentUserModel()->isAdmin()) {
 					$recordModel = new Settings_Groups_Record_Model();
 					$recordModel->set('groupid', $value);
 					$detailViewUrl = $recordModel->getDetailViewUrl();

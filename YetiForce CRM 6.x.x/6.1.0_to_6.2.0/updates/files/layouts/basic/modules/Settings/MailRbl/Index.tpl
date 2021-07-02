@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 	<!-- tpl-Settings-MailRbl-Index -->
 	<div class="js-base-container" data-js="container">
@@ -75,6 +75,7 @@
 					<a class="nav-link {if $ACTIVE_TAB eq 'publicRbl'}active{/if}" href="#publicRbl" data-name="publicRbl" data-toggle="tab">
 						<span class="fas fa-globe mr-2"></span>{\App\Language::translate('LBL_PUBLIC_RBL', $QUALIFIED_MODULE)}
 						<span class="badge badge-warning badge-pill ml-2 js-badge" data-js="container"></span>
+						<span class="yfi-premium u-fs-26px color-red-600 float-right js-popover-tooltip" data-class="u-min-w-500px" data-content="{\App\Purifier::encodeHtml(App\Language::translateArgs('LBL_SYNCH_PAID_FEATURE', $QUALIFIED_MODULE,"<a target=\"_blank\" href=\"index.php?module=YetiForce&parent=Settings&view=Shop&product=YetiForceRbl&mode=showProductModal\">{\App\Language::translate('LBL_YETIFORCE_SHOP', $QUALIFIED_MODULE)}</a>"))}" ></span>
 					</a>
 				</li>
 			</ul>

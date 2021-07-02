@@ -2,10 +2,10 @@
 /**
  * Mail outlook message file.
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -122,7 +122,7 @@ class Outlook extends Base
 	public function findRelatedRecordsByEmail(): array
 	{
 		if (isset($this->processData['findByEmail'])) {
-			return  $this->processData['findByEmail'];
+			return $this->processData['findByEmail'];
 		}
 		$emails = $this->get('to_email');
 		$emails[] = $this->get('from_email');
@@ -139,7 +139,7 @@ class Outlook extends Base
 	public function findRelatedRecordsBySubject(): array
 	{
 		if (isset($this->processData['findBySubject'])) {
-			return  $this->processData['findBySubject'];
+			return $this->processData['findBySubject'];
 		}
 		return $this->processData['findBySubject'] = \App\Mail\RecordFinder::findBySubject($this->get('subject'), $this->getNumberFields());
 	}

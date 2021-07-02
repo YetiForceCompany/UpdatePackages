@@ -1,12 +1,19 @@
-License: YetiForce Public License 3.0 licenses/License.html
+License: YetiForce Public License 4.0 licenses/License.html
 The update time might be longer depending on the server speed and amount of data in the system.
 Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 
-After the update process finishes, please also update all the languages in your system.
-
-The format for saving masks for fields has changed, reconfiguration of the masks is required.
-
-Changed the syntax for PDF RelatedAttachments methods, such as below
-6.1 - $(custom : RelatedAttachments|__CONDITIONS__|__ATTACH_FILES__)$
-6.2 - $(custom : RelatedAttachments|__FIELD_NAMES__|__CONDITIONS__|__ATTACH_FILES__)$
+Notes:
+- You will be redirected to the registration view once the update is completed.
+- Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
+- After the update process finishes, please also update all the languages in your system.
+- Registration verification mechanism has been modified so re-registration is required.
+  In order to re-register your system go to "Software configuration > Company > Company details" select "Registration - OnLine" and click "Send" (https://yetiforce.com/en/marketplace/system-registration).
+- Modified mail templates related to portal and password reset.
+- Rebuilt and changed API communication. If you are using webservices, verify their configuration in the system and communication (https://doc.yetiforce.com/api/).
+    Application type "Portal" has been divided into RestAPI and Portal. RestAPI contains a set of basic methods used to exchange information, and Portal contains methods used to support an external addon called YetiForcePortal2.
+- All global search engine and quick suggest data in reference fields will be removed during the update.
+  Search engines may not work properly until the missing data is added, which is what one of cron's tasks is responsible for.
+- Changed the syntax for PDF RelatedAttachments methods, such as below
+    6.1 - $(custom : RelatedAttachments|__CONDITIONS__|__ATTACH_FILES__)$
+    6.2 - $(custom : RelatedAttachments|__FIELD_NAMES__|__CONDITIONS__|__ATTACH_FILES__)$

@@ -3,10 +3,10 @@
  * YetiForce watchdog class.
  * Modifying this file or functions that affect the footer appearance will violate the license terms!!!
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -54,7 +54,7 @@ class Watchdog
 	public $cache = [];
 
 	/**
-	 * Send status information's.
+	 * Send status informations.
 	 */
 	public static function send()
 	{
@@ -81,7 +81,7 @@ class Watchdog
 				],
 				'allow_redirects' => false,
 				'timeout' => 5,
-				'json' => $info
+				'json' => $info,
 			]);
 			\App\Log::endProfile("POST|Watchdog::send|{$url}", __NAMESPACE__);
 		} catch (\Throwable $e) {
@@ -161,7 +161,7 @@ class Watchdog
 	public function getOsVersion()
 	{
 		if (empty($this->cache['environment'])) {
-			$this->cache['environment'] = \App\Utils\ConfReport::get('environment');
+			$this->cache['environment'] = \App\Utils::merge(\App\Utils\ConfReport::get('environment'), \App\Utils\ConfReport::getEnv());
 		}
 		return $this->cache['environment']['operatingSystem']['www'] ?? '';
 	}
@@ -176,7 +176,7 @@ class Watchdog
 		$cron = \App\Utils\ConfReport::getCronVariables('last_start');
 		$value = '-';
 		if ($cron) {
-			$value = date('Y-m-d H:i:s', $cron);
+			$value = $cron;
 		}
 		return $value;
 	}

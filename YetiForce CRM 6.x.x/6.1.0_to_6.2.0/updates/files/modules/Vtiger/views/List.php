@@ -30,11 +30,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 	 */
 	protected $viewName;
 
-	public function __construct()
-	{
-		parent::__construct();
-	}
-
+	/** {@inheritdoc} */
 	public function getPageTitle(App\Request $request)
 	{
 		$moduleName = $request->getModule();
@@ -49,13 +45,14 @@ class Vtiger_List_View extends Vtiger_Index_View
 		return $title;
 	}
 
+	/** {@inheritdoc} */
 	public function getBreadcrumbTitle(App\Request $request)
 	{
 		$moduleName = $request->getModule();
 		$title = \App\Language::translate('LBL_VIEW_LIST', $moduleName);
 		if ($request->has('viewname') && !empty(CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)])) {
 			$customView = CustomView_Record_Model::getAll($moduleName)[$request->getByType('viewname', 2)];
-			$title .= '<div class="pl-1 pb-1 d-flex align-items-end"><small class="breadCrumbsFilter"> [' . \App\Language::translate('LBL_FILTER', $moduleName)
+			$title .= '<div class="pl-1 pb-1 align-items-end"><small class="breadCrumbsFilter"> [' . \App\Language::translate('LBL_FILTER', $moduleName)
 				. ': ' . \App\Language::translate($customView->get('viewname'), $moduleName) . ']</small> </div>';
 		}
 		return $title;
@@ -82,7 +79,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$linkParams = ['MODULE' => $moduleName, 'ACTION' => $request->getByType('view', 1)];
 		$viewer->assign('CUSTOM_VIEWS', CustomView_Record_Model::getAllByGroup($moduleName, $mid));
 		$this->viewName = App\CustomView::getInstance($moduleName)->getViewId();
-		if ($request->isEmpty('viewname') && App\CustomView::hasViewChanged($moduleName, $this->viewName)) {
+		if ($this->viewName && $request->isEmpty('viewname') && App\CustomView::hasViewChanged($moduleName, $this->viewName)) {
 			$customViewModel = CustomView_Record_Model::getInstanceById($this->viewName);
 			if ($customViewModel) {
 				App\CustomView::setSortBy($moduleName, $customViewModel->getSortOrderBy());
@@ -96,6 +93,7 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$viewer->assign('HEADER_LINKS', $this->listViewModel->getHederLinks($linkParams));
 		$this->initializeListViewContents($request, $viewer);
 		$viewer->assign('VIEWID', $this->viewName);
+		$viewer->assign('MID', $mid);
 		$viewer->assign('MODULE_MODEL', Vtiger_Module_Model::getInstance($moduleName));
 		if ($display) {
 			$this->preProcessDisplay($request);
@@ -124,9 +122,9 @@ class Vtiger_List_View extends Vtiger_Index_View
 				$this->viewName = App\CustomView::getInstance($moduleName)->getViewId();
 			}
 			$orderBy = $request->getArray('orderby', \App\Purifier::STANDARD, [], \App\Purifier::SQL);
-			if (App\CustomView::hasViewChanged($moduleName, $this->viewName)) {
+			if ($this->viewName && App\CustomView::hasViewChanged($moduleName, $this->viewName)) {
 				if ($orderBy || ($customViewModel = CustomView_Record_Model::getInstanceById($this->viewName))) {
-					App\CustomView::setSortBy($moduleName, $orderBy ? $orderBy : $customViewModel->getSortOrderBy());
+					App\CustomView::setSortBy($moduleName, $orderBy ?: $customViewModel->getSortOrderBy());
 				}
 				App\CustomView::setCurrentView($moduleName, $this->viewName);
 			} else {
@@ -195,7 +193,12 @@ class Vtiger_List_View extends Vtiger_Index_View
 		$orderBy = $request->getArray('orderby', \App\Purifier::STANDARD, [], \App\Purifier::SQL);
 		if (empty($orderBy) && !($orderBy = App\CustomView::getSortBy($moduleName))) {
 			$moduleInstance = CRMEntity::getInstance($moduleName);
-			$orderBy = $moduleInstance->default_order_by ? [$moduleInstance->default_order_by => $moduleInstance->default_sort_order] : [];
+			if ($moduleInstance->default_order_by && $moduleInstance->default_sort_order) {
+				$orderBy = [];
+				foreach ((array) $moduleInstance->default_order_by as $value) {
+					$orderBy[$value] = $moduleInstance->default_sort_order;
+				}
+			}
 		}
 		if (empty($pageNumber)) {
 			$pageNumber = App\CustomView::getCurrentPage($moduleName, $this->viewName);

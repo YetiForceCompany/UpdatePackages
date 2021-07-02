@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 <!-- tpl-Components-MailMessageAnalysisModal -->
 <div class="modal-body pt-1">
@@ -22,7 +22,7 @@
 					{foreach item=ROW from=$RECEIVED}
 						<tr class="{if $SENDER['key'] === $ROW['key']}table-info{/if}">
 							{foreach item=ITEM_ROWS  from=$TABLE_HEADERS}
-								<td class="text-center u-min-w-150px {$ITEM_ROWS}">
+								<td class="text-center u-min-w-150pxr {$ITEM_ROWS}">
 									{if isset($ROW[$ITEM_ROWS])}
 										{if $ITEM_ROWS eq 'fromIP'}
 											{assign var=FROM_IP value=$ROW[$ITEM_ROWS]}

@@ -5,7 +5,7 @@
  * @package   View
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  * @author    Arkadiusz Dudek <a.dudek@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
@@ -50,8 +50,9 @@ class Vtiger_ChangeRelationData_View extends \App\Controller\Modal
 		$recordId = $request->getInteger('record');
 		$parentRecordId = $request->getInteger('fromRecord');
 		$relationId = $request->getInteger('relationId');
+		$cvId = $request->isEmpty('cvId', true) ? 0 : $request->getByType('cvId', 'Alnum');
 		$parentRecord = \Vtiger_Record_Model::getInstanceById($parentRecordId);
-		$relationView = \Vtiger_RelationListView_Model::getInstance($parentRecord, $moduleName, $relationId);
+		$relationView = \Vtiger_RelationListView_Model::getInstance($parentRecord, $moduleName, $relationId, $cvId);
 		$relationModel = $relationView->getRelationModel()->getTypeRelationModel();
 		$data = $relationModel->getRelationData($parentRecordId, $recordId);
 		$fieldModels = [];

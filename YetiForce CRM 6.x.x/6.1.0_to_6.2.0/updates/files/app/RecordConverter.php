@@ -6,7 +6,7 @@
  * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Adrian Kon <a.kon@yetiforce.com>
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
@@ -311,8 +311,8 @@ class RecordConverter extends Base
 	public function isPermitted(int $recordId): bool
 	{
 		$moduleName = Module::getModuleName($this->get('source_module'));
-		return \App\Privilege::isPermitted($moduleName, 'RecordConventer') && \App\Privilege::isPermitted($moduleName, 'DetailView', $recordId) &&
-			(\App\Json::isEmpty($this->get('conditions')) || \App\Condition::checkConditions(\App\Json::decode($this->get('conditions')), \Vtiger_Record_Model::getInstanceById($recordId)));
+		return \App\Privilege::isPermitted($moduleName, 'RecordConventer') && \App\Privilege::isPermitted($moduleName, 'DetailView', $recordId)
+			&& (\App\Json::isEmpty($this->get('conditions')) || \App\Condition::checkConditions(\App\Json::decode($this->get('conditions')), \Vtiger_Record_Model::getInstanceById($recordId)));
 	}
 
 	/**

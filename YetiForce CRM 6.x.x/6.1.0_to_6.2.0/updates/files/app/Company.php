@@ -2,10 +2,10 @@
 /**
  * Company basic file.
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -27,7 +27,7 @@ class Company extends Base
 		'Small' => 50,
 		'Medium' => 250,
 		'Large' => 1000,
-		'Corporation' => 0
+		'Corporation' => 0,
 	];
 
 	/**
@@ -40,7 +40,7 @@ class Company extends Base
 		if (Cache::has('CompanyGetAll', '')) {
 			return Cache::get('CompanyGetAll', '');
 		}
-		$rows = (new Db\Query())->from('s_#__companies')->all();
+		$rows = (new Db\Query())->from('s_#__companies')->all(Db::getInstance('admin'));
 		Cache::save('CompanyGetAll', '', $rows, Cache::LONG);
 		return $rows;
 	}
@@ -58,12 +58,12 @@ class Company extends Base
 		if ($name) {
 			Db::getInstance('admin')->createCommand()
 				->update('s_#__companies', [
-					'status' => $status
+					'status' => $status,
 				], ['name' => $name])->execute();
 		}
 		Db::getInstance('admin')->createCommand()
 			->update('s_#__companies', [
-				'status' => $status
+				'status' => $status,
 			])->execute();
 	}
 
@@ -112,7 +112,7 @@ class Company extends Base
 		$return = 'Micro';
 		$last = 0;
 		foreach (self::$sizes as $size => $value) {
-			if (0 !== $value && 0 !== $value && $count <= $value && $count > $last) {
+			if (0 !== $value && $count <= $value && $count > $last) {
 				return $size;
 			}
 			if (0 === $value && $count > 1000) {

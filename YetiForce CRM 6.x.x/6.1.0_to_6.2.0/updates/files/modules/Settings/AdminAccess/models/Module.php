@@ -6,7 +6,7 @@
  * @package Settings.Model
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 /**
@@ -77,6 +77,13 @@ class Settings_AdminAccess_Module_Model extends Settings_Vtiger_Module_Model
 				'label' => 'LBL_LOGIN_ADMIN_VISIT_PURPOSE',
 				'labelDesc' => 'LBL_LOGIN_ADMIN_VISIT_PURPOSE_DESC',
 				'fieldvalue' => $config['askAdminAboutVisitPurpose'] ?? ''
+			],
+			'askAdminAboutVisitSwitchUsers' => [
+				'purifyType' => 'bool',
+				'uitype' => 56,
+				'label' => 'LBL_LOGIN_ADMIN_VISIT_SWITCH_USERS',
+				'labelDesc' => 'LBL_LOGIN_ADMIN_VISIT_SWITCH_USERS_DESC',
+				'fieldvalue' => $config['askAdminAboutVisitSwitchUsers'] ?? ''
 			],
 		];
 		foreach ($fields as $key => $value) {

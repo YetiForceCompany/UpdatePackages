@@ -3,10 +3,10 @@
 /**
  * Conf report class.
  *
- * @package   App
+ * @package App
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
@@ -17,17 +17,10 @@ namespace App\Utils;
  */
 class ConfReport
 {
-	/**
-	 * System URL.
-	 *
-	 * @var string
-	 */
+	/** @var string System URL. */
 	private static $crmUrl;
-	/**
-	 * Optional database configuration for offline use.
-	 *
-	 * @var array
-	 */
+
+	/** @var array Optional database configuration for offline use. */
 	public static $dbConfig = [
 		'dsn' => 'mysql:host=127.0.0.1;port=3306;dbname=yetiforce;',
 		'user' => '',
@@ -35,12 +28,8 @@ class ConfReport
 		'options' => [],
 	];
 
-	/**
-	 * Urls to check in request.
-	 *
-	 * @var array
-	 */
-	public static $urlsToCheck = ['root' => 'shorturl.php', 'js' => 'layouts/resources/Tools.js', 'css' => 'layouts/resources/fonts/fonts.css'];
+	/** @var array Urls to check in request. */
+	public static $urlsToCheck = ['root' => 'token.php', 'js' => 'layouts/resources/Tools.js', 'css' => 'layouts/resources/fonts/fonts.css'];
 
 	/**
 	 * List all variables.
@@ -108,7 +97,7 @@ class ConfReport
 		'expose_php' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true],
 		'session_regenerate_id' => ['recommended' => 'On', 'type' => 'SessionRegenerate', 'testCli' => true],
 		'disable_functions' => ['recommended' => 'shell_exec, exec, system, passthru, popen', 'type' => 'In', 'container' => 'php', 'testCli' => false],
-		'allow_url_include' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true]
+		'allow_url_include' => ['recommended' => 'Off', 'type' => 'OnOff', 'container' => 'php', 'testCli' => true],
 	];
 
 	/**
@@ -427,8 +416,7 @@ class ConfReport
 	 */
 	public static $functionalVerification = [
 		'branding' => ['type' => 'Branding',  'testCli' => false, 'label' => 'FOOTER', 'mode' => 'onlyText'],
-		'premiumModules' => ['type' => 'PremiumModules',  'testCli' => false, 'label' => 'PREMIUM_MODULES', 'mode' => 'onlyText'],
-		'magento' => ['type' => 'Magento',  'testCli' => false, 'label' => 'MAGENTO', 'mode' => 'onlyText'],
+		'shop' => ['type' => 'ShopProducts',  'testCli' => false, 'label' => 'PREMIUM_MODULES', 'mode' => 'onlyText'],
 	];
 	/**
 	 * Php variables.
@@ -620,8 +608,8 @@ class ConfReport
 				'lastCronStartDateTime' => $lastCronStart,
 				'protocolVersion' => isset($_SERVER['SERVER_PROTOCOL']) ? substr($_SERVER['SERVER_PROTOCOL'], strpos($_SERVER['SERVER_PROTOCOL'], '/') + 1) : '-',
 				'SSL_CERT_FILE' => getenv('SSL_CERT_FILE') ?? '',
-				'SSL_CERT_DIR' => getenv('SSL_CERT_DIR') ?? ''
-			]
+				'SSL_CERT_DIR' => getenv('SSL_CERT_DIR') ?? '',
+			],
 		];
 	}
 
@@ -1191,7 +1179,7 @@ class ConfReport
 	{
 		unset($sapi);
 		$header = strtolower(\str_replace('Header: ', '', $name));
-		$row['recommended'] = trim(\App\Headers::getInstance()->getCspHeader());
+		$row['recommended'] = trim(\App\Controller\Headers::getInstance()->getCspHeader());
 		if (isset(static::$request[$header])) {
 			$row['www'] = static::$request[$header]['root'] ?? '-';
 			$row['status'] = strtolower($row['www']) === strtolower($row['recommended']);
@@ -1401,7 +1389,7 @@ class ConfReport
 	{
 		unset($name);
 		$supported = [];
-		$requestUrl = static::$crmUrl . 'shorturl.php';
+		$requestUrl = static::$crmUrl . 'token.php';
 		foreach (\explode(', ', $row['recommended']) as $type) {
 			try {
 				$response = (new \GuzzleHttp\Client(\App\RequestHttp::getOptions()))->request($type, $requestUrl, ['timeout' => 1, 'verify' => false]);
@@ -1491,7 +1479,7 @@ class ConfReport
 	}
 
 	/**
-	 * Validate premium modules value.
+	 * Validate shop products.
 	 *
 	 * @param string $name
 	 * @param array  $row
@@ -1499,28 +1487,19 @@ class ConfReport
 	 *
 	 * @return array
 	 */
-	private static function validatePremiumModules(string $name, array $row, string $sapi)
+	private static function validateShopProducts(string $name, array $row, string $sapi)
 	{
 		unset($name);
 		$row['status'] = true;
-		$row[$sapi] = \App\Language::translate($row['status'] ? 'LBL_YES' : 'LBL_NO');
-		return $row;
-	}
-
-	/**
-	 * Validate magento value.
-	 *
-	 * @param string $name
-	 * @param array  $row
-	 * @param string $sapi
-	 *
-	 * @return array
-	 */
-	private static function validateMagento(string $name, array $row, string $sapi)
-	{
-		unset($name);
-		$row['status'] = !(\Settings_Magento_Module_Model::isActive() && !\App\YetiForce\Shop::check('YetiForceMagento'));
-		$row[$sapi] = \App\Language::translate($row['status'] ? 'LBL_YES' : 'LBL_NO');
+		$status = '';
+		foreach (\App\YetiForce\Shop::getProducts() as $name => $product) {
+			$verify = $product->verify();
+			if (!$verify['status']) {
+				$status .= $name . '(' . \strlen($verify['message']) . '), ';
+				$row['status'] = false;
+			}
+		}
+		$row[$sapi] = $status ? trim($status, ', ') : \App\Language::translate('LBL_YES');
 		return $row;
 	}
 
@@ -1595,7 +1574,7 @@ class ConfReport
 	public static function getAllErrors(bool $cache = false)
 	{
 		$fileCache = ROOT_DIRECTORY . '/app_data/ConfReport_AllErrors.php';
-		if ($cache && file_exists($fileCache) && filemtime($fileCache) > strtotime('-5 minute')) {
+		if ($cache && file_exists($fileCache) && filemtime($fileCache) > strtotime('-15 minute')) {
 			return require $fileCache;
 		}
 		$result = [];
@@ -1676,5 +1655,52 @@ class ConfReport
 			}
 		}
 		return $ver;
+	}
+
+	/**
+	 * Save environment variables.
+	 *
+	 * @return void
+	 */
+	public static function saveEnv(): void
+	{
+		$data = self::getEnv();
+		$key = \PHP_SAPI !== 'cli' ? 'www' : 'cli';
+		$data[$key]['sapi'] = \PHP_SAPI;
+		$data[$key]['operatingSystem'] = [
+			'machineType' => php_uname('m'),
+			'hostName' => php_uname('n'),
+			'release' => php_uname('r'),
+			'operatingSystem' => php_uname('s'),
+			'version' => php_uname('v'),
+		];
+		if (($db = \App\Db::getInstance()) && $db->getMasterPdo() && ($dbInfo = $db->getInfo())) {
+			$data[$key]['sql'] = [
+				'clientVersion' => $dbInfo['clientVersion'],
+				'serverVersion' => $dbInfo['serverVersion'],
+				'typeDb' => $dbInfo['typeDb'],
+				'version' => $dbInfo['version'] ?? '',
+				'versionComment' => $dbInfo['version_comment'] ?? '',
+				'versionSslLibrary' => $dbInfo['version_ssl_library'] ?? '',
+			];
+		}
+		if (isset($_SERVER['SERVER_SOFTWARE'])) {
+			$data[$key]['serverSoftware'] = $_SERVER['SERVER_SOFTWARE'];
+		}
+		if (isset($_SERVER['GATEWAY_INTERFACE'])) {
+			$data[$key]['gatewayInterface'] = $_SERVER['GATEWAY_INTERFACE'];
+		}
+		\App\Utils::saveToFile(ROOT_DIRECTORY . '/app_data/ConfReport_Env.php', $data, '', 0, true);
+	}
+
+	/**
+	 * Get environment variables.
+	 *
+	 * @return array
+	 */
+	public static function getEnv(): array
+	{
+		$path = ROOT_DIRECTORY . '/app_data/ConfReport_Env.php';
+		return file_exists($path) ? (require $path) : [];
 	}
 }

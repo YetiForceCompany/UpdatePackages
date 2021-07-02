@@ -4,7 +4,7 @@
  * Companies record model class.
  *
  * @copyright YetiForce Sp. z o.o
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
@@ -128,9 +128,9 @@ class Settings_Companies_Record_Model extends Settings_Vtiger_Record_Model
 		if ('LBL_TYPE_TARGET_USER' === self::TYPES[$params['type']] || 1 === (new \App\Db\Query())->from('s_#__companies')->count()) {
 			$configFile = new \App\ConfigFile('component', 'Branding');
 			$configFile->set('footerName', $params['name']);
-			$configFile->set('urlFacebook', $params['facebook']);
-			$configFile->set('urlTwitter', $params['twitter']);
-			$configFile->set('urlLinkedIn', $params['linkedin']);
+			$configFile->set('urlFacebook', $params['facebook'] ?? '');
+			$configFile->set('urlTwitter', $params['twitter'] ?? '');
+			$configFile->set('urlLinkedIn', $params['linkedin'] ?? '');
 			$configFile->create();
 		}
 		\App\Cache::clear();

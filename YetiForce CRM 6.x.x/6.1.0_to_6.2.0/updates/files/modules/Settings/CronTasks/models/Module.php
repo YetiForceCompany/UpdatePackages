@@ -4,7 +4,7 @@
  * Settings CronTasks Module Model class.
  *
  * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Rafal Pospiech <r.pospiech@yetiforce.com>
  */
 class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model
@@ -71,7 +71,6 @@ class Settings_CronTasks_Module_Model extends Settings_Vtiger_Module_Model
 		$cronConfigFileName = ROOT_DIRECTORY . '/app_data/cron.php';
 		if (file_exists($cronConfigFileName)) {
 			$cronConfig = include $cronConfigFileName;
-
 			if ($cronConfig && isset($cronConfig['last_start'])) {
 				return $this->lastCronStart = (int) $cronConfig['last_start'];
 			}

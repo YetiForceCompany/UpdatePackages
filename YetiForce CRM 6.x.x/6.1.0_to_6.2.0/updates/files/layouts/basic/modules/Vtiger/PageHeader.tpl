@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 <!DOCTYPE html>
 <html lang="{$HTMLLANG}" class="o-view-{$VIEW|lower}">
@@ -29,7 +29,7 @@
 		{\App\Debuger::getDebugBar()->loadScripts()}
 	{/if}
 </head>
-<body class="{if $SHOW_FOOTER_BAR} {if App\Config::module('Users', 'IS_VISIBLE_USER_INFO_FOOTER')}user-info--active {/if} {else} footer-non--active {/if} {if \App\YetiForce\Shop::check('YetiForceDisableBranding')} limited-footer--active{/if}" data-language="{$LANGUAGE}" data-module="{$MODULE_NAME}" data-view="{$VIEW}" data-skinpath="{$SKIN_PATH}" data-layoutpath="{$LAYOUT_PATH}" {$USER_MODEL->getBodyLocks()}>
+<body class="{if $SHOW_FOOTER_BAR} {if App\Config::module('Users', 'IS_VISIBLE_USER_INFO_FOOTER')}user-info--active {/if} {else} footer-non--active {/if} {if \App\YetiForce\Shop::check('YetiForceDisableBranding')}limited-footer--active{/if}" data-language="{$LANGUAGE}" data-module="{$MODULE_NAME}" data-view="{$VIEW}" data-skinpath="{$SKIN_PATH}" data-layoutpath="{$LAYOUT_PATH}" {$USER_MODEL->getBodyLocks()}>
 <div id="configuration">
 	<input type="hidden" id="currencyGroupingPattern" value="{$USER_MODEL->get('currency_grouping_pattern')}"/>
 	<input type="hidden" id="truncateTrailingZeros" value="{$USER_MODEL->get('truncate_trailing_zeros')}"/>

@@ -1,4 +1,4 @@
-{*<!-- {[The file is published on the basis of YetiForce Public License 3.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
+{*<!-- {[The file is published on the basis of YetiForce Public License 4.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} -->*}
 {strip}
 <!-- tpl-Base-List-Field-Tree -->
 {assign var="FIELD_NAME" value=$FIELD_MODEL->getName()}
@@ -10,7 +10,7 @@
 	{assign var="SEARCH_VALUES" value=''}
 {/if}
 {assign var="DISPLAY_VALUE" value=$FIELD_MODEL->getDisplayValue($SEARCH_VALUES)}
-<div class="js-tree-container fieldValue u-min-w-150px" data-js="container">
+<div class="js-tree-container fieldValue u-min-w-150pxr" data-js="container">
 	<input name="{$FIELD_MODEL->getFieldName()}" type="hidden" value="{$SEARCH_VALUES}" class="sourceField listSearchContributor" data-displayvalue='{$DISPLAY_VALUE}' data-fieldinfo='{$FIELD_INFO}' data-multiple="1" data-treetemplate="{$FIELD_MODEL->getFieldParams()}" data-modulename="{$FIELD_MODEL->getModuleName()}">
 	<div class="input-group {$WIDTHTYPE_GROUP}">
 		{if $FIELD_MODEL->get('displaytype') != 10}

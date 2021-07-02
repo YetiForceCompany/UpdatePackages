@@ -15,18 +15,40 @@
  */
 class Vtiger_Record_Model extends \App\Base
 {
-	protected $module = false;
-	private $inventoryData;
+	/**
+	 * @var Vtiger_Module_Model Module model
+	 */
+	protected $module;
+	/**
+	 * @var array Inventory data
+	 */
+	protected $inventoryData;
+	/**
+	 * @var array Record changes
+	 */
+	protected $changes = [];
+	/**
+	 * @var array Record inventory changes
+	 */
+	protected $changesInventory = [];
+	/**
+	 * @var array Data for save
+	 */
+	protected $dataForSave = [];
+	/**
+	 * @var array Event handler exceptions
+	 */
+	protected $handlerExceptions = [];
+	protected $handler;
 	protected $privileges = [];
 	protected $fullForm = true;
-	protected $changes = [];
-	private $changesInventory = [];
-	protected $handlerExceptions;
+	/**
+	 * @var string Record label
+	 */
+	public $label;
 	public $summaryRowCount = 4;
 	public $isNew = true;
 	public $ext = [];
-	protected $dataForSave = [];
-	protected $handler;
 
 	/**
 	 * Function to get the id of the record.
@@ -96,14 +118,17 @@ class Vtiger_Record_Model extends \App\Base
 	 * Set custom data for save.
 	 *
 	 * @param array $data
+	 *
+	 * @return $this
 	 */
-	public function setDataForSave(array $data)
+	public function setDataForSave(array $data): self
 	{
 		$db = \App\Db::getInstance();
 		foreach ($data as $tableName => $tableData) {
 			$tableName = $db->quoteSql($tableName);
 			$this->dataForSave[$tableName] = isset($this->dataForSave[$tableName]) ? array_merge($this->dataForSave[$tableName], $tableData) : $tableData;
 		}
+		return $this;
 	}
 
 	/**
@@ -117,21 +142,20 @@ class Vtiger_Record_Model extends \App\Base
 	}
 
 	/**
-	 * Fuction to get the Name of the record.
+	 * Function to get the Name of the record.
 	 *
 	 * @return string - Entity Name of the record
 	 */
-	public function getName()
+	public function getName(): string
 	{
-		$displayName = $this->get('label');
-		if (empty($displayName)) {
-			return $this->getDisplayName();
+		if (!isset($this->label)) {
+			$this->label = $this->getDisplayName();
 		}
-		return \App\Purifier::encodeHtml($displayName);
+		return $this->label;
 	}
 
 	/**
-	 * Get pevious value by field.
+	 * Get pervious value by field.
 	 *
 	 * @param string $fieldName
 	 *
@@ -213,7 +237,7 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @return Vtiger_Module_Model
 	 */
-	public function getModule()
+	public function getModule(): Vtiger_Module_Model
 	{
 		return $this->module;
 	}
@@ -223,12 +247,11 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @param string $moduleName
 	 *
-	 * @return Vtiger_Record_Model or Module Specific Record Model instance
+	 * @return Vtiger_Record_Model Record Model instance
 	 */
-	public function setModule($moduleName)
+	public function setModule(string $moduleName): self
 	{
 		$this->module = Vtiger_Module_Model::getInstance($moduleName);
-
 		return $this;
 	}
 
@@ -237,9 +260,9 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @param Vtiger_Module_Model $module
 	 *
-	 * @return Vtiger_Record_Model or Module Specific Record Model instance
+	 * @return Vtiger_Record_Model Record Model instance
 	 */
-	public function setModuleFromInstance($module)
+	public function setModuleFromInstance(Vtiger_Module_Model $module): self
 	{
 		$this->module = $module;
 		return $this;
@@ -313,7 +336,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function getDetailViewUrl()
 	{
 		$menuUrl = '';
-		if (isset($_REQUEST['parent'])) {
+		if (isset($_REQUEST['parent']) && 'Settings' !== $_REQUEST['parent']) {
 			$menuUrl .= '&parent=' . \App\Request::_getInteger('parent');
 		}
 		if (isset($_REQUEST['mid'])) {
@@ -384,7 +407,7 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @return string - Record Module Name
 	 */
-	public function getModuleName()
+	public function getModuleName(): string
 	{
 		return $this->getModule()->get('name');
 	}
@@ -520,6 +543,7 @@ class Vtiger_Record_Model extends \App\Base
 				$this->saveToDb();
 			}
 			Users_Privileges_Model::setSharedOwner($this->get('shownerid'), $this->getId());
+			\App\Record::updateLabelOnSave($this);
 			$this->addRelations();
 			$transaction->commit();
 		} catch (\Exception $e) {
@@ -531,7 +555,6 @@ class Vtiger_Record_Model extends \App\Base
 			\App\Cache::staticSave('RecordModel', $this->getId() . ':' . $this->getModuleName(), $this);
 			$this->isNew = false;
 		}
-		\App\Cache::delete('recordLabel', $this->getId());
 		\App\Cache::staticDelete('UnlockFields', $this->getId());
 		\App\PrivilegeUpdater::updateOnRecordSave($this);
 	}
@@ -680,10 +703,7 @@ class Vtiger_Record_Model extends \App\Base
 			$eventHandler->setRecordModel($this);
 			$eventHandler->setModuleName($moduleName);
 			$eventHandler->trigger('EntityBeforeDelete');
-			$dbCommand = $db->createCommand();
-			$dbCommand->delete('u_#__crmentity_label', ['crmid' => $this->getId()])->execute();
-			$dbCommand->delete('u_#__crmentity_search_label', ['crmid' => $this->getId()])->execute();
-			$dbCommand->delete('vtiger_crmentity', ['crmid' => $this->getId()])->execute();
+			$db->createCommand()->delete('vtiger_crmentity', ['crmid' => $this->getId()])->execute();
 			\App\Db::getInstance('admin')->createCommand()->delete('s_#__privileges_updater', ['crmid' => $this->getId()])->execute();
 			Vtiger_MultiImage_UIType::deleteRecord($this);
 			$eventHandler->trigger('EntityAfterDelete');
@@ -702,9 +722,9 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @param string $moduleName
 	 *
-	 * @return Vtiger_Record_Model or Module Specific Record Model instance
+	 * @return $this or Module Specific Record Model instance
 	 */
-	public static function getCleanInstance($moduleName)
+	public static function getCleanInstance(string $moduleName)
 	{
 		if (\App\Cache::staticHas('RecordModelCleanInstance', $moduleName)) {
 			return clone \App\Cache::staticGet('RecordModelCleanInstance', $moduleName);
@@ -729,7 +749,7 @@ class Vtiger_Record_Model extends \App\Base
 	 * @param int    $recordId
 	 * @param string $module
 	 *
-	 * @return \Vtiger_Record_Model Module Specific Record Model instance
+	 * @return $this Module Specific Record Model instance
 	 */
 	public static function getInstanceById($recordId, $module = null)
 	{
@@ -755,7 +775,6 @@ class Vtiger_Record_Model extends \App\Base
 		$instance->setId($recordId);
 		$instance->isNew = false;
 		\App\Cache::staticSave('RecordModel', $cacheName, $instance);
-
 		return $instance;
 	}
 
@@ -769,55 +788,6 @@ class Vtiger_Record_Model extends \App\Base
 		$recordModel->setData($focus->column_fields)->setId($recordId)->setModuleFromInstance($moduleModel)->setEntity($focus);
 
 		return $recordModel;
-	}
-
-	/**
-	 * Static Function to get the list of records matching the search key.
-	 *
-	 * @param string $searchKey
-	 * @param mixed  $module
-	 * @param mixed  $limit
-	 * @param mixed  $operator
-	 *
-	 * @return <Array> - List of Vtiger_Record_Model or Module Specific Record Model instances
-	 */
-	public static function getSearchResult($searchKey, $module = false, $limit = false, $operator = false)
-	{
-		if (!$limit) {
-			$limit = App\Config::search('GLOBAL_SEARCH_MODAL_MAX_NUMBER_RESULT');
-		}
-		$recordSearch = new \App\RecordSearch($searchKey, $module, $limit);
-		if ($operator) {
-			$recordSearch->operator = $operator;
-		}
-		$rows = $recordSearch->search();
-
-		$ids = $matchingRecords = $leadIdsList = [];
-		foreach ($rows as $row) {
-			$ids[] = $row['crmid'];
-			if ('Leads' === $row['setype']) {
-				$leadIdsList[] = $row['crmid'];
-			}
-		}
-		$convertedInfo = Leads_Module_Model::getConvertedInfo($leadIdsList);
-		$labels = \App\Record::getLabel($ids);
-		foreach ($rows as $row) {
-			if ('Leads' === $row['setype'] && $convertedInfo[$row['crmid']]) {
-				continue;
-			}
-			$recordMeta = \vtlib\Functions::getCRMRecordMetadata($row['crmid']);
-			$row['id'] = $row['crmid'];
-			$row['label'] = App\Purifier::decodeHtml($labels[$row['crmid']]);
-			$row['assigned_user_id'] = $recordMeta['smownerid'];
-			$row['createdtime'] = $recordMeta['createdtime'];
-			$row['permitted'] = \App\Privilege::isPermitted($row['setype'], 'DetailView', $row['crmid']);
-			$moduleName = $row['setype'];
-			$moduleModel = Vtiger_Module_Model::getInstance($moduleName);
-			$modelClassName = Vtiger_Loader::getComponentClassName('Model', 'Record', $moduleName);
-			$recordInstance = new $modelClassName();
-			$matchingRecords[$moduleName][$row['id']] = $recordInstance->setData($row)->setModuleFromInstance($moduleModel);
-		}
-		return $matchingRecords;
 	}
 
 	/**
@@ -1364,7 +1334,7 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @param array $exceptions
 	 */
-	public function setHandlerExceptions($exceptions)
+	public function setHandlerExceptions($exceptions): void
 	{
 		$this->handlerExceptions = $exceptions;
 	}
@@ -1374,7 +1344,7 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @return array
 	 */
-	public function getHandlerExceptions()
+	public function getHandlerExceptions(): array
 	{
 		return $this->handlerExceptions;
 	}
@@ -1459,7 +1429,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkdata' => [
 						'module' => $this->getModuleName(),
 						'record' => $this->getId(),
-					]
+					],
 				];
 			}
 		}
@@ -1587,7 +1557,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkdata' => [
 						'module' => $this->getModuleName(),
 						'record' => $this->getId(),
-					]
+					],
 				]);
 			}
 			if ($this->isViewable() && $this->getModule()->isPermitted('WatchingRecords')) {
@@ -1604,7 +1574,7 @@ class Vtiger_Record_Model extends \App\Base
 						'on' => 'btn-dark',
 						'off' => 'btn-outline-dark',
 						'icon-on' => 'fa-eye',
-						'icon-off' => 'fa-eye-slash'],
+						'icon-off' => 'fa-eye-slash', ],
 				]);
 			}
 			if ($this->getModule()->isPermitted('ExportPdf')) {
@@ -1616,7 +1586,7 @@ class Vtiger_Record_Model extends \App\Base
 						'linklabel' => 'LBL_EXPORT_PDF',
 						'dataUrl' => 'index.php?module=' . $this->getModuleName() . '&view=PDF&fromview=Detail&record=' . $this->getId(),
 						'linkicon' => 'fas fa-file-pdf',
-						'linkclass' => 'btn-sm btn-outline-danger showModal js-pdf'
+						'linkclass' => 'btn-sm btn-outline-danger showModal js-pdf',
 					]);
 				}
 			}
@@ -1629,8 +1599,8 @@ class Vtiger_Record_Model extends \App\Base
 					'linkdata' => [
 						'content' => \App\Language::translate('LBL_REMOVE_RELATION'),
 						'confirm' => \App\Language::translate('LBL_REMOVE_RELATION_CONFIRMATION'),
-						'id' => $this->getId()
-					]
+						'id' => $this->getId(),
+					],
 				]);
 			}
 			$stateColors = App\Config::search('LIST_ENTITY_STATE_COLOR');
@@ -1644,8 +1614,8 @@ class Vtiger_Record_Model extends \App\Base
 					'linkdata' => [
 						'content' => \App\Language::translate('LBL_ACTIVATE_RECORD'),
 						'confirm' => \App\Language::translate('LBL_ACTIVATE_RECORD_DESC'),
-						'id' => $this->getId()
-					]
+						'id' => $this->getId(),
+					],
 				]);
 			}
 			if ($this->privilegeToArchive()) {
@@ -1658,8 +1628,8 @@ class Vtiger_Record_Model extends \App\Base
 					'linkdata' => [
 						'content' => \App\Language::translate('LBL_ARCHIVE_RECORD'),
 						'confirm' => \App\Language::translate('LBL_ARCHIVE_RECORD_DESC'),
-						'id' => $this->getId()
-					]
+						'id' => $this->getId(),
+					],
 				]);
 			}
 			if ($privilegeToDelete && $this->privilegeToMoveToTrash()) {
@@ -1670,7 +1640,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkicon' => 'fas fa-trash-alt',
 					'style' => empty($stateColors['Trash']) ? '' : "background: {$stateColors['Trash']};",
 					'linkdata' => ['confirm' => \App\Language::translate('LBL_MOVE_TO_TRASH_DESC')],
-					'linkclass' => 'btn-sm btn-outline-dark relationDelete entityStateBtn'
+					'linkclass' => 'btn-sm btn-outline-dark relationDelete entityStateBtn',
 				]);
 			}
 			if ($privilegeToDelete && $this->privilegeToDelete()) {
@@ -1680,7 +1650,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linkicon' => 'fas fa-eraser',
 					'dataUrl' => 'index.php?module=' . $this->getModuleName() . '&action=Delete&record=' . $this->getId(),
 					'linkdata' => ['confirm' => \App\Language::translate('LBL_DELETE_RECORD_COMPLETELY_DESC')],
-					'linkclass' => 'btn-sm btn-dark relationDelete entityStateBtn'
+					'linkclass' => 'btn-sm btn-dark relationDelete entityStateBtn',
 				]);
 			}
 			if (!empty($relationModel->getTypeRelationModel()->customFields) && ($relationModel->getTypeRelationModel()->getFields()) && ($parentRecord = $relationModel->get('parentRecord')) && $parentRecord->isEditable() && $this->isEditable()) {
@@ -1689,7 +1659,7 @@ class Vtiger_Record_Model extends \App\Base
 					'linklabel' => 'LBL_CHANGE_RELATION_DATA',
 					'dataUrl' => "index.php?module={$relationModel->getParentModuleModel()->getName()}&view=ChangeRelationData&record={$this->getId()}&fromRecord={$parentRecord->getId()}&relationId={$relationModel->getId()}",
 					'linkicon' => 'mdi mdi-briefcase-edit-outline',
-					'linkclass' => 'btn-sm btn-warning js-show-modal'
+					'linkclass' => 'btn-sm btn-warning js-show-modal',
 				]);
 				if (App\Config::relation('separateChangeRelationButton')) {
 					$links['BUTTONS']['LBL_CHANGE_RELATION_DATA'] = $changeRelationDataButton;
@@ -1773,6 +1743,21 @@ class Vtiger_Record_Model extends \App\Base
 	}
 
 	/**
+	 * Function gets the value from this record.
+	 *
+	 * @param \Vtiger_Field_Model $fieldModel
+	 *
+	 * @return mixed
+	 */
+	public function getValueByFieldModel(Vtiger_Field_Model $fieldModel)
+	{
+		if ($fieldModel->get('source_field_name')) {
+			return isset($this->ext[$fieldModel->get('source_field_name')][$fieldModel->getModuleName()]) ? $this->ext[$fieldModel->get('source_field_name')][$fieldModel->getModuleName()]->get($fieldModel->getName()) : null;
+		}
+		return $this->get($fieldModel->getName());
+	}
+
+	/**
 	 * Change record state.
 	 *
 	 * @param type $state
@@ -1800,7 +1785,7 @@ class Vtiger_Record_Model extends \App\Base
 			$dbCommand = $db->createCommand();
 			$dbCommand->update('vtiger_crmentity', [
 				'deleted' => $stateId, 'modifiedtime' => date('Y-m-d H:i:s'),
-				'modifiedby' => \App\User::getCurrentUserId()
+				'modifiedby' => \App\User::getCurrentUserId(),
 			], ['crmid' => $this->getId()])->execute();
 			if ('Active' !== $state) {
 				$dbCommand->delete('u_#__crmentity_search_label', ['crmid' => $this->getId()])->execute();
