@@ -647,7 +647,6 @@ STR;
 				}
 			}
 			$fieldId = (new \App\Db\Query())->select(['fieldid'])->from('vtiger_field')->where(['fieldname' => $fieldName, 'uitype' => [16, 33]])->scalar();
-			$this->log("[INFO] PICKLIST VALUES: {$fieldName} " . print_r($fieldName, array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)), $values, \App\Fields\Picklist::getValuesName($fieldName)));
 			if ($fieldId && ($diffVal = array_diff($values, \App\Fields\Picklist::getValuesName($fieldName)))) {
 				$this->log("[INFO] PICKLIST VALUES SET IN: {$fieldName}");
 				$fieldModel = \Vtiger_Field_Model::getInstanceFromFieldId($fieldId);
