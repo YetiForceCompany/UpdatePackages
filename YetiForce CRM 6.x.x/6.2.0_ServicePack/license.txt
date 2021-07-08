@@ -1,0 +1,7 @@
+License: YetiForce Public License 4.0 licenses/License.html
+
+- Fixed relation fields autofill while creating related records
+- Fixed listing records in trash
+- Fixes in Admin access panel
+- Fixed layout for employee hierarchy view (#14899)
+- and other
