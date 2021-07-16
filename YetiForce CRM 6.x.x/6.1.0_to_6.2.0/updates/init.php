@@ -70,6 +70,15 @@ class YetiForceUpdate
 		$minTime = 600;
 		$maxExecutionTime = ini_get('max_execution_time');
 		$maxInputTime = ini_get('max_input_time');
+		if (version_compare(PHP_VERSION, '7.3', '<')) {
+			$error = 'Wrong PHP version, recommended version >= 7.3';
+		}
+		if ($error) {
+			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
+			$this->package->_errorText .= 'Please have a look at the list of errors:'. PHP_EOL. PHP_EOL;
+			$this->package->_errorText .= $error;
+			return false;
+		}
 		if ((0 != $maxExecutionTime && $maxExecutionTime < $minTime) || ($maxInputTime > 0 && $maxInputTime < $minTime)) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:';
@@ -218,11 +227,11 @@ class YetiForceUpdate
 						['columnname' => 'related_to', 'tablename' => 'u_yf_ssalesprocesses'],
 						['columnname' => 'linktoaccountscontacts', 'tablename' => 'vtiger_project'],
 						['columnname' => ['parent_id', 'status'], 'tablename' => 'vtiger_troubletickets'],
-					]
-				]
+					],
+				],
 			],
 			['vtiger_field', ['header_field' => '{"type":"value"}'], ['fieldname' => ['shownerid', 'assigned_user_id'], 'tablename' => 'vtiger_crmentity', 'header_field' => [null, ''], 'tabid' => [
-				\App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Calendar'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('SSalesProcesses'), \App\Module::getModuleId('MultiCompany')
+				\App\Module::getModuleId('Contacts'), \App\Module::getModuleId('Calendar'), \App\Module::getModuleId('HelpDesk'), \App\Module::getModuleId('Project'), \App\Module::getModuleId('SSalesProcesses'), \App\Module::getModuleId('MultiCompany'),
 			]]],
 			['vtiger_field', ['fieldparams' => '{"mask":"9999999999999"}'], ['columnname' => 'ean', 'tablename' => 'vtiger_products', 'fieldparams' => '9999999999999']],
 			['vtiger_field', ['displaytype' => 2], ['fieldlabel' => ['FL_MAGENTO_SERVER', 'FL_MAGENTO_ID', 'FL_MAGENTO_STATUS']]],
@@ -234,7 +243,7 @@ class YetiForceUpdate
 			['vtiger_eventhandlers', ['privileges' => 1], ['or', ['event_name' => 'EditViewPreSave'], ['handler_class' => ['PaymentsIn_PaymentsInHandler_Handler', 'Vtiger_RecordFlowUpdater_Handler', 'Contacts_DuplicateEmail_Handler', 'Accounts_DuplicateVatId_Handler', 'Products_DuplicateEan_Handler', 'IGDNC_IgdnExist_Handler', 'App\Extension\PwnedPassword', 'Vtiger_AutoFillIban_Handler']]]],
 			['vtiger_cron_task', ['max_exe_time' => 5], ['and',
 				['handler_class' => 'Calendar_SetCrmActivity_Cron'],
-				['or', ['max_exe_time' => null], ['max_exe_time' => 0]]
+				['or', ['max_exe_time' => null], ['max_exe_time' => 0]],
 			]],
 			['vtiger_field', ['defaultvalue' => null], ['fieldname' => 'crmactivity', 'tablename' => 'vtiger_entity_stats']],
 			['vtiger_settings_field', ['iconpath' => 'yfi yfi-map'], ['name' => ['LBL_MAP']]],
@@ -289,7 +298,7 @@ class YetiForceUpdate
 					'creator_detail' => $creatorDetail,
 					'relation_comment' => $relationComment,
 					'view_type' => $viewType,
-					'field_name' => $fieldName
+					'field_name' => $fieldName,
 				])->execute();
 			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
 				$where = $relation['where'] ?? $where;
@@ -303,7 +312,7 @@ class YetiForceUpdate
 					'creator_detail' => $creatorDetail,
 					'relation_comment' => $relationComment,
 					'view_type' => $viewType,
-					'field_name' => $fieldName
+					'field_name' => $fieldName,
 				], $where)->execute();
 			}
 		}
@@ -702,8 +711,8 @@ STR;
 			'Ticket change: Send Email to Record Account',
 			'Ticket Closed: Send Email to Record Owner',
 			'Ticket Closed: Send Email to Record Account',
-			'Ticket Creation: Send Email to Record Account'
-		]
+			'Ticket Creation: Send Email to Record Account',
+		],
 		];
 		foreach ($workflows as $moduleName => $names) {
 			$dataReader = (new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflows')->where(['module_name' => $moduleName, 'summary' => $names])->createCommand()->query();
@@ -888,14 +897,14 @@ STR;
 					'OSSSoldServices' => ['fieldName' => 'parent_id', 'moduleName' => 'Accounts'],
 				],
 				'Assets' => [
-					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
+					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts'],
 				],
 				'OSSSoldServices' => [
-					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts']
+					'ServiceContracts' => ['fieldName' => 'sc_related_to', 'moduleName' => 'Accounts'],
 				],
 				'SSalesProcesses' => [
-					'SSalesProcesses' => ['fieldName' => 'related_to', 'moduleName' => 'Accounts']
-				]
+					'SSalesProcesses' => ['fieldName' => 'related_to', 'moduleName' => 'Accounts'],
+				],
 			];
 			foreach ($tabRel as $relModule => $relData) {
 				foreach ($relData as $sourceModule => $fieldsData) {
@@ -951,7 +960,7 @@ STR;
 		if (empty($fields)) {
 			$fields = [
 				[112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => ['label' => 'LBL_CUSTOM_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 0, 'iscustom' => 0, 'icon' => null], 'moduleName' => 'EmailTemplates'],
-				[60, 3079, 'multicompanyid', 'vtiger_osspasswords', 1, 10, 'multicompanyid', 'FL_MULTICOMPANY', 0, 2, '', '4294967295', 16, 147, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_OSSPASSWORD_INFORMATION', 'blockData' => ['label' => 'LBL_OSSPASSWORD_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['MultiCompany'], 'moduleName' => 'OSSPasswords']
+				[60, 3079, 'multicompanyid', 'vtiger_osspasswords', 1, 10, 'multicompanyid', 'FL_MULTICOMPANY', 0, 2, '', '4294967295', 16, 147, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_OSSPASSWORD_INFORMATION', 'blockData' => ['label' => 'LBL_OSSPASSWORD_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['MultiCompany'], 'moduleName' => 'OSSPasswords'],
 			];
 		}
 
@@ -1050,7 +1059,7 @@ STR;
 			],
 			'performance' => [
 				'CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER' => 1000 == \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER') ? 10000 : \App\Config::performance('CRON_MAX_NUMBERS_RECORD_LABELS_UPDATER'),
-			]
+			],
 		];
 
 		$skip = ['module', 'component'];
@@ -1103,7 +1112,7 @@ STR;
 				'from_version' => (string) $this->moduleNode->from_version,
 				'to_version' => (string) $this->moduleNode->to_version,
 				'result' => false,
-				'time' => date('Y-m-d H:i:s')
+				'time' => date('Y-m-d H:i:s'),
 			])->execute();
 			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->moduleNode->to_version])->execute();
 			\vtlib\Functions::recurseDelete('cache/updates');
