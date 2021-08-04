@@ -70,6 +70,89 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
+		$this->emailTemplates();
+	}
+
+	public function emailTemplates()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+		$oldContent = (new \App\Db\Query())->select(['content'])->from('u_yf_emailtemplates')->where(['sys_name' => 'UsersResetPassword'])->scalar();
+		$usersResetPassword = <<<'STR'
+		<table align="center" bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" class="table_full editable-bg-color bg_color_ffffff editable-bg-image" style="max-width:1024px;min-width:320px;">
+	<tbody>
+		<tr>
+			<td height="20">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr>
+						<td bgcolor="#fcfcfc" style="border:1px solid #f2f2f2;border-radius:5px;padding:10px;">
+						<table align="center" border="0" cellpadding="0" cellspacing="0" class="no_float">
+							<tbody>
+								<tr>
+									<td align="center" class="editable-img">$(organization : logo)$</td>
+								</tr>
+							</tbody>
+						</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="25">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr style="text-align:left;">
+						<td bgcolor="#fcfcfc" style="padding:30px 20px 30px 20px;border:1px solid #f2f2f2;border-radius:5px;">
+							<p>Dear user,<br />
+								We received a request to change the password to your account.<br />
+								In order to set a new password click the following link (valid until $(params : expirationDate)$):<br /><br />
+								<a href="$(params : url)$" target="_blank">$(params : url)$</a><br />
+								$(params : token)$
+								<br /><br />
+								If you didn't request the passwords change please report it to the administrator or use the password change option available on the login page.
+							</p>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="40">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+			<table align="center" border="0" cellpadding="0" cellspacing="0" class="table1" style="width:100%;">
+				<tbody>
+					<tr>
+						<td align="center" class="text_color_c6c6c6" style="line-height:1;font-size:14px;font-weight:400;font-family:'Open Sans', Helvetica, sans-serif;">
+						<div class="editable-text"><span class="text_container">&copy; 2021 YetiForce Sp. z o.o. All Rights Reserved.</span></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="20">&nbsp;</td>
+		</tr>
+	</tbody>
+</table>
+STR;
+		if ('1c5a01d67ab1fa3e3c4e6baa1f3f164f6af00665' === sha1($oldContent)) {
+			$dbCommand->update('u_yf_emailtemplates', ['content' => $usersResetPassword], ['sys_name' => 'UsersResetPassword'])->execute();
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**

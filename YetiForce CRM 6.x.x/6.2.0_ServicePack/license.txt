@@ -4,4 +4,14 @@ License: YetiForce Public License 4.0 licenses/License.html
 - Fixed listing records in trash
 - Fixes in Admin access panel
 - Fixed layout for employee hierarchy view (#14899)
+- Improved selection of records on the list of users
+- Improved layout of user photo on list of users
+- Fix compatibility with sql_mode ONLY_FULL_GROUP_BY
+- Improved conditions for removing departments
+- Fix #14974
+- Improved field order in quick create.
+- Improved ConfReport
+- Fix change password
+- Fixed postponement of calendar entries
+- Improved page reload after quick create record
 - and other
