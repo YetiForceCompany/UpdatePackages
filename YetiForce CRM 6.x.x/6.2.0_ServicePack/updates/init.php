@@ -7,6 +7,7 @@
  * @copyright YetiForce Sp. z o.o.
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
 /**
@@ -71,6 +72,7 @@ class YetiForceUpdate
 	public function update()
 	{
 		$this->emailTemplates();
+		$this->importerDb();
 	}
 
 	public function emailTemplates()
@@ -153,6 +155,64 @@ STR;
 			$dbCommand->update('u_yf_emailtemplates', ['content' => $usersResetPassword], ['sys_name' => 'UsersResetPassword'])->execute();
 		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Add tables.
+	 */
+	public function importerDb()
+	{
+		$db = \App\Db::getInstance();
+		$importer = new \App\Db\Importers\Base();
+		$tables = [
+			'u_#__mail_quantities' => [
+				'columns' => [
+					'userid' => $importer->integer(10)->unsigned()->notNull(),
+					'num' => $importer->smallInteger()->unsigned()->defaultValue(0),
+					'date' => $importer->dateTime(),
+				],
+				'primaryKeys' => [
+					['mail_quantities_pk', 'userid'],
+				],
+				'foreignKey' => [
+					['u_#__mail_quantities_ibfk_1', 'u_#__mail_quantities', 'userid', 'roundcube_users', 'user_id', 'CASCADE', null],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8',
+			],
+			'roundcube_users' => [
+				'columns' => [
+					'crm_status' => $importer->smallInteger(1)->defaultValue(0),
+					'crm_error' => $importer->stringType(200),
+				],
+				'columns_mysql' => [
+					'crm_status' => $importer->tinyInteger(1)->defaultValue(0),
+				],
+				'index' => [
+					['crm_status', 'crm_status'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8',
+			],
+		];
+		$base = new \App\Db\Importer();
+		$base->dieOnError = App\Config::debug('SQL_DIE_ON_ERROR');
+		foreach ($tables as $tableName => $data) {
+			$importer->tables = [$tableName => $data];
+			if ($db->isTableExists($tableName)) {
+				$base->updateTables($importer);
+			} else {
+				$base->addTables($importer);
+				if (isset($data['foreignKey'])) {
+					$importer->foreignKey = $data['foreignKey'];
+					$base->addForeignKey($importer);
+				}
+			}
+		}
+		if ($db->isTableExists('yetiforce_mail_quantities')) {
+			$base->dropTable(['yetiforce_mail_quantities']);
+		}
+		$base->logs(true);
 	}
 
 	/**
