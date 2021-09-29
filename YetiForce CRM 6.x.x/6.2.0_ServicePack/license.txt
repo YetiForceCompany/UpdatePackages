@@ -14,4 +14,6 @@ License: YetiForce Public License 4.0 licenses/License.html
 - Fix change password
 - Fixed postponement of calendar entries
 - Improved page reload after quick create record
+- Fix #15190
+- System registration has been improved
 - and other
