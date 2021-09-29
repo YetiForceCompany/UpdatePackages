@@ -10,4 +10,7 @@
 		<vtiger_version>6.2.0</vtiger_version>
 		<vtiger_max_version>6.2.0</vtiger_max_version>
 	</dependencies>
+	<license>
+		<file>license.txt</file>
+	</license>
 </module>
