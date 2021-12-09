@@ -65,5 +65,6 @@ return [
 	'public_html/modules/Settings/YetiForce/YetiForceApiPortal.png',
 	'vendor',
 	'public_html/vendor',
-	'public_html/libraries'
+	'public_html/libraries',
+	'config/Components/Social.php'
 ];

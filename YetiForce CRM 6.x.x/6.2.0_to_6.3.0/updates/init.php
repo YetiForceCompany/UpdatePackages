@@ -590,6 +590,15 @@ STR;
 		$configTemplates = 'config/Components/ConfigTemplates.php';
 		copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
 
+		foreach (['Documents', 'Partners', 'Passwords'] as $moduleName) {
+			$dirPath = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'modules' . \DIRECTORY_SEPARATOR . $moduleName;
+			if (!is_dir($dirPath)) {
+				mkdir($dirPath);
+			}
+			$configTemplates = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+			copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
+		}
+
 		\App\Cache::resetOpcache();
 		clearstatcache();
 
@@ -599,6 +608,14 @@ STR;
 		$componentsData = require_once "$path";
 		foreach ($componentsData as $component => $data) {
 			(new \App\ConfigFile('component', $component))->create();
+		}
+
+		$dataReader = (new \App\Db\Query())->select(['name'])->from('vtiger_tab')->where(['vtiger_tab.isentitytype' => 1])->createCommand()->query();
+		while ($moduleName = $dataReader->readColumn(0)) {
+			$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+			if (file_exists($filePath)) {
+				(new \App\ConfigFile('module', $moduleName))->create();
+			}
 		}
 
 		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
