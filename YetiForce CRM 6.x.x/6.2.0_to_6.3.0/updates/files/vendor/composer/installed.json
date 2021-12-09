@@ -964,17 +964,17 @@
         },
         {
             "name": "illuminate/collections",
-            "version": "v8.74.0",
-            "version_normalized": "8.74.0.0",
+            "version": "v8.75.0",
+            "version_normalized": "8.75.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
-                "reference": "f292b77824b42cd28decc7327e7c2e24c3806371"
+                "reference": "5a018387352afa2af30fd2be0a78c31e93295720"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/collections/zipball/f292b77824b42cd28decc7327e7c2e24c3806371",
-                "reference": "f292b77824b42cd28decc7327e7c2e24c3806371",
+                "url": "https://api.github.com/repos/illuminate/collections/zipball/5a018387352afa2af30fd2be0a78c31e93295720",
+                "reference": "5a018387352afa2af30fd2be0a78c31e93295720",
                 "shasum": ""
             },
             "require": {
@@ -985,7 +985,7 @@
             "suggest": {
                 "symfony/var-dumper": "Required to use the dump method (^5.4)."
             },
-            "time": "2021-11-30T14:29:03+00:00",
+            "time": "2021-12-07T14:48:29+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1021,17 +1021,17 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v8.74.0",
-            "version_normalized": "8.74.0.0",
+            "version": "v8.75.0",
+            "version_normalized": "8.75.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
-                "reference": "b0886ec05a63b204634d64d0b39d5b78a7c06f81"
+                "reference": "b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/contracts/zipball/b0886ec05a63b204634d64d0b39d5b78a7c06f81",
-                "reference": "b0886ec05a63b204634d64d0b39d5b78a7c06f81",
+                "url": "https://api.github.com/repos/illuminate/contracts/zipball/b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f",
+                "reference": "b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f",
                 "shasum": ""
             },
             "require": {
@@ -1039,7 +1039,7 @@
                 "psr/container": "^1.0",
                 "psr/simple-cache": "^1.0"
             },
-            "time": "2021-11-17T15:04:30+00:00",
+            "time": "2021-12-07T08:18:44+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1072,8 +1072,8 @@
         },
         {
             "name": "illuminate/macroable",
-            "version": "v8.74.0",
-            "version_normalized": "8.74.0.0",
+            "version": "v8.75.0",
+            "version_normalized": "8.75.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/macroable.git",
@@ -1121,17 +1121,17 @@
         },
         {
             "name": "illuminate/support",
-            "version": "v8.74.0",
-            "version_normalized": "8.74.0.0",
+            "version": "v8.75.0",
+            "version_normalized": "8.75.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "79bb5570274d6abbfaac736992c6b5f5cbcc17c1"
+                "reference": "f542bb78a8a1013ab33fbe14974c45b2a88993d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/79bb5570274d6abbfaac736992c6b5f5cbcc17c1",
-                "reference": "79bb5570274d6abbfaac736992c6b5f5cbcc17c1",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/f542bb78a8a1013ab33fbe14974c45b2a88993d0",
+                "reference": "f542bb78a8a1013ab33fbe14974c45b2a88993d0",
                 "shasum": ""
             },
             "require": {
@@ -1156,7 +1156,7 @@
                 "symfony/var-dumper": "Required to use the dd function (^5.4).",
                 "vlucas/phpdotenv": "Required to use the Env class and env helper (^5.2)."
             },
-            "time": "2021-11-30T14:13:40+00:00",
+            "time": "2021-12-03T15:33:45+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2975,17 +2975,17 @@
         },
         {
             "name": "sabre/dav",
-            "version": "4.2.1",
-            "version_normalized": "4.2.1.0",
+            "version": "4.2.2",
+            "version_normalized": "4.2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sabre-io/dav.git",
-                "reference": "5e651f9ddc2b05745f5b28cd697c8e8c6a0b6146"
+                "reference": "5d739875d624e064018b4709ab544063df42d749"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sabre-io/dav/zipball/5e651f9ddc2b05745f5b28cd697c8e8c6a0b6146",
-                "reference": "5e651f9ddc2b05745f5b28cd697c8e8c6a0b6146",
+                "url": "https://api.github.com/repos/sabre-io/dav/zipball/5d739875d624e064018b4709ab544063df42d749",
+                "reference": "5d739875d624e064018b4709ab544063df42d749",
                 "shasum": ""
             },
             "require": {
@@ -3000,7 +3000,7 @@
                 "ext-spl": "*",
                 "lib-libxml": ">=2.7.0",
                 "php": "^7.1.0 || ^8.0",
-                "psr/log": "^1.0",
+                "psr/log": "^1.0 || ^2.0 || ^3.0",
                 "sabre/event": "^5.0",
                 "sabre/http": "^5.0.5",
                 "sabre/uri": "^2.0",
@@ -3019,7 +3019,7 @@
                 "ext-imap": "*",
                 "ext-pdo": "*"
             },
-            "time": "2021-11-30T13:53:16+00:00",
+            "time": "2021-12-09T06:15:57+00:00",
             "bin": [
                 "bin/sabredav",
                 "bin/naturalselection"
