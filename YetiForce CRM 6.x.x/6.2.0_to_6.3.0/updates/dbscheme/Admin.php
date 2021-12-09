@@ -18,8 +18,8 @@ class Admin extends \App\Db\Importers\Base
 		$this->tables = [
 			'a_#__encryption' => [
 				'columns' => [
-					'target' => $this->smallInteger(5)->notNull(),
-					'status' => $this->smallInteger(1)->notNull()->defaultValue(1)
+					'target' => $this->smallInteger(5)->notNull()->first(),
+					'status' => $this->smallInteger(1)->notNull()->defaultValue(1),
 				],
 				'columns_mysql' => [
 					'status' => $this->tinyInteger(1)->notNull()->defaultValue(1),
@@ -28,14 +28,14 @@ class Admin extends \App\Db\Importers\Base
 					['a_yf_encryption_target_uidx', 'target', true],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'a_#__record_list_filter' => [
 				'columns' => [
 					'label' => $this->stringType(50),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__auto_assign' => [
 				'columns' => [
@@ -63,7 +63,7 @@ class Admin extends \App\Db\Importers\Base
 					['s_yf_auto_assign_tabid_idx', 'tabid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__auto_assign_groups' => [
 				'columns' => [
@@ -76,7 +76,7 @@ class Admin extends \App\Db\Importers\Base
 					['s_yf_auto_assign_groups_member_idx', 'member'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__auto_assign_roles' => [
 				'columns' => [
@@ -89,7 +89,7 @@ class Admin extends \App\Db\Importers\Base
 					['s_yf_auto_assign_roles_member_idx', 'member'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__auto_assign_users' => [
 				'columns' => [
@@ -102,7 +102,7 @@ class Admin extends \App\Db\Importers\Base
 					['s_yf_auto_assign_users_member_idx', 'member'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__kanban_boards' => [
 				'columns' => [
@@ -118,14 +118,14 @@ class Admin extends \App\Db\Importers\Base
 					['s_yf_kanban_boards_tabid_idx', 'tabid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__mail_rbl_list' => [
 				'columns' => [
-					'comment' => $this->stringType(500),
+					'comment' => $this->stringType(500)->after('source'),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__sla_policy' => [
 				'columns' => [
@@ -135,14 +135,14 @@ class Admin extends \App\Db\Importers\Base
 					'available_for_record_time_count' => $this->tinyInteger(1),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			's_#__smsnotifier_queue' => [
 				'columns' => [
-					'message' => $this->stringType(500)->notNull()
+					'message' => $this->stringType(500)->notNull(),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 		];
 		$this->foreignKey = [

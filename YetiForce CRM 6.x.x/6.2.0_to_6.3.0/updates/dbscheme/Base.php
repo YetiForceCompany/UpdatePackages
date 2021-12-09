@@ -23,7 +23,7 @@ class Base extends \App\Db\Importers\Base
 					['userid', 'userid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__chat_rooms_user' => [
 				'index' => [
@@ -31,7 +31,7 @@ class Base extends \App\Db\Importers\Base
 					['userid', 'userid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__chat_user' => [
 				'index' => [
@@ -39,7 +39,7 @@ class Base extends \App\Db\Importers\Base
 					['userid', 'userid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__mail_quantities' => [
 				'columns' => [
@@ -48,10 +48,10 @@ class Base extends \App\Db\Importers\Base
 					'date' => $this->dateTime(),
 				],
 				'primaryKeys' => [
-					['mail_quantities_pk', 'userid']
+					['mail_quantities_pk', 'userid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__servicecontracts_sla_policy' => [
 				'columns' => [
@@ -59,45 +59,45 @@ class Base extends \App\Db\Importers\Base
 					'business_hours' => $this->text(),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__ssalesprocesses' => [
 				'index' => [
 					['ssalesprocesses_status', 'ssalesprocesses_status'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'vtiger_cron_task' => [
 				'columns' => [
 					'id' => $this->integer(10)->unsigned()->autoIncrement()->notNull(),
-					'last_update' => $this->integer(10),
-					'max_exe_time' => $this->smallInteger(5),
+					'last_update' => $this->integer(10)->after('laststart'),
+					'max_exe_time' => $this->smallInteger(5)->after('sequence'),
 					'description' => $this->stringType(255),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'vtiger_field' => [
 				'columns' => [
 					'icon' => $this->stringType(),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'vtiger_loginhistory' => [
 				'columns' => [
 					'user_ip' => $this->stringType(255),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'w_#__api_session' => [
 				'columns' => [
 					'parent_id' => $this->integer(10)->unsigned()->notNull()->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'w_#__fields_server' => [
 				'columns' => [
@@ -115,24 +115,24 @@ class Base extends \App\Db\Importers\Base
 					['w_yf_fields_server_serverid_idx', 'serverid'],
 				],
 				'primaryKeys' => [
-					['fields_server_pk', 'fieldid']
+					['fields_server_pk', 'fieldid'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'w_#__portal_session' => [
 				'columns' => [
 					'parent_id' => $this->integer(10)->unsigned()->notNull()->defaultValue(0),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'w_#__portal_user' => [
 				'columns' => [
 					'preferences' => $this->text(),
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__auto_assign_rr' => [
 				'columns' => [
@@ -145,21 +145,28 @@ class Base extends \App\Db\Importers\Base
 					['s_yf_auto_assign_rr_user_idx', 'user'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
 			],
 			'u_#__notification' => [
 				'index' => [
-					['notification_status', 'notification_status']
+					['notification_status', 'notification_status'],
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8'
+				'charset' => 'utf8',
+			],
+			'vtiger_modtracker_basic' => [
+				'index' => [
+					['status', 'status'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8',
 			],
 		];
 		// $this->dropTables = [
 		// 	'roundcube_system', 'vtiger_blocks_hide'
 		// ];
 		$this->dropIndexes = [
-			'vtiger_notes' => ['notes_notesid_idx']
+			'vtiger_notes' => ['notes_notesid_idx'],
 		];
 		$this->foreignKey = [
 			['s_#__auto_assign_rr_id_fk', 'u_#__auto_assign_rr', 'id', 's_#__auto_assign', 'id', 'CASCADE', null],

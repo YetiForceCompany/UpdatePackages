@@ -110,10 +110,14 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
-			
+
 			$db = \App\Db::getInstance();
-			$db->createCommand("ALTER TABLE `w_yf_api_user` DROP INDEX `server_id`, ADD KEY `w_yf_api_user_server_id__idx` (`server_id`);")->execute();
-			$db->createCommand("ALTER TABLE `w_yf_api_user` DROP INDEX `user_name_status`, ADD KEY `w_yf_api_user_user_name_status__idx` (`user_name`, `status`);")->execute();
+			$keys = $db->getTableKeys('w_yf_api_user');
+			if (!isset($keys['w_yf_api_user_server_id__idx'])) {
+				$db->createCommand('ALTER TABLE `w_yf_api_user` DROP INDEX `server_id`, ADD KEY `w_yf_api_user_server_id__idx` (`server_id`);')->execute();
+				$db->createCommand('ALTER TABLE `w_yf_api_user` DROP INDEX `user_name_status`, ADD KEY `w_yf_api_user_user_name_status__idx` (`user_name`, `status`);')->execute();
+			}
+
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['b_#__social_media_twitter', 's_#__automatic_assignment', 'u_#__social_media_config', 'u_#__social_media_twitter', 'yetiforce_mail_quantities', 'l_#__social_media_logs']);
 			$this->importer->importData();
@@ -185,6 +189,7 @@ class YetiForceUpdate
 			$db->createCommand("ALTER TABLE `roundcube_cache_shared` CHANGE `data` `data` longtext  COLLATE utf8mb4_unicode_ci NOT NULL after `expires` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
 			$db->createCommand("ALTER TABLE `roundcube_cache_thread` CHANGE `data` `data` longtext  COLLATE utf8mb4_unicode_ci NOT NULL after `expires` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
 			$db->createCommand("ALTER TABLE `roundcube_contactgroups` CHANGE `name` `name` varchar(128)  COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' after `del` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
+
 			$db->createCommand("ALTER TABLE `roundcube_contacts`
 			CHANGE `name` `name` varchar(128)  COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' after `del` ,
 			CHANGE `email` `email` text  COLLATE utf8mb4_unicode_ci NOT NULL after `name` ,
@@ -341,7 +346,7 @@ class YetiForceUpdate
 						$isExists = (new \App\Db\Query())->from('vtiger_profile2utility')->where(['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key])->exists();
 						if (!$isExists) {
 							$db->createCommand()->insert('vtiger_profile2utility', [
-								'profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission
+								'profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission,
 							])->execute();
 						}
 					}
@@ -505,7 +510,7 @@ STR;
 			$fields = [
 				[92, 3080, 'parentid', 'u_yf_partners', 1, 10, 'parentid', 'FL_MEMBER_OF', 0, 2, '', '4294967295', 10, 299, 1, 'V~O', 2, 3, 'BAS', 1, '', 1, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_PARTNERS_INFORMATION', 'blockData' => ['label' => 'LBL_PARTNERS_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['Partners'], 'moduleName' => 'Partners'],
 				[13, 3097, 'contact_id', 'vtiger_troubletickets', 1, 10, 'contact_id', 'FL_CONTACT', 0, 2, '', '4294967295', 7, 25, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_TICKET_INFORMATION', 'blockData' => ['label' => 'LBL_TICKET_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['Contacts'], 'moduleName' => 'HelpDesk', 'relationData' => [669, 'Contacts', 'HelpDesk', 'getDependentsList', 4, 'LBL_HELPDESK_DEPENDENTS', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'contact_id', null]],
-				[111, 3098, 'subprocess_sl', 'u_yf_notification', 2, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 10, 374, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'blockData' => ['label' => 'LBL_NOTIFICATION_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['ProjectTask'], 'moduleName' => 'Notification', 'relationData' => [670, 'ProjectTask', 'Notification', 'getDependentsList', 5, 'Notification', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'subprocess_sl', null]]
+				[111, 3098, 'subprocess_sl', 'u_yf_notification', 2, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 10, 374, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'blockData' => ['label' => 'LBL_NOTIFICATION_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['ProjectTask'], 'moduleName' => 'Notification', 'relationData' => [670, 'ProjectTask', 'Notification', 'getDependentsList', 5, 'Notification', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'subprocess_sl', null]],
 			];
 		}
 
