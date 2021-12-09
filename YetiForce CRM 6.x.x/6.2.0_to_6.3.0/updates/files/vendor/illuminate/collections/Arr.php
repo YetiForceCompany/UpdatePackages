@@ -718,19 +718,6 @@ class Arr
     }
 
     /**
-     * Filter items where the value is not null.
-     *
-     * @param  array  $array
-     * @return array
-     */
-    public static function whereNotNull($array)
-    {
-        return static::where($array, function ($value) {
-            return ! is_null($value);
-        });
-    }
-
-    /**
      * If the given value is not an array and not null, wrap it in one.
      *
      * @param  mixed  $value

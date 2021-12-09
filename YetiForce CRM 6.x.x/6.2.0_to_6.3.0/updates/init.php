@@ -69,15 +69,15 @@ class YetiForceUpdate
 		$minTime = 600;
 		$maxExecutionTime = ini_get('max_execution_time');
 		$maxInputTime = ini_get('max_input_time');
+
 		if (version_compare(PHP_VERSION, '7.3', '<')) {
 			$error = 'Wrong PHP version, recommended version >= 7.3';
-		}
-		if ($error) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:' . PHP_EOL . PHP_EOL;
 			$this->package->_errorText .= $error;
 			return false;
 		}
+
 		if ((0 != $maxExecutionTime && $maxExecutionTime < $minTime) || ($maxInputTime > 0 && $maxInputTime < $minTime)) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:';
@@ -590,7 +590,7 @@ STR;
 		$configTemplates = 'config/Components/ConfigTemplates.php';
 		copy(__DIR__ . '/files/' . $configTemplates, \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . $configTemplates);
 
-		foreach (['Documents', 'Partners', 'Passwords'] as $moduleName) {
+		foreach (['Documents', 'Partners', 'Passwords', 'Project', 'Import'] as $moduleName) {
 			$dirPath = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'modules' . \DIRECTORY_SEPARATOR . $moduleName;
 			if (!is_dir($dirPath)) {
 				mkdir($dirPath);
@@ -610,8 +610,7 @@ STR;
 			(new \App\ConfigFile('component', $component))->create();
 		}
 
-		$dataReader = (new \App\Db\Query())->select(['name'])->from('vtiger_tab')->where(['vtiger_tab.isentitytype' => 1])->createCommand()->query();
-		while ($moduleName = $dataReader->readColumn(0)) {
+		foreach (['Documents', 'Partners', 'Passwords', 'Project', 'Import'] as $moduleName) {
 			$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
 			if (file_exists($filePath)) {
 				(new \App\ConfigFile('module', $moduleName))->create();

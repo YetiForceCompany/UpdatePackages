@@ -183,7 +183,6 @@ class ConfReport
 		'serverInfo' => ['container' => 'db', 'testCli' => true, 'label' => 'DB_SERVER_INFO'],
 		'maximumMemorySize' => ['container' => 'db', 'type' => 'ShowBytes', 'testCli' => true, 'label' => 'DB_MAXIMUM_MEMORY_SIZE', 'showHelp' => true],
 		'key_buffer_size' => ['container' => 'db', 'type' => 'ShowBytes', 'testCli' => true],
-		'have_query_cache' => ['container' => 'db', 'testCli' => true],
 		'query_cache_size' => ['container' => 'db', 'type' => 'ShowBytes', 'testCli' => true],
 		'query_cache_type' => ['container' => 'db', 'testCli' => true],
 		'table_cache' => ['container' => 'db', 'testCli' => true],
@@ -265,9 +264,6 @@ class ConfReport
 		'version_compile_os' => ['container' => 'db', 'testCli' => true],
 		'socket' => ['container' => 'db', 'testCli' => true],
 		'back_log' => ['container' => 'db', 'testCli' => true],
-		'log_bin' => ['container' => 'db', 'testCli' => true],
-		'log_bin_basename' => ['container' => 'db', 'testCli' => true],
-		'log_slave_updates' => ['container' => 'db', 'testCli' => true],
 		'binlog_format' => ['container' => 'db', 'testCli' => true],
 		'max_binlog_size' => ['container' => 'db', 'type' => 'ShowBytes', 'testCli' => true],
 		'slow_query_log' => ['container' => 'db', 'testCli' => true],
@@ -867,12 +863,8 @@ class ConfReport
 	private static function validateGreater(string $name, array $row, string $sapi)
 	{
 		unset($name);
-		if (isset($row[$sapi])) {
-			if ((int) $row[$sapi] > 0 && (int) $row[$sapi] < (int) $row['recommended']) {
-				$row['status'] = false;
-			}
-		} else {
-			$row['noParameter'] = true;
+		if (isset($row[$sapi]) && (int) $row[$sapi] > 0 && (int) $row[$sapi] < (int) $row['recommended']) {
+			$row['status'] = false;
 		}
 		return $row;
 	}
@@ -894,9 +886,6 @@ class ConfReport
 		if (isset($row[$sapi]) && (int) $row[$sapi] < $row['recommended']) {
 			$row['status'] = false;
 		}
-		if (!isset($row[$sapi])) {
-			$row['noParameter'] = true;
-		}
 		return $row;
 	}
 
@@ -917,8 +906,6 @@ class ConfReport
 				$row['status'] = false;
 			}
 			$row[$sapi] = \vtlib\Functions::showBytes($row[$sapi]);
-		} else {
-			$row['noParameter'] = true;
 		}
 		return $row;
 	}
@@ -935,11 +922,7 @@ class ConfReport
 	private static function validateShowBytes(string $name, array $row, string $sapi)
 	{
 		unset($name);
-		if (isset($row[$sapi])) {
-			$row[$sapi] = \vtlib\Functions::showBytes($row[$sapi]);
-		} else {
-			$row['noParameter'] = true;
-		}
+		$row[$sapi] = \vtlib\Functions::showBytes($row[$sapi] ?? 0);
 		return $row;
 	}
 
@@ -955,12 +938,8 @@ class ConfReport
 	private static function validateEqual(string $name, array $row, string $sapi)
 	{
 		unset($name);
-		if (isset($row[$sapi])) {
-			if (strtolower((string) $row[$sapi]) !== strtolower((string) $row['recommended'])) {
-				$row['status'] = false;
-			}
-		} else {
-			$row['noParameter'] = true;
+		if (isset($row[$sapi]) && strtolower((string) $row[$sapi]) !== strtolower((string) $row['recommended'])) {
+			$row['status'] = false;
 		}
 		return $row;
 	}
@@ -1022,14 +1001,9 @@ class ConfReport
 	private static function validateOnOff(string $name, array $row, string $sapi)
 	{
 		unset($name);
-		if (isset($row[$sapi])) {
-			if ($row[$sapi] !== $row['recommended'] && !(isset($row['demoMode']) && 'prod' !== \App\Config::main('systemMode'))) {
-				$row['status'] = false;
-			}
-		} else {
-			$row['noParameter'] = true;
+		if (isset($row[$sapi]) && $row[$sapi] !== $row['recommended'] && !(isset($row['demoMode']) && 'prod' !== \App\Config::main('systemMode'))) {
+			$row['status'] = false;
 		}
-
 		return $row;
 	}
 
@@ -1264,8 +1238,6 @@ class ConfReport
 					break;
 				}
 			}
-		} else {
-			$row['noParameter'] = true;
 		}
 		return $row;
 	}
@@ -1283,9 +1255,6 @@ class ConfReport
 	{
 		unset($name);
 		$value = $row[$sapi] ?? '';
-		if (!isset($row[$sapi])) {
-			$row['noParameter'] = true;
-		}
 		if (!\is_array($value)) {
 			$value = \explode(',', $value);
 		}
@@ -1319,12 +1288,8 @@ class ConfReport
 		} else {
 			$recommended = \array_map('trim', \explode(',', strtolower($row['recommended'])));
 		}
-		if (isset($row[$sapi])) {
-			if (!\in_array((string) $row[$sapi], $recommended)) {
-				$row['status'] = false;
-			}
-		} else {
-			$row['noParameter'] = true;
+		if (isset($row[$sapi]) && !\in_array((string) $row[$sapi], $recommended)) {
+			$row['status'] = false;
 		}
 		return $row;
 	}

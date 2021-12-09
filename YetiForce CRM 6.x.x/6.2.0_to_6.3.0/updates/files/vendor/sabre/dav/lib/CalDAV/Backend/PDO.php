@@ -948,46 +948,42 @@ SQL;
         }
         list($calendarId, $instanceId) = $calendarId;
 
+        // Current synctoken
+        $stmt = $this->pdo->prepare('SELECT synctoken FROM '.$this->calendarTableName.' WHERE id = ?');
+        $stmt->execute([$calendarId]);
+        $currentToken = $stmt->fetchColumn(0);
+
+        if (is_null($currentToken)) {
+            return null;
+        }
+
         $result = [
+            'syncToken' => $currentToken,
             'added' => [],
             'modified' => [],
             'deleted' => [],
         ];
 
         if ($syncToken) {
-            $query = 'SELECT uri, operation, synctoken FROM '.$this->calendarChangesTableName.' WHERE synctoken >= ?  AND calendarid = ? ORDER BY synctoken';
+            $query = 'SELECT uri, operation FROM '.$this->calendarChangesTableName.' WHERE synctoken >= ? AND synctoken < ? AND calendarid = ? ORDER BY synctoken';
             if ($limit > 0) {
-                // Fetch one more raw to detect result truncation
-                $query .= ' LIMIT '.((int) $limit + 1);
+                $query .= ' LIMIT '.(int) $limit;
             }
 
             // Fetching all changes
             $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$syncToken, $calendarId]);
+            $stmt->execute([$syncToken, $currentToken, $calendarId]);
 
             $changes = [];
 
             // This loop ensures that any duplicates are overwritten, only the
             // last change on a node is relevant.
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $changes[$row['uri']] = $row;
+                $changes[$row['uri']] = $row['operation'];
             }
-            $currentToken = null;
 
-            $result_count = 0;
             foreach ($changes as $uri => $operation) {
-                if (!is_null($limit) && $result_count >= $limit) {
-                    $result['result_truncated'] = true;
-                    break;
-                }
-
-                if (null === $currentToken || $currentToken < $operation['synctoken'] + 1) {
-                    // SyncToken in CalDAV perspective is consistently the next number of the last synced change event in this class.
-                    $currentToken = $operation['synctoken'] + 1;
-                }
-
-                ++$result_count;
-                switch ($operation['operation']) {
+                switch ($operation) {
                     case 1:
                         $result['added'][] = $uri;
                         break;
@@ -999,24 +995,7 @@ SQL;
                         break;
                 }
             }
-
-            if (!is_null($currentToken)) {
-                $result['syncToken'] = $currentToken;
-            } else {
-                // This means returned value is equivalent to syncToken
-                $result['syncToken'] = $syncToken;
-            }
         } else {
-            // Current synctoken
-            $stmt = $this->pdo->prepare('SELECT synctoken FROM '.$this->calendarTableName.' WHERE id = ?');
-            $stmt->execute([$calendarId]);
-            $currentToken = $stmt->fetchColumn(0);
-
-            if (is_null($currentToken)) {
-                return null;
-            }
-            $result['syncToken'] = $currentToken;
-
             // No synctoken supplied, this is the initial sync.
             $query = 'SELECT uri FROM '.$this->calendarObjectTableName.' WHERE calendarid = ?';
             $stmt = $this->pdo->prepare($query);
