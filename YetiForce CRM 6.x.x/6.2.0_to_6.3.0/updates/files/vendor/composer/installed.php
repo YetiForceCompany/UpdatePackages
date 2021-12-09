@@ -425,12 +425,12 @@
             'dev_requirement' => false,
         ),
         'sabre/dav' => array(
-            'pretty_version' => '4.2.2',
-            'version' => '4.2.2.0',
+            'pretty_version' => '4.2.3',
+            'version' => '4.2.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../sabre/dav',
             'aliases' => array(),
-            'reference' => '5d739875d624e064018b4709ab544063df42d749',
+            'reference' => '6703fb74952cd4e2d8135a71b4f78ce2eecc37bc',
             'dev_requirement' => false,
         ),
         'sabre/event' => array(
