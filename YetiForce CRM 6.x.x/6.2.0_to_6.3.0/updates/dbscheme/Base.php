@@ -8,6 +8,7 @@ namespace Importers;
  * @copyright YetiForce Sp. z o.o.
  * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 class Base extends \App\Db\Importers\Base
 {
@@ -94,15 +95,6 @@ class Base extends \App\Db\Importers\Base
 			'w_#__api_session' => [
 				'columns' => [
 					'parent_id' => $this->integer(10)->unsigned()->notNull()->defaultValue(0),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'w_#__api_user' => [
-				'index' => [
-					['user_name', 'user_name', true],
-					['w_yf_api_user_server_id__idx', 'server_id'],
-					['w_yf_api_user_user_name_status__idx', ['user_name', 'status']],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

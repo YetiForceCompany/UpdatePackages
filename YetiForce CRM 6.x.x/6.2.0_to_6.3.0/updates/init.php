@@ -7,6 +7,7 @@
  * @copyright YetiForce Sp. z o.o.
  * @license   YetiForce Public License 4.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
 /**
@@ -109,9 +110,10 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
-			$this->importer->dropIndexes([
-				'w_yf_api_user' => ['user_name_status', 'server_id', 'user_name']
-			]);
+			
+			$db = \App\Db::getInstance();
+			$db->createCommand("ALTER TABLE `w_yf_api_user` DROP INDEX `server_id`, ADD KEY `w_yf_api_user_server_id__idx` (`server_id`);")->execute();
+			$db->createCommand("ALTER TABLE `w_yf_api_user` DROP INDEX `user_name_status`, ADD KEY `w_yf_api_user_user_name_status__idx` (`user_name`, `status`);")->execute();
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['b_#__social_media_twitter', 's_#__automatic_assignment', 'u_#__social_media_config', 'u_#__social_media_twitter', 'yetiforce_mail_quantities', 'l_#__social_media_logs']);
 			$this->importer->importData();
