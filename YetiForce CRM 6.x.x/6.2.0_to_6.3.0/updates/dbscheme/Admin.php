@@ -18,7 +18,11 @@ class Admin extends \App\Db\Importers\Base
 		$this->tables = [
 			'a_#__encryption' => [
 				'columns' => [
-					'target' => $this->smallInteger(5)->notNull()
+					'target' => $this->smallInteger(5)->notNull(),
+					'status' => $this->smallInteger(1)->notNull()->defaultValue(1)
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->notNull()->defaultValue(1),
 				],
 				'index' => [
 					['a_yf_encryption_target_uidx', 'target', true],
@@ -102,7 +106,7 @@ class Admin extends \App\Db\Importers\Base
 			],
 			's_#__kanban_boards' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(),
+					'id' => $this->primaryKeyUnsigned(11),
 					'tabid' => $this->smallInteger(5)->notNull(),
 					'fieldid' => $this->integer(10)->notNull(),
 					'detail_fields' => $this->text(),
@@ -110,7 +114,7 @@ class Admin extends \App\Db\Importers\Base
 					'sequence' => $this->integer()->unsigned()->notNull(),
 				],
 				'index' => [
-					['s_yf_kanban_boards_fieldid_idx', 'fieldid'],
+					['s_yf_kanban_boards_fieldid_idx', 'fieldid', true],
 					['s_yf_kanban_boards_tabid_idx', 'tabid'],
 				],
 				'engine' => 'InnoDB',

@@ -109,11 +109,12 @@ class YetiForceUpdate
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
+			$this->importer->dropIndexes([
+				'w_yf_api_user' => ['user_name_status', 'server_id', 'user_name']
+			]);
 			$this->importer->updateScheme();
-
+			$this->importer->dropTable(['b_#__social_media_twitter', 's_#__automatic_assignment', 'u_#__social_media_config', 'u_#__social_media_twitter', 'yetiforce_mail_quantities', 'l_#__social_media_logs']);
 			$this->importer->importData();
-			$this->addModules(['Passwords']);
-			$this->removeModules('Password');
 
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -126,12 +127,12 @@ class YetiForceUpdate
 
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
+		$this->removeModules('Password');
+		$this->addModules(['Passwords']);
 		$this->updateData();
 		$this->addFields();
-		// $this->setRelations();
-		$this->importer->dropTable(['b_#__social_media_twitter', 's_#__automatic_assignment', 'u_#__social_media_config', 'u_#__social_media_twitter', 'yetiforce_mail_quantities', 'l_#__social_media_logs']);
-		// $this->importer->dropColumns([['w_yf_portal_user', 'logout_time'], ['w_yf_portal_user', 'language']]);
 		$this->createConfigFiles();
+		$this->updateProfileData();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -254,6 +255,9 @@ class YetiForceUpdate
 			['vtiger_blocks', ['icon' => 'fas fa-business-time'], ['tabid' => \App\Module::getModuleId('HelpDesk'), 'blocklabel' => 'BL_RECORD_STATUS_TIMES']],
 			['vtiger_field',	['uitype' => 300], ['fieldname' => 'commentcontent', 'tablename' => ['vtiger_modcomments'], 'uitype' => 19]],
 			['vtiger_customview',	['status' => 3], ['status' => 0, 'presence' => 1]],
+			['vtiger_eventhandlers',	['privileges' => 1], ['handler_class' => 'ServiceContracts_ServiceContractsHandler_Handler', 'event_name' => 'EntityAfterSave']],
+			['vtiger_relatedlists',	['label' => 'LBL_HELPDESK_RELATED'], ['tabid' => \App\Module::getModuleId('Contacts'), 'related_tabid' => \App\Module::getModuleId('HelpDesk'), 'name' => 'getRelatedList', 'label' => 'HelpDesk']],
+			['vtiger_settings_field',	['premium' => 1], ['name' => 'LBL_AUTOMATIC_ASSIGNMENT']],
 		]);
 		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 
@@ -304,9 +308,9 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$db = \App\Db::getInstance();
-
+		$modules = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['and', ['isentitytype' => 1], ['not', ['name' => ['OSSMailView', 'CallHistory']]]])->column();
 		$actions = [
-			['type' => 'add', 'name' => 'Kanban', 'tabsData' => [], 'permission' => 1],
+			['type' => 'add', 'name' => 'Kanban', 'tabsData' => $modules, 'permission' => 1],
 		];
 
 		foreach ($actions as $action) {
@@ -345,55 +349,34 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
-	private function setRelations()
+	private function setRelations(array $relation)
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$dbCommand = \App\Db::getInstance()->createCommand();
 
-		$ralations = [
-			['type' => 'add', 'data' => [659, 'ServiceContracts', 'Contacts', 'getRelatedList', 1, 'Contacts', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null, null]],
-			['type' => 'add', 'data' => [660, 'Contacts', 'ServiceContracts', 'getRelatedList', 13, 'ServiceContracts', 0, 'SELECT', 0, 0, 0, 'RelatedTab', null, null]],
-			// ['type' => 'add', 'data' => [661,'SSalesProcesses','SSalesProcesses','getDependentsList',25,'SSalesProcesses',1,'',0,0,0,'RelatedTab','parentid',null]],
-		];
-
-		foreach ($ralations as $relation) {
-			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName,$customView] = $relation['data'];
-			$tabid = \App\Module::getModuleId($moduleName);
-			$relTabid = \App\Module::getModuleId($relModuleName);
-			$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
-			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
-			if (!$isExists && 'add' === $relation['type']) {
-				$dbCommand->insert('vtiger_relatedlists', [
-					'tabid' => $tabid,
-					'related_tabid' => $relTabid,
-					'name' => $name,
-					'sequence' => $sequence,
-					'label' => $label,
-					'presence' => $presence,
-					'actions' => $actions,
-					'favorites' => $favorites,
-					'creator_detail' => $creatorDetail,
-					'relation_comment' => $relationComment,
-					'view_type' => $viewType,
-					'field_name' => $fieldName,
-				])->execute();
-			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
-				$where = $relation['where'] ?? $where;
-				$dbCommand->update('vtiger_relatedlists', [
-					'name' => $name,
-					'sequence' => $sequence,
-					'label' => $label,
-					'presence' => $presence,
-					'actions' => $actions,
-					'favorites' => $favorites,
-					'creator_detail' => $creatorDetail,
-					'relation_comment' => $relationComment,
-					'view_type' => $viewType,
-					'field_name' => $fieldName,
-				], $where)->execute();
-			}
+		[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName,$customView] = $relation;
+		$tabid = \App\Module::getModuleId($moduleName);
+		$relTabid = \App\Module::getModuleId($relModuleName);
+		$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
+		$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
+		if (!$isExists) {
+			$dbCommand->insert('vtiger_relatedlists', [
+				'tabid' => $tabid,
+				'related_tabid' => $relTabid,
+				'name' => $name,
+				'sequence' => $sequence,
+				'label' => $label,
+				'presence' => $presence,
+				'actions' => $actions,
+				'favorites' => $favorites,
+				'creator_detail' => $creatorDetail,
+				'relation_comment' => $relationComment,
+				'view_type' => $viewType,
+				'field_name' => $fieldName,
+			])->execute();
 		}
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
@@ -495,7 +478,7 @@ STR;
 				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
 				$importInstance->importModule();
 				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
-				if ('Queue' === $moduleName && ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar())) {
+				if ('Passwords' === $moduleName && ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar())) {
 					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
 				}
 			} else {
@@ -519,8 +502,8 @@ STR;
 		if (empty($fields)) {
 			$fields = [
 				[92, 3080, 'parentid', 'u_yf_partners', 1, 10, 'parentid', 'FL_MEMBER_OF', 0, 2, '', '4294967295', 10, 299, 1, 'V~O', 2, 3, 'BAS', 1, '', 1, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_PARTNERS_INFORMATION', 'blockData' => ['label' => 'LBL_PARTNERS_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['Partners'], 'moduleName' => 'Partners'],
-				[13, 3097, 'contact_id', 'vtiger_troubletickets', 1, 10, 'contact_id', 'FL_CONTACT', 0, 2, '', '4294967295', 7, 25, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_TICKET_INFORMATION', 'blockData' => ['label' => 'LBL_TICKET_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['Contacts'], 'moduleName' => 'HelpDesk'],
-				[111, 3098, 'subprocess_sl', 'u_yf_notification', 2, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 10, 374, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'blockData' => ['label' => 'LBL_NOTIFICATION_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['ProjectTask'], 'moduleName' => 'Notification']
+				[13, 3097, 'contact_id', 'vtiger_troubletickets', 1, 10, 'contact_id', 'FL_CONTACT', 0, 2, '', '4294967295', 7, 25, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_TICKET_INFORMATION', 'blockData' => ['label' => 'LBL_TICKET_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['Contacts'], 'moduleName' => 'HelpDesk', 'relationData' => [669, 'Contacts', 'HelpDesk', 'getDependentsList', 4, 'LBL_HELPDESK_DEPENDENTS', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'contact_id', null]],
+				[111, 3098, 'subprocess_sl', 'u_yf_notification', 2, 64, 'subprocess_sl', 'FL_SUBPROCESS_SECOND_LEVEL', 0, 0, '', '4294967295', 10, 374, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_NOTIFICATION_INFORMATION', 'blockData' => ['label' => 'LBL_NOTIFICATION_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['ProjectTask'], 'moduleName' => 'Notification', 'relationData' => [670, 'ProjectTask', 'Notification', 'getDependentsList', 5, 'Notification', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'subprocess_sl', null]]
 			];
 		}
 
@@ -583,8 +566,13 @@ STR;
 			if (!empty($field['picklistValues']) && (15 == $field[5] || 16 == $field[5] || 33 == $field[5])) {
 				$fieldInstance->setPicklistValues($field['picklistValues']);
 			}
-			if (!empty($field['relatedModules']) && 10 == $field[5]) {
-				$fieldInstance->setRelatedModules($field['relatedModules']);
+			if (!empty($field['relatedModules']) && \in_array($field[5], [10, 64])) {
+				if (10 == $field[5]) {
+					$fieldInstance->setRelatedModules($field['relatedModules']);
+				}
+				if (!empty($field['relationData'])) {
+					$this->setRelations($field['relationData']);
+				}
 			}
 		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
@@ -663,6 +651,17 @@ STR;
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 		exit;
+	}
+
+	public function updateProfileData()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		\App\Db\Fixer::baseModuleTools();
+		\App\Db\Fixer::baseModuleActions();
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
 	/**

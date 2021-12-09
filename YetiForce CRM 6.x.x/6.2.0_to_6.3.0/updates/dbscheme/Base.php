@@ -100,7 +100,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'w_#__api_user' => [
 				'index' => [
-					['user_name', 'user_name'],
+					['user_name', 'user_name', true],
 					['w_yf_api_user_server_id__idx', 'server_id'],
 					['w_yf_api_user_user_name_status__idx', ['user_name', 'status']],
 				],
@@ -151,6 +151,13 @@ class Base extends \App\Db\Importers\Base
 				'index' => [
 					['s_yf_auto_assign_rr_id_date_idx', ['id', 'datetime']],
 					['s_yf_auto_assign_rr_user_idx', 'user'],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'u_#__notification' => [
+				'index' => [
+					['notification_status', 'notification_status']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
