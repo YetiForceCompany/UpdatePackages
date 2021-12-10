@@ -26,6 +26,13 @@
     ],
     "6.2": [
         {
+            "label": "YetiForce CRM 6.2 SecurityFix v1",
+            "version": "1",
+            "fromVersion": "6.2.0",
+            "toVersion": "6.2.0",
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.2.0_SecurityFix\/zip\/6.2.0_SecurityFix.zip"
+        },
+        {
             "label": "YetiForce CRM 6.2 Service Pack v4",
             "version": "4",
             "fromVersion": "6.2.0",
