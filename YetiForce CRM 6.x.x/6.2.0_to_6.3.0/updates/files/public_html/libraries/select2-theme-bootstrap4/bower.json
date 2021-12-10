@@ -1,0 +1,29 @@
+{
+  "name": "select2-theme-bootstrap4",
+  "description": "A theme for Select2 v4 and Bootstrap 4.",
+  "keywords": [
+    "bootstrap",
+    "select2",
+    "css",
+    "sass",
+    "less"
+  ],
+  "homepage": "https://angel-vladov.github.io/select2-theme-bootstrap4",
+  "main": [
+    "src/select2-bootstrap.scss"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "bootstrap": "^4.0.0",
+    "select2": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:angel-vladov/select2-theme-bootstrap4.git"
+  }
+}
