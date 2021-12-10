@@ -191,7 +191,7 @@ window.AppConnector = {
 };
 
 $(function () {
-  document.on('click', '.js-post-action', function (e) {
+  $(this).on('click', '.js-post-action', function (e) {
     e.preventDefault();
     let element = $(this);
     if (element.attr('href')) {
