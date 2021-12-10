@@ -179,10 +179,20 @@ class YetiForceUpdate
 	private function roundcubeUpdateTable()
 	{
 		$db = \App\Db::getInstance();
-
 		$tableSchema = $db->getTableSchema('roundcube_users');
 		$column = $tableSchema->getColumn('crm_status');
-		if (!$column) {
+		if ($column) {
+			$db->createCommand("ALTER TABLE `roundcube_users`
+			CHANGE `crm_error` `crm_error` varchar(255)  COLLATE utf8mb4_unicode_ci NULL after `crm_status`,
+			DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
+		} else {
+			$db->createCommand("ALTER TABLE `roundcube_users`
+			ADD COLUMN `crm_status` tinyint(1)   NULL DEFAULT 0 after `crm_user_id` ,
+			ADD COLUMN `crm_error` varchar(255)  COLLATE utf8mb4_unicode_ci NULL after `crm_status` ,
+			ADD KEY `crm_status`(`crm_status`) , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
+		}
+		$columnSchema = $db->createCommand('SHOW FULL COLUMNS FROM roundcube_cache WHERE FIELD = \'data\';')->queryOne();
+		if ('utf8mb4_unicode_ci' !== $columnSchema['Collation']) {
 			$db->createCommand("ALTER TABLE `roundcube_cache` CHANGE `data` `data` longtext  COLLATE utf8mb4_unicode_ci NOT NULL after `expires` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
 			$db->createCommand("ALTER TABLE `roundcube_cache_index` CHANGE `data` `data` longtext  COLLATE utf8mb4_unicode_ci NOT NULL after `valid` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
 			$db->createCommand("ALTER TABLE `roundcube_cache_messages` CHANGE `data` `data` longtext  COLLATE utf8mb4_unicode_ci NOT NULL after `expires` , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
@@ -224,9 +234,7 @@ class YetiForceUpdate
 			CHANGE `preferences` `preferences` longtext  COLLATE utf8mb4_unicode_ci NULL after `language` ,
 			CHANGE `actions` `actions` text  COLLATE utf8mb4_unicode_ci NULL after `preferences` ,
 			CHANGE `password` `password` varchar(500)  COLLATE utf8mb4_unicode_ci NULL after `actions` ,
-			ADD COLUMN `crm_status` tinyint(1)   NULL DEFAULT 0 after `crm_user_id` ,
-			ADD COLUMN `crm_error` varchar(255)  COLLATE utf8mb4_unicode_ci NULL after `crm_status` ,
-			ADD KEY `crm_status`(`crm_status`) , DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
+			DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
 			$db->createCommand('ALTER TABLE `roundcube_users_autologin`	ADD KEY `crmuser_id`(`crmuser_id`) ;')->execute();
 		}
 	}
