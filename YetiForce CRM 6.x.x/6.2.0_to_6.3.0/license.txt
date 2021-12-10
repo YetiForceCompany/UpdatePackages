@@ -1,0 +1,15 @@
+License: YetiForce Public License 4.0 licenses/License.html
+
+Required PHP version for the update package is PHP 7.3.x., 7.4.x.
+The update time might be longer depending on the server speed and amount of data in the system.
+Before launching the update package we recommend disabling all cron actions.
+Log files should be checked after update.
+
+Notes:
+- Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
+- After the update process finishes, please also update all the languages in your system.
+- Modified mail templates related to password reset.
+- The current Passwords module is outdated and will be removed in the next version. Please consider migrating your data to the new passwords module.
+- All entries for automatic record assignment will be removed.
+- Rebuilt and changed API communication. If you are using webservices, verify their configuration in the system and communication (https://doc.yetiforce.com/api/).
+    Application type "Portal" has been replaced with Webservice Premium and "RestAPI" with Webservice Standard.
