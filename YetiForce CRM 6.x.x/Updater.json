@@ -46,5 +46,14 @@
             "toVersion": "6.3.0",
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.2.0_to_6.3.0\/zip\/6.2.0_to_6.3.0_v1.zip"
         }
+    ],
+    "6.3": [
+        {
+            "label": "YetiForce CRM 6.3 SecurityFix v1",
+            "version": "1",
+            "fromVersion": "6.3.0",
+            "toVersion": "6.3.0",
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_SecurityFix\/zip\/6.3.0_SecurityFix_v1.zip"
+        }
     ]
 }
