@@ -235,7 +235,9 @@ class YetiForceUpdate
 			CHANGE `actions` `actions` text  COLLATE utf8mb4_unicode_ci NULL after `preferences` ,
 			CHANGE `password` `password` varchar(500)  COLLATE utf8mb4_unicode_ci NULL after `actions` ,
 			DEFAULT CHARSET='utf8mb4', COLLATE ='utf8mb4_unicode_ci' ;")->execute();
-			$db->createCommand('ALTER TABLE `roundcube_users_autologin`	ADD KEY `crmuser_id`(`crmuser_id`) ;')->execute();
+			if(empty($db->getTableKeys('roundcube_users_autologin')['crmuser_id'])){
+				$db->createCommand('ALTER TABLE `roundcube_users_autologin`	ADD KEY `crmuser_id`(`crmuser_id`) ;')->execute();
+			}
 		}
 	}
 
