@@ -317,6 +317,12 @@ class YetiForceUpdate
 				\vtlib\Module::toggleModuleAccess($moduleName, false);
 			}
 		}
+		
+		if(file_exists(ROOT_DIRECTORY . '/config/Modules/OSSMail.php')){
+			$content = file_get_contents(ROOT_DIRECTORY . '/config/Modules/OSSMail.php');
+			$content =  str_replace("'advanced_search',", '', $content);
+			file_put_contents(ROOT_DIRECTORY.'/config/Modules/OSSMail.php',$content);
+		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
