@@ -155,7 +155,7 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'unit_price']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'weight']],
 			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['tablename' => 'vtiger_project', 'fieldname' => 'estimated_work_time']],
-			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_project', 'fieldname' => 'targetbudget']],
+			['vtiger_field', ['maximumlength' => '0,4294967295', 'typeofdata' => 'I~O'], ['tablename' => 'vtiger_project', 'fieldname' => 'targetbudget']],
 			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['tablename' => 'vtiger_projectmilestone', 'fieldname' => 'estimated_work_time']],
 			['vtiger_field', ['maximumlength' => '0,999999'], ['tablename' => 'vtiger_projecttask', 'fieldname' => 'estimated_work_time']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'purchase']],
