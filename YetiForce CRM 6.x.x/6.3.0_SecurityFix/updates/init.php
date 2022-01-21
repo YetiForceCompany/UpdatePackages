@@ -116,6 +116,8 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->updateData();
+		$this->createConfigFiles();
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -169,6 +171,25 @@ class YetiForceUpdate
 		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	/**
+	 * Post update.
+	 */
+	public function createConfigFiles(): bool
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$configTemplates = 'config/ConfigTemplates.php';
+		copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
+
+		\App\Cache::resetOpcache();
+		clearstatcache();
+
+		(new \App\ConfigFile('security'))->create();
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+		return true;
 	}
 
 	/**
