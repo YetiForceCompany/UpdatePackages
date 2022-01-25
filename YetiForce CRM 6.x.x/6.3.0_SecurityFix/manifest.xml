@@ -1,9 +1,9 @@
 <?xml version='1.0'?>
 <module>
-	<name>YetiForce CRM 6.3 SecurityFix v5</name>
-	<label>YetiForce CRM 6.3 SecurityFix v5</label>
+	<name>YetiForce CRM 6.3 SecurityFix v6</name>
+	<label>YetiForce CRM 6.3 SecurityFix v6</label>
 	<type>update</type>
-	<version>5</version>
+	<version>6</version>
 	<from_version>6.3.0</from_version>
 	<to_version>6.3.0</to_version>
 	<dependencies>
