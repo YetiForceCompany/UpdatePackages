@@ -17,11 +17,11 @@
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.1.0_ServicePack\/zip\/6.1.0_ServicePack_8.zip"
         },
         {
-            "label": "YetiForce CRM 6.2.0 v2",
-            "version": "2",
+            "label": "YetiForce CRM 6.2.0 v3",
+            "version": "3",
             "fromVersion": "6.1.0",
             "toVersion": "6.2.0",
-            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.1.0_to_6.2.0\/zip\/6.1.0_to_6.2.0_v2.zip"
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.1.0_to_6.2.0\/zip\/6.1.0_to_6.2.0_v3.zip"
         }
     ],
     "6.2": [
@@ -49,11 +49,11 @@
     ],
     "6.3": [
         {
-            "label": "YetiForce CRM 6.3 SecurityFix v6",
-            "version": "6",
+            "label": "YetiForce CRM 6.3 SecurityFix v7",
+            "version": "7",
             "fromVersion": "6.3.0",
             "toVersion": "6.3.0",
-            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_SecurityFix\/zip\/6.3.0_SecurityFix_v6.zip"
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_SecurityFix\/zip\/6.3.0_SecurityFix_v7.zip"
         }
     ]
 }
