@@ -75,7 +75,7 @@ class YetiForceUpdate
 		}
 		if ($error) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
-			$this->package->_errorText .= 'Please have a look at the list of errors:'. PHP_EOL. PHP_EOL;
+			$this->package->_errorText .= 'Please have a look at the list of errors:' . PHP_EOL . PHP_EOL;
 			$this->package->_errorText .= $error;
 			return false;
 		}
@@ -928,7 +928,7 @@ STR;
 							$query = (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => \App\Module::getModuleId($relModuleName), 'related_tabid' => \App\Module::getModuleId($relModule)])->one();
 							$desRelationId = $query['relation_id'];
 
-							if (!(new \App\Db\Query())->from('a_yf_record_list_filter')->where(['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId])->exists()) {
+							if ($relRelationId && $sourceRelationId && $desRelationId && !(new \App\Db\Query())->from('a_yf_record_list_filter')->where(['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId])->exists()) {
 								$dbCommand->insert('a_yf_record_list_filter',
 								['relationid' => $sourceRelationId, 'rel_relationid' => $relRelationId, 'dest_relationid' => $desRelationId]
 								)->execute();
