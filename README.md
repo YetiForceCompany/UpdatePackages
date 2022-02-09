@@ -6,6 +6,7 @@ Ran into problems while trying to update YetiForce? Submit an [issue](https://gi
 
 Useful links:
 - https://yetiforce.com
+- https://doc.yetiforce.com/
 - https://github.com/YetiForceCompany/YetiForceCRM
 - https://github.com/YetiForceCompany
 - https://github.com/YetiForceCompany/YetiForceScripts
