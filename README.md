@@ -10,3 +10,4 @@ Useful links:
 - https://github.com/YetiForceCompany/YetiForceCRM
 - https://github.com/YetiForceCompany
 - https://github.com/YetiForceCompany/YetiForceScripts
+- https://github.com/YetiForceCompany/YetiForceCRMLanguages
