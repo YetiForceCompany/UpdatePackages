@@ -123,6 +123,7 @@ class YetiForceUpdate
 			$this->importer->importData();
 			$this->importer->postUpdate();
 			$this->createdUserId(1);
+			$this->addMissingMultiCompany();
 			$this->addModules(['Approvals', 'ApprovalsRegister', 'MailIntegration']);
 			$this->updateWidgets();
 			$this->dropColumns();
@@ -421,8 +422,8 @@ class YetiForceUpdate
 					'sequence' => 6,
 					'active' => 0,
 					'pinned' => 0,
-					'admin_access' => null
-				], ['name' => 'LBL_MAP']
+					'admin_access' => null,
+				], ['name' => 'LBL_MAP'],
 			],
 			['vtiger_password',	['type' => 'pwned',	'val' => 'false'], ['type' => 'pwned']],
 			['vtiger_password',	['type' => 'pwned_time', 'val' => '7'], ['type' => 'pwned_time']],
@@ -438,7 +439,7 @@ class YetiForceUpdate
 			['vtiger_module_dashboard',  ['and', ['<>', 'blockid', 0],  ['NOT IN',  'blockid', (new \App\Db\Query())->select(['id'])->from('vtiger_module_dashboard_blocks')]]],
 			['vtiger_module_dashboard_blocks',  ['NOT IN',  'authorized', (new \App\Db\Query())->select(['roleid'])->from('vtiger_role')]],
 			['yetiforce_proc_marketing',  ['type' => 'lead',  'param' => 'currentuser_status']],
-			['vtiger_ws_fieldtype',  ['uitype' => [117, 80]]]
+			['vtiger_ws_fieldtype',  ['uitype' => [117, 80]]],
 		]);
 
 		if (!(new \App\Db\Query())->from('vtiger_status_rel')->exists()) {
@@ -765,7 +766,7 @@ class YetiForceUpdate
 				//[34, 2828, 'attention', 'vtiger_crmentity', 1, 300, 'attention', 'Attention', 0, 2, '', null, 0, 445, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->integer(10), 'blockLabel' => 'LBL_DESCRIPTION_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'ServiceContracts'],
 				[29, 2899, 'mail_scanner_actions', 'vtiger_users', 1, 322, 'mail_scanner_actions', 'FL_MAIL_SCANNER_ACTIONS', 0, 2, '', '65535', 1, 452, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_USER_MAIL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
 				[29, 2900, 'mail_scanner_fields', 'vtiger_users', 1, 323, 'mail_scanner_fields', 'FL_MAIL_SCANNER_FIELDS', 0, 2, '', '65535', 3, 452, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_USER_MAIL', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Users'],
-				[4, 2901, 'approvals', 'vtiger_contactdetails', 1, 321, 'approvals', 'FL_APPROVALS', 0, 2, '', '65535', 12, 5, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '{"module":"Approvals"}', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Contacts']
+				[4, 2901, 'approvals', 'vtiger_contactdetails', 1, 321, 'approvals', 'FL_APPROVALS', 0, 2, '', '65535', 12, 5, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '{"module":"Approvals"}', null, 0, 0, 0, 'type' => $importerType->text(), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'Contacts'],
 			];
 		}
 
@@ -789,8 +790,8 @@ class YetiForceUpdate
 				$blockId = $blockInstance->id;
 				$blockInstance = \vtlib\Block::getInstance($blockId, $moduleId);
 			}
-			if (!$blockInstance &&
-			!($blockInstance = reset(Vtiger_Module_Model::getInstance($field['moduleName'])->getBlocks()))) {
+			if (!$blockInstance
+			&& !($blockInstance = reset(Vtiger_Module_Model::getInstance($field['moduleName'])->getBlocks()))) {
 				$this->log("[ERROR] No block found to create a field, you will need to create a field manually.
 				Module: {$field['moduleName']}, field name: {$field[6]}, field label: {$field[7]}");
 				\App\Log::error("No block found ({$field['blockLabel']}) to create a field, you will need to create a field manually.
@@ -845,7 +846,7 @@ class YetiForceUpdate
 			$dbCommand->insert('vtiger_trees_templates', [
 				'name' => $tree['base'][1],
 				'module' => $tree['base'][2],
-				'access' => $tree['base'][3]
+				'access' => $tree['base'][3],
 			])->execute();
 			$templateId = $db->getLastInsertID('vtiger_trees_templates_templateid_seq');
 			$skipCheckData = true;
@@ -862,7 +863,7 @@ class YetiForceUpdate
 				'depth' => $data[4],
 				'label' => $data[5],
 				'state' => $data[6],
-				'icon' => $data[7]
+				'icon' => $data[7],
 			])->execute();
 		}
 
@@ -1134,7 +1135,7 @@ class YetiForceUpdate
 				'from_version' => (string) $this->modulenode->from_version,
 				'to_version' => (string) $this->modulenode->to_version,
 				'result' => true,
-				'time' => date('Y-m-d H:i:s')
+				'time' => date('Y-m-d H:i:s'),
 			])->execute();
 			$dbCommand->update('vtiger_version', ['current_version' => (string) $this->modulenode->to_version])->execute();
 			\vtlib\Functions::recurseDelete('cache/updates');
@@ -1177,7 +1178,7 @@ class YetiForceUpdate
 		$changeConfiguration = [
 			'base' => [
 				'sounds' => [
-					'CHAT' => 'sound_2.mp3'
+					'CHAT' => 'sound_2.mp3',
 				],
 				'security' => [
 					'loginSessionRegenerate' => \App\Config::security('loginSessionRegenerate', \App\Config::main('session_regenerate_id')),
@@ -1186,19 +1187,19 @@ class YetiForceUpdate
 					'forceUrlRedirection' => \App\Config::security('forceUrlRedirection', \App\Config::main('forceRedirect')),
 					'hpkpKeysHeader' => \App\Config::security('hpkpKeysHeader', \App\Config::security('HPKP_KEYS')),
 					'cspHeaderActive' => \App\Config::security('cspHeaderActive', \App\Config::security('CSP_ACTIVE')),
-					'purifierAllowedDomains' => \App\Config::security('purifierAllowedDomains', \App\Config::security('PURIFIER_ALLOWED_DOMAINS'))
-				]
+					'purifierAllowedDomains' => \App\Config::security('purifierAllowedDomains', \App\Config::security('PURIFIER_ALLOWED_DOMAINS')),
+				],
 			],
 			'module' => [
 				'ModTracker' => [
-					'TEASER_TEXT_LENGTH' => 100
-				]
+					'TEASER_TEXT_LENGTH' => 100,
+				],
 			],
 			'component' => [
 				'YetiForce' => [
-					'watchdogUrl' => \App\Config::component('YetiForce', 'watchdogUrl', \App\Config::component('YetiForce', 'statusUrl'))
-				]
-			]
+					'watchdogUrl' => \App\Config::component('YetiForce', 'watchdogUrl', \App\Config::component('YetiForce', 'statusUrl')),
+				],
+			],
 		];
 		\App\Cache::resetOpcache();
 		\App\Config::set('module', 'OSSMail', 'root_directory', new \Nette\PhpGenerator\PhpLiteral('ROOT_DIRECTORY . DIRECTORY_SEPARATOR'));
@@ -1335,7 +1336,7 @@ class YetiForceUpdate
 						}
 						break;
 					case 'decimal':
-						$range = pow(10, ((int) $column->size) - ((int) $column->scale)) - 1;
+						$range = 10 ** (((int) $column->size) - ((int) $column->scale)) - 1;
 						break;
 					default:
 						$range = false;
@@ -1373,7 +1374,7 @@ class YetiForceUpdate
 		$baseModuleTools = ['Import', 'Export', 'Merge', 'CreateCustomFilter',
 			'DuplicateRecord', 'MassEdit', 'MassArchived', 'MassActive', 'MassDelete', 'MassAddComment', 'MassTransferOwnership',
 			'ReadRecord', 'WorkflowTrigger', 'Dashboard', 'CreateDashboardFilter', 'QuickExportToExcel', 'ExportPdf', 'RecordMapping',
-			'RecordMappingList', 'FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'RemoveRelation', 'ReviewingUpdates', 'OpenRecord', 'CloseRecord', 'ReceivingMailNotifications', 'CreateDashboardChartFilter', 'TimeLineList', 'ArchiveRecord', 'ActiveRecord', 'MassTrash', 'MoveToTrash', 'RecordConventer', 'AutoAssignRecord', 'AssignToYourself'];
+			'RecordMappingList', 'FavoriteRecords', 'WatchingRecords', 'WatchingModule', 'RemoveRelation', 'ReviewingUpdates', 'OpenRecord', 'CloseRecord', 'ReceivingMailNotifications', 'CreateDashboardChartFilter', 'TimeLineList', 'ArchiveRecord', 'ActiveRecord', 'MassTrash', 'MoveToTrash', 'RecordConventer', 'AutoAssignRecord', 'AssignToYourself', ];
 		$allUtility = $missing = $curentProfile2utility = [];
 		foreach ((new \App\Db\Query())->from('vtiger_profile2utility')->all() as $row) {
 			$curentProfile2utility[$row['profileid']][$row['tabid']][$row['activityid']] = true;
@@ -1414,6 +1415,29 @@ class YetiForceUpdate
 		\Settings_SharingAccess_Module_Model::recalculateSharingRules();
 		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 		return $i;
+	}
+
+	public function addMissingMultiCompany()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . "\t\t|\t" . date('H:i:s'));
+
+		$multicompanyId = (new \App\Db\Query())->select(['multicompanyid'])
+			->from('u_yf_multicompany')
+			->innerJoin('vtiger_crmentity', 'u_yf_multicompany.multicompanyid = vtiger_crmentity.crmid')
+			->where(['vtiger_crmentity.deleted' => 0])->limit(1)->scalar();
+		if (empty($multicompanyId)) {
+			$mompany = (new \App\Db\Query())->from('s_yf_companies')->one();
+			$multiCompany = \Vtiger_Record_Model::getCleanInstance('MultiCompany');
+			$multiCompany->set('company_name', $mompany['name'] ?? 'MultiCompany Name');
+			$multiCompany->save();
+			$multicompanyId = $multiCompany->getId();
+			\App\Db::getInstance()->createCommand()
+				->update('vtiger_role', ['company' => $multicompanyId])
+				->execute();
+		}
+
+		$this->log(' -> ' . date('H:i:s') . "\t|\t" . round((microtime(true) - $start) / 60, 2) . ' min.', false);
 	}
 }
 

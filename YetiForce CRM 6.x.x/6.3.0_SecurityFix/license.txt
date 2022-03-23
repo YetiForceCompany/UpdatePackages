@@ -1,0 +1,4 @@
+License: YetiForce Public License 4.0 licenses/License.html
+
+Some dependent libraries are updated in this package.
+Any modifications in the /vendor directory will be lost.
