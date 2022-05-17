@@ -786,6 +786,11 @@ class YetiForceUpdate
 		foreach ($mapp as $fromField => $dataType) {
 			$data = [];
 			if (($fieldModel = $moduleInstance->getFieldByName($fromField)) && $dataType !== $fieldModel->getFieldDataType()) {
+				if ('unit_price' === $fromField) {
+					$tableName = $moduleInstance->basetable;
+					$index = $moduleInstance->basetableid;
+					$unitPriceRows = (new \App\Db\Query())->select([$index, 'currency_id', 'unit_price'])->from($tableName)->all();
+				}
 				$type = $queryBuilder->getColumnType($fields[$fromField]['type']);
 				$db->createCommand("ALTER TABLE {$fieldModel->getTableName()} CHANGE {$fieldModel->getColumnName()} {$fromField} {$type};")->execute();
 				$fieldData = $fields[$fromField];
@@ -793,14 +798,14 @@ class YetiForceUpdate
 				\App\Db\Updater::batchUpdate($data);
 				$this->removeField($fieldModel, $fromField);
 				if ('unit_price' === $fromField) {
-					$tableName = $moduleInstance->basetable;
-					$index = $moduleInstance->basetableid;
-					$dataReader = (new \App\Db\Query())->select(['currency_id', $index])->from($tableName)->createCommand()->query();
-					while ($row = $dataReader->read()) {
+					foreach ($unitPriceRows as $row) {
 						$currencyData = [];
 						$dataReaderRel = (new \App\Db\Query())->select(['currencyid', 'actual_price'])->from('vtiger_productcurrencyrel')->where(['productid' => $row[$index]])->createCommand()->query();
 						while ($rowRel = $dataReaderRel->read()) {
-							$currencyData['currencies'][(int) $rowRel['currencyid']]['price'] = $rowRel['actual_price'];
+							$currencyData['currencies'][(int) $rowRel['currencyid']]['price'] = (float) $rowRel['actual_price'];
+						}
+						if (!$currencyData && 0 != $row['unit_price']) {
+							$currencyData['currencies'][(int) $row['currency_id']]['price'] = (float) $row['unit_price'];
 						}
 						if ($currencyData) {
 							$currencyData['currencyId'] = (int) $row['currency_id'];
@@ -808,7 +813,6 @@ class YetiForceUpdate
 						$dataReaderRel->close();
 						$db->createCommand()->update($fieldModel->getTableName(), [$fieldModel->getColumnName() => \App\Json::encode($currencyData)], [$index => $row[$index]])->execute();
 					}
-					$dataReader->close();
 					$this->importer->dropColumns([[$tableName, 'currency_id']]);
 				}
 			}
@@ -1323,8 +1327,8 @@ class YetiForceUpdate
 					$this->log("[INFO] Create workflow {$record[1]} {$record[2]}");
 				}
 				foreach ($workflowTask as $indexTask) {
-					if ($indexTask[1] === $record[0] &&
-						!(new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId, 'summary' => $indexTask[2]])->exists()
+					if ($indexTask[1] === $record[0]
+						&& !(new \App\Db\Query())->select(['workflow_id'])->from('com_vtiger_workflowtasks')->where(['workflow_id' => $workflowId, 'summary' => $indexTask[2]])->exists()
 						) {
 						$task = $taskManager->unserializeTask($indexTask[3]);
 						$task->id = '';
@@ -1691,8 +1695,8 @@ class YetiForceUpdate
 				$blockId = $blockInstance->id;
 				$blockInstance = \vtlib\Block::getInstance($blockId, $moduleId);
 			}
-			if (!$blockInstance &&
-			!($blockInstance = reset(Vtiger_Module_Model::getInstance($field['moduleName'])->getBlocks()))) {
+			if (!$blockInstance
+			&& !($blockInstance = reset(Vtiger_Module_Model::getInstance($field['moduleName'])->getBlocks()))) {
 				$this->log("[ERROR] No block found to create a field, you will need to create a field manually.
 				Module: {$field['moduleName']}, field name: {$field[6]}, field label: {$field[7]}");
 				\App\Log::error("No block found ({$field['blockLabel']}) to create a field, you will need to create a field manually.
