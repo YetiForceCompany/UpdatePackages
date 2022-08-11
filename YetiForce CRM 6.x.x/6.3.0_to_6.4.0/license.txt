@@ -1,0 +1,10 @@
+License: YetiForce Public License 5.0 licenses/License.html
+
+Required PHP version for the update package is PHP 7.4.x, 8.0.x.
+The update time might be longer depending on the server speed and amount of data in the system.
+Before launching the update package we recommend disabling all cron actions.
+Log files should be checked after update.
+
+Notes:
+- Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
+- After the update process finishes, please also update all the languages in your system.
