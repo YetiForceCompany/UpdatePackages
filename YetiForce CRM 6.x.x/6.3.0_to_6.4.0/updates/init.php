@@ -9,6 +9,8 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
+//  SHA-1: a7dcfe55ce345f9f8e9f42e0956c9c76b4f7ab11
+
 /**
  * YetiForce system update package class.
  */
@@ -101,7 +103,12 @@ class YetiForceUpdate
 		try {
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
+			$this->roundcubeUpdateTable();
+			$this->updateTargetField();
+
 			$this->importer->updateScheme();
+			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
+
 			$this->importer->importData();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -115,7 +122,125 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->updateData();
-		$this->createConfigFiles();
+		$this->picklistDependency();
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function roundcubeUpdateTable()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		foreach (['roundcube_cache', 'roundcube_cache_index', 'roundcube_cache_shared', 'roundcube_cache_thread', 'roundcube_dictionary'] as $tableName) {
+			$db->createCommand()->truncateTable($tableName)->execute();
+		}
+		$importerBase = new \App\Db\Importers\Base();
+		$importerBase->dropColumns = [
+			['roundcube_cache', 'created'],
+			['roundcube_cache_shared', 'created'],
+			['roundcube_session', 'created']
+		];
+		$importerBase->dropIndexes = [
+			'roundcube_cache' => ['user_cache_index'],
+			'roundcube_cache_shared' => ['cache_key_index'],
+		];
+		$importerBase->tables = [
+			'roundcube_cache' => [
+				'primaryKeys' => [
+					['roundcube_cache_pk', ['user_id', 'cache_key']]
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+			'roundcube_cache_messages' => [
+				'columns' => [
+					'uid' => $importerBase->integer()->unsigned()->notNull()->defaultValue(0),
+					'flags' => $importerBase->integer()->notNull()->defaultValue(0),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+			'roundcube_cache_shared' => [
+				'primaryKeys' => [
+					['roundcube_cache_shared_pk', 'cache_key']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+			'roundcube_dictionary' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+		];
+
+		if (!$db->isTableExists('roundcube_responses')) {
+			$importerBase->tables['roundcube_responses'] = [
+				'columns' => [
+					'response_id' => $this->primaryKeyUnsigned(10),
+					'user_id' => $this->integer(10)->unsigned()->notNull(),
+					'name' => $this->stringType()->notNull(),
+					'data' => $this->text()->notNull(),
+					'is_html' => $this->smallInteger(1)->notNull()->defaultValue(0),
+					'changed' => $this->dateTime()->notNull()->defaultValue('1000-01-01 00:00:00'),
+					'del' => $this->smallInteger(1)->notNull()->defaultValue(0),
+				],
+				'columns_mysql' => [
+					'is_html' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+					'del' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+				],
+				'index' => [
+					['user_responses_index', ['user_id', 'del']],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			];
+			$importerBase->foreignKey = [
+				['user_id_fk_responses', 'roundcube_responses', 'user_id', 'roundcube_users', 'user_id', 'CASCADE', 'CASCADE']
+			];
+		}
+
+		$this->importer->drop($importerBase);
+		$this->importer->updateScheme($importerBase);
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function updateTargetField()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$column = $db->getSchema()->getTableSchema('vtiger_project')->getColumn('targetbudget');
+		$i = 0;
+		if ($column && 'integer' !== $column->type) {
+			$dbCommand = $db->createCommand();
+			$dataReader = (new \App\db\Query())->select(['projectid', 'targetbudget'])->from('vtiger_project')->where(['not', ['targetbudget' => null]])->createCommand()->query();
+			while ($row = $dataReader->read()) {
+				$value = $row['targetbudget'];
+				$value = is_numeric($value) ? (float) $value : 0;
+				if ($value < 0) {
+					$value = 0;
+				}
+				$i += $dbCommand->update('vtiger_project', ['targetbudget' => $value], ['projectid' => $row['projectid']])->execute();
+			}
+			$dataReader->close();
+			$this->log('[INFO] update vtiger_project.targetbudget | count:' . $i);
+
+			$importerBase = new \App\Db\Importers\Base();
+			$importerBase->tables['vtiger_project'] = [
+				'columns' => [
+					'targetbudget' => ['type' => $importerBase->integer(10)->unsigned(), 'mode' => 1]
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			];
+			$this->importer->updateScheme($importerBase);
+		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
@@ -125,8 +250,162 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
-		$batchUpdate = \App\Db\Updater::batchUpdate([]);
+		$batchInsert = \App\Db\Updater::batchInsert([
+			['a_yf_discounts_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
+			['a_yf_taxes_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
+		]);
+		$this->log('[INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
+		unset($batchInsert);
+
+		$updates = [
+			['vtiger_trees_templates_data', ['icon' => ''], ['icon' => '1']],
+			['vtiger_trees_templates_data', ['icon' => new \yii\db\Expression("REPLACE(icon,'public_html/', '')")], ['like', 'icon', 'public_html/%', false]],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'timing_change', 'tablename' => 'u_yf_cfixedassets', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'fuel_consumption', 'tablename' => 'u_yf_cfixedassets', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'oil_change', 'tablename' => 'u_yf_cfixedassets', 'maximumlength' => '0,2147483647']],
+			// ['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'current_odometer_reading', 'tablename' => 'u_yf_cfixedassets', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,65535'], ['fieldname' => 'number_repair', 'tablename' => 'u_yf_cfixedassets', 'maximumlength' => '0,32767']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'peoplne_number', 'tablename' => 'u_yf_incidentregister', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'capacity', 'tablename' => 'u_yf_locations', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'employees', 'tablename' => 'vtiger_account', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'duration', 'tablename' => 'vtiger_callhistory', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'prodcount', 'tablename' => 'vtiger_outsourcedproducts', 'maximumlength' => '0,2147483647']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['fieldname' => 'records_limit', 'tablename' => 'vtiger_users']],
+			['vtiger_field', ['maximumlength' => '0,999'], ['fieldname' => 'total_units', 'tablename' => 'vtiger_servicecontracts', 'maximumlength' => '999']],
+			['vtiger_field', ['maximumlength' => '0,999999'], ['fieldname' => 'estimated_work_time', 'tablename' => 'vtiger_projecttask', 'maximumlength' => '999999']],
+			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['fieldname' => 'estimated_work_time', 'tablename' => 'vtiger_projectmilestone', 'maximumlength' => '9999999999999']],
+			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['fieldname' => 'estimated_work_time', 'tablename' => 'vtiger_project', 'maximumlength' => '9999999999999']],
+
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'actual_price']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'current_odometer_reading']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'fuel_consumption']],
+			['vtiger_field', ['maximumlength' => '0,65535'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'number_repair']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'oil_change']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'purchase_price']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_cfixedassets', 'fieldname' => 'timing_change']],
+			['vtiger_field', ['maximumlength' => '0,99999999999'], ['tablename' => 'u_yf_cmileagelogbook', 'fieldname' => 'number_kilometers']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_incidentregister', 'fieldname' => 'peoplne_number']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_locations', 'fieldname' => 'capacity']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'u_yf_occurrences', 'fieldname' => 'participants']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_account', 'fieldname' => 'employees']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_callhistory', 'fieldname' => 'duration']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'actualcost']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'actualroi']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'budgetcost']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'expectedrevenue']],
+			['vtiger_field', ['maximumlength' => '0,1.0E+20'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'expectedroi']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'actualsalescount']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'actualresponsecount']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'expectedresponsecount']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'expectedsalescount']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'targetsize']],
+			['vtiger_field', ['maximumlength' => '0,99999999999'], ['tablename' => 'vtiger_campaign', 'fieldname' => 'numsent']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'noofemployees']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_outsourcedproducts', 'fieldname' => 'prodcount']],
+			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'purchase']],
+			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'unit_price']],
+			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'weight']],
+			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['tablename' => 'vtiger_project', 'fieldname' => 'estimated_work_time']],
+			['vtiger_project', ['targetbudget' => null], ['targetbudget' => '']],
+			['vtiger_field', ['maximumlength' => '0,4294967295', 'typeofdata' => 'I~O'], ['tablename' => 'vtiger_project', 'fieldname' => 'targetbudget']],
+			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['tablename' => 'vtiger_projectmilestone', 'fieldname' => 'estimated_work_time']],
+			['vtiger_field', ['maximumlength' => '0,999999'], ['tablename' => 'vtiger_projecttask', 'fieldname' => 'estimated_work_time']],
+			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'purchase']],
+			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'unit_price']],
+			['vtiger_field', ['maximumlength' => '0,999'], ['tablename' => 'vtiger_servicecontracts', 'fieldname' => 'total_units']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_users', 'fieldname' => 'records_limit']],
+			['vtiger_field', ['maximumlength' => '0,255'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'type']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'mid']],
+			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'rc_user']],
+		];
+		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
+		foreach ($links as $linkId => $tabId) {
+			$updates[] = ['vtiger_module_dashboard_widgets', ['module' => $tabId], ['linkid' => $linkId]];
+		}
+		$batchUpdate = \App\Db\Updater::batchUpdate($updates);
+		// ['u_yf_users_pinned', ['tabid' => \App\Module::getModuleId('Calendar')], ''],
 		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
+		unset($batchUpdate);
+
+		$importerBase = new \App\Db\Importers\Base();
+		$importerBase->tables = [
+			'u_#__users_pinned' => [
+				'columns' => [
+					'tabid' => $importerBase->smallInteger(5)->notNull()
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+		];
+		$this->importer->updateScheme($importerBase);
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function picklistDependency(): void
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		if (!$db->isTableExists('vtiger_picklist_dependency')) {
+			$this->log('[INFO] skip update dependency: table not exists vtiger_picklist_dependency');
+			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+			return;
+		}
+		$dbCommand = $db->createCommand();
+
+		$dependencies = [];
+		$dataReader = (new \App\db\Query())->from('vtiger_picklist_dependency')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			$dependencies[$row['tabid']][$row['targetfield']][$row['sourcefield']][] = $row;
+		}
+		$dataReader->close();
+
+		try {
+			$isEmptyDefaultValue = \App\Config::performance('PICKLIST_DEPENDENCY_DEFAULT_EMPTY', true);
+			foreach ($dependencies as $tabId => $data) {
+				$moduleName = \App\Module::getModuleName($tabId);
+				if ($moduleName && \App\Module::isModuleActive($moduleName)) {
+					$moduleModel = \Vtiger_Module_Model::getInstance($moduleName);
+					foreach ($data as $targetField => $dependency) {
+						$fieldModel = $moduleModel->getFieldByName($targetField);
+						foreach ($dependency as $sourceField => $values) {
+							$fieldModelSource = $moduleModel->getFieldByName($sourceField);
+							$conditionFieldName = "{$sourceField}:{$moduleName}";
+							if ($fieldModel && $fieldModel->isActive() && 'picklist' === $fieldModel->getFieldDataType()
+							&& $fieldModelSource && $fieldModelSource->isActive() && 'picklist' === $fieldModelSource->getFieldDataType()
+							&& !(new \App\db\Query())->from('s_yf_picklist_dependency')->where(['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->exists()
+						) {
+								$dbCommand->insert('s_yf_picklist_dependency', ['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->execute();
+								$dependencyId = $db->getLastInsertID('s_yf_picklist_dependency_id_seq');
+								$targetPicklistValues = \App\Fields\Picklist::getValuesName($fieldModel->getName());
+								$sourcePicklistValues = \App\Fields\Picklist::getValuesName($fieldModelSource->getName());
+								foreach ($targetPicklistValues as $key => $value) {
+									$sourceValues = array_filter($values, fn ($row) => \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]')));
+									$sourceValues = array_column($sourceValues, 'sourcevalue');
+									$sourceValues = array_intersect($sourceValues, $sourcePicklistValues);
+									$rules = [];
+									if (!$sourceValues && $isEmptyDefaultValue) {
+										$rules[] = ['fieldname' => $conditionFieldName, 'operator' => 'y', 'value' => ''];
+										$rules[] = ['fieldname' => $conditionFieldName, 'operator' => 'ny', 'value' => ''];
+									} elseif ($sourceValues) {
+										$rules[] = ['fieldname' => $conditionFieldName, 'operator' => 'e', 'value' => implode('##', $sourceValues)];
+									}
+									if ($rules) {
+										$conditions = ['condition' => 'AND', 'rules' => $rules];
+										$dbCommand->insert('s_yf_picklist_dependency_data', ['id' => $dependencyId, 'source_id' => $key, 'conditions' => \App\Json::encode($conditions)])->execute();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			$this->importer->dropTable(['vtiger_picklist_dependency']);
+		} catch (\Throwable $th) {
+			$this->log("[ERROR]: {$th->__toString()}");
+		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -139,13 +418,93 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
-		$configTemplates = 'config/ConfigTemplates.php';
-		copy(__DIR__ . '/files/' . $configTemplates, ROOT_DIRECTORY . '/' . $configTemplates);
+		foreach (['config/ConfigTemplates.php', 'config/Components/ConfigTemplates.php', 'modules/OSSMail/ConfigTemplate.php', 'modules/OpenStreetMap/ConfigTemplate.php', 'modules/ModComments/ConfigTemplate.php'] as $configTemplates) {
+			$path = ROOT_DIRECTORY . '/' . $configTemplates;
+			copy(__DIR__ . '/files/' . $configTemplates, $path);
+			\App\Cache::resetFileCache($path);
+		}
 
 		\App\Cache::resetOpcache();
 		clearstatcache();
 
 		(new \App\ConfigFile('security'))->create();
+		(new \App\ConfigFile('performance'))->create();
+		$debug = (new \App\ConfigFile('debug'));
+		if (null !== \App\Config::debug('DAV_DEBUG_EXCEPTIONS', null)) {
+			$debug->set('davDebugExceptions', \App\Config::debug('DAV_DEBUG_EXCEPTIONS'));
+			$debug->set('davDebugPlugin', \App\Config::debug('DAV_DEBUG_PLUGIN'));
+		}
+		$debug->create();
+
+		$ossMail = new \App\ConfigFile('module', 'OSSMail');
+		if (null !== \App\Config::module('OSSMail', 'default_host', null)) {
+			$imaps = \App\Config::module('OSSMail', 'default_host');
+			$newImaps = [];
+			$port = \App\Config::module('OSSMail', 'default_port', 993);
+			foreach ($imaps as $key => $name) {
+				if (!parse_url($key, PHP_URL_PORT)) {
+					if ($name === $key) {
+						$name .= ":{$port}";
+					}
+					$key .= ":{$port}";
+				}
+				$newImaps[$key] = $name;
+			}
+			$ossMail->set('imap_host', $newImaps);
+
+			$smtp = \App\Config::module('OSSMail', 'smtp_server');
+			$smtpPort = \App\Config::module('OSSMail', 'smtp_port');
+			$ossMail->set('smtp_host', $smtp ? "{$smtp}:{$smtpPort}" : '');
+		}
+		$ossMail->create();
+
+		$openStreetMap = new \App\ConfigFile('module', 'OpenStreetMap');
+		if (null !== \App\Config::module('OpenStreetMap', 'CRON_MAX_UPDATED_ADDRESSES', null)) {
+			$openStreetMap->set('cronMaxUpdatedAddresses', \App\Config::module('OpenStreetMap', 'CRON_MAX_UPDATED_ADDRESSES', 1000));
+			$openStreetMap->set('mapModules', \App\Config::module('OpenStreetMap', 'ALLOW_MODULES', ['Accounts', 'Contacts', 'Competition', 'Vendors', 'Partners', 'Leads', 'Locations']));
+			$openStreetMap->set('mapPinFields', \App\Config::module('OpenStreetMap', 'FIELDS_IN_POPUP', [
+				'Accounts' => ['accountname', 'email1', 'phone'],
+				'Leads' => ['company', 'firstname', 'lastname', 'email'],
+				'Partners' => ['subject', 'email'],
+				'Competition' => ['subject', 'email'],
+				'Vendors' => ['vendorname', 'email', 'website'],
+				'Contacts' => ['firstname', 'lastname', 'email', 'phone'],
+				'Locations' => ['subject', 'email']
+			]));
+		}
+		$openStreetMap->create();
+
+		$configFile = new \App\ConfigFile('module', 'ModComments');
+		if (null !== \App\Config::module('ModComments', 'DEFAULT_SOURCE', null)) {
+			$configFile->set('defaultSource', \App\Config::module('ModComments', 'DEFAULT_SOURCE', ['current']));
+		}
+		$configFile->create();
+
+		// $addressFinder = new \App\ConfigFile('component', 'AddressFinder');
+		// if ('no data' !== \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE', 'no data')) {
+		// 	$addressFinder->set('remappingOpenCage', \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE'));
+		// 	$addressFinder->set('remappingOpenCageForCountry', \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE_FOR_COUNTRY'));
+		// }
+		// $addressFinder->create();
+
+		$skip = ['main', 'db', 'performance', 'debug', 'security', 'module', 'component'];
+		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
+			(new \App\ConfigFile($type))->create();
+		}
+
+		$dataReader = (new \App\Db\Query())->select(['name'])->from('vtiger_tab')->createCommand()->query();
+		while ($moduleName = $dataReader->readColumn(0)) {
+			$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
+			if (!\in_array($moduleName, ['OpenStreetMap', 'OSSMail', 'ModComments']) && file_exists($filePath)) {
+				(new \App\ConfigFile('module', $moduleName))->create();
+			}
+		}
+		$path = \ROOT_DIRECTORY . \DIRECTORY_SEPARATOR . 'config' . \DIRECTORY_SEPARATOR . 'Components' . \DIRECTORY_SEPARATOR . 'ConfigTemplates.php';
+		$componentsData = require_once "$path";
+		foreach ($componentsData as $component => $data) {
+			(new \App\ConfigFile('component', $component))->create();
+		}
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 		return true;
 	}
@@ -157,6 +516,7 @@ class YetiForceUpdate
 	{
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$this->createConfigFiles();
 
 		\App\Cache::clear();
 		\App\Cache::resetOpcache();

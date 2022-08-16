@@ -1,0 +1,33 @@
+{
+  "php": {
+    "SMSNotifier": "SMS messages",
+    "SINGLE_SMSNotifier": "SMS message",
+    "LBL_CUSTOM_INFORMATION": "System information",
+    "BL_SMS_CONTENT": "SMS content",
+    "FL_RELATED_TO": "Related to",
+    "FL_STATUS": "Status",
+    "FL_PARENT": "Parent SMS",
+    "FL_IMAGE": "Image file",
+    "FL_MESSAGE_ID": "Message ID",
+    "PLL_UNDEFINED": "Undefined",
+    "PLL_DELIVERED": "Delivered",
+    "PLL_FAILED": "Failed",
+    "PLL_SENT": "Sent",
+    "PLL_QUEUE": "In queue",
+    "PLL_REPLY": "Reply",
+    "LBL_MASS_SEND_SMS_INFO": "All text messages are sent in cron",
+    "LBL_CHECK_STATUS": "Check status",
+    "FL_MESSAGE": "Message",
+    "LBL_SMSNOTIFIER_INFORMATION": "SMS information",
+    "LBL_ADD_MORE_FIELDS": "Add more fields",
+    "LBL_MASS_SEND_SMS_QUEUE_INFO": "Added SMS messages to the queue",
+    "LBL_TEMPLATE": "Template",
+    "LBL_SMS_MAX_CHARACTERS_ALLOWED": "SMS max 160 characters allowed",
+    "LBL_SEND_SMS_TO_SELECTED_NUMBERS": "Send SMS to the selected numbers",
+    "LBL_SELECT_THE_PHONE_NUMBER_FIELDS_TO_SEND": "Phone number from",
+    "LBL_ADD_IMAGE_FILE": "Add an image file",
+    "LBL_TYPE_THE_MESSAGE": "Type the message",
+    "LBL_LIMIT_OF_ONETIME_CREATED_TEXT_MESSAGES": "Limit of one-time created text messages",
+    "LBL_SERVER_CONFIG": "Server configuration"
+  }
+}

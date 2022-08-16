@@ -1,0 +1,213 @@
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+body {
+	overflow: hidden;
+}
+
+.mainBody {
+	position: absolute;
+	top: $h-header;
+	bottom: $h-footer;
+	width: 100%;
+	overflow-x: hidden;
+}
+.o-vtiger-index-container {
+	.mainBody {
+		background-color: $yf-gray;
+	}
+}
+.c-btn-fixed {
+	bottom: $h-footer;
+}
+.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+	min-height: calc(100vh - #{$h-header} - #{$h-footer});
+}
+.user-info--active {
+	.mainBody,
+	.c-btn-fixed {
+		bottom: $h-footer-user-info;
+	}
+	.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+		min-height: calc(100vh - #{$h-header} - #{$h-footer-user-info});
+	}
+}
+.limited-footer--active {
+	.mainBody,
+	.c-btn-fixed {
+		bottom: $h-footer-limited;
+	}
+	.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+		min-height: calc(100vh - #{$h-header} - #{$h-footer-limited});
+	}
+}
+
+.user-info--active.limited-footer--active {
+	.mainBody,
+	.c-btn-fixed {
+		bottom: $h-footer;
+	}
+	.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+		min-height: calc(100vh - #{$h-header} - #{$h-footer});
+	}
+}
+
+.footer-non--active {
+	.c-menu__container,
+	.mainBody {
+		bottom: 0rem;
+	}
+}
+
+.footer-non--active.limited-footer--active {
+	.c-menu__container,
+	.mainBody {
+		bottom: 0rem;
+	}
+}
+
+.footer-non--active {
+	.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+		min-height: 100vh;
+	}
+}
+
+@include media-breakpoint-down(sm) {
+	.mainBody,
+	.c-btn-fixed {
+		bottom: $h-footer-limited;
+	}
+	.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+		min-height: calc(100vh - #{$h-header} - #{$h-footer-limited});
+	}
+	.user-info--active {
+		.mainBody {
+			bottom: $h-footer;
+		}
+		.container-fluid[class$="-knowledgebase-container"] .contentsDiv {
+			min-height: calc(100vh - #{$h-header} - #{$h-footer});
+		}
+	}
+}
+
+.footer-non--active {
+	.mainBody {
+		bottom: 0;
+	}
+}
+
+.contentsDiv,
+.centerPanel {
+	margin-left: calculate-rem(4px);
+	margin-right: calculate-rem(4px);
+	@include media-breakpoint-up(sm) {
+		margin-left: calculate-rem(8px);
+		margin-right: calculate-rem(8px);
+	}
+}
+
+.massEditTable {
+	th + th,
+	td + td,
+	th + td,
+	td + th {
+		border-left: 0;
+	}
+}
+
+.massEditContent {
+	border-top: 3px solid #404952;
+}
+
+.o-base-container {
+	.basePanel {
+		position: relative;
+		margin: 0 0 0 230px;
+		padding: 0;
+		left: 0;
+		z-index: 1030;
+		background: $white;
+		min-height: 100%;
+	}
+
+	.c-header {
+		left: 230px;
+	}
+
+	&:not(.c-menu--open) {
+		.basePanel {
+			margin-left: 50px;
+		}
+
+		.c-header {
+			left: 50px;
+		}
+
+		.c-menu__container.js-expand + .c-header,
+		.c-menu__container:hover + .c-header {
+			left: 230px;
+
+			~ .basePanel {
+				left: 180px;
+			}
+		}
+	}
+}
+
+.c-header.open,
+.c-footer.open {
+	left: 210px;
+	-webkit-transition: left ease-in-out 0.3s;
+	transition: left ease-in-out 0.3s;
+}
+
+@media only screen and (max-width: 768px) {
+	.o-base-container {
+		.basePanel {
+			margin: 0 !important;
+		}
+
+		.c-header {
+			left: 0 !important;
+		}
+
+		.c-menu__container.js-expand + .c-header {
+			left: 230px !important;
+
+			~ .basePanel {
+				left: 230px !important;
+			}
+		}
+	}
+}
+
+.o-exception-fixed-block {
+	width: 100%;
+	z-index: 11111111111111;
+}
+
+body > .o-exception-fixed-block {
+	position: static;
+	transform: none;
+}
+
+.o-view-messagecompose {
+	overflow-x: hidden;
+}
+
+.o-tab__container {
+	td {
+		padding-top: calculate-rem(7px) !important;
+	}
+	.o-tab__container--action {
+		display: none;
+		position: absolute;
+	}
+	tr:hover {
+		.o-tab__container--action {
+			display: flex !important;
+		}
+	}
+}
+
+.o-min-width {
+	width: min-content;
+}

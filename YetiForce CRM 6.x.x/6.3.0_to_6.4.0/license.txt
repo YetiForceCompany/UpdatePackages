@@ -8,3 +8,6 @@ Log files should be checked after update.
 Notes:
 - Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
 - After the update process finishes, please also update all the languages in your system.
+
+- dodnaie klucza do tabeli crmeitity i ossmailview może spowodować, że aktualizacja będzie się wykonywac dziesiąt godzin....
+- Funcjonalność zależności słownikowych uległa przepudowaniu. Wsyzstkie istniejące wpisy zostały usunięte. System spróbuje przywrócić zależności, jednakże należy całość zweryfikować po aktualizacji.

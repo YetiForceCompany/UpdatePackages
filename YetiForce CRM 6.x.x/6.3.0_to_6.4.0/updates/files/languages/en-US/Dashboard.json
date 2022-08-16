@@ -1,0 +1,14 @@
+{
+  "php": {
+    "Dashboards": "My home page",
+    "LBL_ADD_FILTER": "Add widget from filter",
+    "LBL_ADD_FILTER_DESC": "Only filters with the \"list in metrics\" option enabled are available.",
+    "LBL_ADD_CHART_FILTER": "Add chart from filter",
+    "LBL_ADD_CHART_FILTER_DESC": "Only filters with the \"list in metrics\" option enabled are available.",
+    "LBL_CLEAR_DEVICE_CONF": "Clear configuration of widgets for this device",
+    "LBL_CLEAR_DEVICE_CONF_DESC": "The button removes/resets the configuration only for the device you are currently using and only for the current tab.",
+    "LBL_PREDEFINED_WIDGETS": "Predefined widgets",
+    "LBL_EMPTY_DASHBOARD": "Selected dashboard is empty.",
+    "LBL_WORKING_TIME_COUNTER": "Working time counter"
+  }
+}
