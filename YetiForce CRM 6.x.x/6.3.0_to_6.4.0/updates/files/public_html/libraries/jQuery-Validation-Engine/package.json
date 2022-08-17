@@ -1,0 +1,18 @@
+{
+  "name": "jquery-validation-engine",
+  "version": "3.1.1",
+  "description": "Validate your forms with style. Complete api included for advanced users",
+  "dependencies": {
+    "jquery": ">=1.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YetiForceCompany/jQuery-Validation-Engine.git"
+  },
+  "author": "Olivier Refalo (http://www.position-absolute.com) and YetiForceCompany <info@yetiforce.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YetiForceCompany/jQuery-Validation-Engine/issues"
+  },
+  "homepage": "https://github.com/YetiForceCompany/jQuery-Validation-Engine#readme"
+}

@@ -17,7 +17,6 @@ updates/files/app_data/*/*
 !updates/files/app_data/**/index.html
 !updates/files/app_data/icons.php
 !updates/files/app_data/moduleHierarchy.php
-!updates/files/app_data/icons.php
 
 updates/files/install/*
 

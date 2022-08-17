@@ -82,5 +82,9 @@ return [
 	'public_html/layouts/basic/modules/Settings/PickListDependency/resources/PickListDependency.min.js.map',
 	'public_html/layouts/resources/YearView.js',
 	'public_html/layouts/resources/YearView.min.js',
-	'public_html/layouts/resources/YearView.min.js.map'
+	'public_html/layouts/resources/YearView.min.js.map',
+	'include/Webservices/WebServiceErrorCode.php',
+	'vendor',
+	'public_html/vendor',
+	'public_html/libraries',
 ];

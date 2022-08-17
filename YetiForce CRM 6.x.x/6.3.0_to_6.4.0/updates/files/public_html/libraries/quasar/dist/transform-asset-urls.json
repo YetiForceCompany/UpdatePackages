@@ -1,0 +1,38 @@
+{
+  "QCarouselSlide": "img-src",
+  "q-carousel-slide": "img-src",
+  "QChatMessage": "avatar",
+  "q-chat-message": "avatar",
+  "QImg": [
+    "src",
+    "placeholder-src"
+  ],
+  "q-img": [
+    "src",
+    "placeholder-src"
+  ],
+  "QParallax": "src",
+  "q-parallax": "src",
+  "QRange": [
+    "track-img",
+    "inner-track-img",
+    "selection-img"
+  ],
+  "q-range": [
+    "track-img",
+    "inner-track-img",
+    "selection-img"
+  ],
+  "QSlider": [
+    "track-img",
+    "inner-track-img",
+    "selection-img"
+  ],
+  "q-slider": [
+    "track-img",
+    "inner-track-img",
+    "selection-img"
+  ],
+  "QTimelineEntry": "avatar",
+  "q-timeline-entry": "avatar"
+}
