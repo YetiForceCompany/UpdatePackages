@@ -87,7 +87,9 @@ class YetiForceUpdate
 			}
 			return false;
 		}
-		copy(__DIR__ . '/files/app/Db/Fixer.php', ROOT_DIRECTORY . '/app/Db/Fixer.php');
+		copy(__DIR__ . '/files/app/Db/Importer.php', ROOT_DIRECTORY . '/app/Db/Importer.php');
+		copy(__DIR__ . '/files/app/Db/Importers/Base.php', ROOT_DIRECTORY . '/app/Db/Importers/Base.php');
+		copy(__DIR__ . '/files/app/Db/Updater.php', ROOT_DIRECTORY . '/app/Db/Updater.php');
 		return true;
 	}
 
@@ -105,7 +107,7 @@ class YetiForceUpdate
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
 			$this->updateTargetField();
-
+			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module'=>'vtiger_trees_templates']);
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
 
@@ -121,9 +123,306 @@ class YetiForceUpdate
 
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
+		$this->addFields($this->getFields(1));
+		$this->removeModules('OSSPasswords');
+		$this->addModules(['SMSTemplates']);
+		$this->smsNotifier();
 		$this->updateData();
 		$this->picklistDependency();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function removeModules($moduleName)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . " {$moduleName} | " . date('Y-m-d H:i:s'));
+
+		$moduleInstance = \Vtiger_Module_Model::getInstance($moduleName);
+		if ($moduleInstance) {
+			$moduleInstance->delete();
+		} else {
+			$this->log('  [INFO] Module not exists: ' . $moduleName);
+		}
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	/**
+	 * Add modules.
+	 *
+	 * @param string[] $modules
+	 */
+	private function addModules(array $modules)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$command = \App\Db::getInstance()->createCommand();
+		foreach ($modules as $moduleName) {
+			if (file_exists(__DIR__ . '/' . $moduleName . '.xml') && !\vtlib\Module::getInstance($moduleName)) {
+				$importInstance = new \vtlib\PackageImport();
+				$importInstance->_modulexml = simplexml_load_file('cache/updates/updates/' . $moduleName . '.xml');
+				$importInstance->importModule();
+				$command->update('vtiger_tab', ['customized' => 0], ['name' => $moduleName])->execute();
+				if ($tabId = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['name' => $moduleName])->scalar()) {
+					\CRMEntity::getInstance('ModTracker')->enableTrackingForModule($tabId);
+				}
+				$this->log('  [INFO] Add module:' . $moduleName);
+			} else {
+				$this->log('  [INFO] Module exist: ' . $moduleName);
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function smsNotifier()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$moduleModel = Vtiger_Module_Model::getInstance('SMSNotifier');
+		$fieldName = 'smsnotifier_status';
+		$values = ['PLL_SENT', 'PLL_QUEUE', 'PLL_REPLY'];
+		$fieldModel = $moduleModel->getFieldByName($fieldName);
+		if ($diffVal = array_diff($values, \App\Fields\Picklist::getValuesName($fieldName))) {
+			$fieldModel->setPicklistValues($diffVal);
+			$this->log('  [INFO] Add picklist values:' . implode(',', $diffVal));
+		}
+		$fieldModel
+			->set('displaytype', 2)
+			->set('presence', 0)
+			->set('defaultvalue', 'PLL_QUEUE')
+			->save();
+		$block = $moduleModel->getBlocks()['StatusInformation'] ?? null;
+		if ($block && null == ($moduleModel->getFieldsByBlocks()['StatusInformation'] ?? null)) {
+			$block->delete(false);
+			$this->log('  [INFO] Delete block: StatusInformation');
+		} elseif ($block) {
+			$this->log('  [WARNING] cannot delete a block(StatusInformation) because it has fields');
+		}
+		if (!($moduleModel->getBlocks()['BL_SMS_CONTENT'] ?? null)) {
+			$blockInstance = new \vtlib\Block();
+			$data = ['label' => 'BL_SMS_CONTENT', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null, 'sequence' => 2];
+			foreach ($data as $key => $value) {
+				$blockInstance->{$key} = $value;
+			}
+			$moduleModel->addBlock($blockInstance);
+			$this->log('  [INFO] Added new block: BL_SMS_CONTENT');
+
+			$messageField = $moduleModel->getFieldByName('message');
+			Settings_LayoutEditor_Block_Model::updateFieldSequenceNumber([[
+				'block' => $blockInstance->id,
+				'fieldid' => $messageField->getId(),
+				'sequence' => 1,
+			]]);
+		}
+
+		$this->addFields($this->getFields(0));
+
+		$updateSeq = [];
+		$systemBlock = $moduleModel->getBlocks()['LBL_CUSTOM_INFORMATION'];
+		foreach ([1 => 'assigned_user_id', 3 => 'createdtime', 4 => 'modifiedtime', 5 => 'created_user_id', 6 => 'modifiedby'] as $key => $fieldName) {
+			$fieldModel = $moduleModel->getFieldByName($fieldName);
+			if ('LBL_SMSNOTIFIER_INFORMATION' === $fieldModel->getBlockName()) {
+				$updateSeq[] = [
+					'block' => $systemBlock->id,
+					'fieldid' => $fieldModel->getId(),
+					'sequence' => $key,
+				];
+			}
+		}
+
+		if ($updateSeq) {
+			Settings_LayoutEditor_Block_Model::updateFieldSequenceNumber($updateSeq);
+		}
+
+		\App\EventHandler::registerHandler('EntityBeforeSave', 'SMSNotifier_Parser_Handler', 'SMSNotifier', '', 5, true, \App\Module::getModuleId('SMSNotifier'));
+		$messageField = $moduleModel->getFieldByName('message');
+		$db->createCommand()->update('vtiger_field', ['fieldlabel' => 'FL_MESSAGE'], ['fieldlabel' => 'message', 'fieldid' => $messageField->getId()])->execute();
+		$db->createCommand()->update('vtiger_smsnotifier_status', ['presence' => 0], ['smsnotifier_status' => ['PLL_QUEUE', 'PLL_SENT', 'PLL_REPLY']])->execute();
+		\App\Db\Updater::addRoleToPicklist(['smsnotifier_status']);
+
+		// remove relation M-M
+		$db->createCommand()->delete('vtiger_relatedlists', ['tabid' => \App\Module::getModuleId('SMSNotifier'), 'name' => 'getRelatedList'])->execute();
+
+		// add block record by picklist value
+		$moduleModel = Settings_Picklist_Module_Model::getInstance('SMSNotifier');
+		$fieldModel = Settings_Picklist_Field_Model::getInstance('smsnotifier_status', $moduleModel);
+		if($fieldModel){
+			$fieldName = $fieldModel->getName();
+			$values = array_column(App\Fields\Picklist::getValues($fieldName), 'picklist_valueid', 'smsnotifier_status');
+			$fieldModel->updateCloseState($values['PLL_DELIVERED'], 'PLL_DELIVERED', true);
+			$fieldModel->updateCloseState($values['PLL_REPLY'], 'PLL_REPLY', true);
+		}
+		$relatedModules = array_merge(array_keys(\App\ModuleHierarchy::getModulesByLevel(0)), ['Contacts']);
+
+		// Add action MassSMS to some modules
+		$this->actionMapp([
+			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 0]
+		]);
+
+		// add restriction to sms workflow task
+		$task = (new \App\Db\Query())->select(['id', 'modules'])->from('com_vtiger_workflow_tasktypes')->where(['tasktypename' => 'VTSMSTask'])->one();
+		$taskModules = \App\Json::decode($task['modules']);
+		$taskModules['include'] = $relatedModules;
+		$task['modules'] = \App\Json::encode($taskModules);
+		$db->createCommand()->update('com_vtiger_workflow_tasktypes', ['modules' => $task['modules']], ['id' => $task['id']])->execute();
+
+		$this->importer->dropTable(['vtiger_passwords_config']);
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function actionMapp(array $actions)
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+
+		foreach ($actions as $action) {
+			$key = (new \App\Db\Query())->select(['actionid'])->from('vtiger_actionmapping')->where(['actionname' => $action['name']])->limit(1)->scalar();
+			if ('remove' === $action['type']) {
+				if ($key) {
+					$db->createCommand()->delete('vtiger_actionmapping', ['actionid' => $key])->execute();
+					$db->createCommand()->delete('vtiger_profile2utility', ['activityid' => $key])->execute();
+				}
+				continue;
+			}
+			if (empty($key)) {
+				$securitycheck = 0;
+				$key = $db->getUniqueID('vtiger_actionmapping', 'actionid', false);
+				$db->createCommand()->insert('vtiger_actionmapping', ['actionid' => $key, 'actionname' => $action['name'], 'securitycheck' => $securitycheck])->execute();
+			}
+			$permission = 1;
+			if (isset($action['permission'])) {
+				$permission = $action['permission'];
+			}
+
+			$tabsData = $action['tabsData'];
+			$dataReader = (new \App\Db\Query())->select(['profileid'])->from('vtiger_profile')->createCommand()->query();
+			while (false !== ($profileId = $dataReader->readColumn(0))) {
+				foreach ($tabsData as $tabId) {
+					$isExists = (new \App\Db\Query())->from('vtiger_profile2utility')->where(['profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key])->exists();
+					if (!$isExists) {
+						$db->createCommand()->insert('vtiger_profile2utility', [
+							'profileid' => $profileId, 'tabid' => $tabId, 'activityid' => $key, 'permission' => $permission,
+						])->execute();
+					}
+				}
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function getFields(int $index)
+	{
+		$fields = [];
+		$importerType = new \App\Db\Importers\Base();
+		switch ($index) {
+			case 0:
+				$fields = [
+					[119, 2653, 'phone', 'vtiger_smsnotifier', 1, 11, 'phone', 'FL_PHONE', 0, 0, '', '30', 3, 407, 10, 'V~M', 1, 0, 'BAS', 1, '', 0, '', '', 0, 0, 0, 0, '', '', 'type' => $importerType->stringType(30), 'blockLabel' => 'LBL_SMSNOTIFIER_INFORMATION', 'blockData' => null, 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'SMSNotifier'],
+					[60, 929, 'related_to', 'vtiger_smsnotifier', 1, 10, 'related_to', 'FL_RELATED_TO', 0, 0, '', '4294967295', 3, 147, 1, 'I~M', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', null, 'type' => $importerType->integer(10)->unsigned(), 'blockLabel' => 'LBL_SMSNOTIFIER_INFORMATION', 'picklistValues' => [], 'relatedModules' => array_merge(array_keys(\App\ModuleHierarchy::getModulesByLevel(0)), ['Contacts']), 'moduleName' => 'SMSNotifier'],
+					[119, 2653, 'msgid', 'vtiger_smsnotifier', 1, 1, 'msgid', 'FL_MESSAGE_ID', 0, 0, '', '50', 3, 407, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', '', 0, 0, 0, 0, '', '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => null, 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'SMSNotifier'],
+					[60, 929, 'parentid', 'vtiger_smsnotifier', 1, 10, 'parentid', 'FL_PARENT', 0, 0, '', '4294967295', 3, 147, 2, 'I~O', 1, null, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', null, 'type' => $importerType->integer(10)->unsigned(), 'blockLabel' => 'LBL_SMSNOTIFIER_INFORMATION', 'picklistValues' => [], 'relatedModules' => ['SMSNotifier'], 'moduleName' => 'SMSNotifier'],
+					[75, 3176, 'image', 'vtiger_smsnotifier', 1, 69, 'image', 'FL_IMAGE', 0, 2, '', '65535', 20, 236, 1, 'V~O', 2, 0, 'BAS', 1, '', 0, '{"maxFileSize":512000}', null, 0, 0, 0, 0, '', '', 'type' => $importerType->text(), 'blockLabel' => 'BL_SMS_CONTENT', 'picklistValues' => [], 'relatedModules' => [], 'moduleName' => 'SMSNotifier'],
+				];
+				break;
+			case 1:
+				$fields = [
+					[29, 3100, 'calendar_all_users_by_default', 'vtiger_users', 1, 56, 'calendar_all_users_by_default', 'FL_CALENDAR_ALL_USERS_BY_DEFAULT', 0, 2, '', '-128,127', 12, 118, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_CALENDAR_SETTINGS', 'blockData' => ['label' => 'LBL_CALENDAR_SETTINGS', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => 'far fa-calendar-alt'], 'moduleName' => 'Users'],
+				];
+				break;
+			default:
+				break;
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Add fields.
+	 *
+	 * @param mixed $fields
+	 */
+	public function addFields($fields = [])
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$importerType = new \App\Db\Importers\Base();
+		if (empty($fields)) {
+			$fields = [
+				[112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => ['label' => 'LBL_CUSTOM_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 0, 'iscustom' => 0, 'icon' => null], 'moduleName' => 'EmailTemplates'],
+				[60, 3079, 'multicompanyid', 'vtiger_osspasswords', 1, 10, 'multicompanyid', 'FL_MULTICOMPANY', 0, 2, '', '4294967295', 16, 147, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_OSSPASSWORD_INFORMATION', 'blockData' => ['label' => 'LBL_OSSPASSWORD_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['MultiCompany'], 'moduleName' => 'OSSPasswords'],
+			];
+		}
+
+		foreach ($fields as $field) {
+			$moduleName = $field['moduleName'];
+			$moduleId = \App\Module::getModuleId($moduleName);
+			if (!$moduleId) {
+				$this->log("  [ERROR] Module not exists: {$moduleName}");
+				continue;
+			}
+			$isExists = (new \App\Db\Query())->from('vtiger_field')->where(['tablename' => $field[3], 'columnname' => $field[2], 'tabid' => $moduleId])->exists();
+			if ($isExists) {
+				$this->log("  [INFO] Skip adding field. Module: {$moduleName}({$moduleId}); field name: {$field[2]}, field exists: {$isExists}");
+				continue;
+			}
+
+			$blockInstance = false;
+			$blockId = (new \App\Db\Query())->select(['blockid'])->from('vtiger_blocks')->where(['blocklabel' => ($field['blockData']['label'] ?? $field['blockLabel']), 'tabid' => $moduleId])->scalar();
+			if ($blockId) {
+				$blockInstance = \vtlib\Block::getInstance($blockId, $moduleId);
+			} elseif (isset($field['blockData'])) {
+				$blockInstance = new \vtlib\Block();
+				foreach ($field['blockData'] as $key => $value) {
+					$blockInstance->{$key} = $value;
+				}
+				\Vtiger_Module_Model::getInstance($moduleName)->addBlock($blockInstance);
+				$blockId = $blockInstance->id;
+				$blockInstance = \vtlib\Block::getInstance($blockId, $moduleId);
+			}
+			if (!$blockInstance
+			&& !($blockInstance = reset(Vtiger_Module_Model::getInstance($moduleName)->getBlocks()))) {
+				$this->log("  [ERROR] No block found to create a field, you will need to create a field manually.
+				Module: {$moduleName}, field name: {$field[6]}, field label: {$field[7]}");
+				\App\Log::error("No block found ({$field['blockData']['label']}) to create a field, you will need to create a field manually.
+				Module: {$moduleName}, field name: {$field[6]}, field label: {$field[7]}");
+				continue;
+			}
+			$fieldInstance = new \vtlib\Field();
+			$fieldInstance->column = $field[2];
+			$fieldInstance->name = $field[6];
+			$fieldInstance->label = $field[7];
+			$fieldInstance->table = $field[3];
+			$fieldInstance->uitype = $field[5];
+			$fieldInstance->typeofdata = $field[15];
+			$fieldInstance->readonly = $field[8];
+			$fieldInstance->displaytype = $field[14];
+			$fieldInstance->masseditable = $field[19];
+			$fieldInstance->quickcreate = $field[16];
+			$fieldInstance->columntype = $field['type'];
+			$fieldInstance->presence = $field[9];
+			$fieldInstance->maximumlength = $field[11];
+			$fieldInstance->quicksequence = $field[17];
+			$fieldInstance->info_type = $field[18];
+			$fieldInstance->helpinfo = $field[20];
+			$fieldInstance->summaryfield = $field[21];
+			$fieldInstance->generatedtype = $field[4];
+			$fieldInstance->defaultvalue = $field[10];
+			$fieldInstance->fieldparams = $field[22];
+			$blockInstance->addField($fieldInstance);
+			if (!empty($field['picklistValues']) && (15 == $field[5] || 16 == $field[5] || 33 == $field[5])) {
+				$fieldInstance->setPicklistValues($field['picklistValues']);
+			}
+			if (!empty($field['relatedModules']) && 10 == $field[5]) {
+				$fieldInstance->setRelatedModules($field['relatedModules']);
+			}
+		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	private function roundcubeUpdateTable()
@@ -132,8 +431,8 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
 		$db = \App\Db::getInstance();
-		foreach (['roundcube_cache', 'roundcube_cache_index', 'roundcube_cache_shared', 'roundcube_cache_thread', 'roundcube_dictionary'] as $tableName) {
-			$db->createCommand()->truncateTable($tableName)->execute();
+		foreach (['roundcube_cache', 'roundcube_cache_index', 'roundcube_cache_messages', 'roundcube_cache_shared', 'roundcube_cache_thread', 'roundcube_dictionary'] as $tableName) {
+			$db->createCommand()->delete($tableName)->execute();
 		}
 		$importerBase = new \App\Db\Importers\Base();
 		$importerBase->dropColumns = [
@@ -170,7 +469,7 @@ class YetiForceUpdate
 			],
 			'roundcube_dictionary' => [
 				'columns' => [
-					'id' => $this->primaryKeyUnsigned(10),
+					'id' => $importerBase->primaryKeyUnsigned(10),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8mb4'
@@ -180,17 +479,17 @@ class YetiForceUpdate
 		if (!$db->isTableExists('roundcube_responses')) {
 			$importerBase->tables['roundcube_responses'] = [
 				'columns' => [
-					'response_id' => $this->primaryKeyUnsigned(10),
-					'user_id' => $this->integer(10)->unsigned()->notNull(),
-					'name' => $this->stringType()->notNull(),
-					'data' => $this->text()->notNull(),
-					'is_html' => $this->smallInteger(1)->notNull()->defaultValue(0),
-					'changed' => $this->dateTime()->notNull()->defaultValue('1000-01-01 00:00:00'),
-					'del' => $this->smallInteger(1)->notNull()->defaultValue(0),
+					'response_id' => $importerBase->primaryKeyUnsigned(10),
+					'user_id' => $importerBase->integer(10)->unsigned()->notNull(),
+					'name' => $importerBase->stringType()->notNull(),
+					'data' => $importerBase->text()->notNull(),
+					'is_html' => $importerBase->smallInteger(1)->notNull()->defaultValue(0),
+					'changed' => $importerBase->dateTime()->notNull()->defaultValue('1000-01-01 00:00:00'),
+					'del' => $importerBase->smallInteger(1)->notNull()->defaultValue(0),
 				],
 				'columns_mysql' => [
-					'is_html' => $this->tinyInteger(1)->notNull()->defaultValue(0),
-					'del' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+					'is_html' => $importerBase->tinyInteger(1)->notNull()->defaultValue(0),
+					'del' => $importerBase->tinyInteger(1)->notNull()->defaultValue(0),
 				],
 				'index' => [
 					['user_responses_index', ['user_id', 'del']],
@@ -204,7 +503,8 @@ class YetiForceUpdate
 		}
 
 		$this->importer->drop($importerBase);
-		$this->importer->updateScheme($importerBase);
+		$this->importer->updateTables($importerBase);
+		$this->importer->updateForeignKey($importerBase);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
@@ -229,7 +529,7 @@ class YetiForceUpdate
 				$i += $dbCommand->update('vtiger_project', ['targetbudget' => $value], ['projectid' => $row['projectid']])->execute();
 			}
 			$dataReader->close();
-			$this->log('[INFO] update vtiger_project.targetbudget | count:' . $i);
+			$this->log('  [INFO] update vtiger_project.targetbudget | count:' . $i);
 
 			$importerBase = new \App\Db\Importers\Base();
 			$importerBase->tables['vtiger_project'] = [
@@ -254,7 +554,7 @@ class YetiForceUpdate
 			['a_yf_discounts_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
 			['a_yf_taxes_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
 		]);
-		$this->log('[INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
+		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
 
 		$updates = [
@@ -317,6 +617,7 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '0,255'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'type']],
 			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'mid']],
 			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'rc_user']],
+			['com_vtiger_workflow_tasktypes', ['templatepath' => ''], []],
 		];
 		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
 		foreach ($links as $linkId => $tabId) {
@@ -324,7 +625,7 @@ class YetiForceUpdate
 		}
 		$batchUpdate = \App\Db\Updater::batchUpdate($updates);
 		// ['u_yf_users_pinned', ['tabid' => \App\Module::getModuleId('Calendar')], ''],
-		$this->log('[INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
+		$this->log('  [INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
 		unset($batchUpdate);
 
 		$importerBase = new \App\Db\Importers\Base();
@@ -337,7 +638,7 @@ class YetiForceUpdate
 				'charset' => 'utf8'
 			],
 		];
-		$this->importer->updateScheme($importerBase);
+		$this->importer->updateTables($importerBase);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -349,14 +650,14 @@ class YetiForceUpdate
 
 		$db = \App\Db::getInstance();
 		if (!$db->isTableExists('vtiger_picklist_dependency')) {
-			$this->log('[INFO] skip update dependency: table not exists vtiger_picklist_dependency');
+			$this->log('  [INFO] skip update dependency: table not exists vtiger_picklist_dependency');
 			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 			return;
 		}
 		$dbCommand = $db->createCommand();
 
 		$dependencies = [];
-		$dataReader = (new \App\db\Query())->from('vtiger_picklist_dependency')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->query();
+		$dataReader = (new \App\db\Query())->from('vtiger_picklist_dependency')->createCommand()->query();
 		while ($row = $dataReader->read()) {
 			$dependencies[$row['tabid']][$row['targetfield']][$row['sourcefield']][] = $row;
 		}
@@ -373,8 +674,8 @@ class YetiForceUpdate
 						foreach ($dependency as $sourceField => $values) {
 							$fieldModelSource = $moduleModel->getFieldByName($sourceField);
 							$conditionFieldName = "{$sourceField}:{$moduleName}";
-							if ($fieldModel && $fieldModel->isActive() && 'picklist' === $fieldModel->getFieldDataType()
-							&& $fieldModelSource && $fieldModelSource->isActive() && 'picklist' === $fieldModelSource->getFieldDataType()
+							if ($fieldModel && $fieldModel->isActiveField() && 'picklist' === $fieldModel->getFieldDataType()
+							&& $fieldModelSource && $fieldModelSource->isActiveField() && 'picklist' === $fieldModelSource->getFieldDataType()
 							&& !(new \App\db\Query())->from('s_yf_picklist_dependency')->where(['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->exists()
 						) {
 								$dbCommand->insert('s_yf_picklist_dependency', ['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->execute();
@@ -382,7 +683,9 @@ class YetiForceUpdate
 								$targetPicklistValues = \App\Fields\Picklist::getValuesName($fieldModel->getName());
 								$sourcePicklistValues = \App\Fields\Picklist::getValuesName($fieldModelSource->getName());
 								foreach ($targetPicklistValues as $key => $value) {
-									$sourceValues = array_filter($values, fn ($row) => \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]')));
+									$sourceValues = array_filter($values, function ($row) use ($value){
+										return \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]'));
+									});
 									$sourceValues = array_column($sourceValues, 'sourcevalue');
 									$sourceValues = array_intersect($sourceValues, $sourcePicklistValues);
 									$rules = [];
@@ -404,7 +707,7 @@ class YetiForceUpdate
 			}
 			$this->importer->dropTable(['vtiger_picklist_dependency']);
 		} catch (\Throwable $th) {
-			$this->log("[ERROR]: {$th->__toString()}");
+			$this->log("  [ERROR]: {$th->__toString()}");
 		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');

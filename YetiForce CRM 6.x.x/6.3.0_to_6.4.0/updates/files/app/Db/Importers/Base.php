@@ -74,7 +74,7 @@ class Base
 	 */
 	public function primaryKey($length = null)
 	{
-		return $this->schema->createColumnSchemaBuilder(Schema::TYPE_PK, $length)->notNull();
+		return $this->schema->createColumnSchemaBuilder(Schema::TYPE_PK, $length)->notNull()->autoIncrement();
 	}
 
 	/**

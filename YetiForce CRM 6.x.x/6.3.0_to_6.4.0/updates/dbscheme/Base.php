@@ -119,17 +119,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			'u_#__openstreetmap_cache' => [
-				'columns' => [
-					'user_id' => $this->integer(10)->notNull(),
-					'crmids' => $this->integer(10)->notNull(),
-				],
-				'index' => [
-					['crmids', 'crmids']
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
 			'u_#__relations_members_entity' => [
 				'columns' => [
 					'rel_created_user' => $this->integer(10),
@@ -145,15 +134,7 @@ class Base extends \App\Db\Importers\Base
 				],
 				'index' => [
 					['u_yf_openstreetmap_cache_crmids_idx', 'crmids'],
-					['u_yf_openstreetmap_cache_module_name_idx', 'module_name'],
-					['u_yf_openstreetmap_cache_user_id_module_name_idx', ['user_id', 'module_name']],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8'
-			],
-			'vtiger_callhistory' => [
-				'columns' => [
-					'duration' => $this->integer(10)->unsigned(),
+					['u_yf_openstreetmap_cache_module_name_idx', 'module_name']
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -224,8 +205,6 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			],
-			// 'vtiger_trees_templates' => [
-			// ],
 			'vtiger_users' => [
 				'columns' => [
 					'user_password' => $this->stringType(),
@@ -252,13 +231,13 @@ class Base extends \App\Db\Importers\Base
 			'u_#__users_pinned' => [
 				'columns' => [
 					'id' => $this->primaryKeyUnsigned(10),
-					'user_id' => ['type' => $this->integer(10)->notNull(), 'rename' => 'owner_id'],
+					'user_id' => ['type' => $this->integer(10)->notNull(), 'renameFrom' => 'owner_id'],
 					'tabid' => $this->smallInteger(5)->notNull()->defaultValue(\App\Module::getModuleId('Calendar')),
-					'fav_id' => ['type' => $this->integer(10)->unsigned()->notNull(), 'rename' => 'fav_element_id'],
+					'fav_id' => ['type' => $this->integer(10)->unsigned()->notNull(), 'renameFrom' => 'fav_element_id'],
 				],
 				'index' => [
-					['u_yf_users_pinned_user_id_idx', 'tabid'],
-					['u_yf_users_pinned_tabid_idx', 'user_id'],
+					['u_yf_users_pinned_user_id_idx', 'user_id'],
+					['u_yf_users_pinned_tabid_idx', 'tabid'],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -384,6 +363,20 @@ class Base extends \App\Db\Importers\Base
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8',
+			],
+			'vtiger_trees_templates' => [
+				'columns' => [
+					'templateid' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
+					'tabid' => ['type' => $this->smallInteger(5)->notNull(), 'renameFrom' => 'owner_id']
+				],
+				'index' => [
+					['module', 'tabid'],
+				],
+				'primaryKeys' => [
+					['trees_templates_pk', 'templateid']
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb3'
 			],
 		];
 		$this->foreignKey = [
