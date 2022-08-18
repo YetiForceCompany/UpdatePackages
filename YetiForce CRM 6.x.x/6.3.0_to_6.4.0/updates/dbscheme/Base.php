@@ -395,8 +395,8 @@ class Base extends \App\Db\Importers\Base
 			],
 			'w_#__servers' => [
 				'index' => [
-					['w_yf_servers_api_key_idx', 'api_key'],
-					['w_yf_servers_name_type_idx', ['type', 'name']],
+					['w_yf_servers_api_key_idx', 'api_key', true],
+					['w_yf_servers_name_type_idx', ['type', 'name'], true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -418,7 +418,7 @@ class Base extends \App\Db\Importers\Base
 					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
 				],
 				'index' => [
-					['w_yf_sms_user_server_id_token_uidx', ['server_id', 'token']],
+					['w_yf_sms_user_server_id_token_uidx', ['server_id', 'token'], true],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'

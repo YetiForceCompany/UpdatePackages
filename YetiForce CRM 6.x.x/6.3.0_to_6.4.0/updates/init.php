@@ -103,19 +103,19 @@ class YetiForceUpdate
 
 		$this->importer = new \App\Db\Importer();
 		try {
+			$this->removeModules('OSSPasswords');
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
 			$this->updateTargetField();
 			$this->importer->dropIndexes([
 				'w_yf_servers' => ['name'],
-				'u_yf_users_pinned' => ['user_id', 'tabid']
+				'u_yf_users_pinned' => ['user_id', 'tabid','u_yf_users_pinned']
 			]);
 			$this->importer->dropColumns([['vtiger_groups', 'modules']]);
 			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module' => 'vtiger_trees_templates']);
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
-
 			$this->importer->importData();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -129,7 +129,6 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->addFields($this->getFields(1));
-		$this->removeModules('OSSPasswords');
 		$this->addModules(['SMSTemplates']);
 		$this->smsNotifier();
 		$this->updateData();
@@ -446,17 +445,6 @@ class YetiForceUpdate
 			'roundcube_cache_shared' => ['cache_key_index'],
 		]);
 
-		// $importerBase = new \App\Db\Importers\Base();
-		// $importerBase->dropColumns = [
-		// 	['roundcube_cache', 'created'],
-		// 	['roundcube_cache_shared', 'created'],
-		// 	['roundcube_session', 'created']
-		// ];
-		// $importerBase->dropIndexes = [
-		// 	'roundcube_cache' => ['user_cache_index'],
-		// 	'roundcube_cache_shared' => ['cache_key_index'],
-		// ];
-
 		$tableSchema = $db->getTableSchema('roundcube_cache');
 		$column = $tableSchema->getColumn('created');
 		if ($column) {
@@ -491,10 +479,6 @@ class YetiForceUpdate
 		$importerBase->dropColumns = [
 			['roundcube_session', 'created']
 		];
-		// $importerBase->dropIndexes = [
-		// 	'roundcube_cache' => ['user_cache_index'],
-		// 	'roundcube_cache_shared' => ['cache_key_index'],
-		// ];
 		$importerBase->tables = [
 			'roundcube_dictionary' => [
 				'columns' => [
@@ -566,9 +550,19 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
+		$batchDelete = \App\Db\Updater::batchDelete([
+			['a_yf_settings_modules', ['name' => 'OSSPasswords']],
+		]);
+		$this->log('  [INFO] batchDelete: ' . \App\Utils::varExport($batchDelete));
+		unset($batchDelete);
+
 		$batchInsert = \App\Db\Updater::batchInsert([
 			['a_yf_discounts_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
 			['a_yf_taxes_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
+			['a_yf_settings_modules', ['name' => 'Media', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'Media']],
+			['a_yf_settings_modules', ['name' => 'Wapro', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'Wapro']],
+			['a_yf_settings_modules', ['name' => 'RecordCollector', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'RecordCollector']],
+			['com_vtiger_workflow_tasktypes', ['tasktypename'=>'RecordCollector','label'=>'LBL_RECORD_COLLECTOR','classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php','modules'=> "{\"include\":[],\"exclude\":[]}", 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
@@ -678,7 +672,7 @@ class YetiForceUpdate
 			$dependencies[$row['tabid']][$row['targetfield']][$row['sourcefield']][] = $row;
 		}
 		$dataReader->close();
-
+		$i = 0;
 		try {
 			$isEmptyDefaultValue = \App\Config::performance('PICKLIST_DEPENDENCY_DEFAULT_EMPTY', true);
 			foreach ($dependencies as $tabId => $data) {
@@ -694,12 +688,15 @@ class YetiForceUpdate
 							&& $fieldModelSource && $fieldModelSource->isActiveField() && 'picklist' === $fieldModelSource->getFieldDataType()
 							&& !(new \App\db\Query())->from('s_yf_picklist_dependency')->where(['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->exists()
 						) {
+								++$i;
 								$dbCommand->insert('s_yf_picklist_dependency', ['tabid' => $tabId, 'source_field' => $fieldModel->getId()])->execute();
 								$dependencyId = $db->getLastInsertID('s_yf_picklist_dependency_id_seq');
 								$targetPicklistValues = \App\Fields\Picklist::getValuesName($fieldModel->getName());
 								$sourcePicklistValues = \App\Fields\Picklist::getValuesName($fieldModelSource->getName());
 								foreach ($targetPicklistValues as $key => $value) {
-									$sourceValues = array_filter($values, fn ($row) => \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]')));
+									$sourceValues = array_filter($values, function ($row) use ($value){
+										return \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]'));
+									});
 									$sourceValues = array_column($sourceValues, 'sourcevalue');
 									$sourceValues = array_intersect($sourceValues, $sourcePicklistValues);
 									$rules = [];
@@ -723,6 +720,7 @@ class YetiForceUpdate
 		} catch (\Throwable $th) {
 			$this->log("  [ERROR]: {$th->__toString()}");
 		}
+		$this->log('  [INFO] dependencies were recreated: '. $i);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
@@ -796,13 +794,6 @@ class YetiForceUpdate
 			$configFile->set('defaultSource', \App\Config::module('ModComments', 'DEFAULT_SOURCE', ['current']));
 		}
 		$configFile->create();
-
-		// $addressFinder = new \App\ConfigFile('component', 'AddressFinder');
-		// if ('no data' !== \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE', 'no data')) {
-		// 	$addressFinder->set('remappingOpenCage', \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE'));
-		// 	$addressFinder->set('remappingOpenCageForCountry', \App\Config::component('AddressFinder', 'REMAPPING_OPENCAGE_FOR_COUNTRY'));
-		// }
-		// $addressFinder->create();
 
 		$skip = ['main', 'db', 'performance', 'debug', 'security', 'module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
