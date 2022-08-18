@@ -6,11 +6,11 @@ Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 
 Notes:
-- <strong>Stary moduł haseł (OSSPasswords) zostanie pernamentnie usunięty, jeżeli nie chesz ustracić danych, zmigruj je do nowego modułu haseł (Passwords).</strong>
-  Zobacz: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussioncomment-1793851
-- Funcjonalność zależności słownikowych uległa przebudowaniu. Wsyzstkie istniejące wpisy zostały usunięte. System spróbuje przywrócić zależności, jednakże należy całość zweryfikować po aktualizacji.
-- Moduł SMSNotifier uległ modernizacji w znacznym stopniu. Relacje M-M pomiędzy tym modułem zostaną usunięte. Wpisy w tym module nie zostana usuniete, aczkolwiek zaleca sie je pernamentnie usnąc po aktualizacji.
+- Stary moduł haseł (OSSPasswords) zostanie permanentnie usunięty, jeżeli nie chcesz utracić danych, zmigruj je do nowego modułu haseł (Passwords).
+  Zobacz: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussioncomment-1793851
+- Funkcjonalność zależności słownikowych uległa przebudowaniu. Wszystkie istniejące wpisy zostały usunięte. System spróbuje przywrócić zależności, jednakże należy całość zweryfikować po aktualizacji.
+- Moduł SMSNotifier uległ modernizacji w znacznym stopniu. Relacje M-M pomiędzy tym modułem zostaną usunięte. Wpisy w tym module nie zostaną usunięte, aczkolwiek zaleca się je permanentnie usnąć po aktualizacji.
 - W trakcie aktualizacja wykonywane będą operacja na głównych tabelach bazy danych. Jeżeli posiadasz dużą baszę danych, rozważ przeprowadzenie aktualizacji z poziomu CLI, aby uniknąć przekroczenia różnego rodzaju limitów czasowych.
-  Zobacz: link do instrukcji z CLI
+  Zobacz: link do instrukcji z CLI 
 - Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
 - After the update process finishes, please also update all the languages in your system.

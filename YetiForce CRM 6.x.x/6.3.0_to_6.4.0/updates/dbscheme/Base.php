@@ -27,7 +27,7 @@ class Base extends \App\Db\Importers\Base
 		$this->tables = [
 			'a_#__pdf' => [
 				'columns' => [
-					'generator' => $this->stringType(50)->notNull()->defaultValue('YetiForcePDF'),
+					'generator' => $this->stringType(50)->notNull()->defaultValue('YetiForcePDF')->after('pdfid'),
 					'styles' => $this->text()
 				],
 				'engine' => 'InnoDB',
@@ -35,7 +35,7 @@ class Base extends \App\Db\Importers\Base
 			],
 			'a_#__smsnotifier_servers' => [
 				'columns' => [
-					'name' => $this->stringType(50)->notNull()->defaultValue(''),
+					'name' => $this->stringType(50)->notNull()->defaultValue('')->after('id'),
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
@@ -233,7 +233,7 @@ class Base extends \App\Db\Importers\Base
 					'id' => $this->primaryKeyUnsigned(10),
 					'user_id' => ['type' => $this->integer(10)->notNull(), 'renameFrom' => 'owner_id'],
 					'tabid' => $this->smallInteger(5)->notNull()->defaultValue(\App\Module::getModuleId('Calendar')),
-					'fav_id' => ['type' => $this->integer(10)->unsigned()->notNull(), 'renameFrom' => 'fav_element_id'],
+					'fav_id' => ['type' => $this->integer(10)->unsigned()->notNull()->after('tabid'), 'renameFrom' => 'fav_element_id'],
 				],
 				'index' => [
 					['u_yf_users_pinned_user_id_idx', 'user_id'],
@@ -324,6 +324,7 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_products' => [
 				'columns' => [
 					'weight' => ['type' => $this->decimal('11,3')->unsigned(), 'mode' => 1],
+					'commissionrate' => ['type' => $this->decimal('8,2'), 'mode' => 1],
 				],
 				'engine' => 'InnoDB',
 				'charset' => 'utf8',
@@ -357,6 +358,13 @@ class Base extends \App\Db\Importers\Base
 				'engine' => 'InnoDB',
 				'charset' => 'utf8',
 			],
+			'vtiger_service' => [
+				'columns' => [
+					'commissionrate' => ['type' => $this->decimal('8,2'), 'mode' => 1],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8',
+			],
 			'u_#__cmileagelogbook' => [
 				'columns' => [
 					'number_kilometers' => ['type' => $this->decimal('13,2')->unsigned(), 'mode' => 1],
@@ -367,7 +375,7 @@ class Base extends \App\Db\Importers\Base
 			'vtiger_trees_templates' => [
 				'columns' => [
 					'templateid' => $this->smallInteger(5)->unsigned()->autoIncrement()->notNull(),
-					'tabid' => ['type' => $this->smallInteger(5)->notNull(), 'renameFrom' => 'owner_id']
+					'tabid' => ['type' => $this->smallInteger(5)->notNull(), 'renameFrom' => 'module']
 				],
 				'index' => [
 					['module', 'tabid'],
@@ -376,7 +384,44 @@ class Base extends \App\Db\Importers\Base
 					['trees_templates_pk', 'templateid']
 				],
 				'engine' => 'InnoDB',
-				'charset' => 'utf8mb3'
+				'charset' => 'utf8'
+			],
+			'l_#__mail' => [
+				'columns' => [
+					'content' => $this->mediumText(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__servers' => [
+				'index' => [
+					['w_yf_servers_api_key_idx', 'api_key'],
+					['w_yf_servers_name_type_idx', ['type', 'name']],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
+			],
+			'w_#__sms_user' => [
+				'columns' => [
+					'id' => $this->primaryKeyUnsigned(10),
+					'server_id' => $this->integer(10)->unsigned()->notNull(),
+					'status' => $this->smallInteger(1)->notNull()->defaultValue(0),
+					'token' => $this->char(64)->notNull(),
+					'type' => $this->smallInteger(1)->unsigned()->notNull()->defaultValue(1),
+					'login_time' => $this->dateTime(),
+					'language' => $this->stringType(10),
+					'user_id' => $this->integer(10),
+					'custom_params' => $this->text(),
+				],
+				'columns_mysql' => [
+					'status' => $this->tinyInteger(1)->notNull()->defaultValue(0),
+					'type' => $this->tinyInteger(1)->unsigned()->notNull()->defaultValue(1),
+				],
+				'index' => [
+					['w_yf_sms_user_server_id_token_uidx', ['server_id', 'token']],
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8'
 			],
 		];
 		$this->foreignKey = [
@@ -394,6 +439,7 @@ class Base extends \App\Db\Importers\Base
 			['vtiger_users2group_groupid_fk', 'vtiger_users2group', 'groupid', 'vtiger_groups', 'groupid', 'CASCADE', null],
 			['u_#__users_pinned_ibfk_1', 'u_#__users_pinned', 'user_id', 'vtiger_users', 'id', 'CASCADE', null],
 			['u_#__users_pinned_ibfk_2', 'u_#__users_pinned', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+			['w_#__sms_user_server_id_fk', 'w_#__sms_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', null],
 		];
 	}
 }

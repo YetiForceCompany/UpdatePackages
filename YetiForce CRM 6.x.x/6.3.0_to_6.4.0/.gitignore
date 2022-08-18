@@ -3,7 +3,7 @@ updates/files/tests/*
 
 updates/files/user_privileges/*
 
-updates/files/config/*
+updates/files/config/*/*
 !updates/files/config/username_blacklist.php
 !updates/files/config/csrf_config.php
 !updates/files/config/mimetypes.php

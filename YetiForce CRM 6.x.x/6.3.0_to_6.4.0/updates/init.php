@@ -9,7 +9,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
-//  SHA-1: e32d5353852580fd3354ca3776a7879212aada93
+//  SHA-1: ec51e0dcf80302633326f6736b4093d5cd461b0e
 
 /**
  * YetiForce system update package class.
@@ -107,6 +107,11 @@ class YetiForceUpdate
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
 			$this->updateTargetField();
+			$this->importer->dropIndexes([
+				'w_yf_servers' => ['name'],
+				'u_yf_users_pinned' => ['user_id', 'tabid']
+			]);
+			$this->importer->dropColumns([['vtiger_groups', 'modules']]);
 			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module' => 'vtiger_trees_templates']);
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
@@ -331,6 +336,7 @@ class YetiForceUpdate
 				break;
 			case 1:
 				$fields = [
+					[79, 3099, 'finvoiceproformaid', 'vtiger_paymentsin', 1, 10, 'finvoiceproformaid', 'FL_FINVOICE_PROFORMA', 0, 2, '', '4294967295', 9, 251, 1, 'I~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->integer()->unsigned(), 'blockLabel' => 'LBL_PAYMENT_INFORMATION', 'blockData' => ['label' => 'LBL_PAYMENT_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['FInvoiceProforma'], 'moduleName' => 'PaymentsIn'],
 					[29, 3100, 'calendar_all_users_by_default', 'vtiger_users', 1, 56, 'calendar_all_users_by_default', 'FL_CALENDAR_ALL_USERS_BY_DEFAULT', 0, 2, '', '-128,127', 12, 118, 1, 'C~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', '', 'type' => $importerType->tinyInteger(1), 'blockLabel' => 'LBL_CALENDAR_SETTINGS', 'blockData' => ['label' => 'LBL_CALENDAR_SETTINGS', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => 'far fa-calendar-alt'], 'moduleName' => 'Users'],
 				];
 				break;
@@ -434,77 +440,87 @@ class YetiForceUpdate
 		foreach (['roundcube_cache', 'roundcube_cache_index', 'roundcube_cache_messages', 'roundcube_cache_shared', 'roundcube_cache_thread', 'roundcube_dictionary'] as $tableName) {
 			$db->createCommand()->delete($tableName)->execute();
 		}
-		$importerBase = new \App\Db\Importers\Base();
-		$importerBase->dropColumns = [
-			['roundcube_cache', 'created'],
-			['roundcube_cache_shared', 'created'],
-			['roundcube_session', 'created']
-		];
-		$importerBase->dropIndexes = [
+
+		$this->importer->dropIndexes([
 			'roundcube_cache' => ['user_cache_index'],
 			'roundcube_cache_shared' => ['cache_key_index'],
-		];
-		$importerBase->tables = [
-			'roundcube_cache' => [
-				'primaryKeys' => [
-					['roundcube_cache_pk', ['user_id', 'cache_key']]
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8mb4'
-			],
-			'roundcube_cache_messages' => [
-				'columns' => [
-					'uid' => $importerBase->integer()->unsigned()->notNull()->defaultValue(0),
-					'flags' => $importerBase->integer()->notNull()->defaultValue(0),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8mb4'
-			],
-			'roundcube_cache_shared' => [
-				'primaryKeys' => [
-					['roundcube_cache_shared_pk', 'cache_key']
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8mb4'
-			],
-			'roundcube_dictionary' => [
-				'columns' => [
-					'id' => $importerBase->primaryKeyUnsigned(10),
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8mb4'
-			],
-		];
+		]);
 
-		if (!$db->isTableExists('roundcube_responses')) {
-			$importerBase->tables['roundcube_responses'] = [
-				'columns' => [
-					'response_id' => $importerBase->primaryKeyUnsigned(10),
-					'user_id' => $importerBase->integer(10)->unsigned()->notNull(),
-					'name' => $importerBase->stringType()->notNull(),
-					'data' => $importerBase->text()->notNull(),
-					'is_html' => $importerBase->smallInteger(1)->notNull()->defaultValue(0),
-					'changed' => $importerBase->dateTime()->notNull()->defaultValue('1000-01-01 00:00:00'),
-					'del' => $importerBase->smallInteger(1)->notNull()->defaultValue(0),
-				],
-				'columns_mysql' => [
-					'is_html' => $importerBase->tinyInteger(1)->notNull()->defaultValue(0),
-					'del' => $importerBase->tinyInteger(1)->notNull()->defaultValue(0),
-				],
-				'index' => [
-					['user_responses_index', ['user_id', 'del']],
-				],
-				'engine' => 'InnoDB',
-				'charset' => 'utf8mb4'
-			];
-			$importerBase->foreignKey = [
-				['user_id_fk_responses', 'roundcube_responses', 'user_id', 'roundcube_users', 'user_id', 'CASCADE', 'CASCADE']
-			];
+		// $importerBase = new \App\Db\Importers\Base();
+		// $importerBase->dropColumns = [
+		// 	['roundcube_cache', 'created'],
+		// 	['roundcube_cache_shared', 'created'],
+		// 	['roundcube_session', 'created']
+		// ];
+		// $importerBase->dropIndexes = [
+		// 	'roundcube_cache' => ['user_cache_index'],
+		// 	'roundcube_cache_shared' => ['cache_key_index'],
+		// ];
+
+		$tableSchema = $db->getTableSchema('roundcube_cache');
+		$column = $tableSchema->getColumn('created');
+		if ($column) {
+			$db->createCommand('ALTER TABLE `roundcube_cache`
+			CHANGE `cache_key` `cache_key` varchar(128)  COLLATE utf8mb4_bin NOT NULL after `user_id` ,
+			CHANGE `expires` `expires` datetime   NULL after `cache_key` ,
+			DROP COLUMN `created` ,
+			ADD PRIMARY KEY(`user_id`,`cache_key`), ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_cache_index` CHANGE `mailbox` `mailbox` varchar(255)  COLLATE utf8mb4_bin NOT NULL after `user_id`, ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_cache_messages`
+			CHANGE `mailbox` `mailbox` varchar(255)  COLLATE utf8mb4_bin NOT NULL after `user_id` ,
+			CHANGE `uid` `uid` int(11) unsigned   NOT NULL DEFAULT 0 after `mailbox` ,
+			CHANGE `flags` `flags` int(11)   NOT NULL DEFAULT 0 after `data`, ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_cache_shared`
+			CHANGE `cache_key` `cache_key` varchar(255)  COLLATE utf8mb4_bin NOT NULL first ,
+			CHANGE `expires` `expires` datetime   NULL after `cache_key` ,
+			DROP COLUMN `created` ,
+			ADD PRIMARY KEY(`cache_key`), ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_cache_thread` CHANGE `mailbox` `mailbox` varchar(255)  COLLATE utf8mb4_bin NOT NULL after `user_id` , ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_users` CHANGE `username` `username` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_contactgroupmembers` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_contactgroups` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_contacts` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_dictionary` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_filestore` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_identities` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_session` ROW_FORMAT=DYNAMIC;')->execute();
+			$db->createCommand('ALTER TABLE `roundcube_searches` ROW_FORMAT=DYNAMIC;')->execute();
 		}
 
+		$importerBase = new \App\Db\Importers\Base();
+		$importerBase->dropColumns = [
+			['roundcube_session', 'created']
+		];
+		// $importerBase->dropIndexes = [
+		// 	'roundcube_cache' => ['user_cache_index'],
+		// 	'roundcube_cache_shared' => ['cache_key_index'],
+		// ];
+		$importerBase->tables = [
+			'roundcube_dictionary' => [
+				'columns' => [
+					'id' => $importerBase->primaryKeyUnsigned(10)->first(),
+				],
+				'engine' => 'InnoDB',
+				'charset' => 'utf8mb4'
+			],
+		];
 		$this->importer->drop($importerBase);
 		$this->importer->updateTables($importerBase);
-		$this->importer->updateForeignKey($importerBase);
+
+		if (!$db->isTableExists('roundcube_responses')) {
+			$db->createCommand("CREATE TABLE `roundcube_responses` (
+				`response_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				`user_id` int(10) unsigned NOT NULL,
+				`name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+				`data` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+				`is_html` tinyint(1) NOT NULL DEFAULT 0,
+				`changed` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
+				`del` tinyint(1) NOT NULL DEFAULT 0,
+				PRIMARY KEY (`response_id`),
+				KEY `user_responses_index` (`user_id`,`del`),
+				CONSTRAINT `user_id_fk_responses` FOREIGN KEY (`user_id`) REFERENCES `roundcube_users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+			  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;")->execute();
+		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
@@ -539,7 +555,7 @@ class YetiForceUpdate
 				'engine' => 'InnoDB',
 				'charset' => 'utf8'
 			];
-			$this->importer->updateScheme($importerBase);
+			$this->importer->updateTables($importerBase);
 		}
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
@@ -683,9 +699,7 @@ class YetiForceUpdate
 								$targetPicklistValues = \App\Fields\Picklist::getValuesName($fieldModel->getName());
 								$sourcePicklistValues = \App\Fields\Picklist::getValuesName($fieldModelSource->getName());
 								foreach ($targetPicklistValues as $key => $value) {
-									$sourceValues = array_filter($values, function ($row) use ($value){
-										return \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]'));
-									});
+									$sourceValues = array_filter($values, fn ($row) => \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]')));
 									$sourceValues = array_column($sourceValues, 'sourcevalue');
 									$sourceValues = array_intersect($sourceValues, $sourcePicklistValues);
 									$rules = [];
