@@ -84,6 +84,7 @@ class ComposerStaticInitYT
             'Symfony\\Component\\Translation\\' => 30,
             'Symfony\\Component\\Process\\' => 26,
             'Symfony\\Component\\Filesystem\\' => 29,
+            'SimplePie\\' => 10,
             'Seld\\CliPrompt\\' => 15,
             'Sabre\\Xml\\' => 10,
             'Sabre\\VObject\\' => 14,
@@ -114,6 +115,10 @@ class ComposerStaticInitYT
             'ParagonIE\\ConstantTime\\' => 23,
             'PHPMailer\\PHPMailer\\' => 20,
             'PHPMailer\\DKIMValidator\\' => 24,
+        ),
+        'N' => 
+        array (
+            'Notihnio\\MultipartFormDataParser\\' => 33,
         ),
         'M' => 
         array (
@@ -263,6 +268,10 @@ class ComposerStaticInitYT
         array (
             0 => __DIR__ . '/..' . '/symfony/filesystem',
         ),
+        'SimplePie\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/simplepie/simplepie/src',
+        ),
         'Seld\\CliPrompt\\' => 
         array (
             0 => __DIR__ . '/..' . '/seld/cli-prompt/src',
@@ -359,6 +368,10 @@ class ComposerStaticInitYT
         'PHPMailer\\DKIMValidator\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpmailer/dkimvalidator/src',
+        ),
+        'Notihnio\\MultipartFormDataParser\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/notihnio/php-multipart-form-data-parser/src',
         ),
         'MyCLabs\\Enum\\' => 
         array (
@@ -473,6 +486,13 @@ class ComposerStaticInitYT
     );
 
     public static $prefixesPsr0 = array (
+        'S' => 
+        array (
+            'SimplePie' => 
+            array (
+                0 => __DIR__ . '/..' . '/simplepie/simplepie/library',
+            ),
+        ),
         'P' => 
         array (
             'Pimple' => 
@@ -1314,8 +1334,6 @@ class ComposerStaticInitYT
         'Evenement\\EventEmitterInterface' => __DIR__ . '/..' . '/evenement/evenement/src/Evenement/EventEmitterInterface.php',
         'Evenement\\EventEmitterTrait' => __DIR__ . '/..' . '/evenement/evenement/src/Evenement/EventEmitterTrait.php',
         'FPDF' => __DIR__ . '/..' . '/setasign/fpdf/fpdf.php',
-        'Feed' => __DIR__ . '/..' . '/dg/rss-php/src/Feed.php',
-        'FeedException' => __DIR__ . '/..' . '/dg/rss-php/src/Feed.php',
         'FontLib\\AdobeFontMetrics' => __DIR__ . '/..' . '/phenx/php-font-lib/src/FontLib/AdobeFontMetrics.php',
         'FontLib\\Autoloader' => __DIR__ . '/..' . '/phenx/php-font-lib/src/FontLib/Autoloader.php',
         'FontLib\\BinaryStream' => __DIR__ . '/..' . '/phenx/php-font-lib/src/FontLib/BinaryStream.php',
@@ -2262,6 +2280,8 @@ class ComposerStaticInitYT
         'Nette\\Utils\\Type' => __DIR__ . '/..' . '/nette/utils/src/Utils/Type.php',
         'Nette\\Utils\\UnknownImageFileException' => __DIR__ . '/..' . '/nette/utils/src/Utils/exceptions.php',
         'Nette\\Utils\\Validators' => __DIR__ . '/..' . '/nette/utils/src/Utils/Validators.php',
+        'Notihnio\\MultipartFormDataParser\\MultipartFormDataParser' => __DIR__ . '/..' . '/notihnio/php-multipart-form-data-parser/src/MultipartFormDataParser.php',
+        'Notihnio\\MultipartFormDataParser\\MultipartFormDataset' => __DIR__ . '/..' . '/notihnio/php-multipart-form-data-parser/src/MultipartFormDataset.php',
         'PHPMailer\\DKIMValidator\\DKIM' => __DIR__ . '/..' . '/phpmailer/dkimvalidator/src/DKIM.php',
         'PHPMailer\\DKIMValidator\\DKIMException' => __DIR__ . '/..' . '/phpmailer/dkimvalidator/src/DKIMException.php',
         'PHPMailer\\DKIMValidator\\Validator' => __DIR__ . '/..' . '/phpmailer/dkimvalidator/src/Validator.php',
@@ -3295,6 +3315,74 @@ class ComposerStaticInitYT
         'Sabre\\Xml\\XmlDeserializable' => __DIR__ . '/..' . '/sabre/xml/lib/XmlDeserializable.php',
         'Sabre\\Xml\\XmlSerializable' => __DIR__ . '/..' . '/sabre/xml/lib/XmlSerializable.php',
         'Seld\\CliPrompt\\CliPrompt' => __DIR__ . '/..' . '/seld/cli-prompt/src/CliPrompt.php',
+        'SimplePie' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie.php',
+        'SimplePie\\Author' => __DIR__ . '/..' . '/simplepie/simplepie/src/Author.php',
+        'SimplePie\\Cache' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache.php',
+        'SimplePie\\Cache\\Base' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/Base.php',
+        'SimplePie\\Cache\\DB' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/DB.php',
+        'SimplePie\\Cache\\File' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/File.php',
+        'SimplePie\\Cache\\Memcache' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/Memcache.php',
+        'SimplePie\\Cache\\Memcached' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/Memcached.php',
+        'SimplePie\\Cache\\MySQL' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/MySQL.php',
+        'SimplePie\\Cache\\Redis' => __DIR__ . '/..' . '/simplepie/simplepie/src/Cache/Redis.php',
+        'SimplePie\\Caption' => __DIR__ . '/..' . '/simplepie/simplepie/src/Caption.php',
+        'SimplePie\\Category' => __DIR__ . '/..' . '/simplepie/simplepie/src/Category.php',
+        'SimplePie\\Content\\Type\\Sniffer' => __DIR__ . '/..' . '/simplepie/simplepie/src/Content/Type/Sniffer.php',
+        'SimplePie\\Copyright' => __DIR__ . '/..' . '/simplepie/simplepie/src/Copyright.php',
+        'SimplePie\\Credit' => __DIR__ . '/..' . '/simplepie/simplepie/src/Credit.php',
+        'SimplePie\\Enclosure' => __DIR__ . '/..' . '/simplepie/simplepie/src/Enclosure.php',
+        'SimplePie\\Exception' => __DIR__ . '/..' . '/simplepie/simplepie/src/Exception.php',
+        'SimplePie\\File' => __DIR__ . '/..' . '/simplepie/simplepie/src/File.php',
+        'SimplePie\\Gzdecode' => __DIR__ . '/..' . '/simplepie/simplepie/src/Gzdecode.php',
+        'SimplePie\\HTTP\\Parser' => __DIR__ . '/..' . '/simplepie/simplepie/src/HTTP/Parser.php',
+        'SimplePie\\IRI' => __DIR__ . '/..' . '/simplepie/simplepie/src/IRI.php',
+        'SimplePie\\Item' => __DIR__ . '/..' . '/simplepie/simplepie/src/Item.php',
+        'SimplePie\\Locator' => __DIR__ . '/..' . '/simplepie/simplepie/src/Locator.php',
+        'SimplePie\\Misc' => __DIR__ . '/..' . '/simplepie/simplepie/src/Misc.php',
+        'SimplePie\\Net\\IPv6' => __DIR__ . '/..' . '/simplepie/simplepie/src/Net/IPv6.php',
+        'SimplePie\\Parse\\Date' => __DIR__ . '/..' . '/simplepie/simplepie/src/Parse/Date.php',
+        'SimplePie\\Parser' => __DIR__ . '/..' . '/simplepie/simplepie/src/Parser.php',
+        'SimplePie\\Rating' => __DIR__ . '/..' . '/simplepie/simplepie/src/Rating.php',
+        'SimplePie\\Registry' => __DIR__ . '/..' . '/simplepie/simplepie/src/Registry.php',
+        'SimplePie\\Restriction' => __DIR__ . '/..' . '/simplepie/simplepie/src/Restriction.php',
+        'SimplePie\\Sanitize' => __DIR__ . '/..' . '/simplepie/simplepie/src/Sanitize.php',
+        'SimplePie\\SimplePie' => __DIR__ . '/..' . '/simplepie/simplepie/src/SimplePie.php',
+        'SimplePie\\Source' => __DIR__ . '/..' . '/simplepie/simplepie/src/Source.php',
+        'SimplePie\\XML\\Declaration\\Parser' => __DIR__ . '/..' . '/simplepie/simplepie/src/XML/Declaration/Parser.php',
+        'SimplePie_Author' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Author.php',
+        'SimplePie_Cache' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache.php',
+        'SimplePie_Cache_Base' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/Base.php',
+        'SimplePie_Cache_DB' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/DB.php',
+        'SimplePie_Cache_File' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/File.php',
+        'SimplePie_Cache_Memcache' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/Memcache.php',
+        'SimplePie_Cache_Memcached' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/Memcached.php',
+        'SimplePie_Cache_MySQL' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/MySQL.php',
+        'SimplePie_Cache_Redis' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Cache/Redis.php',
+        'SimplePie_Caption' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Caption.php',
+        'SimplePie_Category' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Category.php',
+        'SimplePie_Content_Type_Sniffer' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Content/Type/Sniffer.php',
+        'SimplePie_Copyright' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Copyright.php',
+        'SimplePie_Core' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Core.php',
+        'SimplePie_Credit' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Credit.php',
+        'SimplePie_Decode_HTML_Entities' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Decode/HTML/Entities.php',
+        'SimplePie_Enclosure' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Enclosure.php',
+        'SimplePie_Exception' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Exception.php',
+        'SimplePie_File' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/File.php',
+        'SimplePie_HTTP_Parser' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/HTTP/Parser.php',
+        'SimplePie_IRI' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/IRI.php',
+        'SimplePie_Item' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Item.php',
+        'SimplePie_Locator' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Locator.php',
+        'SimplePie_Misc' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Misc.php',
+        'SimplePie_Net_IPv6' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Net/IPv6.php',
+        'SimplePie_Parse_Date' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Parse/Date.php',
+        'SimplePie_Parser' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Parser.php',
+        'SimplePie_Rating' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Rating.php',
+        'SimplePie_Registry' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Registry.php',
+        'SimplePie_Restriction' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Restriction.php',
+        'SimplePie_Sanitize' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Sanitize.php',
+        'SimplePie_Source' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/Source.php',
+        'SimplePie_XML_Declaration_Parser' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/XML/Declaration/Parser.php',
+        'SimplePie_gzdecode' => __DIR__ . '/..' . '/simplepie/simplepie/library/SimplePie/gzdecode.php',
         'Smarty' => __DIR__ . '/..' . '/smarty/smarty/libs/Smarty.class.php',
         'SmartyCompilerException' => __DIR__ . '/..' . '/smarty/smarty/libs/sysplugins/smartycompilerexception.php',
         'SmartyException' => __DIR__ . '/..' . '/smarty/smarty/libs/sysplugins/smartyexception.php',

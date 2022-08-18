@@ -55,15 +55,6 @@
             'reference' => '30897edbfb15e784fe55587b4f73ceefd3c4d98c',
             'dev_requirement' => false,
         ),
-        'dg/rss-php' => array(
-            'pretty_version' => 'v1.5',
-            'version' => '1.5.0.0',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../dg/rss-php',
-            'aliases' => array(),
-            'reference' => '18f00ab1828948a8cfe107729ca1f11c20129b47',
-            'dev_requirement' => false,
-        ),
         'doctrine/collections' => array(
             'pretty_version' => '1.6.8',
             'version' => '1.6.8.0',
@@ -316,6 +307,15 @@
             'reference' => '0af4e3de4df9f1543534beab255ccf459e7a2c99',
             'dev_requirement' => false,
         ),
+        'notihnio/php-multipart-form-data-parser' => array(
+            'pretty_version' => '1.0.0',
+            'version' => '1.0.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../notihnio/php-multipart-form-data-parser',
+            'aliases' => array(),
+            'reference' => '78be265f45804401e14dd4cd76479957fbda2058',
+            'dev_requirement' => false,
+        ),
         'paragonie/constant_time_encoding' => array(
             'pretty_version' => 'v2.6.3',
             'version' => '2.6.3.0',
@@ -512,12 +512,12 @@
             'dev_requirement' => false,
         ),
         'sabre/uri' => array(
-            'pretty_version' => '2.2.2',
-            'version' => '2.2.2.0',
+            'pretty_version' => '2.3.0',
+            'version' => '2.3.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../sabre/uri',
             'aliases' => array(),
-            'reference' => '7cb0f489578afad5006e85cd60f18ff33f2d440d',
+            'reference' => '4e84208b86d351e8a439613f318feda7a0152b48',
             'dev_requirement' => false,
         ),
         'sabre/vobject' => array(
@@ -563,6 +563,15 @@
             'install_path' => __DIR__ . '/../setasign/fpdi',
             'aliases' => array(),
             'reference' => '6231e315f73e4f62d72b73f3d6d78ff0eed93c31',
+            'dev_requirement' => false,
+        ),
+        'simplepie/simplepie' => array(
+            'pretty_version' => '1.6.0',
+            'version' => '1.6.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../simplepie/simplepie',
+            'aliases' => array(),
+            'reference' => '2bdbc51ed1010941c9c5f2cddca433e79665bfe1',
             'dev_requirement' => false,
         ),
         'simshaun/recurr' => array(

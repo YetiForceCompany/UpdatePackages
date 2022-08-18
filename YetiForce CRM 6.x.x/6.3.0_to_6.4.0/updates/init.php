@@ -9,7 +9,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
-//  SHA-1: a7dcfe55ce345f9f8e9f42e0956c9c76b4f7ab11
+//  SHA-1: e32d5353852580fd3354ca3776a7879212aada93
 
 /**
  * YetiForce system update package class.
@@ -31,7 +31,7 @@ class YetiForceUpdate
 	/** @var DbImporter */
 	private $importer;
 
-	/** @var string[] Rrror. */
+	/** @var string[] Errors. */
 	private $error = [];
 
 	/**
@@ -107,7 +107,7 @@ class YetiForceUpdate
 			$this->importer->checkIntegrity(false);
 			$this->roundcubeUpdateTable();
 			$this->updateTargetField();
-			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module'=>'vtiger_trees_templates']);
+			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module' => 'vtiger_trees_templates']);
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
 
@@ -248,7 +248,7 @@ class YetiForceUpdate
 		// add block record by picklist value
 		$moduleModel = Settings_Picklist_Module_Model::getInstance('SMSNotifier');
 		$fieldModel = Settings_Picklist_Field_Model::getInstance('smsnotifier_status', $moduleModel);
-		if($fieldModel){
+		if ($fieldModel) {
 			$fieldName = $fieldModel->getName();
 			$values = array_column(App\Fields\Picklist::getValues($fieldName), 'picklist_valueid', 'smsnotifier_status');
 			$fieldModel->updateCloseState($values['PLL_DELIVERED'], 'PLL_DELIVERED', true);

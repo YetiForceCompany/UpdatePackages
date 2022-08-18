@@ -321,55 +321,6 @@
             "install-path": "./ca-bundle"
         },
         {
-            "name": "dg/rss-php",
-            "version": "v1.5",
-            "version_normalized": "1.5.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/dg/rss-php.git",
-                "reference": "18f00ab1828948a8cfe107729ca1f11c20129b47"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/dg/rss-php/zipball/18f00ab1828948a8cfe107729ca1f11c20129b47",
-                "reference": "18f00ab1828948a8cfe107729ca1f11c20129b47",
-                "shasum": ""
-            },
-            "require": {
-                "ext-simplexml": "*",
-                "php": ">=5.3"
-            },
-            "time": "2020-11-25T22:57:16+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "classmap": [
-                    "src/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "David Grudl",
-                    "homepage": "https://davidgrudl.com"
-                }
-            ],
-            "description": "RSS & Atom Feeds for PHP is a very small and easy-to-use library for consuming an RSS and Atom feed",
-            "homepage": "https://github.com/dg/rss-php",
-            "keywords": [
-                "atom",
-                "feed",
-                "rss"
-            ],
-            "support": {
-                "source": "https://github.com/dg/rss-php/tree/v1.5"
-            },
-            "install-path": "../dg/rss-php"
-        },
-        {
             "name": "doctrine/collections",
             "version": "1.6.8",
             "version_normalized": "1.6.8.0",
@@ -2436,6 +2387,49 @@
             "install-path": "../nette/utils"
         },
         {
+            "name": "notihnio/php-multipart-form-data-parser",
+            "version": "1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/notihnio/php-multipart-form-data-parser.git",
+                "reference": "78be265f45804401e14dd4cd76479957fbda2058"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/notihnio/php-multipart-form-data-parser/zipball/78be265f45804401e14dd4cd76479957fbda2058",
+                "reference": "78be265f45804401e14dd4cd76479957fbda2058",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "time": "2019-03-10T13:10:12+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Notihnio\\MultipartFormDataParser\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Notis Mastrandrikos",
+                    "email": "pmastrandrikos@gmail.com"
+                }
+            ],
+            "description": "The missing php functionality to support put, patch, delete, etc multipart requests handling",
+            "support": {
+                "issues": "https://github.com/notihnio/php-multipart-form-data-parser/issues",
+                "source": "https://github.com/notihnio/php-multipart-form-data-parser/tree/1.0.0"
+            },
+            "install-path": "../notihnio/php-multipart-form-data-parser"
+        },
+        {
             "name": "paragonie/constant_time_encoding",
             "version": "v2.6.3",
             "version_normalized": "2.6.3.0",
@@ -3628,28 +3622,28 @@
         },
         {
             "name": "sabre/uri",
-            "version": "2.2.2",
-            "version_normalized": "2.2.2.0",
+            "version": "2.3.0",
+            "version_normalized": "2.3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sabre-io/uri.git",
-                "reference": "7cb0f489578afad5006e85cd60f18ff33f2d440d"
+                "reference": "4e84208b86d351e8a439613f318feda7a0152b48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sabre-io/uri/zipball/7cb0f489578afad5006e85cd60f18ff33f2d440d",
-                "reference": "7cb0f489578afad5006e85cd60f18ff33f2d440d",
+                "url": "https://api.github.com/repos/sabre-io/uri/zipball/4e84208b86d351e8a439613f318feda7a0152b48",
+                "reference": "4e84208b86d351e8a439613f318feda7a0152b48",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1 || ^8.0"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "~2.17.1",
-                "phpstan/phpstan": "^0.12",
-                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.0"
+                "friendsofphp/php-cs-fixer": "^3.9",
+                "phpstan/phpstan": "^1.8",
+                "phpunit/phpunit": "^9.0"
             },
-            "time": "2021-11-04T09:29:58+00:00",
+            "time": "2022-08-17T09:51:38+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -4046,6 +4040,83 @@
                 }
             ],
             "install-path": "../setasign/fpdi"
+        },
+        {
+            "name": "simplepie/simplepie",
+            "version": "1.6.0",
+            "version_normalized": "1.6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/simplepie/simplepie.git",
+                "reference": "2bdbc51ed1010941c9c5f2cddca433e79665bfe1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/simplepie/simplepie/zipball/2bdbc51ed1010941c9c5f2cddca433e79665bfe1",
+                "reference": "2bdbc51ed1010941c9c5f2cddca433e79665bfe1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcre": "*",
+                "ext-xml": "*",
+                "ext-xmlreader": "*",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "yoast/phpunit-polyfills": "^1.0.1"
+            },
+            "suggest": {
+                "ext-curl": "",
+                "ext-iconv": "",
+                "ext-intl": "",
+                "ext-mbstring": "",
+                "mf2/mf2": "Microformat module that allows for parsing HTML for microformats"
+            },
+            "time": "2022-04-21T11:05:19+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-0": {
+                    "SimplePie": "library"
+                },
+                "psr-4": {
+                    "SimplePie\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Ryan Parman",
+                    "homepage": "http://ryanparman.com/",
+                    "role": "Creator, alumnus developer"
+                },
+                {
+                    "name": "Sam Sneddon",
+                    "homepage": "https://gsnedders.com/",
+                    "role": "Alumnus developer"
+                },
+                {
+                    "name": "Ryan McCue",
+                    "email": "me@ryanmccue.info",
+                    "homepage": "http://ryanmccue.info/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A simple Atom/RSS parsing library for PHP",
+            "homepage": "http://simplepie.org/",
+            "keywords": [
+                "atom",
+                "feeds",
+                "rss"
+            ],
+            "support": {
+                "issues": "https://github.com/simplepie/simplepie/issues",
+                "source": "https://github.com/simplepie/simplepie/tree/1.6.0"
+            },
+            "install-path": "../simplepie/simplepie"
         },
         {
             "name": "simshaun/recurr",

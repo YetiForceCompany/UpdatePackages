@@ -84,6 +84,8 @@ return [
 	'public_html/layouts/resources/YearView.min.js',
 	'public_html/layouts/resources/YearView.min.js.map',
 	'include/Webservices/WebServiceErrorCode.php',
+	'layouts/basic/modules/HelpDesk/charts/ShowTimeHelpDesk.tpl',
+	'layouts/basic/modules/Project/charts/ShowTimeProjectUsers.tpl',
 	'vendor',
 	'public_html/vendor',
 	'public_html/libraries',
