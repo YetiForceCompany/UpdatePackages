@@ -117,6 +117,9 @@ class YetiForceUpdate
 			$this->importer->updateScheme();
 			$this->importer->dropTable(['vtiger_ws_entity', 'vtiger_ws_fieldinfo', 'vtiger_ws_operation', 'vtiger_ws_operation_parameters', 'vtiger_ws_userauthtoken']);
 			$this->importer->importData();
+			$this->importer->dropIndexes([
+				'u_yf_users_pinned' => ['u_yf_users_pinned']
+			]);
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
 			$this->importer->logs(false);
@@ -795,7 +798,7 @@ class YetiForceUpdate
 		}
 		$configFile->create();
 
-		$skip = ['main', 'db', 'performance', 'debug', 'security', 'module', 'component'];
+		$skip = ['performance', 'debug', 'security', 'module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
 		}
