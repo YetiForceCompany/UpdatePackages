@@ -586,10 +586,16 @@ class YetiForceUpdate
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_WAPRO_ERP', 'iconpath' => 'fab fa-connectdevelop', 'description' => 'LBL_WAPRO_ERP_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Wapro&view=List', 'sequence' => 17, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_WAPRO_ERP']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
-			['vtiger_cron_task', ['status' => 0, 'name' => 'LBL_INTEGRATION_PL_GUS_REGON', 'handler_class' => 'Vtiger_IntegrationPLGusRegon_Cron', 'frequency' => 43200, 'module' => 'Vtiger', 'sequence' => 29], ['name' => 'LBL_INTEGRATION_PL_GUS_REGON']],
+			['vtiger_cron_task', ['status' => 0, 'name' => 'LBL_INTEGRATION_PL_GUS_REGON', 'handler_class' => 'Vtiger_IntegrationPLGusRegon_Cron', 'frequency' => 43200, 'module' => 'Vtiger', 'sequence' => \vtlib\Cron::nextSequence()], ['name' => 'LBL_INTEGRATION_PL_GUS_REGON']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
+
+		App\EventHandler::registerHandler('EntityAfterSave', 'Approvals_Approvals_Handler', 'Approvals', '', 5, true, \App\Module::getModuleId('Approvals'));
+		App\EventHandler::registerHandler('EditViewPreSave', 'Calendar_VerifyIsHolidayDate_Handler', 'Calendar', '', 5, true, \App\Module::getModuleId('Calendar'));
+		App\EventHandler::registerHandler('EditViewPreSave', 'FInvoice_CheckingQuantityAvailableProduct_Handler', 'FInvoice', '', 5, false, \App\Module::getModuleId('FInvoice'));
+		App\EventHandler::registerHandler('EntityAfterDelete', 'ModTracker_ModTrackerHandler_Handler', '', '', 5, true, \App\Module::getModuleId('ModTracker'), 0);
+		App\EventHandler::registerHandler('InventoryRecordDetails', 'Products_InventoryRecordDetails_Handler', 'Products,Services', '', 5, true, 0, 0);
 
 		$updates = [
 			['vtiger_trees_templates_data', ['icon' => ''], ['icon' => '1']],
@@ -660,6 +666,8 @@ class YetiForceUpdate
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'leadstatus', 'header_field' => null]],
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_contactdetails', 'fieldname' => 'contactstatus', 'header_field' => '']],
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field' => null]],
+			['vtiger_blocks', ['sequence' => 3], ['blocklabel' => 'LBL_CUSTOM_INFORMATION', 'tabid' => \App\Module::getModuleId('SMSNotifier')]],
+			['vtiger_eventhandlers', ['owner_id' => \App\Module::getModuleId('ModTracker'), 'privileges'=>0], ['handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
 		];
 		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
 		foreach ($links as $linkId => $tabId) {
