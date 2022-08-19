@@ -195,7 +195,9 @@ class YetiForceUpdate
 		$this->actionMapp([
 			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 1],
 			['type' => 'add', 'name' => 'CustomViewAdvCond', 'tabsData' => $entityModuleIds, 'permission' => 1],
-			['type' => 'add', 'name' => 'RecordActivityNotifier', 'tabsData' => $entityModuleIds, 'permission' => 1],
+			['type' => 'add', 'name' => 'RecordActivityNotifier', 'tabsData' =>  array_filter($entityModuleIds, function ($tabId) {
+				return $tabId !== \App\Module::getModuleId('OSSMailView');
+			}), 'permission' => 1],
 			['type' => 'add', 'name' => 'WorkflowTriggerWhenRecordIsBlocked', 'tabsData' => $entityModuleIds, 'permission' => 1],
 			['type' => 'add', 'name' => 'ServiceContractsSla', 'tabsData' => [\App\Module::getModuleId('ServiceContracts')], 'permission' => 1],
 			['type' => 'add', 'name' => 'TilesView', 'tabsData' => $entityModuleIds, 'permission' => 0],
