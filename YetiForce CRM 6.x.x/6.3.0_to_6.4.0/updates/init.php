@@ -586,10 +586,11 @@ class YetiForceUpdate
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_WAPRO_ERP', 'iconpath' => 'fab fa-connectdevelop', 'description' => 'LBL_WAPRO_ERP_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Wapro&view=List', 'sequence' => 17, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_WAPRO_ERP']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
+			['vtiger_cron_task', ['status' => 0, 'name' => 'LBL_INTEGRATION_PL_GUS_REGON', 'handler_class' => 'Vtiger_IntegrationPLGusRegon_Cron', 'frequency' => 43200, 'module' => 'Vtiger', 'sequence' => 29], ['name' => 'LBL_INTEGRATION_PL_GUS_REGON']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
-
+		
 		$updates = [
 			['vtiger_trees_templates_data', ['icon' => ''], ['icon' => '1']],
 			['vtiger_trees_templates_data', ['icon' => new \yii\db\Expression("REPLACE(icon,'public_html/', '')")], ['like', 'icon', 'public_html/%', false]],
