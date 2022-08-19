@@ -50,8 +50,8 @@ return [
 	'modules/Reservations/views/RightPanel.php',
 	'modules/Settings/ConfigEditor/views/Edit.php',
 	'modules/Settings/Groups/actions/EditAjax.php',
-	'modules/Settings/Help/views/Index.php',
-	'modules/Settings/LoginHistory/actions/ListAjax.php',
+	'modules/Settings/Help/',
+	'modules/Settings/LoginHistory/actions/',
 	'modules/Settings/PickListDependency/actions/Index.php',
 	'modules/Settings/Profiles/views/EditAjax.php',
 	'modules/SMSNotifier/actions/MassSaveAjax.php',
@@ -89,4 +89,5 @@ return [
 	'vendor',
 	'public_html/vendor',
 	'public_html/libraries',
+	'public_html/api',
 ];
