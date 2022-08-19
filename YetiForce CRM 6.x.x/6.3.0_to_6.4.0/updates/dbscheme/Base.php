@@ -438,7 +438,6 @@ class Base extends \App\Db\Importers\Base
 			['vtiger_trees_templates_data_templateid', 'vtiger_trees_templates_data', 'templateid', 'vtiger_trees_templates', 'templateid', 'CASCADE', null],
 			['vtiger_users2group_groupid_fk', 'vtiger_users2group', 'groupid', 'vtiger_groups', 'groupid', 'CASCADE', null],
 			['u_#__users_pinned_ibfk_1', 'u_#__users_pinned', 'user_id', 'vtiger_users', 'id', 'CASCADE', null],
-			['u_#__users_pinned_ibfk_2', 'u_#__users_pinned', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
 			['w_#__sms_user_server_id_fk', 'w_#__sms_user', 'server_id', 'w_#__servers', 'id', 'CASCADE', null],
 		];
 	}
