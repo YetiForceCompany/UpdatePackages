@@ -1,0 +1,253 @@
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+.dashboardWidgetCalendar {
+	.fc .fc-daygrid-day-events {
+		text-align: center;
+	}
+	.fc .fc-daygrid-day-number {
+		padding: 2px 4px;
+	}
+	.fc .fc-daygrid-day-top {
+		line-height: 1;
+	}
+	.fc-daygrid-event-harness {
+		display: inline-block;
+		.fc-daygrid-event {
+			padding: 0px 4px;
+			.fc-event-main {
+				color: inherit;
+			}
+		}
+	}
+}
+
+.fc-event-style1 {
+	background: #17309a;
+	border-color: #17309a;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #17309a;
+		border-color: #17309a;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style2 {
+	background: #3a87ad;
+	border-color: #3a87ad;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #3a87ad;
+		border-color: #3a87ad;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style3 {
+	background: #aa6705;
+	border-color: #aa6705;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #aa6705;
+		border-color: #aa6705;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style4 {
+	background: #953b39;
+	border-color: #953b39;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #953b39;
+		border-color: #953b39;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style5 {
+	background: #545252;
+	border-color: #545252;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #545252;
+		border-color: #545252;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style6 {
+	background: #87865d;
+	border-color: #87865d;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #87865d;
+		border-color: #87865d;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+.fc-event-style7 {
+	background: #c71585;
+	border-color: #c71585;
+	font-weight: normal;
+	text-shadow: none;
+}
+
+.fc-event-style8 {
+	background: #006400;
+	border-color: #006400;
+	font-weight: normal;
+	text-shadow: none;
+
+	.fc-event-skin {
+		background: #006400;
+		border-color: #006400;
+		font-weight: normal;
+		text-shadow: none;
+	}
+}
+
+#calendarview th {
+	color: #000;
+}
+
+.fc .fc-button {
+	display: inline-block;
+	margin-bottom: 0;
+	font-weight: normal;
+	line-height: 1.5;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+	-ms-touch-action: manipulation;
+	touch-action: manipulation;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	background-image: none;
+	border: 1px solid transparent;
+	border-radius: 4px;
+
+	&:active .fc-button-inner {
+		background: transparent;
+
+		.fc-button-content {
+			color: #fff;
+		}
+	}
+
+	&.fc-button-active .fc-button-inner .fc-button-content,
+	&:active .fc-button-inner .fc-button-content {
+		color: #000 !important;
+		background: transparent;
+		background-image: none;
+	}
+}
+
+.fc-header-title h2 {
+	font-size: 15px;
+	line-height: 20px;
+}
+
+.fc-col-header-cell {
+	background: $light;
+	border-color: #ccc;
+	a {
+		color: #666;
+	}
+}
+
+.fc-content {
+	background: #fff;
+	margin-left: 10px;
+}
+
+.fc-event-container .fc-event.fc-draggable {
+	margin: 0 0 2px 0;
+	border-radius: 0;
+}
+
+.fc-content {
+	.fc-title {
+		padding-left: 2px;
+	}
+
+	td:hover {
+		background: #f3f3f3;
+	}
+}
+
+.fc button {
+	height: auto !important;
+	.fas {
+		display: block;
+	}
+}
+
+.fc-toolbar {
+	margin-bottom: 0 !important;
+}
+
+.fc-time-grid .fc-time-grid-event.fc-event {
+	min-height: 27px;
+	min-width: 100px;
+}
+
+.fc-time-grid-event.fc-short .fc-title {
+	font-size: 1em;
+}
+
+@media only screen and (max-width: 480px) {
+	.fc-toolbar {
+		.fc-left,
+		.fc-right {
+			float: none !important;
+			display: inline-block;
+		}
+	}
+	.fc-basic-view .fc-body .fc-row {
+		min-height: 2em !important;
+	}
+
+	.fc-row .fc-content-skeleton {
+		padding-bottom: 0px;
+	}
+	.fc th,
+	.fc td {
+		padding: 0 !important;
+		line-height: 1;
+	}
+	.c-calendar-quickcreate .fc-daygrid-day-top .fc-daygrid-day-number {
+		font-size: 20px;
+	}
+	.js-calendar-switch-container {
+		margin: auto !important;
+	}
+}
+.fc-unthemed td {
+	border-color: #ddd !important;
+}
+
+.fc-view-container {
+	@extend .mb-0;
+}

@@ -1,0 +1,63 @@
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+
+.c-tiles-container {
+	.c-tile-record-container:hover {
+		z-index: 1;
+	}
+	.c-tiles-actions-container {
+		.toolsAction {
+			line-height: 0;
+		}
+	}
+	.c-tile-body {
+		.c-multi-image__preview-img {
+			transition: transform 0.2s;
+		}
+		.c-tile-image {
+			.c-multi-image__preview-img,
+			.carousel-image {
+				height: 12em;
+			}
+		}
+		.c-tile-value {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			.carousel-item.active {
+				display: flex;
+				justify-content: center;
+			}
+		}
+		.carousel-control-next,
+		.carousel-control-prev {
+			filter: invert(100%);
+		}
+		.c-tile-image {
+			transition: transform 0.2s;
+		}
+	}
+	&_very_small {
+		.c-tile-image .c-multi-image__preview-img,
+		.carousel.slide {
+			width: 100% !important;
+		}
+	}
+	&_small {
+		.c-tile-image .c-multi-image__preview-img,
+		.carousel.slide {
+			width: 63% !important;
+		}
+	}
+	&_medium {
+		.c-tile-image .c-multi-image__preview-img,
+		.carousel.slide {
+			width: 46% !important;
+		}
+	}
+	&_big {
+		.c-tile-image .c-multi-image__preview-img,
+		.carousel.slide {
+			width: 30% !important;
+		}
+	}
+}

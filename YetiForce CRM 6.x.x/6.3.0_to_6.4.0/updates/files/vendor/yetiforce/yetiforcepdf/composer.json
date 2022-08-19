@@ -1,0 +1,39 @@
+{
+  "name": "yetiforce/yetiforcepdf",
+  "description": "Library that generate pdf files from html.",
+  "license": "MIT",
+  "type": "library",
+  "keywords": [
+    "pdf",
+    "html",
+    "html to pdf"
+  ],
+  "homepage": "https://github.com/YetiForceCompany/YetiForcePDF",
+  "authors": [
+    {
+      "name": "YetiForceCompany",
+      "email": "devs@yetiforce.com",
+      "homepage": "https://yetiforce.com/"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "ext-mbstring": "*",
+    "ext-dom": "*",
+    "ext-libxml": "*",
+    "ext-bcmath": "*",
+    "ext-zlib": "*",
+    "ext-gd": "*",
+    "ext-filter": "*",
+    "phenx/php-font-lib": "^0.5",
+    "guzzlehttp/guzzle": "^7",
+    "composer/ca-bundle": "^1",
+    "milon/barcode": "^9",
+    "sabberworm/php-css-parser": "^8"
+  },
+  "autoload": {
+    "psr-4": {
+      "YetiForcePDF\\": "lib/"
+    }
+  }
+}

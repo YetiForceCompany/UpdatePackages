@@ -1,0 +1,32 @@
+.container-fluid .c-menu__header,
+header.navbar {
+	background: #0078d4;
+}
+.c-menu__container  .modulesList a {
+	color: #616161 !important;
+}
+ .c-menu__container .modulesList  a:hover {
+	color: #0078d4 !important;
+}
+.c-menu__container,
+.modulesList .c-menu__item a,
+.c-menu__content .modulesList {
+	background: #edebe9 !important;
+}
+.modulesList .c-menu__item a:hover{
+	background: #f5f5f5 !important;
+}
+.c-menu__item .tpl-menu-SubMenu {
+	background: #ded9d4 !important;
+}
+.c-menu__item .tpl-menu-SubMenu a {
+	background: #d0d0d0 !important;
+}
+.c-menu__item .tpl-menu-SubMenu a.active, .c-menu__item .tpl-menu-Profile_submenu a.active{
+	background: #0078d4 !important;
+	color: #fff !important;
+}
+.c-footer {
+	background: #d8d8d8;
+	color: #343a40;
+}

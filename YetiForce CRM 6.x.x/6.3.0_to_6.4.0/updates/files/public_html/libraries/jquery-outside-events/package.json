@@ -1,0 +1,23 @@
+{
+  "name": "jquery-outside-events",
+  "version": "1.0.0",
+  "description": "[http://benalman.com/projects/jquery-outside-events-plugin/](http://benalman.com/projects/jquery-outside-events-plugin/)",
+  "main": "jquery.ba-outside-events.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cowboy/jquery-outside-events.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cowboy/jquery-outside-events/issues"
+  },
+  "homepage": "https://github.com/cowboy/jquery-outside-events"
+}

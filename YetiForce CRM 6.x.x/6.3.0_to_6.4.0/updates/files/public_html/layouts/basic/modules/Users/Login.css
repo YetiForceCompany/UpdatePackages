@@ -1,0 +1,160 @@
+/* {[The file is published on the basis of YetiForce Public License 5.0 that can be found in the following directory: licenses/LicenseEN.txt or yetiforce.com]} */
+.logo {
+	text-align: center;
+	padding: 0.5rem 0;
+}
+.logo__img {
+	max-height: 200px;
+	max-width: 200px;
+}
+@media (min-width: 768px) {
+	.logo__img {
+		max-height: 700px;
+		max-width: 400px;
+	}
+}
+
+@media only screen and (max-width: 480px) {
+	#loginDiv {
+		width: 100%;
+	}
+
+	.login-area {
+		max-width: 100%;
+		margin: 0 auto;
+	}
+	.login-space {
+		margin-top: 0;
+	}
+}
+
+@media only screen and (min-width: 480px) {
+	.login-area {
+		max-width: 400px;
+		margin: 0 auto;
+	}
+}
+
+@media only screen and (max-width: 340px) {
+	.login-space {
+		margin-top: 0;
+	}
+}
+
+@media only screen and (min-width: 340px) and (max-width: 480px) {
+	.login-space {
+		margin-top: 10px;
+	}
+}
+
+@media only screen and (min-width: 480px) {
+	.login-space {
+		margin-top: 70px;
+	}
+}
+
+@media only screen and (max-width: 575px) {
+	.heightButtonPhone {
+		height: 55px !important;
+	}
+}
+
+.forgotpass {
+	margin-top: 10px;
+}
+
+.login-text {
+	margin-top: 10px;
+}
+
+.container {
+	padding: 0;
+	margin-top: 5px;
+}
+
+html,
+body {
+	background: #f0f0f0;
+}
+
+.login-form .form-group.first-group {
+	margin-bottom: 0px;
+}
+
+.logo {
+	margin: auto;
+	margin-bottom: 0px;
+	max-width: 100%;
+	display: block;
+}
+
+.fieldContainer {
+	width: 100%;
+	height: 100%;
+}
+
+.fieldContainer .form-group {
+	padding-bottom: 10px;
+}
+
+.fieldContainer span:not(.fas) {
+	color: #4a5364;
+	font-size: 24px;
+}
+
+.fieldContainer input {
+	background-color: #fff !important;
+	color: #4a5364 !important;
+}
+
+.fieldContainer button {
+	font-size: 35px;
+	color: #fff !important;
+	padding: 0;
+}
+
+@media (min-width: 768px) {
+	.visible-phone {
+		visibility: hidden;
+	}
+}
+
+@media (max-width: 767px) {
+	.visible-phone {
+		visibility: visible;
+	}
+}
+
+.heightDiv_2 {
+	height: 102px;
+}
+
+.heightDiv_3 {
+	height: 163px;
+}
+
+.heightDiv_4 {
+	height: 214px;
+}
+
+.heightDiv_5 {
+	height: 105px;
+}
+
+select.form-control {
+	padding-right: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.fontSizeIcon {
+	font-size: 60px !important;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none !important;
+	margin: 0 !important;
+}
+input[type='number'] {
+	-moz-appearance: textfield;
+}
