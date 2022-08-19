@@ -590,7 +590,7 @@ class YetiForceUpdate
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
-		
+
 		$updates = [
 			['vtiger_trees_templates_data', ['icon' => ''], ['icon' => '1']],
 			['vtiger_trees_templates_data', ['icon' => new \yii\db\Expression("REPLACE(icon,'public_html/', '')")], ['like', 'icon', 'public_html/%', false]],
@@ -800,6 +800,11 @@ class YetiForceUpdate
 			$smtp = \App\Config::module('OSSMail', 'smtp_server');
 			$smtpPort = \App\Config::module('OSSMail', 'smtp_port');
 			$ossMail->set('smtp_host', $smtp ? "{$smtp}:{$smtpPort}" : '');
+			$plugins = \App\Config::module('OSSMail', 'plugins', []);
+			if (false !== ($key = array_search('advanced_search', $plugins))) {
+				unset($plugins[$key]);
+				\Config\Modules\OSSMail::$plugins = $plugins;
+			}
 		}
 		$ossMail->create();
 
