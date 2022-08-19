@@ -585,6 +585,8 @@ class YetiForceUpdate
 			['a_yf_settings_modules', ['name' => 'RecordCollector', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'RecordCollector']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename'=>'RecordCollector','label'=>'LBL_RECORD_COLLECTOR','classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php','modules'=> "{\"include\":[],\"exclude\":[]}", 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
+			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_WAPRO_ERP', 'iconpath' => 'fab fa-connectdevelop', 'description' => 'LBL_WAPRO_ERP_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Wapro&view=List', 'sequence' => 17, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_WAPRO_ERP']],
+			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
