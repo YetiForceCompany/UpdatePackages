@@ -54,6 +54,7 @@ return [
 	'modules/Settings/LoginHistory/actions/',
 	'modules/Settings/PickListDependency/actions/Index.php',
 	'modules/Settings/Profiles/views/EditAjax.php',
+	'modules/Settings/ApiAddress/actions/ValidateConfiguration.php',
 	'modules/SMSNotifier/actions/MassSaveAjax.php',
 	'modules/SMSNotifier/models/ListView.php',
 	'modules/SMSNotifier/providers/',
