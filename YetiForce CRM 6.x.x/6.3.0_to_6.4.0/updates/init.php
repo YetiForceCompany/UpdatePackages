@@ -138,6 +138,7 @@ class YetiForceUpdate
 		$this->setRelations();
 		$this->updateData();
 		$this->picklistDependency();
+		$this->importer->logs(false);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -683,7 +684,13 @@ class YetiForceUpdate
 				'charset' => 'utf8'
 			],
 		];
+
+		$importerBase->foreignKey = [
+			['u_#__users_pinned_ibfk_2', 'u_#__users_pinned', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', null],
+		];
+
 		$this->importer->updateTables($importerBase);
+		$this->importer->updateForeignKey($importerBase);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
