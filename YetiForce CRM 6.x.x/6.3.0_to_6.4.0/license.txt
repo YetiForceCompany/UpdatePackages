@@ -6,11 +6,11 @@ Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 
 Notes:
-- Stary moduł haseł (OSSPasswords) zostanie permanentnie usunięty, jeżeli nie chcesz utracić danych, zmigruj je do nowego modułu haseł (Passwords).
-  Zobacz: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussioncomment-1793851
-- Funkcjonalność zależności słownikowych uległa przebudowaniu. Wszystkie istniejące wpisy zostały usunięte. System spróbuje przywrócić zależności, jednakże należy całość zweryfikować po aktualizacji.
-- Moduł SMSNotifier uległ modernizacji w znacznym stopniu. Relacje M-M pomiędzy tym modułem zostaną usunięte. Wpisy w tym module nie zostaną usunięte, aczkolwiek zaleca się je permanentnie usnąć po aktualizacji.
-- W trakcie aktualizacja wykonywane będą operacja na głównych tabelach bazy danych. Jeżeli posiadasz dużą baszę danych, rozważ przeprowadzenie aktualizacji z poziomu CLI, aby uniknąć przekroczenia różnego rodzaju limitów czasowych.
-  Zobacz: link do instrukcji z CLI 
+- The old password module (OSSPasswords) will be permanently deleted, if you don’t want to lose your data, migrate it to the new password module (Passwords).
+See: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussioncomment-1793851
+- The picklist dependencies functionality has been rebuilt. All existing entries have been deleted. The system will try to restore the dependencies, however everything should be verified after the update.
+- The SMSNotifier module has been significantly modernized. M-M relations involving this module will be deleted. Entries in this module will not be deleted, although it’s recommended to permanently delete them after the update.
+- Operations on the main database tables will be performed during the update. If you have a lot of data, consider updating from within the CLI level to avoid exceeding various time limits.
+See: https://yetiforce.com/en/knowledge-base/documentation/implementer-documentation/item/yetiforce-cli-command-line-interface
 - Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
 - After the update process finishes, please also update all the languages in your system.
