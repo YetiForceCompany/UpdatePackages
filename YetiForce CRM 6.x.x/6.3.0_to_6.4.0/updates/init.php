@@ -565,6 +565,7 @@ class YetiForceUpdate
 
 		$batchDelete = \App\Db\Updater::batchDelete([
 			['a_yf_settings_modules', ['name' => 'OSSPasswords']],
+			['vtiger_links', ['linktype' => 'EDIT_VIEW_RECORD_COLLECTOR']],
 		]);
 		$this->log('  [INFO] batchDelete: ' . \App\Utils::varExport($batchDelete));
 		unset($batchDelete);

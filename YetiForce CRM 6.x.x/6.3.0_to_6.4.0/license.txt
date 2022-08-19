@@ -10,6 +10,7 @@ Notes:
 See: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussioncomment-1793851
 - The picklist dependencies functionality has been rebuilt. All existing entries have been deleted. The system will try to restore the dependencies, however everything should be verified after the update.
 - The SMSNotifier module has been significantly modernized. M-M relations involving this module will be deleted. Entries in this module will not be deleted, although it’s recommended to permanently delete them after the update.
+- The update deactivates the record collector mechanism. You can re-activate it after the update in the Software configuration > Integration > Record collectors panel
 - Operations on the main database tables will be performed during the update. If you have a lot of data, consider updating from within the CLI level to avoid exceeding various time limits.
 See: https://yetiforce.com/en/knowledge-base/documentation/implementer-documentation/item/yetiforce-cli-command-line-interface
 - Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
