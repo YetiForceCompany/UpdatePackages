@@ -381,7 +381,6 @@ class YetiForceUpdate
 		if (empty($fields)) {
 			$fields = [
 				[112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => ['label' => 'LBL_CUSTOM_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 0, 'iscustom' => 0, 'icon' => null], 'moduleName' => 'EmailTemplates'],
-				[60, 3079, 'multicompanyid', 'vtiger_osspasswords', 1, 10, 'multicompanyid', 'FL_MULTICOMPANY', 0, 2, '', '4294967295', 16, 147, 1, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->integer(10)->unsigned()->defaultValue(0), 'blockLabel' => 'LBL_OSSPASSWORD_INFORMATION', 'blockData' => ['label' => 'LBL_OSSPASSWORD_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 2, 'iscustom' => 0, 'icon' => null], 'relatedModules' => ['MultiCompany'], 'moduleName' => 'OSSPasswords'],
 			];
 		}
 
@@ -667,6 +666,7 @@ class YetiForceUpdate
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'leadstatus', 'header_field' => null]],
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_contactdetails', 'fieldname' => 'contactstatus', 'header_field' => '']],
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field' => null]],
+			['vtiger_field', ['presence' => 0], ['tablename' => 'u_yf_approvals', 'fieldname' => 'approvals_status']],
 			['vtiger_blocks', ['sequence' => 3], ['blocklabel' => 'LBL_CUSTOM_INFORMATION', 'tabid' => \App\Module::getModuleId('SMSNotifier')]],
 			['vtiger_eventhandlers', ['owner_id' => \App\Module::getModuleId('ModTracker'), 'privileges'=>0], ['handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
 		];

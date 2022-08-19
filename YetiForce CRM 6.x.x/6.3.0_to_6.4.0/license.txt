@@ -13,4 +13,4 @@ See: https://github.com/YetiForceCompany/YetiForceCRM/discussions/15538#discussi
 - Operations on the main database tables will be performed during the update. If you have a lot of data, consider updating from within the CLI level to avoid exceeding various time limits.
 See: https://yetiforce.com/en/knowledge-base/documentation/implementer-documentation/item/yetiforce-cli-command-line-interface
 - Check changes: https://yetiforce.com/en/knowledge-base/documentation/developer-documentation/category/changes-2
-- After the update process finishes, please also update all the languages in your system.
+- After the update process finishes, please also update all the languages in your system and clear browser cache (https://yetiforce.com/en/knowledge-base/documentation/implementer-documentation/item/how-to-clear-browser-cache).
