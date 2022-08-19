@@ -9,7 +9,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
-//  SHA-1: ec51e0dcf80302633326f6736b4093d5cd461b0e
+//  SHA-1: fa42e112b93327b5d7f47df7bc035581dd3c16e1
 
 /**
  * YetiForce system update package class.
@@ -110,7 +110,7 @@ class YetiForceUpdate
 			$this->updateTargetField();
 			$this->importer->dropIndexes([
 				'w_yf_servers' => ['name'],
-				'u_yf_users_pinned' => ['user_id', 'tabid','u_yf_users_pinned']
+				'u_yf_users_pinned' => ['user_id', 'tabid', 'u_yf_users_pinned']
 			]);
 			$this->importer->dropColumns([['vtiger_groups', 'modules']]);
 			$this->importer->dropForeignKeys(['u_yf_users_pinned_fk_1' => 'u_yf_users_pinned', 'module' => 'vtiger_trees_templates']);
@@ -181,7 +181,6 @@ class YetiForceUpdate
 		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
-
 
 	private function addActionMapping()
 	{
@@ -580,10 +579,10 @@ class YetiForceUpdate
 		$batchInsert = \App\Db\Updater::batchInsert([
 			['a_yf_discounts_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
 			['a_yf_taxes_config', ['param' => 'default_mode', 'value' => 1], ['param' => 'default_mode']],
-			['a_yf_settings_modules', ['name' => 'Media', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'Media']],
-			['a_yf_settings_modules', ['name' => 'Wapro', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'Wapro']],
-			['a_yf_settings_modules', ['name' => 'RecordCollector', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'RecordCollector']],
-			['com_vtiger_workflow_tasktypes', ['tasktypename'=>'RecordCollector','label'=>'LBL_RECORD_COLLECTOR','classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php','modules'=> "{\"include\":[],\"exclude\":[]}", 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
+			['a_yf_settings_modules', ['name' => 'Media', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'Media']],
+			['a_yf_settings_modules', ['name' => 'Wapro', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'Wapro']],
+			['a_yf_settings_modules', ['name' => 'RecordCollector', 'status' => 1, 'created_time' => date('Y-m-d H:i:s')], ['name' => 'RecordCollector']],
+			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'RecordCollector', 'label' => 'LBL_RECORD_COLLECTOR', 'classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php', 'modules' => '{"include":[],"exclude":[]}', 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_WAPRO_ERP', 'iconpath' => 'fab fa-connectdevelop', 'description' => 'LBL_WAPRO_ERP_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Wapro&view=List', 'sequence' => 17, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_WAPRO_ERP']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
@@ -657,9 +656,9 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'vtiger_users', 'fieldname' => 'confirm_password']],
 			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'u_yf_passwords', 'fieldname' => 'password']],
 			['com_vtiger_workflow_tasktypes', ['templatepath' => ''], []],
-			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'leadstatus', 'header_field'  => null]],
-			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_contactdetails', 'fieldname' => 'contactstatus', 'header_field'  => '']],
-			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field'  => null]],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'leadstatus', 'header_field' => null]],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_contactdetails', 'fieldname' => 'contactstatus', 'header_field' => '']],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field' => null]],
 		];
 		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
 		foreach ($links as $linkId => $tabId) {
@@ -752,7 +751,7 @@ class YetiForceUpdate
 		} catch (\Throwable $th) {
 			$this->log("  [ERROR]: {$th->__toString()}");
 		}
-		$this->log('  [INFO] dependencies were recreated: '. $i);
+		$this->log('  [INFO] dependencies were recreated: ' . $i);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
