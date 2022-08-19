@@ -132,6 +132,7 @@ class YetiForceUpdate
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
 		$this->addFields($this->getFields(1));
+		$this->addActionMapping();
 		$this->addModules(['SMSTemplates']);
 		$this->smsNotifier();
 		$this->updateData();
@@ -178,6 +179,28 @@ class YetiForceUpdate
 				$this->log('  [INFO] Module exist: ' . $moduleName);
 			}
 		}
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+
+	private function addActionMapping()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$relatedModules = array_merge(array_keys(\App\ModuleHierarchy::getModulesByLevel(0)), ['Contacts']);
+		$entityModuleIds = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['isentitytype' => 1])->column();
+		// Add action MassSMS to some modules
+		$this->actionMapp([
+			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 0],
+			['type' => 'add', 'name' => 'CustomViewAdvCond', 'tabsData' => $entityModuleIds, 'permission' => 0],
+			['type' => 'add', 'name' => 'RecordActivityNotifier', 'tabsData' => $entityModuleIds, 'permission' => 0],
+			['type' => 'add', 'name' => 'WorkflowTriggerWhenRecordIsBlocked', 'tabsData' => $entityModuleIds, 'permission' => 0],
+			['type' => 'add', 'name' => 'ServiceContractsSla', 'tabsData' => [\App\Module::getModuleId('ServiceContracts')], 'permission' => 0],
+			['type' => 'add', 'name' => 'TilesView', 'tabsData' => $entityModuleIds, 'permission' => 0],
+			['type' => 'add', 'name' => 'LeaderCanManageGroupMembership', 'tabsData' => [\App\Module::getModuleId('Users')], 'permission' => 0],
+		]);
+
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 	}
 
@@ -262,11 +285,6 @@ class YetiForceUpdate
 			$fieldModel->updateCloseState($values['PLL_REPLY'], 'PLL_REPLY', true);
 		}
 		$relatedModules = array_merge(array_keys(\App\ModuleHierarchy::getModulesByLevel(0)), ['Contacts']);
-
-		// Add action MassSMS to some modules
-		$this->actionMapp([
-			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 0]
-		]);
 
 		// add restriction to sms workflow task
 		$task = (new \App\Db\Query())->select(['id', 'modules'])->from('com_vtiger_workflow_tasktypes')->where(['tasktypename' => 'VTSMSTask'])->one();
@@ -566,6 +584,7 @@ class YetiForceUpdate
 			['a_yf_settings_modules', ['name' => 'Wapro', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'Wapro']],
 			['a_yf_settings_modules', ['name' => 'RecordCollector', 'status' => 1,'created_time'=> date('Y-m-d H:i:s')], ['name' => 'RecordCollector']],
 			['com_vtiger_workflow_tasktypes', ['tasktypename'=>'RecordCollector','label'=>'LBL_RECORD_COLLECTOR','classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php','modules'=> "{\"include\":[],\"exclude\":[]}", 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
+			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
 		unset($batchInsert);
@@ -618,6 +637,7 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'purchase']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'unit_price']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'weight']],
+			['vtiger_field', ['maximumlength' => '999999'], ['tablename' => 'vtiger_products', 'fieldname' => 'commissionrate']],
 			['vtiger_field', ['maximumlength' => '0,9999999999999'], ['tablename' => 'vtiger_project', 'fieldname' => 'estimated_work_time']],
 			['vtiger_project', ['targetbudget' => null], ['targetbudget' => '']],
 			['vtiger_field', ['maximumlength' => '0,4294967295', 'typeofdata' => 'I~O'], ['tablename' => 'vtiger_project', 'fieldname' => 'targetbudget']],
@@ -625,12 +645,19 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '0,999999'], ['tablename' => 'vtiger_projecttask', 'fieldname' => 'estimated_work_time']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'purchase']],
 			['vtiger_field', ['maximumlength' => '0,99999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'unit_price']],
+			['vtiger_field', ['maximumlength' => '999999'], ['tablename' => 'vtiger_service', 'fieldname' => 'commissionrate']],
 			['vtiger_field', ['maximumlength' => '0,999'], ['tablename' => 'vtiger_servicecontracts', 'fieldname' => 'total_units']],
 			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_users', 'fieldname' => 'records_limit']],
 			['vtiger_field', ['maximumlength' => '0,255'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'type']],
 			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'mid']],
 			['vtiger_field', ['maximumlength' => '0,4294967295'], ['tablename' => 'vtiger_ossmailview', 'fieldname' => 'rc_user']],
+			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'vtiger_users', 'fieldname' => 'user_password']],
+			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'vtiger_users', 'fieldname' => 'confirm_password']],
+			['vtiger_field', ['maximumlength' => '100'], ['tablename' => 'u_yf_passwords', 'fieldname' => 'password']],
 			['com_vtiger_workflow_tasktypes', ['templatepath' => ''], []],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_leaddetails', 'fieldname' => 'leadstatus', 'header_field'  => null]],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_contactdetails', 'fieldname' => 'contactstatus', 'header_field'  => '']],
+			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field'  => null]],
 		];
 		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
 		foreach ($links as $linkId => $tabId) {
