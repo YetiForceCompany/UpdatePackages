@@ -135,6 +135,7 @@ class YetiForceUpdate
 		$this->addActionMapping();
 		$this->addModules(['SMSTemplates']);
 		$this->smsNotifier();
+		$this->setRelations();
 		$this->updateData();
 		$this->picklistDependency();
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
@@ -585,7 +586,7 @@ class YetiForceUpdate
 			['com_vtiger_workflow_tasktypes', ['tasktypename' => 'RecordCollector', 'label' => 'LBL_RECORD_COLLECTOR', 'classname' => 'RecordCollector', 'classpath' => 'modules/com_vtiger_workflow/tasks/RecordCollector.php', 'modules' => '{"include":[],"exclude":[]}', 'templatepath' => ''], ['tasktypename' => 'RecordCollector']],
 			['vtiger_links', ['tabid' => 3, 'linktype' => 'DASHBOARDWIDGET', 'linklabel' => 'LBL_WORKING_TIME_COUNTER', 'linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter', 'handler_class' => 'OSSTimeControl_TimeCounterModel_Dashboard'], ['linkurl' => 'index.php?module=OSSTimeControl&view=ShowWidget&name=TimeCounter']],
 			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_WAPRO_ERP', 'iconpath' => 'fab fa-connectdevelop', 'description' => 'LBL_WAPRO_ERP_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=Wapro&view=List', 'sequence' => 17, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_WAPRO_ERP']],
-			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 1, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
+			['vtiger_settings_field', ['blockid' => \vtlib\Deprecated::getSettingsBlockId('LBL_INTEGRATION'), 'name' => 'LBL_RECORD_COLLECTOR', 'iconpath' => 'yfi-record-collectors', 'description' => 'LBL_RECORD_COLLECTOR_DESCRIPTION', 'linkto' => 'index.php?parent=Settings&module=RecordCollector&view=List', 'sequence' => 18, 'active' => 0, 'pinned' => 0, 'premium' => 0, 'admin_access' => null], ['name' => 'LBL_RECORD_COLLECTOR']],
 			['vtiger_cron_task', ['status' => 0, 'name' => 'LBL_INTEGRATION_PL_GUS_REGON', 'handler_class' => 'Vtiger_IntegrationPLGusRegon_Cron', 'frequency' => 43200, 'module' => 'Vtiger', 'sequence' => \vtlib\Cron::nextSequence()], ['name' => 'LBL_INTEGRATION_PL_GUS_REGON']],
 		]);
 		$this->log('  [INFO] batchInsert: ' . \App\Utils::varExport($batchInsert));
@@ -762,6 +763,65 @@ class YetiForceUpdate
 		}
 		$this->log('  [INFO] dependencies were recreated: ' . $i);
 
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+	
+	private function setRelations()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+		$dbCommand = \App\Db::getInstance()->createCommand();
+
+		$ralations = [
+			['type' => 'add', 'data' => [671,'Vendors','Passwords','getDependentsList',22,'Passwords',0,'ADD',0,0,0,'RelatedTab','link',NULL]],
+			['type' => 'add', 'data' => [672,'FInvoiceProforma','PaymentsIn','getDependentsList',1,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab','finvoiceproformaid',NULL]],
+			['type' => 'add', 'data' => [673,'Accounts','SMSNotifier','getDependentsList',44,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [674,'Leads','SMSNotifier','getDependentsList',27,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [675,'Vendors','SMSNotifier','getDependentsList',23,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [676,'Partners','SMSNotifier','getDependentsList',16,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [677,'Competition','SMSNotifier','getDependentsList',16,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [678,'OSSEmployees','SMSNotifier','getDependentsList',11,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [679,'Contacts','SMSNotifier','getDependentsList',17,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
+			['type' => 'add', 'data' => [680,'SMSNotifier','SMSNotifier','getDependentsList',4,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','parentid',NULL]],
+		];
+
+		foreach ($ralations as $relation) {
+			[, $moduleName, $relModuleName, $name, $sequence, $label, $presence, $actions, $favorites, $creatorDetail, $relationComment, $viewType, $fieldName,$customView] = $relation['data'];
+			$tabid = \App\Module::getModuleId($moduleName);
+			$relTabid = \App\Module::getModuleId($relModuleName);
+			$where = ['tabid' => $tabid, 'related_tabid' => $relTabid, 'name' => $name];
+			$isExists = (new \App\Db\Query())->from('vtiger_relatedlists')->where($where)->exists();
+			if (!$isExists && 'add' === $relation['type']) {
+				$dbCommand->insert('vtiger_relatedlists', [
+					'tabid' => $tabid,
+					'related_tabid' => $relTabid,
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName,
+				])->execute();
+			} elseif ('update' === $relation['type'] && ($isExists || (!$isExists && isset($relation['where']['name']) && (new \App\Db\Query())->from('vtiger_relatedlists')->where(['tabid' => $tabid, 'related_tabid' => $relTabid])->exists()))) {
+				$where = $relation['where'] ?? $where;
+				$dbCommand->update('vtiger_relatedlists', [
+					'name' => $name,
+					'sequence' => $sequence,
+					'label' => $label,
+					'presence' => $presence,
+					'actions' => $actions,
+					'favorites' => $favorites,
+					'creator_detail' => $creatorDetail,
+					'relation_comment' => $relationComment,
+					'view_type' => $viewType,
+					'field_name' => $fieldName,
+				], $where)->execute();
+			}
+		}
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 

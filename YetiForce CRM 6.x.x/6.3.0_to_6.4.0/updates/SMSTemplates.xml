@@ -545,6 +545,10 @@
 			<status>enabled</status>
 		</action>
 		<action>
+			<name><![CDATA[WorkflowTriggerWhenRecordIsBlocked]]></name>
+			<status>enabled</status>
+		</action>
+		<action>
 			<name><![CDATA[TilesView]]></name>
 			<status>enabled</status>
 		</action>
