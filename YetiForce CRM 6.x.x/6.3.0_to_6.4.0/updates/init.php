@@ -192,13 +192,13 @@ class YetiForceUpdate
 		$entityModuleIds = (new \App\Db\Query())->select(['tabid'])->from('vtiger_tab')->where(['isentitytype' => 1])->column();
 		// Add action MassSMS to some modules
 		$this->actionMapp([
-			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 0],
-			['type' => 'add', 'name' => 'CustomViewAdvCond', 'tabsData' => $entityModuleIds, 'permission' => 0],
-			['type' => 'add', 'name' => 'RecordActivityNotifier', 'tabsData' => $entityModuleIds, 'permission' => 0],
-			['type' => 'add', 'name' => 'WorkflowTriggerWhenRecordIsBlocked', 'tabsData' => $entityModuleIds, 'permission' => 0],
-			['type' => 'add', 'name' => 'ServiceContractsSla', 'tabsData' => [\App\Module::getModuleId('ServiceContracts')], 'permission' => 0],
+			['type' => 'add', 'name' => 'MassSendSMS', 'tabsData' => array_map('\App\Module::getModuleId', $relatedModules), 'permission' => 1],
+			['type' => 'add', 'name' => 'CustomViewAdvCond', 'tabsData' => $entityModuleIds, 'permission' => 1],
+			['type' => 'add', 'name' => 'RecordActivityNotifier', 'tabsData' => $entityModuleIds, 'permission' => 1],
+			['type' => 'add', 'name' => 'WorkflowTriggerWhenRecordIsBlocked', 'tabsData' => $entityModuleIds, 'permission' => 1],
+			['type' => 'add', 'name' => 'ServiceContractsSla', 'tabsData' => [\App\Module::getModuleId('ServiceContracts')], 'permission' => 1],
 			['type' => 'add', 'name' => 'TilesView', 'tabsData' => $entityModuleIds, 'permission' => 0],
-			['type' => 'add', 'name' => 'LeaderCanManageGroupMembership', 'tabsData' => [\App\Module::getModuleId('Users')], 'permission' => 0],
+			['type' => 'add', 'name' => 'LeaderCanManageGroupMembership', 'tabsData' => [\App\Module::getModuleId('Users')], 'permission' => 1],
 		]);
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
@@ -928,6 +928,8 @@ class YetiForceUpdate
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleTools', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleActions', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::profileField', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\UserPrivilegesFile::recalculateAll', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => 'Settings_SharingAccess_Module_Model::recalculateSharingRules', 'params' => []]))->save();
 
 		\App\Cache::clear();
 		\App\Cache::resetOpcache();
