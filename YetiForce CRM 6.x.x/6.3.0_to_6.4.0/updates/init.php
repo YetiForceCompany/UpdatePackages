@@ -377,13 +377,6 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
-		$importerType = new \App\Db\Importers\Base();
-		if (empty($fields)) {
-			$fields = [
-				[112, 3065, 'sys_name', 'u_yf_emailtemplates', 1, 1, 'sys_name', 'FL_SYS_NAME', 0, 0, '', '50', 8, 378, 2, 'V~O', 1, 0, 'BAS', 1, '', 0, '', null, 0, 0, 0, 0, '', 'type' => $importerType->stringType(50), 'blockLabel' => 'LBL_CUSTOM_INFORMATION', 'blockData' => ['label' => 'LBL_CUSTOM_INFORMATION', 'showtitle' => 0, 'visible' => 0, 'increateview' => 0, 'ineditview' => 0, 'indetailview' => 0, 'display_status' => 0, 'iscustom' => 0, 'icon' => null], 'moduleName' => 'EmailTemplates'],
-			];
-		}
-
 		foreach ($fields as $field) {
 			$moduleName = $field['moduleName'];
 			$moduleId = \App\Module::getModuleId($moduleName);
@@ -765,7 +758,7 @@ class YetiForceUpdate
 
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
-	
+
 	private function setRelations()
 	{
 		$start = microtime(true);
@@ -930,6 +923,10 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$this->createConfigFiles();
+
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleTools', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleActions', 'params' => []]))->save();
+		(new \App\BatchMethod(['method' => '\App\Db\Fixer::profileField', 'params' => []]))->save();
 
 		\App\Cache::clear();
 		\App\Cache::resetOpcache();
