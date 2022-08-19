@@ -9,7 +9,7 @@
  * @author    Radosław Skrzypczak <r.skrzypczak@yetiforce.com>
  */
 
-//  SHA-1: fa42e112b93327b5d7f47df7bc035581dd3c16e1
+//  SHA-1: c4753f36eccebcd84bf28e617a1611115ffe84ff
 
 /**
  * YetiForce system update package class.
@@ -725,9 +725,7 @@ class YetiForceUpdate
 								$targetPicklistValues = \App\Fields\Picklist::getValuesName($fieldModel->getName());
 								$sourcePicklistValues = \App\Fields\Picklist::getValuesName($fieldModelSource->getName());
 								foreach ($targetPicklistValues as $key => $value) {
-									$sourceValues = array_filter($values, function ($row) use ($value){
-										return \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]'));
-									});
+									$sourceValues = array_filter($values, fn ($row) => \in_array($value, \App\Json::decode($row['targetvalues'] ?: '[]')));
 									$sourceValues = array_column($sourceValues, 'sourcevalue');
 									$sourceValues = array_intersect($sourceValues, $sourcePicklistValues);
 									$rules = [];
