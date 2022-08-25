@@ -979,7 +979,8 @@ This file is auto-generated.
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$this->createConfigFiles();
 		$this->updateMailConfiguration();
-
+		(new \Settings_Menu_Record_Model())->refreshMenuFiles();
+		
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleTools', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleActions', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::profileField', 'params' => []]))->save();
