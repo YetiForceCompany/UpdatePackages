@@ -8,8 +8,8 @@
  * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
- 
-//  SHA-1: 57b3f1a9b29bfe0030829840ec85cd51c5be89e6
+
+//  SHA-1: f01611dbd20a6c8929577faa5b5605fcd0b596db
 
 /**
  * YetiForceUpdate Class.
@@ -45,6 +45,7 @@ class YetiForceUpdate
 	public function __construct($moduleNode)
 	{
 		$this->moduleNode = $moduleNode;
+		$this->filesToDelete = require_once 'deleteFiles.php';
 	}
 
 	/**
@@ -79,13 +80,22 @@ class YetiForceUpdate
 		foreach ($menu as $value) {
 			$url = $value['dataurl'];
 			if (0 === strpos($url, Config\Main::$site_URL) || 0 === strpos($url, 'index.php?')) {
-				$url = str_replace('view=CalendarExtended', 'view=Calendar&', $url);
+				$url = str_replace('view=CalendarExtended&', 'view=Calendar&', $url);
 				$createCommand->update('yetiforce_menu', ['dataurl' => $url], ['id' => $value['id']])->execute();
 			}
 		}
 		(new \Settings_Menu_Record_Model())->refreshMenuFiles();
+		$dataReader = (new \App\Db\Query())->from('vtiger_widgets')
+			->where(['type' => 'EmailList'])
+			->createCommand()->query();
+		while ($row = $dataReader->read()) {
+			if (!\App\Relation::getRelationId(\App\Module::getModuleName($row['tabid']), 'OSSMailView')) {
+				$createCommand->delete('vtiger_widgets', ['id' => $row['id']])
+					->execute();
+			}
+		}
+		$dataReader->close();
 	}
-
 
 	/**
 	 * Postupdate.

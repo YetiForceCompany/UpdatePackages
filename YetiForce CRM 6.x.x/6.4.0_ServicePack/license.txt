@@ -9,3 +9,6 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Fix #16387 (Switch users)
 - Fixed manual importing of mail messages
 - lib_roundcube 0.3.1
+- Improved YetiForce CLI
+- Redundant code has been removed
+- Fixed display of mail widgets when there is no relationship
