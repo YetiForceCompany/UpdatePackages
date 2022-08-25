@@ -1,3 +1,11 @@
 License: YetiForce Public License 5.0 licenses/License.html
 
-- Fixed relation fields autofill while creating related records
+- Improved data display on some widgets
+- Fix #16376 (Recycle bin)
+- Improved display of account name field
+- Improved ConfReport
+- Improved custom narrowing of entries in the record list modal windows for reference fields
+- Compatibility with the latest version of JITSI has been fixed
+- Fix #16387 (Switch users)
+- Fixed manual importing of mail messages
+- lib_roundcube 0.3.1

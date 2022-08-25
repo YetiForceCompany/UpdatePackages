@@ -72,7 +72,18 @@ class YetiForceUpdate
 	 */
 	public function update()
 	{
-	
+		$createCommand = \App\Db::getInstance()->createCommand();
+		$menu = (new \App\Db\Query())->select(['id', 'dataurl'])->from('yetiforce_menu')
+			->where(['like', 'dataurl', '%view=CalendarExtended&%', false])
+			->all();
+		foreach ($menu as $value) {
+			$url = $value['dataurl'];
+			if (0 === strpos($url, Config\Main::$site_URL) || 0 === strpos($url, 'index.php?')) {
+				$url = str_replace('view=CalendarExtended', 'view=Calendar&', $url);
+				$createCommand->update('yetiforce_menu', ['dataurl' => $url], ['id' => $value['id']])->execute();
+			}
+		}
+		(new \Settings_Menu_Record_Model())->refreshMenuFiles();
 	}
 
 
