@@ -56,11 +56,11 @@
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_SecurityFix\/zip\/6.3.0_SecurityFix_v8.zip"
         },
         {
-            "label": "YetiForce CRM 6.4.0 v1",
-            "version": "1",
+            "label": "YetiForce CRM 6.4.0 v2",
+            "version": "2",
             "fromVersion": "6.3.0",
             "toVersion": "6.4.0",
-            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_to_6.4.0\/zip\/6.3.0_to_6.4.0_v1.zip"
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.3.0_to_6.4.0\/zip\/6.3.0_to_6.4.0_v2.zip"
         }
     ]
 }
