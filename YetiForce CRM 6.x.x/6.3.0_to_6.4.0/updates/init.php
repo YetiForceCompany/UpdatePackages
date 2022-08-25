@@ -665,7 +665,7 @@ class YetiForceUpdate
 			['vtiger_field', ['header_field' => '{"type":"progress"}'], ['tablename' => 'vtiger_account', 'fieldname' => 'accounts_status', 'header_field' => null]],
 			['vtiger_field', ['presence' => 0], ['tablename' => 'u_yf_approvals', 'fieldname' => 'approvals_status']],
 			['vtiger_blocks', ['sequence' => 3], ['blocklabel' => 'LBL_CUSTOM_INFORMATION', 'tabid' => \App\Module::getModuleId('SMSNotifier')]],
-			['vtiger_eventhandlers', ['owner_id' => \App\Module::getModuleId('ModTracker'), 'privileges'=>0], ['handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
+			['vtiger_eventhandlers', ['owner_id' => \App\Module::getModuleId('ModTracker'), 'privileges' => 0], ['handler_class' => 'ModTracker_ModTrackerHandler_Handler']],
 		];
 		$links = (new \App\db\Query())->select(['linkid', 'tabid'])->from('vtiger_links')->where(['linktype' => 'DASHBOARDWIDGET'])->createCommand()->queryAllByGroup(0);
 		foreach ($links as $linkId => $tabId) {
@@ -776,16 +776,16 @@ class YetiForceUpdate
 		$dbCommand = \App\Db::getInstance()->createCommand();
 
 		$ralations = [
-			['type' => 'add', 'data' => [671,'Vendors','Passwords','getDependentsList',22,'Passwords',0,'ADD',0,0,0,'RelatedTab','link',NULL]],
-			['type' => 'add', 'data' => [672,'FInvoiceProforma','PaymentsIn','getDependentsList',1,'PaymentsIn',0,'ADD',0,0,0,'RelatedTab','finvoiceproformaid',NULL]],
-			['type' => 'add', 'data' => [673,'Accounts','SMSNotifier','getDependentsList',44,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [674,'Leads','SMSNotifier','getDependentsList',27,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [675,'Vendors','SMSNotifier','getDependentsList',23,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [676,'Partners','SMSNotifier','getDependentsList',16,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [677,'Competition','SMSNotifier','getDependentsList',16,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [678,'OSSEmployees','SMSNotifier','getDependentsList',11,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [679,'Contacts','SMSNotifier','getDependentsList',17,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','related_to',NULL]],
-			['type' => 'add', 'data' => [680,'SMSNotifier','SMSNotifier','getDependentsList',4,'SMSNotifier',0,'ADD',0,0,0,'RelatedTab','parentid',NULL]],
+			['type' => 'add', 'data' => [671, 'Vendors', 'Passwords', 'getDependentsList', 22, 'Passwords', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'link', null]],
+			['type' => 'add', 'data' => [672, 'FInvoiceProforma', 'PaymentsIn', 'getDependentsList', 1, 'PaymentsIn', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'finvoiceproformaid', null]],
+			['type' => 'add', 'data' => [673, 'Accounts', 'SMSNotifier', 'getDependentsList', 44, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [674, 'Leads', 'SMSNotifier', 'getDependentsList', 27, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [675, 'Vendors', 'SMSNotifier', 'getDependentsList', 23, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [676, 'Partners', 'SMSNotifier', 'getDependentsList', 16, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [677, 'Competition', 'SMSNotifier', 'getDependentsList', 16, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [678, 'OSSEmployees', 'SMSNotifier', 'getDependentsList', 11, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [679, 'Contacts', 'SMSNotifier', 'getDependentsList', 17, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'related_to', null]],
+			['type' => 'add', 'data' => [680, 'SMSNotifier', 'SMSNotifier', 'getDependentsList', 4, 'SMSNotifier', 0, 'ADD', 0, 0, 0, 'RelatedTab', 'parentid', null]],
 		];
 
 		foreach ($ralations as $relation) {
@@ -854,33 +854,6 @@ class YetiForceUpdate
 		}
 		$debug->create();
 
-		$ossMail = new \App\ConfigFile('module', 'OSSMail');
-		if (null !== \App\Config::module('OSSMail', 'default_host', null)) {
-			$imaps = \App\Config::module('OSSMail', 'default_host');
-			$newImaps = [];
-			$port = \App\Config::module('OSSMail', 'default_port', 993);
-			foreach ($imaps as $key => $name) {
-				if (!parse_url($key, PHP_URL_PORT)) {
-					if ($name === $key) {
-						$name .= ":{$port}";
-					}
-					$key .= ":{$port}";
-				}
-				$newImaps[$key] = $name;
-			}
-			$ossMail->set('imap_host', $newImaps);
-
-			$smtp = \App\Config::module('OSSMail', 'smtp_server');
-			$smtpPort = \App\Config::module('OSSMail', 'smtp_port');
-			$ossMail->set('smtp_host', $smtp ? "{$smtp}:{$smtpPort}" : '');
-			$plugins = \App\Config::module('OSSMail', 'plugins', []);
-			if (false !== ($key = array_search('advanced_search', $plugins))) {
-				unset($plugins[$key]);
-				\Config\Modules\OSSMail::$plugins = $plugins;
-			}
-		}
-		$ossMail->create();
-
 		$openStreetMap = new \App\ConfigFile('module', 'OpenStreetMap');
 		if (null !== \App\Config::module('OpenStreetMap', 'CRON_MAX_UPDATED_ADDRESSES', null)) {
 			$openStreetMap->set('cronMaxUpdatedAddresses', \App\Config::module('OpenStreetMap', 'CRON_MAX_UPDATED_ADDRESSES', 1000));
@@ -925,6 +898,78 @@ class YetiForceUpdate
 		return true;
 	}
 
+	public function updateMailConfiguration()
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		if (null === \App\Config::module('OSSMail', 'default_host', null)) {
+			$this->log('  [INFO] Skip');
+			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+			return;
+		}
+		$config = [];
+		$imaps = \App\Config::module('OSSMail', 'default_host');
+		$newImaps = [];
+		$port = \App\Config::module('OSSMail', 'default_port', 993);
+		foreach ($imaps as $key => $name) {
+			if (!parse_url($key, PHP_URL_PORT)) {
+				if ($name === $key) {
+					$name .= ":{$port}";
+				}
+				$key .= ":{$port}";
+			}
+			$newImaps[$key] = $name;
+		}
+		$config['imap_host'] = $newImaps;
+
+		$smtp = \App\Config::module('OSSMail', 'smtp_server');
+		$smtpPort = \App\Config::module('OSSMail', 'smtp_port');
+		$config['smtp_host'] = $smtp ? "{$smtp}:{$smtpPort}" : '';
+		$plugins = \App\Config::module('OSSMail', 'plugins', []);
+		if (false !== ($key = array_search('advanced_search', $plugins))) {
+			unset($plugins[$key]);
+			$config['plugins'] = array_values($plugins);
+		}
+
+		$className = 'Config\\Modules\\OSSMail';
+		$file = new \Nette\PhpGenerator\PhpFile();
+		$license = 'Configuration file.
+This file is auto-generated.
+
+@package Config
+
+@copyright YetiForce S.A.
+@license   YetiForce Public License 5.0 (licenses/LicenseEN.txt or yetiforce.com)
+';
+		$file->addComment($license);
+		$class = $file->addClass($className);
+		$class->addComment("Configuration file: {$className}.");
+		$templatePath = 'modules/OSSMail/ConfigTemplate.php';
+		$filePath = 'config' . \DIRECTORY_SEPARATOR . 'Modules' . \DIRECTORY_SEPARATOR . 'OSSMail.php';
+		$template = require "{$templatePath}";
+		foreach ($template as $parameterName => $parameter) {
+			if (isset($parameter['type']) && 'function' === $parameter['type']) {
+				$property = $class->addMethod($parameterName)->setStatic()->setBody($parameter['default'])->addComment($parameter['description']);
+			} else {
+				$value = $config[$parameterName] ?? \App\Config::get($className, $parameterName, $parameter['default']);
+				$property = $class->addProperty($parameterName, $value)->setStatic()->addComment($parameter['description']);
+			}
+			if (isset($parameter['docTags'])) {
+				foreach ($parameter['docTags'] as $tagName => $val) {
+					$property->addComment('');
+					$property->addComment("@{$tagName} {$val}");
+				}
+			}
+		}
+		if (false === file_put_contents($filePath, $file, LOCK_EX)) {
+			$this->log("  [ERROR] Failed to create file: {$filePath}");
+		}
+		\App\Cache::resetFileCache($filePath);
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
 	/**
 	 * Post update .
 	 */
@@ -933,6 +978,7 @@ class YetiForceUpdate
 		$start = microtime(true);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 		$this->createConfigFiles();
+		$this->updateMailConfiguration();
 
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleTools', 'params' => []]))->save();
 		(new \App\BatchMethod(['method' => '\App\Db\Fixer::baseModuleActions', 'params' => []]))->save();
