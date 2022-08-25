@@ -87,6 +87,7 @@ return [
 	'include/Webservices/WebServiceErrorCode.php',
 	'layouts/basic/modules/HelpDesk/charts',
 	'layouts/basic/modules/Project/charts',
+	'app/Pdf/PDF.php',
 	'vendor',
 	'public_html/vendor',
 	'public_html/libraries',
