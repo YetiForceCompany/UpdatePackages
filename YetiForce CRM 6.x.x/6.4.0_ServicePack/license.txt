@@ -13,3 +13,10 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Redundant code has been removed
 - Fixed display of mail widgets when there is no relationship
 - Fixed updating the coordinates
+- Improved display of data in the modal field editing window
+- Improved display of data
+- Fixed display of views in the calendar
+- Improved display of data in the business hours
+- Improved worflow panel
+- Improved display of data in select2
+- Improved SLA Policy elements

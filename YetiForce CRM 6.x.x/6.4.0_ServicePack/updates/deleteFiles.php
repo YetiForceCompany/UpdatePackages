@@ -8,4 +8,8 @@
  */
 return [
 	'app/Pdf/PDF.php',
+	'modules/ServiceContracts/actions/PolicyTemplatesAjax.php',
+	'layouts/basic/modules/ServiceContracts/SlaPolicyCustom.tpl',
 ];
+
+
