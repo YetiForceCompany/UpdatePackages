@@ -20,3 +20,4 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Improved worflow panel
 - Improved display of data in select2
 - Improved SLA Policy elements
+- Fix Inventory Reference Field in Advanced Block
