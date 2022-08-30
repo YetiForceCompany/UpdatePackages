@@ -21,3 +21,5 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Improved display of data in select2
 - Improved SLA Policy elements
 - Fix Inventory Reference Field in Advanced Block
+- Improved YetiForce CLI
+- Fixed address book in outlook integration panel
