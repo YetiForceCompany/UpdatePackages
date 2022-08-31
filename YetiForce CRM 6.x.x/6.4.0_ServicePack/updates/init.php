@@ -9,7 +9,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 
-//  SHA-1: 1ac4258501a1e8304cdc14ed8a5cf527f095b02f
+//  SHA-1: 78e01aaf84ae354d964d3f579db989a01fa9edf3
 
 /**
  * YetiForceUpdate Class.
