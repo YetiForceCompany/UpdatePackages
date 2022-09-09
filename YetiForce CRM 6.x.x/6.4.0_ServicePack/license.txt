@@ -23,3 +23,5 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Fix Inventory Reference Field in Advanced Block
 - Improved YetiForce CLI
 - Fixed address book in outlook integration panel
+- Fixed IMAP connection and permissions
+- Added reloading of user switching configuration

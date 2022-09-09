@@ -95,6 +95,15 @@ class YetiForceUpdate
 			}
 		}
 		$dataReader->close();
+		$users = [];
+		$moduleModel = Settings_Users_Module_Model::getInstance();
+		foreach ($moduleModel->getSwitchUsers() as $user => $access) {
+			$users[] = [
+				'user' => $user,
+				'access' => $access,
+			];
+		}
+		$moduleModel->saveSwitchUsers($users);
 	}
 
 	/**
