@@ -1,0 +1,32 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 1.1 Developer was released on 8 January 2015. The list of changes for other releases can be found in different articles in the same sub-menu.
+UPDATES AND ENHANCEMENTS:
+- Uploaded changes from Vtiger 6.2.0 rev. 14388 [only these that we considered essential, e.g. changes within their shop were ignored].
+- Language updates (PL_PL, EN_US, DE_DE) and a new language in a beta version: PT_BR. We would like to thank new developers for github!
+- Optimized records coloring within lists.
+- Optimized widgets in a record summary.
+- Fixed a bug that disabled the function of generating modules from a console.
+- Fixed special functions in PDF.
+- Error logs from php server moved to the logs directory.
+- Fixed numerous minor bugs.
+NEW FUNCTIONALITIES:
+- An option enabling permissions to edit comments was added to profiles.
+- Added a module for system updates.
+- Added a Backup module. 
+- Added readcrumbs menu. 
+- Added a tool for verifying the configuration of parameters and permissions on the server. 
+- Added D3js - Data-Driven Documents library.
+- Optimized data loading in uitype10 fields.
+- Added new displaytype 10.
+- Added Widget KPI [it is going to be improved and optimized].
+- iCal support! Now you can accept invitations and send them from an email client level!
+- Added a new autocomplete mechanism for email addresses within an email client.
+- Added a possibility to color some elements [adding a color in a module menu e.g. Accounts results in having the same color in a breadcrumbs menu and in a record list).
+- A possibility to manage widgets from a startup screen was added to a panel!
+SECURITY:
+- Remote access to the following directories was blocked: api, backup, cache\addressBook, logs, session, storage.
+OPTIMIZATION OF PROCESSES:
+- Added new fields.
+- Changed logics of fields within Tickets module.
+- Moved the management of calendar filters to a panel.
+- Optimized a mechanism calculating tax.
+YETIFORCE 1.0 WAS THE FIRST VERSION RELEASED IN 2014.

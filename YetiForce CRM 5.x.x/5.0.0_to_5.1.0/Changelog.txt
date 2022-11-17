@@ -1,0 +1,37 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 5.1 was released on 13 March 2019. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 5.0 > 5.1
+ADDED:
+Added a registration for a newsletter
+Added new fields and relations to Calendar and Time control modules
+Added new uitype - second level subprocess
+Added emoji encoding
+Added hierarchy count and a modal window for the Projects module
+Added a new upcoming project tasks widget
+Added improvements to save product prices
+Added validation parameters for the module Settings: Widgets
+Added changes in the hierarchy
+FIXED:
+Fixed 2FA configuration
+Fixed the activation of change history
+Fixed mapping for advanced fields
+Fixed saving of widgets with filter
+Fixed main menu
+Fixed ignoring system alerts
+Fixed TimeControl updates on related records
+Fixed import to XML
+Fixed loading of the Gantt chart
+Rebuilt Advanced Permissions detail view
+IMPROVED:
+Improved the registrations form
+Improved list of comments for modules without relations
+Improved saving of inventory configuration
+Improved multifilter
+Improved backup manager
+Improved Lead conversion to Account
+Improved message formatting
+Improved CSV import
+Improved DAV synchronization
+Improved code formatting
+Improved language download
+Improved the Gantt chart
+Rebuilt system registration

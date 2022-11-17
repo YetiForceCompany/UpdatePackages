@@ -1,0 +1,39 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 3.1 was released on 18 May 2016. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 3.0 > 3.1
+SECURITY:
+• secured and optimized loading of data from requests,
+• blocked permissions to actions that don’t exist,
+• improved permissions mechanism,
+• optimized the mechanism that loads information about users.
+ADDED:
+• new permissions to remove relations between records,
+• new language - French,
+• global change tracking,
+• ICS support for Calendar Import,
+• changes to API,
+• mapping from Accounts to Vendors.
+IMPROVED:
+• DAV integration,
+• filtering in the widget history,
+• creating records via workflow, 
+• error registration, 
+• functions in API,
+• sending documents via email,
+• widgets,
+• logs in sending mail,
+• function getRangeTime(),
+• notifications,
+• variety of appearance improvements, 
+• a ton of translations, 
+• updated SabreDav library.
+FIXED:
+• permissions in Webservice,
+• scrolling on mobile devices,
+• Mass edit action in a custom module,
+• references to system fields, 
+• hierarchy of Accounts.
+NEW COMMERCIAL MODULES:
+• POS
+• Analyzer
+• PrestaSync
+• Permission Inspector

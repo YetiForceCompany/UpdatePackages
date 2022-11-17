@@ -1,0 +1,26 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 2.3 was released on 13 October 2015. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 2.2 > 2.3
+NEW FUNCTIONALITIES:
+Added new module type [Advanced], where we can design a block with products/services. Everything can be managed in the field editor. Also, new panels to manage discounts and taxes were created [they work only with the new module type].
+Added new permission mechanisms [available in role configuration], which define the permissions regarding the account.
+Added the ability to control the filter tool in profiles.
+Added the ability to assign a filter to the menu [works for the Module type menu] in menu.
+Added a new field type [uitype 305], which allows you to search by related modules, eg. if we add the product to the account, then we will be able to search for accounts who have this product on the accounts list.
+Added new types of events in workflow.
+Added a mechanism for removing modules [works for the new modules].
+Added a mechanism in profiles to disable advanced search.
+Added ability to set a different menu name for the Module type menu.
+Added a mechanism that allows for logging on any user: https://gitdeveloper.yetiforce.com/index.php?module=Users&view=SwitchUsers&parent=Settings&block=4&fieldid=94
+OPTIMIZATION:
+Improved the login panel and added [optional] language selection.
+Improved record export to CSV files [including " character support].
+Standardized the calendar statuses [tasks/to do's] and the optimized calendar related widgets.
+Added a mechanism for closing tasks/to do's in widgets, notifications and record summary.
+Improved scanner mechanisms and mechanisms used for creating relations.
+Optimized dozens of engine functions and database queries.
+Improved the mechanism used for getting currency exchange rates.
+Rebuilt the mechanism responsible for loading from the vtiger_links table
+ISSUES:
+Fixed many reported bugs and issues, the full list can be found here: https://github.com/YetiForceCompany/YetiForceCRM/issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22YetiForce+2.3+GA%22
+Removed 'my settings' tab [it can be enabled in: config/security.php]
+Removed the ability to reset passwords while logging in [it can be enabled in: config/security.php]

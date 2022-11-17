@@ -1,0 +1,36 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 4.2 was released on 9 August 2017. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 4.1 > 4.2
+ADDED:
+Added missing files
+Added support for session handlers
+Added type hint to id
+Added functionality to add missing permissions
+Added option to jump to entry details
+Added “last modified by” to partners
+Added possibility to get list related records in TextParser (PDF, Mail template)
+Added possibility to get records list in TextParser (PDF, Mail template)
+Added support for new related lists
+Added enhancements to the text parser
+FIXED:
+Fixed query
+Fixed wrong column name in query
+Fixed email address search
+Fixed TextParser and Notifications
+Fixed module export
+Fixed display user image in timeline
+IMPROVED:
+Updated PBXManager.php
+Updated installed.json file
+Updated tests
+Improved caching
+Improved error logs
+Improved query to get records for calendar in the OSSTimeControl
+Improved error handling
+Improved getting user currency id
+Rebuilt session support
+Increase column value
+REMOVED:
+Removed .htaccess from the stage subdirectories
+Removed unnecessary files
+Removed redundant code
+Removed unused var

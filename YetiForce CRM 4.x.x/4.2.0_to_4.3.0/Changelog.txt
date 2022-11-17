@@ -1,0 +1,163 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 4.3 was released on 29 December 2017. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 4.2 > 4.3
+ADDED:
+Added the Italian language
+Added verification of permissions
+Added a generator for user and calendar colors
+Added picklist css generator
+Added verification of dangerous usernames
+Added ability to change username during installation
+Added enhancements to the system installer
+Added user name verification during installation
+Added new charts to widgets
+Added filtering by owner to widgets with charts
+Added advanced verification of phone numbers
+Added a new field - Country
+Added new graphs to widgets
+Added testing of a record list
+Added verification of data types while saving
+Added summation to charts
+Added testing of the record list
+Added tests for API integration
+Added a new functionality to reset a user’s password
+Added a new functionality to change a user’s password
+Added mass password reset
+Added new tests
+Added a new functionality to remember previous user’s passwords
+Added brute force to reset password
+Added user password lifetime
+Added configuration of user account lock time
+Added functionality to force user password change
+Added a new filter for users
+Added functionality for archiving records
+Added coloring for record states
+Added style enhancements 
+Added confirmations to actions
+Added validation of entered data to inventory table
+Added filtering by record status to related module
+Added ability to define view of related module
+Added functionality for calculating values in the related record list
+Added a new view with record’s preview
+Added comment archiving functionality
+Added a new field type hierarchy
+Added improvements in DAV integration
+Added improvements in the system installer
+Added the ability to filter on less than today's date and greater than today's date
+Added horizontal scrollbar to list
+FIXED:
+Fixed loading of links
+Fixed a bug that appeared after opening an event in list view
+Fixed a bug that appeared when creating a filter
+Fixed calendar colors in configuration
+Fixed attaching emails in contacts
+Fixed an advanced filter condition
+Fixed filter conditions
+Fixed a deletion of email scanner accounts
+Fixed errors in permissions
+Fixed create user records
+Fixed displaying of user image
+Fixed import
+Fixed folder conditions on folder and email fields
+Fixed tests
+Fixed group and role creation
+Fixed deletion of groups
+Fixed workflows navigation
+Fixed a function call
+Fixed deleting users
+Fixed add relation in quick create
+Fixed field validation
+Fixed global search
+Fixed quick create error
+Fixed the FAQ module
+Fixed a bug that didn’t allow to add comments
+Fixed validation of url
+Fixed adding events
+Fixed the display of working time in Competition
+Fixed Campaigns reports
+Added minor fixes to phone field
+Fixed compatibility functions
+Changed the password encryption algorithm
+Fixed an error in OSSPassword
+Fixed system installer
+Fixed bugs in Reports
+Fixed mass edit in Users
+Fixed bugs in Workflows
+Fixed a bug that didn’t allow to add or remove new widgets in modules
+Fixed a bug that didn’t allow to use advanced search when in the module
+Fixed a bug with permissions in profiles
+Fixed fields updating in the Geolocator
+Fixed Email Scanner
+Fixed related documents so that they become clickable
+Fixed a bug that appeared during generating a PDF Template
+Fixed mass SMS
+Fixed a fatal error in advanced block fields
+Fixed Contact relation with Sold Products and Services
+Fixed caching functionality
+Fixed calendar display
+Fixed Language Management
+Fixed a graph in Time Control
+Fixed a bug in filters
+Fixed the display of currency symbol
+IMPROVED:
+Changed the license to YetiForce Public License v3
+Improved error handling
+Improved TextParser
+Improved editor of Roundcube Configuration
+Reconstruction of group functions
+Improved the panel for the search configuration
+Improved mail scanner
+Updated user colors
+Updated composer.json
+Updated .gitignore
+Updated phpunit.xml
+Updated .travis.yml
+Updated purifier.php
+Updated README.md
+Improved security
+Improved the quick create form for calendar
+Improved sql queries
+Improved automatic loading of values
+Improved create the menu
+Moved colors to the new settings module
+Rebuilt handling errors and clearing input
+Rebuilt test structure
+Rebuilt the list of related records functionality
+Reconstructed input data security
+Improved view of event information
+Improved phone number storage
+Improved translation mechanism
+Improved permissions to delete records
+Improved cache of data in installation
+Improved configuration saving in ApiAddress module
+Improved email binding
+Improved code quality
+Improved security of input data
+Improved security exceptions
+Improved functions of dates
+Improved data cleaning
+Improved permissions for Custom View
+Improved the list of mass actions
+Improved the login functionality
+Improved record deletion
+Improved ModTracker for deleting records
+Improved display of currency values
+Improved anti-XSS mechanism
+Improved data cleaning in the language editor module
+Rebuilt PDF template
+Improved calendar invitation
+Improvements in dav integration
+Improved action to preview location
+Improved configuration verification
+Changed Module name “Sales Orders” → “Purchase Orders”
+Cleaned up translations
+REMOVED:
+Removed PearDatabase
+Removed GetParentGroups.php file
+Removed moduleColor css class
+Removed mt940 import
+Removed EditFieldByModal
+Removed redundant code
+Removed DataAccess module
+Removed an old password reset and password change functionality
+Removed the Recycle Bin module
+Removed console.php

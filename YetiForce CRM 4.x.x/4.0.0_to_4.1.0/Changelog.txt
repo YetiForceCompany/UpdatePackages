@@ -1,0 +1,88 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 4.1 was released on 31 July 2017. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 4.0 > 4.1
+ADDED:
+Added the Spanish language
+Added telephone service functionality
+Added drive speed test
+Added minor enhancements in the system installer
+Added quick record preview
+Added new uitype MultiImage
+Added a new widget - team’s estimated sales
+Added a new widget - actual sales of the team
+Added PHP documentation to code
+Added a new field type - Tree field
+Added the ability to zoom widgets
+Added mandatory announcements
+Added a new library DOMPurify
+Added loading JS and CSS from public directory
+Added a new level of role permissions
+Added email alerts with system warnings
+Added warning low free space warning
+Added support for plural translations
+Added integration with PBX Mixpbx
+Added security tab
+Added SensioLabs Security Checker
+FIXED:
+Fixed deleting reports on row
+Fixed records’ import
+Fixed workflow for the Helpdesk module
+Fixed saving a PDF template
+Fixed the creation of Helpdesk in the Mail scanner
+Fixed encoding
+Fixed a popup window for Pricebooks
+Fixed permissions for groups
+Fixed generate records
+Fixed tree view
+Fixed loading skins
+Fixed reports
+Fixed Gantt
+Fixed WYSIWYG
+IMPROVED:
+Improved CRON
+Improved deleting a user
+Improved compatibility with PHP7
+Improved compatibility with HHVM
+Improved compatibility with W3C
+Improved refreshing of permissions
+Improved API
+Improved webservices
+Improved workflows
+Improved sending emails
+Improved record saving
+Improved verification of requirements
+Improved toggle panels
+Updated autoloader
+Updated tests
+Simplified a mechanism used to modify translations
+Optimized database structure
+Rebuilt edit parameters of field in LayoutEditor
+Rebuilt and improved a mechanism for cleaning entered data
+Secured data retrieval from the request
+Updated the license to YetiForce Public License 1.2
+Improved public directory
+Updated composer
+Improved scrolling in widgets
+Improved Brute Force security
+Improved user authorization
+Improved import
+Improved system requirements verification
+CSS and JS optimization
+Secured file names
+Improved system installer
+Added enhancements to mail scanner
+Improved Mime Type functions
+Improved widgets
+Improved chat module
+Rebuilt finding duplicates
+Improved unit tests
+Updated .travis.yml
+Improved removing picklists
+Update database structure
+Improved SQL queries
+REMOVED:
+Redundant code
+Removed the Tracker
+Removed dUnzip2 library
+Removed module AJAXChat
+Removed old webservice
+Removed WSAPP module

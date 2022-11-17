@@ -1,0 +1,155 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.0. was released on 23 November 2020. The list of changes for other releases can be found in different articles in the same sub-menu.
+ 
+
+Changes 5.3 > 6.0.
+
+ADDED:
+Added a new product to the Marketplace - Magento integration
+Added a new product to the Marketplace  - YetiForce PL GUS
+Added new functionality - Conflict of interest
+Added a new module - Bank accounts
+Added a new module to Setting - LogsViewer
+Added a panel to manage RBL
+Added validation of EAN number in the products
+Added validation of tax identification number in the account
+Added event handler configuration panel
+Added new fields in the Opportunities module
+Added new options to the user menu
+Added descriptions for fields in the user module
+Added mapping templates
+Added Docker
+Added functionality that quickly changes values
+Added Process Wizard
+Added Gus record collector
+Added profile entries
+Added split edit view for non-inventory modules
+Added user login history in reports
+Added label coloring
+Added exporting records to XLS, XLSX, ODS
+Added narrow records list
+Added a new relations
+Added option to disable column summation in the related module
+Added default search operator to user
+Added filters in list of records in modal window
+Added proxy support for internet communication 
+Added Lint Code Base
+Added the possibility to store in the system permanently deleted users label
+Added a new record display mode "isReadOnly"
+Added database size check
+Added admin access
+Added: Request visit purpose when logging in as an administrator
+Added Visits Purpose view
+Added a new panel: Dependencies
+Added DMARC verification
+Added charts in detail view
+Added send calendar option with ics
+Added counting sum payments in proforma invoices and sales invoices 
+Added visibility check block
+Added synchronization server with a public RBL
+Added a spam report window
+Added VIES record collectors
+FIXED:
+Fixed LDAP password verification
+ Fixed a bug with a disappearing profile photo
+ Fixed an issue with merging arrays
+ Fixed incorrect saving of sent emails
+ Fixed problem with a long content error message
+ Fixed the registration
+ Fixed transferring roles
+ Fixed a problem with assigning workflow to a group or multiple users
+ Fixed Project Tasks widgets
+ Fixed event for related list
+ Fixed problem with scroll
+ Fixed destroying old sessions
+ Fixed RecordCollectorModal
+Fixed saving of Shared Owner
+Fixed closing chat dialog
+Fixed triggering handlers
+Fixed update the order status in Magento
+Disabled pretty scrollbars for roundcube page
+Reconstructed API Web Services
+Fixed filter conditions for tree element
+Fixed activating Magento
+Fixed flush of cache for currencies
+Fixed order of handlers
+Fixed export action trigger
+Fixed filter permissions
+Fixed blocking of records
+Fixed the problem with downloading related documents
+Fixed mass edit
+Fixed NotePad widget
+Fixed the problem with a separator in percentage fields
+Fixed the Address Finder
+Fixed the display of summaries for inventory modules
+Fixed a problem with related product/service list on SQuotes
+Fixed a problem with mass edit on new bootstrap v4.5 
+Fixed the emoji problem
+Fixed notifications
+Fixed password detail view
+Fixed copying data from the initial invoice
+Fixed MAP
+Fixed chat notifications
+IMPROVED:
+Updated Roundcube
+Improved lead conversion
+Improved adding fields
+Improved sorting settings
+Improved error handling in cron
+Improved testing
+Improved editing records on workflow
+Improved color contrast
+Rebuilt force password change
+Reconstructed password encryption mechanism
+Changed "Home Page" to "Dashboard"
+Development of interactive OpenAPI documentation
+Minor improvements to the Web Service API
+Improved menu
+Improved deleting users
+Improved inventory loading data
+Improved export of records to XLS, XLSX, ODS
+Improved editing picklists
+Updated order statuses
+Updated dev dependencies
+Updated sabre/dav to 4.x
+Updated PNotify 5
+Extended the Text Parser mechanism to retrieve information from the next level of the relationship
+Extended Email Parser with related modules
+Added minor improvements for settings
+Added minor improvements in the Users module
+Added minor improvements in the Mail-Scanner panel
+Improved pagination in record list (modal window)
+Improved some workflow tasks
+Improved Updates widget
+Improved quick editing
+Improved widget cache
+Improved Updates widget
+Improving cron to avoid timeout
+Improved API
+Improved double field validation
+Improved Multifilter widget
+Improved attachment management
+Improved deleting comments
+Improved editing users
+Improved changing of mass owner
+Improved API Record History
+Improved the integration with GUS
+Improved get related fields or module
+Improved the calculation of the sum in the related module
+Improved permissions for super user
+Improved the BruteForce module
+Improved loading of files
+Improved lead conversion
+Improved exception handling and error messages
+Store expansion and improvements
+PwnedPassword improvements
+Improved KnowledgeBase
+Improved smsapi
+Improved ConfReport
+Improved integration with Magento
+Improved chat
+Improved generating queries
+Improved in Public holidays panel
+Improved Outlook Integration panel
+REMOVED
+Removed the GitHub module
+Removed the Portal module
