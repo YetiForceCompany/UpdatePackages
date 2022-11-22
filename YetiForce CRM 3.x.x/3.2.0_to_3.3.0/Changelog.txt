@@ -1,0 +1,35 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 3.2 and 3.4 were released together on 10 October 2016. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 3.2 > 3.3 
+ADDED:
+• Added Integration with OpenStreetMap
+• Added route calculation in map
+• Added missing action 'Custom filters creation' in profiles
+• Added default visibility in CalDAV integrating
+• Added button to save and close activity in calendar
+• Added exclusion for DAV synchronization
+• Added mechanism to download missing libraries
+• Added checking for installed libraries
+• Added consoles used for code debugging
+FIXED:
+• Fixed switching mail users
+• Improved Homepage
+• Optimized database
+• Optimized system
+• Fixed database error 1:M duplicate in "Reservations"
+• Rebuilt unit tests
+• Moved available record actions to the left in related module list view
+• Rebuilt creating address book
+• Improved PHP7 compatibility
+• Fixed encoding messages
+• Fixed quick edition
+• Improved code quality
+• Improved Dashboard
+REMOVED:
+• Removed global variables and functions
+• Removed mail scanner module from profiles
+• Removed Roundcube library
+• Removed mPDF library
+• Removed PHPExcel library
+• Removed AJAXChat library
+• Removed CKFinder
+• Removed the Mobile module

@@ -1,0 +1,115 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 5.2 was released on 6 September 2019. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 5.1 > 5.2
+ADDED:
+Added a possibility to copy emails in workflow task
+Added mass download for related documents
+Added a new widget CREATED_BY_ME_BUT_NOT_MINE_OVERDUE_ACTIVITIES
+Added a special function to print correcting invoices
+Added the menu for webservice apps
+Added new relation to the Invoices module
+Added a relation between Service Contracts and Products/Services Sold
+Added css classes to textparser
+Added the price field to the Accounts
+Added a field for permissions in API
+Added HelpDesk hierarchy
+Added search in the knowledge base
+Added PDF to the portal API
+Added record states functionality
+Added a new time range uitype
+Added the configuration of business hours
+Added new fields to Notifications
+Added a relation between FAQs and Accounts
+Added counting time based on the business hours of service contracts
+Added SLA Policy (user side)
+Added a new field in products: Weight [DB]
+Added library verification
+Added Record Converter
+Added to the list of related records to API
+Added the Shop module
+Added payment data to company details
+Added tickets closing validation
+Added "DisableBranding"
+Added product search
+Added action to set a number of products in storage
+Added verification of the size of email attachments
+Added a new view of libraries vulnerabilities
+Added tabindex support to fields
+Added an option to edit record numbering
+FIXED:
+Fixed offline registration
+Added a fix to search params link from charts
+Fixed a problem with engine validation on date fields
+Fixed a bug in the Related Products widget
+Fixed adding charts to a dashboard
+Fixed creating PDFs
+Fixed a problem with module configuration in OSSMailView, OSSMailScanner, OSSMail
+Fixed notifications
+Fixed sending PDF files by e-mail
+Fixed mass edition for multi-currency
+Fixed import and export of data and added a mechanism to calculate values for selected fields in the Products and Services modules.
+Fixed email address search
+Fixed select2 bugs
+Fixed operators in BaseField
+Fixed a problem with filters in widgets
+Fixed deleting related records in Campaigns
+Fixed counting created records amount in Record Converter
+Fixed sound notifications in Chat
+Fixed adding comments
+Fixed List Preview
+Fixed margin calculation
+Fixed MultiReference
+Fixed global search
+Fixed button "More" in widgets
+Fixed chat bugs
+IMPROVED:
+Improved an Installation Template
+Improved a link to create records from widgets
+Improved permissions for API (Portal)
+Improved multiple file download
+Improved the Mail Scanner
+Improved system registration
+Improved error handling
+Improved detection of dangerous files
+Improved fields and relations in the knowledge base module
+Improved permissions
+Improved functionality faq
+Improved calculations
+Improved record view
+Improved the condition mechanism for the record
+Improved creating ToDo from workflow
+Improved saving company’s logo
+Improved permissions to email templates
+Improved conditions for workflow
+Improved ICS import
+Improved the installation wizard
+Improvements in converting time interval
+Improved mass actions in the Calendar
+Improved mass actions in PriceBooks
+Improved and rewrote the Chat
+Improved loading fields in record list modal
+Improved admin home page
+Improved the SystemWarnings module
+Improved mail scanning
+Improved closing tickets mechanism
+Improved quick export to excel
+Improved QueryGenerator
+Improved mechanism for editing records
+Improved 'Manual trigger' (workflow)
+Improved the shop
+Changed detail view widget layout in modules
+Changed mandatory fields in the Users module
+Changed the start page in the system settings
+Changed "review changes" to "mark updates as reviewed"
+Updated *.min and *.map files
+Numerous visual and usability improvements
+Activation of the time counting mechanism in the Helpdesk module
+Updated composer and yarn
+Updated README.md
+Implemented emojis with translations and mentions in Chat
+Reorganized settings' dashboard
+Expanded the "Manual trigger by the user" option in workflow
+REMOVED:
+Removed the possibility to create cf fields
+Removed deprecated AppConfig
+Removed _seq tables.
+Removed unnecessary variables

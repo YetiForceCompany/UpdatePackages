@@ -1,0 +1,142 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 5.0 was released on 12 February 2019. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 4.4 > 5.0
+ADDED:
+Implemented a new chat
+Added the Social Media module
+Added a new widget - Multifilter
+Added hierarchy into Competition
+Added search to QuickCreateModal
+Added select user calendar
+Added pin/unpin user
+Added related fields in filters
+Added a possibility to remove a relation in an email widget
+Added a possibility to remove related records
+Added a possibility to edit Calendar from a widget
+Added searching and sorting for related fields in filters
+Added a new condition builder to filter
+Added a popover ajax mechanism
+Added a backup file manager
+Added a widget into Recurring Orders
+Added the Time Control module to dashboard
+Added an automatic logout of users from the mailbox
+Added favorites stars
+Added MultiCompany to Roles
+Added a new “type” field to the Companies module
+Added a default employee for an Administrator user
+Added Crowdin
+Added validation field search_params from a request
+Added fields to the user module
+Added custom Gantt filters
+Added templates for invoices
+Added recurrency to js tree folders
+Added download languages from the repository
+Added hierarchy into Contacts
+Added search owner
+Added a new relation to Accounts
+Added a relation between SQuoteEnquiries and Leads
+Added Code of Conduct
+FIXED:
+Fixed an issue with ZIP
+Fixed deleting widgets from the list
+Fixed the problem with permissions
+Fixed a related list in the Documents module
+Fixed an error in ConfReport
+Fixed widget refresh
+Fixed displaying an empty Gantt
+Fixed drag and drop of menu items
+Fixed an Advanced Search
+Fixed numerous layout bugs
+Fixed the Relations panel
+Fixed a widget with a Related module (list with summary)
+Minor fixes in the Calendar module
+Fixed settings status on Event
+Fixed a problem with adding a Custom Field
+Fixed search for non-editable field
+Fixed edit & save when history filter is active
+Fixed errors in the widget’s configuration panel
+Fixed bugs in Discounts and Taxes
+Fixed a multi-email field
+Fixed a problem with merging
+Fixed a permission to postpone calendar records
+Fixed workflow tasks
+Fixed create a ToDo from workflow
+Fixed renewal
+Fixed MultiImage
+Fixed problems with a profile picture
+Fixed modules coloring
+Fixed loading filter data after adding events, corrected class names
+Fixed layout bugs
+Fixed calculating tax and amounts in general, when a comma was used as a Decimal separator
+Fixed permissions to groups
+Fixed errors that occurred when using various data formats
+Fixed a multi PDF generation
+Fixed global search settings
+Fixed export to XML
+Fixed recurring events
+Added a few fixes to the Map
+Fixed calendar history
+Fixed a problem with the widget from filter
+Fixed creating PDF templates
+Fixed rounding the amount
+Fixed a bug in integration with CalDAV
+Fixed removing OutsourcedProducts from tree
+Fixed the import of invoices
+Fixed displaying multiple events
+Fixed and refactored deleting tree item
+Fixed saving and reading config files
+Fixed the MultiReferenceValue field
+Fixed the format of calendar hours
+Fixed related list in campaigns
+Fixed multiplying events in activities widget
+Fixed manual import of mails
+Fixed adding mass comments
+Fixed validation of prefixes
+Fixed password configuration
+Fixed mass invoice export to PDF
+IMPROVED:
+Improved Bread Crumbs
+Improved responsiveness on tablets and phones
+Improved the Time Control module
+Added minor improvements to Inventory
+Refactored frontend inventory methods
+Refactored correcting invoices
+Optimized the MailScanner
+Improved error handling
+Improved calendar view
+Improved QuickCreate for the Calendar
+Improved the appearance of advanced fields
+Improved field image, MultiImage and Email
+Improved many fields
+Improved an import/export module
+Improved a mail widget in detail view
+Improved the field files
+Improved recurring events in the Calendar module
+Improved Cron
+Improved the conversion to Account
+Improved formatting currency
+Improved the Mail Scanner
+Improved sending e-mails
+Improved downloading attachments from email
+Improved and updated the Gantt chart
+Improved encoding data from JSON
+Improved integration with DAV
+Improved calendar import
+Improved the 'Products sold' widget
+Improved the 'Sold Services' widget
+Improved validation of the main configuration
+Improved list of comments for modules without relations
+Added minor improvements to the Calendar module
+Added minor improvements to mass actions
+Added minor improvements to the SQuoteEnquiries module
+Added minor improvements in OpenCage integrations
+Rebuilt searching duplicates in customview
+Rebuilt currency functionality
+Rebuilt system registration
+Moved the "Sale enquires" module in the menu
+Improvement and unification of exports
+REMOVED:
+Removed unnecessary files
+Removed PBXManager module files
+Removed relation between the Calendar and Contacts
+Removed a default list of fields in the relation list view
+Removed iCalendar

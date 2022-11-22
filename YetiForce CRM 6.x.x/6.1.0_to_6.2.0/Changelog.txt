@@ -1,0 +1,218 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.2. was released on 2 July 2021. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 6.1 > 6.2
+
+ADDED:
+Added a new license - YetiForce Public License 4.0
+Mass add entries to an advanced block 
+Added a new operator for date fields
+Added new uitype Barcode 
+Added possibility of hiding buttons in related records
+Added a new type of events handlers MailerBeforeSend and MailerAfterSend
+Added possibility to quickly create multiple records
+Add YetiForce CLI
+Added possibility to quickly create multiple records from related list
+Added option to disable data narrowing of list items
+Added log anonymization
+Add IP verification in existing RBLs
+Added missing value in CalDav
+Added configuration proxy
+Improved db structure - added missing foreign key
+Added a new type of events handlers MailerAddToQueue and MailerAddToLogs
+Added a new type of events handlers MailerAfterSendError
+Added new widget - Inventory block
+Added new module: Queued changes
+Added new widget: PDF Viewer
+Added filters in related modules
+Added autolink for contenteditable element
+Added new field in Password module: Department
+Added YetiForceDav
+Added YetiForceRBL
+Added module ServiceContracts related to the contacts
+Added automatic tests
+Added send pdf via email in PDFViewer widget
+Added event handling mechanism
+Added a mechanism for group adding of records
+Added Pauser - Temporary data handling functionality
+Added a new widget: Upcoming events based on selected date fields.
+Added possibility to overwrite the configuration Record Collectors
+Added new type of chart from filter - Tabular
+Added mandatory change the password when someone else sets your password
+Added 2FA to LDAP
+Development of interactive OpenAPI documentation
+Added validation for password change
+Added sandbox for Twig parser
+Added API history of access activity
+Added new method to API: History of user access activity
+Development of interactive OpenAPI documentation
+Added API public address
+Added new method to API: User password reset
+Added new IBAN uitype
+Added new api method for custom views
+Added new method to API: Get related modules
+Development of interactive OpenAPI documentation
+Added save comments from api
+Added new method to API: Source based data
+Added new icons
+FIXED:
+Fixed “Edit fields” function
+Fixed view fields in the list view and view fields in related module list view
+Refactored the Quick Record Creation modal window
+Fixed the process wizard
+Minor fix in the system warnings
+Fixed notice in workflow schedule
+Fixed detail view in modal windows
+Fixed get relation type
+Fixed filtering of nested record lists
+Fixed 'Estimated Opportunity value' widget
+Fixed wrong session id
+Fixed selecting records from modal window
+Fixed displaying data on record list in modal window
+Fixed field auto-mapping function
+Fixed max size for mask field
+Fixed double type field maximum length validation
+Fixed Address book generator
+Fixed memory size exhausted error when generating an address book
+Fixed filtering for MultiReferenceValue field type
+Fixed mass edit validation
+Fixed record numbering
+Fixed relations
+Fixed registration
+Fixed calendar view
+Fixed export related data to excel
+Fixed global search in admin settings
+Fixed validation for tickets
+Fixed possibility to set the default entry in the inventory data
+Fixed icons for notification widget
+Fixed quick edit for Calendar
+Fixed the country list select field for the phone field
+Fixed data for approval fields
+Fixed mass comment
+Fixed cache data
+Fixed next page verification when fetching entries from api
+Fixed displaying related records
+Fixed widget - Sales comparison by user
+Fixed reordering line items in advanced block
+Fixed mandatory reference type field in advanced blocks.
+Fixed displaying mapped data in advanced block
+Fixed pagination in the RecordHistory api method
+Fixed permissions for Comments
+Fixed creating webservice portal users
+Fixed deleting webservice users
+IMPROVED:
+Rebuilt the action to create and relate tickets
+Improved RBL verifier
+Improved the panel to manage RBL
+Improved header elements configuration in record preview
+Improved support for white and black list
+Improved meetings
+Improved error handling when uploading files
+Improved ConfReport
+Improved display of barcode
+Improved TextParser functions
+Updated Mail Templates
+Added minor improvements in ConfReport, CLI and API
+Improved user preferences view
+Improved field type for magento
+Improved QueryGenerator and get the list of ID
+Improved query builder
+Optimized RBL verifier
+Improved Record converter
+Improved Roundcube integration
+Updated mail templates
+Improved cron
+Improved handling API exceptions
+Updated installation translations
+Improved "Modules – Relations" panel
+Changed time sum fields
+Improved cron action to change state of events in calendar
+Improved display interval in a human readable format
+Improved inventory save
+Improved displaying Time Control charts
+Improved function for attachments in PDF
+Improved gus record collector
+Improved panel to manage RBL
+Improved password change/reset functions
+Improved CalDav parsing
+Improved a mechanism that limits lists of related records
+Updated DEV dependencies
+Updated PHP Coding Standards Fixer
+Improved mail record finder
+Improved OWASP panel logs
+Improved RBL verifier
+Improved ConfReport
+Improved GUS integration
+Improved Permissions for api user
+Updated *.min and *.map files
+Improved cleaning cache
+Improved vulnerability panel
+Improved events in the list of related records
+ckeditor Excluded plugin for Spell Checker
+Improved searching mechanism
+Improved operation of subscription
+Improved mass mail view
+Improved displaying data for Notification module
+Improved selecting picklist values if widget is cached after page refresh
+Improved widgets modularity
+Improved document download link generation
+Improved gus record collector
+Rebuilt relationship support
+Improved user permissions
+Rebuilt and improved Marketplace
+Improved displaying data of related records
+Improved displaying yfi icons
+Improved parsing PDF templates
+Improved API
+Improved widget: Sales comparison by month
+Improved getting list of records
+Added fixes and improvements for the search mechanism
+Separation of API into REST API and PORTAL
+Developed interactive OpenAPI documentation
+Rebuilt login history
+Rebuilt the APIRest/Portal
+Improved workflow actions
+Improved YetiForce CLI
+Improved favorites for custom view
+Rebuilt encryption in API
+Updated *.min and *.map files
+Improved logs
+Improved tabular type of chart from filter
+Improved listing of e-mail templates when sending e-mails
+Improved permissions for entries
+Improved query for group users
+Improved validation for created fields
+Improved widget - Field history and duration summary
+Improved comments widget
+Improved quick preview
+Minor improvements for widget - Field history and duration summary
+Improved workflow field list
+Improved calendar right panel
+Improved some value types and api annotations
+Improved privileges for interest conflict
+Improve cron action for session cleanup
+Added unit test for ManageConsents
+Improved binding services in mail scanner action
+Update codecov.yml
+Password reset has been rebuilt
+Improved information about permissions when verifying permissions from api.
+Improved gross value for products from api
+Improved some descriptions in api and add new parameter x-cv-id (custom view ID) for the list of records
+Improved permission verification for custom view
+Improved sorting in api methods
+Improved RecordRelatedList api method
+Improved permissions to comments for api
+Improved RecordRelatedList api method
+Improved getting related comments
+Updated DEV dependencies
+GUI improvements
+Improved saving and editing webservice users
+Improved api data for multi reference field
+Improved api files method
+Improved multi email field
+Improved record permissions from portal
+REMOVED
+Removed picklist value that doesn’t exists in Order module
+Removed mysql warnings when removing fields
+Removed duplicate code
+Removed out of date module hierarchy data
+Removed quick edit from modal for Password module
+Removed console.log from system fields function

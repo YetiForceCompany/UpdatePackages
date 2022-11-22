@@ -1,0 +1,176 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 4.4 RC1 was released on 27 April 2018 and YetiForce 4.4 GA/RTW on 2 August 2018. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 4.3 > 4.4 RC1
+ADDED:
+Added Permission Inspector as a free module
+Added the Italian language
+Added the Turkish language
+Added the ability to filter by event type in widgets
+Added Font Awesome
+Created saas project structure
+Added a plugin to check allowed domains in URLs
+Added PHP CS Fixer Config
+Added minor improvements in the Mail module
+Added an improvement in HTML purify
+Added batch methods
+Added the possibility to encrypt and decrypt passwords
+Added an option to turn off encryption
+Added encryption of password for API and DAV
+Added improvements in picklist setting
+Added multi-image upload
+Added multi-filter charts
+Added auto logout
+Bootstrap 4
+Added multiple selection of records in modal records list
+Added a template to Invoices
+Added possibility to select more than one photo in the product
+FIXED:
+Fixed recalculation of sharing rules
+Fixed an error that appeared when creating a widget from filter
+Fixed list of users
+Cleaned and corrected FullCalendar
+Fixed configuration of Marketing Process
+Fixed date parsing on widgets
+Fixed filtering by date
+Fixed Gantt
+Fixed webservice
+Fixed a password saving issue
+Fixed Events widget
+Fixed related lists in the Products module
+Fixed assigning “Reporting To”
+Fixed Calendar scroll
+Fixed a bug in Related lists in Products
+Fixed filtering in Gantt
+Fixed permissions for Widgets
+Fixed PBX integration
+Fixed Calendar Quick Create
+Fixed Time Control Quick Create
+Fixed a bug that allowed to save a record with empty mandatory fields when the block was collapsed
+Fixed DAV integration
+Fixed clock click
+Fixed TextParser
+Fixed pagination page search
+Fixed the ability to edit product if quantity is negative
+Fixed TextParser bug with Cyrillic symbols
+IMPROVED:
+Changed the license to YetiForce Public License v3
+General UI changes
+General code improvements
+Improved verification of configuration
+Improved SQL queries
+Improved switch users
+Updated README.md
+Updated libraries: font-awesome, libphonenumber-for-php, security-checker, lib_roundcube
+Updated framework yii2
+Changed global functions to static functions
+Changed many icons
+Improved searching Accounts when converting Lead
+Improved summary of Products and Services
+Improved an action to configure RoundCube
+Improved owner colors
+Improved export to XLS
+Improved loading of widgets
+Improved Quick Create for Notifications
+Improved validation of the CRSF token
+Improved Language Management panel
+Improved autocomplete in Quick Create modals
+Improved file upload
+Improved multi-image upload
+Improved process panels
+Improved privilege updater
+Improved records import
+Improved functions getAccessibleGroups and getAccessibleUsers
+Improved Credits
+Improved the appearance of “Widgets” in configuration
+Improved selection of records in the inventory
+Improved permissions to filters
+Corrected code formatting
+Corrected modals
+Corrected create filter view
+Changed module name from Purchase Orders to Sales Orders
+Changed the format of language files (json)
+Changed file permissions
+Cleaned up code
+Refactored pagination
+Refactored copy to clipboard
+REMOVED:
+Removed Terms and Conditions
+Removed unused libraries: handsontable, Guiders, symfony/var-dumper, jQuery and Snoopy
+Removed “add cron task” action
+Removed fileUpload
+Removed an old image field
+Removed the Reports module
+Removed mobile menu
+ 
+
+Changes 4.3 > 4.4 GA/RTW
+
+ADDED:
+Added a new language - Romanian ro_ro
+Added DataSetRegister module
+Added Activity Register module
+Added Location Register module
+Added Incident Register module
+Added Merge Records module
+Added Audit Register module
+Added many new icons
+Added a mechanism that prevents adding a value that is out of the allowed range
+Added status field to the project milestones
+Added a warning about encryption
+Added a function to animate modals
+Added two-factor authentication
+Added Gantt view to all projects
+Added missing privileges in the profiles
+Added new types of Inventory fields
+Added an option to change the default currency
+FIXED:
+Fixed Time Control Widget
+Fixed clear history
+Fixed a problem with digital separator and digit grouping symbol
+Fixed editing and viewing the Calendar detail through calendar widget
+Fixed permissions in generating PDFs
+Fixed adding picklist values when adding a new field
+Fixed a global search
+Fixed sharing permissions
+Fixed a bug modifying field visibility
+Fixed translations management
+Fixed importing and exporting of a language
+Fixed “Recurrence” field in Events
+Fixed deleting DAV accounts
+Fixed adding calendar record in widget
+Fixed updating of a currency symbol
+Fixed adding events in Reservations
+Fixed adding a relation between Products and Pricelist
+Fixed some layout bugs while adding widgets from filters in the Admin panel
+Fixed exporting to PDF
+Fixed importing
+Fixed DAV integration
+Fixed many modals
+IMPROVED:
+Compatibility with PHP 7.2
+Rebuilt a search engine for addresses
+Improved responsiveness
+Improved saving attachments
+Improved an installation wizard
+Improved checking of server configuration
+Improved tax information
+Improved compatibility to support mysqlnd
+Improved Travis
+Improved front end filters
+Improved 2FA authentication
+Improved validation in import from ZIP
+Improved responsiveness
+Improved permissions after save
+Improved pagination
+Improved adding a task
+Improved in cron email template
+Improved TextParser
+Updated database structure
+Numerous updates to Bootstrap 4
+Changed the sequence of steps in the installation
+Optimized database
+Rebuilt address search engine
+REMOVED:
+Removed unused code
+Removed divided charts
+Removed the action “mass activate users”
+Removed axis type chart

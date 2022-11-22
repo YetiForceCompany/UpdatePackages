@@ -1,0 +1,24 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.1. was released on 2 December 2020. The list of changes for other releases can be found in different articles in the same sub-menu.
+ 
+
+Changes 6.0 > 6.1
+
+ADDED:
+Added icons in blocks
+Added extended option of document widget
+Added ability to quickly edit attachment
+Added new operator for date fields
+FIXED:
+Fixed condition builder template name
+IMPROVED:
+Improved Importer
+Update install translations
+Improved integration with DAV
+Update sample LAMP configuration
+Improved panel to manage RBL
+Improved exception handling and error messages
+Improved support for white and black list
+Update lib_roundcube
+Improved meetings modal window
+Improved widget template
+Improved import ics

@@ -1,0 +1,107 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes,
+enhancements and new functionalities. 
+YetiForce 1.4 Developer was released on 25 March 2015. The list of changes for other 
+releases can be found in different articles in the same sub-menu.
+BUG FIXES: 
+- Fixed various bugs from Vtiger’s engine that appeared when a recurring invoice was created.
+- Fixed a bug that appeared when a display type of newly added field was corrupted during editing, just after its creation.
+- Fixed a Time Control Dashboard widget.
+- Fixed an email templates creation.
+- Fixed module columns appearing in the documents.
+- Fixed loading of data in the fields in the quick create.
+- Fixed a generation of recurrent invoice date.
+- Fixed Credits view.
+- Fixed an email template in Send Customer Login Details.
+- Fixed an option of mass edit for user passwords.
+- Fixed a critical error in Calculations. After adding a record to Calculations, list view of the module was unusable.
+- Fixed a Calendars Ajax Edit functionality.
+- Fixed a display of tree type fields in popups.
+- Fixed hiding of a button for records creation in related modules if a user doesn't have privileges to create new records.
+- Fixed a propagation of products/services limit (in relation to Potential) to other modules than Quotes, Calculations, Sales Order and Invoice.
+- Fixed add events to the Calendar.
+- Fixed a bug that appeared while saving new order of menu blocks.
+- Fixed an edit option in the records preview.
+- Fixed save of a "Copy permissions automatically" field.
+- Fixed quick create for Products and Services.
+- Fixed a bug in logs.
+- Fixed the display of headers.
+- Fixed loading of data into the fields in the quick create.
+- Fixed the edit view in the Passwords module.
+- Fixed adding pdf attachments in the Quotes module.
+- Fixed search of an email address in an email message.
+- Fixed the display of Products/Services in a popup window.
+- Fixed a template error that appeared when there were more menu blocks that could be contained.
+- Fixed the export module
+IMPROVEMENTS:
+- Added a possibility to change ID of sessions after logging.
+- Added names for subcategories in search results in trees.
+- Added a relation between Contacts and Vendors.
+- Added an integration of mobile phone calls listening.
+- Added hints to the mask in the editor field.
+- Improved translations.
+- Added other types to workflow.
+- Added blocks hiding management fields. 
+- Added a configuration panel for adding non-working Public Holidays.
+- Improved a tree field.
+- Added a possibility to close events quickly in the widget summary.
+- Reconstruction and a clean-up of file structure.
+- Added a new type of field to Time Control.
+- Added a possibility to add fields to a company.
+- Added a possibility to redirect a list to Time Control after clicking on user time widget.
+- Improved migration mechanisms.
+- Improved search for tree type fields in a record list view.
+- Added a possibility to delete record from the Calendar widget when the task was marked as done.
+- Added an option that sets by default a person who convers lead to opportunity as a record owner.
+- Updated a Fullcalendar library.
+- Improved search in Public Holiday.
+- Added the option that allows to select time type that will be shown on a user time control chart.
+- Added default start and end hours in month view in Time Control.
+- Added users and types of coloring to the Calendar.
+- Added a possibility to enable/disable brute force, a possibility to add users (with admin privileges) to email notifications if brute force has been detected.
+- Improved the way that columns appear in the associated modules.
+- Improved the creation of picklists.
+- Added comments widget to SalesOrders.
+- Improved checking of the configuration during installation.
+- Improved debugging.
+- Improved the display of user time control widget. 
+- Improved the menu.
+- Improved the Quotes module.
+- Improved the Calculations module.
+- Improved a validation of records.
+- Improved the time chart
+- Added new types of fields for working time. 
+- Added a possibility to create relationships between modules.
+- Added a page with recent history.
+- Improved Import updates.
+- Added a possibility to import and export relations in the manifest file with modules other than the installed ones.
+- Added a protection when events in the widget are being closed.
+- Added a file with a new handler that updates sharing.
+- Added a new type of handler that is triggered when records are related.
+- Added validation fields with masks.
+- Added a new field Legal form to the Accounts and Leads module.
+- Added a new field Relation to the Leads module
+- Updated Roundcube to version 1.1.0.
+NEW FUNCTIONALITIES:
+- Added a widget with a last updated record.
+- Added a filter to the calendar time.
+- Added a new module – Requirement cards.
+- Added a new module – Quotes enquires.
+- Added a configuration panel for setting if a popup for products should show products only related to presently chosen Potential or not.
+- Added a configuration of Sales Processes.
+- Added a field 'All Day' to the Calendar.
+- Added a new module – Holidays Entitlement.
+- Added modules: PaymentsIn and PaymentsOut
+- Added a possibility to create and edit help icons.
+- Added fields: local number and building number in Vendors.
+- Added validation in Quick Create of Time Control.
+- Reconstruction of events displayed in the Calendar.
+- Added a new option to the Calendar configuration panel.
+- Added the integration with CalDAV.
+- Added a new module - NewOrders.
+- Added a functionality, which can send email notifications when backup is complete.
+- Added a possibility to send a backup to the ftp server.
+- Added Saber Dav library.
+- Added a new menu block "Secretariat".
+- Added new modules: Incoming and Outgoing Letters.
+- Added the first part of the integration with WebDav.
+- Added a new module - Reservations.
