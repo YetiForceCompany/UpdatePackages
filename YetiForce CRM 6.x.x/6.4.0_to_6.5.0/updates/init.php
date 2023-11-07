@@ -205,8 +205,8 @@ class YetiForceUpdate
 		clearstatcache();
 
 		$openStreetMap = new \App\ConfigFile('module', 'OpenStreetMap');
-		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'coordinatesServer', null)) {
-			$openStreetMap->set('coordinatesServer', '');
+		if ('Nominatim' !== \App\Config::module('OpenStreetMap', 'coordinatesServer', null)) {
+			$openStreetMap->set('coordinatesServer', 'Nominatim');
 		}
 		\App\Config::set('module', 'OpenStreetMap', 'coordinatesServers', [
 			'Nominatim' => [
@@ -215,8 +215,8 @@ class YetiForceUpdate
 				'docUrl' => 'https://wiki.openstreetmap.org/wiki/Nominatim',
 			],
 		]);
-		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'routingServer', null)) {
-			$openStreetMap->set('routingServer', '');
+		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'routingServer', null) || empty(\App\Config::module('OpenStreetMap', 'routingServer', null))) {
+			$openStreetMap->set('routingServer', 'Osrm');
 		}
 		\App\Config::set('module', 'OpenStreetMap', 'routingServers', [
 			'Yours' => [
