@@ -235,7 +235,16 @@ class YetiForceUpdate
 			],
 		]);
 		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'tileLayerServer', null)) {
-			$openStreetMap->set('tileLayerServer', '');
+			$openStreetMap->set('tileLayerServer', 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+			$security = new \App\ConfigFile('security');
+			$allowedImageDomains = \App\Config::security('allowedImageDomains', []);
+			$value = '*.tile.openstreetmap.org';
+			if (!\in_array($value, $allowedImageDomains)) {
+				$allowedImageDomains[] = $value;
+			}
+			$security->set('allowedImageDomains', array_values($allowedImageDomains));
+			$security->create();
 		}
 		\App\Config::set('module', 'OpenStreetMap', 'tileLayerServers', [
 			'OpenStreetMap Default' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -243,6 +252,7 @@ class YetiForceUpdate
 			'Esri WorldTopoMap' => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
 			'Esri WorldImagery' => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
 		]);
+
 		$openStreetMap->create();
 
 		\App\Config::set('performance', 'recursiveTranslate', true);

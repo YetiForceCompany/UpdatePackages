@@ -11,3 +11,4 @@ Addons in this version changed, so please take a look at the offer at https://ye
 - The default provider "YetiForce" for map components has been removed.
 After the update, please verify the map settings in the configuration.
 - You will be automatically logged out after the update.
+- Check changes: https://doc.yetiforce.com/introduction/release-notes-changelog
