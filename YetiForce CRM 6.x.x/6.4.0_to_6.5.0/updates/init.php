@@ -119,7 +119,9 @@ class YetiForceUpdate
 				['s_yf_companies', 'twitter'],
 				['s_yf_companies', 'linkedin'],
 			]);
-			$this->importer->dropForeignKeys(['u_yf_modentity_sequences_tabid_fk' => 'u_yf_modentity_sequences']);
+			$this->importer->dropIndexes([
+				'u_yf_modentity_sequences' => ['u_yf_modentity_sequences_tabid_fk'],
+			]);
 			$this->preSchemaUpdateData();
 			$this->importer->updateScheme();
 			$this->importer->refreshSchema();
@@ -168,7 +170,7 @@ class YetiForceUpdate
 			['vtiger_field', ['maximumlength' => '400'], ['fieldname' => 'filename', 'tablename' => 'vtiger_notes']],
 			['vtiger_notification_status', ['presence' => 0], ['notification_status' => ['PLL_UNREAD','PLL_READ']]],
 			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Companies&view=Edit'], ['linkto' => 'index.php?parent=Settings&module=Companies&view=List']],
-			['vtiger_settings_field', ['active' => 0], ['name' => ['LBL_VULNERABILITIES','LBL_MAGENTO','LBL_WAPRO_ERP']]],
+			['vtiger_settings_field', ['active' => 1], ['name' => ['LBL_VULNERABILITIES','LBL_MAGENTO','LBL_WAPRO_ERP']]],
 		];
 		$batchUpdate = \App\Db\Updater::batchUpdate($updates);
 		$this->log('  [INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
@@ -191,6 +193,9 @@ class YetiForceUpdate
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
 
 		foreach (['config/ConfigTemplates.php', 'config/Components/ConfigTemplates.php', 'modules/OSSMail/ConfigTemplate.php', 'modules/OpenStreetMap/ConfigTemplate.php', 'modules/ModComments/ConfigTemplate.php'] as $configTemplates) {
+			if(!file_exists(__DIR__ . '/files/' . $configTemplates)){
+				continue;
+			}
 			$path = ROOT_DIRECTORY . '/' . $configTemplates;
 			copy(__DIR__ . '/files/' . $configTemplates, $path);
 			\App\Cache::resetFileCache($path);
@@ -199,7 +204,50 @@ class YetiForceUpdate
 		\App\Cache::resetOpcache();
 		clearstatcache();
 
-		$skip = ['performance', 'debug', 'security', 'module', 'component'];
+		$openStreetMap = new \App\ConfigFile('module', 'OpenStreetMap');
+		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'coordinatesServer', null)) {
+			$openStreetMap->set('coordinatesServer', '');
+		}
+		\App\Config::set('module', 'OpenStreetMap', 'coordinatesServers', [
+			'Nominatim' => [
+				'driverName' => 'Nominatim',
+				'apiUrl' => 'https://nominatim.openstreetmap.org',
+				'docUrl' => 'https://wiki.openstreetmap.org/wiki/Nominatim',
+			],
+		]);
+		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'routingServer', null)) {
+			$openStreetMap->set('routingServer', '');
+		}
+		\App\Config::set('module', 'OpenStreetMap', 'routingServers', [
+			'Yours' => [
+				'driverName' => 'Yours',
+				'apiUrl' => 'http://www.yournavigation.org/api/1.0/gosmore.php',
+				'params' => ['preference' => 'fastest', 'profile' => 'driving-car', 'units' => 'km'],
+			],
+			'Osrm' => [
+				'driverName' => 'Osrm',
+				'apiUrl' => 'https://routing.openstreetmap.de/routed-car',
+			],
+			'GraphHopper' => [
+				'driverName' => 'GraphHopper',
+				'apiUrl' => 'https://graphhopper.com/api/1',
+				'params' => ['key' => 'b16b1d60-3c8c-4cd6-bae6-07493f23e589'],
+			],
+		]);
+		if ('YetiForce' === \App\Config::module('OpenStreetMap', 'tileLayerServer', null)) {
+			$openStreetMap->set('tileLayerServer', '');
+		}
+		\App\Config::set('module', 'OpenStreetMap', 'tileLayerServers', [
+			'OpenStreetMap Default' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+			'OpenStreetMap HOT' => 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+			'Esri WorldTopoMap' => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+			'Esri WorldImagery' => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+		]);
+		$openStreetMap->create();
+
+		\App\Config::set('performance', 'recursiveTranslate', true);
+
+		$skip = ['module', 'component'];
 		foreach (array_diff(\App\ConfigFile::TYPES, $skip) as $type) {
 			(new \App\ConfigFile($type))->create();
 		}
@@ -207,7 +255,7 @@ class YetiForceUpdate
 		$dataReader = (new \App\Db\Query())->select(['name'])->from('vtiger_tab')->createCommand()->query();
 		while ($moduleName = $dataReader->readColumn(0)) {
 			$filePath = 'modules' . \DIRECTORY_SEPARATOR . $moduleName . \DIRECTORY_SEPARATOR . 'ConfigTemplate.php';
-			if (!\in_array($moduleName, ['OpenStreetMap', 'OSSMail', 'ModComments']) && file_exists($filePath)) {
+			if (!\in_array($moduleName, ['OpenStreetMap']) && file_exists($filePath)) {
 				(new \App\ConfigFile('module', $moduleName))->create();
 			}
 		}
@@ -243,9 +291,59 @@ class YetiForceUpdate
 			$this->stopProcess();
 			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
 			exit;
+		}else{
+			$db= \App\Db::getInstance();
+			$db->createCommand()->insert('yetiforce_updates', [
+				'user' => \Users_Record_Model::getCurrentUserModel()->get('user_name'),
+				'name' => (string) $this->moduleNode->label,
+				'from_version' => (string) $this->moduleNode->from_version,
+				'to_version' => (string) $this->moduleNode->to_version,
+				'result' => true,
+				'time' => date('Y-m-d H:i:s'),
+			])->execute();
+
+			$db->createCommand()->update('vtiger_version', ['current_version' => (string) $this->moduleNode->to_version])->execute();
+
+			\vtlib\Functions::recurseDelete('cache/updates/updates');
+			register_shutdown_function(function () {
+				try {
+					\vtlib\Functions::recurseDelete('cache/templates_c');
+				} catch (\Exception $e) {
+					\App\Log::error($e->getMessage() . PHP_EOL . $e->__toString());
+				}
+			});
+			\App\Module::createModuleMetaFile();
+			\App\Cache::clear();
+			\App\Cache::clearOpcache();
+			\vtlib\Functions::recurseDelete('app_data/LanguagesUpdater.json');
+			\vtlib\Functions::recurseDelete('app_data/SystemUpdater.json');
+			\vtlib\Functions::recurseDelete('app_data/cron.php');
+			\vtlib\Functions::recurseDelete('app_data/ConfReport_AllErrors.php');
+			\vtlib\Functions::recurseDelete('app_data/shop.php');
+			\vtlib\Functions::recurseDelete('app_data/shopCache.php');
+			file_put_contents('cache/logs/update.log', PHP_EOL . date('Y-m-d H:i:s') . ' | ' . ob_get_clean(), FILE_APPEND);
+			$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+			$this->logout();
 		}
-		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
-		return true;
+		exit;
+	}
+
+	private function logout(){
+		if(PHP_SAPI !== 'cli'){
+			$moduleModel = Users_Module_Model::getInstance('Users');
+			$moduleModel->saveLogoutHistory();
+
+			$eventHandler = new App\EventHandler();
+			$eventHandler->trigger('UserLogoutBefore');
+			if (\Config\Security::$loginSessionRegenerate ?? false) {
+				App\Session::regenerateId(true);
+			}
+			OSSMail_Logout_Model::logoutCurrentUser();
+			App\Session::destroy();
+			header('location: index.php');
+			exit;
+		}
+
 	}
 
 	/**

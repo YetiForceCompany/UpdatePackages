@@ -83,6 +83,7 @@ class Base extends \App\Db\Importers\Base
 		];
 		$this->foreignKey = [
 			['fk_dav_users', 'dav_users', 'userid', 'vtiger_users', 'id', 'CASCADE', NULL],
+			['u_yf_modentity_sequences_tabid_fk', 'u_yf_modentity_sequences', 'tabid', 'vtiger_tab', 'tabid', 'CASCADE', NULL],
 		];
 	}
 }

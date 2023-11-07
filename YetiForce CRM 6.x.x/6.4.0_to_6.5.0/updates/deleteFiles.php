@@ -9,9 +9,7 @@
 return [
 	'.php_cs.dist',
 	'app/SystemWarnings/YetiForce/Newsletter.php',
-	'app/YetiForce/Shop/Product/Partner/Integrator.php',
-	'app/YetiForce/Shop/Product/Partner/ModuleProducer.php',
-	'app/YetiForce/Shop/Product/Partner/Reseller.php',
+	'app/YetiForce/Shop/Product/Partner',
 	'app/YetiForce/Shop/Product/YetiForceDevelopmentSupport.php',
 	'app/YetiForce/Shop/Product/YetiForceDonations.php',
 	'app/YetiForce/Shop/Product/YetiForceHelp.php',

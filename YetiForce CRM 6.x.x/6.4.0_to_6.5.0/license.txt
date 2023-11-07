@@ -10,3 +10,4 @@ All the paid addons you've been using will stop working until they're re-activat
 Addons in this version changed, so please take a look at the offer at https://yetiforce.com/en/add-ons-and-integrations.html or reach out to hello@yetiforce.com in case you need assistance.
 - The default provider "YetiForce" for map components has been removed.
 After the update, please verify the map settings in the configuration.
+- You will be automatically logged out after the update.
