@@ -1,4 +1,4 @@
-YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.5. was released on November 2, 2022.
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.5. was released on November 2, 2023.
 
 CHANGES 6.4 > 6.5
 FIXED

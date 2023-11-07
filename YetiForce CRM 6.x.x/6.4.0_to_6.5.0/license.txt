@@ -5,3 +5,8 @@ Before launching the update package we recommend disabling all cron actions.
 Log files should be checked after update.
 
 Notes:
+- Once you update you will have to register the system once again.
+All the paid addons you've been using will stop working until they're re-activated.
+Addons in this version changed, so please take a look at the offer at https://yetiforce.com/en/add-ons-and-integrations.html or reach out to hello@yetiforce.com in case you need assistance.
+- The default provider "YetiForce" for map components has been removed.
+After the update, please verify the map settings in the configuration.

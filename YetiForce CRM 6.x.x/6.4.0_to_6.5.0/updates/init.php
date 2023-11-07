@@ -74,7 +74,7 @@ class YetiForceUpdate
 			return false;
 		}
 
-		if (($maxExecutionTime && 0 != $maxExecutionTime && $maxExecutionTime < $minTime) || (is_numeric($maxInputTime) && $maxInputTime > 0 && $maxInputTime < $minTime)) {
+		if ((is_numeric($maxExecutionTime) && 0 != $maxExecutionTime && $maxExecutionTime < $minTime) || (is_numeric($maxInputTime) && $maxInputTime > 0 && $maxInputTime < $minTime)) {
 			$this->package->_errorText = 'The server configuration is not compatible with the requirements of the upgrade package.' . PHP_EOL;
 			$this->package->_errorText .= 'Please have a look at the list of errors:';
 			if (0 != $maxExecutionTime && $maxExecutionTime < $minTime) {
@@ -83,6 +83,11 @@ class YetiForceUpdate
 			if ($maxInputTime > 0 && $maxInputTime < $minTime) {
 				$this->package->_errorText .= PHP_EOL . 'max_input_time = ' . $maxInputTime . ' < ' . $minTime;
 			}
+			return false;
+		}
+
+		if(!\function_exists('openssl_encrypt') || !extension_loaded('openssl')){
+			$this->package->_errorText = 'The server configuration is not compatible with the requirements: openssl extension is required.' . PHP_EOL;
 			return false;
 		}
 		return true;
@@ -98,9 +103,24 @@ class YetiForceUpdate
 
 		$this->importer = new \App\Db\Importer();
 		try {
-			$this->removeModules('OSSPasswords');
 			$this->importer->loadFiles(__DIR__ . '/dbscheme');
 			$this->importer->checkIntegrity(false);
+			$this->importer->dropColumns([
+				['s_yf_companies', 'status'],
+				['s_yf_companies', 'type'],
+				['s_yf_companies', 'city'],
+				['s_yf_companies', 'address'],
+				['s_yf_companies', 'post_code'],
+				['s_yf_companies', 'companysize'],
+				['s_yf_companies', 'logo'],
+				['s_yf_companies', 'firstname'],
+				['s_yf_companies', 'lastname'],
+				['s_yf_companies', 'facebook'],
+				['s_yf_companies', 'twitter'],
+				['s_yf_companies', 'linkedin'],
+			]);
+			$this->importer->dropForeignKeys(['u_yf_modentity_sequences_tabid_fk' => 'u_yf_modentity_sequences']);
+			$this->preSchemaUpdateData();
 			$this->importer->updateScheme();
 			$this->importer->refreshSchema();
 			$this->importer->postUpdate();
@@ -113,8 +133,53 @@ class YetiForceUpdate
 
 		$this->importer->refreshSchema();
 		$this->importer->checkIntegrity(true);
+		$this->updateData();
 		$this->importer->logs(false);
 		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' min');
+	}
+
+	private function preSchemaUpdateData(){
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$db = \App\Db::getInstance();
+		$db->createCommand("DELETE FROM `dav_users` WHERE userid NOT IN (SELECT id FROM vtiger_users)")->execute();
+		$db->createCommand("DELETE FROM `dav_users` WHERE userid IN (SELECT id FROM vtiger_users WHERE `status`= 'Inactive')")->execute();
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
+	}
+
+	private function updateData(): void
+	{
+		$start = microtime(true);
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s'));
+
+		$batchDelete = \App\Db\Updater::batchDelete([
+			['a_yf_settings_modules', ['name' => 'Magento']],
+			['a_yf_settings_modules', ['name' => 'Wapro']],
+			['s_yf_address_finder_config', ['val' => 'YetiForceGeocoder']],
+			['s_yf_address_finder_config', ['type' => 'YetiForceGeocoder']],
+			['vtiger_cron_task', ['name' => 'LBL_MAGENTO']],
+		]);
+		$this->log('  [INFO] batchDelete: ' . \App\Utils::varExport($batchDelete));
+		unset($batchDelete);
+
+		$updates = [
+			['vtiger_field', ['maximumlength' => '400'], ['fieldname' => 'filename', 'tablename' => 'vtiger_notes']],
+			['vtiger_notification_status', ['presence' => 0], ['notification_status' => ['PLL_UNREAD','PLL_READ']]],
+			['vtiger_settings_field', ['linkto' => 'index.php?parent=Settings&module=Companies&view=Edit'], ['linkto' => 'index.php?parent=Settings&module=Companies&view=List']],
+			['vtiger_settings_field', ['active' => 0], ['name' => ['LBL_VULNERABILITIES','LBL_MAGENTO','LBL_WAPRO_ERP']]],
+		];
+		$batchUpdate = \App\Db\Updater::batchUpdate($updates);
+		$this->log('  [INFO] batchUpdate: ' . \App\Utils::varExport($batchUpdate));
+		unset($batchUpdate);
+
+		$db = \App\Db::getInstance();
+		$db->createCommand("UPDATE vtiger_ossmailview SET uid = TRIM(LEADING '<' FROM TRIM(TRAILING '>' FROM uid)) WHERE uid LIKE '<%'")->execute();
+		$db->createCommand("update `vtiger_field` set icon = null where icon is not null and icon != '' and icon not like '{%';")->execute();
+		$db->createCommand("update `vtiger_field` set icon = CONCAT(trim(TRAILING '}' from icon),',\"type\":\"icon\"}') where icon is not null and icon != '' and icon like '{%' and icon not like '%\"type\"%'")->execute();
+
+		$this->log(__METHOD__ . ' | ' . date('Y-m-d H:i:s') . ' | ' . round((microtime(true) - $start) / 60, 2) . ' mim.');
 	}
 
 	/**
