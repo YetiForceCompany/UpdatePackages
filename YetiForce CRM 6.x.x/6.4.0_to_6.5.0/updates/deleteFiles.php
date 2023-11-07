@@ -51,5 +51,8 @@ return [
 	'public_html/layouts/basic/modules/Settings/YetiForce/resources/RegistrationSerialModal.js',
 	'public_html/layouts/basic/modules/Settings/YetiForce/resources/RegistrationSerialModal.min.js',
 	'public_html/layouts/basic/modules/Settings/YetiForce/resources/RegistrationSerialModal.min.js.map',
-	'tests/Settings/Companies.php'
+	'tests/Settings/Companies.php',
+	'public_html/libraries',
+	'public_html/vendor',
+	'vendor'
 ];
