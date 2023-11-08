@@ -1,0 +1,76 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 1.3 Developer was released on 13 February 2015. The list of changes for other releases can be found in different articles in the same sub-menu.
+BUG FIXES:
+- Fixed an issue with a decimal separator in PDF.
+- Fixed a bug in dynamically generated enquiries.
+- Fixed an issue related to reading ICS files.
+- Improved language files.
+- Deleted unused files.
+- Improved a mechanism responsible for saving translations.
+- Engine optimization – logical operators.
+- Fixed the display of related modules.
+- Fixed the quick edit view in the Calendar.
+- Fixed saving of tasks in workflow.
+- Fixed the display of pick list in PDF module.
+- Fixed the display of widgets.
+- Fixed relation of data in the Calendar.
+- Fixed an issue that existed when a widget was added to a Project Task.
+- Fixed report generation in PDF.
+- Fixed the system installer.
+- Fixed the display of WYSIWIG editor in quick create.
+- Fixed the display of time format in Employees.
+- Fixed the creation of tickets in the Customer Portal.
+- Fixed the setting of the main module field (Entity Identifier).
+- Fixed encoding in WYSIWYG file.
+
+IMPROVEMENTS:
+- Improved mechanisms verifying the actual web server configuration (during installation and configuration).
+- Added a function that tests connection with the mobile application.
+- Added support for untypical ICS files.
+- Added additional mechanism detecting errors in the email module.
+- Added new translations in language files.
+- Updated a Russian language pack.
+- Updated a German language pack.
+- Improved a mechanism responsible for a password reset in the Customer Portal.
+- Improved a mechanism responsible for a migration to a new version [Vtiger 6.1 > YetiForce 1.3]. In the new version, migration will be only available for Vtiger 6.2.
+- Developed a mechanism responsible for coloring of module names and icons in modules.
+- Optimization of calls to mobile phones.
+- Optimization of a management panel for related modules.
+- Migration of a folder field from Documents to a new filed type.
+- Optimization of ADODB.
+- Improved a mechanism responsible for making relations in mobile phone connections.
+- Added a possibility to configure the minimum time for CRON [above 15 mins].
+- Added records summary to the Employees module.
+- Improved an integrative bar in the email module.
+- Updated zend library (encoding and decoding).
+- Improved the display of displaytype in fields management.
+- Improved the authorization in the email module.
+- Added a possibility to set a primary language from the panel.
+- Improved the display of emails, added filters checking WYSIWYG displayed content.
+- Secured user creation, improved import of users.
+- Added vendors to action bar in the email module.
+- Organized file structure (data directory removed). 
+- Improved webforms.
+- Redeveloped Brute Force verification.
+- Redeveloped tag cloud and its management.
+- Redeveloped address search.
+- Improved export and import of modules.
+- Added a time stamp for records preview.
+- Added a new field: “Updated”.
+- Redeveloped a password reminder in the Customer Portal.
+- Added suggestions on buttons.
+NEW FUNCTIONALITIES:
+- Added jsTree library.
+- Added a module for the management of jsTree templates.
+- Added new uitype for jsTree.
+- Added a panel for widget management and for defining privileges.
+- Added a panel for column management in related modules and popup windows.
+- Added a mechanism for mass enable and disable of tasks in workflow.
+- Updated the primary engine to Vtiger 6.2.0 [rev. 14427].
+- Added a mechanism that allows to duplicate users.
+- Added a panel that allows to identify modules that are registered by ModTracker.
+- Added a widget with Employee’s working time.
+- Added jquery inputmask library.
+- Added a functionality that allows to set a mask on a filed.
+- Added a possibility to search for addresses Google Maps.
+- Added a functionality that allows to unmark whether a record was read. 
+- Added a new module: Ideas.

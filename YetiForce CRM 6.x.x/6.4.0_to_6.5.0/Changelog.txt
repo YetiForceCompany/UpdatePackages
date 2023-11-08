@@ -1,0 +1,114 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.5. was released on November 2, 2023.
+
+CHANGES 6.4 > 6.5
+FIXED
+* Fixed #17252 (#17261)
+* Fixed #17253
+* Fixed calendar titles (#17249)
+* Fixed getting duplicates in list view (#17149)
+* Fix #17163 - Fix ckeditor link element
+* Fix sorting and pagination in the record list modal window
+* Fixed wysiwyg editor loading
+* Fix record number generation
+* Fix searching users by AJAX in filters (#17156)
+* Fixed docs links
+* Fix #16480 Set icons for fields
+* Fix #16376 (Recycle bin)
+* Fix #16387 (Switch users)
+* Fixed manual importing of mail messages
+* Fixed updating the coordinates
+* Fixed display of views in the calendar
+* Fixed address book in outlook integration panel
+* Fixed #16420
+* Fix #16440
+* Fixed comment editing
+* Fixed IMAP connection and permissions
+* Fixed IMAP connection and permissions
+* Fix datetimepicker loading in modal windows
+* Fix default field value settings
+* Fix attaching graphic files from URL from email body as documents.
+* Fix assign owner
+* Fix #16543 Filter configuration
+* Fixed order of months in the Gantt chart
+* Fixed the display of the document source in CKEditor in the workflow task send an e-mail (#16672)
+* Fixed minor bugs with DAV integration
+* Fixed showing all day events in calendar (#16760)
+* Fixed the display of the document source in CKEditor in the workflow task send an e-mail (#16722)
+* Fix #16542 - editing of Status picklist in the Opportunities module
+* Fix #16835 - Webhook
+* Fix #16633 - remove widgets from home page
+* Fix dashboard view for new modules
+* Fixed getting company values in PDF tool (#16916)
+* Fixed values in workflow conditions.
+* Fix #16991 - Layout for picklist values
+* Fix error with cached templates variable (#17159)
+* Fixed add record button in Kanban view (#17148)
+* Fixed bug in SLA policy (#17212)
+* Compatibility with the latest version of JITSI has been fixed
+* Mechanism for specifying the type of mail has been fixed
+
+REMOVED
+* Remove default fields that will be showed in the record selection popup for Bank account module
+* Removed unnecessary configuration
+
+IMPROVED
+* Changed the license
+* Improved reset password
+* Improved search from the record list (#17139)
+* Improved autocomplete
+* Improved quick edit (#16946)
+* Improved data display on some widgets
+* Improved display of account name field
+* Improved ConfReport
+* Improved custom narrowing of entries in the record list modal windows for reference fields
+* Improved display of data in the custom view modal
+* Improved cache clearing
+* Improved display of data in the custom view modal
+* Improved display of data in the modal field editing window
+* Improved display of data in the business hours
+* Improved display of data
+* Improved workflow panel
+* Improved display of data in select2
+* Improved SLA Policy elements
+* Improved display of data
+* Increased pdf loading times (#16419)
+* Improved YetiForce CLI
+* Improved import data
+* Improved display of data for VariablePanel
+* Changed the way of displaying time values in the charts from the working time tab.
+* Improved display of rows in the modal window of related records
+* Improved ConfReport
+* CalDav parsing has been improved
+* Set default currency in user preferences
+* Improved loading template (#16499)
+* Improved create comments
+* Improved mail scanner parser data
+* Improvements in multiEmail and MultiDomain fields
+* Improved saving members in Auto Assign panel
+* Improved Roundcube config
+* Improved relationship deletion
+* Improvements in record collectors
+* Improved label updater
+* Improved data cleaning
+* Improved create comments from API
+* Improved the workflow action queue
+* Chat - skipping rooms of inactive users
+* Improved getting events in OsstimeControl calendar view (#16969)
+* Improved the display of the number of changes in the History of changes (#16971)
+* Improved calendar widget data
+* Improved workflow expression parser
+* Increased the number of characters for the "file name/www" (#17087)
+* CalDav parsing has been improved
+* Corrected completion of the Country field by the collector record (#17127)
+* Disabled value editing for the Status field in the Notifications module. (#17134)
+* Improved getting data from No Brreg Enhetsregisteret (#17153)
+* Set default value in records_limit column to 0 (#17193)
+* Improved consent management
+* Unified the access level for the $module variable. (#17213)
+* Improved link generation
+
+
+ADDED
+* Added minor improvements to PHP8.0 support
+* Added URL to Security errors. (#16961)
+* Added deleting DAV user after deleting system user. (#16986)

@@ -1,0 +1,133 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.3. was released on the 10th of December 2021. The list of changes for other releases can be found in different articles in the same sub-menu.
+CHANGES 6.2 > 6.3
+ADDED:
+Added new functions for TextParser
+Added summary option for tabular chart type for widget from filter
+Development of interactive OpenAPI documentation
+Added possibility of using different path for storing documents
+Add to CLI: Disable 2FA od LDAP auth
+Added possibility of sorting in widgets from the settings panel
+Added editing of charts from filter from the settings panel
+Added Kanban Board
+Added preview of widget from filter from the settings panel
+Added hierarchy to Partners module
+Added exception for mail scanner action
+Added new module Passwords
+Added configurations for relationship
+Added portal API user preferences
+Added keyboard shortcuts
+Added compatibility with PHP 8
+FIXED:
+Fixed autocomplete for related records
+Fixed getting list items for some fields in configuration panels
+Fixed users selection
+Fixed photos in the record list in Users module
+Fixed compatibility with sql_mode ONLY_FULL_GROUP_BY
+Fixed color configurations
+Fixed minor bugs related to datetime field
+Fixed date format for date type field
+Fix change password
+Fixed password reset
+Fixed postponement of calendar entries
+Fix mail scanner alerts for folders
+Fixed save MultiCurrency field
+Fixed removal of cron jobs for the module
+Fixed export to csv
+Fixed mass add
+Fixed module type change
+Fix calendar detail view
+Fixed display type for sum_time fields
+Fixed Chat 
+Fixed Knowledge Base
+IMPROVED:
+Improved license
+Improved preview of records in the recycle bin
+Improved conditions for quick create view
+Improved Admin access panel
+Updated dependencies
+Improved handling of API exceptions
+Improved compatibility with PHP 8
+Updated install translations
+Improved the Watchdog mechanism
+Improved relationship tabs
+Improved reminder UIType
+Improved conditions for removing departments
+Optimized and improved Mail Scanner
+Improved displaying fields on widget from filter
+Improved order of fields in quick create
+Improved ConfReport 
+Improved getting mail scanner action
+Improved access to Calendar widget
+Improved page reload after quick create record
+Improved widget management
+Updated vhost and .htaccess configuration for apache
+Improved narrowing of records in modal windows by labels
+Improved sorting in widgets
+Optimized counting the number of e-mails
+Improved connection to the mailbox
+Improved CalDav parsing
+Improved code profiling
+Improved Importer
+Improved login history data
+Improved display of text area field
+Improved dependent/dynamic fields functionality
+Improved conditions for multipicklist field
+Improved anonymization functionality
+Improved password uitype
+Improved quick export functionality
+Improved password field export
+Improved encryption
+Improved password uitype
+Improved encryption - db
+Improved module removal
+Improved QueryGenerator
+Improved TextParser
+Improved search elements
+Improved creating tickets
+Improved config generator
+Improved panel to manage RBL - extended configuration
+Improved TextParser functions (border + field config)
+Improved record creation from workflow
+Improved display of change history data
+Improved filter permissions (custom view)
+Improved default filter search
+Improved panel to manage RBL
+Improvements in the Marketplace
+Improved cron to avoid running already running jobs
+Improved YetiForce CLI
+Improved data cleaning
+Improved system registration
+Update DB schema
+Improve compile builder and dependencies
+Improved filtering on empty values
+Improved displaying time format
+Improved Mapping panel list view
+Improved field deletion from system
+Rebuilt menu
+Improved permissions for api
+Improved hierarchy for api
+Improved API sessions
+Rebuilt APIRest/Portal
+Renamed YetiForce Api Portal to YetiForce Webservice Premium in the Marketplace
+Improved validation Time Control, Reservation module
+Improved calendar mass edit view
+Rebuilt display of comments
+Changed Sass compiler
+Rebuilt record actions and confirmation dialog
+Improved product management in the marketplace
+Improved system configuration panel
+Updated tooltips for SLA time fields
+Improved list view for Recycle bin module
+Improved display of the product table
+Improved filter conditions for users
+Improved tree view in products
+Improved mail action bar
+Improved blue skin
+Rebuilt and improved record auto assign mechanism
+REMOVED
+Removed redundant button in visit purpose modal window
+Removed create address book files with every change in record
+Duplicate operation removed when removing module
+Disabled old Password module
+Removed integration with Twitter
+Removed VTCacheUtils.php

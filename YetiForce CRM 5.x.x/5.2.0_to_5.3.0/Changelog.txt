@@ -1,0 +1,153 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 5.3 was released on 13 March 2020. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 5.2 > 5.3
+ADDED:
+Added a new product to the Marketplace - YetiForce Map
+Added a new product to the Marketplace - YetiForce Password
+Added a new product to the Marketplace - YetiForce Outlook Integration
+Added related fields to SMS workflow
+Added new parameters to the verification of configuration
+Added private rooms to chat
+Added ability to create reference record in quick create
+Added functionality to download information about available updates
+Added an option to set default inventory description view (collapsed/expanded) and block height
+Added quick preview to related records in emails
+Added country codes validation
+Added a new level of permissions - permissions based on the creator
+Added new mail scanner fields
+Added new uitype - multi reference
+Added two modules: Approvals and Approvals register
+Added a new email import and linking mechanism
+Added a new web service - Manage Consents
+Added user rooms to chat
+Added ability to sort by multiple fields
+Added IE compatibility enhancements
+Added room types configuration to chat
+Added maximum value fixer for fields
+Added a possibility to modify related data
+Added quick edit in list view
+Added a new color picker to settings
+Added a new parsing function to PDF
+Implementation of the new mail scanner mechanism
+Added new chat sounds
+Added an ability to import related records
+Added a new widget - updates
+Added interactive OpenAPI documentation
+Added working day workflows schedule
+Added YetiForce watchdog monitor
+Added 2FA whitelist
+Added new modules: Locations, Occurrence
+Added contacts in related comments for modules at level 0
+Added new calendar in Reservations
+Added a new type of validation
+Added some improvements to DAV integration
+Added minor improvements to the Web Service API
+Added sequence settings based on picklist
+Added new fields from the scanner to the user
+Added minor improvements in calendar view
+Added new time periods in quick filters
+Added sending SMS to related records
+Added missing translations
+Added missing actions in filters
+Added new TextParser for reports
+Added the possibility of displaying fields in blocks in quick create
+Added record collector mechanism
+FIXED:
+Fixed the bug “Call to a member function get() on bool.”
+Fixed comparison of float values
+Fixed a problem with saving clockPicker selected value
+Fixed incorrect column types
+Fixed daterange picker bugs
+Fixed Disable YetiForce Branding
+Fixed a search engine for addresses
+Fixed saving issues in admin panel
+Fixed missing date in emails
+Fixed an issue related to workflow (thanks to MacarenaReina’s contribution)
+Fixed missing query operators for conditions
+Fixed saving data in history of changes
+Fixed errors in the Calendar
+Fixed sending emails
+Fixed a problem with changing record owner on the detail view
+Fixed the login page
+Fixed RWD issues and vue warns
+Fixed character limits
+Fixed an error that didn’t allow to delete a custom block
+Fixed a number of minor bugs reported on GitHub
+Fixed google geocode configuration
+Fixed a bug that appeared when creating a ticket while being inside another ticket
+Fixed a problem with related fields on export to excel
+Fixed chat bugs
+Fixed system installer
+Fixed announcements
+Fixed permissions
+Fixed saving Pricebooks
+Fixed problems with dashboards
+Fixed unpinning users 
+Fixed reloading related list after a quick edit
+Fixed color contrast
+Fixed removing images
+Fixed adding relations
+IMPROVED:
+Updated libraries
+Improved sending an email from a record
+Improved replying to a HelpDesk
+Improved permissions for all calendar modules
+Improved CSP
+Improved CSRF
+Improved PDF
+Improved saving data in history of changes
+Updated composer and yarn
+Updated dependencies
+Improved sorting elements on selection lists
+Improved comparing floating point numbers
+Expanded server config verification
+Refactored chat vue files
+Optimized log registration
+Optimized display of the history of changes
+Improved sending emails from records
+Improved list of group members
+Improved interactive OpenAPI documentation
+Improved comments and quick actions
+Rebuilt the mail scanner
+Rebuilt the functionality of retrieving record relations
+Rebuilt the display of HTML fields
+Rebuilt performance tests
+Refactored quick create functions
+Developed an interactive OpenAPI documentation
+Cleaned up database structure 
+Removed redundant tables
+Improved adding relations in outlook
+Improved handling of errors
+Improved sorting on filters
+Improved chat
+Improved pinning chat rooms
+Improved delay of notifications
+Improved adding current record to chat
+Improved chat notifications
+Improved Db Importer
+Improved actions in related list view records
+Improved Calendar
+Improved fullscreen mode
+Improved condition mechanisms
+Improved testing
+Improved TextParser
+Improved quick edit
+Improved workflow with the creation of notifications
+Improved Layout editor
+Improved mail bar
+Improved text parser
+Improved API debugging
+Improved the update module
+Improved company details entry
+Improved Marketplace
+Changed menu item name: Realization > Project Mgmt
+Changed translation: Corporate emails > Email History
+Improved calendar view
+Numerous fixes for Outlook integration
+Expanded relations between modules
+Improved ConfReport
+Improved handler trigger
+Improved relation cache
+Improved attachment saving
+Improved the integration with DAV
+Improved cron
+Improved calendar widget

@@ -1,0 +1,268 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 6.4. was released on the 19th of August 2022. The list of changes for other releases can be found in different articles in the same sub-menu.
+
+CHANGES 6.3 > 6.4
+ADDED:
+Added new integrations: WAPRO ERP integration, KRS integration, Companies House integration, YetiForce VAT UK , YetiForce EDGAR USA, YetiForce CEIDG PL, OrbIntelligence integration, YetiForce Entreprise GOUV FR, YetiForce Receita CNPJ BR, YetiForce Enhetsregisteret NO,  Vatify integration, YetiForce Zefix CH, YetiForce CVR DK, UaYouControl integration, NorthData integration
+Added additional data validation in the wysiwyg editor when inputting data in the source
+Added Data validation
+Added an advanced filtering mechanism based on related records
+Added test for QueryGenerator (Advanced conditions)
+Added library chrome-php/chrome
+Added new Chromium / Chrome PDF generation engine
+Added missing relation Vendor-Password
+Added YetiForce Public License 5.0
+Added new functionality: Record activity notifier
+Added Record activity notifier action to profile
+Added possibility to run workflow manually when record is blocked by status
+Added new operators to the field comparison
+Added foreign keys for group tables
+Added Semgrep CI
+Added a new type of events handlers - EditViewBefore
+Added option to change the date display format in comments
+Added leaders for groups
+Added configuration of the default discount and tax type
+Added a new type of events handlers - RecordGetData
+Added a new type of events handlers - RelationListLinks, ExportPdfBefore, ExportPdfAfter
+Added a new type of events handlers PdfModalBefore, PdfModalAfter
+Added new field type: Attachments
+Added missing scss file
+Added a new type of events handlers PdfGenerateInit, PdfGenerate, Possibility of single selection of the template has been added
+Added missing field types for record conditions
+Added widget configuration cleaning on the current device
+Added tracker for Auto assign configurations
+Added entry counting in filter type menu items 
+Added 'split' to Twig filters
+Added new module: SMS Template
+Added abbreviated names of days in the calendar according to the screen width.
+Added check if the record is selected for the mass edit action
+Added action for TileView
+Added validation to pasted files to the wysiwyg editor
+Added MassSMS action to list view
+Added custom parameters that can affect the return value in Record api method
+Added possibility of sorting tasks and actions in workflows
+Added sequence columns to workflow tables in database
+Add password validator 
+Added advanced conditions for mass actions
+Added optional short labels for column names
+Added generate & validate pass to WebservicePremium
+Added new fields to relatedRecordsList template for PDF
+Added copying to uitype password
+Added a quick edit button to the related widget in the Summary view and list with summary
+Added an active class to the filter in the menu
+Added time control autocomplete 
+Added option for Leaders to manage group membership.
+Added record collector task to workflows
+Added record collector task to workflows
+Added possibility to narrow results in list view
+Added new uitype: MultiReference
+Added conditions wizard for 'Update related record' workflow action
+Added tracking to media management
+Added functionality to unlock e-mail accounts
+Added priority to CalendarActivities and OverdueActivities dashboard widgets
+Added working time counter widget
+FIXED:
+Changed footer color for blue skin
+Fixed picklist listing without permission for record list filters
+Fixed user list filter bug
+Fixed the avatars in the comments of inactive users
+Fixed checking if URL address exists
+Fixed app/Purifier.php
+Fixed time display in the "Field history and duration summary" widget
+Fixed roundcube database structure
+Fixed e-mail template about blocking the IP address
+Fixed pdf generation from list
+Fixed message error label in the Documents module
+Fixed session initiation for files
+Fixed offline registration
+Fixed display of SLA configuration
+Fixed ownership transfer for Documents
+Fixed saving changes when changing condition values
+Fixed html clipping
+Fixed operator list for record
+Fixed pagination in RecycleBin
+Fixed getting translation in Widgets
+Fixed Dashboard module permissions 
+Fixed marking tabs in detail view after page refreshing 
+Fixed notice title for Review Changes
+Fixed saving filters in menu
+Fixed inventory events
+Fixed counting entries in calendar day view
+Fixed action saving data in API (SaveInventory)
+Fixed HTML truncation
+Fixed queue popupReference error
+Fixed importing graphics from the e-mail body
+Fixed field permissions in API
+Fixed meeting url params
+Fixed Mail integration panel 
+Fixed Gantt view
+Fixed scrollbar on dashboard widgets when resizing them, including calendar view
+Fixed Send PDF workflow task
+Fixed attachments in 'Emails to send' panel
+Fixed list view entries count
+Fixed edit view header links
+Fixed getting reference module in inventory name field
+Fixed a bug when selecting all users in the calendar quick edit view
+IMPROVED:
+Improved validation for multi-currency fields
+Improved ConfReport
+Improved YetiForce CLI
+Improved validation of uploaded files
+Improved validation for weight fields
+Improved MeetingUrl uitype
+Improved types and validations for numeric fields
+Improved consent management
+Improved field validation with regard to the maximum value
+GUI improvements
+Improved compile builder
+Improved deletion of relations in Campaign module
+Improved pre save validation
+Improved TOTP code verification (GUI)
+Improved DocBlock
+Improved CSRF protection
+Improving sending e-mails
+Improved avatars for comments
+Improved 2FA
+Improved RBL
+Improved photo handling in TextParser functionality
+Improved backup panel
+Improved modal window view for tree type field
+Improved data cleaning
+Rebuilt PDF merging
+Improved creation of temporary files
+Improved Marketplace
+Improved saving record data
+Improved data change from progress bar
+Improved PDF variable name in configuration file
+Improved restoring users
+Improved display of deleted records and in the recycle bin
+Improved history of changes -  added Record deletion to history
+Improved error handling of the integration bar with the mail client
+Improved Detail view widget
+Improved cleaning temporary files
+Improved Groups
+Improved menu elements
+Improved auto assign workflow template
+Improved get the Detail View url for the record
+Improved automatic assignment
+Improved ConfReport
+Improved import - finding record duplicates
+Improved event handlers panel
+Improved record number field
+Improved record converter
+Improved the list of e-mail accounts in the imap e-mail widget
+Improved field object info data
+Improved keyboard shortcuts
+Improved integration with DAV
+Improved RBL verifier
+Updated *.min and *.map files
+Improved language export 
+Improved record statuses time counting
+Improved calendar right panel
+Improved mass changing owner
+Improved filtering of the records list
+Improved SLA policy permissions
+Improved permissions for transfer ownership action
+Rebuilt widgets
+Improved iframe loading
+Improved condition for picklilst getDisplayValue method
+Improved table in related list
+Improved setting tracker
+Improved BreadCrumbs
+Improved Variable panel layout and clipboard event
+Improved advanced module configurations
+Improved mass adding of documents from the widget level
+Improved clipboard function
+Improved Web service app panel
+Improved getting businessTime in ServiceContracts
+Improved error notification
+Improved saving webservice users settings
+Improved copy to clipboard on Webservice users panel
+Upgraded fullcalendar from v3 to v5 + Rebuilt calendar
+Improved layout of labels in the detail view
+Improved footer in the description preview
+Improved Picklist panel
+Improved TextParser
+Improved read-only phone field lock
+Improved field navigation in related list
+Improved variables panel
+Improved SMS notifier
+Improved values for inventory field
+Improved database for sms communication
+Improved getting modules in quick create mode
+Improved sms configuration and added sms api
+Improved mails list widget
+Improved sms communication with smsapi
+CSS improvements
+Improved data cleaning
+Improved browsing history
+Improved structure of SMSNotifier fields
+Improved image field
+Improved api method RecordsList
+Improved relational data change
+Improved sortable workflow
+Improved QueryGenerator
+Adjusted the line width for the image field according to user settings
+Improved deleting records in tiles view
+Improved mail notification message for the mail binding action
+Improved encryption
+Improved verifying access to the mail client
+Changed display order in knowledge base
+Improved picklist panel
+Updated DEV dependencies
+Changed routing engine for YetiForce Routing
+Improved Web Content Accessibility
+Rebuilt map functionality
+Hidden inactive users in UserSwitch menu
+Improved record collectors
+Rebuilt picklist dependency
+Improved the handling sounds in the system
+Improved autocompletion of data for records created from the widget
+Improved Create Entity action in Workflows
+Improved editing configuration variables
+Improved validation of numeric type fields
+Improved theme field type
+Improved menu when removing filter
+Improved display of text fields in records list
+Improvements in PDF
+Improved group membership management
+Improved picklist dependency
+Improved display of the password field when creating a user
+Improved validation of the module name
+Improved the advanced block view in related modules
+Expanded generation of links and record labels
+Improved system warnings
+Improved handling of photos when replying and forwarding e-mails
+Improved the quick calendar creation view
+Improved pagination on related records list and responsive table
+Improved month view in quick calendar creation
+Improved export data to XLS
+Improved widget positioning
+Unified display of graphic files
+Improved 'chart from filter' widget
+Improved DocBlock
+Improved record creation permissions
+Improve Mail Integration module
+Improved default dashboard in api
+Improved import file button
+Improved imap connection
+Improved OSSMail template
+Improved widgets permissions
+Increased scrolling speed
+Improved Inventory panel and PDF widget
+Improved integration with DAV
+Improved inventory auto fill
+Improved getting data from smtp
+Improved DB structure for map table cache
+Improved updating payment status
+Improved input data cleanup
+Improved RSS
+Improved anonymization
+REMOVED
+Removed duplicate requests in ConditionBuilder
+Removed redundant styles
+Removed autocomplete for fields by default
+Replaced Bootbox with PNotify
+Removed emojipanel library
+Remove redundant resize function for textarea
+Removed badge background from calendar widget
+Removed OSSPasswords module

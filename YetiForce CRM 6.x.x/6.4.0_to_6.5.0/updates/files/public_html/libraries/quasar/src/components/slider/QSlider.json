@@ -1,0 +1,31 @@
+{
+  "mixins": [ "components/slider/slider-utils" ],
+
+  "meta": {
+    "docsUrl": "https://v1.quasar.dev/vue-components/slider"
+  },
+
+  "props": {
+    "value": {
+      "type": "Number",
+      "desc": "Model of the component (must be between min/max); Either use this property (along with a listener for 'input' event) OR use v-model directive",
+      "examples": [ "v-model=\"positionModel\"" ],
+      "category": "model"
+    },
+
+    "label-value": {
+      "type": [ "String", "Number" ],
+      "desc": "Override default label value",
+      "examples": [
+        ":label-value=\"model + 'px'\""
+      ],
+      "category": "content"
+    }
+  },
+
+  "events": {
+    "input": {
+      "extends": "input"
+    }
+  }
+}

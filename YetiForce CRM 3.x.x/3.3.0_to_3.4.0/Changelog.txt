@@ -1,0 +1,27 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 3.2 and 3.4 were released together on 10 October 2016. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 3.3 > 3.4
+ADDED:
+• Added Yii library
+• Added a new mechanism for database communication
+• Added new logger
+• Added unread e-mails quantity
+• Added the option to group arguments in sectors in filter charts
+• Added advanced permissions
+• Added Notifications as a module
+• Added “closed tickets by priority” widget
+• Added “closed tickets by users” widget
+• Added “Accounts by industry” widget
+• Added “Estimated Opportunity value” widget Updated HTML Purifier 4.8.0
+FIXED:
+• Rebuilt database connection
+• Fixed sales funnel
+• Fixed system installer
+• Fixed a bug in Document Flow
+• Fixed DAV synchronization
+• Rebuilt and expanded the permissions update mechanism
+• Fixed mobile version appearance
+• Added missing actions to profiles
+• Fixed downloading libraries
+REMOVED:
+• Removed the Portuguese language
+• Removed log4php library

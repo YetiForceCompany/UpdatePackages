@@ -1,0 +1,158 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 4.0 was released on 14 February 2017. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 3.4 > 4.0
+ADDED:
+Added profiling
+Added logs optimization
+Added the ability to add modules to recalculating permission
+Added data caching
+Added fields, link, process and subprocess to Notification
+Added a new widget “Number of notifications by sender”
+Added a new mechanism to import database
+Added a schema to admin importer
+Added RSS & Atom Feeds for PHP
+Added a new skin - "modern" (thanks to ezbank)
+Added a new Gantt library
+Added a new functionality - event handler
+Added a function getDBvalue to UITypeModels
+Added a new panel - Auto assign records
+Added an option to disable global search
+Added a new version of PHPMailer library
+Added a new mechanism for sending e-mails
+Added Mailer CRON
+Added new parameters to filter the list
+Added mail queue, smtp mail modules in panel
+Added validation fields when creating a module
+Added alert info to LDAP
+Added mass upload for files in Documents
+Added a function to search for record by label
+Added source record to text parser
+Added new library clipboard.js
+Added new search options
+Added info about missing folders in mail scanner
+Added module CFixedAssets
+Added module CInternalTickets
+Added authres_status plugin
+Added new library Requests
+Added module FInvoiceCost
+Added module CMileageLogbook
+Added new statuses in reservation
+Added module SVendorEnquiries
+Added Composer
+Added blinking button to notify about unread messages
+Added button to send mail to contact from widget
+Added new panel to configure users in Webservice
+Added special function to pdf
+Added parsing of variables in the mail
+Added new uitype total time. Displays time in the format: 271 hours 54 minutes
+Added recurring events
+Added simshaun/recurr library
+Added cron task for never-ending events
+Added a PDF template for Invoices
+FIXED:
+Fixed configuration of mail client
+Fixed displaying contents of the WYSIWYG widget
+Fixed Calendar visibility
+Fixed saving a user
+Fixed an error that appeared when creating a custom filter
+Fixed CustomView
+Fixed mailscanner issues
+Fixed sorting records in list view
+Fixed currency fields
+Fixed mass edit
+Fixed displaying and filtering by language field
+Fixed displaying and filtering “share with” field
+Fixed save user
+Fixed removing menu items
+Fixed installation process
+Fixed global search
+Fixed restoring records from trashbin
+Fixed save records in Documents module
+Fixed removing modules
+Fixed a function used for switching users
+Fixed updating permissions
+Fixed a function that turns off modules
+Fixed adding attachments
+Fixed loading views
+Fixed getting data for Tooltip
+Fixed privileges
+Fixed saving configuration for the Calendar
+Fixed adding product bundles to a bundle
+Fixed a bug in Quick Create a Ticket
+Fixed some bugs in Reports
+Fixed deleting notifications
+Added fixes related to records import
+Fixed permission to send mass emails
+Fixed export
+Fixed AppConnector
+Fixed creating notifications via workflow
+Fixed workflow VTEmailTemplateTask
+Fixed timeline icons functionality in listview
+Fixed CalDav integration
+Fixed currency updates
+Fixed displaying list of users in widgets
+Fixed .htaccess
+Fixed a problem with adding comments to related records
+Fixed conversion from Lead
+Fixed system installer
+IMPROVED:
+Rebuilt module OpenStreetMaps
+Improved synchronization with CalDAV
+Numerous improvements in sql queries
+Improved Brute Force module
+Rebuilt CSRF
+Rebuilt widget “Products and services”
+Rebuilt saving record
+Improved the last inserted ID
+Reconstructed QueryGenerator
+Improved compatibility with PHP7
+Improved removing activities
+Improved displaying and searching multireference field
+Improved searching by first letter
+Improved creating modules
+Improved searching for duplicates
+Improved saving tickets in YetiForce Customer Portal
+Updated highlightjs library
+Updated Roundcube to 1.2.3 version
+Reconstructed text parser
+Updated tests
+Improved server verification configuration
+Replaced an old module “EmailTemplates” with a new one
+Improved LDAP configuration
+Improved mail queue and mail smtp panels
+Rebuilt search engine
+Improved global search
+Improved cron action “Activity state”
+Rebuilt VTEmailTemplateTask
+Rebuilt VTSendPdf
+Rebuilt variables in workflow
+Improved removing module
+Reconstructed Company Details
+Improved LDAP
+Improved structure tables for importer
+Rebuilt webservice
+Improved company selection
+Changed webservice icons
+Improved calendar
+Improved search in the list
+Fixed directory names
+Improved sending mails
+Improved saving in mailsmtp
+Improved search engine
+Updated mPDF library
+Updated AJAXChat library
+Improved creation of tasks in workflow
+Changed operator to search for field multipicklist
+Improved system warnings
+REMOVED:
+Removed magpierss library
+Removed ZeroClipboard
+Removed OutgoingServer
+Removed module OSSMailTemplates
+Removed Webforms module
+Removed nusoap
+Removed Vtiger_Net_Client
+Removed POS module
+Removed Project Templates modules
+Removed Document Control module
+Removed insertIntoFAQCommentTable method
+Removed MobileApps

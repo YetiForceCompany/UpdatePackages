@@ -1,0 +1,34 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 1.2 Developer was released on 20 January 2015. The list of changes for other releases can be found in different articles in the same sub-menu.
+BUG FIXES:
+- Fixed the display of errors in mail module.
+- Fixed the display of records in calendar.
+- Fixed the display of colored records.
+- Fixed search in uitype10 fields.
+- Fixed adding of menu items. 
+- Fixed coping of address data. 
+- Improved saving in language module. 
+- Fixed function responsible for sending PDF via mail using workflows. 
+- Fixed date format in validation mechanism. 
+- Fixed edit view in PDF module. 
+- Fixed function responsible for creating modules from console. 
+- Disabled a possibility to switch users. 
+- Fixed size of modal window. 
+- Improved mechanism responsible for updates and migration [FOREIGN_KEY_CHECKS].
+- Fixed issues reported at github.com
+IMPROVEMENTS:
+- Language files. 
+- Added new uitype (list of modules with records).
+- Added validation of separators for numbers.
+- Added api for communication with mobile devices [PushCall, DialHistory].
+- Improved login in mail module. 
+- Added validation in a mechanism responsible for creating fields. 
+- Added validation of user filter. 
+- Added a mechanism that allows to add empty module with records. 
+- Improved a mechanism responsible for updates.
+NEW FUNCTIONALITIES:
+- A possibility to color module names (list view, record preview, list view in related modules, breadcrumbs menu). 
+- Added a panel allowing to manage filters in calendar. 
+- Added a new language (Russian) – special thanks to waw555 [Алексей].
+- Added a panel allowing to manage connections with API.
+- New module for mobile call history. 
+- Added a panel allowing to manage widgets.

@@ -1,0 +1,74 @@
+YetiForce regularly releases new versions of the software. Each new version includes bug fixes, enhancements and new functionalities. YetiForce 3.2 was released on 29 August 2016. The list of changes for other releases can be found in different articles in the same sub-menu.
+Changes 3.1 > 3.2
+ADDED:
+• Added the option to send notifications via mail
+• Added the ability to send notifications to all users
+• Added the functionality that displays announcements
+• Added user list to Announcements
+• Added a widget to show work time for all users
+• Added a widget - New Accounts, Neglected Accounts, RSS
+• Added a widget - Charts from filter
+• Added a widget - Number of records - to Campaigns
+• Added the display of comments for related records in the hierarchy
+• Added the ability to encrypt/decrypt data
+• Added a feature to copy menu
+• Added a plugin CalDAV Schedule
+• Added an option to search on the related module’s records list
+• Added a special function that prints that prints gross amount in words in PDFs
+• Added Travis CI tests
+• Added the ability to search records in related modules
+• Added the ability to search users via AJAX
+• Added features for customizing fields in the list
+• Added a missing action to generate records
+• Added new skin
+• Added new field type - multipicklists of categories
+• Added the option to generate PDFs with a watermark
+IMPROVED:
+• Improved Mail Scanner
+• Improved saving of watched modules
+• Improved error logs
+• Improved code quality by removing E_NOTICE,E_STRICT,E_DEPRECATED
+• Improved compatibility with PHP7
+• Improved error handling and debugging
+• Removed mode timeline in comments
+• Improved the list of owners
+• Improved permissions to actions and views in the Users module
+• Improved permissions to modules.
+• Reconstruction of management values for shared users
+• Various improvements in Reports
+• Enabled pricebooks in Inventory
+• Improved PBX Manager module
+• Improved mass actions such as import, export, TransferOwnership and export to excel
+• Updated NuSOAP, PHP Excel, select2
+• Rebuilt integration with CardDAV
+• Rebuilt sending emails
+• Rebuilt records loading in the Campaigns module
+• Rebuilt list view notifications
+• Improved displaying and reviewing history of changes
+• Improved security for executing database queries
+• Optimized filter by owner
+• Improved searching for record owner
+• Improved the search engine
+• Improved strip code HTML
+• Fixed pagination of records on the list
+FIXED:
+• Fixed Cron workflow
+• Fixed warning notices
+• Fixed a list of related records
+• Fixed coloring of record list
+• Fixed a problem with adding tickets to the Customer Portal
+• Fixed custom field mapping
+• Fixed a bug in the report editor
+• Fixed a bug in permissions when editing a user
+• Fixed a bug in the Calendar that displayed incorrect hours
+• Fixed a bug in sorting settings
+• Fixed displaying the number of notifications
+• Fixed merging of records
+• Fixed auto login to Mailbox
+• Fixed mass mailing
+• Fixed converting Leads
+• Fixed sending reminders
+• Fixed bugs that appeared while adding widgets
+• Fixed sorting documents in list view
+• Fixed a bug that didn't allow to save a new password
+• Fixed permissions for standard actions
