@@ -4,3 +4,5 @@ License: YetiForce Public License 6.5 https://yetiforce.com/en/license.html
 - Remove php-function as modifier in smarty
 - Fixed cache clearing for address finder configuration
 - Improved default value for map
+- Fix #17341 | Modules – Relations
+
