@@ -16,4 +16,5 @@ License: YetiForce Public License 4.0 licenses/License.html
 - Improved page reload after quick create record
 - Fix #15190
 - System registration has been improved
+- Increase the $timeout parameter, allow you to download the new package successfully, if you have a slow internet connection
 - and other
