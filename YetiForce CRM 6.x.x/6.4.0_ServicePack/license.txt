@@ -25,3 +25,4 @@ License: YetiForce Public License 5.0 licenses/License.html
 - Fixed address book in outlook integration panel
 - Fixed IMAP connection and permissions
 - Added reloading of user switching configuration
+- Increase the $timeout parameter, allow you to download the new package successfully, if you have a slow internet connection
