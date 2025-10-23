@@ -81,11 +81,11 @@
     ],
     "6.5": [
         {
-            "label": "YetiForce CRM 6.5 Service Pack v2",
-            "version": "2",
+            "label": "YetiForce CRM 6.5 Service Pack v3",
+            "version": "3",
             "fromVersion": "6.5.0",
             "toVersion": "6.5.0",
-            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.5.0_ServicePack\/zip\/6.5.0_ServicePack_v2.zip"
+            "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.5.0_ServicePack\/zip\/6.5.0_ServicePack_v3.zip"
         },
         {
             "label": "YetiForce CRM 7.0.1 v4",
