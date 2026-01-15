@@ -88,11 +88,11 @@
             "url": "https:\/\/github.com\/YetiForceCompany\/UpdatePackages\/raw\/master\/\/YetiForce CRM 6.x.x\/6.5.0_ServicePack\/zip\/6.5.0_ServicePack_v3.zip"
         },
         {
-            "label": "YetiForce CRM 7.0.1 v4",
-            "version": "4",
+            "label": "YetiForce CRM 7.0.1 v5",
+            "version": "5",
             "fromVersion": "6.5.0",
             "toVersion": "7.0.1",
-            "url": "https://api.yetiforce.eu/download/crm/UpdatePackages/6.5.0_to_7.0.1_v4"
+            "url": "https://api.yetiforce.eu/download/crm/UpdatePackages/6.5.0_to_7.0.1_v5"
         }
     ]
 }
